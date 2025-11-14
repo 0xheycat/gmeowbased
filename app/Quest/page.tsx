@@ -4,12 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useConfig } from 'wagmi'
 import { getPublicClient } from 'wagmi/actions'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 import { TimeEmoji } from '@/components/TimeEmoji'
 import { Button, buttonVariants } from '@/components/ui/button'
 import Loader from '@/components/ui/loader'
 import { useNotifications, type NotificationTone } from '@/components/ui/live-notifications'
 import QuestLoadingDeck from '@/components/Quest/QuestLoadingDeck'
 import { QuestCard, type QuestCardData } from '@/components/Quest/QuestCard'
+import { QuestFAB } from '@/components/Quest/QuestFAB'
+import { getBookmarks, getBookmarkCount, type BookmarkedQuest } from '@/lib/quest-bookmarks'
 import {
   CHAIN_IDS,
   CHAIN_KEYS,
@@ -23,6 +27,7 @@ import {
   type NormalizedQuest,
   getContractAddress,
 } from '@/lib/gm-utils'
+import { formatNumber, formatExpiryShort, formatRelativeTime, formatRelativeTimeShort } from '@/lib/formatters'
 import { clamp, cn, readStorageCache, writeStorageCache } from '@/lib/utils'
 
 const CHAINS: ChainKey[] = CHAIN_KEYS
@@ -126,6 +131,33 @@ export default function QuestHubPage() {
   const [typeFilter, setTypeFilter] = useState<TypeFilterKey>('all')
   const [rewardFilter, setRewardFilter] = useState<RewardFilterKey>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [showBookmarksOnly, setShowBookmarksOnly] = useState(false)
+  const [bookmarks, setBookmarks] = useState<BookmarkedQuest[]>([])
+  const [bookmarkCount, setBookmarkCount] = useState(0)
+  
+    // Debounced search terms
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const debouncedArchiveSearch = useDebounce(archiveSearchTerm, 300)
+
+  // Update bookmark count when bookmarks change
+  const refreshBookmarks = useCallback(() => {
+    setBookmarks(getBookmarks())
+    setBookmarkCount(getBookmarkCount())
+  }, [])
+
+  // Hydrate bookmarks from localStorage
+  useEffect(() => {
+    setBookmarks(getBookmarks())
+    setBookmarkCount(getBookmarkCount())
+    
+    // Listen for bookmark changes from QuestCard
+    const handleBookmarkChange = () => {
+      refreshBookmarks()
+    }
+    
+    window.addEventListener('quest-bookmark-changed', handleBookmarkChange)
+    return () => window.removeEventListener('quest-bookmark-changed', handleBookmarkChange)
+  }, [refreshBookmarks])
 
   const questsRef = useRef<QuestSummary[]>([])
   const fetchVersionRef = useRef(0)
@@ -136,6 +168,10 @@ export default function QuestHubPage() {
   const lastResultCountRef = useRef<number | null>(null)
   const lastErrorRef = useRef<string | null>(null)
   const initialFetchRef = useRef(false)
+  const archiveModalRef = useRef<HTMLDivElement>(null)
+  const archiveSearchRef = useRef<HTMLInputElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   const setQuests = useCallback((next: QuestSummary[]) => {
     questsRef.current = next
@@ -374,6 +410,7 @@ export default function QuestHubPage() {
     setTypeFilter('all')
     setRewardFilter('all')
     setSearchTerm('')
+    setShowBookmarksOnly(false)
     sendNotification({
       tone: 'info',
       title: 'Filters reset',
@@ -381,16 +418,130 @@ export default function QuestHubPage() {
     })
   }, [sendNotification])
 
+  const handleBookmarkToggle = useCallback(() => {
+    setShowBookmarksOnly(!showBookmarksOnly)
+    if (!showBookmarksOnly) {
+      sendNotification({
+        tone: 'info',
+        title: 'Bookmarks',
+        description: `Showing ${bookmarkCount} saved ${bookmarkCount === 1 ? 'quest' : 'quests'}.`,
+      })
+    }
+  }, [showBookmarksOnly, bookmarkCount, sendNotification])
+
+  const handleScrollTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
+  // Filter keyboard navigation
+  const handleFilterKeyDown = useCallback((event: React.KeyboardEvent, filterType: 'type' | 'reward', currentKey: string) => {
+    const filters = filterType === 'type' ? TYPE_FILTERS : REWARD_FILTERS
+    const currentIndex = filters.findIndex(f => f.key === currentKey)
+    
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      const nextIndex = (currentIndex + 1) % filters.length
+      const nextKey = filters[nextIndex].key
+      if (filterType === 'type') setTypeFilter(nextKey as TypeFilterKey)
+      else if (filterType === 'reward') setRewardFilter(nextKey as RewardFilterKey)
+      // Focus next button
+      setTimeout(() => {
+        const buttons = document.querySelectorAll<HTMLButtonElement>(`[data-filter-type="${filterType}"]`)
+        buttons[nextIndex]?.focus()
+      }, 0)
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      const prevIndex = currentIndex === 0 ? filters.length - 1 : currentIndex - 1
+      const prevKey = filters[prevIndex].key
+      if (filterType === 'type') setTypeFilter(prevKey as TypeFilterKey)
+      else if (filterType === 'reward') setRewardFilter(prevKey as RewardFilterKey)
+      // Focus previous button
+      setTimeout(() => {
+        const buttons = document.querySelectorAll<HTMLButtonElement>(`[data-filter-type="${filterType}"]`)
+        buttons[prevIndex]?.focus()
+      }, 0)
+    }
+  }, [])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Focus search on '/' key
+      if (event.key === '/' && !archiveOpen && document.activeElement?.tagName !== 'INPUT') {
+        event.preventDefault()
+        searchInputRef.current?.focus()
+      }
+      // Close archive on Escape
+      if (event.key === 'Escape' && archiveOpen) {
+        setArchiveOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [archiveOpen])
+
+  // Archive modal focus management
+  useEffect(() => {
+    if (archiveOpen) {
+      // Store previous focus
+      previousFocusRef.current = document.activeElement as HTMLElement
+      // Focus search input after modal opens
+      setTimeout(() => archiveSearchRef.current?.focus(), 100)
+    } else if (previousFocusRef.current) {
+      // Restore focus when modal closes
+      previousFocusRef.current.focus()
+      previousFocusRef.current = null
+    }
+  }, [archiveOpen])
+
+  // Focus trap for archive modal
+  useEffect(() => {
+    if (!archiveOpen) return
+
+    const handleTabKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !archiveModalRef.current) return
+
+      const focusableElements = archiveModalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+          event.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          event.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleTabKey)
+    return () => window.removeEventListener('keydown', handleTabKey)
+  }, [archiveOpen])
+
   const filteredQuests = useMemo(() => {
-    return quests.filter((quest) => {
+    let result = quests
+
+    // Bookmark filter
+    if (showBookmarksOnly) {
+      const bookmarkSet = new Set(bookmarks.map(b => `${b.chain}-${b.id}`))
+      result = result.filter(q => bookmarkSet.has(`${q.chain}-${q.id}`))
+    }
+
+    return result.filter((quest) => {
       if (chainFilter !== 'all' && quest.chain !== chainFilter) return false
       if (typeFilter === 'social' && quest.category !== 'social') return false
       if (typeFilter === 'onchain' && quest.category !== 'onchain') return false
       if (rewardFilter === 'points' && quest.rewardToken) return false
       if (rewardFilter === 'token' && !quest.rewardToken) return false
 
-      if (searchTerm.trim()) {
-        const needle = searchTerm.trim().toLowerCase()
+      if (debouncedSearchTerm.trim()) {
+        const needle = debouncedSearchTerm.trim().toLowerCase()
         const haystack = [
           quest.name,
           quest.instructions,
@@ -405,7 +556,7 @@ export default function QuestHubPage() {
 
       return true
     })
-  }, [quests, chainFilter, typeFilter, rewardFilter, searchTerm])
+  }, [quests, chainFilter, typeFilter, rewardFilter, debouncedSearchTerm, showBookmarksOnly, bookmarks])
 
   useEffect(() => {
     if (loading) return
@@ -428,7 +579,7 @@ export default function QuestHubPage() {
 
   const archiveResults = useMemo(() => {
     if (!archive.length) return [] as QuestArchiveEntry[]
-    const needle = archiveSearchTerm.trim().toLowerCase()
+    const needle = debouncedArchiveSearch.trim().toLowerCase()
     const base = needle
       ? archive.filter((entry) =>
           [
@@ -449,7 +600,7 @@ export default function QuestHubPage() {
       const bTime = b.retiredAt ?? b.lastSeen
       return bTime - aTime
     })
-  }, [archive, archiveSearchTerm])
+  }, [archive, debouncedArchiveSearch])
 
   useEffect(() => {
     if (!archiveOpen) return undefined
@@ -480,7 +631,9 @@ export default function QuestHubPage() {
               <TimeEmoji className="text-base" /> Gmeow Missions
             </span>
             <div className="theme-shell-label flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.3em]">
-              <span>{syncLabel}</span>
+              <span aria-live="polite" aria-atomic="true">
+                {syncLabel}
+              </span>
               <Button
                 type="button"
                 size="small"
@@ -507,17 +660,24 @@ export default function QuestHubPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <span className="theme-shell-label text-[10px] uppercase tracking-[0.3em]">Mission type</span>
-            <div className="flex flex-wrap gap-2" role="tablist">
+            <span className="theme-shell-label text-[10px] uppercase tracking-[0.3em]" id="type-filter-label">
+              Mission type
+            </span>
+            <div className="flex flex-wrap gap-2" role="tablist" aria-labelledby="type-filter-label">
               {TYPE_FILTERS.map(({ key, label }) => (
                 <Button
                   key={key}
                   type="button"
-                  size="mini"
+                  role="tab"
+                  size="small"
                   variant={typeFilter === key ? 'solid' : 'ghost'}
                   color={typeFilter === key ? 'primary' : 'gray'}
-                  className="px-4"
+                  className="px-5 min-h-[44px]"
                   onClick={() => setTypeFilter(key)}
+                  onKeyDown={(e) => handleFilterKeyDown(e, 'type', key)}
+                  aria-selected={typeFilter === key}
+                  data-filter-type="type"
+                  tabIndex={typeFilter === key ? 0 : -1}
                 >
                   {label}
                 </Button>
@@ -526,17 +686,24 @@ export default function QuestHubPage() {
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <span className="theme-shell-label text-[10px] uppercase tracking-[0.3em]">Reward</span>
-          <div className="flex flex-wrap gap-2" role="tablist">
+          <span className="theme-shell-label text-[10px] uppercase tracking-[0.3em]" id="reward-filter-label">
+            Reward
+          </span>
+          <div className="flex flex-wrap gap-2" role="tablist" aria-labelledby="reward-filter-label">
             {REWARD_FILTERS.map(({ key, label }) => (
               <Button
                 key={key}
                 type="button"
-                size="mini"
+                role="tab"
+                size="small"
                 variant={rewardFilter === key ? 'solid' : 'ghost'}
                 color={rewardFilter === key ? (key === 'token' ? 'warning' : 'primary') : 'gray'}
-                className="px-4"
+                className="px-5 min-h-[44px]"
                 onClick={() => setRewardFilter(key)}
+                onKeyDown={(e) => handleFilterKeyDown(e, 'reward', key)}
+                aria-selected={rewardFilter === key}
+                data-filter-type="reward"
+                tabIndex={rewardFilter === key ? 0 : -1}
               >
                 {label}
               </Button>
@@ -545,15 +712,23 @@ export default function QuestHubPage() {
         </div>
         <div className="flex flex-col gap-2">
           <label className="theme-shell-label text-[10px] uppercase tracking-[0.3em]" htmlFor="quest-search">
-            Search
+            Search <span className="text-[9px] opacity-60">(Press / to focus)</span>
           </label>
           <input
+            ref={searchInputRef}
             id="quest-search"
             placeholder="Name, chain, token, type"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="pixel-input"
+            aria-describedby="quest-search-help"
           />
+          <span id="quest-search-help" className="sr-only">
+            Search across quest names, blockchain networks, reward tokens, and quest types. Results update as you type.
+          </span>
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {filteredQuests.length > 0 ? `${filteredQuests.length} quest${filteredQuests.length === 1 ? '' : 's'} found` : searchTerm.trim() ? 'No quests match your search' : ''}
+          </div>
         </div>
       </section>
 
@@ -561,19 +736,7 @@ export default function QuestHubPage() {
         {showSkeleton ? (
           <QuestLoadingDeck />
         ) : filteredQuests.length ? (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredQuests.map((quest, questIndex) => {
-              const compositeKey = `${quest.chain}:${quest.id}`
-              return (
-                <QuestCard
-                  key={compositeKey}
-                  quest={quest as QuestCardData}
-                  index={questIndex}
-                  featured={featuredKeys.has(compositeKey)}
-                />
-              )
-            })}
-          </div>
+          <VirtualQuestGrid quests={filteredQuests} featuredKeys={featuredKeys} />
         ) : (
           <div className="quest-empty pixel-card">
             <div className="quest-empty__art" aria-hidden>
@@ -609,18 +772,25 @@ export default function QuestHubPage() {
       {archiveOpen ? (
         <div className="quest-archive__overlay" role="presentation" onClick={() => setArchiveOpen(false)}>
           <div
+            ref={archiveModalRef}
             className="quest-archive"
             role="dialog"
             aria-modal="true"
             aria-labelledby="quest-archive-title"
+            aria-describedby="quest-archive-description"
             onClick={(event) => event.stopPropagation()}
           >
             <header className="quest-archive__header">
               <div className="quest-archive__header-meta">
-                <span className="quest-tag quest-tag--info">Quest archive</span>
-                <p className="quest-archive__subtitle">Browse retired missions and revisit their highlights.</p>
+                <span id="quest-archive-title" className="quest-tag quest-tag--info">Quest archive</span>
+                <p id="quest-archive-description" className="quest-archive__subtitle">Browse retired missions and revisit their highlights.</p>
               </div>
-              <button type="button" className="quest-archive__close" onClick={() => setArchiveOpen(false)}>
+              <button 
+                type="button" 
+                className="quest-archive__close" 
+                onClick={() => setArchiveOpen(false)}
+                aria-label="Close quest archive modal"
+              >
                 Close
               </button>
             </header>
@@ -629,70 +799,36 @@ export default function QuestHubPage() {
                 Search archive
               </label>
               <input
+                ref={archiveSearchRef}
                 id="quest-archive-search"
                 className="quest-archive__search"
                 placeholder="Name, chain, reward, streak"
                 value={archiveSearchTerm}
                 onChange={(event) => setArchiveSearchTerm(event.target.value)}
-                autoFocus
+                aria-describedby="archive-search-help"
               />
+              <span id="archive-search-help" className="sr-only">
+                Search through retired quests by name, blockchain, reward type, or streak requirement.
+              </span>
+              <div aria-live="polite" aria-atomic="true" className="sr-only">
+                {archiveResults.length > 0 ? `${archiveResults.length} archived quest${archiveResults.length === 1 ? '' : 's'} found` : archiveSearchTerm.trim() ? 'No archived quests match your search' : ''}
+              </div>
             </div>
-            <div className="quest-archive__list" role="list">
-              {archiveResults.length ? (
-                archiveResults.map((entry) => {
-                  const statusTagClass = entry.retiredAt ? 'quest-tag--alert' : 'quest-tag--accent'
-                  const statusLabel = entry.retiredAt ? 'Retired' : 'Active'
-                  const rewardLabel = entry.rewardToken
-                    ? entry.rewardTokenPerUser
-                      ? `${formatNumber(entry.rewardTokenPerUser)} token`
-                      : 'Token reward'
-                    : `${formatNumber(entry.rewardPoints)} Gmeow Points`
-                  const timingLabel = entry.retiredAt
-                    ? `Retired ${formatRelativeTimeShort(entry.retiredAt)}`
-                    : `Seen ${formatRelativeTimeShort(entry.lastSeen)}`
-                  const detailHref = `/Quest/${entry.chain}/${entry.id}`
-                  return (
-                    <article key={`${entry.chain}-${entry.id}`} className="quest-archive__item" role="listitem">
-                      <div className="quest-archive__item-head">
-                        <span className="quest-tag quest-tag--info">{entry.chainLabel}</span>
-                        <span className={cn('quest-tag', statusTagClass)}>{statusLabel}</span>
-                      </div>
-                      <div className="quest-archive__item-main">
-                        <strong className="quest-archive__item-title">{entry.name}</strong>
-                        <div className="quest-archive__item-tags">
-                          <span className="quest-tag quest-tag--points">{rewardLabel}</span>
-                          {entry.progressLabel ? (
-                            <span className="quest-tag quest-tag--info">{entry.progressLabel}</span>
-                          ) : null}
-                          {entry.streakLabel ? (
-                            <span className="quest-tag quest-tag--accent">
-                              <span className="quest-tag__dot" aria-hidden />
-                              {entry.streakLabel}
-                            </span>
-                          ) : null}
-                        </div>
-                        <div className="quest-archive__item-meta">
-                          <span>{timingLabel}</span>
-                          <Link className="quest-archive__item-link" href={detailHref}>
-                            View details
-                          </Link>
-                        </div>
-                      </div>
-                    </article>
-                  )
-                })
-              ) : (
-                <div className="quest-archive__empty">
-                  <span className="quest-tag quest-tag--info">Archive empty</span>
-                  <p className="quest-archive__empty-copy">
-                    Once missions retire they will appear here with their final stats. Launch a quest to seed the archive.
-                  </p>
-                </div>
-              )}
-            </div>
+            <VirtualArchiveList results={archiveResults} />
           </div>
         </div>
       ) : null}
+
+      {/* Mobile FAB for quick actions */}
+      <QuestFAB
+        onRefresh={handleRefresh}
+        onScrollTop={handleScrollTop}
+        onArchive={() => setArchiveOpen(true)}
+        onBookmarks={handleBookmarkToggle}
+        isRefreshing={isSyncing}
+        bookmarkCount={bookmarkCount}
+        showBookmarkFilter={showBookmarksOnly}
+      />
     </div>
   )
 }
@@ -949,19 +1085,6 @@ function classifyQuest(metaType: unknown, questType: QuestTypeKey | null): 'soci
   return questType.startsWith('FARCASTER') ? 'social' : 'onchain'
 }
 
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat('en-US').format(value)
-}
-
-function formatExpiryShort(expiresAt: number): string {
-  try {
-    const d = new Date(expiresAt * 1000)
-    return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-  } catch {
-    return 'Unknown'
-  }
-}
-
 function toNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {
@@ -988,36 +1111,225 @@ function normalizeTimestamp(value: number | null): number | null {
   return value * 1000
 }
 
-function formatRelativeTime(timestamp: number | null): string {
-  if (!timestamp) return 'Awaiting first sync'
-  const delta = Date.now() - timestamp
-  if (delta < 30_000) return 'Synced just now'
-  if (delta < 60_000) return 'Synced under a minute ago'
-  if (delta < 3_600_000) {
-    const minutes = Math.round(delta / 60_000)
-    return `Synced ${minutes} minute${minutes === 1 ? '' : 's'} ago`
+// Virtual scrolling component for quest grid
+function VirtualQuestGrid({
+  quests,
+  featuredKeys,
+}: {
+  quests: QuestSummary[]
+  featuredKeys: Set<string>
+}) {
+  const parentRef = useRef<HTMLDivElement>(null)
+  
+  // Only virtualize if we have 20+ quests
+  const shouldVirtualize = quests.length >= 20
+  
+  // Calculate columns based on screen size
+  const getColumnCount = () => {
+    if (typeof window === 'undefined') return 3
+    if (window.innerWidth < 640) return 1 // mobile
+    if (window.innerWidth < 1280) return 2 // tablet
+    return 3 // desktop
   }
-  if (delta < 86_400_000) {
-    const hours = Math.round(delta / 3_600_000)
-    return `Synced ${hours} hour${hours === 1 ? '' : 's'} ago`
+  
+  const [columnCount, setColumnCount] = useState(getColumnCount)
+  
+  useEffect(() => {
+    const handleResize = () => setColumnCount(getColumnCount())
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+  
+  const rowCount = Math.ceil(quests.length / columnCount)
+  
+  const virtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 420, // Estimated quest card height + gap
+    overscan: 2,
+    enabled: shouldVirtualize,
+  })
+  
+  if (!shouldVirtualize) {
+    // Regular grid for small lists
+    return (
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        {quests.map((quest, questIndex) => {
+          const compositeKey = `${quest.chain}:${quest.id}`
+          return (
+            <QuestCard
+              key={compositeKey}
+              quest={quest as QuestCardData}
+              index={questIndex}
+              featured={featuredKeys.has(compositeKey)}
+            />
+          )
+        })}
+      </div>
+    )
   }
-  const days = Math.round(delta / 86_400_000)
-  return `Synced ${days} day${days === 1 ? '' : 's'} ago`
+  
+  // Virtualized grid for large lists
+  const items = virtualizer.getVirtualItems()
+  
+  return (
+    <div ref={parentRef} style={{ height: '800px', overflow: 'auto' }}>
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {items.map((virtualRow) => {
+          const startIndex = virtualRow.index * columnCount
+          const rowQuests = quests.slice(startIndex, startIndex + columnCount)
+          
+          return (
+            <div
+              key={virtualRow.key}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {rowQuests.map((quest, colIndex) => {
+                  const questIndex = startIndex + colIndex
+                  const compositeKey = `${quest.chain}:${quest.id}`
+                  return (
+                    <QuestCard
+                      key={compositeKey}
+                      quest={quest as QuestCardData}
+                      index={questIndex}
+                      featured={featuredKeys.has(compositeKey)}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
-function formatRelativeTimeShort(timestamp: number | null): string {
-  if (!timestamp) return 'just now'
-  const delta = Date.now() - timestamp
-  if (delta < 60_000) return 'just now'
-  if (delta < 3_600_000) {
-    const minutes = Math.round(delta / 60_000)
-    return `${minutes}m ago`
+// Virtual scrolling component for archive modal
+function VirtualArchiveList({ results }: { results: QuestArchiveEntry[] }) {
+  const parentRef = useRef<HTMLDivElement>(null)
+  
+  // Only virtualize if we have 20+ archived quests
+  const shouldVirtualize = results.length >= 20
+  
+  // Always call the hook (React Hooks rules)
+  const virtualizer = useVirtualizer({
+    count: results.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 120, // Estimated archive item height
+    overscan: 3,
+    enabled: shouldVirtualize, // Control virtualization behavior
+  })
+  
+  if (!shouldVirtualize) {
+    // Regular list for small archives
+    return (
+      <div className="quest-archive__list" role="list">
+        {results.length ? (
+          results.map((entry) => (
+            <ArchiveItem key={`${entry.chain}-${entry.id}`} entry={entry} />
+          ))
+        ) : (
+          <div className="quest-archive__empty">
+            <span className="quest-tag quest-tag--info">Archive empty</span>
+            <p className="quest-archive__empty-copy">
+              Once missions retire they will appear here with their final stats. Launch a quest to seed the archive.
+            </p>
+          </div>
+        )}
+      </div>
+    )
   }
-  if (delta < 86_400_000) {
-    const hours = Math.round(delta / 3_600_000)
-    return `${hours}h ago`
-  }
-  const days = Math.round(delta / 86_400_000)
-  return `${days}d ago`
+  
+  // Virtualized list for large archives
+  const items = virtualizer.getVirtualItems()
+  
+  return (
+    <div ref={parentRef} className="quest-archive__list" role="list" style={{ height: '500px', overflow: 'auto' }}>
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {items.map((virtualItem) => {
+          const entry = results[virtualItem.index]
+          return (
+            <div
+              key={virtualItem.key}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              <ArchiveItem entry={entry} />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// Archive item component
+function ArchiveItem({ entry }: { entry: QuestArchiveEntry }) {
+  const statusTagClass = entry.retiredAt ? 'quest-tag--alert' : 'quest-tag--accent'
+  const statusLabel = entry.retiredAt ? 'Retired' : 'Active'
+  const rewardLabel = entry.rewardToken
+    ? entry.rewardTokenPerUser
+      ? `${formatNumber(entry.rewardTokenPerUser)} token`
+      : 'Token reward'
+    : `${formatNumber(entry.rewardPoints)} Gmeow Points`
+  const timingLabel = entry.retiredAt
+    ? `Retired ${formatRelativeTimeShort(entry.retiredAt)}`
+    : `Seen ${formatRelativeTimeShort(entry.lastSeen)}`
+  const detailHref = `/Quest/${entry.chain}/${entry.id}`
+  
+  return (
+    <article className="quest-archive__item" role="listitem">
+      <div className="quest-archive__item-head">
+        <span className="quest-tag quest-tag--info">{entry.chainLabel}</span>
+        <span className={cn('quest-tag', statusTagClass)}>{statusLabel}</span>
+      </div>
+      <div className="quest-archive__item-main">
+        <strong className="quest-archive__item-title">{entry.name}</strong>
+        <div className="quest-archive__item-tags">
+          <span className="quest-tag quest-tag--points">{rewardLabel}</span>
+          {entry.progressLabel ? (
+            <span className="quest-tag quest-tag--info">{entry.progressLabel}</span>
+          ) : null}
+          {entry.streakLabel ? (
+            <span className="quest-tag quest-tag--accent">
+              <span className="quest-tag__dot" aria-hidden />
+              {entry.streakLabel}
+            </span>
+          ) : null}
+        </div>
+        <div className="quest-archive__item-meta">
+          <span>{timingLabel}</span>
+          <Link className="quest-archive__item-link" href={detailHref}>
+            View details
+          </Link>
+        </div>
+      </div>
+    </article>
+  )
 }
 

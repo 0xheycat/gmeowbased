@@ -318,7 +318,9 @@ html.light .quest-archive__overlay {
 }
 
 .quest-archive__close {
-  padding: 0.45rem 0.9rem;
+  padding: 0.7rem 1.2rem;
+  min-height: 44px;
+  min-width: 44px;
   border-radius: 999px;
   border: 1px solid var(--frost-border);
   background: var(--frost-bg);
@@ -342,15 +344,24 @@ html.light .quest-archive__overlay {
   background: var(--frost-bg);
   backdrop-filter: blur(calc(var(--glass-blur) - 2px));
   isolation: isolate;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 .quest-archive__item-title {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .quest-archive__item-meta {
   font-size: 0.8rem;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ======================================================
@@ -616,5 +627,169 @@ select:focus {
 }
 
 /* ======================================================
+   QUEST FAB (Floating Action Button) — Mobile-first
+   ====================================================== */
+
+.quest-fab-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .quest-fab-container {
+    bottom: 32px;
+    right: 32px;
+  }
+}
+
+/* Main FAB button */
+.quest-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--frost-accent) 32%, var(--shell-overlay) 68%),
+    color-mix(in srgb, var(--frost-accent) 18%, var(--shell-overlay) 82%)
+  );
+  border: 1px solid color-mix(in srgb, var(--frost-accent) 65%, white 12%);
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 
+    var(--fx-inset-2),
+    0 8px 24px color-mix(in srgb, var(--frost-accent) 38%, transparent 62%),
+    0 0 0 0 color-mix(in srgb, var(--frost-accent) 32%, transparent 68%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: all 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  isolation: isolate;
+}
+
+.quest-fab:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 
+    var(--fx-inset-2),
+    0 12px 32px color-mix(in srgb, var(--frost-accent) 45%, transparent 55%),
+    0 0 0 8px color-mix(in srgb, var(--frost-accent) 18%, transparent 82%);
+}
+
+.quest-fab:active {
+  transform: scale(0.96);
+}
+
+.quest-fab--expanded {
+  transform: rotate(45deg);
+}
+
+.quest-fab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* FAB action menu */
+.quest-fab-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fabMenuSlideIn 280ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fabMenuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Individual FAB action buttons */
+.quest-fab-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px 12px 14px;
+  background: color-mix(in srgb, var(--shell-overlay) 94%, transparent 6%);
+  border: 1px solid color-mix(in srgb, var(--shell-border) 80%, transparent 20%);
+  border-radius: 28px;
+  color: var(--shell-text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 
+    var(--fx-inset-1),
+    0 6px 18px color-mix(in srgb, var(--frost-shadow) 35%, transparent 65%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  isolation: isolate;
+  min-width: 140px;
+}
+
+.quest-fab-action:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--frost-accent) 14%, var(--shell-overlay) 86%);
+  border-color: color-mix(in srgb, var(--frost-accent) 45%, var(--shell-border) 55%);
+  box-shadow: 
+    var(--fx-inset-2),
+    0 8px 24px color-mix(in srgb, var(--frost-accent) 28%, transparent 72%);
+  transform: translateX(-4px);
+}
+
+.quest-fab-action:active:not(:disabled) {
+  transform: translateX(-2px) scale(0.98);
+}
+
+.quest-fab-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quest-fab-action--active {
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--frost-accent) 22%, var(--shell-overlay) 78%),
+    color-mix(in srgb, var(--frost-accent) 12%, var(--shell-overlay) 88%)
+  );
+  border-color: color-mix(in srgb, var(--frost-accent) 55%, white 8%);
+  color: white;
+}
+
+.quest-fab-action-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.quest-fab-action-label {
+  flex: 1;
+  text-align: left;
+}
+
+/* Hide FAB on large screens (optional) */
+@media (min-width: 1024px) {
+  .quest-fab-container {
+    /* Keep visible for now, but can hide with: display: none; */
+  }
+}
+
+/* ======================================================
    End of stylesheet
    ====================================================== */
+
