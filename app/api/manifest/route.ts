@@ -74,8 +74,8 @@ export async function GET() {
     const manifestCore = domainManifestSchema.parse({
       accountAssociation,
       miniapp: {
-        version: '1',
-        name: 'GMEOW - adventure',
+        version: '1.1',
+        name: 'Gmeowbased Adventure',
         iconUrl: toAbsoluteUrl('/favicon.ico', baseUrl),
         homeUrl: toAbsoluteUrl('/', baseUrl),
         splashImageUrl: toAbsoluteUrl('/splash.png', baseUrl),
@@ -83,12 +83,12 @@ export async function GET() {
         webhookUrl: toAbsoluteUrl('/api/neynar/webhook', baseUrl),
         subtitle: 'Daily GM Quest Hub',
         description:
-          'GMEOW Adventure turns your morning GM into a multiplayer quest—lock in streaks, complete onchain challenges, and climb the community leaderboard.',
+          'Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
         primaryCategory: 'social',
         tags: ['gm', 'streak', 'base', 'social', 'daily'],
         heroImageUrl: toAbsoluteUrl('/hero.png', baseUrl),
         tagline: 'Keep your GM streak alive',
-        ogTitle: 'GMEOW Adventure GM Quests',
+        ogTitle: 'Gmeowbased Quest Game',
         ogDescription:
           'Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.',
         ogImageUrl: toAbsoluteUrl('/og-image.png', baseUrl),
