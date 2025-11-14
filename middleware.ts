@@ -40,59 +40,71 @@ async function verifyAdminToken(token: string | undefined | null) {
 }
 
 async function enforceAdminSecurity(req: NextRequest) {
-  if (!isAdminSecurityEnabled()) return null
+  try {
+    if (!isAdminSecurityEnabled()) return null
 
-  const { pathname } = req.nextUrl
-  if (!shouldProtectAdminRoute(pathname)) return null
+    const { pathname } = req.nextUrl
+    if (!shouldProtectAdminRoute(pathname)) return null
 
-  const token = req.cookies.get(ADMIN_SESSION_COOKIE)?.value
-  const valid = await verifyAdminToken(token)
-  if (valid) return null
+    const token = req.cookies.get(ADMIN_SESSION_COOKIE)?.value
+    const valid = await verifyAdminToken(token)
+    if (valid) return null
 
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.json({ error: 'admin_auth_required' }, { status: 401 })
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'admin_auth_required' }, { status: 401 })
+    }
+
+    const loginUrl = req.nextUrl.clone()
+    loginUrl.pathname = '/admin/login'
+    loginUrl.search = `?next=${encodeURIComponent(req.nextUrl.href)}`
+    return NextResponse.redirect(loginUrl)
+  } catch (error) {
+    console.error('Admin security check failed:', error)
+    // If admin security fails, allow the request to proceed
+    return null
   }
-
-  const loginUrl = req.nextUrl.clone()
-  loginUrl.pathname = '/admin/login'
-  loginUrl.search = `?next=${encodeURIComponent(req.nextUrl.href)}`
-  return NextResponse.redirect(loginUrl)
 }
 
 export async function middleware(req: NextRequest) {
-  const adminEnforcement = await enforceAdminSecurity(req)
-  if (adminEnforcement) return adminEnforcement
+  try {
+    const adminEnforcement = await enforceAdminSecurity(req)
+    if (adminEnforcement) return adminEnforcement
 
-  if (!ENABLED) return NextResponse.next()
+    if (!ENABLED) return NextResponse.next()
 
-  const { pathname, href } = req.nextUrl
+    const { pathname, href } = req.nextUrl
 
-  // Allow the maintenance page, auth API, and common public assets
-  const allow = [
-    /^\/maintenance(?:\/|$)/,
-    /^\/api\/maintenance\/auth(?:\/|$)/,
-    /^\/admin\/login(?:\/|$)/,
-    /^\/api\/admin\/auth\//,
-    /^\/_next\//,
-    /^\/favicon\.ico$/,
-    /^\/robots\.txt$/,
-    /^\/sitemap\.xml$/,
-    /^\/images\//,
-    /^\/assets\//,
-    /^\/public\//,
-    /^\/.well-known\//,
-    /^\/api\/manifest(?:\/|$)/,
-  ].some((re) => re.test(pathname))
+    // Allow the maintenance page, auth API, and common public assets
+    const allow = [
+      /^\/maintenance(?:\/|$)/,
+      /^\/api\/maintenance\/auth(?:\/|$)/,
+      /^\/admin\/login(?:\/|$)/,
+      /^\/api\/admin\/auth\//,
+      /^\/_next\//,
+      /^\/favicon\.ico$/,
+      /^\/robots\.txt$/,
+      /^\/sitemap\.xml$/,
+      /^\/images\//,
+      /^\/assets\//,
+      /^\/public\//,
+      /^\/.well-known\//,
+      /^\/api\/manifest(?:\/|$)/,
+    ].some((re) => re.test(pathname))
 
-  if (allow) return NextResponse.next()
+    if (allow) return NextResponse.next()
 
-  const hasToken = req.cookies.get(COOKIE_NAME)?.value === TOKEN
-  if (hasToken) return NextResponse.next()
+    const hasToken = req.cookies.get(COOKIE_NAME)?.value === TOKEN
+    if (hasToken) return NextResponse.next()
 
-  const url = req.nextUrl.clone()
-  url.pathname = '/maintenance'
-  url.search = `?next=${encodeURIComponent(href)}`
-  return NextResponse.redirect(url)
+    const url = req.nextUrl.clone()
+    url.pathname = '/maintenance'
+    url.search = `?next=${encodeURIComponent(href)}`
+    return NextResponse.redirect(url)
+  } catch (error) {
+    console.error('Middleware error:', error)
+    // On error, allow the request through to avoid blocking the entire site
+    return NextResponse.next()
+  }
 }
 
 export const config = {
