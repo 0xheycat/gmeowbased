@@ -278,10 +278,52 @@ function safeCompareHex(a: string, b: string): boolean {
   }
 }
 
-function isCastTargetedToBot(data: NeynarCastEventData, botFid: number | null): boolean {
-  if (!botFid) return true
+function isCastTargetedToBot(
+  data: NeynarCastEventData, 
+  botFid: number | null,
+  config: { mentionMatchers: string[]; signalKeywords: string[]; questionStarters: string[]; requireQuestionMark: boolean }
+): boolean {
+  // 1. Check direct mention in mentioned_profiles array
   const mentions = Array.isArray(data.mentioned_profiles) ? data.mentioned_profiles : []
-  return mentions.some(profile => Number(profile?.fid) === botFid)
+  if (botFid && mentions.some(profile => Number(profile?.fid) === botFid)) {
+    return true
+  }
+
+  const text = (data.text || '').toLowerCase()
+  if (!text.trim()) return false
+
+  // 2. Check text for mention matchers (@gmeowbased, #gmeowbased)
+  if (config.mentionMatchers.some(matcher => text.includes(matcher.toLowerCase()))) {
+    return true
+  }
+
+  // 3. Check for signal keywords + question pattern
+  const hasSignalKeyword = config.signalKeywords.some(keyword => 
+    text.includes(keyword.toLowerCase())
+  )
+  
+  if (hasSignalKeyword) {
+    // Check if it's a question (starts with question word or has ?)
+    const hasQuestionStarter = config.questionStarters.some(starter => {
+      const lowerStarter = starter.toLowerCase()
+      return text.startsWith(lowerStarter) || 
+             text.includes(` ${lowerStarter} `) ||
+             text.includes(`\n${lowerStarter} `)
+    })
+    const hasQuestionMark = text.includes('?')
+    
+    // MUST have either question starter OR question mark
+    // requireQuestionMark config determines if BOTH are needed
+    if (config.requireQuestionMark) {
+      // Strict mode: need question starter AND ?
+      return hasQuestionStarter && hasQuestionMark
+    } else {
+      // Relaxed mode: need question starter OR ?
+      return hasQuestionStarter || hasQuestionMark
+    }
+  }
+
+  return false
 }
 
 function authorIsBot(data: NeynarCastEventData, botFid: number | null): boolean {
@@ -372,21 +414,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, skipped: 'self-cast' })
   }
 
-  if (!isCastTargetedToBot(data, botFid)) {
-    return NextResponse.json({ ok: true, skipped: 'bot-not-mentioned' })
-  }
-
   const signerUuid = resolveBotSignerUuid()
   if (!signerUuid) {
     console.warn('[neynar-webhook] Missing signer UUID; skipping reply')
     return NextResponse.json({ ok: true, skipped: 'missing-signer-uuid' })
   }
 
+  // Load config early - needed for targeting check
+  const config = await loadBotStatsConfig()
+
+  if (!isCastTargetedToBot(data, botFid, config)) {
+    return NextResponse.json({ ok: true, skipped: 'bot-not-targeted' })
+  }
+
   let replyText: string | null = null
   let replyMeta: Record<string, unknown> | null = null
 
   try {
-    const config = await loadBotStatsConfig()
     const autoReply = await buildAgentAutoReply({
       fid: Number.isFinite(Number(data.author?.fid)) ? Number(data.author?.fid) : null,
       text: data.text ?? '',
