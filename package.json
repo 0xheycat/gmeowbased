@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@coinbase/onchainkit": "^1.1.2",
+    "@farcaster/core": "^0.18.9",
     "@farcaster/hub-nodejs": "^0.15.9",
     "@farcaster/miniapp-core": "^0.4.1",
     "@farcaster/miniapp-node": "^0.1.11",
