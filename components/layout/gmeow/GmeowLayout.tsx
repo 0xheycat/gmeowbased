@@ -1,17 +1,30 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CaretRight } from '@phosphor-icons/react'
 import { GmeowHeader } from './GmeowHeader'
 import { GmeowSidebarLeft } from './GmeowSidebarLeft'
 import { GmeowSidebarRight } from './GmeowSidebarRight'
 import { SiteFooter } from './SiteFooter'
+import { MobileNavigation } from '@/components/MobileNavigation'
 
 // detail: gmeow layout helpers live in app/styles.css (gmeow-*)
 
 export function GmeowLayout({ children }: { children: ReactNode }) {
   const [leftSidebarHidden, setLeftSidebarHidden] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   return (
     <div className="relative flex min-h-screen w-full site-font gmeow-shell-text">
@@ -43,10 +56,11 @@ export function GmeowLayout({ children }: { children: ReactNode }) {
       ) : null}
       <div className="gmeow-layout-main flex min-h-screen flex-1 flex-col">
         <GmeowHeader />
-        <main className="flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 2xl:pt-8">
-          <div className="mx-auto w-full max-w-6xl space-y-10 lg:space-y-12">{children}</div>
+        <main className="flex-1 px-3 pb-24 pt-4 sm:px-6 sm:pb-28 sm:pt-6 lg:px-10 xl:px-12 2xl:px-16 2xl:pt-8">
+          <div className="mx-auto w-full max-w-6xl space-y-8 sm:space-y-10 lg:space-y-12">{children}</div>
         </main>
         <SiteFooter />
+        {isMobile && <MobileNavigation />}
       </div>
       <GmeowSidebarRight />
     </div>

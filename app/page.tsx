@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { MiniappReady } from '@/components/MiniappReady'
-import GmeowIntro from '@/components/intro/gmeowintro'
+import { OnboardingFlow } from '@/components/intro/OnboardingFlow'
 import { HeroSection } from '@/components/home/HeroSection'
 import { OnchainHub } from '@/components/home/OnchainHub'
 import { HowItWorks } from '@/components/home/HowItWorks'
@@ -84,7 +84,7 @@ const FAQ_ITEMS: FAQItem[] = [
   },
 ]
 
-const INTRO_STORAGE_KEY = 'gmeow:intro.cinema.v1'
+const INTRO_STORAGE_KEY = 'gmeow:onboarding.v1'
 
 function HomePage() {
   const { address, isConnected } = useAccount()
@@ -190,7 +190,7 @@ function HomePage() {
   return (
     <>
       <MiniappReady />
-      <GmeowIntro forceShow={forceIntro} onFinish={handleIntroFinish} enableAudio />
+      <OnboardingFlow forceShow={forceIntro} onComplete={handleIntroFinish} />
       <div className="page-root">
         <main>
           <HeroSection

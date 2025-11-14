@@ -1,0 +1,227 @@
+/* ============================================
+   MOBILE-FIRST MINIAPP OPTIMIZATIONS
+   ============================================ */
+
+/* Safe area support for miniapp environments */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left, 0);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Miniapp-specific viewport optimizations */
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+}
+
+/* Touch-friendly tap targets (minimum 44x44px) */
+.pixel-tab,
+.retro-btn,
+.nav-link {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Optimize for smaller screens */
+@media (max-width: 640px) {
+  /* Reduce vertical spacing on mobile */
+  .space-y-10 > * + * {
+    margin-top: 2rem;
+  }
+
+  .space-y-12 > * + * {
+    margin-top: 2.5rem;
+  }
+
+  /* Make cards more compact */
+  .retro-hero-title {
+    font-size: 1.75rem;
+    line-height: 1.25;
+  }
+
+  .retro-hero-subtitle {
+    font-size: 0.925rem;
+    line-height: 1.5;
+  }
+
+  /* Optimize button sizing */
+  .retro-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  /* Reduce chart bar width on mobile */
+  .retro-hero-chart-bar {
+    min-width: 48px;
+  }
+
+  /* Compact ticker cards */
+  .ticker-card {
+    padding: 0.75rem;
+  }
+
+  .ticker-value {
+    font-size: 0.925rem;
+  }
+
+  .ticker-detail {
+    font-size: 0.75rem;
+  }
+}
+
+/* Miniapp-specific header adjustments */
+@media (max-width: 768px) {
+  .theme-shell-header {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Ensure mobile nav doesn't overflow */
+  .header-mobile-nav {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .header-mobile-nav::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Profile dropdown mobile optimizations */
+@media (max-width: 640px) {
+  .profile-dropdown-menu {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    top: auto;
+    bottom: 5rem;
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* Improve touch interactions */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch target sizes */
+  .pixel-tab,
+  .nav-link {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Remove hover effects on touch devices */
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+
+  /* Add active state feedback */
+  .pixel-tab:active,
+  .retro-btn:active,
+  .nav-link:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+/* Onboarding flow mobile optimizations */
+@media (max-width: 640px) {
+  .onboarding-stage {
+    padding: 1.5rem;
+  }
+
+  .onboarding-stage h2 {
+    font-size: 1.5rem;
+  }
+
+  .onboarding-stage p {
+    font-size: 0.875rem;
+  }
+
+  /* Stack features grid on mobile */
+  .onboarding-stage ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Footer mobile adjustments */
+@media (max-width: 768px) {
+  .site-footer {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0));
+  }
+}
+
+/* Optimize animations for mobile performance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode adjustments for miniapp */
+@media (prefers-color-scheme: dark) {
+  .gmeow-page-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(11, 10, 22, 0.95) 0%,
+      rgba(11, 10, 22, 0.85) 100%
+    );
+  }
+}
+
+/* Prevent text size adjustment in landscape */
+@media (orientation: landscape) and (max-height: 500px) {
+  html {
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* Ensure images don't cause layout shifts */
+img {
+  height: auto;
+  max-width: 100%;
+}
+
+/* Optimize for notched devices */
+@supports (padding: max(0px)) {
+  .pixel-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .theme-shell-header {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+}
+
+/* Performance: Use will-change for frequently animated elements */
+.retro-hero-chart-bar-fill,
+.nav-glow,
+.pixel-tab[data-active='true'] {
+  will-change: transform, opacity;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .retro-hero-chart-bar-fill {
+    transition: none !important;
+  }
+}

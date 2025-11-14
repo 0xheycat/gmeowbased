@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { LayoutModeSwitch } from '@/components/ui/LayoutModeSwitch'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { useLayoutMode } from '@/components/ui/layout-mode-context'
+import { ProfileDropdown } from '@/components/layout/ProfileDropdown'
 
 import {
   navIconLinks,
@@ -62,22 +63,22 @@ export function GmeowHeader() {
   return (
     <header
       className={clsx(
-        'theme-shell-header site-font sticky top-0 z-40 flex h-16 items-center justify-between border-b px-4 transition-[background,box-shadow,border-bottom-color,color] duration-300 md:px-6 lg:px-10',
+        'theme-shell-header site-font sticky top-0 z-40 flex h-14 sm:h-16 items-center justify-between border-b px-3 sm:px-4 md:px-6 lg:px-10 transition-[background,box-shadow,border-bottom-color,color] duration-300',
         isSolid && 'theme-shell-header--solid'
       )}
     >
       {/* LEFT */}
-      <div className="flex items-center gap-3">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="theme-shell-icon theme-shell-icon--badge grid h-10 w-10 place-items-center rounded-lg border text-base font-semibold">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3">
+          <span className="theme-shell-icon theme-shell-icon--badge grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-lg border text-sm sm:text-base font-semibold">
             😺
           </span>
 
           <span className="hidden flex-col leading-tight sm:flex">
-            <span className="theme-shell-label text-xs uppercase tracking-[0.3em]">
+            <span className="theme-shell-label text-[10px] sm:text-xs uppercase tracking-[0.3em]">
               Gmeow Adventure
             </span>
-            <span className="theme-shell-title text-sm font-semibold">
+            <span className="theme-shell-title text-xs sm:text-sm font-semibold">
               Flight Deck
             </span>
           </span>
@@ -86,7 +87,7 @@ export function GmeowHeader() {
 
       {/* DESKTOP NAV */}
       <nav
-        className="hidden h-full items-center gap-3 lg:flex"
+        className="hidden h-full items-center gap-2 lg:flex lg:gap-3"
         aria-label="Primary navigation"
       >
         {navIconLinks.map((link) => {
@@ -103,19 +104,19 @@ export function GmeowHeader() {
               aria-label={link.label}
               data-active={active ? 'true' : undefined}
               className={clsx(
-                'flex h-12 w-12 items-center justify-center rounded-xl border transition-all',
+                'flex h-10 w-10 lg:h-12 lg:w-12 items-center justify-center rounded-xl border transition-all',
                 active
                   ? 'border-[var(--px-accent)] bg-[var(--px-accent)]/10 text-[var(--px-accent)] shadow-[0_0_12px_rgba(124,255,122,0.25)]'
                   : 'border-white/10 text-white/70 hover:border-[var(--px-accent)]/60 hover:text-[var(--px-accent)]'
               )}
             >
-              <Icon size={20} weight={active ? 'fill' : 'regular'} />
+              <Icon size={18} weight={active ? 'fill' : 'regular'} />
             </Link>
           )
         })}
       </nav>
 
-      {/* MOBILE NAV */}
+      {/* MOBILE NAV - Reduced on mobile */}
       <nav
         className={clsx(
           'flex-1 items-center justify-center lg:hidden',
@@ -123,8 +124,8 @@ export function GmeowHeader() {
         )}
         aria-label="Mobile quick navigation"
       >
-        <div className="header-mobile-nav flex w-full max-w-[420px] items-center justify-center gap-1.5 overflow-x-auto px-1 py-1 [-ms-overflow-style:none] [scrollbar-width:none]">
-          {navMobileShortcuts.map((link) => {
+        <div className="header-mobile-nav flex w-full max-w-[320px] sm:max-w-[420px] items-center justify-center gap-1 sm:gap-1.5 overflow-x-auto px-1 py-1 [-ms-overflow-style:none] [scrollbar-width:none]">
+          {navMobileShortcuts.slice(0, 4).map((link) => {
             const Icon = link.icon
             const active = isLinkActive(pathname, link.href)
             const external = link.href.startsWith('http')
@@ -138,13 +139,13 @@ export function GmeowHeader() {
                 aria-label={link.label}
                 data-active={active ? 'true' : undefined}
                 className={clsx(
-                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-all',
+                  'flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg border transition-all',
                   active
                     ? 'border-[var(--px-accent)] bg-[var(--px-accent)]/15 text-[var(--px-accent)] shadow-[0_0_10px_rgba(124,255,122,0.35)]'
                     : 'border-white/10 text-white/70 hover:border-[var(--px-accent)]/60 hover:text-[var(--px-accent)]'
                 )}
               >
-                <Icon size={18} weight={active ? 'fill' : 'regular'} />
+                <Icon size={16} weight={active ? 'fill' : 'regular'} />
                 <span className="sr-only">{link.label}</span>
               </Link>
             )
@@ -153,7 +154,8 @@ export function GmeowHeader() {
       </nav>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+        <ProfileDropdown />
         <LayoutModeSwitch className="hidden md:inline-flex" />
         <ThemeToggle />
       </div>
