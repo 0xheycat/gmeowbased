@@ -60,8 +60,11 @@ function miniappButtonKey(index: number, ...parts: Array<string | number>): stri
 
 const DEFAULT_HTML_HEADERS: Record<string, string> = {
   'content-type': 'text/html; charset=utf-8',
-  'content-security-policy': "frame-ancestors 'self' https://warpcast.com;",
-  'x-frame-options': 'ALLOW-FROM https://warpcast.com',
+  'content-security-policy': "frame-ancestors 'self' https://warpcast.com https://*.base.dev https://base.dev https://*.farcaster.xyz https://farcaster.xyz;",
+  'x-frame-options': 'ALLOWALL',
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, OPTIONS',
+  'access-control-allow-headers': 'Content-Type, Authorization, X-Requested-With',
   'cache-control': 'public, max-age=300, stale-while-revalidate=60',
   'referrer-policy': 'same-origin',
 }
@@ -613,7 +616,11 @@ function toJsonSafe<T>(value: T): any {
 }
 
 function respondJson(data: any, init?: ResponseInit) {
-  return NextResponse.json(toJsonSafe(data), init)
+  const headers = new Headers(init?.headers)
+  headers.set('access-control-allow-origin', '*')
+  headers.set('access-control-allow-methods', 'GET, POST, OPTIONS')
+  headers.set('access-control-allow-headers', 'Content-Type, Authorization, X-Requested-With')
+  return NextResponse.json(toJsonSafe(data), { ...init, headers })
 }
 
 function createHtmlResponse(html: string, init?: { status?: number; headers?: Record<string, string | undefined> }) {
@@ -1147,7 +1154,19 @@ function buildFrameHtml(params: {
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
-    <!-- Farcaster miniapp frame tags -->
+    <!-- Legacy Farcaster frame tags (v1 compatibility) -->
+    <meta property="fc:frame" content="vNext" />
+    ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />` : ''}
+    ${buttons.map((btn, idx) => {
+      const index = idx + 1
+      const action = btn.action ?? 'link'
+      const label = escapeHtml(btn.label)
+      const target = btn.target ? escapeHtml(btn.target) : ''
+      const actionTag = action !== 'link' ? `\n    <meta property="fc:frame:button:${index}:action" content="${action}" />` : ''
+      const targetTag = target ? `\n    <meta property="fc:frame:button:${index}:target" content="${target}" />` : ''
+      return `<meta property="fc:frame:button:${index}" content="${label}" />${actionTag}${targetTag}`
+    }).join('\n    ')}
+    <!-- Farcaster miniapp frame tags (v2) -->
     <meta property="${miniappFrameKey()}" content="vNext" />
     ${imageEsc ? `<meta property="${miniappFrameKey('image')}" content="${imageEsc}" />\n    <meta property="${miniappFrameKey('image', 'aspect_ratio')}" content="1.91:1" />` : ''}
     <meta property="${miniappFrameKey('title')}" content="${pageTitle}" />
