@@ -80,6 +80,8 @@ export async function middleware(req: NextRequest) {
     /^\/images\//,
     /^\/assets\//,
     /^\/public\//,
+    /^\/.well-known\//,
+    /^\/api\/manifest(?:\/|$)/,
   ].some((re) => re.test(pathname))
 
   if (allow) return NextResponse.next()

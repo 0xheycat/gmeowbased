@@ -24,9 +24,13 @@ function resolveAssociationValue(key: AssociationKey): string {
   const envName = ACCOUNT_ASSOCIATION_ENVS[key]
   const value = readEnv(envName)
   if (!value) {
+    // In development/preview, allow serving with placeholder values
+    if (process.env.NODE_ENV !== 'production') {
+      return `PLACEHOLDER_${key.toUpperCase()}_TO_BE_SIGNED`
+    }
     throw new Error(`Missing required Farcaster account association env: ${envName}`)
   }
-  if (PLACEHOLDER_PATTERN.test(value)) {
+  if (PLACEHOLDER_PATTERN.test(value) && process.env.NODE_ENV === 'production') {
     throw new Error(`Replace placeholder value for ${envName} before serving the manifest`)
   }
   return value
