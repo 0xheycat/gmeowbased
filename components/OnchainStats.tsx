@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useAccount } from 'wagmi'
 import { createPublicClient, http, formatEther } from 'viem'
 import type { Address } from 'viem'
+import { chainStateCache } from '@/lib/cache-storage'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import { probeMiniappReady, getMiniappContext } from '@/lib/miniappEnv'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
@@ -203,27 +204,30 @@ type OnchainStatsData = {
   powerBadge: boolean | null
 }
 
-type OnchainShareFields = Partial<
-  Record<
-    | 'txs'
-    | 'contracts'
-    | 'volume'
-    | 'balance'
-    | 'age'
-    | 'builder'
-    | 'neynar'
-    | 'power'
-    | 'firstTx'
-    | 'lastTx'
-    | 'chainName'
-    | 'explorer',
-    string
-  >
->
+type OnchainShareFields = Partial<Record<
+  | 'txs'
+  | 'contracts'
+  | 'age'
+  | 'balance'
+  | 'volume'
+  | 'talent'
+  | 'neynar'
+  | 'power'
+  | 'featured'
+  | 'builder'
+  | 'firstTx'
+  | 'lastTx'
+  | 'chainName'
+  | 'explorer',
+  string
+>>
+
+type CachedStats = {
+  fetchedAt: number
+  stats: OnchainStatsData
+}
 
 const STATS_CACHE_TTL_MS = 3 * 60 * 1000
-
-const statsCache = new Map<string, { fetchedAt: number; stats: OnchainStatsData }>()
 
 function createEmptyStats(): OnchainStatsData {
   return {
@@ -368,8 +372,8 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
         return
       }
 
-      const cacheKey = `${normalizedAddress}::${chainKey}`
-      const cached = statsCache.get(cacheKey)
+      const cacheKey = `stats:${normalizedAddress}:${chainKey}`
+      const cached = chainStateCache.get(cacheKey) as CachedStats | null
       if (!force && cached && Date.now() - cached.fetchedAt < STATS_CACHE_TTL_MS) {
         setErrMsg(null)
         setLoading(false)
@@ -711,7 +715,7 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
 
         if (reqIdRef.current === myId) {
           setStats(nextStats)
-          statsCache.set(cacheKey, { stats: nextStats, fetchedAt: Date.now() })
+          chainStateCache.set(cacheKey, { stats: nextStats, fetchedAt: Date.now() })
         }
       } catch (e: any) {
         if (reqIdRef.current === myId) setErrMsg(e?.message || 'Failed to load onchain stats')

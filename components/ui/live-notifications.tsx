@@ -5,6 +5,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { saveNotification } from '@/lib/notification-history'
+import { userContextCache } from '@/lib/cache-storage'
 
 export type NotificationCategory =
   | 'system'
@@ -15,6 +17,8 @@ export type NotificationCategory =
   | 'tip'
   | 'level'
   | 'reminder'
+  | 'mention'
+  | 'streak'
 
 export type NotificationTone = 'info' | 'success' | 'warning' | 'error'
 
@@ -27,6 +31,9 @@ type NotificationInput = {
   onAction?: () => void
   duration?: number
   category?: NotificationCategory
+  mentionedUser?: string | null
+  rewardAmount?: number | null
+  streakCount?: number | null
 }
 
 export type NotificationItem = NotificationInput & {
@@ -100,6 +107,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const timersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
   const idRef = useRef(1)
+  const savedIdsRef = useRef<Set<number>>(new Set())
 
   const dismiss = useCallback((id: number) => {
     clearTimeout(timersRef.current[id])
@@ -132,6 +140,41 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     timersRef.current = {}
   }, [])
 
+  // Auto-save notifications to history
+  useEffect(() => {
+    if (notifications.length === 0) return
+
+    const latest = notifications[0]
+
+    // Only save each notification once
+    if (savedIdsRef.current.has(latest.id)) return
+    savedIdsRef.current.add(latest.id)
+
+    // Get user context for saving
+    const userContext = userContextCache.get('current') as { fid?: number; walletAddress?: string } | null
+    if (!userContext?.fid && !userContext?.walletAddress) return
+
+    // Save to Supabase (fire and forget)
+    saveNotification({
+      fid: userContext.fid,
+      walletAddress: userContext.walletAddress,
+      category: latest.category || 'system',
+      title: latest.title,
+      description: latest.description || null,
+      tone: latest.tone,
+      metadata: {
+        mentionedUser: latest.mentionedUser,
+        rewardAmount: latest.rewardAmount,
+        streakCount: latest.streakCount,
+      },
+      actionLabel: latest.actionLabel || null,
+      actionHref: latest.href || null,
+    }).catch(err => {
+      // Silent fail - don't block UI
+      console.debug('[NotificationProvider] Failed to save notification:', err.message)
+    })
+  }, [notifications])
+
   const value = useMemo<NotificationContextValue>(
     () => ({ push, dismiss, dismissAll, items: notifications }),
     [push, dismiss, dismissAll, notifications],
@@ -154,8 +197,8 @@ function LiveNotificationSurface({
 }) {
   const headlineTone = notifications[0]?.tone ?? 'info'
   const stackAnchorClass =
-    'pointer-events-none fixed right-4 top-24 z-[2000] flex justify-end sm:right-6 lg:right-10'
-  const stackWrapperClass = 'flex w-full max-w-sm flex-col gap-3'
+    'pointer-events-none fixed right-3 sm:right-4 top-20 sm:top-24 z-[2000] flex justify-end lg:right-10'
+  const stackWrapperClass = 'flex w-full max-w-[360px] sm:max-w-sm flex-col gap-2 sm:gap-3'
 
   return (
     <>
@@ -163,8 +206,8 @@ function LiveNotificationSurface({
       {notifications.length ? (
         <div className={stackAnchorClass}>
           <div className={stackWrapperClass}>
-            {notifications.map((note) => (
-              <NotificationCard key={note.id} note={note} onDismiss={onDismiss} />
+            {notifications.map((note, index) => (
+              <NotificationCard key={note.id} note={note} onDismiss={onDismiss} index={index} />
             ))}
           </div>
         </div>
@@ -178,14 +221,14 @@ function NotificationBelt({ count, tone }: { count: number; tone: NotificationTo
   const { icon, beacon } = toneVisuals[tone]
   const active = count > 0
   const displayCount = count > 9 ? '9+' : count.toString()
-  const anchorClass = 'pointer-events-none fixed right-5 top-5 z-[2100] sm:right-6 lg:right-10'
-  const labelClass = 'pointer-events-none mt-2 block text-center text-[10px] uppercase tracking-[0.32em] text-slate-400'
+  const anchorClass = 'pointer-events-none fixed right-4 sm:right-5 top-4 sm:top-5 z-[2100] lg:right-10'
+  const labelClass = 'pointer-events-none mt-1.5 sm:mt-2 block text-center text-[9px] sm:text-[10px] uppercase tracking-[0.28em] sm:tracking-[0.32em] text-slate-400'
 
   return (
     <div className={anchorClass}>
       <div
         className={cn(
-          'relative flex h-14 w-14 items-center justify-center rounded-full border border-white/12 bg-[#040f1d]/80 text-lg text-cyan-100 shadow-[0_18px_52px_rgba(4,14,28,0.6)] backdrop-blur-xl',
+          'relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/12 bg-[#040f1d]/80 text-base sm:text-lg text-cyan-100 shadow-[0_18px_52px_rgba(4,14,28,0.6)] backdrop-blur-xl',
           active ? 'animate-[gmeow-beacon_2800ms_ease-in-out_infinite]' : 'opacity-80',
           active ? beacon : '',
         )}
@@ -195,7 +238,7 @@ function NotificationBelt({ count, tone }: { count: number; tone: NotificationTo
         <span aria-hidden>{icon}</span>
         {active ? (
           <span
-            className="pointer-events-none absolute -top-1.5 -right-1.5 flex min-h-[1.5rem] min-w-[1.6rem] items-center justify-center rounded-full bg-gradient-to-br from-[#5df3d0] to-[#4fd1ff] px-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-[#062033] shadow-[0_10px_30px_rgba(6,26,44,0.55)]"
+            className="pointer-events-none absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 flex min-h-[1.4rem] min-w-[1.5rem] sm:min-h-[1.5rem] sm:min-w-[1.6rem] items-center justify-center rounded-full bg-gradient-to-br from-[#5df3d0] to-[#4fd1ff] px-0.5 sm:px-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.22em] sm:tracking-[0.26em] text-[#062033] shadow-[0_10px_30px_rgba(6,26,44,0.55)]"
             style={{ animation: 'gmeow-badge-pop 240ms ease-out forwards' }}
           >
             {displayCount}
@@ -213,7 +256,7 @@ function NotificationBelt({ count, tone }: { count: number; tone: NotificationTo
   )
 }
 
-function NotificationCard({ note, onDismiss }: { note: NotificationItem; onDismiss: (id: number) => void }) {
+function NotificationCard({ note, onDismiss, index }: { note: NotificationItem; onDismiss: (id: number) => void; index: number }) {
   const { icon, border, glow, textAccent, progress } = toneVisuals[note.tone]
   const duration = typeof note.duration === 'number' ? note.duration : 5200
   const isPolite = note.tone === 'info' || note.tone === 'success'
@@ -222,45 +265,77 @@ function NotificationCard({ note, onDismiss }: { note: NotificationItem; onDismi
     ? categoryLabels[note.category] ?? note.category
     : null
 
+  // Staggered animation delay
+  const animationDelay = `${index * 80}ms`
+  const slideDistance = 20 + (index * 5)
+
   return (
     <article
       role={note.tone === 'error' || note.tone === 'warning' ? 'alert' : 'status'}
       aria-live={isPolite ? 'polite' : 'assertive'}
       className={cn(
-        'pointer-events-auto overflow-hidden rounded-3xl border bg-[#080f21]/95 px-5 py-4 text-sm shadow-[0_24px_80px_rgba(5,10,34,0.55)] backdrop-blur',
-        'animate-[gmeow-fade-in_180ms_cubic-bezier(0.22,1,0.36,1)]',
+        'pointer-events-auto overflow-hidden rounded-2xl sm:rounded-3xl border bg-[#080f21]/95 px-4 py-3 sm:px-5 sm:py-4 text-sm shadow-[0_24px_80px_rgba(5,10,34,0.55)] backdrop-blur',
         border,
       )}
+      style={{
+        animation: `gmeow-slide-in-notification 320ms cubic-bezier(0.22,1,0.36,1) ${animationDelay} both`,
+        '--slide-distance': `${slideDistance}px`,
+      } as React.CSSProperties}
     >
       <div className={cn('absolute inset-0 -z-10 bg-gradient-to-br opacity-90', glow)} />
-      <div className="flex items-start gap-3">
-        <span className="text-lg" aria-hidden>
+      <div className="flex items-start gap-2 sm:gap-3">
+        <span className="text-base sm:text-lg" aria-hidden>
           {icon}
         </span>
         <div className="min-w-0 flex-1 text-slate-200">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-slate-400">Live Update</p>
-          <h3 className={cn('mt-1 text-sm font-semibold text-slate-100', textAccent)}>{note.title}</h3>
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.3em] sm:tracking-[0.34em] text-slate-400">Live Update</p>
+          <h3 className={cn('mt-1 text-sm font-semibold text-slate-100 leading-tight', textAccent)}>{note.title}</h3>
+          
+          {/* Mention support */}
+          {note.mentionedUser ? (
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className="text-xs text-slate-400">@</span>
+              <span className={cn('text-xs font-medium', textAccent)}>{note.mentionedUser}</span>
+            </div>
+          ) : null}
+
+          {/* Reward amount */}
+          {note.rewardAmount != null && note.rewardAmount > 0 ? (
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className="text-base" aria-hidden>🎁</span>
+              <span className={cn('text-sm font-bold', textAccent)}>+{note.rewardAmount.toLocaleString()} XP</span>
+            </div>
+          ) : null}
+
+          {/* Streak count */}
+          {note.streakCount != null && note.streakCount > 0 ? (
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className="text-base" aria-hidden>🔥</span>
+              <span className={cn('text-sm font-bold', textAccent)}>{note.streakCount} day streak!</span>
+            </div>
+          ) : null}
+
           {categoryLabel ? (
-            <span className="mt-1 inline-flex items-center rounded-full border border-white/10 bg-white/10 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-white/80">
+            <span className="mt-1.5 inline-flex items-center rounded-full border border-white/10 bg-white/10 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-white/80">
               {categoryLabel}
             </span>
           ) : null}
           {note.description ? (
-            <p className="mt-1 text-xs leading-relaxed text-slate-300">{note.description}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-300">{note.description}</p>
           ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.28em]">
+          <div className="mt-2.5 sm:mt-3 flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-[0.24em] sm:tracking-[0.28em]">
             {note.href && note.actionLabel ? (
               isExternal ? (
                 <a
                   href={note.href}
                   target="_blank"
                   rel="noreferrer"
-                  className={cn(buttonVariants({ variant: 'ghost', color: 'primary', size: 'small' }), 'px-5')}
+                  className={cn(buttonVariants({ variant: 'ghost', color: 'primary', size: 'small' }), 'px-4 sm:px-5')}
                 >
                   {note.actionLabel}
                 </a>
               ) : (
-                <Link href={note.href} className={cn(buttonVariants({ variant: 'ghost', color: 'primary', size: 'small' }), 'px-5')}>
+                <Link href={note.href} className={cn(buttonVariants({ variant: 'ghost', color: 'primary', size: 'small' }), 'px-4 sm:px-5')}>
                   {note.actionLabel}
                 </Link>
               )
@@ -269,7 +344,7 @@ function NotificationCard({ note, onDismiss }: { note: NotificationItem; onDismi
               <button
                 type="button"
                 onClick={note.onAction}
-                className={cn(buttonVariants({ variant: 'ghost', color: 'primary', size: 'small' }), 'px-5')}
+                className={cn(buttonVariants({ variant: 'ghost', color: 'primary', size: 'small' }), 'px-4 sm:px-5')}
               >
                 {note.actionLabel}
               </button>
@@ -279,14 +354,14 @@ function NotificationCard({ note, onDismiss }: { note: NotificationItem; onDismi
         <button
           type="button"
           aria-label="Dismiss notification"
-          className={cn(buttonVariants({ variant: 'ghost', color: 'gray', size: 'small' }), 'px-3 text-[10px]')}
+          className={cn(buttonVariants({ variant: 'ghost', color: 'gray', size: 'small' }), 'px-2 sm:px-3 text-[10px]')}
           onClick={() => onDismiss(note.id)}
         >
           ✕
         </button>
       </div>
       {duration > 0 ? (
-        <div className="mt-4 h-[3px] w-full overflow-hidden rounded-full bg-white/10" aria-hidden>
+        <div className="mt-3 sm:mt-4 h-[2px] sm:h-[3px] w-full overflow-hidden rounded-full bg-white/10" aria-hidden>
           <span
             className={cn('block h-full w-[200%]', progress)}
             style={{ animation: `gmeow-progress ${duration}ms linear forwards` }}
@@ -306,6 +381,8 @@ const categoryLabels: Partial<Record<NotificationCategory, string>> = {
   tip: 'Tip',
   level: 'Level Up',
   reminder: 'Reminder',
+  mention: 'Mention',
+  streak: 'Streak',
 }
 
 export function useLegacyNotificationAdapter() {

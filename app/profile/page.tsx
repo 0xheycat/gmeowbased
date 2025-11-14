@@ -1,15 +1,26 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
+import { useAccount } from 'wagmi'
 import { ProfileStats } from '@/components/ProfileStats'
 import { GMHistory } from '@/components/GMHistory'
+import { ProfileSettings } from '@/components/profile/ProfileSettings'
+import { ProfileNotificationCenter } from '@/components/profile/ProfileNotificationCenter'
+import { ProfileHeroStats } from '@/components/profile/ProfileHeroStats'
+import { ProfileStickyHeader } from '@/components/profile/ProfileStickyHeader'
+import { FloatingActionMenu, type FloatingAction } from '@/components/profile/FloatingActionMenu'
+import { useNotifications } from '@/components/ui/live-notifications'
+import { farcasterVerificationCache } from '@/lib/cache-storage'
+import { upsertNotificationToken } from '@/lib/miniapp-notifications'
 import type { ProfileOverviewData } from '@/lib/profile-types'
 import { buildProfileOverview, pickAddressFromSource, normalizeAddress, type MiniAppUser } from '@/lib/profile-data'
 import { fireMiniappReady, isAllowedReferrer, isEmbedded } from '@/lib/miniappEnv'
 import { fetchUserByFid, fetchUserByUsername } from '@/lib/neynar'
 
 export default function ProfilePage() {
+  const { push: pushNotification } = useNotifications()
+  const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount()
   const [contextUser, setContextUser] = useState<MiniAppUser | null>(null)
   const [address, setAddress] = useState<`0x${string}` | null>(null)
   const [contextAddress, setContextAddress] = useState<`0x${string}` | null>(null)
@@ -24,13 +35,24 @@ export default function ProfilePage() {
     return isEmbedded()
   })
   const [isManualEditing, setIsManualEditing] = useState(false)
-  const verifiedAddressCache = useRef(new Map<string, boolean>())
+  const [pushTokenRegistered, setPushTokenRegistered] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const ensureFarcasterLinked = useCallback(async (addr: `0x${string}`) => {
-    const cache = verifiedAddressCache.current
-    if (cache.has(addr)) {
-      return cache.get(addr) ?? false
+    // Check unified cache first (localStorage with 2min TTL)
+    const cached = farcasterVerificationCache.get(addr)
+    if (cached !== null) {
+      return cached
     }
+    
     try {
       const res = await fetch(`/api/farcaster/fid?address=${encodeURIComponent(addr)}`, { cache: 'no-store' })
       if (!res.ok) {
@@ -38,14 +60,113 @@ export default function ProfilePage() {
       }
       const payload = (await res.json()) as { ok?: boolean; fid?: number }
       const linked = Boolean(payload?.fid)
-      cache.set(addr, linked)
+      
+      // Cache result in unified storage (persists across page reloads)
+      farcasterVerificationCache.set(addr, linked)
       return linked
     } catch (err) {
       console.error('Farcaster link validation failed:', err)
-      cache.delete(addr)
+      // Don't cache errors - allow retry
       throw err
     }
   }, [])
+
+    // Floating action button handlers
+  const handleQuickShare = useCallback(() => {
+    if (!profileData?.frameUrl) {
+      pushNotification({ tone: 'warning', title: 'No frame URL', description: 'Profile frame is not available yet.' })
+      return
+    }
+    const shareUrl = profileData.frameUrl
+    window.open(`https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(shareUrl)}`, '_blank')
+    pushNotification({ tone: 'success', title: 'Opening share', description: 'Redirecting to Warpcast composer...' })
+  }, [profileData?.frameUrl, pushNotification])
+
+  const handleQuickCopy = useCallback(() => {
+    if (!address) {
+      pushNotification({ tone: 'warning', title: 'No address', description: 'No wallet address to copy.' })
+      return
+    }
+    navigator.clipboard.writeText(address).then(
+      () => pushNotification({ tone: 'success', title: 'Copied!', description: 'Wallet address copied to clipboard.' }),
+      () => pushNotification({ tone: 'error', title: 'Copy failed', description: 'Could not copy address.' })
+    )
+  }, [address, pushNotification])
+
+  const handleQuickGM = useCallback(() => {
+    pushNotification({ 
+      tone: 'info', 
+      title: 'Send GM', 
+      description: 'Navigate to home page to send your daily GM!',
+      href: '/',
+      actionLabel: 'Go to Home'
+    })
+  }, [pushNotification])
+
+  const floatingActions = useMemo<FloatingAction[]>(() => [
+    { icon: '⚡', label: 'Send GM', onClick: handleQuickGM },
+    { icon: '📤', label: 'Share', onClick: handleQuickShare, disabled: !profileData?.frameUrl },
+    { icon: '📋', label: 'Copy', onClick: handleQuickCopy, disabled: !address },
+  ], [handleQuickGM, handleQuickShare, handleQuickCopy, profileData?.frameUrl, address])
+
+  const registerPushNotifications = useCallback(async () => {
+    if (!contextUser?.fid || !embeddedApp) {
+      console.warn('[Push] Not in miniapp context or missing FID')
+      return false
+    }
+
+    try {
+      // Get notification context from SDK
+      const context = await sdk.context
+      const notificationDetails = context?.client?.notificationDetails
+
+      if (!notificationDetails?.url || !notificationDetails?.token) {
+        console.warn('[Push] Missing notification details from SDK context')
+        pushNotification({
+          tone: 'warning',
+          category: 'system',
+          title: 'Notifications Unavailable',
+          description: 'Push notifications are not available in this context.',
+          duration: 5000,
+        })
+        return false
+      }
+
+      // Register token with backend
+      const success = await upsertNotificationToken({
+        fid: contextUser.fid,
+        token: notificationDetails.token,
+        notificationUrl: notificationDetails.url,
+        status: 'enabled',
+        eventType: 'profile_registration',
+        walletAddress: address ?? undefined,
+      })
+
+      if (success) {
+        setPushTokenRegistered(true)
+        pushNotification({
+          tone: 'success',
+          category: 'system',
+          title: 'Push Notifications Enabled',
+          description: 'You will receive notifications for important events.',
+          duration: 5000,
+        })
+        return true
+      } else {
+        throw new Error('Token registration failed')
+      }
+    } catch (error) {
+      console.error('[Push] Registration error:', error)
+      pushNotification({
+        tone: 'error',
+        category: 'system',
+        title: 'Push Registration Failed',
+        description: 'Unable to enable push notifications. Try again later.',
+        duration: 5000,
+      })
+      return false
+    }
+  }, [contextUser, embeddedApp, address, pushNotification])
 
   const selectAddress = useCallback(
     async (
@@ -64,12 +185,33 @@ export default function ProfilePage() {
             setProfileData(null)
             setError('This wallet is not linked to Farcaster. Choose a verified address.')
             setManualMessage('Wallet is not linked to Farcaster.')
+            pushNotification({
+              tone: 'warning',
+              category: 'system',
+              title: 'Not Linked',
+              description: 'This wallet is not connected to Farcaster.',
+              duration: 5000,
+            })
             return false
           }
+          pushNotification({
+            tone: 'success',
+            category: 'system',
+            title: 'Wallet Verified',
+            description: 'Farcaster link confirmed.',
+            duration: 2000,
+          })
         } catch {
           setProfileData(null)
           setError('Unable to verify Farcaster link. Try again in a moment.')
           setManualMessage('Verification failed—please retry.')
+          pushNotification({
+            tone: 'error',
+            category: 'system',
+            title: 'Verification Error',
+            description: 'Unable to verify Farcaster link. Try again.',
+            duration: 5000,
+          })
           return false
         }
       }
@@ -83,7 +225,7 @@ export default function ProfilePage() {
       setContextReady(true)
       return true
     },
-    [ensureFarcasterLinked],
+    [ensureFarcasterLinked, pushNotification],
   )
 
   useEffect(() => {
@@ -119,7 +261,8 @@ export default function ProfilePage() {
 
         const resolved = pickAddressFromSource(context) || pickAddressFromSource(userObj)
         if (resolved) {
-          verifiedAddressCache.current.set(resolved, true)
+          // Cache Farcaster-linked address
+          farcasterVerificationCache.set(resolved, true)
           await selectAddress(resolved, { requireLinked: false, resetManualMessage: true, pinAsContext: true })
         }
 
@@ -177,7 +320,8 @@ export default function ProfilePage() {
         }
         const resolved = pickAddressFromSource(merged)
         if (resolved) {
-          verifiedAddressCache.current.set(resolved, true)
+          // Cache Farcaster-linked address from fallback
+          farcasterVerificationCache.set(resolved, true)
           await selectAddress(resolved, { requireLinked: false, resetManualMessage: true, pinAsContext: true })
           setError(null)
         }
@@ -196,13 +340,20 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!contextReady) return
     if (address) return
+    
+    // Try wagmi wallet as fallback if not embedded miniapp
+    if (embeddedApp === false && isWagmiConnected && wagmiAddress) {
+      void selectAddress(wagmiAddress, { requireLinked: true, resetManualMessage: true })
+      return
+    }
+    
     if (embeddedApp === false) {
       if (error) setError(null)
       return
     }
     if (error) return
     setError('No connected wallet detected. Connect a wallet in Warpcast.')
-  }, [contextReady, address, error, embeddedApp])
+  }, [contextReady, address, error, embeddedApp, isWagmiConnected, wagmiAddress, selectAddress])
 
   const handleManualSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -311,19 +462,40 @@ export default function ProfilePage() {
           setProfileData(null)
           setError('This wallet no longer resolves to a Farcaster identity.')
           setManualMessage('Wallet is not currently linked to Farcaster.')
+          pushNotification({
+            tone: 'error',
+            category: 'system',
+            title: 'Profile Not Found',
+            description: 'This wallet is not linked to Farcaster.',
+            duration: 5000,
+          })
           return
         }
         setProfileData(overview)
+        pushNotification({
+          tone: 'success',
+          category: 'system',
+          title: 'Profile Loaded',
+          description: `Welcome back, ${overview.displayName || 'user'}!`,
+          duration: 3000,
+        })
       } catch (err) {
         if (signal?.aborted) return
         console.error('Profile load failed:', err)
         setError((err as Error)?.message || 'Failed to load profile data.')
         setProfileData(null)
+        pushNotification({
+          tone: 'error',
+          category: 'system',
+          title: 'Load Failed',
+          description: (err as Error)?.message || 'Unable to load profile data.',
+          duration: 5000,
+        })
       } finally {
         if (!signal?.aborted) setLoading(false)
       }
     },
-    [],
+    [pushNotification],
   )
 
   useEffect(() => {
@@ -350,7 +522,7 @@ export default function ProfilePage() {
           <div className="pixel-scanlines-overlay" />
         </div>
 
-        <main className={`container relative z-10 mx-auto ${compactLayout ? 'px-3 py-6 pb-14' : 'px-4 py-10 pb-24 sm:pb-16'}`}>
+        <main className={`container relative z-10 mx-auto ${compactLayout ? 'px-3 py-6 pb-[calc(56px+env(safe-area-inset-bottom,0px)+1rem)]' : 'px-4 py-10 pb-24 sm:pb-16'}`}>
           <section className={`mega-card${compactLayout ? ' mega-card--compact' : ''}`}>
             <div className="mega-card__shadow" aria-hidden />
             <div className="mega-card__glare" aria-hidden />
@@ -362,6 +534,14 @@ export default function ProfilePage() {
               </div>
             </div>
           </section>
+
+          {/* Floating Action Button (Mobile + Miniapp Only) */}
+          {isMobile && embeddedApp && address && (
+            <FloatingActionMenu
+              actions={floatingActions}
+              className="fixed bottom-[calc(56px+env(safe-area-inset-bottom,0px)+1rem)] right-4 z-50"
+            />
+          )}
         </main>
       </div>
     )
@@ -375,7 +555,27 @@ export default function ProfilePage() {
         <div className="pixel-scanlines-overlay" />
       </div>
 
-      <main className={`container relative z-10 mx-auto ${compactLayout ? 'px-3 py-6 pb-14' : 'px-4 py-10 pb-24 sm:pb-16'}`}>
+      <main className={`container relative z-10 mx-auto ${compactLayout ? 'px-3 py-6 pb-[calc(56px+env(safe-area-inset-bottom,0px)+1rem)]' : 'px-4 py-10 pb-24 sm:pb-16'}`}>
+        {/* Mobile Sticky Header */}
+        {isMobile && profileData && address && (
+          <ProfileStickyHeader
+            avatarUrl={profileData.farcasterUser?.pfpUrl}
+            displayName={profileData.username || profileData.displayName || 'Unknown'}
+            address={address}
+            totalPoints={profileData.totalPoints}
+            globalRank={profileData.globalRank ?? null}
+          />
+        )}
+
+        {/* Mobile Hero Stats */}
+        {isMobile && profileData && (
+          <ProfileHeroStats
+            totalPoints={profileData.totalPoints}
+            globalRank={profileData.globalRank ?? null}
+            streak={profileData.streak}
+          />
+        )}
+
         <section className={`mega-card${compactLayout ? ' mega-card--compact' : ''}`}>
           <div className="mega-card__shadow" aria-hidden />
           <div className="mega-card__glare" aria-hidden />
@@ -460,13 +660,30 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-6 flex justify-center sm:mt-8 lg:mt-10">
-              <div className="w-full max-w-[1080px]">
+              <div className="w-full max-w-[1080px] space-y-6">
+                {contextUser?.fid && embeddedApp && (
+                  <ProfileSettings
+                    fid={contextUser.fid}
+                    onPushRegistrationRequest={registerPushNotifications}
+                  />
+                )}
+                
+                <ProfileNotificationCenter />
+                
                 <ProfileStats
                   address={address ?? undefined}
                   data={profileData}
                   loading={loading}
                   error={error}
                 />
+                
+                {pushTokenRegistered && (
+                  <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-center">
+                    <p className="text-[12px] text-emerald-100">
+                      ✅ Push notifications active for this session
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
