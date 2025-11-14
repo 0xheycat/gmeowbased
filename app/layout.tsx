@@ -5,7 +5,6 @@ import './styles/quest-card.css'
 import './styles/mega-intro.css'
 import { MiniAppProvider } from './providers'
 import type { ReactNode } from 'react'
-import localFont from 'next/font/local'
 import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
 
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
@@ -77,18 +76,9 @@ export const metadata: Metadata = {
   },
 }
 
-const siteFont = localFont({
-  src: [
-    { path: './fonts/gmeow.woff2', weight: '400', style: 'normal' }, // preferred
-    { path: './fonts/gmeow.otf', weight: '400', style: 'normal' },   // fallback if no woff2
-  ],
-  variable: '--site-font',
-  display: 'swap',
-})
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={siteFont.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen pixel-page" style={{ color: 'var(--text-color)' }}>
         <MiniAppProvider>
           <GmeowLayout>{children}</GmeowLayout>
