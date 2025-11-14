@@ -8,9 +8,9 @@
     "ownerAddress": "0xB4F2fF92E8ccbbeAb7094cef5514A15aeBbbD11F"
   },
   "miniapp": {
-    "version": "1.1",
+    "version": "1",
     "name": "Gmeowbased Adventure",
-    "iconUrl": "https://gmeowhq.art/favicon.ico",
+    "iconUrl": "https://gmeowhq.art/icon.png",
     "homeUrl": "https://gmeowhq.art",
     "splashImageUrl": "https://gmeowhq.art/splash.png",
     "splashBackgroundColor": "#0B0A16",

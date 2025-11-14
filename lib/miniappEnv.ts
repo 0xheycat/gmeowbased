@@ -1,4 +1,4 @@
-const ALLOWED_SUFFIXES = ['farcaster.xyz', 'warpcast.com']
+const ALLOWED_SUFFIXES = ['farcaster.xyz', 'warpcast.com', 'base.dev']
 
 export function isEmbedded(): boolean {
   try {
@@ -87,10 +87,38 @@ function asEmbedTuple(arr?: string[]): EmbedTuple | undefined {
 export async function fireMiniappReady(): Promise<void> {
   // Call as early as possible on the client; gate to embedded + allowed referrer
   try {
-    if (!isEmbedded() || !isAllowedReferrer()) return
+    if (!isEmbedded()) {
+      console.log('[miniappEnv] Not embedded, skipping ready call')
+      return
+    }
+    
+    if (!isAllowedReferrer()) {
+      console.log('[miniappEnv] Referrer not allowed:', referrerHost())
+      return
+    }
+
+    console.log('[miniappEnv] Embedded in allowed referrer, loading SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
-    await sdk.actions.ready?.().catch(() => {})
-  } catch {
-    // ignore
+    
+    // Wait for context to be available
+    console.log('[miniappEnv] Waiting for SDK context...')
+    const context = await Promise.race([
+      sdk.context,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 3000))
+    ])
+    
+    console.log('[miniappEnv] SDK context ready:', context)
+    
+    // Call ready action
+    if (sdk.actions?.ready) {
+      console.log('[miniappEnv] Calling actions.ready()...')
+      await sdk.actions.ready()
+      console.log('[miniappEnv] ✅ actions.ready() completed successfully')
+    } else {
+      console.warn('[miniappEnv] ⚠️ actions.ready not available on SDK')
+    }
+  } catch (error) {
+    console.error('[miniappEnv] ❌ Error in fireMiniappReady:', error)
+    throw error
   }
 }
