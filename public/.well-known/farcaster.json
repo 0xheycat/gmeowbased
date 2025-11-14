@@ -7,34 +7,34 @@
   "baseBuilder": {
     "ownerAddress": "0xB4F2fF92E8ccbbeAb7094cef5514A15aeBbbD11F"
   },
-  "frame": {
-    "version": "1",
+  "miniapp": {
+    "version": "1.1",
     "name": "Gmeowbased Adventure",
-    "iconUrl": "https://gmeowhq.art/icon.png",
+    "iconUrl": "https://gmeowhq.art/favicon.ico",
     "homeUrl": "https://gmeowhq.art",
-    "imageUrl": "https://gmeowhq.art/image.png",
-    "buttonTitle": "✨ Enter Gmeow",
     "splashImageUrl": "https://gmeowhq.art/splash.png",
     "splashBackgroundColor": "#0B0A16",
-    "webhookUrl": "https://gmeowhq.art/api/webhook",
-    "subtitle": "Embark on the Gmeowbased",
-    "description": "Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink",
-    "screenshotUrls": [],
-    "primaryCategory": "games",
-    "tags": ["gm", "quests", "onchain", "adventure", "guild"],
+    "webhookUrl": "https://gmeowhq.art/api/neynar/webhook",
+    "subtitle": "Daily GM Quest Hub",
+    "description": "Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.",
+    "primaryCategory": "social",
+    "tags": ["gm", "streak", "base", "social", "daily"],
     "heroImageUrl": "https://gmeowhq.art/hero.png",
-    "tagline": "Adventure Awaits Daily",
+    "tagline": "Keep your GM streak alive",
     "ogTitle": "Gmeowbased Quest Game",
     "ogDescription": "Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.",
     "ogImageUrl": "https://gmeowhq.art/og-image.png",
     "noindex": false,
+    "canonicalDomain": "gmeowhq.art",
     "requiredChains": [
       "eip155:8453",
       "eip155:10",
-      "eip155:42220",
-      "eip155:57073",
-      "eip155:763373"
+      "eip155:42220"
     ],
-    "canonicalDomain": "gmeowhq.art"
+    "requiredCapabilities": [
+      "actions.ready",
+      "actions.composeCast",
+      "wallet.getEthereumProvider"
+    ]
   }
 }

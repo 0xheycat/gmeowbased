@@ -79,7 +79,7 @@ export async function GET() {
         iconUrl: toAbsoluteUrl('/favicon.ico', baseUrl),
         homeUrl: toAbsoluteUrl('/', baseUrl),
         splashImageUrl: toAbsoluteUrl('/splash.png', baseUrl),
-        splashBackgroundColor: '#FEF3E2',
+        splashBackgroundColor: '#0B0A16',
         webhookUrl: toAbsoluteUrl('/api/neynar/webhook', baseUrl),
         subtitle: 'Daily GM Quest Hub',
         description:
@@ -92,8 +92,9 @@ export async function GET() {
         ogDescription:
           'Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.',
         ogImageUrl: toAbsoluteUrl('/og-image.png', baseUrl),
+        noindex: false,
         canonicalDomain: baseUrl.hostname,
-        requiredChains: ['eip155:8453'],
+        requiredChains: ['eip155:8453', 'eip155:10', 'eip155:42220'],
         requiredCapabilities: [
           'actions.ready',
           'actions.composeCast',
