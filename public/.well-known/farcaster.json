@@ -1,31 +1,31 @@
 {
   "accountAssociation": {
-    "header": "PLACEHOLDER_HEADER_TO_BE_SIGNED",
-    "payload": "PLACEHOLDER_PAYLOAD_TO_BE_SIGNED",
-    "signature": "PLACEHOLDER_SIGNATURE_TO_BE_SIGNED"
+    "header": "eyJmaWQiOjE4MTM5LCJ0eXBlIjoiYXV0aCIsImtleSI6IjB4OGEzMDk0ZTQ0NTc3NTc5ZDZmNDFGNjIxNGE4NkMyNTBiN2RCREM0ZSJ9",
+    "payload": "eyJkb21haW4iOiJnbWVvd2hxLmFydCJ9",
+    "signature": "ma2xN3r5WlQtga5DzVlKnRmyRpKVswxrrDbS0FkEIXtdns/IyQKA1irzruuaOYVI3vw5jkhEUXOc6vzbDOKNFRs="
   },
   "baseBuilder": {
     "ownerAddress": "0xB4F2fF92E8ccbbeAb7094cef5514A15aeBbbD11F"
   },
-  "miniapp": {
+  "frame": {
     "version": "1",
-    "name": "Gmeow Adventure",
+    "name": "Gmeowbased Adventure",
     "iconUrl": "https://gmeowhq.art/icon.png",
     "homeUrl": "https://gmeowhq.art",
-    "imageUrl": "https://gmeowhq.art/og-image.png",
+    "imageUrl": "https://gmeowhq.art/image.png",
     "buttonTitle": "✨ Enter Gmeow",
     "splashImageUrl": "https://gmeowhq.art/splash.png",
     "splashBackgroundColor": "#0B0A16",
-    "webhookUrl": "https://gmeowhq.art/api/neynar/webhook",
-    "subtitle": "Embark on the Gmeow Adventure",
-    "description": "Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.",
+    "webhookUrl": "https://gmeowhq.art/api/webhook",
+    "subtitle": "Embark on the Gmeowbased",
+    "description": "Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink",
     "screenshotUrls": [],
     "primaryCategory": "games",
     "tags": ["gm", "quests", "onchain", "adventure", "guild"],
     "heroImageUrl": "https://gmeowhq.art/hero.png",
     "tagline": "Adventure Awaits Daily",
-    "ogTitle": "Gmeow Adventure — Multi-Chain Quest Game",
-    "ogDescription": "Begin your Gmeow Adventure! Conquer daily GM streaks, complete cross-chain quests, join guilds, and earn exclusive rewards in this Farcaster-native adventure.",
+    "ogTitle": "Gmeowbased Quest Game",
+    "ogDescription": "Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.",
     "ogImageUrl": "https://gmeowhq.art/og-image.png",
     "noindex": false,
     "requiredChains": [
