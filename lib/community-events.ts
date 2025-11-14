@@ -1,0 +1,346 @@
+// @edit-start 2025-02-14 — Community event aggregation helpers
+import { COMMUNITY_EVENT_TYPES, type CommunityEventSummary, type CommunityEventType } from '@/lib/community-event-types'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { normalizeAddress } from '@/lib/profile-data'
+import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
+import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
+
+const RANK_EVENT_TABLE = 'gmeow_rank_events'
+const DEFAULT_LIMIT = 40
+const MAX_LIMIT = 120
+
+export type FetchCommunityEventsOptions = {
+  limit?: number
+  since?: string | null
+  types?: CommunityEventType[] | null
+}
+
+export type FetchCommunityEventsResult = {
+  events: CommunityEventSummary[]
+  fetchedAt: string
+  nextCursor: string | null
+  meta: {
+    limit: number
+    requestedTypes: CommunityEventType[]
+    appliedTypes: CommunityEventType[]
+    since: string | null
+    supabaseConfigured: boolean
+  }
+}
+
+type RankEventRow = {
+  id?: string
+  created_at?: string
+  event_type?: string
+  chain?: string | null
+  wallet_address?: string | null
+  fid?: number | string | null
+  quest_id?: number | string | null
+  delta?: number | string | null
+  total_points?: number | string | null
+  previous_points?: number | string | null
+  level?: number | string | null
+  tier_name?: string | null
+  tier_percent?: number | string | null
+  metadata?: Record<string, unknown> | null
+}
+
+function clampLimit(value: number | undefined, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback
+  const numeric = value as number
+  if (numeric <= 0) return fallback
+  if (numeric > MAX_LIMIT) return MAX_LIMIT
+  return Math.floor(numeric)
+}
+
+function coerceNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim().length) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+function coerceChain(value: unknown): ChainKey | null {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toLowerCase()
+  return (CHAIN_KEYS as readonly string[]).includes(normalized)
+    ? (normalized as ChainKey)
+    : null
+}
+
+function sanitizeEventType(value: unknown): CommunityEventType | null {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toLowerCase()
+  return (COMMUNITY_EVENT_TYPES as readonly string[]).includes(normalized)
+    ? (normalized as CommunityEventType)
+    : null
+}
+
+function computeEmphasis(delta: number | null): 'positive' | 'neutral' | 'negative' {
+  if (delta == null || !Number.isFinite(delta)) return 'neutral'
+  if (delta > 0) return 'positive'
+  if (delta < 0) return 'negative'
+  return 'neutral'
+}
+
+function formatActorLabel(actor: { username: string | null; displayName: string | null; fid: number | null; wallet: string | null }): string {
+  if (actor.displayName) return actor.displayName
+  if (actor.username) return `@${actor.username}`
+  if (actor.fid) return `pilot #${actor.fid}`
+  if (actor.wallet) return `${actor.wallet.slice(0, 6)}…${actor.wallet.slice(-4)}`
+  return 'A pilot'
+}
+
+function toTwoDecimals(value: number | null): number | null {
+  if (value == null || !Number.isFinite(value)) return null
+  return Math.round(value * 100) / 100
+}
+
+function describeEvent(row: RankEventRow, actorLabel: string): { headline: string; context: string | null } {
+  const delta = coerceNumber(row.delta)
+  const total = coerceNumber(row.total_points)
+  const questId = coerceNumber(row.quest_id)
+  const chain = typeof row.chain === 'string' ? row.chain.toUpperCase() : null
+  const level = coerceNumber(row.level)
+  const tierName = typeof row.tier_name === 'string' ? row.tier_name : null
+  const eventType = sanitizeEventType(row.event_type)
+
+  switch (eventType) {
+    case 'gm':
+      return {
+        headline: `${actorLabel} logged a GM streak`,
+        context: level != null && tierName
+          ? `Level ${level} · ${tierName}${delta ? ` · +${delta} pts` : ''}`
+          : delta
+            ? `Streak synced · +${delta} pts`
+            : 'Streak synced',
+      }
+    case 'quest-verify':
+      return {
+        headline: questId != null
+          ? `${actorLabel} completed Quest #${questId}${chain ? ` on ${chain}` : ''}`
+          : `${actorLabel} verified a quest${chain ? ` on ${chain}` : ''}`,
+        context: delta != null && total != null
+          ? `+${delta} pts · ${total.toLocaleString()} pts total`
+          : delta != null
+            ? `+${delta} pts`
+            : total != null
+              ? `${total.toLocaleString()} pts total`
+              : null,
+      }
+    case 'quest-create':
+      return {
+        headline: `${actorLabel} launched a new quest${chain ? ` on ${chain}` : ''}`,
+        context: questId != null ? `Quest ID ${questId}` : null,
+      }
+    case 'tip':
+      return {
+        headline: `${actorLabel} received a tip${chain ? ` on ${chain}` : ''}`,
+        context: delta != null ? `+${delta} pts from tips` : null,
+      }
+    case 'stats-query':
+      return {
+        headline: `${actorLabel} requested a ledger sync`,
+        context: total != null && tierName
+          ? `${tierName} · ${total.toLocaleString()} pts`
+          : total != null
+            ? `${total.toLocaleString()} pts`
+            : null,
+      }
+    case 'stake':
+      return {
+        headline: `${actorLabel} staked into the treasury${chain ? ` (${chain})` : ''}`,
+        context: delta != null ? `Locked ${delta.toLocaleString()} pts` : null,
+      }
+    case 'unstake':
+      return {
+        headline: `${actorLabel} withdrew treasury stake${chain ? ` (${chain})` : ''}`,
+        context: delta != null ? `${delta.toLocaleString()} pts withdrawn` : null,
+      }
+    default:
+      return {
+        headline: `${actorLabel} triggered ${row.event_type || 'an event'}`,
+        context: delta != null ? `${delta.toLocaleString()} pts` : null,
+      }
+  }
+}
+
+function deriveCta(row: RankEventRow): { label: string; href: string } | null {
+  const eventType = sanitizeEventType(row.event_type)
+  const questId = coerceNumber(row.quest_id)
+  const chain = typeof row.chain === 'string' ? row.chain.toLowerCase() : null
+
+  if (eventType === 'quest-verify' || eventType === 'quest-create') {
+    if (questId != null) {
+      return { label: 'Review quest', href: `/Quest/leaderboard${chain ? `/${chain}` : ''}?quest=${questId}` }
+    }
+    return { label: 'Open quests', href: '/Quest' }
+  }
+
+  if (eventType === 'gm') {
+    return { label: 'View streaks', href: '/Quest' }
+  }
+
+  if (eventType === 'tip') {
+    return { label: 'Leaderboard', href: '/leaderboard' }
+  }
+
+  if (eventType === 'stats-query') {
+    return { label: 'Open dashboard', href: '/Dashboard' }
+  }
+
+  return null
+}
+
+function buildActorCacheEntry(user: FarcasterUser | null, fid: number | null, wallet: `0x${string}` | string | null) {
+  return {
+    fid,
+    username: user?.username ?? null,
+    displayName: user?.displayName ?? null,
+    walletAddress: wallet ?? user?.custodyAddress ?? null,
+  }
+}
+
+export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOptions = {}): Promise<FetchCommunityEventsResult> {
+  const supabaseConfigured = isSupabaseConfigured()
+  const nowIso = new Date().toISOString()
+  const requestedTypes = Array.isArray(options.types) && options.types.length
+    ? options.types
+    : ([] as CommunityEventType[])
+
+  if (!supabaseConfigured) {
+    return {
+      events: [],
+      fetchedAt: nowIso,
+      nextCursor: null,
+      meta: {
+        limit: DEFAULT_LIMIT,
+        requestedTypes,
+        appliedTypes: [],
+        since: options.since ?? null,
+        supabaseConfigured,
+      },
+    }
+  }
+
+  const client = getSupabaseServerClient()
+  if (!client) {
+    return {
+      events: [],
+      fetchedAt: nowIso,
+      nextCursor: null,
+      meta: {
+        limit: DEFAULT_LIMIT,
+        requestedTypes,
+        appliedTypes: [],
+        since: options.since ?? null,
+        supabaseConfigured,
+      },
+    }
+  }
+
+  const appliedTypes = (requestedTypes.length ? requestedTypes : COMMUNITY_EVENT_TYPES).filter((type): type is CommunityEventType => COMMUNITY_EVENT_TYPES.includes(type))
+  const limit = clampLimit(options.limit, DEFAULT_LIMIT)
+  const since = options.since && options.since.trim().length ? options.since : null
+
+  let query = client
+    .from(RANK_EVENT_TABLE)
+    .select('id,created_at,event_type,chain,wallet_address,fid,quest_id,delta,total_points,previous_points,level,tier_name,tier_percent,metadata')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (appliedTypes.length) {
+    query = query.in('event_type', appliedTypes as unknown as string[])
+  }
+
+  if (since) {
+    query = query.gt('created_at', since)
+  }
+
+  const { data, error } = await query
+  if (error) {
+    throw new Error(`[community-events] Supabase query failed: ${error.message}`)
+  }
+
+  const rows: RankEventRow[] = Array.isArray(data) ? (data as RankEventRow[]) : []
+  const fidSet = new Set<number>()
+
+  for (const row of rows) {
+    const fid = coerceNumber(row.fid)
+    if (fid != null && fid > 0) fidSet.add(fid)
+  }
+
+  const actorMap = new Map<number, ReturnType<typeof buildActorCacheEntry>>()
+
+  await Promise.all(
+    Array.from(fidSet).map(async (fid) => {
+      try {
+        const user = await fetchUserByFid(fid)
+        const entry = buildActorCacheEntry(user, fid, null)
+        actorMap.set(fid, entry)
+      } catch (err) {
+        console.warn('[community-events] Failed to resolve Farcaster user', fid, (err as Error)?.message || err)
+        actorMap.set(fid, buildActorCacheEntry(null, fid, null))
+      }
+    }),
+  )
+
+  const events: CommunityEventSummary[] = rows.map((row) => {
+    const fid = coerceNumber(row.fid)
+    const normalizedWallet = normalizeAddress(row.wallet_address) ?? null
+    const actor = fid != null && fid > 0
+      ? actorMap.get(fid) ?? buildActorCacheEntry(null, fid, normalizedWallet)
+      : buildActorCacheEntry(null, null, normalizedWallet)
+
+    const actorLabel = formatActorLabel({
+      username: actor.username,
+      displayName: actor.displayName,
+      fid: actor.fid,
+      wallet: actor.walletAddress,
+    })
+
+    const { headline, context } = describeEvent(row, actorLabel)
+    const createdAtIso = row.created_at ? new Date(row.created_at).toISOString() : nowIso
+    const cursor = row.id ? `${createdAtIso}#${row.id}` : `${createdAtIso}#${Math.random().toString(36).slice(2, 8)}`
+    const delta = coerceNumber(row.delta)
+
+    return {
+      id: row.id || cursor,
+      eventType: sanitizeEventType(row.event_type) ?? 'gm',
+      headline,
+      context,
+      emphasis: computeEmphasis(delta),
+      createdAt: createdAtIso,
+      cursor,
+      chain: coerceChain(row.chain),
+      questId: coerceNumber(row.quest_id),
+      delta,
+      totalPoints: coerceNumber(row.total_points),
+      previousTotal: coerceNumber(row.previous_points),
+      level: coerceNumber(row.level),
+      tierName: typeof row.tier_name === 'string' ? row.tier_name : null,
+      tierPercent: toTwoDecimals(coerceNumber(row.tier_percent)),
+      actor,
+      metadata: row.metadata ?? null,
+      cta: deriveCta(row),
+    }
+  })
+
+  const nextCursor = events.length ? events[0]?.cursor ?? null : since
+
+  return {
+    events,
+    fetchedAt: nowIso,
+    nextCursor,
+    meta: {
+      limit,
+      requestedTypes,
+      appliedTypes,
+      since,
+      supabaseConfigured,
+    },
+  }
+}
+// @edit-end

@@ -1,0 +1,40 @@
+{
+  "accountAssociation": {
+    "header": "PLACEHOLDER_HEADER_TO_BE_SIGNED",
+    "payload": "PLACEHOLDER_PAYLOAD_TO_BE_SIGNED",
+    "signature": "PLACEHOLDER_SIGNATURE_TO_BE_SIGNED"
+  },
+  "baseBuilder": {
+    "ownerAddress": "0xB4F2fF92E8ccbbeAb7094cef5514A15aeBbbD11F"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Gmeow Adventure",
+    "iconUrl": "https://gmeowhq.art/icon.png",
+    "homeUrl": "https://gmeowhq.art",
+    "imageUrl": "https://gmeowhq.art/og-image.png",
+    "buttonTitle": "✨ Enter Gmeow",
+    "splashImageUrl": "https://gmeowhq.art/splash.png",
+    "splashBackgroundColor": "#0B0A16",
+    "webhookUrl": "https://gmeowhq.art/api/neynar/webhook",
+    "subtitle": "Embark on the Gmeow Adventure",
+    "description": "Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.",
+    "screenshotUrls": [],
+    "primaryCategory": "games",
+    "tags": ["gm", "quests", "onchain", "adventure", "guild"],
+    "heroImageUrl": "https://gmeowhq.art/hero.png",
+    "tagline": "Adventure Awaits Daily",
+    "ogTitle": "Gmeow Adventure — Multi-Chain Quest Game",
+    "ogDescription": "Begin your Gmeow Adventure! Conquer daily GM streaks, complete cross-chain quests, join guilds, and earn exclusive rewards in this Farcaster-native adventure.",
+    "ogImageUrl": "https://gmeowhq.art/og-image.png",
+    "noindex": false,
+    "requiredChains": [
+      "eip155:8453",
+      "eip155:10",
+      "eip155:42220",
+      "eip155:57073",
+      "eip155:763373"
+    ],
+    "canonicalDomain": "gmeowhq.art"
+  }
+}

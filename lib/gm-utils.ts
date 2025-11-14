@@ -1,0 +1,799 @@
+/* src/lib/gm-utils.ts
+   Full-feature gm-utils for GmeowMultichain (ABI-confirmed)
+   - Requires viem vX (encodeFunctionData, createPublicClient, http, erc20Abi)
+   - ABI: '@/lib/abi/gmeowmultichain.json'
+   - Exported builders return objects suitable for viem/writeContract or wagmi/writeContract
+*/
+
+import {
+  encodeFunctionData,
+  parseEther,
+  createPublicClient,
+  http,
+  erc20Abi,
+  erc721Abi,
+  type Abi,
+  type AbiFunction,
+  type Address,
+} from 'viem'
+
+// ABI import (confirmed)
+import GM_ABI_JSON from '@/lib/abi/gmeowmultichain.json'
+
+// -------------------------------
+// Chain registry / configuration
+// -------------------------------
+export type ChainKey = 'base' | 'unichain' | 'celo' | 'ink' | 'op'
+
+export const CHAIN_IDS: Record<ChainKey, number> = {
+  base: 8453,
+  unichain: 130,
+  celo: 42220,
+  ink: 57073,
+  op: 10,
+}
+
+export const CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
+  base: (process.env.NEXT_PUBLIC_GM_BASE_ADDRESS as `0x${string}`) || '0x3ad420B8C2Be19ff8EBAdB484Ed839Ae9254bf2F',
+  unichain: (process.env.NEXT_PUBLIC_GM_UNICHAIN_ADDRESS as `0x${string}`) || '0xD8b4190c87d86E28f6B583984cf0C89FCf9C2a0f',
+  celo: (process.env.NEXT_PUBLIC_GM_CELO_ADDRESS as `0x${string}`) || '0xa68BfB4BB6F7D612182A3274E7C555B7b0b27a52',
+  ink: (process.env.NEXT_PUBLIC_GM_INK_ADDRESS as `0x${string}`) || '0x6081a70c2F33329E49cD2aC673bF1ae838617d26',
+  op: (process.env.NEXT_PUBLIC_GM_OP_ADDRESS as `0x${string}`) || '0xF670d5387DF68f258C4D5aEBE67924D85e3C6db6',
+}
+
+export const GM_CONTRACT_ADDRESS = CONTRACT_ADDRESSES.base
+export const getContractAddress = (chain: ChainKey = 'base') => CONTRACT_ADDRESSES[chain]
+
+export const GM_CONTRACT_ABI = GM_ABI_JSON as unknown as Abi
+export const ERC721_ABI = erc721Abi as unknown as Abi
+
+const CHAIN_KEY_SET = new Set<ChainKey>(Object.keys(CONTRACT_ADDRESSES) as ChainKey[])
+const CHAIN_ID_LOOKUP = new Map<number, ChainKey>(
+  Object.entries(CHAIN_IDS).map(([key, value]) => [value, key as ChainKey]),
+)
+
+const CHAIN_ALIAS_LOOKUP: Record<string, ChainKey> = {
+  base: 'base',
+  'base-mainnet': 'base',
+  'coinbase-base': 'base',
+  unichain: 'unichain',
+  uni: 'unichain',
+  celo: 'celo',
+  'celo-mainnet': 'celo',
+  ink: 'ink',
+  'ink-mainnet': 'ink',
+  op: 'op',
+  optimism: 'op',
+  'optimism-mainnet': 'op',
+}
+
+const HEX_ID_REGEX = /^0x[0-9a-f]+$/i
+
+const toNumericChainId = (value: string): number | null => {
+  if (!value) return null
+  if (/^\d+$/.test(value)) {
+    const num = Number.parseInt(value, 10)
+    return Number.isFinite(num) ? num : null
+  }
+  if (HEX_ID_REGEX.test(value)) {
+    const num = Number.parseInt(value, 16)
+    return Number.isFinite(num) ? num : null
+  }
+  return null
+}
+
+export function normalizeChainKey(input: unknown): ChainKey | null {
+  if (typeof input === 'string') {
+    const trimmed = input.trim()
+    if (!trimmed) return null
+    const lower = trimmed.toLowerCase()
+    if (CHAIN_KEY_SET.has(lower as ChainKey)) return lower as ChainKey
+    const alias = CHAIN_ALIAS_LOOKUP[lower]
+    if (alias) return alias
+    const numId = toNumericChainId(trimmed)
+    if (numId != null) {
+      const mapped = CHAIN_ID_LOOKUP.get(numId)
+      if (mapped) return mapped
+    }
+    return null
+  }
+  if (typeof input === 'number' && Number.isFinite(input)) {
+    const mapped = CHAIN_ID_LOOKUP.get(Math.trunc(input))
+    return mapped ?? null
+  }
+  if (typeof input === 'bigint') {
+    const mapped = CHAIN_ID_LOOKUP.get(Number(input))
+    return mapped ?? null
+  }
+  return null
+}
+
+export function isChainKey(value: unknown): value is ChainKey {
+  return normalizeChainKey(value) != null
+}
+
+export function assertChainKey(value: unknown, fallback?: ChainKey): ChainKey {
+  const normalized = normalizeChainKey(value)
+  if (normalized) return normalized
+  if (fallback) return fallback
+  throw new Error(`Unknown chain key: ${String(value)}`)
+}
+
+const ABI_FUNCTION_NAMES = new Set(
+  (GM_CONTRACT_ABI as Abi)
+    .filter((item): item is AbiFunction => item?.type === 'function' && typeof item.name === 'string')
+    .map(item => item.name),
+)
+
+const missingFunctionWarnings = new Set<string>()
+
+function assertFunctionInAbi(functionName: string) {
+  if (ABI_FUNCTION_NAMES.has(functionName)) return true
+  if (!missingFunctionWarnings.has(functionName)) {
+    missingFunctionWarnings.add(functionName)
+    console.warn(`[gm-utils] Function "${functionName}" not present in loaded contract ABI.`)
+  }
+  return false
+}
+
+export const gmContractHasFunction = (functionName: string): boolean => ABI_FUNCTION_NAMES.has(functionName)
+
+// -------------------------------
+// Utilities & types
+// -------------------------------
+type Tx = { to: `0x${string}`; value: bigint; data: `0x${string}` }
+
+type ContractCall = {
+  address: `0x${string}`
+  abi: Abi
+  functionName: string
+  args: readonly unknown[]
+}
+
+const toBigInt = (value: bigint | number | string): bigint => (typeof value === 'bigint' ? value : BigInt(value))
+
+function buildTx(functionName: string, args: readonly unknown[], chain: ChainKey = 'base'): Tx {
+  assertFunctionInAbi(functionName)
+  const data = encodeFunctionData({
+    abi: GM_CONTRACT_ABI,
+    functionName: functionName as any,
+    args: args as any,
+  }) as `0x${string}`
+  return { to: getContractAddress(chain), value: parseEther('0'), data }
+}
+
+function buildTxFromCall(call: ContractCall): Tx {
+  assertFunctionInAbi(call.functionName)
+  const data = encodeFunctionData({
+    abi: call.abi,
+    functionName: call.functionName as any,
+    args: call.args as any,
+  }) as `0x${string}`
+  return { to: call.address, value: parseEther('0'), data }
+}
+
+// Helper to create the "viem/wagmi"-style call object (address, abi, functionName, args)
+function buildCallObject(functionName: string, args: readonly unknown[], chain: ChainKey = 'base') {
+  assertFunctionInAbi(functionName)
+  return {
+    address: getContractAddress(chain),
+    abi: GM_CONTRACT_ABI,
+    functionName: functionName as any,
+    args,
+  }
+}
+
+// Small address guard
+export function isAddress(a: unknown): a is Address {
+  return typeof a === 'string' && /^0x[a-fA-F0-9]{40}$/.test(a)
+}
+
+// -------------------------------
+// Basic / daily helpers (sendGM)
+// -------------------------------
+export const createSendGMTx = (chain: ChainKey = 'base') =>
+  buildCallObject('sendGM', [], chain)
+
+export const createGMTransaction = (chain: ChainKey = 'base'): Tx =>
+  buildTx('sendGM', [], chain)
+
+export const createGMUniTransaction = (): Tx => createGMTransaction('unichain')
+export const createGMCeloTransaction = (): Tx => createGMTransaction('celo')
+export const createGMInkTransaction = (): Tx => createGMTransaction('ink')
+export const createGMOpTransaction = (): Tx => createGMTransaction('op')
+
+// -------------------------------
+// QUESTS - creation, helpers & completions
+// -------------------------------
+
+/*
+  addQuest (points-only)
+    args: (name, uint8 questType, uint256 target, uint256 rewardPointsPerUser,
+           uint256 maxCompletions, uint256 expiresAt, string meta)
+*/
+export const createAddQuestTx = (
+  name: string,
+  questType: number,
+  target: bigint | number | string,
+  rewardPointsPerUser: bigint | number | string,
+  maxCompletions: bigint | number | string,
+  expiresAt: bigint | number | string,
+  meta: string,
+  chain: ChainKey = 'base',
+) =>
+  buildCallObject(
+    'addQuest',
+    [name, questType, toBigInt(target), toBigInt(rewardPointsPerUser), toBigInt(maxCompletions), toBigInt(expiresAt), meta],
+    chain,
+  )
+
+export const createAddQuestTransaction = (
+  name: string,
+  questType: number,
+  target: bigint | number | string,
+  reward: bigint | number | string,
+  maxCompletions: bigint | number | string,
+  expiresAt: bigint | number | string,
+  meta: string,
+  chain: ChainKey = 'base',
+): Tx => buildTxFromCall(createAddQuestTx(name, questType, target, reward, maxCompletions, expiresAt, meta, chain))
+
+/*
+  addQuestWithERC20 (token-backed quest)
+    args: (name, uint8 questType, uint256 target, uint256 rewardPointsPerUser,
+           uint256 maxCompletions, uint256 expiresAt, string meta,
+           address rewardToken, uint256 rewardTokenPerUser)
+*/
+export const createAddQuestWithERC20Tx = (
+  name: string,
+  questType: number,
+  target: bigint | number | string,
+  rewardPointsPerUser: bigint | number | string,
+  maxCompletions: bigint | number | string,
+  expiresAt: bigint | number | string,
+  meta: string,
+  rewardToken: `0x${string}`,
+  rewardTokenPerUser: bigint | number | string,
+  chain: ChainKey = 'base',
+) => buildCallObject('addQuestWithERC20', [name, questType, BigInt(target), BigInt(rewardPointsPerUser), BigInt(maxCompletions), BigInt(expiresAt), meta, rewardToken, BigInt(rewardTokenPerUser)], chain)
+
+export const createAddQuestWithERC20Transaction = (
+  name: string,
+  questType: number,
+  target: bigint | number | string,
+  rewardPointsPerUser: bigint | number | string,
+  maxCompletions: bigint | number | string,
+  expiresAt: bigint | number | string,
+  meta: string,
+  rewardToken: `0x${string}`,
+  rewardTokenPerUser: bigint | number | string,
+  chain: ChainKey = 'base',
+): Tx =>
+  buildTxFromCall(
+    createAddQuestWithERC20Tx(
+      name,
+      questType,
+      target,
+      rewardPointsPerUser,
+      maxCompletions,
+      expiresAt,
+      meta,
+      rewardToken,
+      rewardTokenPerUser,
+      chain,
+    ),
+  )
+
+/*
+  completeQuestWithSig
+    args: (questId, user, fid, action(uint8), deadline, nonce, sig)
+*/
+export const createCompleteQuestWithSigTx = (
+  questId: bigint | number | string,
+  user: `0x${string}`,
+  fid: bigint | number | string,
+  action: number,
+  deadline: bigint | number | string,
+  nonce: bigint | number | string,
+  sig: `0x${string}`,
+  chain: ChainKey = 'base',
+) => buildCallObject('completeQuestWithSig', [BigInt(questId), user, BigInt(fid), action, BigInt(deadline), BigInt(nonce), sig], chain)
+
+export const createCompleteQuestTransaction = (
+  questId: bigint | number | string,
+  user: `0x${string}` | string,
+  fid: bigint | number | string,
+  action: number,
+  deadline: bigint | number | string,
+  nonce: bigint | number | string,
+  sig: `0x${string}` | string,
+  chain: ChainKey = 'base',
+): Tx =>
+  buildTxFromCall(createCompleteQuestWithSigTx(questId, user as `0x${string}`, fid, action, deadline, nonce, sig as `0x${string}`, chain))
+
+// closeQuest, batchRefund, getters
+export const createCloseQuestTx = (questId: bigint | number | string, chain: ChainKey = 'base') =>
+  buildCallObject('closeQuest', [BigInt(questId)], chain)
+
+export const createBatchRefundQuestsTx = (questIds: (bigint|number|string)[], chain: ChainKey = 'base') =>
+  buildCallObject('batchRefundQuests', [questIds.map(id => toBigInt(id))], chain)
+
+export const createGetQuestCall = (questId: bigint | number | string, chain: ChainKey = 'base') =>
+  buildCallObject('getQuest', [BigInt(questId)], chain)
+
+export const createGetActiveQuestsCall = (chain: ChainKey = 'base') =>
+  buildCallObject('getActiveQuests', [], chain)
+
+// -------------------------------
+// Referral system TX builders
+// -------------------------------
+export const createRegisterReferralCodeTx = (code: string, chain: ChainKey = 'base') =>
+  buildCallObject('registerReferralCode', [code], chain)
+
+export const createSetReferrerTx = (code: string, chain: ChainKey = 'base') =>
+  buildCallObject('setReferrer', [code], chain)
+
+export const createSetFarcasterFidTx = (fid: bigint | number | string, chain: ChainKey = 'base') =>
+  buildCallObject('setFarcasterFid', [toBigInt(fid)], chain)
+
+// admin setters for referral
+// -------------------------------
+// Guild system TX builders
+// -------------------------------
+export const createGuildTx = (name: string, chain: ChainKey = 'base') =>
+  buildCallObject('createGuild', [name], chain)
+
+export const createJoinGuildTx = (guildId: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('joinGuild', [BigInt(guildId)], chain)
+
+export const createLeaveGuildTx = (chain: ChainKey = 'base') =>
+  buildCallObject('leaveGuild', [], chain)
+
+export const createDepositGuildPointsTx = (guildId: bigint|number|string, points: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('depositGuildPoints', [toBigInt(guildId), toBigInt(points)], chain)
+
+export const createClaimGuildRewardTx = (guildId: bigint|number|string, points: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('claimGuildReward', [toBigInt(guildId), toBigInt(points)], chain)
+
+export const createGuildQuestTx = (guildId: bigint|number|string, name: string, rewardPoints: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('createGuildQuest', [toBigInt(guildId), name, toBigInt(rewardPoints)], chain)
+
+export const createCompleteGuildQuestTx = (guildQuestId: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('completeGuildQuest', [toBigInt(guildQuestId)], chain)
+
+// -------------------------------
+// Points / tipping / badges / staking builders
+// -------------------------------
+export const createTipUserTx = (to: `0x${string}`, points: bigint|number|string, recipientFid: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('tipUser', [to, toBigInt(points), toBigInt(recipientFid)], chain)
+
+export const createMintBadgeFromPointsTx = (pointsToBurn: bigint|number|string, badgeType: string, chain: ChainKey = 'base') =>
+  buildCallObject('mintBadgeFromPoints', [toBigInt(pointsToBurn), badgeType], chain)
+
+export const createStakeForBadgeTx = (points: bigint|number|string, badgeId: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('stakeForBadge', [toBigInt(points), toBigInt(badgeId)], chain)
+
+export const createUnstakeForBadgeTx = (points: bigint|number|string, badgeId: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('unstakeForBadge', [toBigInt(points), toBigInt(badgeId)], chain)
+
+// getUserStats, tokenEscrowOf query wrappers
+export const createGetUserStatsCall = (user: `0x${string}`, chain: ChainKey = 'base') =>
+  buildCallObject('getUserStats', [user], chain)
+
+export const createTokenEscrowOfCall = (token: `0x${string}`, chain: ChainKey = 'base') =>
+  buildCallObject('tokenEscrowOf', [token], chain)
+
+// -------------------------------
+// Admin / governance tx builders (owner-only)
+// -------------------------------
+export const createSetOracleSignerTx = (newSigner: `0x${string}`, chain: ChainKey = 'base') =>
+  buildCallObject('setOracleSigner', [newSigner], chain)
+
+export const createSetPowerBadgeForFidTx = (fid: bigint|number|string, val: boolean, chain: ChainKey = 'base') =>
+  buildCallObject('setPowerBadgeForFid', [BigInt(fid), val], chain)
+
+export const createSetTokenWhitelistEnabledTx = (enabled: boolean, chain: ChainKey = 'base') =>
+  buildCallObject('setTokenWhitelistEnabled', [enabled], chain)
+
+export const createAddTokenToWhitelistTx = (token: `0x${string}`, allowed: boolean, chain: ChainKey = 'base') =>
+  buildCallObject('addTokenToWhitelist', [token, allowed], chain)
+
+export const createWithdrawContractReserveTx = (to: `0x${string}`, amount: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('withdrawContractReserve', [to, toBigInt(amount)], chain)
+
+export const createEmergencyWithdrawTokenTx = (token: `0x${string}`, to: `0x${string}`, amount: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('emergencyWithdrawToken', [token, to, toBigInt(amount)], chain)
+
+export const createPauseTx = (chain: ChainKey = 'base') => buildCallObject('pause', [], chain)
+export const createUnpauseTx = (chain: ChainKey = 'base') => buildCallObject('unpause', [], chain)
+
+// GM configuration helpers
+export const createSetGMConfigTx = (reward: bigint|number|string, cooldown: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('setGMConfig', [toBigInt(reward), toBigInt(cooldown)], chain)
+
+export const createSetGMBonusTiersTx = (
+  bonus7: number | string | bigint,
+  bonus30: number | string | bigint,
+  bonus100: number | string | bigint,
+  chain: ChainKey = 'base',
+) => buildCallObject('setGMBonusTiers', [Number(bonus7), Number(bonus30), Number(bonus100)], chain)
+
+export const createDepositToTx = (to: `0x${string}`, amount: bigint|number|string, chain: ChainKey = 'base') =>
+  buildCallObject('depositTo', [to, toBigInt(amount)], chain)
+
+// -------------------------------
+// ERC20 helpers (client-side checks)
+// -------------------------------
+/**
+ * checkTokenAllowanceAndBalance
+ * - token: token address
+ * - owner: wallet address to check
+ * - spender: spender (contract address)
+ * - rpcUrl?: optional RPC URL to create a public client
+ *
+ * returns { balance, allowance, decimals, symbol }
+ */
+export async function checkTokenAllowanceAndBalance(
+  token: `0x${string}`,
+  owner: `0x${string}`,
+  spender: `0x${string}`,
+  rpcUrl?: string,
+) {
+  const client = createPublicClient({
+    transport: http(rpcUrl || (process.env.NEXT_PUBLIC_RPC_BASE as string) || ''),
+  })
+
+  const [balance, allowance, decimals, symbol] = await Promise.all([
+    client.readContract({ address: token, abi: erc20Abi, functionName: 'balanceOf', args: [owner] }).catch(() => 0n),
+    client.readContract({ address: token, abi: erc20Abi, functionName: 'allowance', args: [owner, spender] }).catch(() => 0n),
+    client.readContract({ address: token, abi: erc20Abi, functionName: 'decimals' }).catch(() => 18),
+    client.readContract({ address: token, abi: erc20Abi, functionName: 'symbol' }).catch(() => ''),
+  ])
+
+  return { balance, allowance, decimals: Number(decimals), symbol }
+}
+
+export const createApproveERC20Tx = (token: `0x${string}`, spender: `0x${string}`, amount: bigint|number|string) =>
+  ({
+    address: token,
+    abi: erc20Abi,
+    functionName: 'approve' as const,
+    args: [spender, BigInt(amount)] as const, // tuple for wagmi types
+  })
+
+// -------------------------------
+// Time & formatting helpers (kept)
+// -------------------------------
+export const getTodayDateString = (): string => new Date().toISOString().split('T')[0]
+
+export const hasGMToday = (lastGM?: string | number | Date | null): boolean => {
+  if (!lastGM) return false
+  const today = getTodayDateString()
+  if (typeof lastGM === 'string') {
+    const trimmed = lastGM.trim()
+    if (!trimmed) return false
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed === today
+    const numeric = Number(trimmed)
+    if (Number.isFinite(numeric)) {
+      const ts = numeric < 1e12 ? numeric * 1000 : numeric
+      return new Date(ts).toISOString().split('T')[0] === today
+    }
+    const parsed = Date.parse(trimmed)
+    return Number.isNaN(parsed) ? false : new Date(parsed).toISOString().split('T')[0] === today
+  }
+  if (typeof lastGM === 'number') {
+    const ts = lastGM < 1e12 ? lastGM * 1000 : lastGM
+    return new Date(ts).toISOString().split('T')[0] === today
+  }
+  if (lastGM instanceof Date) {
+    return lastGM.toISOString().split('T')[0] === today
+  }
+  return false
+}
+
+export const getYesterdayDateString = (): string => {
+  const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]
+}
+
+export const getTimeUntilMidnight = (): number => {
+  const now = new Date(); const midnight = new Date(now); midnight.setHours(24, 0, 0, 0); return midnight.getTime() - now.getTime()
+}
+
+export const getTimeUntilNextGM = (lastGMTimestamp: number): number => {
+  if (lastGMTimestamp === 0) return 0
+  const now = Date.now()
+  const lastGMTime = lastGMTimestamp * 1000
+  const nextGMTime = lastGMTime + 24 * 60 * 60 * 1000
+  const timeRemaining = nextGMTime - now
+  return Math.max(0, timeRemaining)
+}
+
+export const canGMBasedOnTimestamp = (lastGMTimestamp: number): boolean => getTimeUntilNextGM(lastGMTimestamp) === 0
+
+export const formatTimeUntilMidnight = (): string => {
+  const timeLeft = getTimeUntilMidnight()
+  const hours = Math.floor(timeLeft / (1000 * 60 * 60))
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000)
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`
+  if (minutes > 0) return `${minutes}m ${seconds}s`
+  return `${seconds}s`
+}
+
+export const formatTimeUntilNextGM = (lastGMTimestamp: number): string => {
+  const timeLeft = getTimeUntilNextGM(lastGMTimestamp)
+  if (timeLeft === 0) return 'Ready to GM!'
+  const hours = Math.floor(timeLeft / (1000 * 60 * 60))
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000)
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`
+  if (minutes > 0) return `${minutes}m ${seconds}s`
+  return `${seconds}s`
+}
+
+// -------------------------------
+// Quest Type mapping (same as contract enum)
+export type QuestTypeKey =
+  | 'GENERIC'
+  | 'FARCASTER_FOLLOW'
+  | 'FARCASTER_RECAST'
+  | 'FARCASTER_REPLY'
+  | 'FARCASTER_LIKE'
+  | 'HOLD_ERC20'
+  | 'HOLD_ERC721'
+  | 'FARCASTER_CAST'
+  | 'FARCASTER_MENTION'
+  | 'FARCASTER_CHANNEL_POST'
+  | 'FARCASTER_FRAME_INTERACT'
+  | 'FARCASTER_VERIFIED_USER'
+
+export const QUEST_TYPES: Record<QuestTypeKey, number> = {
+  GENERIC: 1,
+  FARCASTER_FOLLOW: 2,
+  FARCASTER_RECAST: 3,
+  FARCASTER_REPLY: 4,
+  FARCASTER_LIKE: 5,
+  HOLD_ERC20: 6,
+  HOLD_ERC721: 7,
+  FARCASTER_CAST: 8,
+  FARCASTER_MENTION: 9,
+  FARCASTER_FRAME_INTERACT: 10,
+  FARCASTER_CHANNEL_POST: 11,
+  FARCASTER_VERIFIED_USER: 12,
+} as const
+
+export const toQuestTypeCode = (k: QuestTypeKey | string | number): number => {
+  if (typeof k === 'number') return k
+  const key = String(k).trim().toUpperCase() as QuestTypeKey
+  return (QUEST_TYPES as Record<string, number>)[key] ?? 0
+}
+
+export const QUEST_TYPES_BY_CODE: Record<number, QuestTypeKey> = Object.fromEntries(
+  Object.entries(QUEST_TYPES).map(([k, v]) => [v, k as QuestTypeKey]),
+) as Record<number, QuestTypeKey>
+
+export type QuestMode = 'social' | 'onchain'
+export type QuestFieldRequirement = 'hidden' | 'optional' | 'required'
+
+export type QuestFieldConfig = {
+  mode: QuestMode
+  followHandle: QuestFieldRequirement
+  frameUrl: QuestFieldRequirement
+  castLink: QuestFieldRequirement
+  castText: QuestFieldRequirement
+  mentionHandle: QuestFieldRequirement
+  targetHandle: QuestFieldRequirement
+  targetFid: QuestFieldRequirement
+}
+
+type QuestFieldOverrides = Partial<Omit<QuestFieldConfig, 'mode'>>
+
+const BASE_FIELD_STATE: Omit<QuestFieldConfig, 'mode'> = {
+  followHandle: 'hidden',
+  frameUrl: 'hidden',
+  castLink: 'hidden',
+  castText: 'hidden',
+  mentionHandle: 'hidden',
+  targetHandle: 'hidden',
+  targetFid: 'hidden',
+}
+
+const createQuestFieldConfig = (
+  mode: QuestMode,
+  overrides: QuestFieldOverrides = {},
+): QuestFieldConfig => ({
+  mode,
+  followHandle: overrides.followHandle ?? BASE_FIELD_STATE.followHandle,
+  frameUrl: overrides.frameUrl ?? BASE_FIELD_STATE.frameUrl,
+  castLink: overrides.castLink ?? BASE_FIELD_STATE.castLink,
+  castText: overrides.castText ?? BASE_FIELD_STATE.castText,
+  mentionHandle: overrides.mentionHandle ?? BASE_FIELD_STATE.mentionHandle,
+  targetHandle: overrides.targetHandle ?? BASE_FIELD_STATE.targetHandle,
+  targetFid: overrides.targetFid ?? BASE_FIELD_STATE.targetFid,
+})
+
+export const QUEST_FIELD_CONFIG: Record<QuestTypeKey, QuestFieldConfig> = {
+  GENERIC: createQuestFieldConfig('onchain'),
+  HOLD_ERC20: createQuestFieldConfig('onchain'),
+  HOLD_ERC721: createQuestFieldConfig('onchain'),
+  FARCASTER_FOLLOW: createQuestFieldConfig('social', {
+    followHandle: 'required',
+    targetHandle: 'optional',
+    targetFid: 'optional',
+  }),
+  FARCASTER_RECAST: createQuestFieldConfig('social', { castLink: 'required' }),
+  FARCASTER_REPLY: createQuestFieldConfig('social', { castLink: 'required', castText: 'optional' }),
+  FARCASTER_LIKE: createQuestFieldConfig('social', { castLink: 'required' }),
+  FARCASTER_CAST: createQuestFieldConfig('social', { castText: 'optional' }),
+  FARCASTER_MENTION: createQuestFieldConfig('social', { mentionHandle: 'required', castText: 'optional' }),
+  FARCASTER_CHANNEL_POST: createQuestFieldConfig('social', { castLink: 'required', castText: 'optional' }),
+  FARCASTER_FRAME_INTERACT: createQuestFieldConfig('social', { frameUrl: 'required' }),
+  FARCASTER_VERIFIED_USER: createQuestFieldConfig('social'),
+}
+
+const QUEST_TYPE_KEY_SET = new Set<QuestTypeKey>(Object.keys(QUEST_TYPES) as QuestTypeKey[])
+
+export function normalizeQuestTypeKey(input: unknown): QuestTypeKey {
+  if (typeof input === 'string') {
+    const trimmed = input.trim()
+    if (!trimmed) return 'GENERIC'
+    const upper = trimmed.toUpperCase() as QuestTypeKey
+    if (QUEST_TYPE_KEY_SET.has(upper)) return upper
+    const numeric = Number.parseInt(trimmed, 10)
+    if (Number.isFinite(numeric)) {
+      const byCode = QUEST_TYPES_BY_CODE[numeric]
+      if (byCode) return byCode
+    }
+  } else if (typeof input === 'number' && Number.isFinite(input)) {
+    const byCode = QUEST_TYPES_BY_CODE[Math.trunc(input)]
+    if (byCode) return byCode
+  }
+  return 'GENERIC'
+}
+
+export function getQuestFieldConfig(key: QuestTypeKey | string | number): QuestFieldConfig {
+  const normalized = normalizeQuestTypeKey(key)
+  const config = QUEST_FIELD_CONFIG[normalized]
+  return { ...config }
+}
+
+// -------------------------------
+// Small convenience exports for front-end usage
+// -------------------------------
+export const CHAIN_KEYS = Object.keys(CONTRACT_ADDRESSES) as ChainKey[]
+
+// Label map for UI (exported for reuse)
+export const CHAIN_LABEL: Record<ChainKey, string> = {
+  base: 'Base',
+  unichain: 'Unichain',
+  celo: 'Celo',
+  ink: 'Ink',
+  op: 'Optimism',
+}
+
+// Treat tiny/invalid timestamps as "no expiry"
+export const MIN_VALID_UNIX = 1_600_000_000
+export function sanitizeExpiresAt(raw: any): number {
+  const n = Number(raw || 0)
+  if (!Number.isFinite(n) || n <= 0) return 0
+  return n < MIN_VALID_UNIX ? 0 : n
+}
+
+// Normalized quest shape type
+export type NormalizedQuest = {
+  name?: string
+  questType?: number
+  target?: number
+  rewardPoints?: number
+  creator?: `0x${string}` | string
+  maxCompletions?: number
+  expiresAt?: number
+  meta?: any
+  isActive?: boolean
+  escrowedPoints?: number
+  claimedCount?: number
+  rewardToken?: `0x${string}` | string
+  rewardTokenPerUser?: number
+  tokenEscrowRemaining?: number
+}
+
+// Normalize quest struct from mapping (named fields) or getQuest tuple
+export function normalizeQuestStruct(q: any): NormalizedQuest {
+  if (!q) return {}
+
+  // Named fields (quests mapping)
+  if (typeof q === 'object' && ('questType' in q || 'expiresAt' in q || 'meta' in q)) {
+    return {
+      name: (q as any).name,
+      questType: Number((q as any).questType ?? (q as any).type ?? 0),
+      target: Number((q as any).target ?? 0),
+      rewardPoints: Number((q as any).rewardPoints ?? 0),
+      creator: (q as any).creator,
+      maxCompletions: Number((q as any).maxCompletions ?? 0),
+      expiresAt: Number((q as any).expiresAt ?? 0),
+      meta: (q as any).meta,
+      isActive: Boolean((q as any).isActive),
+      escrowedPoints: Number((q as any).escrowedPoints ?? 0),
+      claimedCount: Number((q as any).claimedCount ?? 0),
+      rewardToken: (q as any).rewardToken,
+      rewardTokenPerUser: Number((q as any).rewardTokenPerUser ?? 0),
+      tokenEscrowRemaining: Number((q as any).tokenEscrowRemaining ?? 0),
+    }
+  }
+
+  // Tuple from getQuest (index-safe)
+  const get = (i: number) => (Array.isArray(q) ? (q as any)[i] : undefined)
+  return {
+    name: get(0),
+    questType: Number(get(1) ?? 0),
+    target: Number(get(2) ?? 0),
+    rewardPoints: Number(get(3) ?? 0),
+    creator: get(4),
+    maxCompletions: Number(get(5) ?? 0),
+    expiresAt: Number(get(6) ?? 0),
+    meta: get(7),
+    isActive: Boolean(get(8)),
+    rewardToken: get(9),
+    rewardTokenPerUser: Number(get(10) ?? 0),
+    tokenEscrowRemaining: Number(get(11) ?? 0),
+  }
+}
+
+// -------------------------------
+// Exported builders return objects suitable for viem/writeContract or wagmi/writeContract
+// -------------------------------
+const gmUtils = {
+  CHAIN_IDS,
+  CONTRACT_ADDRESSES,
+  GM_CONTRACT_ABI,
+  ERC721_ABI,
+  normalizeChainKey,
+  isChainKey,
+  assertChainKey,
+  getContractAddress,
+  createSendGMTx,
+  createAddQuestTx,
+  createAddQuestWithERC20Tx,
+  createCompleteQuestWithSigTx,
+  createCloseQuestTx,
+  createBatchRefundQuestsTx,
+  createRegisterReferralCodeTx,
+  createSetReferrerTx,
+  createSetFarcasterFidTx,
+  createGuildTx,
+  createJoinGuildTx,
+  createLeaveGuildTx,
+  createDepositGuildPointsTx,
+  createClaimGuildRewardTx,
+  createGuildQuestTx,
+  createCompleteGuildQuestTx,
+  createTipUserTx,
+  createMintBadgeFromPointsTx,
+  createStakeForBadgeTx,
+  createUnstakeForBadgeTx,
+  createGetUserStatsCall,
+  createTokenEscrowOfCall,
+  createSetOracleSignerTx,
+  createSetPowerBadgeForFidTx,
+  createSetTokenWhitelistEnabledTx,
+  createAddTokenToWhitelistTx,
+  createWithdrawContractReserveTx,
+  createEmergencyWithdrawTokenTx,
+  createPauseTx,
+  createUnpauseTx,
+  createSetGMConfigTx,
+  createSetGMBonusTiersTx,
+  createDepositToTx,
+  checkTokenAllowanceAndBalance,
+  createApproveERC20Tx,
+  hasGMToday,
+  QUEST_TYPES,
+  QUEST_TYPES_BY_CODE,
+  toQuestTypeCode,
+  QUEST_FIELD_CONFIG,
+  normalizeQuestTypeKey,
+  getQuestFieldConfig,
+  gmContractHasFunction,
+}
+
+export default gmUtils

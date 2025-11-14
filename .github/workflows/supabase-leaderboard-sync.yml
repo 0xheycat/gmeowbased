@@ -1,0 +1,50 @@
+name: Supabase Leaderboard Sync
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Supabase leaderboard snapshot
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_LEADERBOARD_TABLE: ${{ secrets.SUPABASE_LEADERBOARD_TABLE }}
+          SUPABASE_LEADERBOARD_VIEW_CURRENT: ${{ secrets.SUPABASE_LEADERBOARD_VIEW_CURRENT }}
+          SUPABASE_LEADERBOARD_SEASON_KEY: ${{ vars.SUPABASE_LEADERBOARD_SEASON_KEY }}
+          SUPABASE_TIMEOUT_MS: ${{ vars.SUPABASE_TIMEOUT_MS }}
+          SUPABASE_MAX_RETRIES: ${{ vars.SUPABASE_MAX_RETRIES }}
+          RPC_BASE: ${{ secrets.RPC_BASE }}
+          RPC_OP: ${{ secrets.RPC_OP }}
+          RPC_CELO: ${{ secrets.RPC_CELO }}
+          RPC_UNICHAIN: ${{ secrets.RPC_UNICHAIN }}
+          RPC_INK: ${{ secrets.RPC_INK }}
+          CHAIN_START_BLOCK: ${{ vars.CHAIN_START_BLOCK }}
+          CHAIN_START_BLOCK_BASE: ${{ vars.CHAIN_START_BLOCK_BASE }}
+          CHAIN_START_BLOCK_OP: ${{ vars.CHAIN_START_BLOCK_OP }}
+          CHAIN_START_BLOCK_CELO: ${{ vars.CHAIN_START_BLOCK_CELO }}
+          CHAIN_START_BLOCK_UNICHAIN: ${{ vars.CHAIN_START_BLOCK_UNICHAIN }}
+          CHAIN_START_BLOCK_INK: ${{ vars.CHAIN_START_BLOCK_INK }}
+        run: npx tsx scripts/leaderboard/sync-supabase.ts

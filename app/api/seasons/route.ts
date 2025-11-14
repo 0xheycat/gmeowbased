@@ -1,0 +1,107 @@
+// /api/seasons/route.ts
+import { NextResponse } from 'next/server'
+import { createPublicClient, http } from 'viem'
+import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey } from '@/lib/gm-utils'
+import { getRpcUrl } from '@/lib/rpc'
+
+const CACHE_TTL = 30_000
+let cache: { key: string; at: number; data: SeasonsResponse } | null = null
+
+const HAS_SEASON_ABI = gmContractHasFunction('getAllSeasons') && gmContractHasFunction('getSeason')
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url)
+    const chain = (url.searchParams.get('chain') || 'base') as ChainKey
+    const contractAddr = CONTRACT_ADDRESSES[chain]
+    const chainId = CHAIN_IDS[chain]
+    if (!contractAddr || !chainId) return NextResponse.json({ ok: false, reason: 'bad chain' }, { status: 400 })
+
+    const key = `seasons:${chain}`
+    if (cache && cache.key === key && Date.now() - cache.at < CACHE_TTL) {
+      return NextResponse.json(cache.data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
+    }
+
+    if (!HAS_SEASON_ABI) {
+      const data: SeasonsResponse = { ok: true, chain, seasons: [], reason: 'season_contract_functions_unavailable' }
+      cache = { key, at: Date.now(), data }
+      return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
+    }
+
+    let rpc = ''
+    try {
+      rpc = getRpcUrl(chain)
+    } catch {
+      rpc = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_BASE || ''
+    }
+    const client = createPublicClient({ transport: http(rpc) })
+
+    // Read all seasons count via getAllSeasons (returns ids)
+    let ids: readonly bigint[] = []
+    try {
+      const res = await client.readContract({
+        address: contractAddr,
+        abi: GM_CONTRACT_ABI,
+        functionName: 'getAllSeasons',
+        args: [],
+      })
+      ids = Array.isArray(res) ? (res as unknown as readonly bigint[]) : []
+    } catch {
+      ids = []
+    }
+
+    const out: SeasonInfo[] = []
+    const now = Date.now() / 1000
+    for (const id of ids || []) {
+      try {
+        const s = await client.readContract({
+          address: contractAddr,
+          abi: GM_CONTRACT_ABI,
+          functionName: 'getSeason',
+          args: [id],
+        })
+        // getSeason returns (startTime,endTime,totalRewards,isActive,rewardToken,finalized)
+        const [startTime, endTime, totalRewards, isActive, rewardToken, finalized] = s as unknown as SeasonTuple
+        out.push({
+          id: Number(id),
+          startTime: Number(startTime),
+          endTime: Number(endTime),
+          totalRewards: String(totalRewards || 0n),
+          isActive: Boolean(isActive),
+          rewardToken: String(rewardToken),
+          finalized: Boolean(finalized),
+          current: Number(startTime) <= now && (Number(endTime) === 0 || Number(endTime) >= now) && Boolean(isActive),
+        })
+      } catch {
+        // ignore per-season errors
+      }
+    }
+
+    // mark "current" explicitly
+    const data: SeasonsResponse = { ok: true, chain, seasons: out.sort((a, b) => b.id - a.id) }
+    cache = { key, at: Date.now(), data }
+    return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'failed'
+    return NextResponse.json({ ok: false, reason: message }, { status: 500 })
+  }
+}
+
+type SeasonTuple = readonly [bigint, bigint, bigint, boolean, string, boolean]
+type SeasonInfo = {
+  id: number
+  startTime: number
+  endTime: number
+  totalRewards: string
+  isActive: boolean
+  rewardToken: string
+  finalized: boolean
+  current: boolean
+}
+
+type SeasonsResponse = {
+  ok: true
+  chain: ChainKey
+  seasons: SeasonInfo[]
+  reason?: string
+}

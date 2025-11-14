@@ -1,0 +1,28 @@
+tasks:
+  - id: lint
+    description: Run ESLint with zero warnings
+    command: npm run lint
+  - id: build
+    description: Produce production build and validate types
+    command: npm run build
+    dependsOn:
+      - lint
+  - id: perf-audit
+    description: Profile Dashboard tip stream for expensive rerenders
+    command: 'echo "TODO: integrate React Profiler"'
+    dependsOn:
+      - build
+    continueOnError: true
+  - id: bundle-report
+    description: Generate bundle analyzer report
+    command: 'npm run analyze -- --out build-report.html'
+    dependsOn:
+      - build
+    continueOnError: true
+  - id: write-summary
+    description: Append optimization notes to planning/2025-11-04/notes.md
+    command: 'echo "Document findings after profiling"'
+    dependsOn:
+      - perf-audit
+      - bundle-report
+    continueOnError: true

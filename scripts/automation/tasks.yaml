@@ -1,0 +1,39 @@
+tasks:
+  - id: lint
+    description: Run ESLint with zero warnings
+    command: npm run lint
+  - id: build
+    description: Produce production build and validate types
+    command: npm run build
+    dependsOn:
+      - lint
+  - id: summary-reminder
+    description: Prompt to update planning summary if needed
+    command: echo "Review planning/2025-11-04/README.md summary"
+    dependsOn:
+      - build
+    continueOnError: true
+  - id: optimization-backlog
+    description: Draft optimization backlog entry in planning notes
+    command: echo "Add optimization ideas to planning/2025-11-04/notes.md"
+    dependsOn:
+      - summary-reminder
+    continueOnError: true
+  - id: frame-mega-plan
+    description: Review Mega Frame roadmap in Planing/Frame/frame.md
+    command: echo "Sync Mega Frame upgrades with Planing/Frame/frame.md"
+    dependsOn:
+      - optimization-backlog
+    continueOnError: true
+  - id: frame-meta-check
+    description: Validate Farcaster frame metadata defaults before deploy
+    command: echo "Hit /api/frame?type=leaderboard&chain=base during QA"
+    dependsOn:
+      - frame-mega-plan
+    continueOnError: true
+  - id: gm-reminder-dry-run
+    description: Dry run GM streak reminder broadcast
+    command: npm run notifications:gm-reminders -- --dry-run
+    dependsOn:
+      - frame-meta-check
+    continueOnError: true

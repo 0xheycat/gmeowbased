@@ -1,0 +1,604 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ======================================================
+   GLOBAL FROSTED GLASS THEME — macOS ADAPTIVE (v2)
+   Optimized for performance (Option B)
+   ====================================================== */
+
+/* --- Core tokens (shared) --- */
+:root {
+  --frost-radius: 16px;
+
+  /* shadow tokens (tunable) */
+  --fx-inset-1: inset 0 1px 0 rgba(255,255,255,0.04);
+  --fx-inset-2: inset 0 1px 0 rgba(255,255,255,0.12);
+  --fx-elev-1: 0 8px 20px rgba(0,0,0,0.32); /* moderated */
+  --fx-elev-2: 0 14px 36px rgba(0,0,0,0.28); /* hover / elevated */
+
+  /* low-cost shadow used for many static elements */
+  --fx-elev-static: 0 6px 14px rgba(0,0,0,0.18);
+
+  /* lightweight backdrop blur (default) — reduced a bit from original for perf */
+  --glass-blur: 12px;
+  --glass-blur-large: 18px;
+  --glass-saturate: 135%;
+}
+
+/* --- Theme tokens (dark baseline and light override) --- */
+html,
+html.dark {
+  --frost-bg: rgba(255, 255, 255, 0.04);
+  --frost-border: rgba(255, 255, 255, 0.1);
+  --frost-shadow: rgba(0, 0, 0, 0.4);
+  --frost-accent: #7ce1ff;
+  --text-color: #eaf6ff;
+  --text-muted: rgba(210, 225, 245, 0.8);
+  --bg-gradient: radial-gradient(1200px 800px at 50% 0%, rgba(124,225,255,0.12), transparent 70%), #0c1018;
+  --page-bg-overlay:
+    radial-gradient(140% 120% at 18% 18%, rgba(18, 165, 255, 0.18), rgba(3, 12, 24, 0.45)),
+    radial-gradient(120% 130% at 82% 12%, rgba(63, 255, 211, 0.14), rgba(3, 11, 20, 0.32)),
+    radial-gradient(120% 150% at 52% 96%, rgba(27, 124, 255, 0.2), rgba(2, 10, 18, 0.66));
+  --shell-border: rgba(29, 38, 71, 0.75);
+  --shell-bg: rgba(11, 16, 34, 0.9);
+  --shell-overlay: rgba(16, 23, 49, 0.8);
+  --shell-heading: #5f74c8;
+  --shell-text: #d5defd;
+  --shell-success: #7afcca;
+  --shell-warning: #ffc27c;
+  --shell-info: #94b2ff;
+  --gmeow-orbit-accent: color-mix(in srgb, var(--frost-accent) 78%, transparent 22%);
+  --gmeow-orbit-info: color-mix(in srgb, var(--shell-info) 82%, transparent 18%);
+  --gmeow-orbit-heading: color-mix(in srgb, var(--shell-heading) 75%, transparent 25%);
+  --gmeow-orbit-mobile: color-mix(in srgb, var(--shell-info) 76%, transparent 24%);
+  --gmeow-shell-shadow: color-mix(in srgb, #000 65%, var(--frost-shadow) 35%);
+}
+
+html.light {
+  --frost-bg: rgba(255, 255, 255, 0.35);
+  --frost-border: rgba(255, 255, 255, 0.6);
+  --frost-shadow: rgba(0, 0, 0, 0.08);
+  --frost-accent: #007aff;
+  --text-color: #0a0a0a;
+  --text-muted: rgba(40, 40, 60, 0.7);
+  --bg-gradient: radial-gradient(800px 600px at 50% 0%, rgba(255,255,255,0.6), rgba(245,245,250,1));
+  --page-bg-overlay:
+    radial-gradient(140% 120% at 18% 18%, rgba(0, 170, 255, 0.12), rgba(220, 235, 255, 0.2)),
+    radial-gradient(120% 130% at 82% 12%, rgba(255, 200, 120, 0.15), rgba(230, 240, 255, 0.2)),
+    radial-gradient(120% 150% at 52% 96%, rgba(140, 210, 255, 0.18), rgba(245, 249, 255, 0.6));
+  --shell-border: rgba(212, 220, 240, 0.7);
+  --shell-bg: rgba(240, 244, 255, 0.92);
+  --shell-overlay: rgba(230, 238, 255, 0.84);
+  --shell-heading: #4c6edc;
+  --shell-text: #2b3960;
+  --shell-success: #1c8060;
+  --shell-warning: #c86f00;
+  --shell-info: #3a64d6;
+  --gmeow-orbit-accent: color-mix(in srgb, var(--frost-accent) 68%, transparent 32%);
+  --gmeow-orbit-info: color-mix(in srgb, var(--shell-info) 70%, transparent 30%);
+  --gmeow-orbit-heading: color-mix(in srgb, var(--shell-heading) 66%, transparent 34%);
+  --gmeow-orbit-mobile: color-mix(in srgb, var(--shell-info) 64%, transparent 36%);
+  --gmeow-shell-shadow: color-mix(in srgb, #000 40%, var(--frost-shadow) 60%);
+}
+
+/* Real mobile breakpoints */
+@media (max-width: 768px) {
+  .layout-mobile-nav {
+    display: flex;
+  }
+
+  .layout-switch {
+    width: 42px;
+    height: 42px;
+  }
+
+  .layout-menu-toggle {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* Lighter visual workload on smaller devices */
+  :root {
+    --glass-blur: 8px;
+    --glass-blur-large: 12px;
+    --fx-elev-1: 0 6px 14px rgba(0,0,0,0.22);
+    --fx-elev-2: 0 10px 26px rgba(0,0,0,0.2);
+  }
+}
+
+/* ======================================================
+   BASE STYLES
+   ====================================================== */
+@layer base {
+  html {
+    @apply antialiased;
+    background: var(--bg-gradient);
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+    color: var(--text-color);
+    font-weight: 500;
+    background: transparent;
+  }
+
+  /* Removed global border application to avoid accidental overrides.
+     Apply border colors where explicitly needed (see components). */
+}
+
+/* ======================================================
+   GLOBAL REDUCED GLASS (toggleable) — use on low-power devices
+   Add class `reduced-glass` to <html> or <body> to disable heavy effects.
+   ====================================================== */
+html.reduced-glass *,
+body.reduced-glass * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  background-blend-mode: normal !important;
+}
+
+/* Respect user motion / contrast preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --fx-inset-1: inset 0 1px 0 rgba(255,255,255,0.06);
+    --fx-elev-1: 0 10px 26px rgba(0,0,0,0.36);
+  }
+}
+
+/* ======================================================
+   GENERIC FROSTED ELEMENTS
+   ====================================================== */
+.frosted-surface {
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  border-radius: var(--frost-radius);
+
+  /* use tokens to reduce repeated work and allow hardware-friendly stacking */
+  box-shadow: var(--fx-inset-1), var(--fx-elev-1);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+
+  transition: background 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  isolation: isolate; /* prevents paint chaining for better performance */
+}
+
+/* Hover elevation (kept visually similar but uses tokenized shadow) */
+.frosted-surface:hover {
+  box-shadow: var(--fx-inset-1), var(--fx-elev-2);
+}
+
+/* ======================================================
+   QUEST MARQUEE — Frosted Meta Header
+   ====================================================== */
+.quest-marquee__meta {
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.quest-marquee__description {
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.quest-marquee__control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  color: var(--text-color);
+
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--fx-inset-1), 0 6px 14px rgba(0,0,0,0.18);
+  transition: all 160ms ease;
+  isolation: isolate;
+}
+.quest-marquee__control:hover {
+  color: var(--frost-accent);
+  border-color: color-mix(in srgb, var(--frost-accent) 50%, white 10%);
+  transform: translateY(-1px);
+}
+
+/* ======================================================
+   QUEST EMPTY STATE — Adaptive Frosted Panel
+   ====================================================== */
+.quest-empty {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2rem;
+  border-radius: var(--frost-radius);
+  border: 1px solid var(--frost-border);
+  background: var(--frost-bg);
+  box-shadow: var(--fx-inset-1), 0 8px 22px rgba(0,0,0,0.26);
+  backdrop-filter: blur(calc(var(--glass-blur) + 4px));
+  isolation: isolate;
+}
+@media (min-width: 680px) {
+  .quest-empty {
+    grid-template-columns: 160px 1fr;
+    align-items: center;
+  }
+}
+
+.quest-empty__icon {
+  font-size: 2.5rem;
+  color: var(--frost-accent);
+}
+.quest-empty__title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.quest-empty__copy {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* === Layout Shells === */
+
+/* ======================================================
+   QUEST ARCHIVE MODAL — Frosted Window
+   ====================================================== */
+.quest-archive__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(10, 14, 24, 0.6);
+  backdrop-filter: blur(var(--glass-blur-large));
+  isolation: isolate;
+}
+
+html.light .quest-archive__overlay {
+  background: rgba(255,255,255,0.6);
+}
+
+.quest-archive {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.8rem;
+  border-radius: 22px;
+  border: 1px solid var(--frost-border);
+  background: var(--frost-bg);
+
+  /* slightly reduced blur and refined shadow for perf */
+  box-shadow: 0 18px 44px rgba(0,0,0,0.28), var(--fx-inset-2);
+  backdrop-filter: blur(calc(var(--glass-blur-large) + 2px)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur-large) + 2px)) saturate(var(--glass-saturate));
+  isolation: isolate;
+}
+
+.quest-archive__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.quest-archive__close {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--frost-border);
+  background: var(--frost-bg);
+  color: var(--text-color);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: all 160ms ease;
+  isolation: isolate;
+}
+.quest-archive__close:hover {
+  color: var(--frost-accent);
+  border-color: color-mix(in srgb, var(--frost-accent) 40%, white 6%);
+  transform: translateY(-1px);
+}
+
+.quest-archive__item {
+  padding: 1rem 1.2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--frost-bg);
+  backdrop-filter: blur(calc(var(--glass-blur) - 2px));
+  isolation: isolate;
+}
+.quest-archive__item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.quest-archive__item-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ======================================================
+   BUTTONS — Frosted Consistency
+   ====================================================== */
+@layer components {
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--frost-border);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    transition: all 180ms ease;
+    isolation: isolate;
+  }
+
+  .btn-primary {
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.22));
+    color: var(--text-color);
+  }
+  .btn-primary:hover {
+    border-color: color-mix(in srgb, var(--frost-accent) 50%, white 8%);
+    color: var(--frost-accent);
+    transform: translateY(-1px);
+    box-shadow: var(--fx-inset-1), 0 10px 26px color-mix(in srgb, var(--frost-accent) 28%, transparent);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.02);
+    color: var(--text-muted);
+  }
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+  }
+}
+
+/* ======================================================
+   THEME TOGGLE — Frosted Icon Button
+   ====================================================== */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  color: var(--text-color);
+  box-shadow: var(--fx-inset-1), 0 6px 16px rgba(0,0,0,0.18);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: transform 160ms ease, color 160ms ease, border-color 160ms ease;
+  isolation: isolate;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  color: var(--frost-accent);
+  border-color: color-mix(in srgb, var(--frost-accent) 50%, white 12%);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--frost-accent) 60%, white 10%);
+  outline-offset: 2px;
+}
+
+.theme-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ======================================================
+   UTILITIES — Gradients / Accents / Glass
+   ====================================================== */
+.text-gradient {
+  background-image: linear-gradient(90deg, var(--frost-accent), #d6a7ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.blur-glass {
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--fx-inset-1), var(--fx-elev-1);
+  isolation: isolate;
+}
+
+/* ======================================================
+   GLOBAL CANVAS DEPTH — macOS Glass Elevation
+   ====================================================== */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 160% at 50% 120%, rgba(0,0,0,0.22), transparent 75%),
+    radial-gradient(140% 140% at 20% -20%, rgba(255,255,255,0.18), transparent 65%);
+  opacity: 0.45;
+  pointer-events: none;
+  filter: blur(60px);
+  transform: translateZ(0);
+  will-change: transform; /* hint to compositor */
+}
+
+html.dark body::before {
+  background:
+    radial-gradient(120% 160% at 50% 120%, rgba(6,14,36,0.65), transparent 75%),
+    radial-gradient(160% 160% at 20% -20%, rgba(72,122,255,0.22), transparent 65%);
+  opacity: 0.55;
+}
+
+.pixel-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(600px 400px at 50% 110%, color-mix(in srgb, var(--frost-accent) 14%, transparent)),
+    radial-gradient(1000px 700px at 0% 0%, color-mix(in srgb, var(--frost-shadow) 18%, transparent));
+  filter: blur(72px);
+  opacity: 0.36;
+  pointer-events: none;
+  will-change: filter;
+}
+
+/* ======================================================
+   SYSTEM GLASS UPGRADE — Headers, Cards, Buttons, Forms
+   ====================================================== */
+
+/* 1. Headers / Shell */
+.theme-shell-header {
+  background: color-mix(in srgb, var(--shell-overlay) 88%, transparent 12%);
+  backdrop-filter: blur(var(--glass-blur-large)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-large)) saturate(var(--glass-saturate));
+  border-bottom: 1px solid color-mix(in srgb, var(--shell-border) 70%, transparent 30%);
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--frost-shadow) 45%, transparent 55%), var(--fx-inset-2);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  isolation: isolate;
+}
+
+/* 2. Cards (mega, theme-shell, etc.) */
+.theme-shell-card,
+.mega-card {
+  background: color-mix(in srgb, var(--shell-overlay) 92%, transparent 8%);
+  border: 1px solid color-mix(in srgb, var(--shell-border) 85%, transparent 15%);
+  border-radius: 18px;
+  box-shadow: 0 20px 45px color-mix(in srgb, var(--frost-shadow) 60%, transparent 40%), var(--fx-inset-2);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  transition: box-shadow 240ms ease, transform 240ms ease;
+  isolation: isolate;
+}
+.theme-shell-card:hover,
+.mega-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 26px 60px color-mix(in srgb, var(--frost-shadow) 56%, transparent 44%), var(--fx-inset-2);
+}
+
+/* 3. Buttons (system-style glass buttons) */
+button,
+input[type="submit"],
+input[type="button"],
+.retro-btn,
+.cta-enter {
+  appearance: none;
+  background: color-mix(in srgb, var(--shell-overlay) 88%, transparent 12%);
+  border: 1px solid color-mix(in srgb, var(--shell-border) 70%, transparent 30%);
+  border-radius: 999px;
+  color: var(--shell-text);
+  box-shadow: var(--fx-inset-2), 0 8px 18px color-mix(in srgb, var(--frost-shadow) 45%, transparent 55%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: all 180ms ease;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.8rem 1.4rem;
+  isolation: isolate;
+}
+
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+.retro-btn:hover,
+.cta-enter:hover {
+  background: color-mix(in srgb, var(--frost-accent) 18%, var(--shell-overlay) 82%);
+  border-color: color-mix(in srgb, var(--frost-accent) 35%, var(--shell-border) 65%);
+  box-shadow: var(--fx-inset-2), 0 10px 28px color-mix(in srgb, var(--frost-accent) 32%, transparent);
+  transform: translateY(-1px);
+}
+
+button:active,
+.retro-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--frost-shadow) 50%, transparent 50%);
+}
+
+/* Primary accent button (uses frost accent) */
+button.primary,
+.retro-btn-primary {
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--frost-accent) 26%, var(--shell-overlay) 74%),
+    color-mix(in srgb, var(--frost-accent) 14%, var(--shell-overlay) 86%)
+  );
+  border-color: color-mix(in srgb, var(--frost-accent) 55%, white 8%);
+  color: #fff;
+}
+
+/* 4. Form Inputs (glass fields) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select,
+.form-control {
+  background: color-mix(in srgb, var(--shell-overlay) 88%, transparent 12%);
+  border: 1px solid color-mix(in srgb, var(--shell-border) 75%, transparent 25%);
+  color: var(--shell-text);
+  border-radius: 12px;
+
+  padding: 0.75rem 1rem;
+  box-shadow: var(--fx-inset-2), 0 6px 16px color-mix(in srgb, var(--frost-shadow) 40%, transparent 60%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  isolation: isolate;
+  -webkit-text-fill-color: var(--shell-text);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--frost-accent) 60%, white 10%);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--frost-accent) 22%, transparent 78%),
+    0 10px 22px color-mix(in srgb, var(--frost-shadow) 45%, transparent 55%);
+}
+
+/* 5. Subtle macOS footer shadow */
+.theme-shell-footer,
+.pixel-footer {
+  background: color-mix(in srgb, var(--shell-overlay) 92%, transparent 8%);
+  border-top: 1px solid color-mix(in srgb, var(--shell-border) 70%, transparent 30%);
+  box-shadow: 0 -14px 36px color-mix(in srgb, var(--frost-shadow) 40%, transparent 60%);
+  backdrop-filter: blur(var(--glass-blur-large)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-large)) saturate(var(--glass-saturate));
+  isolation: isolate;
+}
+
+/* ======================================================
+   End of stylesheet
+   ====================================================== */

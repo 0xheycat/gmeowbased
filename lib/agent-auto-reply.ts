@@ -1,0 +1,498 @@
+// @edit-start 2025-11-13 — Agent auto-reply engine
+import { computeBotUserStats, type BotUserStats } from '@/lib/bot-stats'
+import type { BotStatsConfig } from '@/lib/bot-config-types'
+import { type CommunityEventType } from '@/lib/community-event-types'
+import { normalizeAddress } from '@/lib/profile-data'
+import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+
+const CAST_CHARACTER_LIMIT = 320
+const DEFAULT_STATS_WINDOW_DAYS = 7
+const DEFAULT_QUEST_WINDOW_DAYS = 14
+const MAX_EVENT_ROWS = 240
+
+export type AgentIntentType =
+  | 'stats'
+  | 'tips'
+  | 'streak'
+  | 'quests'
+  | 'leaderboard'
+  | 'gm'
+  | 'help'
+
+export type TimeframeSpec = {
+  label: string
+  shortLabel: string
+  since: Date
+}
+
+export type AgentAutoReplyInput = {
+  fid: number | null
+  text: string
+  username?: string | null
+  displayName?: string | null
+}
+
+export type AgentAutoReplySuccess = {
+  ok: true
+  intent: AgentIntentType
+  text: string
+  meta: Record<string, unknown>
+}
+
+export type AgentAutoReplyFailure = {
+  ok: false
+  reason: 'missing-fid' | 'low-score' | 'missing-wallet' | 'stats-unavailable' | 'unsupported'
+  detail?: string
+}
+
+export type AgentAutoReplyResult = AgentAutoReplySuccess | AgentAutoReplyFailure
+
+type SummarisedEvents = {
+  totalDelta: number
+  totalEvents: number
+  lastEventAt: Date | null
+}
+
+type IntentDetection = {
+  type: AgentIntentType
+  timeframe: TimeframeSpec | null
+}
+
+const TIMEFRAME_PATTERNS: Array<{
+  regex: RegExp
+  resolve(now: Date): TimeframeSpec
+}> = [
+  {
+    regex: /last\s+(?:24\s*hours|day)/i,
+    resolve(now) {
+      const since = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      return { label: 'the last 24 hours', shortLabel: 'last 24h', since }
+    },
+  },
+  {
+    regex: /yesterday/i,
+    resolve(now) {
+      const start = startOfUtcDay(new Date(now.getTime() - 24 * 60 * 60 * 1000))
+      return { label: 'yesterday', shortLabel: 'yesterday', since: start }
+    },
+  },
+  {
+    regex: /today|right now/i,
+    resolve(now) {
+      const start = startOfUtcDay(now)
+      return { label: 'today', shortLabel: 'today', since: start }
+    },
+  },
+  {
+    regex: /this\s+week/i,
+    resolve(now) {
+      const start = startOfUtcWeek(now)
+      return { label: 'this week', shortLabel: 'this week', since: start }
+    },
+  },
+  {
+    regex: /last\s+week/i,
+    resolve(now) {
+      const start = startOfUtcWeek(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000))
+      return { label: 'last week', shortLabel: 'last week', since: start }
+    },
+  },
+  {
+    regex: /last\s+(?:7|seven)\s+days/i,
+    resolve(now) {
+      const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      return { label: 'the last 7 days', shortLabel: 'last 7d', since }
+    },
+  },
+  {
+    regex: /last\s+(?:30|thirty)\s+days/i,
+    resolve(now) {
+      const since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      return { label: 'the last 30 days', shortLabel: 'last 30d', since }
+    },
+  },
+  {
+    regex: /this\s+month/i,
+    resolve(now) {
+      const start = startOfUtcMonth(now)
+      return { label: 'this month', shortLabel: 'this month', since: start }
+    },
+  },
+  {
+    regex: /last\s+month/i,
+    resolve(now) {
+      const currentMonthStart = startOfUtcMonth(now)
+      const lastMonthStart = new Date(Date.UTC(currentMonthStart.getUTCFullYear(), currentMonthStart.getUTCMonth() - 1, 1))
+      return { label: 'last month', shortLabel: 'last month', since: lastMonthStart }
+    },
+  },
+  {
+    regex: /past\s+week/i,
+    resolve(now) {
+      const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      return { label: 'the past week', shortLabel: 'past week', since }
+    },
+  },
+  {
+    regex: /past\s+month/i,
+    resolve(now) {
+      const since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      return { label: 'the past month', shortLabel: 'past month', since }
+    },
+  },
+]
+
+export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: BotStatsConfig): Promise<AgentAutoReplyResult> {
+  const normalizedText = (input.text || '').trim()
+  if (!normalizedText) {
+    return { ok: false, reason: 'unsupported', detail: 'empty-text' }
+  }
+
+  if (!input.fid || !Number.isFinite(input.fid) || input.fid <= 0) {
+    return { ok: false, reason: 'missing-fid' }
+  }
+
+  const intent = detectIntent(normalizedText)
+  const handle = formatHandle(input.username, input.displayName)
+
+  const author = await fetchUserByFid(input.fid)
+  const neynarScore = typeof author?.neynarScore === 'number' ? author.neynarScore : null
+  const scoreMet = neynarScore != null && neynarScore >= Math.max(0, config.minNeynarScore)
+  if (!scoreMet) {
+    return { ok: false, reason: 'low-score', detail: neynarScore == null ? 'score-null' : `score-${neynarScore}` }
+  }
+
+  const address = resolveAddress(author)
+  if (!address) {
+    const text = trimToLimit(buildMissingWalletMessage(handle))
+    return { ok: true, intent: 'help', text, meta: { reason: 'missing-wallet', handle, fid: input.fid } }
+  }
+
+  const stats = await computeStats(address)
+  if (!stats) {
+    const text = trimToLimit(buildStatsUnavailableMessage(handle))
+    return { ok: true, intent: 'help', text, meta: { reason: 'stats-unavailable', handle, fid: input.fid } }
+  }
+
+  const summaryMeta: Record<string, unknown> = {
+    fid: input.fid,
+    handle,
+    intent: intent.type,
+    timeframe: intent.timeframe?.shortLabel ?? null,
+    neynarScore,
+    address,
+    minNeynarScore: config.minNeynarScore,
+  }
+
+  let replyText: string | null = null
+  switch (intent.type) {
+    case 'tips': {
+      const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
+      const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['tip'], since: timeframe.since })
+      summaryMeta.events = summary
+      replyText = buildTipsMessage(handle, stats, timeframe, summary)
+      break
+    }
+    case 'streak': {
+      replyText = buildStreakMessage(handle, stats)
+      break
+    }
+    case 'quests': {
+      const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_QUEST_WINDOW_DAYS, 'the last 14 days', 'last 14d')
+      const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['quest-verify'], since: timeframe.since })
+      summaryMeta.events = summary
+      replyText = buildQuestMessage(handle, stats, timeframe, summary)
+      break
+    }
+    case 'leaderboard': {
+      const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
+      const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['gm', 'quest-verify', 'tip', 'stake', 'unstake'], since: timeframe.since })
+      summaryMeta.events = summary
+      replyText = buildLeaderboardMessage(handle, stats, timeframe, summary)
+      break
+    }
+    case 'gm': {
+      const timeframe = buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
+      const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['gm'], since: timeframe.since })
+      summaryMeta.events = summary
+      replyText = buildGreetingMessage(handle, stats, summary)
+      break
+    }
+    case 'help': {
+      replyText = buildHelpMessage(handle)
+      break
+    }
+    case 'stats':
+    default: {
+      const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
+      const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['gm', 'quest-verify', 'tip', 'stake', 'unstake'], since: timeframe.since })
+      summaryMeta.events = summary
+      replyText = buildStatsMessage(handle, stats, timeframe, summary)
+      break
+    }
+  }
+
+  if (!replyText) {
+    return { ok: false, reason: 'unsupported', detail: 'empty-reply' }
+  }
+
+  return {
+    ok: true,
+    intent: intent.type,
+    text: trimToLimit(replyText),
+    meta: summaryMeta,
+  }
+}
+
+function detectIntent(text: string): IntentDetection {
+  const lower = text.toLowerCase()
+  const timeframe = parseTimeframe(lower)
+
+  if (/\btips?\b/.test(lower) || /\bboosts?\b/.test(lower) || /\bgrants?\b/.test(lower)) {
+    return { type: 'tips', timeframe }
+  }
+
+  if (/\bstreak\b/.test(lower) || /good\s+morning/.test(lower)) {
+    return { type: 'streak', timeframe }
+  }
+
+  if (/\bquest\b/.test(lower) || /\bmission\b/.test(lower)) {
+    return { type: 'quests', timeframe }
+  }
+
+  if (/\bleaderboard\b/.test(lower) || /\brank\b/.test(lower)) {
+    return { type: 'leaderboard', timeframe }
+  }
+
+  if (/\bxp\b/.test(lower) || /\bpoints?\b/.test(lower) || /\blevel\b/.test(lower) || /\bscore\b/.test(lower)) {
+    return { type: 'stats', timeframe }
+  }
+
+  if (/\bhelp\b/.test(lower) || /what\s+can\s+you\s+do/.test(lower)) {
+    return { type: 'help', timeframe }
+  }
+
+  if (/\bgm\b/.test(lower)) {
+    return { type: 'gm', timeframe }
+  }
+
+  return { type: 'stats', timeframe }
+}
+
+function parseTimeframe(text: string): TimeframeSpec | null {
+  const now = new Date()
+  for (const pattern of TIMEFRAME_PATTERNS) {
+    if (pattern.regex.test(text)) {
+      return pattern.resolve(now)
+    }
+  }
+  return null
+}
+
+function buildDefaultTimeframe(days: number, label: string, shortLabel: string): TimeframeSpec {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  return { label, shortLabel, since }
+}
+
+async function computeStats(address: `0x${string}`): Promise<BotUserStats | null> {
+  try {
+    return await computeBotUserStats(address)
+  } catch (error) {
+    console.warn('[agent-auto-reply] compute stats failed', (error as Error)?.message || error)
+    return null
+  }
+}
+
+function resolveAddress(author: FarcasterUser | null): `0x${string}` | null {
+  if (!author) return null
+  const verified = Array.isArray(author.verifications)
+    ? author.verifications
+        .map((value) => normalizeAddress(value))
+        .find((value): value is `0x${string}` => Boolean(value))
+    : null
+
+  if (verified) return verified
+
+  const custody = normalizeAddress(author.custodyAddress || author.walletAddress)
+  return custody ?? null
+}
+
+async function summariseUserEvents(options: {
+  fid: number
+  address: `0x${string}`
+  eventTypes: CommunityEventType[]
+  since: Date
+}): Promise<SummarisedEvents> {
+  if (!isSupabaseConfigured()) {
+    return { totalDelta: 0, totalEvents: 0, lastEventAt: null }
+  }
+
+  const client = getSupabaseServerClient()
+  if (!client) {
+    return { totalDelta: 0, totalEvents: 0, lastEventAt: null }
+  }
+
+  try {
+    let query = client
+      .from('gmeow_rank_events')
+      .select('delta,created_at', { count: 'exact' })
+      .eq('fid', options.fid)
+      .eq('wallet_address', options.address)
+      .gte('created_at', options.since.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(MAX_EVENT_ROWS)
+
+    if (options.eventTypes.length) {
+      query = query.in('event_type', options.eventTypes as unknown as string[])
+    }
+
+    const { data, count, error } = await query
+
+    if (error) {
+      console.warn('[agent-auto-reply] summarise query failed', error.message)
+      return { totalDelta: 0, totalEvents: 0, lastEventAt: null }
+    }
+
+    const rows = Array.isArray(data) ? data : []
+    let totalDelta = 0
+    let lastEventAt: Date | null = null
+
+    for (const row of rows) {
+      const delta = Number((row as any)?.delta ?? 0)
+      if (Number.isFinite(delta)) totalDelta += delta
+      const createdAtIso = typeof (row as any)?.created_at === 'string' ? (row as any).created_at : null
+      if (createdAtIso) {
+        const createdAt = new Date(createdAtIso)
+        if (!lastEventAt || createdAt > lastEventAt) {
+          lastEventAt = createdAt
+        }
+      }
+    }
+
+    return {
+      totalDelta,
+      totalEvents: typeof count === 'number' && Number.isFinite(count) ? count : rows.length,
+      lastEventAt,
+    }
+  } catch (error) {
+    console.warn('[agent-auto-reply] summarise events failed', (error as Error)?.message || error)
+    return { totalDelta: 0, totalEvents: 0, lastEventAt: null }
+  }
+}
+
+function buildStatsMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents): string {
+  const deltaLabel = summary.totalDelta > 0 ? ` +${formatPoints(summary.totalDelta)} pts ${timeframe.shortLabel}.` : ''
+  const streakLabel = stats.streak > 0 ? ` Streak ${stats.streak}d.` : ''
+  const lastGmLabel = stats.lastGM ? ` Last GM ${formatRelativeTime(stats.lastGM)}.` : ''
+  const core = `gm ${handle} 🐾 Level ${stats.level} ${stats.tierName} on deck with ${formatPoints(stats.totalPoints)} pts.${deltaLabel}${streakLabel}${lastGmLabel}`
+  return `${core} Profile → https://gmeowhq.art/profile`
+}
+
+function buildTipsMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents): string {
+  const windowPoints = summary.totalDelta > 0 ? formatPoints(summary.totalDelta) : '0'
+  const windowEvents = summary.totalEvents > 0 ? ` across ${summary.totalEvents} boosts` : ''
+  const allTime = stats.tipsAll != null ? formatPoints(stats.tipsAll) : '—'
+  const body = `gm ${handle}! Tips ${timeframe.shortLabel}: ${windowPoints} pts${windowEvents}. All-time tips ${allTime} pts.`
+  return `${body} Leaderboard → https://gmeowhq.art/leaderboard`
+}
+
+function buildStreakMessage(handle: string, stats: BotUserStats): string {
+  if (stats.streak <= 0) {
+    return `gm ${handle}! No streak detected yet, but your ledger shows ${formatPoints(stats.totalPoints)} pts. Log a GM to ignite it → https://gmeowhq.art/Quest`
+  }
+
+  const lastGm = stats.lastGM ? ` Last GM ${formatRelativeTime(stats.lastGM)}.` : ''
+  return `gm ${handle}! ${stats.streak}-day streak active with ${formatPoints(stats.totalPoints)} pts.${lastGm} Keep it rolling → https://gmeowhq.art/Quest`
+}
+
+function buildQuestMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents): string {
+  const completions = summary.totalEvents > 0
+    ? `${summary.totalEvents} verified quests ${timeframe.shortLabel}`
+    : 'No verified quests in this window'
+  const delta = summary.totalDelta > 0 ? ` worth ${formatPoints(summary.totalDelta)} pts` : ''
+  const tier = `Level ${stats.level} ${stats.tierName}`
+  return `gm ${handle}! ${completions}${delta}. ${tier} is ready for the next contract → https://gmeowhq.art/Quest`
+}
+
+function buildLeaderboardMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents): string {
+  const delta = summary.totalDelta > 0 ? ` +${formatPoints(summary.totalDelta)} pts ${timeframe.shortLabel}` : ''
+  return `gm ${handle}! ${stats.tierName} shell with ${formatPoints(stats.totalPoints)} pts.${delta} Scope your rank → https://gmeowhq.art/leaderboard`
+}
+
+function buildGreetingMessage(handle: string, stats: BotUserStats, summary: SummarisedEvents): string {
+  const gmCount = summary.totalEvents > 0 ? `${summary.totalEvents} GMs logged this week` : 'Let’s log your next GM'
+  return `gm ${handle}! ${gmCount}. Ledger: ${formatPoints(stats.totalPoints)} pts. Dive in → https://gmeowhq.art/Quest`
+}
+
+function buildHelpMessage(handle: string): string {
+  return `gm ${handle}! Ask things like "how many tips this week?", "what’s my streak?", or "show my XP" and I’ll pull the receipts. Command deck → https://gmeowhq.art/Agent`
+}
+
+function buildMissingWalletMessage(handle: string): string {
+  return `gm ${handle}! Link an ETH wallet in Warpcast settings so I can sync your quests, streaks, and tips. Ping me again once it’s connected.`
+}
+
+function buildStatsUnavailableMessage(handle: string): string {
+  return `gm ${handle}! Telemetry is warming up. Give me a minute and try again once the indexer settles.`
+}
+
+function formatHandle(username?: string | null, displayName?: string | null): string {
+  if (username && username.trim().length > 0) {
+    const trimmed = username.trim().replace(/^@+/, '')
+    return `@${trimmed}`
+  }
+
+  if (displayName && displayName.trim().length > 0) {
+    return displayName.trim()
+  }
+
+  return 'friend'
+}
+
+function trimToLimit(message: string): string {
+  if (message.length <= CAST_CHARACTER_LIMIT) return message
+  return `${message.slice(0, CAST_CHARACTER_LIMIT - 1)}…`
+}
+
+function formatPoints(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return '0'
+  return Math.round(value).toLocaleString('en-US')
+}
+
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now()
+  const diffMs = Math.max(0, now - timestamp)
+  const minutes = Math.floor(diffMs / (60 * 1000))
+
+  if (minutes < 1) return 'just now'
+  if (minutes === 1) return '1 min ago'
+  if (minutes < 60) return `${minutes} mins ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours === 1) return '1 hour ago'
+  if (hours < 24) return `${hours} hours ago`
+
+  const days = Math.floor(hours / 24)
+  if (days === 1) return '1 day ago'
+  if (days < 7) return `${days} days ago`
+
+  const weeks = Math.floor(days / 7)
+  if (weeks === 1) return '1 week ago'
+  return `${weeks} weeks ago`
+}
+
+function startOfUtcDay(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0))
+}
+
+function startOfUtcWeek(date: Date): Date {
+  const dayIndex = date.getUTCDay() || 7
+  const start = new Date(date.getTime() - (dayIndex - 1) * 24 * 60 * 60 * 1000)
+  return startOfUtcDay(start)
+}
+
+function startOfUtcMonth(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0))
+}
+// @edit-end
