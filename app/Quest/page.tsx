@@ -659,6 +659,28 @@ export default function QuestHubPage() {
               </Button>
             </div>
           </div>
+          {/* Creator CTA Section */}
+          <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border border-primary/20 bg-primary/5">
+            <div className="flex-1">
+              <h2 className="text-base font-bold text-foreground mb-1">
+                Create Your Own Quest
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Design custom missions, set rewards, and engage your community with on-chain quests.
+              </p>
+            </div>
+            <Link
+              href="/Quest/creator"
+              className={cn(
+                buttonVariants({ size: 'small', variant: 'solid', color: 'primary' }),
+                'whitespace-nowrap min-h-[44px] px-6 gap-2'
+              )}
+            >
+              <span>🎯</span>
+              Quest Creator
+            </Link>
+          </div>
+
           <div className="flex flex-col gap-2">
             <span className="theme-shell-label text-[10px] uppercase tracking-[0.3em]" id="type-filter-label">
               Mission type

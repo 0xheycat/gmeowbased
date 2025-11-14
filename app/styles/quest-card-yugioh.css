@@ -37,18 +37,24 @@
     inset 0 2px 4px rgba(255, 255, 255, 0.4);
 }
 
-/* Inner card body with dark background */
+/* Inner card body with glass morphism effect */
 .quest-card-yugioh__body {
   position: relative;
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, #2a2218 0%, #1a1410 100%);
+  background: linear-gradient(180deg, 
+    rgba(42, 34, 24, 0.65) 0%, 
+    rgba(26, 20, 16, 0.75) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 12px;
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /* ===== 1. TITLE BAR (Golden name strip at top) ===== */
@@ -384,11 +390,17 @@
   }
 }
 
-/* ===== TIER VARIANTS (Different card colors) ===== */
+/* ===== TIER VARIANTS (Different card colors with glass tints) ===== */
 .quest-card-yugioh[data-tier="common"] {
   --card-gold: #c0c0c0;
   --card-gold-dark: #808080;
   --card-gold-light: #e8e8e8;
+}
+
+.quest-card-yugioh[data-tier="common"] .quest-card-yugioh__body {
+  background: linear-gradient(180deg, 
+    rgba(192, 192, 192, 0.08) 0%, 
+    rgba(26, 20, 16, 0.75) 100%);
 }
 
 .quest-card-yugioh[data-tier="rare"] {
@@ -397,10 +409,22 @@
   --card-gold-light: #60a5fa;
 }
 
+.quest-card-yugioh[data-tier="rare"] .quest-card-yugioh__body {
+  background: linear-gradient(180deg, 
+    rgba(65, 105, 225, 0.12) 0%, 
+    rgba(26, 20, 16, 0.75) 100%);
+}
+
 .quest-card-yugioh[data-tier="epic"] {
   --card-gold: #9333ea;
   --card-gold-dark: #6b21a8;
   --card-gold-light: #c084fc;
+}
+
+.quest-card-yugioh[data-tier="epic"] .quest-card-yugioh__body {
+  background: linear-gradient(180deg, 
+    rgba(147, 51, 234, 0.15) 0%, 
+    rgba(26, 20, 16, 0.75) 100%);
 }
 
 .quest-card-yugioh[data-tier="legendary"] {
@@ -408,6 +432,12 @@
   --card-gold-dark: #b45309;
   --card-gold-light: #fbbf24;
   animation: legendary-glow 3s ease-in-out infinite alternate;
+}
+
+.quest-card-yugioh[data-tier="legendary"] .quest-card-yugioh__body {
+  background: linear-gradient(180deg, 
+    rgba(245, 158, 11, 0.18) 0%, 
+    rgba(26, 20, 16, 0.75) 100%);
 }
 
 @keyframes legendary-glow {
