@@ -11,6 +11,7 @@ import {
   type ChainKey,
 } from '@/lib/gm-utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import { chainStateCache } from '@/lib/cache-storage'
 
 type UserStatsTuple = readonly [
   bigint,          // lastGMTime
@@ -63,7 +64,6 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
   const [history, setHistory] = useState<GMRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const pushNotification = useLegacyNotificationAdapter()
-  const historyCache = useRef<Map<string, GMRecord[]>>(new Map())
   const lastAddressRef = useRef<string | null>(null)
   const [autoHydrate, setAutoHydrate] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -91,7 +91,8 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
       return
     }
 
-    const cached = historyCache.current.get(normalized)
+    const cacheKey = `gmhistory:${normalized}`
+    const cached = chainStateCache.get(cacheKey) as GMRecord[] | null
     if (cached) {
       setHistory(cached)
       setHasLoaded(true)
@@ -202,7 +203,8 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
         return (b.streak || 0) - (a.streak || 0)
       })
 
-      historyCache.current.set(normalized, combined)
+      const cacheKey = `gmhistory:${normalized}`
+      chainStateCache.set(cacheKey, combined)
       setHistory(combined)
       setHasLoaded(true)
 
@@ -229,7 +231,8 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
     const isNewAddress = lastAddressRef.current !== normalized
     lastAddressRef.current = normalized
 
-    const cached = historyCache.current.get(normalized)
+    const cacheKey = `gmhistory:${normalized}`
+    const cached = chainStateCache.get(cacheKey) as GMRecord[] | null
     if (cached) {
       setHistory(cached)
       setHasLoaded(true)

@@ -18,6 +18,8 @@ const FILTER_LABELS: Record<'all' | NotificationCategory, string> = {
   tip: 'Tips',
   level: 'Level Ups',
   reminder: 'Reminders',
+  mention: 'Mentions',
+  streak: 'Streaks',
 }
 
 const CATEGORY_ICONS: Partial<Record<NotificationCategory, string>> = {
@@ -29,6 +31,8 @@ const CATEGORY_ICONS: Partial<Record<NotificationCategory, string>> = {
   tip: '⚡',
   level: '🚀',
   reminder: '⏰',
+  mention: '💬',
+  streak: '🔥',
 }
 
 function formatTimeAgo(timestamp: number): string {

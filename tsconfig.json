@@ -42,6 +42,9 @@
   "exclude": [
     "node_modules",
     "Planing/**/*",
-    "planning/templates/gmeow2/**/*"
+    "planning/templates/gmeow2/**/*",
+    "scripts/run-migration.ts",
+    "scripts/run-migration-pg.ts",
+    "scripts/test-notification-history.ts"
   ]
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import type { ChainKey } from '@/lib/gm-utils'
 
 export const CHAIN_BRAND: Record<ChainKey, { bg: string; fg: string; label: string; title: string }> = {
@@ -41,26 +41,106 @@ export function ChainSwitcher({
   ensureChainAsync?: (c: ChainKey) => Promise<boolean>
 }) {
   const [open, setOpen] = useState(false)
+  const [focusedIndex, setFocusedIndex] = useState(0)
   const ref = useRef<HTMLDivElement | null>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const announcementRef = useRef<HTMLDivElement>(null)
 
+  // Static chains array to avoid dependency issues
+  const chains = useMemo<ChainKey[]>(() => ['base', 'unichain', 'celo', 'ink', 'op'], [])
+
+  // Screen reader announcements
+  const announce = useCallback((message: string) => {
+    if (announcementRef.current) {
+      announcementRef.current.textContent = message
+      setTimeout(() => {
+        if (announcementRef.current) announcementRef.current.textContent = ''
+      }, 1000)
+    }
+  }, [])
+
+  const pick = useCallback(async (c: ChainKey) => {
+    setOpen(false)
+    announce(`${CHAIN_BRAND[c].title} selected`)
+    onSelect(c)
+    if (autoSwitch && ensureChainAsync) await ensureChainAsync(c)
+    buttonRef.current?.focus()
+  }, [announce, onSelect, autoSwitch, ensureChainAsync])
+
+  // Close dropdown on outside click
   useEffect(() => {
     const onDoc = (e: MouseEvent) => { if (!ref.current) return; if (!ref.current.contains(e.target as Node)) setOpen(false) }
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
   }, [])
 
+    // Keyboard navigation
+  useEffect(() => {
+    if (!open) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setFocusedIndex((prev) => (prev + 1) % chains.length)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setFocusedIndex((prev) => (prev - 1 + chains.length) % chains.length)
+          break
+        case 'Home':
+          e.preventDefault()
+          setFocusedIndex(0)
+          break
+        case 'End':
+          e.preventDefault()
+          setFocusedIndex(chains.length - 1)
+          break
+        case 'Enter':
+        case ' ':
+          e.preventDefault()
+          pick(chains[focusedIndex])
+          break
+        case 'Escape':
+          e.preventDefault()
+          setOpen(false)
+          buttonRef.current?.focus()
+          announce('Dropdown closed')
+          break
+        case 'Tab':
+          setOpen(false)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open, focusedIndex, chains, pick, announce])
+
+  // Reset focused index when opening
+  useEffect(() => {
+    if (open) {
+      const currentIndex = chains.indexOf(selected)
+      setFocusedIndex(currentIndex !== -1 ? currentIndex : 0)
+      announce('Chain selector opened. Use arrow keys to navigate.')
+    }
+  }, [open, selected, chains, announce])
+
   const isBusy = busyChain === selected
   const label = CHAIN_BRAND[selected].title
 
-  const pick = async (c: ChainKey) => {
-    setOpen(false)
-    onSelect(c)
-    if (autoSwitch && ensureChainAsync) await ensureChainAsync(c)
-  }
-
   return (
     <div className={`px-switch ${size}`} ref={ref}>
-      <button type="button" className={`px-switch-btn ${isBusy ? 'busy' : ''}`} onClick={() => setOpen((v) => !v)}
+      {/* Screen reader live region */}
+      <div
+        ref={announcementRef}
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      />
+
+      <button type="button" ref={buttonRef} className={`px-switch-btn ${isBusy ? 'busy' : ''}`} onClick={() => setOpen((v) => !v)}
         title={label} aria-haspopup="listbox" aria-expanded={open}>
         <ChainIcon chain={selected} size={size === 'sm' ? 12 : 14} />
         <span className="px-switch-label">{label}</span>
@@ -69,9 +149,11 @@ export function ChainSwitcher({
 
       {open && (
         <div className="px-menu px-menu-enter" role="listbox" aria-label="Select chain">
-          {(['base','unichain','celo','ink','op'] as ChainKey[]).map((c) => (
+          {chains.map((c, index) => (
             <button key={c} role="option" aria-selected={c === selected}
-              className={`px-menu-item ${c === selected ? 'active' : ''}`} onClick={() => pick(c)}>
+              data-chain-index={index}
+              className={`px-menu-item ${c === selected ? 'active' : ''} ${index === focusedIndex ? 'focused' : ''}`}
+              onClick={() => pick(c)}>
               <ChainIcon chain={c} size={12} />
               <span className="px-item-label">{CHAIN_BRAND[c].title}</span>
               {c === selected ? <span className="px-check">✓</span> : null}
