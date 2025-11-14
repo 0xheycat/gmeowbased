@@ -60,7 +60,7 @@ function miniappButtonKey(index: number, ...parts: Array<string | number>): stri
 
 const DEFAULT_HTML_HEADERS: Record<string, string> = {
   'content-type': 'text/html; charset=utf-8',
-  'content-security-policy': "frame-ancestors 'self' https://warpcast.com https://*.base.dev https://base.dev https://*.farcaster.xyz https://farcaster.xyz https://privy.farcaster.xyz https://wallet.farcaster.xyz;",
+  'content-security-policy': "frame-ancestors 'self' https://warpcast.com https://*.base.dev https://base.dev https://*.farcaster.xyz https://farcaster.xyz https://privy.farcaster.xyz https://wallet.farcaster.xyz; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://privy.farcaster.xyz https://wallet.farcaster.xyz https://*.farcaster.xyz; connect-src 'self' https://privy.farcaster.xyz https://wallet.farcaster.xyz https://*.farcaster.xyz https://api.neynar.com wss://*.farcaster.xyz; img-src 'self' data: https: blob:;",
   'x-frame-options': 'ALLOWALL',
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, OPTIONS',
@@ -2281,7 +2281,34 @@ export async function GET(req: Request) {
         if (!value || value === '—') continue
         fcMeta[miniappFrameKey('onchain', key)] = value
       }
-      const image = defaultFrameImage
+      // Generate dynamic OG image URL with stats
+      const imageParams = new URLSearchParams()
+      imageParams.set('title', `Onchain Stats — ${chainDisplay}`)
+      imageParams.set('subtitle', identitySegment || 'Wallet Analytics')
+      imageParams.set('chain', chainDisplay)
+      imageParams.set('footer', `gmeowhq.art • ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`)
+      
+      // Add up to 4 metrics for the OG image
+      const metricPairs: Array<[string, string]> = [
+        ['Transactions', metrics.txs],
+        ['Volume', metrics.volume],
+        ['Builder Score', metrics.builder],
+        ['Neynar Score', metrics.neynar],
+      ].filter(([, value]) => value && value !== '—')
+      
+      metricPairs.slice(0, 4).forEach(([label, value], index) => {
+        imageParams.set(`metric${index + 1}Label`, label)
+        imageParams.set(`metric${index + 1}Value`, value)
+      })
+      
+      // Add badge if user has power badge
+      if (metrics.power && metrics.power.toLowerCase() === 'yes') {
+        imageParams.set('badgeLabel', 'Power Badge')
+        imageParams.set('badgeTone', 'gold')
+        imageParams.set('badgeIcon', '⚡')
+      }
+      
+      const image = `${origin}/api/frame/og?${imageParams.toString()}`
       const identityForJson = resolvedProfile || userParam
         ? {
             username: resolvedProfile?.username || null,
