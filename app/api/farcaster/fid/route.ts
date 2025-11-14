@@ -6,7 +6,7 @@ function isAddress(a?: string): a is Address {
   return !!a && /^0x[a-fA-F0-9]{40}$/.test(a)
 }
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export async function GET(req: Request) {
   try {

@@ -25,7 +25,7 @@ import gm, {
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
 import { buildFrameShareUrl } from '@/lib/share'
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 export const revalidate = 500
 // If you maintain a neynar helper module, use it; otherwise this file contains
 // lightweight neynar helpers (below) that behave reasonably for embedded use.

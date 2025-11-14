@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { fetchUsersByAddresses } from '@/lib/neynar'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   try {
