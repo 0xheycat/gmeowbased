@@ -67,12 +67,18 @@ async function enforceAdminSecurity(req: NextRequest) {
 
 export async function middleware(req: NextRequest) {
   try {
+    // Early return for static assets that somehow pass the matcher
+    const pathname = req.nextUrl?.pathname
+    if (!pathname || pathname.startsWith('/_next/') || pathname.includes('.')) {
+      return NextResponse.next()
+    }
+
     const adminEnforcement = await enforceAdminSecurity(req)
     if (adminEnforcement) return adminEnforcement
 
     if (!ENABLED) return NextResponse.next()
 
-    const { pathname, href } = req.nextUrl
+    const { href } = req.nextUrl
 
     // Allow the maintenance page, auth API, and common public assets
     const allow = [
@@ -108,5 +114,15 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: '/:path*',
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files
+     * - .well-known (for manifests)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+  ],
 }
