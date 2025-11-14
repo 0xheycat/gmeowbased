@@ -3,6 +3,13 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "cleanUrls": true,
+  "functions": {
+    "middleware.js": {
+      "runtime": "nodejs22.x",
+      "memory": 128,
+      "maxDuration": 10
+    }
+  },
   "redirects": [
     {
       "source": "/.well-known/farcaster.json",

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // output: 'standalone', // Removed for Vercel ESM compatibility - not needed for Vercel deployments
   async redirects() {
     return [
       {
