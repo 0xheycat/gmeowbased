@@ -2321,7 +2321,7 @@ export async function GET(req: Request) {
         ['Volume', metrics.volume],
         ['Builder Score', metrics.builder],
         ['Neynar Score', metrics.neynar],
-      ].filter(([, value]) => value && value !== '—')
+      ].filter((pair): pair is [string, string] => pair[1] != null && pair[1] !== '—')
       
       metricPairs.slice(0, 4).forEach(([label, value], index) => {
         imageParams.set(`metric${index + 1}Label`, label)

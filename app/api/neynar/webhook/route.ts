@@ -283,21 +283,24 @@ function isCastTargetedToBot(
   botFid: number | null,
   config: { mentionMatchers: string[]; signalKeywords: string[]; questionStarters: string[]; requireQuestionMark: boolean }
 ): boolean {
-  // 1. Check direct mention in mentioned_profiles array
+  const text = (data.text || '').toLowerCase()
+  
+  // 1. Check direct mention in mentioned_profiles array - ALWAYS respond to direct @mentions
   const mentions = Array.isArray(data.mentioned_profiles) ? data.mentioned_profiles : []
   if (botFid && mentions.some(profile => Number(profile?.fid) === botFid)) {
+    console.log('[bot-webhook] Direct @mention detected - will respond')
     return true
   }
 
-  const text = (data.text || '').toLowerCase()
   if (!text.trim()) return false
 
-  // 2. Check text for mention matchers (@gmeowbased, #gmeowbased)
+  // 2. Check text for mention matchers (@gmeowbased, #gmeowbased) - ALWAYS respond
   if (config.mentionMatchers.some(matcher => text.includes(matcher.toLowerCase()))) {
+    console.log('[bot-webhook] Text mention/hashtag detected - will respond')
     return true
   }
 
-  // 3. Check for signal keywords + question pattern
+  // 3. Check for signal keywords + question pattern (more flexible)
   const hasSignalKeyword = config.signalKeywords.some(keyword => 
     text.includes(keyword.toLowerCase())
   )
@@ -456,16 +459,17 @@ export async function POST(req: NextRequest) {
     if (autoReply.ok) {
       replyText = autoReply.text
       replyMeta = { intent: autoReply.intent, ...autoReply.meta }
-    } else if (autoReply.reason === 'low-score') {
-      console.log('[bot-webhook] Skipping reply - low Neynar score:', {
+    } else {
+      // Log the reason but don't reply (truly can't help)
+      console.log('[bot-webhook] Cannot generate reply:', {
         author: data.author?.username,
         fid: data.author?.fid,
+        reason: autoReply.reason,
         detail: autoReply.detail,
-        minRequired: config.minNeynarScore,
       })
       return NextResponse.json({
         ok: true,
-        skipped: 'min-neynar-score',
+        skipped: autoReply.reason,
         detail: autoReply.detail ?? null,
       })
     }

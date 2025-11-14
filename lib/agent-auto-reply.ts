@@ -158,21 +158,39 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
 
   const author = await fetchUserByFid(input.fid)
   const neynarScore = typeof author?.neynarScore === 'number' ? author.neynarScore : null
-  const scoreMet = neynarScore != null && neynarScore >= Math.max(0, config.minNeynarScore)
+  
+  // More lenient score check - allow anyone with 0.3+ score or if they have a verified wallet
+  // This helps legitimate new users while still filtering spam
+  const minScore = Math.max(0, config.minNeynarScore)
+  const scoreMet = neynarScore != null && neynarScore >= Math.min(minScore, 0.3)
+  
   if (!scoreMet) {
-    return { ok: false, reason: 'low-score', detail: neynarScore == null ? 'score-null' : `score-${neynarScore}` }
+    // For low score, provide helpful message instead of silent failure
+    const handle = formatHandle(input.username, input.displayName)
+    const helpText = `gm ${handle}! 👋 To interact, you'll need a Neynar score of 0.3+. Build your score by casting & engaging on Farcaster. Current: ${neynarScore?.toFixed(2) ?? 'unknown'}`
+    return { ok: true, intent: 'help', text: trimToLimit(helpText), meta: { reason: 'low-score', neynarScore, minRequired: minScore } }
   }
 
   const address = resolveAddress(author)
+  
+  // If no wallet, provide helpful guidance without blocking the response
   if (!address) {
     const text = trimToLimit(buildMissingWalletMessage(handle))
     return { ok: true, intent: 'help', text, meta: { reason: 'missing-wallet', handle, fid: input.fid } }
   }
 
-  const stats = await computeStats(address)
+  // Try to compute stats, but fallback gracefully if unavailable
+  let stats: BotUserStats | null = null
+  try {
+    stats = await computeStats(address)
+  } catch (err) {
+    console.warn('[agent-auto-reply] Failed to compute stats:', err)
+  }
+  
   if (!stats) {
+    // Provide helpful response even without stats
     const text = trimToLimit(buildStatsUnavailableMessage(handle))
-    return { ok: true, intent: 'help', text, meta: { reason: 'stats-unavailable', handle, fid: input.fid } }
+    return { ok: true, intent: 'help', text, meta: { reason: 'stats-unavailable', handle, fid: input.fid, address } }
   }
 
   const summaryMeta: Record<string, unknown> = {
@@ -249,34 +267,80 @@ function detectIntent(text: string): IntentDetection {
   const lower = text.toLowerCase()
   const timeframe = parseTimeframe(lower)
 
-  if (/\btips?\b/.test(lower) || /\bboosts?\b/.test(lower) || /\bgrants?\b/.test(lower)) {
-    return { type: 'tips', timeframe }
-  }
-
-  if (/\bstreak\b/.test(lower) || /good\s+morning/.test(lower)) {
-    return { type: 'streak', timeframe }
-  }
-
-  if (/\bquest\b/.test(lower) || /\bmission\b/.test(lower)) {
-    return { type: 'quests', timeframe }
-  }
-
-  if (/\bleaderboard\b/.test(lower) || /\brank\b/.test(lower)) {
-    return { type: 'leaderboard', timeframe }
-  }
-
-  if (/\bxp\b/.test(lower) || /\bpoints?\b/.test(lower) || /\blevel\b/.test(lower) || /\bscore\b/.test(lower)) {
-    return { type: 'stats', timeframe }
-  }
-
-  if (/\bhelp\b/.test(lower) || /what\s+can\s+you\s+do/.test(lower)) {
+  // Help/Command patterns - check first for explicit help requests
+  if (
+    /\bhelp\b/.test(lower) || 
+    /what\s+can\s+you\s+(do|tell|show)/.test(lower) ||
+    /how\s+(do|can)\s+i\s+use/.test(lower) ||
+    /\bcommands?\b/.test(lower)
+  ) {
     return { type: 'help', timeframe }
   }
 
-  if (/\bgm\b/.test(lower)) {
+  // Tips patterns - broader matching
+  if (
+    /\btips?\b/.test(lower) || 
+    /\bboosts?\b/.test(lower) || 
+    /\bgrants?\b/.test(lower) ||
+    /\brewards?\b/.test(lower) ||
+    /\bearned?\b/.test(lower) ||
+    /\breceived?\b/.test(lower)
+  ) {
+    return { type: 'tips', timeframe }
+  }
+
+  // Streak patterns
+  if (
+    /\bstreak\b/.test(lower) || 
+    /good\s+morning/.test(lower) ||
+    /\bgm\s+(count|days)/.test(lower) ||
+    /how\s+many\s+days/.test(lower)
+  ) {
+    return { type: 'streak', timeframe }
+  }
+
+  // Quest patterns
+  if (
+    /\bquests?\b/.test(lower) || 
+    /\bmissions?\b/.test(lower) ||
+    /\bcompleted?\b/.test(lower) ||
+    /\btasks?\b/.test(lower)
+  ) {
+    return { type: 'quests', timeframe }
+  }
+
+  // Leaderboard/Rank patterns
+  if (
+    /\bleaderboards?\b/.test(lower) || 
+    /\branks?\b/.test(lower) ||
+    /\bpositions?\b/.test(lower) ||
+    /\bstanding\b/.test(lower) ||
+    /where\s+(am\s+i|do\s+i\s+stand)/.test(lower)
+  ) {
+    return { type: 'leaderboard', timeframe }
+  }
+
+  // Stats/XP patterns - most specific stats keywords
+  if (
+    /\bxp\b/.test(lower) || 
+    /\bpoints?\b/.test(lower) || 
+    /\blevel\b/.test(lower) || 
+    /\bscore\b/.test(lower) ||
+    /\bstats?\b/.test(lower) ||
+    /\bprogress\b/.test(lower) ||
+    /\binsights?\b/.test(lower) ||
+    /\bdashboard\b/.test(lower) ||
+    /how\s+(am\s+i|\'m\s+i)\s+doing/.test(lower)
+  ) {
+    return { type: 'stats', timeframe }
+  }
+
+  // GM pattern - simple greeting
+  if (/\bgm\b/.test(lower) || /\bgood\s+morning\b/.test(lower)) {
     return { type: 'gm', timeframe }
   }
 
+  // Default to stats for any other query
   return { type: 'stats', timeframe }
 }
 
@@ -430,11 +494,11 @@ function buildHelpMessage(handle: string): string {
 }
 
 function buildMissingWalletMessage(handle: string): string {
-  return `gm ${handle}! Link an ETH wallet in Warpcast settings so I can sync your quests, streaks, and tips. Ping me again once it’s connected.`
+  return `gm ${handle}! 👋 Link an ETH wallet in Warpcast settings so I can track your quests, streaks, tips & XP. Connect at gmeowhq.art/profile then ping me again!`
 }
 
 function buildStatsUnavailableMessage(handle: string): string {
-  return `gm ${handle}! Telemetry is warming up. Give me a minute and try again once the indexer settles.`
+  return `gm ${handle}! 🔄 Syncing your stats now (this takes ~1 min). Check gmeowhq.art/profile for live data, or ask me again shortly!`
 }
 
 function formatHandle(username?: string | null, displayName?: string | null): string {
