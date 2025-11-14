@@ -243,7 +243,21 @@ export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOp
 
   const appliedTypes = (requestedTypes.length ? requestedTypes : COMMUNITY_EVENT_TYPES).filter((type): type is CommunityEventType => COMMUNITY_EVENT_TYPES.includes(type))
   const limit = clampLimit(options.limit, DEFAULT_LIMIT)
-  const since = options.since && options.since.trim().length ? options.since : null
+  
+  // Validate and normalize since parameter to prevent query errors
+  let sinceFilter: string | null = null
+  if (options.since && options.since.trim().length) {
+    try {
+      const sinceDate = new Date(options.since)
+      if (!isNaN(sinceDate.getTime())) {
+        sinceFilter = sinceDate.toISOString()
+      } else {
+        console.warn('[community-events] Invalid since parameter (not a valid date):', options.since)
+      }
+    } catch (err) {
+      console.warn('[community-events] Failed to parse since parameter:', options.since, (err as Error)?.message)
+    }
+  }
 
   let query = client
     .from(RANK_EVENT_TABLE)
@@ -255,12 +269,26 @@ export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOp
     query = query.in('event_type', appliedTypes as unknown as string[])
   }
 
-  if (since) {
-    query = query.gt('created_at', since)
+  if (sinceFilter) {
+    query = query.gt('created_at', sinceFilter)
   }
 
   const { data, error } = await query
   if (error) {
+    console.error('[community-events] Supabase query failed:', {
+      error,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+      message: error.message,
+      table: RANK_EVENT_TABLE,
+      filters: { 
+        appliedTypes, 
+        limit, 
+        since: sinceFilter,
+        originalSince: options.since,
+      },
+    })
     throw new Error(`[community-events] Supabase query failed: ${error.message}`)
   }
 
@@ -328,7 +356,7 @@ export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOp
     }
   })
 
-  const nextCursor = events.length ? events[0]?.cursor ?? null : since
+  const nextCursor = events.length ? events[0]?.cursor ?? null : sinceFilter
 
   return {
     events,
@@ -338,7 +366,7 @@ export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOp
       limit,
       requestedTypes,
       appliedTypes,
-      since,
+      since: sinceFilter,
       supabaseConfigured,
     },
   }
