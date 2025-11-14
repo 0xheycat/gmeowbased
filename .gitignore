@@ -53,12 +53,3 @@ authbase.md
 /planning/
 .copilot/
 
-git remote remove origin 2>/dev/null; git config --global --unset user.name 2>/dev/null; git config --global --unset user.email 2>/dev/null; rm -rf .git; npm cache clean --force; echo "Git and npm cache cleared successfully"
-git init && git add . && git commit -m "git commit -m "feat: Update Gmeow Adventure with baseBuilder, SDK upgrades, and adventure theme
-git config user.email "gazarmy24@gmail.com" && git config user.name "0xheycat"
-- Add baseBuilder config to manifest with owner address
-- Upgrade @neynar/nodejs-sdk to 3.85.0 and @neynar/react to 1.2.22
-- Update manifest and layout metadata with adventure theme
-- All Farcaster frame implementations audited and verified
-- Mobile-first design confirmed throughout codebase
-- Clean npm cache and build artifacts"
