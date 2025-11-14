@@ -1,7 +1,7 @@
 # Sprint 1: Quest Wizard Refactor Progress
 
 **Goal**: Reduce QuestWizard.tsx from 3,808 lines → ~200 lines
-**Status**: 🟡 **40% Complete**
+**Status**: 🟡 **50% Complete** (Updated: Nov 14, 2025)
 
 ---
 
@@ -49,7 +49,17 @@ components/quest-wizard/
 
 **Lines Extracted**: ~289 lines
 
-**Total Extracted So Far**: 439 lines / 3,808 lines = 11.5%
+### 4. Helpers Extracted (100%)
+**Files Created**:
+- `helpers.ts` (246 lines)
+  * createTokenLookup(), createNftLookup()
+  * deriveTokenEscrowStatus() - 24hr warm-up validation
+  * summarizeDraft() - quest preview generation
+  * deriveQuestModeFromKey()
+
+**Lines Extracted**: ~246 lines
+
+**Total Extracted So Far**: 685 lines / 3,808 lines = 18%
 
 ---
 
@@ -166,8 +176,9 @@ Total Lines: 3,808
 
 1. `dbd23c8` - feat(quest-wizard): Sprint 1 - extract utilities
 2. `302736b` - feat(quest-wizard): Sprint 1 - extract validation logic
+3. `f8f2783` - feat(quest-wizard): Sprint 1 - extract helper functions
 
-**Next Commit**: Extract step components (1,332 lines)
+**Next Commit**: Extract hooks (useWizardState, useAssetCatalog, useWalletAuth)
 
 ---
 
