@@ -9,6 +9,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 
 import { ChainIcon } from '@/components/Quest/QuestChainBadge'
+import { isBookmarked, toggleBookmark } from '@/lib/quest-bookmarks'
+import '@/app/styles/quest-card-yugioh.css'
 import type { RewardAssetInfo, RewardDetail } from '@/components/Quest/QuestRewardCapsule'
 import type { ChainKey, QuestTypeKey } from '@/lib/gm-utils'
 import { buildFrameShareUrl } from '@/lib/share'
@@ -117,25 +119,25 @@ export function QuestCard({ quest, index, featured = false }: QuestCardProps) {
   const targetLookup = useMemo(() => deriveTargetLookup(quest), [quest])
   const [fetchedCastPreview, setFetchedCastPreview] = useState<CastPreview | null>(null)
   const [targetProfile, setTargetProfile] = useState<TargetProfilePreview | null>(initialTargetProfile)
-  // Bookmark and copy functionality removed for Yu-Gi-Oh card redesign
-  // const [bookmarked, setBookmarked] = useState(false)
-  // const [copySuccess, setCopySuccess] = useState(false)
+  const [bookmarked, setBookmarked] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
+  const [imageError, setImageError] = useState(false)
 
   // Check bookmark status on mount
-  // useEffect(() => {
-  //   setBookmarked(isBookmarked(quest.chain, quest.id))
-  // }, [quest.chain, quest.id])
+  useEffect(() => {
+    setBookmarked(isBookmarked(quest.chain, quest.id))
+  }, [quest.chain, quest.id])
 
   // Handle bookmark toggle
-  // const handleBookmarkToggle = (e: React.MouseEvent) => {
-  //   e.preventDefault()
-  //   e.stopPropagation()
-  //   toggleBookmark(quest.chain, quest.id, quest.name || 'Unnamed Quest')
-  //   setBookmarked(!bookmarked)
+  const handleBookmarkToggle = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleBookmark(quest.chain, quest.id, quest.name || 'Unnamed Quest')
+    setBookmarked(!bookmarked)
     
-  //   // Dispatch custom event for quest page to refresh
-  //   window.dispatchEvent(new CustomEvent('quest-bookmark-changed'))
-  // }
+    // Dispatch custom event for quest page to refresh
+    window.dispatchEvent(new CustomEvent('quest-bookmark-changed'))
+  }
 
   // Handle copy URL
   // const handleCopyUrl = async (e: React.MouseEvent) => {
@@ -277,6 +279,15 @@ export function QuestCard({ quest, index, featured = false }: QuestCardProps) {
           <h3 className="quest-card-yugioh__name" title={quest.name}>
             {quest.name}
           </h3>
+          <button
+            type="button"
+            className="quest-card-yugioh__bookmark"
+            onClick={handleBookmarkToggle}
+            aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+            title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+          >
+            {bookmarked ? '🔖' : '🔗'}
+          </button>
           <span className="quest-card-yugioh__serial">{questSerial}</span>
         </div>
 
@@ -300,14 +311,31 @@ export function QuestCard({ quest, index, featured = false }: QuestCardProps) {
         <div className="quest-card-yugioh__artwork-frame">
           {backgroundImage ? (
             <>
-              <Image 
-                src={backgroundImage} 
-                alt={quest.name}
-                fill
-                className="quest-card-yugioh__artwork"
-                sizes="420px"
-                unoptimized
-              />
+              {imageLoading && (
+                <div className="quest-card-yugioh__artwork-skeleton" aria-hidden="true">
+                  <div className="quest-card-yugioh__artwork-skeleton-shimmer" />
+                </div>
+              )}
+              {imageError ? (
+                <div className="quest-card-yugioh__artwork-placeholder">
+                  <span className="text-4xl">🎴</span>
+                </div>
+              ) : (
+                <Image 
+                  src={backgroundImage} 
+                  alt={quest.name}
+                  fill
+                  className="quest-card-yugioh__artwork"
+                  sizes="420px"
+                  unoptimized
+                  style={{ opacity: imageLoading ? 0 : 1 }}
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => {
+                    setImageLoading(false)
+                    setImageError(true)
+                  }}
+                />
+              )}
               <div className="quest-card-yugioh__artwork-overlay" />
             </>
           ) : (
