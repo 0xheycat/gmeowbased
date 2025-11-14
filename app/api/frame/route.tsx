@@ -1947,7 +1947,34 @@ export async function GET(req: Request) {
       const description = descriptionPieces.filter(Boolean).join(' • ')
 
       const title = `${questName} • ${questChainName}`
-      const image = defaultFrameImage
+      
+      // Generate dynamic OG image for quest
+      const questImageParams = new URLSearchParams()
+      questImageParams.set('title', questName)
+      questImageParams.set('subtitle', questTypeLabel)
+      questImageParams.set('chain', questChainName)
+      questImageParams.set('footer', `gmeowhq.art • Quest #${questIdNum}`)
+      
+      // Add quest metrics
+      if (rewardSummary) {
+        questImageParams.set('metric1Label', 'Reward')
+        questImageParams.set('metric1Value', rewardSummary)
+      }
+      if (spotsLeft !== null) {
+        const spotLabel = spotsLeft === 0 ? 'FULL' : `${formatInteger(spotsLeft) ?? spotsLeft} Left`
+        questImageParams.set('metric2Label', 'Spots')
+        questImageParams.set('metric2Value', spotLabel)
+      }
+      if (expiresText) {
+        questImageParams.set('metric3Label', 'Expires')
+        questImageParams.set('metric3Value', expiresText)
+      }
+      
+      // Add badge for quest type
+      questImageParams.set('badgeLabel', questTypeLabel)
+      questImageParams.set('badgeTone', 'violet')
+      
+      const image = `${origin}/api/frame/og?${questImageParams.toString()}`
       const frameBtnUrl = `${origin}/Quest/${encodeURIComponent(chainKey)}/${encodeURIComponent(String(questIdNum))}`
       const primaryLabel = questMeta && typeof questMeta === 'object' && typeof questMeta.cta === 'string' && questMeta.cta.trim()
         ? questMeta.cta.trim()

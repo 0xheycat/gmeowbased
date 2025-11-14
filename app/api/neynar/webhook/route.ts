@@ -411,6 +411,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (authorIsBot(data, botFid)) {
+    console.log('[bot-webhook] Skipping self-cast from bot FID:', botFid)
     return NextResponse.json({ ok: true, skipped: 'self-cast' })
   }
 
@@ -423,9 +424,23 @@ export async function POST(req: NextRequest) {
   // Load config early - needed for targeting check
   const config = await loadBotStatsConfig()
 
-  if (!isCastTargetedToBot(data, botFid, config)) {
+  const isTargeted = isCastTargetedToBot(data, botFid, config)
+  if (!isTargeted) {
+    console.log('[bot-webhook] Cast not targeted:', {
+      author: data.author?.username,
+      fid: data.author?.fid,
+      text: data.text?.substring(0, 100),
+      botFid,
+      mentions: data.mentioned_profiles?.map(p => p.fid),
+    })
     return NextResponse.json({ ok: true, skipped: 'bot-not-targeted' })
   }
+  
+  console.log('[bot-webhook] Cast IS targeted to bot:', {
+    author: data.author?.username,
+    fid: data.author?.fid,
+    text: data.text?.substring(0, 100),
+  })
 
   let replyText: string | null = null
   let replyMeta: Record<string, unknown> | null = null
@@ -442,6 +457,12 @@ export async function POST(req: NextRequest) {
       replyText = autoReply.text
       replyMeta = { intent: autoReply.intent, ...autoReply.meta }
     } else if (autoReply.reason === 'low-score') {
+      console.log('[bot-webhook] Skipping reply - low Neynar score:', {
+        author: data.author?.username,
+        fid: data.author?.fid,
+        detail: autoReply.detail,
+        minRequired: config.minNeynarScore,
+      })
       return NextResponse.json({
         ok: true,
         skipped: 'min-neynar-score',
