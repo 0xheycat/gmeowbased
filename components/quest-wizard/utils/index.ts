@@ -6,3 +6,4 @@
 export * from './tokenMath'
 export * from './formatters'
 export * from './sanitizers'
+export * from './minikit'
