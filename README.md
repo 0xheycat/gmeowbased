@@ -39,7 +39,7 @@ Gmeow Adventure is a production-grade Farcaster mini-app that transforms social 
 - **Guild Coordination**: Team-based challenges with shared progress tracking
 
 **Live Deployment**: https://gmeowhq.art  
-**Farcaster Mini App**: https://farcaster.xyz/miniapps/zOCvTtAbTpBY/gmeow  
+**Farcaster Mini App**: https://farcaster.xyz/miniapps/uhjwm4MTUVBr/gmeowbased-adventure  
 **Manifest**: https://gmeowhq.art/.well-known/farcaster.json
 
 ---
