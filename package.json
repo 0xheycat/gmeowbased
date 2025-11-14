@@ -17,7 +17,7 @@
     "tips:worker": "tsx ./scripts/tipHubWorker.ts",
     "automation:run": "tsx ./scripts/automation/run-queue.ts",
     "notifications:gm-reminders": "tsx ./scripts/automation/send-gm-reminders.ts",
-    "prebuild": "npm run lint && npm run clean",
+    "prebuild": "npm run clean && npm run lint",
     "clean": "rimraf .next"
   },
   "dependencies": {
