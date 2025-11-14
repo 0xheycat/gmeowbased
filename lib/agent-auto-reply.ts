@@ -5,6 +5,17 @@ import { type CommunityEventType } from '@/lib/community-event-types'
 import { normalizeAddress } from '@/lib/profile-data'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { 
+  getCachedStats, 
+  setCachedStats, 
+  getCachedEvents, 
+  setCachedEvents,
+  checkRateLimit,
+  getConversationContext,
+  addConversationInteraction,
+} from '@/lib/bot-cache'
+import { detectLanguage, getTranslations } from '@/lib/bot-i18n'
+import { generateQuestRecommendations, formatQuestRecommendations } from '@/lib/bot-quest-recommendations'
 
 const CAST_CHARACTER_LIMIT = 320
 const DEFAULT_STATS_WINDOW_DAYS = 7
@@ -16,9 +27,11 @@ export type AgentIntentType =
   | 'tips'
   | 'streak'
   | 'quests'
+  | 'quest-recommendations'
   | 'leaderboard'
   | 'gm'
   | 'help'
+  | 'rate-limited'
 
 export type TimeframeSpec = {
   label: string
@@ -153,8 +166,29 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
     return { ok: false, reason: 'missing-fid' }
   }
 
+  // 🔒 RATE LIMITING - Check if user exceeded request limit
+  const rateLimit = checkRateLimit(input.fid)
+  if (!rateLimit.allowed) {
+    const secondsUntilReset = Math.ceil((rateLimit.resetAt - Date.now()) / 1000)
+    const minutesRemaining = Math.ceil(secondsUntilReset / 60)
+    const handle = formatHandle(input.username, input.displayName)
+    const rateLimitText = `gm ${handle}! 🚦 Slow down there! You've reached the limit of 5 requests per minute. Try again in ${minutesRemaining} minute${minutesRemaining > 1 ? 's' : ''}.`
+    return { ok: true, intent: 'rate-limited', text: trimToLimit(rateLimitText), meta: { reason: 'rate-limited', resetAt: rateLimit.resetAt } }
+  }
+
+  // 🌍 LANGUAGE DETECTION
+  const detectedLang = detectLanguage(normalizedText)
+  const t = getTranslations(detectedLang)
+
+  // 💬 CONVERSATION CONTEXT - Check if user has previous interactions
+  const context = getConversationContext(input.fid)
+  const hasContext = context && context.interactions.length > 0
+
   const intent = detectIntent(normalizedText)
   const handle = formatHandle(input.username, input.displayName)
+
+  // Store interaction in context
+  addConversationInteraction(input.fid, normalizedText, intent.type)
 
   const author = await fetchUserByFid(input.fid)
   const neynarScore = typeof author?.neynarScore === 'number' ? author.neynarScore : null
@@ -166,31 +200,38 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
   
   if (!scoreMet) {
     // For low score, provide helpful message instead of silent failure
-    const handle = formatHandle(input.username, input.displayName)
-    const helpText = `gm ${handle}! 👋 To interact, you'll need a Neynar score of 0.3+. Build your score by casting & engaging on Farcaster. Current: ${neynarScore?.toFixed(2) ?? 'unknown'}`
-    return { ok: true, intent: 'help', text: trimToLimit(helpText), meta: { reason: 'low-score', neynarScore, minRequired: minScore } }
+    const helpText = `${t.greeting} ${handle}! 👋 ${t.needHigherScore} Current: ${neynarScore?.toFixed(2) ?? 'unknown'}`
+    return { ok: true, intent: 'help', text: trimToLimit(helpText), meta: { reason: 'low-score', neynarScore, minRequired: minScore, lang: detectedLang } }
   }
 
   const address = resolveAddress(author)
   
   // If no wallet, provide helpful guidance without blocking the response
   if (!address) {
-    const text = trimToLimit(buildMissingWalletMessage(handle))
-    return { ok: true, intent: 'help', text, meta: { reason: 'missing-wallet', handle, fid: input.fid } }
+    const text = trimToLimit(`${t.greeting} ${handle}! 👋 ${t.linkWallet}`)
+    return { ok: true, intent: 'help', text, meta: { reason: 'missing-wallet', handle, fid: input.fid, lang: detectedLang } }
   }
 
-  // Try to compute stats, but fallback gracefully if unavailable
-  let stats: BotUserStats | null = null
-  try {
-    stats = await computeStats(address)
-  } catch (err) {
-    console.warn('[agent-auto-reply] Failed to compute stats:', err)
+  // ⚡ CACHED STATS - Try cache first for faster response
+  let stats: BotUserStats | null = getCachedStats(address) ?? null
+  
+  if (stats === null) {
+    // Cache miss - fetch from DB
+    try {
+      stats = await computeStats(address)
+      // Cache the result
+      if (stats) {
+        setCachedStats(address, stats)
+      }
+    } catch (err) {
+      console.warn('[agent-auto-reply] Failed to compute stats:', err)
+    }
   }
   
   if (!stats) {
     // Provide helpful response even without stats
-    const text = trimToLimit(buildStatsUnavailableMessage(handle))
-    return { ok: true, intent: 'help', text, meta: { reason: 'stats-unavailable', handle, fid: input.fid, address } }
+    const text = trimToLimit(`${t.greeting} ${handle}! 🔄 ${t.syncingStats}`)
+    return { ok: true, intent: 'help', text, meta: { reason: 'stats-unavailable', handle, fid: input.fid, address, lang: detectedLang } }
   }
 
   const summaryMeta: Record<string, unknown> = {
@@ -201,6 +242,9 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
     neynarScore,
     address,
     minNeynarScore: config.minNeynarScore,
+    lang: detectedLang,
+    hasContext,
+    cachedResponse: getCachedStats(address) !== undefined,
   }
 
   let replyText: string | null = null
@@ -221,6 +265,13 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
       const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['quest-verify'], since: timeframe.since })
       summaryMeta.events = summary
       replyText = buildQuestMessage(handle, stats, timeframe, summary)
+      break
+    }
+    case 'quest-recommendations': {
+      // 🎯 SMART QUEST RECOMMENDATIONS
+      const recommendations = await generateQuestRecommendations(address, 3)
+      summaryMeta.recommendations = recommendations
+      replyText = `${t.greeting} ${handle}! ${formatQuestRecommendations(recommendations)}`
       break
     }
     case 'leaderboard': {
@@ -299,7 +350,17 @@ function detectIntent(text: string): IntentDetection {
     return { type: 'streak', timeframe }
   }
 
-  // Quest patterns
+  // Quest patterns - split into recommendations vs status
+  if (
+    /\brecommend(ed)?\s+quests?\b/.test(lower) ||
+    /\bsuggest(ed)?\s+quests?\b/.test(lower) ||
+    /what\s+quests?\s+(should|can)\s+i\s+(do|try)/.test(lower) ||
+    /\bbest\s+quests?\b/.test(lower) ||
+    /\bquests?\s+for\s+me\b/.test(lower)
+  ) {
+    return { type: 'quest-recommendations', timeframe }
+  }
+
   if (
     /\bquests?\b/.test(lower) || 
     /\bmissions?\b/.test(lower) ||
@@ -392,6 +453,12 @@ async function summariseUserEvents(options: {
     return { totalDelta: 0, totalEvents: 0, lastEventAt: null }
   }
 
+  // ⚡ CHECK CACHE FIRST
+  const cachedResult = getCachedEvents(options.fid, options.address, options.eventTypes, options.since.getTime())
+  if (cachedResult !== undefined) {
+    return cachedResult
+  }
+
   const client = getSupabaseServerClient()
   if (!client) {
     return { totalDelta: 0, totalEvents: 0, lastEventAt: null }
@@ -434,11 +501,16 @@ async function summariseUserEvents(options: {
       }
     }
 
-    return {
+    const result = {
       totalDelta,
       totalEvents: typeof count === 'number' && Number.isFinite(count) ? count : rows.length,
       lastEventAt,
     }
+
+    // ⚡ CACHE THE RESULT
+    setCachedEvents(options.fid, options.address, options.eventTypes, options.since.getTime(), result)
+
+    return result
   } catch (error) {
     console.warn('[agent-auto-reply] summarise events failed', (error as Error)?.message || error)
     return { totalDelta: 0, totalEvents: 0, lastEventAt: null }
@@ -490,15 +562,7 @@ function buildGreetingMessage(handle: string, stats: BotUserStats, summary: Summ
 }
 
 function buildHelpMessage(handle: string): string {
-  return `gm ${handle}! Ask things like "how many tips this week?", "what’s my streak?", or "show my XP" and I’ll pull the receipts. Command deck → https://gmeowhq.art/Agent`
-}
-
-function buildMissingWalletMessage(handle: string): string {
-  return `gm ${handle}! 👋 Link an ETH wallet in Warpcast settings so I can track your quests, streaks, tips & XP. Connect at gmeowhq.art/profile then ping me again!`
-}
-
-function buildStatsUnavailableMessage(handle: string): string {
-  return `gm ${handle}! 🔄 Syncing your stats now (this takes ~1 min). Check gmeowhq.art/profile for live data, or ask me again shortly!`
+  return `gm ${handle}! Ask things like "how many tips this week?", "what's my streak?", or "show my XP" and I'll pull the receipts. Command deck → https://gmeowhq.art/Agent`
 }
 
 function formatHandle(username?: string | null, displayName?: string | null): string {
