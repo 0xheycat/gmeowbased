@@ -13,15 +13,22 @@ import type {
 } from '@/components/quest-wizard/shared'
 import {
 	CHAIN_LABEL,
+	QUEST_TYPES,
 	QUEST_TYPE_DETAILS,
 	formatChainList,
 	formatExpiryLabel,
 	formatUsernameForDisplay,
+	isCastHash,
+	isValidHttpUrl,
 	normalizeQuestTypeKey,
+	sanitizeUsernameInput,
+	toIsoStringOrEmpty,
+	toPositiveFloat,
 	toPositiveInt,
 } from '@/components/quest-wizard/shared'
 import { getQuestFieldConfig } from '@/lib/gm-utils'
 import { parseTokenAmountToUnits, formatTokenAmountFromUnits } from './utils/tokenMath'
+import { sanitizePositiveNumberInput } from './utils/sanitizers'
 
 const ERC20_ESCROW_WARMUP_MS = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -242,5 +249,232 @@ export function summarizeDraft(
 		expiryLabel,
 		mediaPreview: draft.mediaPreview,
 		mediaFileName: draft.mediaFileName,
+	}
+}
+
+/**
+ * Build verification payload for /api/quests/verify endpoint
+ * Assembles all quest data into structured format for backend validation
+ */
+export function buildVerificationPayload(
+	draft: QuestDraft,
+	lookups: {
+		tokenLookup: TokenLookup
+		nftLookup: NftLookup
+	},
+) {
+	const questTypeKeyRaw = normalizeQuestTypeKey(draft.questTypeKey)
+	const actionCode = QUEST_TYPES[questTypeKeyRaw] ?? 0
+	const questMode = deriveQuestModeFromKey(questTypeKeyRaw)
+	
+	// Cast identification
+	const castInput = draft.castLink.trim()
+	const castIdentifier = castInput
+	const castUrl = isValidHttpUrl(castInput) ? castInput : ''
+	const castHash = isCastHash(castInput) ? castInput : ''
+	const frameUrl = draft.frameUrl.trim()
+	const castContains = draft.castContains.trim()
+	
+	// Target identification
+	const sanitizedFollow = sanitizeUsernameInput(draft.followUsername)
+	const sanitizedTargetUsername = sanitizeUsernameInput(draft.targetUsername || draft.target)
+	const sanitizedMention = sanitizeUsernameInput(draft.mentionUsername)
+	const targetFidNum = Number.parseInt(draft.targetFid, 10)
+	const questTarget = Number.isFinite(targetFidNum) && targetFidNum > 0 ? targetFidNum : undefined
+
+	// Collect candidate identifiers
+	const candidateFids = new Set<number>()
+	if (questTarget) candidateFids.add(questTarget)
+
+	const candidateUsernames = new Set<string>()
+	if (sanitizedFollow) candidateUsernames.add(sanitizedFollow)
+	if (sanitizedTargetUsername) candidateUsernames.add(sanitizedTargetUsername)
+
+	// Eligibility assets
+	const eligibilityToken =
+		draft.eligibilityAssetType === 'token' && draft.eligibilityAssetId
+			? lookups.tokenLookup[draft.eligibilityAssetId.toLowerCase()]
+			: undefined
+	const eligibilityNft =
+		draft.eligibilityAssetType === 'nft' && draft.eligibilityAssetId
+			? lookups.nftLookup[draft.eligibilityAssetId.toLowerCase()]
+			: undefined
+
+	let gateKind: string | undefined
+	let gateAsset: string | undefined
+	if (draft.eligibilityMode !== 'open' && draft.eligibilityAssetId) {
+		gateKind = draft.eligibilityAssetType === 'token' ? 'erc20' : 'erc721'
+		gateAsset = draft.eligibilityAssetId
+	}
+
+	const minAmountInput = gateKind
+		? sanitizePositiveNumberInput(draft.eligibilityMinimum, gateKind === 'erc20' ? '1' : '1')
+		: ''
+
+	const eligibilityChains =
+		draft.eligibilityMode === 'partner' && draft.eligibilityChainList.length
+			? draft.eligibilityChainList
+			: gateKind === 'erc20' && eligibilityToken
+				? [eligibilityToken.chain]
+				: gateKind === 'erc721' && eligibilityNft
+					? [eligibilityNft.chain]
+					: draft.eligibilityChainList.length
+						? draft.eligibilityChainList
+						: []
+
+	// Reward values
+	const rewardPointsValue = toPositiveInt(draft.rewardPoints, 1)
+	const rewardTokenPerUserValue = toPositiveFloat(draft.rewardTokenPerUser, 0)
+	const maxCompletionsValue = toPositiveInt(draft.maxCompletions, 0)
+	const raffleWinnersValue = toPositiveInt(draft.maxWinners, 0)
+
+	const rewardTokenOption =
+		draft.rewardMode === 'token' && draft.rewardAssetId
+			? lookups.tokenLookup[draft.rewardAssetId.toLowerCase()]
+			: undefined
+	const rewardNftOption =
+		draft.rewardMode === 'nft' && draft.rewardAssetId
+			? lookups.nftLookup[draft.rewardAssetId.toLowerCase()]
+			: undefined
+
+	// Build reward metadata
+	const rewardMeta: Record<string, any> = {
+		kind: draft.rewardMode,
+		pointsPerUser: rewardPointsValue,
+		token: draft.rewardMode === 'token' ? draft.rewardAssetId || '' : '',
+		tokenPerUser: draft.rewardMode === 'token' ? rewardTokenPerUserValue : 0,
+	}
+
+	if (rewardTokenOption && draft.rewardMode === 'token') {
+		rewardMeta.tokenMetadata = {
+			address: rewardTokenOption.address,
+			symbol: rewardTokenOption.symbol,
+			name: rewardTokenOption.name,
+			chain: rewardTokenOption.chain,
+			chainId: rewardTokenOption.chainId,
+			decimals: rewardTokenOption.decimals ?? null,
+			icon: rewardTokenOption.icon,
+			verified: rewardTokenOption.verified,
+		}
+	}
+
+	if (draft.rewardMode === 'nft') {
+		const itemsPerUser = rewardTokenPerUserValue > 0 ? rewardTokenPerUserValue : 1
+		rewardMeta.collection = draft.rewardAssetId || ''
+		rewardMeta.itemsPerUser = itemsPerUser
+		if (rewardNftOption) {
+			rewardMeta.nftMetadata = {
+				address: rewardNftOption.id,
+				name: rewardNftOption.name,
+				collection: rewardNftOption.collection,
+				image: rewardNftOption.image,
+				chain: rewardNftOption.chain,
+				verified: rewardNftOption.verified,
+			}
+		}
+	}
+
+	// Build eligibility metadata
+	const eligibilityMeta: Record<string, any> = {
+		mode: draft.eligibilityMode,
+	}
+
+	if (gateKind && gateAsset) {
+		eligibilityMeta.kind = gateKind
+		eligibilityMeta.asset = gateAsset
+		eligibilityMeta.minimum = minAmountInput || '1'
+		eligibilityMeta.assetType = draft.eligibilityAssetType
+		eligibilityMeta.validation = 'draft'
+		eligibilityMeta.detectedStandard = gateKind
+		if (draft.eligibilityCollection) eligibilityMeta.collection = draft.eligibilityCollection
+		if (eligibilityChains.length) eligibilityMeta.chainList = eligibilityChains
+		if (draft.eligibilityMode === 'partner') eligibilityMeta.partner = true
+		if (eligibilityToken) {
+			eligibilityMeta.token = {
+				address: eligibilityToken.address,
+				symbol: eligibilityToken.symbol,
+				name: eligibilityToken.name,
+				chain: eligibilityToken.chain,
+				chainId: eligibilityToken.chainId,
+				decimals: eligibilityToken.decimals ?? null,
+				icon: eligibilityToken.icon,
+				verified: eligibilityToken.verified,
+			}
+		}
+		if (eligibilityNft) {
+			eligibilityMeta.nft = {
+				address: eligibilityNft.id,
+				name: eligibilityNft.name,
+				collection: eligibilityNft.collection,
+				image: eligibilityNft.image,
+				chain: eligibilityNft.chain,
+				verified: eligibilityNft.verified,
+			}
+		}
+	} else {
+		eligibilityMeta.kind = 'open'
+		eligibilityMeta.validation = 'open'
+	}
+
+	// Build follow metadata
+	const candidateFidsArr = Array.from(candidateFids)
+	const candidateUsernamesArr = Array.from(candidateUsernames)
+	const followMeta: Record<string, any> = {}
+	if (questTarget) followMeta.targetFid = questTarget
+	if (sanitizedFollow) followMeta.targetUsername = sanitizedFollow
+	else if (sanitizedTargetUsername) followMeta.targetUsername = sanitizedTargetUsername
+	if (followMeta.targetUsername) followMeta.target = followMeta.targetUsername
+	if (candidateUsernamesArr.length) followMeta.candidateUsernames = candidateUsernamesArr
+	if (candidateFidsArr.length) followMeta.candidateFids = candidateFidsArr
+
+	// Basic quest data
+	const sanitizedName = draft.name.trim()
+	const sanitizedHeadline = draft.headline.trim()
+	const sanitizedDescription = draft.description.trim()
+	const expiresAtIso = toIsoStringOrEmpty(draft.expiresAtISO)
+	const mediaUrl = (draft.mediaPreview || draft.media || '').trim()
+
+	// Assemble final payload
+	const meta: Record<string, any> = {
+		v: 1,
+		questTypeKey: questTypeKeyRaw,
+		type: questMode,
+		chain: draft.chain,
+		reward: rewardMeta,
+		eligibility: eligibilityMeta,
+		limits: { maxCompletions: maxCompletionsValue },
+		raffle: draft.raffleEnabled
+			? {
+				enabled: true,
+				strategy: draft.raffleStrategy,
+				winners: raffleWinnersValue || 1,
+			}
+			: { enabled: false },
+	}
+
+	if (sanitizedName) meta.name = sanitizedName
+	if (sanitizedHeadline) meta.headline = sanitizedHeadline
+	if (sanitizedDescription) meta.description = sanitizedDescription
+	if (mediaUrl) meta.media = mediaUrl
+	if (draft.mediaFileName) meta.mediaFileName = draft.mediaFileName
+	if (expiresAtIso) meta.expiresAtISO = expiresAtIso
+	if (castIdentifier) meta.castIdentifier = castIdentifier
+	if (castUrl) meta.castUrl = castUrl
+	if (castHash) meta.castHash = castHash
+	if (sanitizedMention) meta.mentionUser = sanitizedMention
+	if (frameUrl) meta.frameUrl = frameUrl
+	if (castContains) meta.castContains = castContains
+	if (candidateUsernamesArr.length) meta.candidateTargetUsernames = candidateUsernamesArr
+	if (candidateFidsArr.length) meta.candidateTargetFids = candidateFidsArr
+	if (sanitizedTargetUsername) meta.targetUsername = sanitizedTargetUsername
+	if (questTarget) meta.targetFid = questTarget
+	if (Object.keys(followMeta).length) meta.follow = followMeta
+
+	return {
+		draft: true,
+		questTypeKey: questTypeKeyRaw,
+		actionCode,
+		meta: JSON.stringify(meta),
+		chain: draft.chain,
 	}
 }
