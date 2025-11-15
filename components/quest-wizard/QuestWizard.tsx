@@ -3,7 +3,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // wizardState methods are memoized with useCallback, safe to use in dependencies
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useAccount, useConnect } from 'wagmi'
 import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
@@ -16,10 +16,7 @@ import { useMiniKitAuth } from '@/hooks/useMiniKitAuth'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useQuestVerification } from '@/hooks/useQuestVerification'
 import { usePolicyEnforcement } from '@/hooks/usePolicyEnforcement'
-import {
-	formatUnknownError,
-	isAbortError,
-} from '@/components/quest-wizard/utils'
+import { useWizardEffects } from '@/hooks/useWizardEffects'
 import { validateAllSteps } from '@/components/quest-wizard/validation'
 import {
 	createTokenLookup,
@@ -28,27 +25,13 @@ import {
 	summarizeDraft,
 	buildVerificationPayload,
 } from '@/components/quest-wizard/helpers'
-import {
-	type AuthStatus,
-	type MiniAppSignInResult,
-	type MiniKitContextUser,
-} from '@/components/quest-wizard/types'
-
-// @edit-start 2025-02-14 — Use shared quest wizard module from components namespace
-import {
-	STEPS,
-	type QuestDraft,
-	normalizeFid,
-} from '@/components/quest-wizard/shared'
-// @edit-end
+import { STEPS, type QuestDraft, normalizeFid } from '@/components/quest-wizard/shared'
 import {
 	getQuestPolicy,
-	isAssetAllowed,
 	questTypeRequiresGate,
 	resolveCreatorTier,
 	type CreatorTier,
 } from '@/lib/quest-policy'
-import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
 import { useNotifications } from '@/components/ui/live-notifications'
 import { Stepper } from '@/components/quest-wizard/components/Stepper'
 import { StepPanel } from '@/components/quest-wizard/components/StepPanel'
@@ -81,10 +64,9 @@ export default function QuestWizard() {
 		assetWarnings,
 	} = assetCatalog
 
-	const contextUser = (context?.user ?? null) as MiniKitContextUser | null
 	const miniAppLocation = typeof (context as any)?.location === 'string' ? (context as any).location : null
 	const miniAppClient = typeof (context as any)?.client?.name === 'string' ? (context as any).client.name : null
-	const isMiniAppSession = Boolean(contextUser || miniAppLocation || miniAppClient)
+	const isMiniAppSession = Boolean(context?.user || miniAppLocation || miniAppClient)
 
 	const auth = useMiniKitAuth({
 		context,
@@ -180,6 +162,18 @@ export default function QuestWizard() {
 		pushNotification,
 	})
 
+	useWizardEffects({
+		isFrameReady,
+		setFrameReady,
+		tokenEscrowStatus,
+		draft,
+		prefilledFollow,
+		contextUsername: auth.contextUser?.username,
+		onEscrowUpdate: () => setEscrowNow(Date.now()),
+		onDraftChange: wizardState.onDraftChange,
+		onFollowPrefilled: () => setPrefilledFollow(true),
+	})
+
 	const activeStep = STEPS[stepIndex]
 	const activeValidation = validation[activeStep.key]
 	const activeStepTouched = touchedSteps[activeStep.key]
@@ -198,45 +192,6 @@ export default function QuestWizard() {
 			}),
 		[stepIndex, validation],
 	)
-
-	useEffect(() => {
-		if (typeof window === 'undefined') return undefined
-		if (tokenEscrowStatus?.state !== 'warming') return undefined
-		const interval = window.setInterval(() => {
-			setEscrowNow(Date.now())
-		}, 30_000)
-		return () => window.clearInterval(interval)
-	}, [tokenEscrowStatus?.state])
-
-	useEffect(() => {
-		setEscrowNow(Date.now())
-	}, [draft.rewardTokenDepositTx, draft.rewardTokenDepositDetectedAtISO, draft.rewardTokenDepositAmount])
-
-	// Frame readiness check for MiniKit
-	useEffect(() => {
-		if (!isFrameReady && typeof setFrameReady === 'function') {
-			setFrameReady()
-		}
-	}, [isFrameReady, setFrameReady])
-
-	// Prefill follow username from MiniKit context
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
-	useEffect(() => {
-		if (prefilledFollow) return
-		if (draft.followUsername) {
-			setPrefilledFollow(true)
-			return
-		}
-		const username = typeof contextUser?.username === 'string' ? contextUser.username : undefined
-		if (!username) return
-		const normalized = username.startsWith('@') ? username.slice(1) : username
-		if (!normalized.trim()) {
-			setPrefilledFollow(true)
-			return
-		}
-		wizardState.onDraftChange({ followUsername: normalized.trim() })
-		setPrefilledFollow(true)
-	}, [prefilledFollow, auth.contextUser?.username, draft.followUsername, wizardState.onDraftChange])
 
 	const handleMerge = (patch: Partial<QuestDraft>) => wizardState.onDraftChange(patch)
 	const handleReset = () => wizardState.onReset()
