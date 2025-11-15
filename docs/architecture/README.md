@@ -182,15 +182,62 @@ NFT → NFTMetadata → NFTOwnership
 ## 🏛️ Architectural Decision Records (ADRs)
 
 ### ADR Index
-- **[ADR-001: Quest Wizard Refactor](../adr/001-quest-wizard-refactor.md)** - Quest UI redesign
-- **[ADR-002: Testing Strategy](../adr/002-testing-strategy.md)** - Test approach
-- **[ADR-003: Frame Architecture](../adr/003-frame-architecture.md)** - Frame system design
-- **[ADR-004: Bot Intelligence](../adr/004-bot-intelligence.md)** - Bot system design
-- **[ADR-005: Multi-Chain Strategy](../adr/005-multi-chain-strategy.md)** - Chain deployment
+- **[ADR-001: Quest Wizard Refactor](./adr/001-quest-wizard-refactor.md)** - Quest UI redesign
+- **[ADR-002: Testing Strategy](./adr/002-testing-strategy.md)** - Test approach
+- **[ADR-003: Frame Architecture](./adr/003-frame-architecture.md)** - Frame system design
+- **[ADR-004: Bot Intelligence](./adr/004-bot-intelligence.md)** - Bot system design
+- **[ADR-005: Multi-Chain Strategy](./adr/005-multi-chain-strategy.md)** - Chain deployment
 
 ### Creating ADRs
 - **[ADR Template](./adr-template.md)** - Template for new ADRs
 - **[ADR Process](./adr-process.md)** - When and how to create ADRs
+
+## 📊 Analysis & Audits
+
+### Feature Audits
+- **[Bot Audit](./analysis/bot-audit.md)** - Bot system analysis
+- **[Bot Improvements](./analysis/bot-improvements.md)** - Bot enhancement proposals
+- **[Bot Enhancements Full](./analysis/bot-enhancements-full.md)** - Complete bot enhancements
+- **[Quest Wizard Audit](./analysis/quest-wizard-audit.md)** - Quest wizard analysis
+- **[Quest Wizard Audit Final](./analysis/quest-wizard-audit-final.md)** - Final wizard audit
+- **[Quest Wizard UX Audit](./analysis/quest-wizard-ux-audit.md)** - UX/UI analysis
+- **[Quest Page Audit](./analysis/quest-page-audit.md)** - Quest page evaluation
+- **[Profile Page Audit](./analysis/profile-page-audit.md)** - Profile page analysis
+
+### API & Integration Audits
+- **[Farcaster Neynar Audit](./analysis/farcaster-neynar-audit.md)** - Neynar API integration
+- **[Audit Notifications Profile](./analysis/AUDIT_NOTIFICATIONS_PROFILE_FINAL.md)** - Notifications system
+
+### Sprint Reports
+- **[Sprint 1 Progress](./analysis/SPRINT1_PROGRESS.md)** - Sprint 1 updates
+- **[Sprint 1 Final](./analysis/SPRINT1_FINAL_SUMMARY.md)** - Sprint 1 completion
+- **[Sprint 1.5 Extraction](./analysis/SPRINT1.5_EXTRACTION_PLAN.md)** - Code extraction plan
+- **[Sprint 2 Prep](./analysis/QUEST_SPRINT2_PREP.md)** - Sprint 2 preparation
+- **[Sprint 3 Complete](../SPRINT3_COMPLETE.md)** - Sprint 3 summary
+
+### Session Reports
+- **[Session 4 Part 2](./analysis/SESSION_4_PART2_COMPLETE.md)** - Development session
+- **[Session 4 Part 3](./analysis/SESSION_4_PART3_COMPLETE.md)** - Development session
+
+### Technical Fixes & Summaries
+- **[Base.dev Fix](./analysis/BASE_DEV_FIX_SUMMARY.md)** - Base.dev integration fix
+- **[CSP Frame Fixes](./analysis/CSP_FRAME_FIXES_SUMMARY.md)** - Content Security Policy fixes
+- **[GitHub Actions Cron Fix](./analysis/GITHUB_ACTIONS_CRON_FIX.md)** - CI/CD automation fix
+- **[Vercel Cache Fix](./analysis/VERCEL_CACHE_FIX.md)** - Deployment caching issues
+- **[Bot Auto-Reply Debug](./analysis/BOT_AUTO_REPLY_DEBUG.md)** - Bot debugging notes
+- **[Miniapp Fixes](./analysis/MINIAPP_FIXES.md)** - Farcaster miniapp fixes
+- **[Features Mobile First](./analysis/FEATURES_MOBILE_FIRST.md)** - Mobile optimization report
+
+### Wallet & Blockchain
+- **[Wallet Comparison](./analysis/WALLET_COMPARISON_ANALYSIS.md)** - Wallet provider comparison
+- **[Wallet Recommendation](./analysis/WALLET_FINAL_RECOMMENDATION.md)** - Wallet strategy decision
+
+### Implementation Summaries
+- **[UX Improvements Summary](./analysis/UX_IMPROVEMENTS_SUMMARY.md)** - UX enhancements
+- **[API Audit Summary](./analysis/API_AUDIT_SUMMARY.md)** - API review
+- **[Development Instructions](./analysis/DEVELOPMENT_INSTRUCTIONS_SUMMARY.md)** - Dev guidelines
+- **[Manifest Regeneration](./analysis/MANIFEST_REGENERATION_SUMMARY.md)** - Manifest updates
+- **[Final Implementation](./analysis/FINAL_IMPLEMENTATION_COMPLETE.md)** - Project milestones
 
 ## 🔄 Migration & Upgrades
 

@@ -5,6 +5,7 @@ Complete API reference for GMEOWBASED platform integration.
 ## 🌐 REST API
 
 ### Core Endpoints
+- **[API Reference](./api-reference.md)** - Complete API documentation
 - **[Overview](./overview.md)** - API architecture and authentication
 - **[Frame API](./frames.md)** - Farcaster frame generation endpoints
 - **[Quest API](./quests.md)** - Quest creation and management

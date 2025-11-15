@@ -55,6 +55,10 @@ Step-by-step guides for using and developing on the GMEOWBASED platform.
 - **[Environment Variables](./environment-variables.md)** - Required env vars
 - **[Database Setup](./database-setup.md)** - Supabase configuration
 - **[Contract Deployment](./contract-deployment.md)** - Deploy contracts
+- **[Base.dev Quick Reference](./development/BASE_DEV_QUICK_REF.md)** - Base.dev integration
+- **[Dev Instructions Quick Reference](./development/DEV_INSTRUCTIONS_QUICK_REF.md)** - Common dev tasks
+- **[Manifest Quick Reference](./development/MANIFEST_QUICK_REFERENCE.md)** - Miniapp manifest
+- **[Manifest Setup](./development/MANIFEST_SETUP.md)** - Initial manifest configuration
 
 ### Integration Guides
 - **[Frame Integration](./frame-integration.md)** - Add frames to your app
@@ -73,6 +77,18 @@ Step-by-step guides for using and developing on the GMEOWBASED platform.
 - **[E2E Testing](./e2e-testing.md)** - End-to-end test setup
 - **[Deployment Guide](./deployment-guide.md)** - Deploy to production
 - **[Monitoring](./monitoring-guide.md)** - Set up monitoring
+
+## 🚀 Deployment Guides
+
+### Production Deployment
+- **[Deployment Overview](./deployment/deployment.md)** - Complete deployment guide
+- **[Deployment Ready](./deployment/DEPLOYMENT_READY.md)** - Pre-deployment checklist
+- **[Deployment Status](./deployment/DEPLOYMENT_STATUS.md)** - Current deployment state
+- **[Phase 4.5 & 4.6 Deployment](./deployment/PHASE_4.5_4.6_DEPLOYMENT.md)** - Phase-specific deployment
+
+### Administration
+- **[Admin Auth Guide](./admin-auth-guide.md)** - Admin authentication setup
+- **[Usage Guide](./usage-guide.md)** - Platform usage patterns
 
 ## 🎨 Design Guides
 

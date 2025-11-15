@@ -18,7 +18,13 @@ Complete documentation for all GMEOWBASED platform features and components.
 
 ## 🎯 Quest System
 
-- **[Quest Wizard](../quest-wizard/README.md)** - Interactive quest creation interface
+- **[Quest Wizard](./quest-wizard/README.md)** - Interactive quest creation interface
+  - [Features](./quest-wizard/FEATURES.md) - Complete feature list
+  - [Performance](./quest-wizard/PERFORMANCE.md) - Performance optimizations
+  - [Analytics](./quest-wizard/ANALYTICS_MOBILE.md) - Mobile analytics
+  - [E2E Testing](./quest-wizard/E2E_TESTING.md) - End-to-end test suite
+  - [Error Tracking](./quest-wizard/ERROR_TRACKING.md) - Error monitoring
+  - [Final Report](./quest-wizard/FINAL_REPORT.md) - Implementation summary
 - **[Quest Types](./quest-types.md)** - Different quest categories and requirements
 - **[Quest Verification](./quest-verification.md)** - Automated quest completion verification
 - **[Quest Rewards](./quest-rewards.md)** - Points, tokens, and badge rewards
