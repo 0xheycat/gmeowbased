@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import './globals.css'
 import './styles.css'
 import './styles/quest-card.css'
-// import './styles/mega-intro.css' // Old MegaIntro component - now using OnboardingFlow with Tailwind
 import './styles/mobile-miniapp.css'
 import { MiniAppProvider } from './providers'
 import type { ReactNode } from 'react'
