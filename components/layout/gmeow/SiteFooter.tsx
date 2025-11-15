@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-import { footerCallouts, navIconLinks, socialLinks } from './nav-data'
+import { footerCallouts, navIconLinks } from './nav-data'
 
 export function SiteFooter() {
   const year = new Date().getFullYear()
@@ -15,8 +15,8 @@ export function SiteFooter() {
             <div className="flex items-center gap-3">
               <span className="grid h-12 w-12 place-items-center rounded-2xl border text-xl">😺</span>
               <div className="flex flex-col leading-tight">
-                <span className="text-[11px] uppercase tracking-[0.32em] text-[var(--px-sub)]">Gmeow Adventure</span>
-                <span className="text-lg font-semibold">Pixel Luxury for Daily GM</span>
+                <span className="text-[11px] uppercase tracking-[0.32em] text-[var(--px-sub)]">Gmeowbased</span>
+                <span className="text-lg font-semibold">Adventure Daily GM</span>
               </div>
             </div>
             <p className="max-w-md text-sm leading-6 text-[var(--px-sub)]">
@@ -73,25 +73,7 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-[var(--px-sub)] sm:flex-row sm:items-center sm:justify-between">
-          <span>© {year} Gmeow Adventure. All rights reserved.</span>
-          <div className="flex flex-wrap gap-2">
-            {socialLinks.map((social) => {
-              const Icon = social.icon
-              const external = social.href.startsWith('http')
-              return (
-                <Link
-                  key={social.id}
-                  href={social.href}
-                  target={external ? '_blank' : undefined}
-                  rel={external ? 'noreferrer' : undefined}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-xs"
-                >
-                  <Icon size={16} weight="bold" />
-                  {social.label}
-                </Link>
-              )
-            })}
-          </div>
+          <span>© {year} Gmeowbased. All rights reserved.</span>
         </div>
       </div>
     </footer>
