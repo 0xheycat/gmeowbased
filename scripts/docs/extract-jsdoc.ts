@@ -9,8 +9,8 @@
  *   tsx scripts/docs/extract-jsdoc.ts [--output docs/api/generated]
  */
 
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'fs'
-import { join, relative, basename, dirname } from 'path'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
+import { join, relative } from 'path'
 import { glob } from 'glob'
 
 interface DocComment {
@@ -46,7 +46,7 @@ function parseJSDocComment(commentText: string): DocComment {
   }
   
   let currentSection: 'description' | 'example' | null = 'description'
-  let descriptionLines: string[] = []
+  const descriptionLines: string[] = []
   let exampleLines: string[] = []
   
   for (const line of lines) {
@@ -145,7 +145,6 @@ function extractFunctionSignature(code: string, startIndex: number): string {
  */
 function scanFile(filePath: string): FunctionDoc[] {
   const content = readFileSync(filePath, 'utf-8')
-  const lines = content.split('\n')
   const docs: FunctionDoc[] = []
   
   // Find JSDoc comment blocks
