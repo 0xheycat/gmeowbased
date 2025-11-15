@@ -30,7 +30,7 @@ export type BotFrameEmbed = {
  * Build a frame URL for bot cast replies based on user intent
  */
 export function buildBotFrameEmbed(options: BotFrameOptions): BotFrameEmbed | null {
-  const { type, fid, username, chain, questId, guildId, includeActions: _includeActions = true } = options
+  const { type, fid, username, chain, questId, guildId } = options
 
   switch (type) {
     case 'stats-summary': {
