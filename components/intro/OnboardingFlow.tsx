@@ -20,26 +20,26 @@ const ONBOARDING_STAGES: OnboardingStage[] = [
   {
     id: 1,
     title: 'Welcome to Gmeowbased',
-    subtitle: 'Your Daily GM Quest Hub',
+    subtitle: 'Collect Yu-Gi-Oh Style Quest Cards',
     description:
-      'Join thousands of adventurers earning points, building streaks, and conquering quests across Base, Celo, Optimism, Unichain, and Ink chains.',
+      'Hunt legendary quest cards across Base, Celo, Optimism, Unichain, and Ink. Each quest is a collectible trading card with unique artwork, stats, and on-chain rewards.',
     points: 10,
     bonusPoints: 5,
     icon: Sparkle,
     features: [
-      'Send daily GM to earn base reward',
-      'Build streaks for multiplier bonuses',
-      'Complete quests for extra rewards',
-      'No wallet required to start',
+      'Browse quest cards in Yu-Gi-Oh inspired design',
+      'Check ATK (rewards) and DEF (difficulty) stats',
+      'Claim NFT badges for completed quests',
+      'No wallet required to start hunting',
     ],
-    contractFeature: 'gmPointReward (10 XP base)',
+    contractFeature: 'Quest Card System + NFT Minting',
   },
   {
     id: 2,
-    title: 'Streak Bonuses Unleashed',
-    subtitle: 'Consistency Pays Off',
+    title: 'Streak Multipliers & Power Badges',
+    subtitle: 'Level Up Your Card Collection',
     description:
-      'The longer your GM streak, the bigger your rewards. Hit milestone streaks to unlock massive bonus multipliers.',
+      'Build your daily GM streak to unlock powerful multipliers. Mint exclusive Power Badge NFTs to boost all quest rewards and unlock partner-exclusive cards.',
     points: 10,
     bonusPoints: 5,
     icon: Lightning,
@@ -47,60 +47,60 @@ const ONBOARDING_STAGES: OnboardingStage[] = [
       '7-day streak: +10% bonus (11 XP per GM)',
       '30-day streak: +25% bonus (12.5 XP per GM)',
       '100-day streak: +50% bonus (15 XP per GM)',
-      '48-hour grace period to maintain streak',
+      'Power Badge NFT: +10% on ALL quest rewards',
     ],
-    contractFeature: 'streak7BonusPct, streak30BonusPct, streak100BonusPct',
+    contractFeature: 'Soulbound Power Badge (ERC-721)',
   },
   {
     id: 3,
-    title: 'Power Badge & Multipliers',
-    subtitle: 'Elite Status Perks',
+    title: 'Claim & Mint NFT Achievements',
+    subtitle: 'Turn Victories into Collectibles',
     description:
-      'Power badge holders and early adopters (FID < 10,000) get exclusive perks, including quest reward multipliers.',
+      'Every milestone becomes a mintable NFT badge. Claim soulbound achievements for streaks, leaderboard ranks, and legendary quest completions. Flex your collection across Farcaster.',
     points: 0,
     bonusPoints: 10,
     icon: Shield,
     features: [
-      'Power badge: +10% on all quest rewards',
+      'Mint Soulbound Badge NFTs for achievements',
       'OG Caster badge: FID < 10,000 auto-mint',
-      'Access to partner-exclusive quests',
-      'Higher trust scores for quest creation',
+      'Leaderboard badges: Top 10 each season',
+      'Guild Victory NFTs: Shared team rewards',
     ],
-    contractFeature: 'powerBadge bonus, OG_THRESHOLD (10k)',
+    contractFeature: 'SoulboundBadge.sol (Non-transferable)',
   },
   {
     id: 4,
-    title: 'Guild System & Team Rewards',
-    subtitle: 'Rally Your Crew',
+    title: 'Guild Treasuries & Team Quests',
+    subtitle: 'Pool Resources, Share NFTs',
     description:
-      'Create or join guilds to pool points, complete team quests, and climb the guild leaderboard together.',
+      'Create guilds with shared treasuries. Complete team quests for rare cards. Top guilds mint exclusive Guild Victory NFTs that all members can claim.',
     points: 100,
     bonusPoints: 50,
     icon: Users,
     features: [
       'Create guild: 100 XP cost (one-time)',
-      'Pool treasury points for team rewards',
-      'Guild levels: 1→2 (1k pts), 2→3 (2k pts), 3→4 (5k pts), 4→5 (10k pts)',
-      'Guild quests with shared rewards',
+      'Shared treasury for team rewards',
+      'Guild-exclusive quest cards',
+      'Mint Guild Victory NFTs for top 3 teams',
     ],
-    contractFeature: 'guildCreationCost, guild levels',
+    contractFeature: 'Guild Treasury + Shared NFT Claims',
   },
   {
     id: 5,
-    title: 'Referral Rewards & Badges',
-    subtitle: 'Invite Friends, Earn More',
+    title: 'Referral NFTs & Recruiter Badges',
+    subtitle: 'Grow Your Squad, Earn Collectibles',
     description:
-      'Share your referral code and earn 50 XP per friend who joins. Unlock recruiter badges at 1, 5, and 10 referrals.',
+      'Share your referral code to mint Recruiter Badge NFTs. Each tier unlocks new card packs and exclusive quest access. Build your recruiting empire.',
     points: 50,
     bonusPoints: 25,
     icon: Gift,
     features: [
-      'Earn 50 XP per referral (referee gets 25 XP)',
-      '1 referral: Bronze Recruiter badge',
-      '5 referrals: Silver Recruiter badge',
-      '10 referrals: Gold Recruiter badge',
+      'Earn 50 XP per referral + mint progress',
+      '1 referral: Bronze Recruiter NFT',
+      '5 referrals: Silver Recruiter NFT',
+      '10 referrals: Gold Recruiter NFT (Legendary)',
     ],
-    contractFeature: 'referralPointReward, referralTierClaimed',
+    contractFeature: 'Recruiter Badge NFTs (Tiered Minting)',
   },
 ]
 
@@ -258,7 +258,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           {currentStage.contractFeature && (
             <div className="mb-8 rounded-lg border border-white/10 bg-white/5 px-4 py-2">
               <code className="text-xs text-white/60">
-                📜 Smart Contract: <span className="text-[#7CFF7A]">{currentStage.contractFeature}</span>
+                🎴 Trading Card Game: <span className="text-[#7CFF7A]">{currentStage.contractFeature}</span>
               </code>
             </div>
           )}
@@ -289,7 +289,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 onClick={handleComplete}
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-semibold text-black transition-transform hover:scale-105"
               >
-                Start Your Adventure
+                Start Collecting Cards
                 <Sparkle size={20} weight="fill" />
               </button>
             )}
