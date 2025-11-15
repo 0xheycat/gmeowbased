@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, ArrowRight, Sparkle, Trophy, Users, Lightning, Gift, Shield } from '@phosphor-icons/react'
+import { X, ArrowRight, Sparkle, Users, Lightning, Gift, Shield, Crown } from '@phosphor-icons/react'
 import Image from 'next/image'
+import '@/app/styles/quest-card-yugioh.css'
 
 type OnboardingStage = {
   id: number
@@ -14,12 +15,17 @@ type OnboardingStage = {
   icon: React.ElementType
   features: string[]
   contractFeature?: string
+  cardArtwork?: string
+  tier?: 'common' | 'rare' | 'epic' | 'legendary'
+  showMintButton?: boolean
+  rewardStat?: string
+  participantsStat?: string
 }
 
 const ONBOARDING_STAGES: OnboardingStage[] = [
   {
     id: 1,
-    title: 'Welcome to Gmeowbased',
+    title: 'Quest Card Hunter',
     subtitle: 'Collect Yu-Gi-Oh Style Quest Cards',
     description:
       'Hunt legendary quest cards across Base, Celo, Optimism, Unichain, and Ink. Each quest is a collectible trading card with unique artwork, stats, and on-chain rewards.',
@@ -33,11 +39,16 @@ const ONBOARDING_STAGES: OnboardingStage[] = [
       'No wallet required to start hunting',
     ],
     contractFeature: 'Quest Card System + NFT Minting',
+    cardArtwork: '/logo.png',
+    tier: 'common',
+    showMintButton: false,
+    rewardStat: '100 XP',
+    participantsStat: '∞',
   },
   {
     id: 2,
-    title: 'Streak Multipliers & Power Badges',
-    subtitle: 'Level Up Your Card Collection',
+    title: 'Power Badge [NFT]',
+    subtitle: 'Mint Your First Soulbound NFT',
     description:
       'Build your daily GM streak to unlock powerful multipliers. Mint exclusive Power Badge NFTs to boost all quest rewards and unlock partner-exclusive cards.',
     points: 10,
@@ -50,10 +61,15 @@ const ONBOARDING_STAGES: OnboardingStage[] = [
       'Power Badge NFT: +10% on ALL quest rewards',
     ],
     contractFeature: 'Soulbound Power Badge (ERC-721)',
+    cardArtwork: '/logo.png',
+    tier: 'rare',
+    showMintButton: true,
+    rewardStat: '+10%',
+    participantsStat: 'OG Only',
   },
   {
     id: 3,
-    title: 'Claim & Mint NFT Achievements',
+    title: 'Achievement Collector',
     subtitle: 'Turn Victories into Collectibles',
     description:
       'Every milestone becomes a mintable NFT badge. Claim soulbound achievements for streaks, leaderboard ranks, and legendary quest completions. Flex your collection across Farcaster.',
@@ -67,10 +83,15 @@ const ONBOARDING_STAGES: OnboardingStage[] = [
       'Guild Victory NFTs: Shared team rewards',
     ],
     contractFeature: 'SoulboundBadge.sol (Non-transferable)',
+    cardArtwork: '/logo.png',
+    tier: 'epic',
+    showMintButton: true,
+    rewardStat: 'NFT Badge',
+    participantsStat: 'Top 10',
   },
   {
     id: 4,
-    title: 'Guild Treasuries & Team Quests',
+    title: 'Guild Treasury Master',
     subtitle: 'Pool Resources, Share NFTs',
     description:
       'Create guilds with shared treasuries. Complete team quests for rare cards. Top guilds mint exclusive Guild Victory NFTs that all members can claim.',
@@ -84,10 +105,15 @@ const ONBOARDING_STAGES: OnboardingStage[] = [
       'Mint Guild Victory NFTs for top 3 teams',
     ],
     contractFeature: 'Guild Treasury + Shared NFT Claims',
+    cardArtwork: '/logo.png',
+    tier: 'epic',
+    showMintButton: true,
+    rewardStat: '500 XP',
+    participantsStat: '5 Members',
   },
   {
     id: 5,
-    title: 'Referral NFTs & Recruiter Badges',
+    title: 'Legendary Recruiter',
     subtitle: 'Grow Your Squad, Earn Collectibles',
     description:
       'Share your referral code to mint Recruiter Badge NFTs. Each tier unlocks new card packs and exclusive quest access. Build your recruiting empire.',
@@ -101,6 +127,11 @@ const ONBOARDING_STAGES: OnboardingStage[] = [
       '10 referrals: Gold Recruiter NFT (Legendary)',
     ],
     contractFeature: 'Recruiter Badge NFTs (Tiered Minting)',
+    cardArtwork: '/logo.png',
+    tier: 'legendary',
+    showMintButton: true,
+    rewardStat: '50 XP/ea',
+    participantsStat: '10+ Refs',
   },
 ]
 
@@ -169,7 +200,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg transition-opacity duration-300 ${
         closing ? 'opacity-0' : 'opacity-100'
       }`}
       role="dialog"
@@ -177,7 +208,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
       aria-label="Onboarding flow"
     >
       <div
-        className={`relative mx-4 w-full max-w-3xl transform rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B0A16] via-[#1a1828] to-[#0B0A16] p-8 shadow-2xl transition-all duration-300 sm:p-10 ${
+        className={`relative mx-4 w-full max-w-5xl transform transition-all duration-300 ${
           closing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
         }`}
       >
@@ -185,120 +216,167 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         <button
           type="button"
           onClick={handleSkip}
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/60 transition-colors hover:border-white/30 hover:text-white"
+          className="absolute -right-2 -top-2 z-50 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#d4af37] bg-gradient-to-br from-[#d4af37] to-[#8b7327] text-[#1a1410] shadow-lg transition-all hover:scale-110 hover:shadow-xl"
           aria-label="Close onboarding"
         >
           <X size={20} weight="bold" />
         </button>
 
         {/* Progress bar */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-white/50 uppercase tracking-wider">
-              Stage {stage + 1} of {ONBOARDING_STAGES.length}
+            <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+              Card {stage + 1} of {ONBOARDING_STAGES.length}
             </span>
-            <span className="text-xs text-white/50">{Math.round(progress)}%</span>
+            <span className="text-xs font-bold text-[#d4af37]">{Math.round(progress)}%</span>
           </div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[#1a1410] border-2 border-[#d4af37]/30">
             <div
-              className="h-full bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] transition-all duration-500"
+              className="h-full bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#d4af37] transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex flex-col items-center text-center">
-          {/* Icon */}
-          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-[#7CFF7A]/30 bg-[#7CFF7A]/10 text-[#7CFF7A]">
-            <Icon size={40} weight="bold" />
-          </div>
-
-          {/* Title & Subtitle */}
-          <h2 className="mb-2 text-3xl font-bold text-white sm:text-4xl">{currentStage.title}</h2>
-          <p className="mb-4 text-lg text-[#7CFF7A]">{currentStage.subtitle}</p>
-          <p className="mb-8 max-w-2xl text-base text-white/70 leading-relaxed">{currentStage.description}</p>
-
-          {/* Points display */}
-          <div className="mb-8 flex items-center gap-4">
-            {currentStage.points > 0 && (
-              <div className="flex items-center gap-2 rounded-full border border-[#7CFF7A]/30 bg-[#7CFF7A]/10 px-4 py-2">
-                <Trophy size={20} weight="fill" className="text-[#7CFF7A]" />
-                <span className="text-sm font-semibold text-white">
-                  {currentStage.points} XP Base Reward
-                </span>
-              </div>
-            )}
-            {currentStage.bonusPoints && currentStage.bonusPoints > 0 && (
-              <div className="flex items-center gap-2 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-4 py-2">
-                <Sparkle size={20} weight="fill" className="text-yellow-400" />
-                <span className="text-sm font-semibold text-white">
-                  +{currentStage.bonusPoints} XP Bonus
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Features grid */}
-          <div className="mb-8 w-full max-w-2xl">
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {currentStage.features.map((feature, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-left"
-                >
-                  <span className="mt-0.5 text-[#7CFF7A]">✓</span>
-                  <span className="text-sm text-white/90">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contract reference */}
-          {currentStage.contractFeature && (
-            <div className="mb-8 rounded-lg border border-white/10 bg-white/5 px-4 py-2">
-              <code className="text-xs text-white/60">
-                🎴 Trading Card Game: <span className="text-[#7CFF7A]">{currentStage.contractFeature}</span>
-              </code>
+        {/* Yu-Gi-Oh Style Quest Card */}
+        <article className="quest-card-yugioh" data-tier={currentStage.tier}>
+          <div className="quest-card-yugioh__body">
+            
+            {/* Title bar with card name */}
+            <div className="quest-card-yugioh__title-bar">
+              <h3 className="quest-card-yugioh__name">{currentStage.title}</h3>
+              <span className="quest-card-yugioh__serial">#{currentStage.id.toString().padStart(3, '0')}</span>
             </div>
-          )}
 
-          {/* Actions */}
-          <div className="flex flex-col gap-3 w-full max-w-md sm:flex-row">
-            {stage < ONBOARDING_STAGES.length - 1 ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-semibold text-black transition-transform hover:scale-105"
-                >
-                  Next Stage
-                  <ArrowRight size={20} weight="bold" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSkip}
-                  className="flex-shrink-0 rounded-full border border-white/20 px-6 py-3 font-semibold text-white/70 transition-colors hover:border-white/40 hover:text-white sm:w-auto"
-                >
-                  Skip
-                </button>
-              </>
-            ) : (
+            {/* Attribute corner (Stage icon) */}
+            <div className="quest-card-yugioh__attribute-corner">
+              <div className="quest-card-yugioh__chain-icon">
+                <Icon size={32} weight="bold" />
+              </div>
+              <div className="quest-card-yugioh__level-stars">
+                {Array.from({ length: currentStage.id }).map((_, i) => (
+                  <span key={i}>★</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Artwork frame */}
+            <div className="quest-card-yugioh__artwork-frame">
+              {currentStage.cardArtwork ? (
+                <>
+                  <Image
+                    src={currentStage.cardArtwork}
+                    alt={currentStage.title}
+                    fill
+                    className="quest-card-yugioh__artwork"
+                    sizes="400px"
+                    priority
+                  />
+                  <div className="quest-card-yugioh__artwork-overlay" />
+                </>
+              ) : (
+                <div className="quest-card-yugioh__artwork-placeholder">
+                  <Icon size={80} weight="bold" />
+                </div>
+              )}
+            </div>
+
+            {/* Type bar */}
+            <div className="quest-card-yugioh__type-bar">
+              <span className="quest-card-yugioh__type-text">
+                {currentStage.showMintButton ? '🎴 NFT MINTABLE' : '⚔️ QUEST CARD'} • {currentStage.subtitle}
+              </span>
+            </div>
+
+            {/* Description box */}
+            <div className="quest-card-yugioh__description-box">
+              <p className="quest-card-yugioh__description-headline">
+                {currentStage.subtitle}
+              </p>
+              <p className="quest-card-yugioh__description-text">
+                {currentStage.description}
+              </p>
+              
+              <div className="quest-card-yugioh__meta-list">
+                {currentStage.features.map((feature, idx) => (
+                  <div key={idx} className="quest-card-yugioh__meta-item">
+                    ✦ {feature}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats footer (ATK/DEF style) */}
+            <div className="quest-card-yugioh__stats-footer">
+              <div className="quest-card-yugioh__stat quest-card-yugioh__stat--reward">
+                <span className="quest-card-yugioh__stat-label">Rewards</span>
+                <span className="quest-card-yugioh__stat-value">{currentStage.rewardStat || `${currentStage.points} XP`}</span>
+              </div>
+
+              {currentStage.bonusPoints && currentStage.bonusPoints > 0 && (
+                <div className="quest-card-yugioh__stat">
+                  <span className="quest-card-yugioh__stat-label">Bonus</span>
+                  <span className="quest-card-yugioh__stat-value">+{currentStage.bonusPoints}</span>
+                </div>
+              )}
+
+              <div className="quest-card-yugioh__stat quest-card-yugioh__stat--participants">
+                <span className="quest-card-yugioh__stat-label">Players</span>
+                <span className="quest-card-yugioh__stat-value">{currentStage.participantsStat || '∞'}</span>
+              </div>
+            </div>
+
+            {/* Contract reference */}
+            {currentStage.contractFeature && (
+              <div className="quest-card-yugioh__action-footer">
+                <span className="text-[0.65rem] text-[#d4af37]">
+                  🎴 {currentStage.contractFeature}
+                </span>
+              </div>
+            )}
+          </div>
+        </article>
+
+        {/* Action buttons below card */}
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          {currentStage.showMintButton && (
+            <button
+              type="button"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#ffd700] px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+            >
+              <Crown size={20} weight="fill" />
+              Mint NFT Badge
+            </button>
+          )}
+          
+          {stage < ONBOARDING_STAGES.length - 1 ? (
+            <>
               <button
                 type="button"
-                onClick={handleComplete}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-semibold text-black transition-transform hover:scale-105"
+                onClick={handleNext}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl"
               >
-                Start Collecting Cards
-                <Sparkle size={20} weight="fill" />
+                Next Card
+                <ArrowRight size={20} weight="bold" />
               </button>
-            )}
-          </div>
-        </div>
-
-        {/* Mascot decoration */}
-        <div className="pointer-events-none absolute -bottom-10 -right-10 hidden opacity-20 lg:block">
-          <Image src="/logo.png" alt="" width={200} height={200} />
+              <button
+                type="button"
+                onClick={handleSkip}
+                className="flex-shrink-0 rounded-xl border-2 border-white/20 bg-white/5 px-6 py-3 font-bold text-white/70 backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10 hover:text-white sm:w-auto"
+              >
+                Skip Tour
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={handleComplete}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+            >
+              <Sparkle size={20} weight="fill" />
+              Start Collecting Cards
+            </button>
+          )}
         </div>
       </div>
     </div>
