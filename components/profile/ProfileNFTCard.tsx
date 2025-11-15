@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount } from 'wagmi'
+// Reserved for future implementation:
+// import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 
 interface ProfileNFTCardProps {
   level: number
@@ -28,8 +30,9 @@ export function ProfileNFTCard({
   const [isMinting, setIsMinting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const { address } = useAccount()
-  const { writeContract, data: hash } = useWriteContract()
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
+  // Wagmi hooks reserved for future SoulboundBadge minting implementation
+  // const { writeContract, data: hash } = useWriteContract()
+  // const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
 
   const handleMint = async () => {
     if (!address) return

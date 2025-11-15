@@ -226,6 +226,7 @@ function formatIssue(issue: LinkIssue): string {
 /**
  * Generate report markdown
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function _generateReport(issues: LinkIssue[]): string {
   const md: string[] = []
   
@@ -271,7 +272,7 @@ function _generateReport(issues: LinkIssue[]): string {
  * Main execution
  */
 async function main() {
-  const args = process.argv.slice(2)
+  // const args = process.argv.slice(2) // Reserved for future --fix flag
   // const shouldFix = args.includes('--fix') // Reserved for future fix functionality
   
   console.log('🔗 Validating markdown links...\n')
