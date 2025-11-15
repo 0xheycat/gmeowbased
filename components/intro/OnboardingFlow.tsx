@@ -19,7 +19,7 @@ type OnboardingStage = {
 const ONBOARDING_STAGES: OnboardingStage[] = [
   {
     id: 1,
-    title: 'Welcome to Gmeow Adventure',
+    title: 'Welcome to Gmeowbased',
     subtitle: 'Your Daily GM Quest Hub',
     description:
       'Join thousands of adventurers earning points, building streaks, and conquering quests across Base, Celo, Optimism, Unichain, and Ink chains.',

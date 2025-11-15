@@ -1171,22 +1171,7 @@ function buildFrameHtml(params: {
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
-    <!-- Farcaster Frame Embed (2024/2025 spec) -->
-    <meta name="fc:frame" content='${JSON.stringify({
-      version: "next",
-      imageUrl: imageEsc || `${frameOrigin || 'https://gmeowhq.art'}/og-image.png`,
-      button: {
-        title: buttons[0]?.label || "Open",
-        action: {
-          type: "launch_frame",
-          name: pageTitle,
-          url: urlEsc,
-          splashImageUrl: imageEsc || `${frameOrigin || 'https://gmeowhq.art'}/og-image.png`,
-          splashBackgroundColor: "#040510"
-        }
-      }
-    })}' />
-    <!-- Legacy v1 compatibility -->
+    <!-- Farcaster Frame vNext -->
     <meta property="fc:frame" content="vNext" />
     ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />` : ''}
     ${buttons.map((btn, idx) => {
