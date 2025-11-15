@@ -68,6 +68,11 @@ test.describe('Quest Wizard - Mobile Gestures', () => {
     
     // Mobile viewport should show touch-optimized UI
     expect(page.viewportSize()?.width).toBeLessThanOrEqual(768)
+    
+    // Log mobile UI detection for debugging
+    if (hasMobileUI) {
+      console.log('Mobile-specific UI elements detected')
+    }
   })
 })
 
