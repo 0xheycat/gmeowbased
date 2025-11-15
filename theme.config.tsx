@@ -38,7 +38,7 @@ const config = {
     )
   },
   
-  head: () => {
+  head: function Head() {
     const { asPath, defaultLocale, locale } = useRouter()
     const url =
       'https://docs.gmeow.art' +
