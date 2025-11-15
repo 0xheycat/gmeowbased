@@ -4,12 +4,13 @@
 // wizardState methods are memoized with useCallback, safe to use in dependencies
 
 import { useMemo, useState } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useAccount, useConnect } from 'wagmi'
 import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
 import { MiniKitAuthPanel } from '@/components/quest-wizard/components/MiniKitAuthPanel'
 import { WizardHeader } from '@/components/quest-wizard/components/WizardHeader'
 import { useMediaQuery } from '@/components/quest-wizard/hooks/useMediaQuery'
+import { useWizardAnimation } from '@/hooks/useWizardAnimation'
 import { useWizardState } from '@/hooks/useWizardState'
 import { useAssetCatalog } from '@/hooks/useAssetCatalog'
 import { useMiniKitAuth } from '@/hooks/useMiniKitAuth'
@@ -25,12 +26,11 @@ import {
 	summarizeDraft,
 	buildVerificationPayload,
 } from '@/components/quest-wizard/helpers'
-import { STEPS, type QuestDraft, normalizeFid } from '@/components/quest-wizard/shared'
+import { STEPS } from '@/components/quest-wizard/shared'
 import {
 	getQuestPolicy,
 	questTypeRequiresGate,
 	resolveCreatorTier,
-	type CreatorTier,
 } from '@/lib/quest-policy'
 import { useNotifications } from '@/components/ui/live-notifications'
 import { Stepper } from '@/components/quest-wizard/components/Stepper'
@@ -57,8 +57,6 @@ export default function QuestWizard() {
 		nftLoading,
 		tokenError,
 		nftError,
-		tokenWarnings,
-		nftWarnings,
 		assetsLoading,
 		assetsError,
 		assetWarnings,
@@ -90,60 +88,27 @@ export default function QuestWizard() {
 
 	const [prefilledFollow, setPrefilledFollow] = useState(false)
 	const [escrowNow, setEscrowNow] = useState(() => Date.now())
-	// @edit-start 2025-11-12 — Respect user reduced-motion preferences for wizard transitions
-	const prefersReducedMotion = useReducedMotion()
-	const sectionMotion = useMemo(
-		() =>
-			prefersReducedMotion
-				? {
-					initial: { opacity: 1, y: 0 },
-					animate: { opacity: 1, y: 0 },
-					exit: { opacity: 1, y: 0 },
-					transition: { duration: 0 },
-				}
-				: {
-					initial: { opacity: 0, y: 16 },
-					animate: { opacity: 1, y: 0 },
-					exit: { opacity: 0, y: -16 },
-					transition: { duration: 0.24, ease: 'easeOut' },
-				},
-		[prefersReducedMotion],
-	)
-	const asideMotion = useMemo(
-		() =>
-			prefersReducedMotion
-				? {
-					initial: { opacity: 1, scale: 1 },
-					animate: { opacity: 1, scale: 1 },
-					transition: { duration: 0 },
-				}
-				: {
-					initial: { opacity: 0, scale: 0.97 },
-					animate: { opacity: 1, scale: 1 },
-					transition: { duration: 0.25, ease: 'easeOut' },
-				},
-		[prefersReducedMotion],
-	)
-	// @edit-end
+	const { sectionMotion, asideMotion } = useWizardAnimation()
 
 	const hasOnchainKitApiKey = Boolean(process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY)
-	const creatorTier = useMemo<CreatorTier>(() => resolveCreatorTier({ fid: auth.resolvedFid ?? undefined, address }), [auth.resolvedFid, address])
-	const questPolicy = useMemo(() => getQuestPolicy(creatorTier), [creatorTier])
-	const requiredAssetGate = useMemo(() => questTypeRequiresGate(draft.questTypeKey), [draft.questTypeKey])
+	const policyData = useMemo(
+		() => {
+			const tier = resolveCreatorTier({ fid: auth.resolvedFid ?? undefined, address })
+			const policy = getQuestPolicy(tier)
+			const requiredGate = questTypeRequiresGate(draft.questTypeKey)
+			return { tier, policy, requiredGate }
+		},
+		[auth.resolvedFid, address, draft.questTypeKey],
+	)
+	const { policy: questPolicy, requiredGate: requiredAssetGate } = policyData
 
-	const tokenLookup = useMemo(() => createTokenLookup(tokens), [tokens])
-	const nftLookup = useMemo(() => createNftLookup(nfts), [nfts])
+	const lookups = useMemo(() => ({ tokens: createTokenLookup(tokens), nfts: createNftLookup(nfts) }), [tokens, nfts])
+	const { tokens: tokenLookup, nfts: nftLookup } = lookups
 	const tokenEscrowStatus = useMemo(() => deriveTokenEscrowStatus(draft, { tokenLookup, now: escrowNow }), [draft, tokenLookup, escrowNow])
 
 	const summary = useMemo(() => summarizeDraft(draft, { tokenLookup, nftLookup }), [draft, tokenLookup, nftLookup])
-	const validation = useMemo(
-		() => validateAllSteps(draft, { tokenLookup, nftLookup, tokenEscrowStatus }),
-		[draft, tokenLookup, nftLookup, tokenEscrowStatus],
-	)
-	const verificationPayload = useMemo(
-		() => buildVerificationPayload(draft, { tokenLookup, nftLookup }),
-		[draft, tokenLookup, nftLookup],
-	)
+	const validation = useMemo(() => validateAllSteps(draft, { tokenLookup, nftLookup, tokenEscrowStatus }), [draft, tokenLookup, nftLookup, tokenEscrowStatus])
+	const verificationPayload = useMemo(() => buildVerificationPayload(draft, { tokenLookup, nftLookup }), [draft, tokenLookup, nftLookup])
 	const verificationCacheKey = useMemo(() => JSON.stringify(verificationPayload), [verificationPayload])
 	
 	const verification = useQuestVerification({
@@ -177,24 +142,10 @@ export default function QuestWizard() {
 	const activeStep = STEPS[stepIndex]
 	const activeValidation = validation[activeStep.key]
 	const activeStepTouched = touchedSteps[activeStep.key]
-	const renderedSteps = useMemo(
-		() =>
-			STEPS.map((step, index) => {
-				const stepValidation = validation[step.key]
-				const isActive = index === stepIndex
-				const isBefore = index < stepIndex
-				const status: 'done' | 'active' | 'waiting' = isActive
-					? 'active'
-					: isBefore && stepValidation?.valid
-						? 'done'
-						: 'waiting'
-				return { ...step, status }
-			}),
-		[stepIndex, validation],
-	)
-
-	const handleMerge = (patch: Partial<QuestDraft>) => wizardState.onDraftChange(patch)
-	const handleReset = () => wizardState.onReset()
+	const renderedSteps = STEPS.map((step, index) => ({
+		...step,
+		status: (index === stepIndex ? 'active' : index < stepIndex && validation[step.key]?.valid ? 'done' : 'waiting') as 'done' | 'active' | 'waiting',
+	}))
 
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
@@ -264,13 +215,13 @@ export default function QuestWizard() {
 							nftError={nftError}
 						tokenQuery={tokenQuery}
 						nftQuery={nftQuery}
-						onTokenSearch={assetCatalog.onTokenSearch}
-						onNftSearch={assetCatalog.onNftSearch}
-						onRefreshCatalog={assetCatalog.onRefreshCatalog}
-					onChange={handleMerge}
-					onNext={() => wizardState.onNext(validation)}
-					onPrev={wizardState.onPrev}
-					onReset={handleReset}
+					onTokenSearch={assetCatalog.onTokenSearch}
+					onNftSearch={assetCatalog.onNftSearch}
+					onRefreshCatalog={assetCatalog.onRefreshCatalog}
+				onChange={wizardState.onDraftChange}
+				onNext={() => wizardState.onNext(validation)}
+				onPrev={wizardState.onPrev}
+				onReset={wizardState.onReset}
 						validation={activeValidation}
 						showValidation={Boolean(activeStepTouched)}
 						tokenEscrowStatus={tokenEscrowStatus}
