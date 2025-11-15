@@ -12,11 +12,10 @@ import { WizardHeader } from '@/components/quest-wizard/components/WizardHeader'
 import { useMediaQuery } from '@/components/quest-wizard/hooks/useMediaQuery'
 import { useWizardState } from '@/hooks/useWizardState'
 import { useAssetCatalog } from '@/hooks/useAssetCatalog'
+import { useMiniKitAuth } from '@/hooks/useMiniKitAuth'
 import {
 	formatUnknownError,
 	isAbortError,
-	safeParseSignInMessage,
-	extractFidFromSignIn,
 } from '@/components/quest-wizard/utils'
 import { validateAllSteps } from '@/components/quest-wizard/validation'
 import {
@@ -63,7 +62,7 @@ export default function QuestWizard() {
 	const { connect, connectAsync, connectors } = useConnect()
 	const { push: pushNotification, dismiss: dismissNotification } = useNotifications()
 	const isMobile = useMediaQuery('(max-width: 768px)')
-	const wizardState = useWizardState(pushNotification)
+	const wizardState = useWizardState({ pushNotification })
 	const { draft, stepIndex, headerCollapsed, touchedSteps } = wizardState
 	const assetCatalog = useAssetCatalog({ isMobile, stepIndex })
 	const {
@@ -81,17 +80,25 @@ export default function QuestWizard() {
 		assetsError,
 		assetWarnings,
 	} = assetCatalog
+
+	const contextUser = (context?.user ?? null) as MiniKitContextUser | null
+	const miniAppLocation = typeof (context as any)?.location === 'string' ? (context as any).location : null
+	const miniAppClient = typeof (context as any)?.client?.name === 'string' ? (context as any).client.name : null
+	const isMiniAppSession = Boolean(contextUser || miniAppLocation || miniAppClient)
+
+	const auth = useMiniKitAuth({
+		context,
+		isFrameReady,
+		isMiniAppSession,
+		signInWithMiniKit,
+		pushNotification,
+		dismissNotification,
+	})
+
 	const [prefilledFollow, setPrefilledFollow] = useState(false)
-	const [authStatus, setAuthStatus] = useState<AuthStatus>('idle')
-	const [authError, setAuthError] = useState<string | null>(null)
-	const [profile, setProfile] = useState<FarcasterUser | null>(null)
-	const [profileLoading, setProfileLoading] = useState(false)
-	const [signInResult, setSignInResult] = useState<MiniAppSignInResult | null>(null)
 	const [walletAutoState, setWalletAutoState] = useState<WalletAutoState>({ status: 'idle', connectorName: null, lastError: null })
 	const [escrowNow, setEscrowNow] = useState(() => Date.now())
-	const triedMiniAuthRef = useRef(false)
 	const triedWalletAutoRef = useRef(false)
-	const pendingAuthToastRef = useRef<number | null>(null)
 	const pendingWalletToastRef = useRef<number | null>(null)
 	const verificationCacheRef = useRef<Map<string, QuestVerificationSuccess>>(new Map())
 	const verificationAbortRef = useRef<AbortController | null>(null)
@@ -140,18 +147,8 @@ export default function QuestWizard() {
 	)
 	// @edit-end
 
-	const contextUser = (context?.user ?? null) as MiniKitContextUser | null
-	const miniAppLocation = typeof (context as any)?.location === 'string' ? (context as any).location : null
-	const miniAppClient = typeof (context as any)?.client?.name === 'string' ? (context as any).client.name : null
-	const isMiniAppSession = Boolean(contextUser || miniAppLocation || miniAppClient)
 	const hasOnchainKitApiKey = Boolean(process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY)
-	const parsedSignIn = useMemo(() => (signInResult ? safeParseSignInMessage(signInResult.message) : null), [signInResult])
-	const signInFid = useMemo(() => extractFidFromSignIn(parsedSignIn), [parsedSignIn])
-	const resolvedFid = useMemo(() => {
-		const contextFid = normalizeFid(contextUser?.fid)
-		return signInFid ?? contextFid ?? null
-	}, [signInFid, contextUser?.fid])
-	const creatorTier = useMemo<CreatorTier>(() => resolveCreatorTier({ fid: resolvedFid ?? undefined, address }), [resolvedFid, address])
+	const creatorTier = useMemo<CreatorTier>(() => resolveCreatorTier({ fid: auth.resolvedFid ?? undefined, address }), [auth.resolvedFid, address])
 	const questPolicy = useMemo(() => getQuestPolicy(creatorTier), [creatorTier])
 	const requiredAssetGate = useMemo(() => questTypeRequiresGate(draft.questTypeKey), [draft.questTypeKey])
 
@@ -464,115 +461,7 @@ export default function QuestWizard() {
 		}
 		wizardState.onDraftChange({ followUsername: normalized.trim() })
 		setPrefilledFollow(true)
-	}, [prefilledFollow, contextUser?.username, draft.followUsername, wizardState.onDraftChange])
-
-	useEffect(() => {
-		if (signInResult) {
-			setAuthStatus((prev) => (prev === 'success' ? prev : 'success'))
-			setAuthError(null)
-			return
-		}
-		if (authStatus === 'success') {
-			setAuthStatus('idle')
-		}
-	}, [signInResult, authStatus])
-
-	useEffect(() => {
-		if (!resolvedFid) {
-			setProfile(null)
-			setProfileLoading(false)
-			return
-		}
-		let cancelled = false
-		setProfileLoading(true)
-		void (async () => {
-			try {
-				const result = await fetchUserByFid(resolvedFid)
-				if (!cancelled) {
-					setProfile(result)
-					setProfileLoading(false)
-				}
-			} catch (error) {
-				if (!cancelled) {
-					console.warn('Failed to fetch Neynar profile:', error)
-					setProfile(null)
-					setProfileLoading(false)
-				}
-			}
-		})()
-		return () => {
-			cancelled = true
-		}
-	}, [resolvedFid])
-
-	const handleAuthenticate = useCallback(async () => {
-		setAuthError(null)
-		setAuthStatus('pending')
-		if (pendingAuthToastRef.current) {
-			dismissNotification(pendingAuthToastRef.current)
-			pendingAuthToastRef.current = null
-		}
-		const startToastId = pushNotification({
-			tone: 'info',
-			title: 'Starting Gmeow sign-in',
-			description: 'Follow the mini-app prompt to finish authentication.',
-			duration: 6400,
-		})
-		pendingAuthToastRef.current = startToastId
-		try {
-			const result = await signInWithMiniKit()
-			dismissNotification(startToastId)
-			pendingAuthToastRef.current = null
-			if (!result) {
-				setSignInResult(null)
-				setAuthStatus('idle')
-				pushNotification({
-					tone: 'warning',
-					title: 'Sign-in dismissed',
-					description: 'No Farcaster signature was detected. Try again when you are ready.',
-				})
-				return result
-			}
-			setSignInResult(result)
-			setAuthStatus('success')
-			pushNotification({
-				tone: 'success',
-				title: 'Signed in with Gmeow',
-				description: 'Mini-app handshake complete. Identity data is synced.',
-			})
-			return result
-		} catch (error) {
-			console.error('MiniKit authentication failed:', error)
-			setAuthStatus('error')
-			setSignInResult(null)
-			const message = formatUnknownError(error, 'We could not finish the Gmeow sign-in.')
-			setAuthError(message)
-			dismissNotification(startToastId)
-			pendingAuthToastRef.current = null
-			pushNotification({
-				tone: 'error',
-				title: 'Sign-in failed',
-				description: message,
-			})
-			return false
-		}
-	}, [dismissNotification, pushNotification, signInWithMiniKit])
-
-	useEffect(() => {
-		if (!isFrameReady) return
-		if (!isMiniAppSession) return
-		if (signInResult) return
-		if (authStatus === 'pending') return
-		if (triedMiniAuthRef.current) return
-		triedMiniAuthRef.current = true
-		void handleAuthenticate()
-	}, [isFrameReady, isMiniAppSession, signInResult, authStatus, handleAuthenticate])
-
-	useEffect(() => {
-		if (!isMiniAppSession) {
-			triedMiniAuthRef.current = false
-		}
-	}, [isMiniAppSession])
+	}, [prefilledFollow, auth.contextUser?.username, draft.followUsername, wizardState.onDraftChange])
 
 	useEffect(() => {
 		if (isMiniAppSession) return
@@ -695,10 +584,10 @@ export default function QuestWizard() {
 			<div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 pb-12 pt-8">
 				<WizardHeader
 					context={context}
-					profile={profile}
-					loadingProfile={profileLoading}
-					signInResult={signInResult}
-					resolvedFid={resolvedFid}
+					profile={auth.profile}
+					loadingProfile={auth.profileLoading}
+					signInResult={auth.signInResult}
+					resolvedFid={auth.resolvedFid}
 					step={stepIndex}
 				collapsed={headerCollapsed}
 				onToggleCollapsed={() => wizardState.setHeaderCollapsed(!headerCollapsed)}
@@ -708,15 +597,15 @@ export default function QuestWizard() {
 				<MiniKitAuthPanel
 					context={context}
 					isFrameReady={isFrameReady}
-					authStatus={authStatus}
-					authError={authError}
+					authStatus={auth.authStatus}
+					authError={auth.authError}
 					hasApiKey={hasOnchainKitApiKey}
-					onAuthenticate={handleAuthenticate}
-					signInResult={signInResult}
-					parsedSignIn={parsedSignIn}
-					profile={profile}
-					profileLoading={profileLoading}
-					resolvedFid={resolvedFid}
+					onAuthenticate={auth.authenticate}
+					signInResult={auth.signInResult}
+					parsedSignIn={null}
+					profile={auth.profile}
+					profileLoading={auth.profileLoading}
+					resolvedFid={auth.resolvedFid}
 				/>
 				<header className="flex flex-col gap-2">
 					<span className="text-[11px] uppercase tracking-[0.3em] text-sky-400">Quest Builder Demo</span>
