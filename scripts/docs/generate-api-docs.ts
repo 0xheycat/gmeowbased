@@ -10,7 +10,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
-import { join, relative, dirname } from 'path'
+import { join, relative } from 'path'
 import { glob } from 'glob'
 
 interface APIRoute {
@@ -61,7 +61,7 @@ function parseAPIRoute(filePath: string): APIRoute | null {
         const commentText = commentMatch[1]
         const lines = commentText.split('\n').map(l => l.trim().replace(/^\\*\\s?/, ''))
         
-        let descLines: string[] = []
+        const descLines: string[] = []
         
         for (const line of lines) {
           if (line.startsWith('@param')) {

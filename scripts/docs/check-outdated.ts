@@ -183,7 +183,7 @@ function formatOutdated(doc: OutdatedDoc): string {
 /**
  * Generate report markdown
  */
-function generateReport(outdated: OutdatedDoc[]): string {
+function _generateReport(outdated: OutdatedDoc[]): string {
   const md: string[] = []
   
   md.push(`# Outdated Documentation Report\n`)

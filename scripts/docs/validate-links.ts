@@ -9,7 +9,7 @@
  *   tsx scripts/docs/validate-links.ts [--fix]
  */
 
-import { readFileSync, existsSync, readdirSync, statSync } from 'fs'
+import { readFileSync, existsSync, readdirSync } from 'fs'
 import { join, dirname, resolve, relative } from 'path'
 import { glob } from 'glob'
 
@@ -226,7 +226,7 @@ function formatIssue(issue: LinkIssue): string {
 /**
  * Generate report markdown
  */
-function generateReport(issues: LinkIssue[]): string {
+function _generateReport(issues: LinkIssue[]): string {
   const md: string[] = []
   
   md.push(`# Link Validation Report\n`)
@@ -272,7 +272,7 @@ function generateReport(issues: LinkIssue[]): string {
  */
 async function main() {
   const args = process.argv.slice(2)
-  const shouldFix = args.includes('--fix')
+  // const shouldFix = args.includes('--fix') // Reserved for future fix functionality
   
   console.log('🔗 Validating markdown links...\n')
   
