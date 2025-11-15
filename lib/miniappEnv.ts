@@ -1,4 +1,4 @@
-const ALLOWED_SUFFIXES = ['farcaster.xyz', 'warpcast.com', 'base.dev']
+const ALLOWED_SUFFIXES = ['farcaster.xyz', 'warpcast.com', 'base.dev', 'gmeowhq.art']
 
 export function isEmbedded(): boolean {
   try {
@@ -100,25 +100,33 @@ export async function fireMiniappReady(): Promise<void> {
     console.log('[miniappEnv] Embedded in allowed referrer, loading SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
     
-    // Wait for context to be available
+    // Wait for context to be available with extended timeout
     console.log('[miniappEnv] Waiting for SDK context...')
     const context = await Promise.race([
       sdk.context,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 3000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 8000))
     ])
     
     console.log('[miniappEnv] SDK context ready:', context)
     
-    // Call ready action
+    // Call ready action with retry logic
     if (sdk.actions?.ready) {
       console.log('[miniappEnv] Calling actions.ready()...')
-      await sdk.actions.ready()
-      console.log('[miniappEnv] ✅ actions.ready() completed successfully')
+      try {
+        await Promise.race([
+          sdk.actions.ready(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout')), 5000))
+        ])
+        console.log('[miniappEnv] ✅ actions.ready() completed successfully')
+      } catch (readyError) {
+        console.warn('[miniappEnv] ⚠️ actions.ready() timed out, but continuing:', readyError)
+        // Don't throw - allow app to continue even if ready() times out
+      }
     } else {
       console.warn('[miniappEnv] ⚠️ actions.ready not available on SDK')
     }
   } catch (error) {
     console.error('[miniappEnv] ❌ Error in fireMiniappReady:', error)
-    throw error
+    // Don't throw - allow app to continue even on error
   }
 }

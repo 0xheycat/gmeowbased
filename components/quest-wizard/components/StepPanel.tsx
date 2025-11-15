@@ -39,12 +39,46 @@ export function StepPanel({
 	onVerifyDraft,
 }: StepPanelProps) {
 	const stepErrors = validation.errors
+	const errorCount = stepErrors ? Object.keys(stepErrors).length : 0
+	
+	// Accessibility announcement for validation state
+	const validationMessage = errorCount > 0 
+		? `${errorCount} validation ${errorCount === 1 ? 'error' : 'errors'} found. Please review and correct before continuing.`
+		: validation.valid 
+			? 'Step is complete and valid. Ready to continue.'
+			: ''
+	
+	// Handle Next click with validation errors - scroll to first error
+	const handleNextClick = () => {
+		if (!validation.valid && errorCount > 0) {
+			// Find first element with aria-invalid="true"
+			const firstErrorField = document.querySelector('[aria-invalid="true"]')
+			if (firstErrorField) {
+				firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+				// Flash the field to draw attention
+				const fieldElement = firstErrorField.closest('fieldset') || firstErrorField
+				fieldElement.classList.add('error-flash')
+				setTimeout(() => fieldElement.classList.remove('error-flash'), 2000)
+			}
+		}
+		onNext()
+	}
 	return (
-		<div className="space-y-6">
+		<div className="space-y-5 lg:space-y-6">
+			{/* Screen reader announcement for validation state */}
+			<div 
+				className="sr-only" 
+				role="status" 
+				aria-live="polite" 
+				aria-atomic="true"
+			>
+				{showValidation && validationMessage}
+			</div>
+			
 			<div>
 				<span className="text-[11px] uppercase tracking-[0.3em] text-sky-400">Step {index + 1}</span>
-				<h2 className="mt-2 text-2xl font-semibold">{step.label}</h2>
-				<p className="text-sm text-slate-300">{step.description}</p>
+				<h2 className="mt-2 text-xl lg:text-2xl font-semibold">{step.label}</h2>
+				<p className="mt-1 text-sm text-slate-300">{step.description}</p>
 			</div>
 
 			{step.key === 'basics' ? <BasicsStep draft={draft} onChange={onChange} errors={stepErrors} showValidation={showValidation} /> : null}
@@ -108,12 +142,12 @@ export function StepPanel({
 				/>
 			) : null}
 
-			<div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+			<div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
 				<button
 					type="button"
 					onClick={onPrev}
 					disabled={index === 0}
-					className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/20 disabled:opacity-40"
+					className="rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
 				>
 					← Back
 				</button>
@@ -121,17 +155,24 @@ export function StepPanel({
 					<button
 						type="button"
 						onClick={onReset}
-						className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/20"
+						className="flex-1 sm:flex-none rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/5 touch-manipulation"
 					>
 						Reset draft
 					</button>
 					<button
 						type="button"
-						onClick={onNext}
+						onClick={handleNextClick}
 						disabled={index >= STEPS.length - 1 || !validation.valid}
-						className="rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+						title={
+							!validation.valid && showValidation && errorCount > 0
+								? `Complete ${errorCount} required field${errorCount === 1 ? '' : 's'} to continue`
+								: !validation.valid
+									? 'Fill in all required fields'
+									: 'Continue to next step'
+						}
+						className="flex-1 sm:flex-none rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 px-6 py-3 text-sm font-semibold text-black shadow-lg shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation"
 					>
-						Next ↗
+						{!validation.valid && errorCount > 0 ? `Next (${errorCount})` : 'Next'} ↗
 					</button>
 				</div>
 			</div>

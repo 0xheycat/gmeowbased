@@ -16,6 +16,7 @@ import { formatNumber } from '@/lib/formatters'
 import { buildGuildSlug } from '@/lib/team'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 import type { FarcasterUser } from '@/lib/neynar'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import { RankProgress } from '@/components/ui/RankProgress'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 import { readStorageCache, writeStorageCache } from '@/lib/utils'
@@ -240,6 +241,7 @@ export default function GuildTeamsPage() {
   const [showRules, setShowRules] = useState(false)
   const [currentUserFarcaster, setCurrentUserFarcaster] = useState<FarcasterUser | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [xpOverlay, setXpOverlay] = useState<XpEventPayload | null>(null)
 
   useEffect(() => {
     let active = true
@@ -1134,6 +1136,7 @@ export default function GuildTeamsPage() {
       </div>
 
       {showRules ? <GuildRulesPanel chains={SUPPORTED_CHAINS} onClose={() => setShowRules(false)} /> : null}
+      <XPEventOverlay open={Boolean(xpOverlay)} payload={xpOverlay} onClose={() => setXpOverlay(null)} />
     </div>
   )
 }

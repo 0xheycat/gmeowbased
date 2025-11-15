@@ -211,7 +211,7 @@ export function BasicsStep({
 				<Field label="Quest title" description="Headline shown on the quest card" error={nameError}>
 					<input
 						className="pixel-input"
-						placeholder="e.g. GM with the partner community"
+						placeholder="e.g., Win 100 USDC for daily GM's or Unlock early mint allowlist"
 						value={draft.name}
 						onChange={(event) => onChange({ name: event.target.value })}
 						aria-invalid={Boolean(nameError)}
@@ -350,7 +350,7 @@ export function BasicsStep({
 						<Field label={targetFidLabel} description="Lock to a specific FID if you expect the username to rotate" error={targetFidError}>
 							<input
 								className="pixel-input"
-								placeholder="12345"
+								placeholder="e.g., 3621 (dwr.eth's FID)"
 								value={draft.targetFid}
 								onChange={(event) => handleTargetFidChange(event.target.value)}
 								aria-invalid={Boolean(targetFidError)}

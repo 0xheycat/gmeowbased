@@ -434,6 +434,9 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const referralFallbackLabel = referralCode ? `Join ${referralCode}` : 'Recruit a Pilot'
   const referralTarget = referralOverrideUrl || referralFrameUrl || referralLandingUrl || href
 
+  const mintUrlParam = toOptionalString(params.mintUrl)
+  const mintUrl = toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=leaderboard&chain=${isGlobal ? 'all' : chainKey}&season=${rawSeason || 'current'}`
+
   const leaderboardButtons = buildContextualButtons({
     type: 'leaderboard',
     fallback: [{ label: 'Open Leaderboard', target: href }],
@@ -444,6 +447,8 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
       challengeLabel: challengeLabelParam,
       referralUrl: referralIdentifier ? referralTarget : null,
       referralLabel: referralIdentifier ? (referralLabelParam || referralFallbackLabel) : null,
+      mintUrl: mintUrl,
+      mintLabel: toOptionalString(params.mintLabel),
     },
   })
 
@@ -846,6 +851,8 @@ type QuestButtonPlan = {
   flexLabel?: string | null
   shareUrl?: string | null
   shareLabel?: string | null
+  mintUrl?: string | null
+  mintLabel?: string | null
 }
 
 type GuildButtonPlan = {
@@ -856,6 +863,8 @@ type GuildButtonPlan = {
   hubLabel?: string | null
   leaderboardUrl?: string | null
   leaderboardLabel?: string | null
+  mintUrl?: string | null
+  mintLabel?: string | null
 }
 
 type ReferralButtonPlan = {
@@ -883,6 +892,8 @@ type LeaderboardButtonPlan = {
   referralLabel?: string | null
   challengeUrl?: string | null
   challengeLabel?: string | null
+  mintUrl?: string | null
+  mintLabel?: string | null
 }
 
 type ContextualButtonPlan = {
@@ -918,8 +929,11 @@ function buildContextualButtons(plan: ContextualButtonPlan): FrameButton[] {
       flexLabel,
       shareUrl,
       shareLabel,
+      mintUrl,
+      mintLabel,
     } = plan.quest
     if (completed) {
+      push(mintUrl ? { label: mintLabel || '🎴 Mint Achievement', target: mintUrl } : null)
       push(flexUrl ? { label: flexLabel || 'Share Your Flex', target: flexUrl } : null)
       push(shareUrl ? { label: shareLabel || 'Share to Warpcast', target: shareUrl } : null)
       push(detailUrl ? { label: detailLabel || 'View Quest Briefing', target: detailUrl } : null)
@@ -929,8 +943,9 @@ function buildContextualButtons(plan: ContextualButtonPlan): FrameButton[] {
       push(detailUrl ? { label: detailLabel || 'View Mission Briefing', target: detailUrl } : null)
     }
   } else if (type === 'guild' && plan.guild) {
-    const { isMember, joinUrl, joinLabel, hubUrl, hubLabel, leaderboardUrl, leaderboardLabel } = plan.guild
+    const { isMember, joinUrl, joinLabel, hubUrl, hubLabel, leaderboardUrl, leaderboardLabel, mintUrl, mintLabel } = plan.guild
     if (isMember) {
+      push(mintUrl ? { label: mintLabel || '🎴 Mint Badge', target: mintUrl } : null)
       push(hubUrl ? { label: hubLabel || 'Open Guild HQ', target: hubUrl } : null)
       push(leaderboardUrl ? { label: leaderboardLabel || 'View Leaderboard', target: leaderboardUrl } : null)
     } else {
@@ -948,7 +963,8 @@ function buildContextualButtons(plan: ContextualButtonPlan): FrameButton[] {
     push(openUrl ? { label: openLabel || 'Open Points HQ', target: openUrl } : null)
     push(leaderboardUrl ? { label: leaderboardLabel || 'View Leaderboard', target: leaderboardUrl } : null)
   } else if (type === 'leaderboard' && plan.leaderboard) {
-    const { openUrl, openLabel, referralUrl, referralLabel, challengeUrl, challengeLabel } = plan.leaderboard
+    const { openUrl, openLabel, referralUrl, referralLabel, challengeUrl, challengeLabel, mintUrl, mintLabel } = plan.leaderboard
+    push(mintUrl ? { label: mintLabel || '🎴 Mint Rank Card', target: mintUrl } : null)
     push(openUrl ? { label: openLabel || 'Open Leaderboard', target: openUrl } : null)
     push(challengeUrl ? { label: challengeLabel || 'Challenge The Lead', target: challengeUrl } : null)
     push(referralUrl ? { label: referralLabel || 'Join Crew', target: referralUrl } : null)
@@ -982,6 +998,7 @@ function buildFrameHtml(params: {
   heroBadge?: { label: string; tone?: 'emerald' | 'violet' | 'gold' | 'blue' | 'pink'; icon?: string } | null
   heroStats?: Array<{ label: string; value: string; accent?: boolean }>
   heroList?: Array<{ primary: string; secondary?: string; icon?: string }>
+  defaultFrameImage?: string | null
 }) {
   const {
     title,
@@ -1002,6 +1019,7 @@ function buildFrameHtml(params: {
     heroBadge,
     heroStats = [],
     heroList = [],
+    defaultFrameImage,
   } = params
   const pageTitle = escapeHtml(title)
   const rawDescription = description || ''
@@ -1154,7 +1172,22 @@ function buildFrameHtml(params: {
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
-    <!-- Legacy Farcaster frame tags (v1 compatibility) -->
+    <!-- Farcaster Frame Embed (2024/2025 spec) -->
+    <meta name="fc:frame" content='${JSON.stringify({
+      version: "next",
+      imageUrl: imageEsc || `${frameOrigin || 'https://gmeowhq.art'}/og-image.png`,
+      button: {
+        title: buttons[0]?.label || "Open",
+        action: {
+          type: "launch_frame",
+          name: pageTitle,
+          url: urlEsc,
+          splashImageUrl: imageEsc || `${frameOrigin || 'https://gmeowhq.art'}/og-image.png`,
+          splashBackgroundColor: "#040510"
+        }
+      }
+    })}' />
+    <!-- Legacy v1 compatibility -->
     <meta property="fc:frame" content="vNext" />
     ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />` : ''}
     ${buttons.map((btn, idx) => {
@@ -1166,11 +1199,6 @@ function buildFrameHtml(params: {
       const targetTag = target ? `\n    <meta property="fc:frame:button:${index}:target" content="${target}" />` : ''
       return `<meta property="fc:frame:button:${index}" content="${label}" />${actionTag}${targetTag}`
     }).join('\n    ')}
-    <!-- Farcaster miniapp frame tags (v2) -->
-    <meta property="${miniappFrameKey()}" content="vNext" />
-    ${imageEsc ? `<meta property="${miniappFrameKey('image')}" content="${imageEsc}" />\n    <meta property="${miniappFrameKey('image', 'aspect_ratio')}" content="1.91:1" />` : ''}
-    <meta property="${miniappFrameKey('title')}" content="${pageTitle}" />
-    <meta property="${miniappFrameKey('description')}" content="${desc}" />
     ${buttonHtml}
     ${fcMetaTags}
     <style>
@@ -1293,25 +1321,32 @@ function buildFrameHtml(params: {
         transform-style:preserve-3d;
       }
       .card.card-3d{
-        border:1px solid rgba(146,169,255,0.38);
-        box-shadow:0 32px 60px rgba(9,14,44,0.68), inset 0 1px 0 rgba(255,255,255,0.08);
+        border:2px solid rgba(255,215,0,0.6);
+        box-shadow:0 32px 60px rgba(9,14,44,0.68), 
+                   inset 0 1px 0 rgba(255,255,255,0.15),
+                   inset 0 0 60px rgba(255,215,0,0.1),
+                   0 0 20px rgba(255,215,0,0.3);
         transform:perspective(1100px) rotateX(2deg) rotateY(-1.2deg);
         transition:transform 0.5s ease, box-shadow 0.5s ease;
+        background:linear-gradient(135deg, rgba(10,14,34,0.95) 0%, rgba(20,24,44,0.92) 100%);
       }
       .card.card-3d:hover{
         transform:perspective(1100px) rotateX(0.6deg) rotateY(-0.4deg) translateY(-4px);
-        box-shadow:0 36px 70px rgba(12,20,60,0.72), inset 0 1px 0 rgba(255,255,255,0.12);
+        box-shadow:0 36px 70px rgba(12,20,60,0.72), 
+                   inset 0 1px 0 rgba(255,255,255,0.2),
+                   inset 0 0 80px rgba(255,215,0,0.15),
+                   0 0 30px rgba(255,215,0,0.5);
       }
       .card.card-3d::before {
         content:"";
         position:absolute;
         inset:-32% -58% auto;
         height:160px;
-        background:linear-gradient(120deg,rgba(94,113,255,0.75),rgba(90,210,255,0.28),rgba(255,255,255,0));
+        background:linear-gradient(120deg,rgba(255,215,0,0.4),rgba(255,180,0,0.2),rgba(255,255,255,0));
         transform:rotate(6deg);
-        opacity:0.32;
+        opacity:0.4;
         pointer-events:none;
-        filter:blur(0.5px);
+        filter:blur(1px);
       }
       .card.card-3d::after{
         content:"";
@@ -1434,15 +1469,17 @@ function buildFrameHtml(params: {
         font-weight:700;
         letter-spacing:0.26em;
         text-transform:uppercase;
-        color:rgba(248,249,255,0.75);
+        color:#ffd700;
         padding:8px 14px;
         border-radius:999px;
         display:inline-flex;
         align-items:center;
         gap:8px;
-        background:rgba(255,255,255,0.12);
-        border:1px solid rgba(255,255,255,0.18);
+        background:linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,180,0,0.15));
+        border:1.5px solid rgba(255,215,0,0.5);
         font-family:"GMeow", var(--site-font, system-ui, -apple-system, Segoe UI, sans-serif);
+        text-shadow:0 0 10px rgba(255,215,0,0.8), 0 1px 3px rgba(0,0,0,0.8);
+        box-shadow:0 4px 12px rgba(255,215,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
       }
       .overlay-kicker span{
         display:inline-flex;
@@ -1721,19 +1758,22 @@ function buildFrameHtml(params: {
         gap:10px;
         padding:12px 20px;
         border-radius:12px;
-        font-weight:600;
+        font-weight:700;
         font-size:15px;
         letter-spacing:0.01em;
         text-decoration:none;
-        color:#040510;
-        background:linear-gradient(120deg,var(--accent) 0%,var(--accent-strong) 100%);
-        box-shadow:var(--accent-shadow);
-        border:1px solid rgba(255,255,255,0.22);
+        color:#ffd700;
+        background:linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,180,0,0.2));
+        box-shadow:0 8px 20px rgba(255,215,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+        border:2px solid rgba(255,215,0,0.6);
         transition:transform 0.25s ease, box-shadow 0.25s ease;
+        text-shadow:0 0 8px rgba(255,215,0,0.6), 0 1px 3px rgba(0,0,0,0.8);
       }
       .btn:hover{
         transform:translateY(-2px) scale(1.01);
-        box-shadow:0 16px 32px rgba(90,210,255,0.48);
+        box-shadow:0 12px 28px rgba(255,215,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+        background:linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,180,0,0.3));
+        border-color:rgba(255,215,0,0.8);
       }
       .btn:active{
         transform:translateY(1px) scale(0.99);
@@ -1814,8 +1854,8 @@ function buildFrameHtml(params: {
         <h1 class="sr-only">${pageTitle}</h1>
         ${imageEsc ? `<div class="hero hero-holo"><span aria-hidden="true" class="hero-glow"></span><span aria-hidden="true" class="hero-grid"></span><img class="hero-img" src="${imageEsc}" alt="frame image" />${overlayHidden ? '' : `<div class="hero-overlay">${overlayHtml}</div>`}</div>` : ''}
         <div class="sr-only">${accessibleDescriptionHtml}</div>
-        ${linkButtons.length ? `<div class="button-group">${linkButtons.map((btn) => `<a class="btn" href="${escapeHtml(btn.target!)}">${escapeHtml(btn.label)}</a>`).join('')}</div>` : primaryLinkHtml}
-        <div class="meta-row">Powered by GMEOW</div>
+        ${linkButtons.length ? `<div class="button-group">${linkButtons.map((btn) => `<a class="btn" href="${escapeHtml(btn.target!)}">⚡ ${escapeHtml(btn.label)}</a>`).join('')}</div>` : primaryLinkHtml}
+        <div class="meta-row" style="background:linear-gradient(90deg,rgba(255,215,0,0.15),rgba(255,180,0,0.1));border:1px solid rgba(255,215,0,0.3);border-radius:8px;padding:8px 12px;font-weight:600;letter-spacing:0.5px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">⚡ Powered by GMEOWBASED ADVENTURE ⚡</div>
         ${debugHtml ? `<div class="debug">${debugHtml}</div>` : ''}
       </div>
     </div>
@@ -1978,13 +2018,14 @@ export async function GET(req: Request) {
       const frameBtnUrl = `${origin}/Quest/${encodeURIComponent(chainKey)}/${encodeURIComponent(String(questIdNum))}`
       const primaryLabel = questMeta && typeof questMeta === 'object' && typeof questMeta.cta === 'string' && questMeta.cta.trim()
         ? questMeta.cta.trim()
-        : 'View Quest Briefing'
+        : `Start Quest on ${questChainName}`
       const fcMeta: Record<string, string> = {
         [miniappFrameKey('entity')]: 'quest',
         [miniappFrameKey('questId')]: String(questIdNum),
         [miniappFrameKey('chain')]: chainKey,
         [miniappFrameKey('requirement')]: qtypeKey,
         [miniappFrameKey('chain_name')]: questChainName,
+        [miniappFrameKey('brand')]: 'GMEOWBASED ADVENTURE',
       }
       if (rewardSummary) fcMeta[miniappFrameKey('quest_reward')] = rewardSummary
       if (spotsLeft !== null) fcMeta[miniappFrameKey('quest_spots_left')] = String(spotsLeft)
@@ -1999,10 +2040,18 @@ export async function GET(req: Request) {
       const claimUrlParam = toOptionalString(params.claimUrl)
       const flexUrlParam = toOptionalString(params.flexUrl)
       const shareUrlParam = toOptionalString(params.shareUrl) ?? toOptionalString(params.inviteUrl)
+      const mintUrlParam = toOptionalString(params.mintUrl)
       const verifyLabelParam = toOptionalString(params.verifyLabel)
       const claimLabelParam = toOptionalString(params.claimLabel)
       const flexLabelParam = toOptionalString(params.flexLabel)
       const shareLabelParam = toOptionalString(params.shareLabel)
+      const mintLabelParam = toOptionalString(params.mintLabel)
+      
+      // Generate mint URL for completed quests
+      const mintUrl = questCompleted 
+        ? (toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=quest&questId=${encodeURIComponent(String(questIdNum))}&chain=${encodeURIComponent(chainKey)}`)
+        : null
+      
       const questButtons = buildContextualButtons({
         type: 'quest',
         fallback: [{ label: primaryLabel, target: frameBtnUrl }],
@@ -2018,6 +2067,8 @@ export async function GET(req: Request) {
           flexLabel: flexLabelParam,
           shareUrl: toAbsoluteUrl(shareUrlParam, origin),
           shareLabel: shareLabelParam,
+          mintUrl: mintUrl,
+          mintLabel: mintLabelParam,
         },
       })
 
@@ -2081,6 +2132,13 @@ export async function GET(req: Request) {
       const joinUrl = toAbsoluteUrl(joinUrlParam, origin) ?? (guildId ? `${guildUrl}?join=1` : `${origin}/guild?join=1`)
       const leaderboardTargetRaw = toOptionalString(params.guildLeaderboardUrl) ?? toOptionalString(params.leaderboardUrl)
       const leaderboardUrl = toAbsoluteUrl(leaderboardTargetRaw, origin) ?? (guildId ? `${origin}/leaderboard?guild=${guildId}` : null)
+      const mintUrlParam = toOptionalString(params.mintUrl)
+      
+      // Generate mint URL for guild members
+      const mintUrl = isMember 
+        ? (toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=guild&guildId=${guildId}`)
+        : null
+      
       const guildButtons = buildContextualButtons({
         type: 'guild',
         fallback: [{ label: 'Open Guild', target: guildUrl }],
@@ -2092,6 +2150,8 @@ export async function GET(req: Request) {
           hubLabel: toOptionalString(params.hubLabel),
           leaderboardUrl,
           leaderboardLabel: toOptionalString(params.leaderboardLabel),
+          mintUrl: mintUrl,
+          mintLabel: toOptionalString(params.mintLabel),
         },
       })
       const html = buildFrameHtml({

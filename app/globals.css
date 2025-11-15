@@ -2,6 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Yu-Gi-Oh inspired holographic shine animation */
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
+    }
+    100% {
+      transform: translateX(200%) skewX(-15deg);
+    }
+  }
+  
+  .animate-shine {
+    animation: shine 3s infinite;
+  }
+  
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+  
+  /* Gold shimmer effect for Yu-Gi-Oh! holographic cards */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  /* Error flash animation for validation feedback */
+  @keyframes error-flash {
+    0%, 100% {
+      box-shadow: 0 0 0 rgba(244, 63, 94, 0);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(244, 63, 94, 0.6);
+    }
+  }
+  
+  .error-flash {
+    animation: error-flash 0.6s ease-in-out 3;
+  }
+}
+
+/* Quest Card 3D effects */
+@layer utilities {
+	.perspective-1000 {
+		perspective: 1000px;
+	}
+	
+	.backface-hidden {
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+	}
+	
+	.preserve-3d {
+		transform-style: preserve-3d;
+	}
+}
+
 /* ======================================================
    CUSTOM FONTS
 /* ===== QUEST FAB (Floating Action Button) ===== */
@@ -888,6 +957,67 @@ select:focus {
 .quest-fab-action:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * QUEST WIZARD FORM INPUTS
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* Reusable glass morphism input style */
+.pixel-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(15, 23, 42, 0.6); /* slate-950/60 */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  color: rgb(226, 232, 240); /* slate-200 */
+  font-size: 0.875rem;
+  line-height: 1.5;
+  outline: none;
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pixel-input::placeholder {
+  color: rgb(100, 116, 139); /* slate-500 */
+}
+
+.pixel-input:focus {
+  border-color: rgb(125, 211, 252); /* sky-300 */
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 
+    0 0 0 3px rgba(125, 211, 252, 0.15),
+    0 4px 16px rgba(14, 165, 233, 0.2);
+}
+
+.pixel-input:hover:not(:focus) {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.pixel-input[aria-invalid="true"] {
+  border-color: rgb(251, 113, 133); /* rose-400 */
+  background: rgba(244, 63, 94, 0.05);
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
+}
+
+/* Enhanced focus-visible styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid rgb(125, 211, 252); /* sky-300 */
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid rgb(125, 211, 252);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.2);
+}
+
+.pixel-input:focus-visible {
+  outline: none; /* Already has custom focus style */
 }
 
 .quest-fab-action--active {

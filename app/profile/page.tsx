@@ -11,6 +11,7 @@ import { ProfileHeroStats } from '@/components/profile/ProfileHeroStats'
 import { ProfileStickyHeader } from '@/components/profile/ProfileStickyHeader'
 import { FloatingActionMenu, type FloatingAction } from '@/components/profile/FloatingActionMenu'
 import { useNotifications } from '@/components/ui/live-notifications'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import { farcasterVerificationCache } from '@/lib/cache-storage'
 import { upsertNotificationToken } from '@/lib/miniapp-notifications'
 import type { ProfileOverviewData } from '@/lib/profile-types'
@@ -37,6 +38,7 @@ export default function ProfilePage() {
   const [isManualEditing, setIsManualEditing] = useState(false)
   const [pushTokenRegistered, setPushTokenRegistered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [xpOverlay, setXpOverlay] = useState<XpEventPayload | null>(null)
 
   // Detect mobile viewport
   useEffect(() => {
@@ -689,6 +691,7 @@ export default function ProfilePage() {
           </div>
         </section>
       </main>
+      <XPEventOverlay open={Boolean(xpOverlay)} payload={xpOverlay} onClose={() => setXpOverlay(null)} />
     </div>
   )
 }

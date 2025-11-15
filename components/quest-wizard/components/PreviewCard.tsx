@@ -2,20 +2,30 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
+import { lazy, Suspense, useState } from 'react'
+import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 import type { QuestDraft, QuestSummary, TokenEscrowPhase, TokenEscrowStatus } from '../shared'
 import { STEPS } from '../shared'
 
+// Lazy load QuestCard for better performance
+const QuestCard = lazy(() => 
+	import('./QuestCard').then(m => ({ default: m.QuestCard }))
+)
+
 export function PreviewCard({
 	summary,
+	draft,
 	stepIndex,
 	tokenEscrowStatus,
 	rewardMode,
 }: {
 	summary: QuestSummary
+	draft: QuestDraft
 	stepIndex: number
 	tokenEscrowStatus: TokenEscrowStatus | null
 	rewardMode: QuestDraft['rewardMode']
 }) {
+	const [viewMode, setViewMode] = useState<'standard' | 'card'>('card')
 	const prefersReducedMotion = useReducedMotion()
 	const escrowBadge = (() => {
 		if (rewardMode !== 'token') return null
@@ -55,28 +65,113 @@ export function PreviewCard({
 			</span>
 		)
 	})()
+	
+	// Determine rarity for QuestCard based on reward type and metadata
+	const getRarity = (): 'normal' | 'rare' | 'epic' | 'legendary' => {
+		if (rewardMode === 'nft') return 'epic'
+		if (rewardMode === 'token') {
+			// Try to extract amount from rewardBadge or metaRows
+			const rewardText = summary.rewardBadge || summary.metaRows.join(' ')
+			const match = rewardText.match(/[\d,]+/)
+			const amount = match ? parseFloat(match[0].replace(/,/g, '')) : 0
+			
+			if (amount > 1000) return 'legendary'
+			if (amount > 100) return 'epic'
+			return 'rare'
+		}
+		if (rewardMode === 'points') return 'rare'
+		return 'normal'
+	}
+	
+	// Show QuestCard if in final preview step (step 3)
+	if (viewMode === 'card' && stepIndex === 3) {
+		return (
+			<div className="space-y-4">
+				{/* View toggle */}
+				<div className="flex justify-end gap-2">
+					<button
+						onClick={() => setViewMode('standard')}
+						className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-white/10"
+					>
+						Standard View
+					</button>
+					<button
+						onClick={() => setViewMode('card')}
+						className="rounded-lg bg-sky-500/20 px-3 py-1.5 text-xs text-sky-300"
+					>
+						Card View ✨
+					</button>
+				</div>
+				
+				<Suspense fallback={<CardLoadingSkeleton />}>
+					<QuestCard
+						summary={summary}
+						variant={getRarity()}
+						showFlip={true}
+					/>
+				</Suspense>
+			</div>
+		)
+	}
+	
 	return (
-		<motion.div
-			className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-[1px]"
+		<div className="space-y-4">
+			{/* View toggle - only show on preview step */}
+			{stepIndex === 3 && (
+				<div className="flex justify-end gap-2">
+					<button
+						onClick={() => setViewMode('standard')}
+						className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-slate-400"
+					>
+						Standard View
+					</button>
+					<button
+						onClick={() => setViewMode('card')}
+						className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-white/10"
+					>
+						Card View ✨
+					</button>
+				</div>
+			)}
+			
+			<motion.div
+			className="group relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-[1px]"
 			/* @edit-start 2025-11-12 — Disable hover wobble when reduced motion is requested */
 			whileHover={prefersReducedMotion ? undefined : { rotateX: -2, rotateY: 3 }}
 			transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 220, damping: 20 }}
 			/* @edit-end */
 		>
-			<div className="relative h-full rounded-[calc(1.5rem-1px)] bg-slate-950/95 p-6 backdrop-blur">
+			<div className="relative h-full rounded-[calc(1rem-1px)] lg:rounded-[calc(1.5rem-1px)] bg-slate-950/95 p-4 lg:p-6 backdrop-blur">
 				<div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),_transparent_60%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 				<div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-500">
 					<span>Live preview</span>
 					<div className="flex items-center gap-2">
 						{escrowBadge}
+						{stepIndex === 3 && (
+							<button
+								onClick={() => {
+									const frameUrl = buildFrameShareUrl({
+										type: 'quest',
+										chain: draft.chain,
+										questId: 'draft',
+									})
+									const castText = `Check out my new quest: ${summary.title} \ud83c\udfaf`
+									void openWarpcastComposer(castText, frameUrl)
+								}}
+								className="rounded-lg bg-sky-500/20 px-3 py-1.5 text-[10px] font-semibold text-sky-200 transition hover:bg-sky-500/30 border border-sky-400/30"
+								title="Share quest frame on Farcaster"
+							>
+								🔗 Share Frame
+							</button>
+						)}
 						<span>
 							Step {stepIndex + 1} / {STEPS.length}
 						</span>
 					</div>
 				</div>
 
-				<div className="mt-6 space-y-5">
-					<div className="relative h-40 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
+				<div className="mt-4 lg:mt-6 space-y-4 lg:space-y-5">
+					<div className="relative h-36 lg:h-40 w-full overflow-hidden rounded-xl lg:rounded-2xl border border-white/10 bg-slate-900">
 						{summary.mediaPreview ? (
 							<Image src={summary.mediaPreview} alt="Quest cover" fill className="object-cover" sizes="320px" unoptimized />
 						) : (
@@ -85,11 +180,11 @@ export function PreviewCard({
 					</div>
 
 					<div>
-						<h3 className="text-2xl font-semibold text-slate-100">{summary.title}</h3>
-						<p className="text-sm text-slate-300">{summary.subtitle}</p>
+						<h3 className="text-xl lg:text-2xl font-semibold text-slate-100">{summary.title}</h3>
+						<p className="text-sm text-slate-300 mt-1">{summary.subtitle}</p>
 					</div>
 
-					<div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.2em] text-slate-400">
+					<div className="flex flex-wrap gap-2 text-[10px] lg:text-[11px] uppercase tracking-[0.2em] text-slate-400">
 						<span className="rounded-full border border-white/10 px-3 py-1">{summary.chainLabel}</span>
 						<span className="rounded-full border border-white/10 px-3 py-1">{summary.questTypeLabel}</span>
 						<span className="rounded-full border border-white/10 px-3 py-1">
@@ -111,5 +206,12 @@ export function PreviewCard({
 				</div>
 			</div>
 		</motion.div>
+		</div>
+	)
+}
+
+function CardLoadingSkeleton() {
+	return (
+		<div className="h-[440px] w-full max-w-[320px] animate-pulse rounded-2xl bg-white/5" />
 	)
 }

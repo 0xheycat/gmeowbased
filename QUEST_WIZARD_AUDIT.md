@@ -1,1248 +1,875 @@
-# Quest Wizard (Creator Page) Comprehensive Audit
-
-**Date**: November 14, 2025  
-**Status**: 🔍 **Initial Audit - 0% → In Progress**  
-**Current Bundle**: 36 kB (needs optimization)
-
-**Files Audited**:
-- `components/quest-wizard/QuestWizard.tsx` (3,808 lines) - Main wizard component 🔍
-- `components/quest-wizard/shared.ts` (508 lines) - Shared types and utilities
-- `components/quest-wizard/types.ts` - Type definitions
-- `components/quest-wizard/components/` (72K) - Sub-components
-  * `Field.tsx` - Form field wrapper
-  * `MiniKitAuthPanel.tsx` - Wallet authentication
-  * `QuickExpiryPicker.tsx` - Date/time selector
-  * `SegmentedToggle.tsx` - Toggle controls
-  * `SelectorState.tsx` - Asset selector
-  * `TokenSelector.tsx` - Token picker
-  * `WizardHeader.tsx` - Step navigation
-  * `a11y.ts` - Accessibility helpers
-  * `primitives.tsx` - UI primitives
-  * `steps/` - Step-specific components
-- Total: **~240K** of Quest Wizard code
+# Quest Wizard Deep Audit Report
+**Generated**: 2025-01-XX  
+**Status**: Documentation claims 100% complete, reality is 75% (6/8 features)
 
 ---
 
-## Executive Summary
+## 🔍 Executive Summary
 
-The Quest Wizard is a **sophisticated 4-step form** for creating on-chain quests. It's the **largest component in the codebase at 3,808 lines**, which presents both power and maintenance challenges.
+### Critical Findings
+1. **❌ WALLET CONNECTION DUPLICATION** - Quest Wizard has its own wallet system conflicting with existing ConnectWalletSection
+2. **❌ AUTH SYSTEM DUPLICATION** - useMiniKitAuth separate from main app auth flow
+3. **❌ SWIPEABLE STEP NOT INTEGRATED** - Component exists but not used in main wizard
+4. **❌ NO ANALYTICS TRACKING** - No posthog/mixpanel implementation
+5. **✅ AUTO-SAVE INTEGRATED** - Successfully added today
+6. **✅ TEMPLATES INTEGRATED** - Successfully added today
 
-**Overall Rating**: ⭐⭐⭐☆☆ (3/5) - *Functional but needs optimization*
-
-**Critical Issues**:
-- 🔴 **3,808 lines** in single file (should be <500 lines)
-- 🔴 **36 kB bundle** (50% larger than main Quest Hub)
-- 🟡 Form validation spread across 500+ lines
-- 🟡 No mobile-specific optimizations
-- 🟡 Preview card doesn't match Yu-Gi-Oh design
-
----
-
-## 1. File Structure Analysis
-
-### Main Components Found (QuestWizard.tsx):
-
-#### Core Functions (42 total):
-1. **`QuestWizard()`** - Main component (line 120)
-2. **`Stepper()`** - Step navigation (line 1080)
-3. **`StepPanel()`** - Step content wrapper (line 1159)
-4. **`BasicsStep()`** - Quest details form (line 1370)
-5. **`EligibilityStep()`** - Gating configuration (line 1679)
-6. **`RewardsStep()`** - Reward setup (line 1987)
-7. **`FinalizeStep()`** - Preview & publish (line 2311)
-8. **`PreviewCard()`** - Quest preview (line 2993)
-9. **`NftSelector()`** - NFT asset picker (line 2705)
-10. **`CatalogStatusBanner()`** - Asset loading status (line 2935)
-
-#### Validation Functions (6):
-- `validateAllSteps()` (line 3607)
-- `validateBasicsStep()` (line 3616)
-- `validateEligibilityStep()` (line 3679)
-- `validateRewardsStep()` (line 3702)
-- `buildQuestFieldRequirementHints()` (line 1298)
-- `buildVerificationPayload()` (line 3370)
-
-#### Helper Functions (20+):
-- `summarizeDraft()` - Convert draft to QuestSummary
-- `deriveTokenEscrowStatus()` - Calculate escrow state
-- `parseTokenAmountToUnits()` - Token math
-- `formatTokenAmountFromUnits()` - Token formatting
-- `sanitizePositiveNumberInput()` - Input sanitization
-- `deriveQuestModeFromKey()` - Quest mode detection
-- `formatUnknownError()` - Error formatting
-- `isAbortError()` - Error type checking
-- `useMediaQuery()` - Responsive hook
-- `safeParseSignInMessage()` - MiniKit parsing
-- `extractFidFromSignIn()` - FID extraction
-- `createTokenLookup()` - Token indexing
-- `createNftLookup()` - NFT indexing
-
-#### State Management:
-- **Draft State**: `useReducer` with `draftReducer` (508 lines in shared.ts)
-- **Step Navigation**: `currentStep`, `stepIndex`, `touchedSteps`
-- **Validation**: `stepErrors`, `showValidation`, `attemptedNext`
-- **Assets**: `tokenSnapshot`, `nftSnapshot`, `tokenLookup`, `nftLookup`
-- **Wallet**: `authStatus`, `miniKitUser`, `walletAutoState`
-- **Async**: `publishing`, `verifyState`, `catalogsLoading`
+### Actual Progress: 6/8 Features (75%)
+- Documentation falsely claims 100% completion
+- MAXIMIZATION_SUMMARY.md says 3/8 (outdated)
+- COMPLETION_REPORT.md says 100% (false)
+- README.md says 8/8 complete (false)
 
 ---
 
-## 2. Component Breakdown by Lines
+## 🎯 Part 1: Wallet Connection System Conflict
 
-| Component | Lines | Purpose | Issues |
-|-----------|-------|---------|--------|
-| **QuestWizard** | 3,808 | Main container | ❌ Too large (should be <500) |
-| **BasicsStep** | ~300 | Quest details | ⚠️ Needs splitting |
-| **EligibilityStep** | ~300 | Gating logic | ⚠️ Complex conditionals |
-| **RewardsStep** | ~300 | Reward config | ⚠️ Token math scattered |
-| **FinalizeStep** | ~400 | Preview/publish | ⚠️ Has own preview card |
-| **PreviewCard** | ~90 | Quest preview | ❌ Doesn't match Yu-Gi-Oh |
-| **Validation** | ~200 | Form validation | ⚠️ Duplicated logic |
-| **Helpers** | ~500 | Utilities | ⚠️ Should be in lib/ |
+### Existing Wallet System (Main App)
+**Location**: `components/ConnectWallet.tsx` (208 lines)
 
----
-
-## 3. Critical Issues Found
-
-### A. **Massive Single File (3,808 lines)** 🔴
-
-**Problem**:
-- Single file responsibility too broad
-- Difficult to navigate and maintain
-- Git conflicts frequent
-- Slow to load in editors
-- Testing individual features impossible
-
-**Impact**:
-- Developer productivity: -60%
-- Onboarding time: +200%
-- Bug discovery: Difficult
-- Bundle size: 36 kB (excessive)
-
-**Recommendation**: Split into 15-20 files
-```
-components/quest-wizard/
-├── QuestWizard.tsx (main coordinator, <200 lines)
-├── hooks/
-│   ├── useWizardState.ts
-│   ├── useAssetCatalog.ts
-│   ├── useWalletAuth.ts
-│   └── useQuestValidation.ts
-├── steps/
-│   ├── BasicsStep.tsx
-│   ├── EligibilityStep.tsx
-│   ├── RewardsStep.tsx
-│   └── FinalizeStep.tsx
-├── preview/
-│   ├── PreviewCard.tsx
-│   └── PreviewCardYugioh.tsx (new)
-├── validation/
-│   ├── validateBasics.ts
-│   ├── validateEligibility.ts
-│   └── validateRewards.ts
-└── utils/
-    ├── tokenMath.ts
-    ├── formatters.ts
-    └── sanitizers.ts
-```
-
----
-
-### B. **No Mobile Optimization** 🟡
-
-**Problems Found**:
-- No touch-specific UI elements
-- Desktop-first stepper design
-- Small form inputs (<44px touch targets)
-- No mobile-specific validation feedback
-- No collapsed step navigation for mobile
-
-**Evidence**:
+**Usage in Main App**:
 ```tsx
-// Current - no mobile considerations
-<Stepper activeIndex={stepIndex} steps={renderedSteps} onSelect={handleStepSelect} />
+// app/page.tsx
+import { ConnectWalletSection } from '@/components/home/ConnectWalletSection'
 
-// No mobile-specific layout
-// No touch gestures for navigation
-// No bottom sheet for asset selectors
+<ConnectWalletSection connected={isWalletConnected} />
 ```
 
-**Impact**:
-- Mobile form completion: Difficult
-- Touch accuracy: Poor
-- User frustration: High
-- Bounce rate: Likely elevated
-
-**Recommendation**:
-1. Add mobile-specific stepper (progress bar)
-2. Use bottom sheets for selectors on mobile
-3. Add swipe gestures for step navigation
-4. Increase all touch targets to 48px+
-5. Add sticky "Next" button on mobile
-
----
-
-### C. **Preview Card Inconsistency** ❌
-
-**Problem**: Preview card (line 2993) doesn't match Yu-Gi-Oh design from main Quest page
-
-**Current Preview Card**:
+**Implementation**:
 ```tsx
-function PreviewCard({ summary, stepIndex, tokenEscrowStatus, rewardMode }) {
-  // Uses old card design, not Yu-Gi-Oh structure
-  // No tier system
-  // No glass morphism
-  // No golden borders
-  // Different layout entirely
+// components/ConnectWallet.tsx
+import { useAccount, useConnect } from 'wagmi'
+
+export function ConnectWallet() {
+  const { address, isConnected } = useAccount()
+  const { connect, connectAsync, connectors } = useConnect()
+  
+  // Auto-connect Farcaster wallet
+  // Shows wallet selection UI
+  // Toast notifications on connect/disconnect
 }
 ```
 
-**Expected**: Should match QuestCard from main page:
-- 7-section Yu-Gi-Oh structure
-- Golden borders with tier colors
-- Glass morphism backgrounds
-- Holographic effects
-- Skeleton loaders
-
-**Impact**:
-- Visual inconsistency
-- User confusion
-- Brand dilution
-- Preview doesn't match final result
-
-**Recommendation**: Replace `PreviewCard` with Yu-Gi-Oh version
+**Features**:
+- Uses wagmi's `useAccount` and `useConnect` directly
+- Auto-connects to Farcaster wallet if available
+- Wrapped by `ConnectWalletSection` component
+- Used on homepage (app/page.tsx)
+- Also used in:
+  * app/Dashboard/page.tsx
+  * app/profile/page.tsx
+  * app/Quest/[chain]/[id]/page.tsx
 
 ---
 
-### D. **Form Validation Complexity** 🟡
+### Quest Wizard Wallet System (Duplicate)
+**Location**: `hooks/useWalletConnection.ts` (178 lines)
 
-**Problems**:
-- 3 separate validation functions (200+ lines each)
-- Validation logic duplicated across steps
-- No shared validation utilities
-- Error messages hard-coded in multiple places
-- No async validation patterns
-
-**Example Issues**:
+**Usage in Quest Wizard**:
 ```tsx
-// validateBasicsStep - 60 lines
-// validateEligibilityStep - 20 lines
-// validateRewardsStep - 90 lines
-// Total: 170 lines of validation code
+// components/quest-wizard/QuestWizard.tsx
+import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { useAccount, useConnect } from 'wagmi'
 
-// Duplicated patterns:
-if (!Number.isFinite(value) || value <= 0) {
-  errors.field = 'Error message'
+const { address, connector: activeConnector, isConnected } = useAccount()
+const { connect, connectAsync, connectors } = useConnect()
+
+const wallet = useWalletConnection({
+  isMiniAppSession,
+  isConnected,
+  activeConnector,
+  connectors,
+  connect,
+  connectAsync,
+  pushNotification,
+  dismissNotification,
+})
+```
+
+**Implementation**:
+```typescript
+// hooks/useWalletConnection.ts
+export function useWalletConnection({
+  isMiniAppSession,
+  isConnected,
+  activeConnector,
+  connectors,
+  connect,
+  connectAsync,
+  pushNotification,
+  dismissNotification,
+}) {
+  // Auto-connect logic
+  // Wallet state management
+  // Toast notifications
+  // Returns: { walletAutoState }
 }
-// Appears 15+ times with slight variations
 ```
 
-**Recommendation**:
-1. Create `lib/quest-validation.ts` with shared validators
-2. Use yup/zod for schema validation
-3. Extract error messages to constants
-4. Add async validation for blockchain checks
-5. Implement field-level validation (not just step-level)
+**Features**:
+- Wraps wagmi hooks with custom logic
+- Auto-connects when not in mini-app session
+- Manages `walletAutoState`: idle, attempting, connected, failed, missing
+- Custom notification system integration
+- Used ONLY in Quest Wizard
 
 ---
 
-### E. **Bundle Size (36 kB)** 🔴
+### ⚠️ CONFLICT ANALYSIS
 
-**Analysis**:
+#### Duplication Issues:
+1. **Two auto-connect implementations** - both try to connect wallet automatically
+2. **Two notification systems** - ConnectWallet uses legacy, Quest Wizard uses new
+3. **Two UI patterns** - ConnectWalletSection vs inline wizard connection
+4. **State management divergence** - ConnectWallet manages its own state, Quest Wizard has walletAutoState
+
+#### Actual Usage:
 ```
-Quest Creator: 36 kB
-Quest Hub: 23.3 kB
-Difference: +54% larger
+Main App (4 places):
+├── app/page.tsx → ConnectWalletSection → ConnectWallet
+├── app/Dashboard/page.tsx → useAccount directly
+├── app/profile/page.tsx → useAccount directly
+└── app/Quest/[chain]/[id]/page.tsx → useAccount directly
+
+Quest Wizard (1 place):
+└── components/quest-wizard/QuestWizard.tsx → useWalletConnection hook
 ```
 
-**Contributors**:
-1. Single massive file (no code splitting)
-2. All step components loaded upfront
-3. Heavy dependencies:
-   - framer-motion (animations)
-   - @coinbase/onchainkit/minikit
-   - wagmi hooks
-4. Inline functions not memoized
-5. No lazy loading for steps
-
-**Impact**:
-- Initial load: Slow on mobile
-- Time to interactive: >3s on 3G
-- Memory usage: High
-- CPU usage: Excessive re-renders
-
-**Recommendation**:
-1. Code split by step: `React.lazy(() => import('./steps/BasicsStep'))`
-2. Lazy load asset selectors
-3. Memoize heavy computations
-4. Use dynamic imports for wagmi
-5. Target bundle: <25 kB
+#### Problem:
+- User has existing wallet connection page (ConnectWalletSection)
+- Quest Wizard recreates same functionality with different approach
+- Both try to auto-connect → potential race conditions
+- Inconsistent UX between main app and Quest Wizard
 
 ---
 
-## 4. Wizard Flow Analysis
+### 💡 RECOMMENDATION: Use Existing Wallet System
 
-### Step 1: Basics (Lines 1370-1678)
-
-**Fields**:
-- Quest name
-- Headline
-- Description
-- Quest type (15 options)
-- Chain selection (5 chains)
-- Expiry date/time
-- Media upload
-- Dynamic fields per quest type
-
-**Issues**:
-- Quest type selector not searchable
-- No quest templates
-- Media upload no preview
-- Date picker desktop-only
-- No autosave
-
-**Validation**: 60 lines (validateBasicsStep)
-
----
-
-### Step 2: Eligibility (Lines 1679-1986)
-
-**Modes**:
-- Open (no gating)
-- Simple (token/NFT gating)
-- Partner (advanced)
-
-**Features**:
-- Token selector with search
-- NFT collection picker
-- Minimum balance setting
-- Multi-chain eligibility
-
-**Issues**:
-- Asset loading slow (no virtualization)
-- No balance preview
-- Chain filter confusing
-- Token search case-sensitive
-
-**Validation**: 20 lines (validateEligibilityStep)
-
----
-
-### Step 3: Rewards (Lines 1987-2310)
-
-**Options**:
-- Points (simple)
-- ERC-20 tokens (complex)
-- NFTs (medium)
-
-**Features**:
-- Token escrow detection
-- Raffle system
-- Max completions cap
-- Per-user reward amount
-
-**Issues**:
-- Escrow detection manual
-- No automatic funding flow
-- Token math confusing
-- Raffle explanation poor
-
-**Validation**: 90 lines (validateRewardsStep)
-
----
-
-### Step 4: Preview & Publish (Lines 2311-2704)
-
-**Features**:
-- Quest summary preview
-- Verification test
-- Publish to blockchain
-- Success/error handling
-
-**Issues**:
-- Preview card doesn't match Yu-Gi-Oh
-- No draft save
-- No edit after publish
-- Error handling generic
-
----
-
-## 5. Mobile-Specific Issues
-
-### Touch Targets (Measured):
-| Element | Current | Target | Status |
-|---------|---------|--------|--------|
-| Step buttons | 32px | 48px | ❌ Too small |
-| Input fields | 36px | 48px | ❌ Too small |
-| Radio buttons | 20px | 44px | ❌ Too small |
-| Asset cards | 60px | 48px | ✅ Adequate |
-| Submit button | 40px | 48px | ⚠️ Close |
-
-### Layout Issues:
-- Stepper horizontal scroll on mobile
-- Form fields not stacked properly
-- Asset selector overflow
-- Preview card too wide (420px)
-- No sticky navigation
-
-### Gestures:
-- ❌ No swipe between steps
-- ❌ No pull-to-refresh
-- ❌ No bottom sheet for selectors
-- ❌ No haptic feedback
-- ❌ No keyboard shortcuts
-
----
-
-## 6. Performance Issues
-
-### Re-render Analysis:
+**Option A (Recommended)**: Remove Quest Wizard's wallet hook, use existing
 ```tsx
-// Every draft change triggers full re-render
-const [draft, dispatch] = useReducer(draftReducer, EMPTY_DRAFT)
+// components/quest-wizard/QuestWizard.tsx
+// REMOVE:
+import { useWalletConnection } from '@/hooks/useWalletConnection'
+const wallet = useWalletConnection({...})
 
-// These cause cascading updates:
-onChange('name', value)           // ❌ Re-renders entire wizard
-onChange('description', value)     // ❌ Re-renders entire wizard
-onChange('chain', value)           // ❌ Re-renders entire wizard
-
-// Should be:
-useDeferredValue() for expensive computations
-useCallback() for event handlers
-React.memo() for step components
+// REPLACE WITH:
+const { address, isConnected, connector } = useAccount()
+// Use isConnected directly for wallet checks
 ```
 
-### Expensive Operations:
-1. **Token/NFT catalog loading**: No virtualization
-2. **Validation on every keystroke**: Should debounce
-3. **Preview card updates**: Should throttle
-4. **Asset search**: Re-filters entire list
-5. **Draft summarization**: Runs on every change
+**Pros**:
+- ✅ Consistent with rest of app
+- ✅ No duplication
+- ✅ Simpler code
+- ✅ User's existing wallet page works as expected
 
-### Memory Leaks:
-- Asset snapshots not cleaned up
-- Event listeners in useMediaQuery
-- Async operations not cancelled
-- Image previews not revoked
+**Cons**:
+- ⚠️ Need to handle wallet state manually in wizard
+- ⚠️ Lose walletAutoState tracking
 
----
+**Option B**: Keep Quest Wizard's hook, remove from main app
+- ❌ Not recommended - breaks existing functionality
 
-## 7. Accessibility Issues
-
-### Keyboard Navigation:
-- ⚠️ Step navigation requires mouse
-- ⚠️ Asset selectors keyboard-unfriendly
-- ⚠️ Date picker not keyboard accessible
-- ⚠️ Form submission requires mouse
-
-### Screen Reader:
-- ⚠️ Step progress not announced
-- ⚠️ Validation errors not announced
-- ⚠️ Loading states not communicated
-- ⚠️ Asset catalog updates not announced
-
-### ARIA Labels:
-- ⚠️ Many form fields missing aria-describedby
-- ⚠️ Error messages not properly associated
-- ⚠️ Required fields not marked
-- ⚠️ Asset cards missing roles
-
-### WCAG Violations:
-- 2.1.1 (Keyboard): Step selector mouse-only
-- 2.4.3 (Focus Order): Inconsistent tab order
-- 3.3.1 (Error Identification): Errors not specific
-- 3.3.2 (Labels): Some inputs unlabeled
-- 4.1.2 (Name, Role, Value): Asset cards missing roles
+**Option C**: Consolidate into shared hook
+- ⚠️ Requires refactoring both systems
 
 ---
 
-## 8. Missing Features
-
-### High Priority:
-1. ❌ **Quest Templates**: No pre-built campaigns
-2. ❌ **Draft Autosave**: Lose progress on refresh
-3. ❌ **Quest Duplication**: Can't clone existing quests
-4. ❌ **Bulk Operations**: Can't create multiple quests
-5. ❌ **Preview Yu-Gi-Oh Card**: Doesn't match main design
-
-### Medium Priority:
-6. ❌ **Collaborative Editing**: Can't share draft with team
-7. ❌ **Version History**: No draft revisions
-8. ❌ **Quest Analytics**: No preview of expected reach
-9. ❌ **Cost Estimator**: No gas/reward cost preview
-10. ❌ **Smart Defaults**: No AI-suggested values
-
-### Low Priority:
-11. ❌ **Import from CSV**: Bulk quest creation
-12. ❌ **Quest Scheduler**: Set future publish time
-13. ❌ **A/B Testing**: Create quest variants
-14. ❌ **Quest Series**: Link related quests
-15. ❌ **Community Templates**: Share quest designs
-
----
-
-## 9. Implementation Sprints
-
-### Sprint 1: URGENT - File Structure Refactor (HIGH - 8-10 hours)
-
-**Goal**: Break 3,808-line file into manageable modules
-
-**Tasks**:
-1. ✅ Create hooks directory
-   - Extract `useWizardState.ts` (draft + navigation)
-   - Extract `useAssetCatalog.ts` (tokens + NFTs)
-   - Extract `useWalletAuth.ts` (MiniKit + wagmi)
-   - Extract `useQuestValidation.ts` (all validation)
-
-2. ✅ Split step components
-   - Move BasicsStep to `steps/BasicsStep.tsx`
-   - Move EligibilityStep to `steps/EligibilityStep.tsx`
-   - Move RewardsStep to `steps/RewardsStep.tsx`
-   - Move FinalizeStep to `steps/FinalizeStep.tsx`
-
-3. ✅ Extract utilities
-   - Create `utils/tokenMath.ts` (parseTokenAmountToUnits, etc.)
-   - Create `utils/formatters.ts` (formatUnknownError, etc.)
-   - Create `utils/sanitizers.ts` (sanitizePositiveNumberInput, etc.)
-
-4. ✅ Extract validation
-   - Create `validation/` directory
-   - Move validateBasicsStep
-   - Move validateEligibilityStep
-   - Move validateRewardsStep
-   - Create shared validators
-
-5. ✅ Update main QuestWizard.tsx
-   - Reduce to <300 lines
-   - Import extracted modules
-   - Keep only orchestration logic
-
-**Expected Result**:
-- QuestWizard.tsx: 3,808 → 250 lines (-93%)
-- Total files: 1 → 20
-- Maintainability: +80%
-
----
-
-### Sprint 2: HIGH - Yu-Gi-Oh Preview Card (HIGH - 4-6 hours)
-
-**Goal**: Match preview card to main Quest page design
-
-**Tasks**:
-1. ✅ Create `preview/PreviewCardYugioh.tsx`
-   - Copy structure from `components/Quest/QuestCard.tsx`
-   - Use same 7-section layout
-   - Apply tier system (Common/Rare/Epic/Legendary)
-   - Add glass morphism backgrounds
-   - Include golden borders
-
-2. ✅ Add preview-specific features
-   - "PREVIEW" watermark
-   - Editable state indicator
-   - Mock data for missing fields
-   - Real-time updates
-
-3. ✅ Update FinalizeStep
-   - Replace old PreviewCard with Yu-Gi-Oh version
-   - Add side-by-side comparison toggle
-   - Show final vs preview diff
-
-4. ✅ Add CSS
-   - Reuse quest-card-yugioh.css
-   - Add preview-specific overrides
-   - Ensure consistency
-
-**Expected Result**:
-- Visual consistency: 100%
-- User confidence: +40%
-- Preview accuracy: Perfect
-
----
-
-### Sprint 3: HIGH - Mobile Optimization (MEDIUM - 6-8 hours)
-
-**Goal**: Make wizard mobile-friendly
-
-**Tasks**:
-1. ✅ Mobile stepper
-   - Replace horizontal stepper with progress bar
-   - Add step numbers (1/4, 2/4, etc.)
-   - Sticky navigation at top
-
-2. ✅ Touch targets
-   - Increase all inputs to 48px height
-   - Enlarge radio/checkbox to 44px
-   - Add spacing between touch elements
-
-3. ✅ Bottom sheets
-   - Use bottom sheet for token selector
-   - Use bottom sheet for NFT selector
-   - Use bottom sheet for date picker
-
-4. ✅ Swipe gestures
-   - Add swipe right/left for prev/next step
-   - Add haptic feedback
-   - Smooth transitions
-
-5. ✅ Mobile layout
-   - Stack form fields vertically
-   - Full-width inputs
-   - Sticky "Next" button at bottom
-   - Collapsible field help text
-
-6. ✅ Responsive asset cards
-   - Grid → List on mobile
-   - Larger tap targets
-   - Infinite scroll instead of pagination
-
-**Expected Result**:
-- Mobile completion rate: +60%
-- Touch accuracy: 95%+
-- User satisfaction: +50%
-
----
-
-### Sprint 4: MEDIUM - Performance Optimization (MEDIUM - 5-7 hours)
-
-**Goal**: Reduce bundle size and improve runtime performance
-
-**Tasks**:
-1. ✅ Code splitting
-   - Lazy load step components
-   - Dynamic import asset selectors
-   - Split wagmi hooks
-
-2. ✅ Memoization
-   - Wrap step components in React.memo()
-   - Use useMemo() for expensive calculations
-   - Use useCallback() for handlers
-
-3. ✅ Debounce/throttle
-   - Debounce validation (300ms)
-   - Throttle preview updates (500ms)
-   - Debounce search (200ms)
-
-4. ✅ Virtual scrolling
-   - Virtualize token list (@tanstack/react-virtual)
-   - Virtualize NFT grid
-   - Limit initial render to 20 items
-
-5. ✅ Bundle optimization
-   - Remove unused imports
-   - Tree-shake framer-motion
-   - Optimize wagmi imports
-   - Use dynamic imports
-
-**Expected Result**:
-- Bundle: 36 kB → <25 kB (-30%)
-- Initial render: 2s → <1s
-- Memory: -40%
-- Re-renders: -70%
-
----
-
-### Sprint 5: MEDIUM - Form Validation Improvements (LOW - 4-5 hours)
-
-**Goal**: Better validation UX and error handling
-
-**Tasks**:
-1. ✅ Shared validators
-   - Create `lib/quest-validation.ts`
-   - Extract common patterns
-   - Add TypeScript schemas (zod)
-
-2. ✅ Field-level validation
-   - Validate on blur instead of step-level
-   - Show inline errors immediately
-   - Green checkmarks for valid fields
-
-3. ✅ Better error messages
-   - Extract to constants
-   - Add helpful suggestions
-   - Link to documentation
-
-4. ✅ Async validation
-   - Check token escrow on blockchain
-   - Verify NFT ownership
-   - Validate cast URLs
-   - Test Farcaster usernames
-
-5. ✅ Progress indicators
-   - Show validation status per field
-   - Display completion percentage
-   - Highlight required vs optional
-
-**Expected Result**:
-- Validation errors: Clearer
-- User frustration: -50%
-- Form completion: +30%
-
----
-
-### Sprint 6: LOW - Quest Templates & Features (LOW - 6-8 hours)
-
-**Goal**: Add convenience features for creators
-
-**Tasks**:
-1. ✅ Quest templates
-   - Create 10 pre-built templates
-   - "Follow Campaign"
-   - "Cast Contest"
-   - "NFT Holder Reward"
-   - "Token Giveaway"
-   - "Partner Quest"
-
-2. ✅ Draft autosave
-   - Save to localStorage every 30s
-   - Restore on page load
-   - Show "Draft saved" indicator
-
-3. ✅ Quest duplication
-   - "Clone this quest" button
-   - Copy all fields
-   - Reset transaction data
-
-4. ✅ Cost estimator
-   - Show gas cost estimate
-   - Show total reward cost
-   - Warn if escrow insufficient
-
-5. ✅ Smart defaults
-   - Pre-fill based on wallet balance
-   - Suggest expiry (7 days default)
-   - Auto-detect chain from wallet
-
-**Expected Result**:
-- Quest creation time: -50%
-- User satisfaction: +40%
-- Completion rate: +35%
-
----
-
-## 10. Testing Checklist
-
-### Wizard Flow Testing:
-- [ ] Complete Basics step with all quest types
-- [ ] Test all 15 quest type variants
-- [ ] Verify dynamic fields appear/hide correctly
-- [ ] Test media upload (image, video, GIF)
-- [ ] Test expiry picker (QuickExpiryPicker)
-
-### Eligibility Testing:
-- [ ] Test open eligibility mode
-- [ ] Test simple token gating
-- [ ] Test simple NFT gating
-- [ ] Test partner mode
-- [ ] Verify multi-chain selection
-
-### Rewards Testing:
-- [ ] Test points reward
-- [ ] Test ERC-20 token reward with escrow
-- [ ] Test NFT reward
-- [ ] Test raffle system
-- [ ] Verify max completions cap
-
-### Preview Testing:
-- [ ] Verify preview matches Yu-Gi-Oh design
-- [ ] Test quest verification
-- [ ] Test publish to blockchain
-- [ ] Test error handling
-- [ ] Verify success flow
-
-### Mobile Testing:
-- [ ] Test on iPhone SE (375px)
-- [ ] Test on iPhone 14 Pro
-- [ ] Test on Android (various sizes)
-- [ ] Verify touch targets (48px+)
-- [ ] Test swipe gestures
-- [ ] Test bottom sheets
-
-### Performance Testing:
-- [ ] Measure bundle size (<25 kB target)
-- [ ] Test initial render time (<1s)
-- [ ] Profile re-render frequency
-- [ ] Test with 1000+ tokens
-- [ ] Test with 1000+ NFTs
-- [ ] Measure memory usage
-
-### Accessibility Testing:
-- [ ] Test keyboard navigation (Tab, Shift+Tab, Enter)
-- [ ] Test with VoiceOver (iOS)
-- [ ] Test with TalkBack (Android)
-- [ ] Test with NVDA (Windows)
-- [ ] Verify ARIA labels
-- [ ] Test focus management
-
----
-
-## 11. Performance Metrics
-
-### Current Baseline (Desktop):
-- **Bundle Size**: 36 kB
-- **Initial Render**: ~2s (Fast 3G)
-- **Time to Interactive**: ~3.5s
-- **Memory**: ~150MB
-- **Re-renders per keystroke**: ~8
-
-### Current Baseline (Mobile):
-- **Bundle Size**: 36 kB
-- **Initial Render**: ~4s (Fast 3G)
-- **Time to Interactive**: ~6s
-- **Touch Target Success**: 60%
-- **Form Completion Rate**: ~40%
-
-### Target After Sprints 1-4:
-- **Bundle Size**: <25 kB ⚡ (-30%)
-- **Initial Render**: <1s ⚡ (-75%)
-- **Time to Interactive**: <2s ⚡ (-71%)
-- **Memory**: <100MB ⚡ (-33%)
-- **Re-renders**: <3 ⚡ (-63%)
-- **Touch Success**: 95% ⚡ (+58%)
-- **Form Completion**: 70% ⚡ (+75%)
-
----
-
-## 12. Priority Matrix
-
-### Must Have (Sprints 1-2):
-- ✅ File structure refactor (3,808 → 250 lines)
-- ✅ Yu-Gi-Oh preview card
-- ✅ Basic mobile optimization
-
-### Should Have (Sprints 3-4):
-- ✅ Advanced mobile features (bottom sheets, swipe)
-- ✅ Performance optimization (code splitting, memoization)
-- ✅ Bundle size reduction (36 → 25 kB)
-
-### Nice to Have (Sprints 5-6):
-- ⏳ Form validation improvements
-- ⏳ Quest templates
-- ⏳ Draft autosave
-- ⏳ Cost estimator
-
-### Future Enhancements:
-- ⏳ Collaborative editing
-- ⏳ Version history
-- ⏳ Analytics preview
-- ⏳ A/B testing
-- ⏳ Community templates
-
----
-
-## 13. Risk Assessment
-
-### High Risk:
-1. **File Refactor**: Breaking changes, high complexity
-   - **Mitigation**: Incremental refactor, extensive testing
-   - **Testing**: Component tests, integration tests, E2E
-
-2. **Preview Card Replacement**: User confusion if different
-   - **Mitigation**: A/B test, gradual rollout
-   - **Testing**: Visual regression tests, user feedback
-
-### Medium Risk:
-3. **Mobile Gestures**: Conflicts with browser gestures
-   - **Mitigation**: Configurable, disable option
-   - **Testing**: Device testing, user testing
-
-4. **Code Splitting**: Async import issues
-   - **Mitigation**: Fallback loading states
-   - **Testing**: Network throttling, offline testing
-
-### Low Risk:
-5. **Validation Changes**: Minor UX improvements
-   - **Mitigation**: Gradual rollout
-   - **Testing**: Unit tests, user feedback
-
----
-
----
-
-## 14. Deep Audit: UI Layout Components ✅
-
-### WizardHeader.tsx (147 lines)
-**Status**: ✅ **Excellent** - Well-structured, accessible
-
-**Strengths**:
-- Clean separation: presentation vs logic
-- Responsive design with `collapsed` state
-- MiniKitContextType integration for MiniApp
-- Wallet auto-connect state tracking
-- StatusPill components with semantic colors
-- MiniStat grid (4 columns on desktop)
-
-**Issues Found**:
-- ⚠️ Avatar Image uses `unoptimized` prop (hurts performance)
-- ⚠️ No loading skeleton for avatar
-- ⚠️ `collapsed` state not persisted (resets on refresh)
-- ⚠️ Step label hardcoded (should use STEPS array length)
-
-**Layout Issues**:
-- Mobile: Stats grid wraps poorly on small screens
-- Mobile: Collapse button too small (should be 48px)
-- Tablet: Header takes 30% of vertical space
-
-**Recommendations**:
-1. Remove `unoptimized` from Image, add placeholder
-2. Persist collapse state to localStorage
-3. Add loading skeleton for initial render
-4. Increase collapse button size to 48px
-
----
-
-### Field.tsx (59 lines)
-**Status**: ✅ **Excellent** - WCAG-compliant field wrapper
-
-**Strengths**:
-- Proper ARIA relationships (labelledby, describedby)
-- Stable IDs with useId()
-- Error announcement with aria-live="polite"
-- Visual error state with aria-invalid
-- Description text properly associated
-
-**Issues Found**:
-- ✅ None - This is a model component
-
-**Layout**:
-- Glass morphism background (white/[0.04])
-- Border radius 2xl (16px)
-- Proper spacing (space-y-3)
-
-**Accessibility**: ⭐⭐⭐⭐⭐ Perfect (5/5)
-
----
-
-### primitives.tsx (30 lines)
-**Status**: ✅ **Good** - Simple, reusable UI atoms
-
-**Components**:
-1. **StatusPill**: Colored status badges (ready/warn/neutral)
-2. **MiniStat**: Label + value stat card
-
-**Issues Found**:
-- ⚠️ StatusPill tone colors not customizable
-- ⚠️ No icon support in StatusPill
-- ⚠️ MiniStat value not semantic (should support ReactNode better)
-
-**Layout**:
-- StatusPill: Rounded-full with uppercase tracking
-- MiniStat: Rounded-2xl with glass effect
-
----
-
-## 15. Deep Audit: Contract Functions ✅
-
-### Escrow Detection System
-
-**Location**: `deriveTokenEscrowStatus()` (lines 3264-3347)
-
-**Flow**:
-1. Parse reward token from draft
-2. Look up token decimals from tokenLookup
-3. Calculate expected total (perUser × maxCompletions)
-4. Compare with recorded deposit amount
-5. Apply 24-hour warm-up period
-
-**States**: 5 phases
-- `missing`: No tx hash or amount
-- `insufficient`: Deposit < required total
-- `awaiting-detection`: No timestamp yet
-- `warming`: Within 24hr warm-up
-- `ready`: Fully ready to launch
-
-**Issues Found**:
-- 🔴 **No actual blockchain verification** - relies on manual input
-- 🔴 **24hr warm-up hardcoded** (`ERC20_ESCROW_WARMUP_MS`)
-- ⚠️ No automatic detection via contract events
-- ⚠️ Escrow amount must be **exactly** correct (no tolerance)
-- ⚠️ Detection timestamp manually entered (error-prone)
-
-**Recommendations**:
-1. Add contract event listener for escrow deposits
-2. Auto-fill detection timestamp from blockchain
-3. Add verification button to check actual balance
-4. Allow 0.1% tolerance for rounding errors
-5. Make warm-up period configurable per chain
-
----
-
-### Token Math Functions
-
-**Functions**:
-- `parseTokenAmountToUnits()` (lines 3348-3365): String → bigint
-- `formatTokenAmountFromUnits()` (lines 3367-3377): bigint → String
-
-**Issues Found**:
-- ⚠️ No validation for max decimals (allows 36, should limit to 18)
-- ⚠️ Comma removal only (doesn't handle other separators)
-- ⚠️ No scientific notation support (1e18)
-- ⚠️ No thousand separators in display format
-
-**Test Cases Missing**:
-- Very large numbers (>1e18)
-- Scientific notation (1.5e6)
-- International formats (1.234,56)
-- Edge cases (0.000000000000000001)
-
----
-
-### Quest Verification Payload
-
-**Function**: `buildVerificationPayload()` (lines 3370-3550)
-
-**Purpose**: Build POST body for `/api/quests/verify` route
-
-**Data Assembled**:
-- Quest type & action code
-- Target FID/username resolution
-- Cast identifier normalization
-- Eligibility gates (token/NFT metadata)
-- Reward configuration (points/token/NFT)
-- Raffle settings
-- Media URLs
-
-**Issues Found**:
-- 🔴 **180 lines** - should be split into smaller functions
-- ⚠️ Username sanitization scattered (not centralized)
-- ⚠️ Candidate FID/username collection duplicated
-- ⚠️ No validation of required fields before building
-- ⚠️ Meta object mutated directly (side effects)
-
-**Recommendations**:
-1. Extract `collectTargetCandidates()` helper
-2. Extract `buildRewardMeta()` helper
-3. Extract `buildEligibilityMeta()` helper
-4. Add `validatePayloadRequirements()` before building
-5. Return immutable payload (no side effects)
-
----
-
-## 16. Deep Audit: Verify Route ✅
-
-**File**: `app/api/quests/verify/route.ts` (1,283 lines)
-
-**Status**: 🔴 **Critical** - Second-largest file in codebase
-
-### Route Responsibilities
-
-**Two Modes**:
-1. **Draft Mode** (`draft: true`): Validate quest configuration
-2. **Live Mode** (`draft: false`): Verify user completion + sign claim
-
-### Draft Mode Flow
-
-```
-1. Parse meta from request body
-2. collectQuestRequirements() → requirement object
-3. prepareRequirementContext() → normalize cast details
-4. Return { ok: true, requirement, meta, castDetails }
+## 🔐 Part 2: Auth System Conflict
+
+### Quest Wizard Auth System
+**Location**: `hooks/useMiniKitAuth.ts` (178 lines)
+
+**Implementation**:
+```tsx
+// components/quest-wizard/QuestWizard.tsx
+import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
+import { useMiniKitAuth } from '@/hooks/useMiniKitAuth'
+
+const { context, isFrameReady, setFrameReady } = useMiniKit()
+const { signIn: signInWithMiniKit } = useAuthenticate()
+
+const auth = useMiniKitAuth({
+  context,
+  isFrameReady,
+  isMiniAppSession,
+  signInWithMiniKit,
+  pushNotification,
+  dismissNotification,
+})
 ```
 
-**Issues**:
-- ✅ Fast path (no blockchain calls)
-- ✅ Validates field requirements
-- ⚠️ No schema validation (raw JSON accepted)
-- ⚠️ Cast URL parsing very complex (200+ lines)
+**Features**:
+- MiniKit authentication for Farcaster
+- Resolves FID from context or sign-in
+- Loads Neynar profile by FID
+- Returns: authStatus, profile, signInResult, handleAuthenticate
 
-### Live Mode Flow
-
-```
-1. Read quest from blockchain (readQuestStatus)
-2. Check quest is active, not expired, not exhausted
-3. Resolve viewer FID (contract → Neynar fallback)
-4. Verify social action OR asset gate
-5. Sign claim with oracle private key
-6. Return { ok: true, sig, fid, nonce, deadline }
-```
-
-**Social Verification** (300+ lines):
-- Fetch cast via Neynar (multiple API versions tried)
-- Check interactions (follows, recasts, likes, replies)
-- Validate cast contains text (if required)
-- Fallback to cast viewer_context
-- Fallback to reply scan
-
-**Asset Gate Verification** (50 lines):
-- Check ERC20 balance
-- Check ERC721 balance
-- Check points balance
-- Simple and reliable
-
-### Critical Issues Found
-
-**1. Massive File Size** 🔴
-- 1,283 lines (should be <200)
-- Mixed concerns: validation, verification, signing, Neynar API
-- Difficult to test individual functions
-
-**2. Neynar API Complexity** 🔴
-- 12+ different endpoint variations tried
-- Fallback hell: v2 → v3 → username lookup → FID lookup
-- No caching (repeated calls for same data)
-- No rate limiting protection
-
-**3. Cast Lookup Complexity** 🔴
-- `buildCastLookupPlan()`: 150 lines
-- Tries 12 different identifier formats
-- Constructs URLs from hashes + usernames
-- Very fragile to Neynar API changes
-
-**4. Error Handling** ⚠️
-- Generic error messages ("verification_failed")
-- No detailed reason for social verification failures
-- Traces bloated with redundant data
-
-**5. Security Issues** ⚠️
-- Oracle private key loaded on every request
-- No rate limiting
-- No request signing (anyone can call)
-- Deadline hardcoded to 15 minutes
-
-**6. Performance Issues** ⚠️
-- Up to 20 Neynar API calls per verification
-- No parallel fetching
-- No connection pooling
-- No timeout handling
-
-### Verification Success Rates (Estimated)
-
-Based on code complexity:
-- **Follow**: 85% (straightforward)
-- **Recast/Like**: 90% (viewer_context fallback)
-- **Reply**: 65% (complex reply scanning)
-- **Mention**: 60% (username resolution flaky)
-- **Cast Contains**: 55% (text matching fragile)
-
-### Recommendations
-
-**Immediate** (Sprint 1):
-1. Split into 5 files:
-   - `verify-draft.ts` (draft mode)
-   - `verify-social.ts` (social verification)
-   - `verify-assets.ts` (asset gates)
-   - `neynar-helpers.ts` (API wrappers)
-   - `verify-signing.ts` (signature generation)
-
-2. Add request validation (zod schema)
-3. Add caching for Neynar responses (5min TTL)
-4. Add rate limiting (100 req/min per IP)
-
-**Medium Priority** (Sprint 3):
-5. Simplify cast lookup (use primary hash only)
-6. Add webhook for async verification
-7. Add detailed error codes
-8. Add monitoring/alerting
-
-**Long Term**:
-9. Move to edge runtime for faster response
-10. Add Redis cache for FID lookups
-11. Batch Neynar API calls
-12. Add verification result caching
+**Auth States**: `idle | pending | success | failed`
 
 ---
 
-## 17. Architecture Recommendations
+### Main App Auth System
+**Status**: ⚠️ UNCLEAR - need to audit
 
-### Current Structure (Problems)
-```
-components/quest-wizard/
-├── QuestWizard.tsx (3,808 lines) ❌ TOO LARGE
-├── shared.ts (508 lines) ✅ OK
-├── types.ts ✅ OK
-└── components/ ✅ GOOD
-```
+**Known Usage**:
+- app/page.tsx: Uses `useAccount` for wallet address
+- app/page.tsx: Fetches Farcaster profile by address via `fetchUserByAddress`
+- app/Dashboard/page.tsx: Uses `useAccount` for wallet address
+- app/profile/page.tsx: Uses `useAccount` for wallet address
 
-### Recommended Structure (Sprint 1)
-```
-components/quest-wizard/
-├── QuestWizard.tsx (200 lines) ← main coordinator
-├── shared.ts (508 lines) ← keep as-is
-├── types.ts ← keep as-is
-├── hooks/
-│   ├── useWizardState.ts ← draft + navigation state
-│   ├── useAssetCatalog.ts ← tokens + NFTs
-│   ├── useWalletAuth.ts ← MiniKit + wagmi
-│   └── useQuestValidation.ts ← all validation logic
-├── steps/
-│   ├── BasicsStep.tsx (300 lines)
-│   ├── EligibilityStep.tsx (300 lines)
-│   ├── RewardsStep.tsx (300 lines)
-│   └── FinalizeStep.tsx (400 lines)
-├── preview/
-│   ├── PreviewCard.tsx ← old version
-│   └── PreviewCardYugioh.tsx ← new Yu-Gi-Oh design
-├── validation/
-│   ├── index.ts ← exports all validators
-│   ├── validateBasics.ts (80 lines)
-│   ├── validateEligibility.ts (40 lines)
-│   ├── validateRewards.ts (100 lines)
-│   └── validators.ts ← shared validators
-├── utils/
-│   ├── tokenMath.ts ← parse/format units
-│   ├── formatters.ts ← error/display formatting
-│   └── sanitizers.ts ← input sanitization
-└── components/ ← keep existing structure
-```
+**Pattern**:
+```tsx
+// app/page.tsx
+const { address, isConnected } = useAccount()
+const [userProfile, setUserProfile] = useState<FarcasterUser | null>(null)
 
-### API Route Structure (Sprint 1)
-```
-app/api/quests/verify/
-├── route.ts (100 lines) ← main handler
-├── verify-draft.ts (150 lines)
-├── verify-social.ts (300 lines)
-├── verify-assets.ts (80 lines)
-├── neynar-helpers.ts (250 lines)
-├── verify-signing.ts (60 lines)
-└── types.ts (50 lines)
+useEffect(() => {
+  if (address) {
+    fetchUserByAddress(address).then(setUserProfile)
+  }
+}, [address])
 ```
 
 ---
 
-## Conclusion
+### ⚠️ POTENTIAL CONFLICT
 
-### Summary of Deep Audit Findings
+#### Questions to Answer:
+1. Does main app use MiniKit auth anywhere?
+2. How does main app handle Farcaster identity?
+3. Is there a central auth provider/context?
+4. Should Quest Wizard use same auth pattern as main app?
 
-**UI Layout**: ✅ **Good** overall
-- WizardHeader, Field, primitives well-structured
-- Minor mobile optimization needed
-- Accessibility excellent (Field.tsx is model component)
+#### Observations:
+- Main app: wallet address → fetch Farcaster profile
+- Quest Wizard: MiniKit context → extract FID → fetch profile
+- Different flows for same goal (get user's Farcaster identity)
 
-**Contract Functions**: ⚠️ **Needs Work**
-- Escrow detection manual (should be automatic)
-- Token math basic (no edge case handling)
-- Verification payload builder too complex (180 lines)
+---
 
-**Verify Route**: 🔴 **Critical Refactor Needed**
-- 1,283 lines (5x too large)
-- Neynar API complexity unsustainable
-- Cast lookup fragile
-- No caching, rate limiting, monitoring
+### 💡 RECOMMENDATION: Investigate Main App Auth
 
-### Updated Priorities
+**Todo**:
+1. Check if `@coinbase/onchainkit/minikit` is used elsewhere
+2. Find if there's a central auth provider in app/providers.tsx
+3. Determine if MiniKit auth is needed or if wallet-based auth is sufficient
+4. Decide: separate auth for Quest Wizard or unified system?
 
-1. **File Structure Refactor** (Sprint 1) - 🔴 **CRITICAL**
-   - QuestWizard.tsx: 3,808 → 200 lines
-   - verify/route.ts: 1,283 → 100 lines + 6 modules
-   
-2. **Escrow Auto-Detection** (Sprint 1.5) - 🔴 **CRITICAL**
-   - Add contract event listeners
-   - Auto-fill detection timestamp
-   - Add balance verification button
+---
 
-3. **Yu-Gi-Oh Preview Card** (Sprint 2) - 🔴 **HIGH**
-   - Visual consistency with main page
-   
-4. **Mobile Optimization** (Sprint 3) - 🟡 **MEDIUM**
-   - Touch targets, gestures, bottom sheets
-   
-5. **Verify Route Optimization** (Sprint 4) - 🟡 **MEDIUM**
-   - Caching, rate limiting, error codes
-   
-6. **Performance** (Sprint 5) - 🟢 **LOW**
-   - Bundle optimization after refactor
+## 📱 Part 3: Missing SwipeableStep Integration
 
-**Estimated Total**: 28-36 hours (increased due to verify route complexity)
+### Current State: Component Exists, Not Used
 
-**Current Status**: 0% → **100% audited** ✅  
-**Next**: Begin Sprint 1 implementation (file refactor + escrow detection)
+**File**: `components/quest-wizard/components/Mobile.tsx` (351 lines)
+
+**What Exists**:
+```tsx
+export function SwipeableStep({
+  children,
+  onSwipeLeft,
+  onSwipeRight,
+  canSwipeLeft = true,
+  canSwipeRight = true,
+}) {
+  // Touch gesture detection
+  // Swipe animations
+  // Visual indicators (← →)
+  // Returns draggable motion.div
+}
+
+export function BottomSheet({ children, isOpen, onClose }) {
+  // Mobile-optimized sheet
+}
+
+export function MobileStepIndicator({ currentStep, totalSteps, stepLabels }) {
+  // Progress dots for mobile
+}
+```
+
+**Features**:
+- Touch gesture detection with framer-motion
+- Swipe threshold: 50px
+- Opacity animation on drag
+- Visual swipe indicators (arrows)
+- Drag constraints and elastic effect
+
+---
+
+### Current Implementation: StepPanel (No Gestures)
+
+**File**: `components/quest-wizard/QuestWizard.tsx`
+
+```tsx
+import { StepPanel } from '@/components/quest-wizard/components/StepPanel'
+
+// NO SwipeableStep import
+// NO gesture support
+
+<StepPanel
+  stepId={currentStep.id}
+  title={currentStep.title}
+  description={currentStep.description}
+  isActive={true}
+  onEnter={() => {}}
+  onExit={() => {}}
+>
+  {/* Step content */}
+</StepPanel>
+```
+
+**Problem**: No mobile gesture support in actual wizard
+
+---
+
+### Where It's Used: Only Example Files
+
+**File**: `components/quest-wizard/examples/EnhancedWizard.tsx` (321 lines)
+
+```tsx
+import { SwipeableStep, MobileStepIndicator } from '@/components/quest-wizard/components/Mobile'
+
+{isMobile ? (
+  <SwipeableStep
+    onSwipeLeft={handleNext}
+    onSwipeRight={handlePrevious}
+    canSwipeLeft={canGoNext}
+    canSwipeRight={canGoPrev}
+  >
+    <StepPanel {...stepProps}>
+      {stepContent}
+    </StepPanel>
+  </SwipeableStep>
+) : (
+  <StepPanel {...stepProps}>
+    {stepContent}
+  </StepPanel>
+)}
+```
+
+**This is the reference implementation - shows how it SHOULD work**
+
+---
+
+### 💡 RECOMMENDATION: Integrate SwipeableStep
+
+**Implementation**:
+```tsx
+// components/quest-wizard/QuestWizard.tsx
+
+// ADD IMPORT:
+import { SwipeableStep } from '@/components/quest-wizard/components/Mobile'
+
+// WRAP StepPanel:
+{isMobile ? (
+  <SwipeableStep
+    onSwipeLeft={() => wizardState.onNext()}
+    onSwipeRight={() => wizardState.onPrev()}
+    canSwipeLeft={stepIndex < STEPS.length - 1}
+    canSwipeRight={stepIndex > 0}
+  >
+    <StepPanel {...props}>
+      {currentStepContent}
+    </StepPanel>
+  </SwipeableStep>
+) : (
+  <StepPanel {...props}>
+    {currentStepContent}
+  </StepPanel>
+)}
+```
+
+**Benefits**:
+- ✅ Better mobile UX
+- ✅ Native-feeling gestures
+- ✅ Visual feedback on swipe
+- ✅ Already built, just need to integrate
+
+**Effort**: LOW (30 minutes)
+
+---
+
+## 📊 Part 4: Analytics Tracking Missing
+
+### Current State: NO ANALYTICS
+
+**Searched for**:
+- `posthog` → 0 matches in quest-wizard/
+- `mixpanel` → 0 matches in quest-wizard/
+- `analytics` → no tracking calls found
+
+**Expected Events** (based on EnhancedWizard.tsx reference):
+```typescript
+// Should track:
+- wizard_started
+- step_completed (per step)
+- template_selected
+- quest_created
+- wizard_abandoned
+- error_encountered
+- asset_search (tokens/NFTs)
+- validation_failed
+```
+
+---
+
+### Example Implementation (from EnhancedWizard.tsx)
+
+```tsx
+import posthog from 'posthog-js'
+
+// Track step completion
+const handleNext = () => {
+  posthog.capture('wizard_step_completed', {
+    step: STEPS[stepIndex].id,
+    stepNumber: stepIndex + 1,
+    totalSteps: STEPS.length,
+  })
+  wizardState.onNext()
+}
+
+// Track quest creation
+const handleSubmit = async () => {
+  posthog.capture('quest_created', {
+    questType: draft.questType,
+    hasRewards: draft.rewards.length > 0,
+    hasGating: Boolean(draft.gating),
+  })
+  // ...submit logic
+}
+```
+
+---
+
+### 💡 RECOMMENDATION: Add Analytics Tracking
+
+**Step 1**: Check if posthog is already configured
+```bash
+grep -r "posthog" app/providers.tsx lib/
+```
+
+**Step 2**: Add tracking to key events
+```tsx
+// components/quest-wizard/QuestWizard.tsx
+
+import posthog from 'posthog-js' // or your analytics lib
+
+// On wizard start
+useEffect(() => {
+  if (stepIndex === 0 && !showTemplateSelector) {
+    posthog.capture('quest_wizard_started')
+  }
+}, [stepIndex, showTemplateSelector])
+
+// On step navigation
+const handleNext = () => {
+  posthog.capture('wizard_step_completed', {
+    step: STEPS[stepIndex].id,
+    stepNumber: stepIndex + 1,
+  })
+  wizardState.onNext()
+}
+
+// On template selection
+const handleTemplateSelect = (template) => {
+  posthog.capture('template_selected', {
+    templateId: template.id,
+    templateName: template.name,
+  })
+  // ...rest of logic
+}
+
+// On quest submission
+const handleSubmit = async () => {
+  posthog.capture('quest_created', {
+    questType: draft.questType,
+    duration: Date.now() - wizardStartTime,
+  })
+  // ...submit logic
+}
+```
+
+**Benefits**:
+- ✅ Track user behavior
+- ✅ Identify drop-off points
+- ✅ Measure conversion rate
+- ✅ Debug user issues
+
+**Effort**: MEDIUM (2-3 hours)
+
+---
+
+## 🗂️ Part 5: Quest Wizard Hooks Inventory
+
+### All Hooks Used in QuestWizard.tsx
+
+| Hook | Location | Purpose | Status |
+|------|----------|---------|--------|
+| `useWizardState` | hooks/useWizardState.ts | Draft & step navigation | ✅ Core |
+| `useWalletConnection` | hooks/useWalletConnection.ts | Wallet auto-connect | ⚠️ **CONFLICT** |
+| `useMiniKitAuth` | hooks/useMiniKitAuth.ts | Farcaster auth | ⚠️ **CONFLICT** |
+| `useAssetCatalog` | hooks/useAssetCatalog.ts | Token/NFT loading | ✅ OK |
+| `useQuestVerification` | hooks/useQuestVerification.ts | Quest validation | ✅ OK |
+| `usePolicyEnforcement` | hooks/usePolicyEnforcement.ts | Quest policy checks | ✅ OK |
+| `useWizardEffects` | hooks/useWizardEffects.ts | Side effects | ✅ OK |
+| `useAutoSave` | hooks/useAutoSave.tsx | Auto-save drafts | ✅ Just integrated |
+| `useWizardAnimation` | hooks/useWizardAnimation.ts | Animations | ✅ OK |
+| `useMediaQuery` | components/quest-wizard/hooks/useMediaQuery.ts | Responsive | ✅ OK |
+| `useNotifications` | components/ui/live-notifications | Toast system | ✅ Shared |
+
+**From wagmi**:
+- `useAccount` - wallet state
+- `useConnect` - wallet connection
+
+**From OnchainKit**:
+- `useMiniKit` - MiniKit context
+- `useAuthenticate` - MiniKit sign-in
+
+---
+
+### Hook Dependencies Audit
+
+#### 🟢 Safe to Keep (No Conflicts)
+```
+✅ useWizardState
+✅ useAssetCatalog
+✅ useQuestVerification
+✅ usePolicyEnforcement
+✅ useWizardEffects
+✅ useAutoSave
+✅ useWizardAnimation
+✅ useMediaQuery
+✅ useNotifications
+```
+
+#### 🟡 Needs Review
+```
+⚠️ useWalletConnection - duplicates ConnectWallet functionality
+⚠️ useMiniKitAuth - unclear if main app uses MiniKit auth
+```
+
+---
+
+## 📋 Part 6: Feature Implementation Status
+
+### Feature Checklist (Reality Check)
+
+| # | Feature | Status | Notes |
+|---|---------|--------|-------|
+| 1 | **QuestCard Integration** | ✅ 100% | In PreviewCard component |
+| 2 | **Quest Templates** | ✅ 100% | TemplateSelector integrated today |
+| 3 | **Auto-Save Drafts** | ✅ 100% | useAutoSave integrated today |
+| 4 | **SwipeableStep Mobile** | ❌ 0% | Exists but NOT used in QuestWizard |
+| 5 | **Analytics Tracking** | ❌ 0% | No posthog/mixpanel calls |
+| 6 | **E2E Tests** | ✅ 100% | 18 scenarios, infrastructure ready |
+| 7 | **Performance Monitoring** | ✅ 100% | initWebVitals + monitoring added |
+| 8 | **Error Tracking** | ✅ 100% | Sentry + ErrorBoundary added |
+
+**Actual Progress**: 6/8 = **75% Complete**
+
+---
+
+### Documentation vs Reality
+
+| Document | Claims | Reality | Accuracy |
+|----------|--------|---------|----------|
+| COMPLETION_REPORT.md | 100% complete | 75% complete | ❌ FALSE |
+| README.md | 8/8 features | 6/8 features | ❌ FALSE |
+| MAXIMIZATION_SUMMARY.md | 3/8 features | 6/8 features | ⚠️ OUTDATED |
+
+---
+
+## 🔧 Part 7: Component Duplication
+
+### Quest Wizard Components vs Main App
+
+#### Potentially Duplicate Components:
+
+**ConnectWallet Logic**:
+```
+Main App:
+├── components/ConnectWallet.tsx (208 lines)
+└── components/home/ConnectWalletSection.tsx (wrapper)
+
+Quest Wizard:
+└── hooks/useWalletConnection.ts (178 lines)
+```
+**Verdict**: ⚠️ **DUPLICATE** - similar auto-connect logic
+
+---
+
+**Notification System**:
+```
+Main App:
+├── components/ui/live-notifications (?)
+└── useLegacyNotificationAdapter (?)
+
+Quest Wizard:
+└── useNotifications from live-notifications
+```
+**Verdict**: ✅ **SHARED** - Quest Wizard uses shared notification system
+
+---
+
+**Step Components**:
+```
+Quest Wizard Only:
+├── components/quest-wizard/steps/BasicsStep.tsx
+├── components/quest-wizard/steps/EligibilityStep.tsx
+├── components/quest-wizard/steps/RewardsStep.tsx
+├── components/quest-wizard/steps/FinalizeStep.tsx
+├── components/quest-wizard/components/StepPanel.tsx
+├── components/quest-wizard/components/Stepper.tsx
+├── components/quest-wizard/components/Mobile.tsx (SwipeableStep)
+└── components/quest-wizard/components/PreviewCard.tsx
+```
+**Verdict**: ✅ **UNIQUE** - no duplication, Quest Wizard specific
+
+---
+
+**Form Components**:
+```
+Quest Wizard Only:
+├── components/quest-wizard/components/Field.tsx
+├── components/quest-wizard/components/TokenSelector.tsx
+├── components/quest-wizard/components/NftSelector.tsx
+└── components/quest-wizard/components/QuestCard.tsx
+```
+**Verdict**: ✅ **UNIQUE** - wizard-specific UI
+
+---
+
+## 🎯 Part 8: Integration Safety Analysis
+
+### What Can Be Integrated Safely ✅
+
+**1. SwipeableStep Component**
+- Risk: LOW
+- Conflicts: NONE
+- Effort: 30 mins
+- Impact: Better mobile UX
+
+**2. Analytics Tracking**
+- Risk: LOW (if posthog already configured)
+- Conflicts: NONE
+- Effort: 2-3 hours
+- Impact: User behavior insights
+
+**3. Auto-Save (Already Done)**
+- Risk: NONE
+- Status: ✅ Integrated
+
+**4. Templates (Already Done)**
+- Risk: NONE
+- Status: ✅ Integrated
+
+---
+
+### What Needs Resolution ⚠️
+
+**1. Wallet Connection Hook**
+- Risk: HIGH (race conditions, UX inconsistency)
+- Conflicts: ConnectWallet.tsx
+- Decision Required: Keep Quest Wizard's or use main app's?
+- Recommendation: Use main app's `useAccount` directly
+
+**2. MiniKit Auth Hook**
+- Risk: MEDIUM (unclear if needed)
+- Conflicts: Unknown (need to audit main app auth)
+- Decision Required: Does main app use MiniKit auth?
+- Recommendation: Investigate first, then decide
+
+---
+
+### What Must Be Removed 🗑️
+
+**If choosing Option A (use main app wallet)**:
+1. Delete or deprecate `hooks/useWalletConnection.ts`
+2. Remove wallet hook usage from QuestWizard.tsx
+3. Use `useAccount` directly
+
+**If main app doesn't use MiniKit**:
+1. Keep Quest Wizard's useMiniKitAuth
+2. Document why it's separate
+3. Consider making it optional
+
+---
+
+## 📊 Part 9: Priority Recommendations
+
+### P0 - Critical (Must Fix)
+1. **Resolve wallet connection conflict**
+   - Decision: Use main app's wallet system
+   - Action: Remove useWalletConnection hook from Quest Wizard
+   - Effort: 1-2 hours
+   - Impact: Prevents race conditions, consistent UX
+
+2. **Audit main app auth system**
+   - Decision: Determine if MiniKit auth is needed
+   - Action: Check app/providers.tsx, search for MiniKit usage
+   - Effort: 30 mins investigation
+   - Impact: Prevents auth conflicts
+
+---
+
+### P1 - High Priority (Should Fix)
+3. **Integrate SwipeableStep**
+   - Action: Wrap StepPanel with SwipeableStep on mobile
+   - Effort: 30 mins
+   - Impact: Much better mobile UX
+
+4. **Add analytics tracking**
+   - Action: Add posthog.capture() calls to key events
+   - Effort: 2-3 hours
+   - Impact: User behavior insights, drop-off analysis
+
+---
+
+### P2 - Medium Priority (Nice to Have)
+5. **Fix documentation accuracy**
+   - Action: Update COMPLETION_REPORT.md and README.md to reflect 75% progress
+   - Effort: 15 mins
+   - Impact: Honest progress tracking
+
+6. **Consolidate wallet logic**
+   - Action: Create shared wallet hook if needed across app
+   - Effort: 3-4 hours
+   - Impact: DRY code, single source of truth
+
+---
+
+### P3 - Low Priority (Future)
+7. **Optimize bundle size**
+   - Action: Check if all quest-wizard hooks are tree-shakeable
+   - Effort: 1 hour
+   - Impact: Smaller bundle
+
+8. **Add more E2E test coverage**
+   - Action: Add tests for template selection, auto-save
+   - Effort: 2 hours
+   - Impact: Better test coverage
+
+---
+
+## 🚀 Part 10: Action Plan
+
+### Phase 1: Investigation (30 mins)
+- [ ] Check if posthog is configured in app/providers.tsx
+- [ ] Search for MiniKit usage in main app
+- [ ] Review main app's auth flow
+- [ ] Document findings
+
+### Phase 2: Critical Fixes (2-3 hours)
+- [ ] Decide wallet system (main app vs Quest Wizard)
+- [ ] Remove conflicting wallet hook if needed
+- [ ] Update QuestWizard.tsx to use chosen wallet system
+- [ ] Test wallet connection in wizard
+
+### Phase 3: Feature Integration (3-4 hours)
+- [ ] Integrate SwipeableStep component
+- [ ] Add analytics tracking (if posthog exists)
+- [ ] Test mobile gestures
+- [ ] Test analytics events fire correctly
+
+### Phase 4: Cleanup (1 hour)
+- [ ] Update documentation to reflect 75% progress
+- [ ] Add comments explaining auth/wallet decisions
+- [ ] Remove unused code
+- [ ] Update audit report with final decisions
+
+---
+
+## 📝 Part 11: Questions to Answer
+
+### Critical Questions:
+1. **Does main app use MiniKit auth anywhere outside Quest Wizard?**
+   - Search: `grep -r "useMiniKit\|useAuthenticate" app/`
+   - If NO → Quest Wizard can keep its own MiniKit auth
+   - If YES → Need to check if it's the same pattern
+
+2. **Should Quest Wizard have separate wallet connection or use main app's?**
+   - User preference: "my old code is have connect wallet own page"
+   - Recommendation: Use main app's ConnectWallet
+   - Reason: Avoid duplication and race conditions
+
+3. **Is posthog already configured in the app?**
+   - Search: `grep -r "posthog" app/providers.tsx`
+   - If YES → Easy to add analytics
+   - If NO → Need to set up first
+
+4. **Why does Quest Wizard need separate wallet/auth hooks?**
+   - Possible reason: Advanced features (auto-connect, state tracking)
+   - Alternative: Enhance main app's wallet system instead
+
+---
+
+## 🎯 Part 12: Final Recommendations Summary
+
+### Immediate Actions (Today):
+1. ✅ Use main app's wallet system (remove useWalletConnection)
+2. ✅ Integrate SwipeableStep for mobile
+3. ✅ Check posthog configuration
+4. ✅ Update documentation to 75%
+
+### Short-term (This Week):
+1. Add analytics tracking if posthog exists
+2. Decide on MiniKit auth after investigation
+3. Write tests for new integrations
+4. Document wallet/auth decisions
+
+### Long-term (Future):
+1. Consider consolidating wallet logic into shared hook
+2. Add more E2E test scenarios
+3. Optimize bundle size
+4. Add accessibility improvements
+
+---
+
+## 📌 Key Takeaways
+
+### What's Actually Working ✅
+- QuestCard integration
+- Templates (just integrated)
+- Auto-save (just integrated)
+- E2E test infrastructure
+- Performance monitoring
+- Error tracking
+
+### What Needs Attention ⚠️
+- Wallet connection duplication
+- MiniKit auth usage unclear
+- SwipeableStep not integrated
+- No analytics tracking
+- Documentation accuracy
+
+### What to Remove 🗑️
+- hooks/useWalletConnection.ts (if using main app wallet)
+- Possibly useMiniKitAuth (if main app doesn't use MiniKit)
+
+---
+
+## 🔗 Related Files
+
+### Core Quest Wizard Files:
+- `components/quest-wizard/QuestWizard.tsx` (323 lines) - Main component
+- `hooks/useWizardState.ts` - Draft & navigation state
+- `hooks/useAutoSave.tsx` - Auto-save (✅ integrated)
+- `components/quest-wizard/components/TemplateSelector.tsx` - Templates (✅ integrated)
+
+### Conflicting Files:
+- `hooks/useWalletConnection.ts` (178 lines) - ⚠️ Duplicates ConnectWallet
+- `hooks/useMiniKitAuth.ts` (178 lines) - ⚠️ Unclear if needed
+- `components/ConnectWallet.tsx` (208 lines) - Main app wallet
+
+### Not Integrated:
+- `components/quest-wizard/components/Mobile.tsx` (351 lines) - SwipeableStep exists
+
+### Reference Implementation:
+- `components/quest-wizard/examples/EnhancedWizard.tsx` (321 lines) - Shows how features should work
+
+---
+
+**End of Audit Report**  
+**Next Step**: Review findings with team and decide on wallet/auth strategy
 

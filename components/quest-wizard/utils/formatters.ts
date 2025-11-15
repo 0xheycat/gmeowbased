@@ -1,6 +1,7 @@
 /**
- * Formatting Utilities
- * Display formatting for errors, addresses, and other UI elements
+ * Display formatting utilities for addresses, errors, and other UI elements.
+ * 
+ * These utilities provide consistent, user-friendly formatting across the application.
  */
 
 /**

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { buildFrameShareUrl } from '@/lib/share'
 
 const statusMetrics: Array<{ label: string; value: string; tone: string }> = [
   { label: 'Daily GMs', value: '18,420', tone: 'theme-text-success' },
@@ -51,15 +52,18 @@ export function GmeowSidebarRight() {
         </ul>
         <div className="theme-shell-card theme-shell-card--muted mt-6 rounded-xl border p-4 text-[11px] uppercase tracking-[0.3em]">
           <p className="theme-shell-title text-sm font-semibold normal-case tracking-normal">Share your GM streak</p>
-          <p className="theme-shell-copy mt-2 leading-relaxed">
+                    <p className="theme-shell-copy mt-2 leading-relaxed">
             Generate a flex frame and schedule a Warpcast drop straight from the command deck.
           </p>
-          <Link
-            href="/api/frame?type=gm"
+          <button
+            onClick={() => {
+              const frameUrl = buildFrameShareUrl({ type: 'gm' })
+              if (typeof window !== 'undefined') window.open(frameUrl, '_blank')
+            }}
             className="theme-shell-cta mt-4 inline-flex w-full items-center justify-center rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em]"
           >
             Launch Frame
-          </Link>
+          </button>
         </div>
       </section>
     </aside>

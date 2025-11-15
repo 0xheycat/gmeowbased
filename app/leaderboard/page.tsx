@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkle } from '@phosphor-icons/react'
 import { CHAIN_KEYS, CHAIN_LABEL, type ChainKey } from '@/lib/gm-utils'
 import { buildFrameShareUrl, openWarpcastComposer, type FrameShareInput } from '@/lib/share'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 
 type FilterKey = 'all' | 'farcaster' | 'onchain'
 
@@ -81,6 +82,7 @@ export default function MegaLeaderboard() {
   const [profileSupported, setProfileSupported] = useState<boolean | null>(null)
   const [meta, setMeta] = useState<LeaderboardMeta>({ total: 0, updatedAt: null })
   const [error, setError] = useState<string | null>(null)
+  const [xpOverlay, setXpOverlay] = useState<XpEventPayload | null>(null)
   const prevRankRef = useRef<Record<string, number>>({})
 
   const currentSeason = useMemo(() => seasons.find(s => s.current), [seasons])
@@ -404,6 +406,7 @@ export default function MegaLeaderboard() {
       </div>
 
       <div className="roster-backdrop" />
+      <XPEventOverlay open={Boolean(xpOverlay)} payload={xpOverlay} onClose={() => setXpOverlay(null)} />
     </div>
   )
 }

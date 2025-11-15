@@ -5,7 +5,7 @@ import { AgentHero } from '@/components/agent/AgentHero'
 import { AgentStreamShell } from '@/components/agent/AgentStreamShell'
 
 export const metadata: Metadata = {
-  title: 'Agent · GMEOW Adventure',
+  title: 'Agent · Gmeowbased Adventure',
   description: 'Mobile-first command center for GMEOW community events, quest completions, and streak telemetry.',
 }
 

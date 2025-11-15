@@ -1,15 +1,23 @@
 /**
- * Token Math Utilities
- * Handles conversion between human-readable token amounts and blockchain units (bigint)
+ * Token math utilities for decimal arithmetic and formatting.
+ * 
+ * These utilities handle the conversion between human-readable decimal values
+ * and blockchain integer representations, accounting for token decimals.
  */
 
 /**
- * Parse human-readable token amount string to units (bigint)
- * Handles decimals, commas, and precision
+ * Parse human-readable token amount string to units (bigint).
+ * Handles decimals, commas, and precision.
+ * 
+ * @param value - Token amount string (e.g., "1.5", "1,234.56")
+ * @param decimals - Number of decimal places (e.g., 18 for ETH, 6 for USDC)
+ * @returns Bigint representation, or null if input is invalid
  * 
  * @example
+ * ```ts
  * parseTokenAmountToUnits('1.5', 18) // 1500000000000000000n
  * parseTokenAmountToUnits('1,234.56', 6) // 1234560000n
+ * ```
  */
 export function parseTokenAmountToUnits(value: string, decimals: number): bigint | null {
 	if (typeof value !== 'string') return null

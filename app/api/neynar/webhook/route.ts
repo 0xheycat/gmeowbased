@@ -9,6 +9,7 @@ import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib/neynar-bot'
 import { isSupabaseConfigured } from '@/lib/supabase-server'
 import { markNotificationTokenDisabled, upsertNotificationToken } from '@/lib/miniapp-notifications'
+import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot-frame-builder'
 
 export const runtime = 'nodejs'
 
@@ -447,6 +448,8 @@ export async function POST(req: NextRequest) {
 
   let replyText: string | null = null
   let replyMeta: Record<string, unknown> | null = null
+  let frameEmbeds: string[] = []
+  let detectedIntent: string = 'help'
 
   try {
     const autoReply = await buildAgentAutoReply({
@@ -459,6 +462,23 @@ export async function POST(req: NextRequest) {
     if (autoReply.ok) {
       replyText = autoReply.text
       replyMeta = { intent: autoReply.intent, ...autoReply.meta }
+      detectedIntent = autoReply.intent
+
+      // Build frame embed based on intent
+      const frameEmbed = selectFrameForIntent(autoReply.intent, {
+        fid: Number.isFinite(Number(data.author?.fid)) ? Number(data.author?.fid) : undefined,
+        username: data.author?.username || undefined,
+        hasStats: !!autoReply.meta?.hasStats,
+        hasStreak: !!autoReply.meta?.hasStreak,
+      })
+
+      if (frameEmbed) {
+        frameEmbeds = formatFrameEmbedForCast(frameEmbed)
+        if (replyMeta) {
+          replyMeta.frameType = frameEmbed.type
+          replyMeta.frameUrl = frameEmbed.url
+        }
+      }
     } else {
       // Log the reason but don't reply (truly can't help)
       console.log('[bot-webhook] Cannot generate reply:', {
@@ -479,6 +499,16 @@ export async function POST(req: NextRequest) {
 
   if (!replyText) {
     replyText = buildReplyText(data)
+    
+    // Even for fallback replies, try to add a helpful frame
+    const fallbackFrame = selectFrameForIntent(detectedIntent, {
+      fid: Number.isFinite(Number(data.author?.fid)) ? Number(data.author?.fid) : undefined,
+      username: data.author?.username || undefined,
+    })
+    
+    if (fallbackFrame) {
+      frameEmbeds = formatFrameEmbedForCast(fallbackFrame)
+    }
   }
 
   if (!replyText) {
@@ -487,21 +517,37 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = getNeynarServerClient()
-    const response = await client.publishCast({
+    
+    // Prepare cast with frame embeds if available
+    const castPayload: any = {
       signerUuid,
       text: replyText,
       parent: data.hash,
       parentAuthorFid: Number.isFinite(Number(data.author?.fid)) ? Number(data.author?.fid) : undefined,
       idem: event.idempotency_key || `gmeowbased:${data.hash}`,
-    })
+    }
+    
+    // Add frame embeds to cast
+    if (frameEmbeds.length > 0) {
+      castPayload.embeds = frameEmbeds.map(url => ({ url }))
+      console.log('[bot-webhook] Including frame embed in reply:', frameEmbeds[0])
+    }
 
-    return NextResponse.json({ ok: true, hash: response.cast?.hash ?? null, meta: replyMeta })
+    const response = await client.publishCast(castPayload)
+
+    return NextResponse.json({ 
+      ok: true, 
+      hash: response.cast?.hash ?? null, 
+      meta: replyMeta,
+      frameEmbedded: frameEmbeds.length > 0
+    })
   } catch (error: any) {
     const isDuplicate = error?.status === 409 || error?.response?.status === 409
     console.error('[neynar-webhook] Failed to publish reply', {
       status: error?.status ?? error?.response?.status,
       message: error?.message,
       isDuplicate,
+      hadFrameEmbed: frameEmbeds.length > 0,
     })
     
     // Return metadata even on failure (especially for duplicate/testing scenarios)
@@ -511,6 +557,7 @@ export async function POST(req: NextRequest) {
         error: isDuplicate ? 'duplicate cast' : 'publish failed',
         meta: replyMeta,
         text: replyText,
+        frameEmbeds: frameEmbeds.length > 0 ? frameEmbeds : undefined,
       }, 
       { status: isDuplicate ? 200 : 502 }
     )

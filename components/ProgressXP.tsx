@@ -204,12 +204,23 @@ export function ProgressXP({
 
   return (
     <div
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-[#040510]/90 backdrop-blur-md p-6"
+      className="fixed inset-0 z-[999] flex items-center justify-center p-6"
       role="presentation"
       onMouseDown={handleBackdropMouseDown}
+      style={{
+        background: 'radial-gradient(ellipse at center, rgba(14, 20, 46, 0.95) 0%, rgba(4, 5, 16, 0.98) 100%)',
+        backdropFilter: 'blur(16px)',
+      }}
     >
-      <div className="absolute inset-0 pointer-events-none" aria-hidden>
-        <div className="absolute inset-0 bg-gradient-to-br from-sky-600/30 via-purple-500/20 to-transparent" />
+      {/* Animated background effects - Yu-Gi-Oh inspired */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(168,85,247,0.12),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_80%,rgba(251,191,36,0.08),transparent_50%)]" />
+        {/* Floating particles */}
+        <div className="absolute top-1/4 left-1/4 h-2 w-2 rounded-full bg-sky-400/40 animate-pulse" />
+        <div className="absolute top-2/3 right-1/3 h-1.5 w-1.5 rounded-full bg-purple-400/30 animate-pulse delay-300" />
+        <div className="absolute bottom-1/3 left-2/3 h-2.5 w-2.5 rounded-full bg-amber-400/25 animate-pulse delay-700" />
       </div>
       <div
         ref={dialogRef}
@@ -220,55 +231,81 @@ export function ProgressXP({
         aria-describedby={tierTagline ? descriptionId : undefined}
         tabIndex={-1}
       >
-        <div className="absolute -top-12 right-0 flex gap-2 text-[11px] text-slate-300">
+        <div className="absolute -top-12 right-0 flex gap-2 text-[11px] text-[#ffd700]/70">
           <button
             ref={closeButtonRef}
             type="button"
-            className="px-3 py-1 rounded-full border border-slate-600/60 bg-[#06091a]/80 hover:bg-[#0b0f2a] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
+            className="px-3 py-1 rounded-full border-2 border-[#ffd700]/30 bg-[#06091a]/90 hover:bg-[#0b0f2a] hover:border-[#ffd700]/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd700]"
             onClick={onClose}
           >
             Close
           </button>
         </div>
-        <div className="relative overflow-hidden rounded-[28px] border border-slate-700/70 bg-[#050b1c]/95 px-8 py-10 shadow-[0_40px_80px_rgba(12,18,56,0.75)]">
-          <div className="absolute inset-0 opacity-40" aria-hidden>
-            <div className="absolute -top-32 -left-20 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl" />
-            <div className="absolute top-24 -right-24 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div className="relative overflow-hidden rounded-[32px] border shadow-[0_0_80px_rgba(14,165,233,0.3),0_0_40px_rgba(168,85,247,0.2)]"
+          style={{
+            borderColor: 'rgba(148, 163, 184, 0.3)',
+            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 50%, rgba(15, 23, 42, 0.95) 100%)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+          }}
+        >
+          {/* Glass morphism layers - Yu-Gi-Oh card inspired */}
+          <div className="absolute inset-0 opacity-60" aria-hidden>
+            {/* Holographic shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/20 via-transparent to-purple-500/20" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(14,165,233,0.15),transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.12),transparent_50%)]" />
+            {/* Animated shine */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shine" 
+              style={{ animationDuration: '3s', animationIterationCount: 'infinite' }} />
           </div>
+          
+          {/* Content area with additional glass layer */}
+          <div className="relative px-8 py-10 backdrop-blur-sm"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)',
+            }}
+          >
           <div className="relative z-10 grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
             <div className="flex flex-col items-center gap-4">
-              <div className="relative h-28 w-28">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-sky-500/30 via-purple-500/30 to-amber-400/20 blur-xl" aria-hidden />
-                <div className="relative h-full w-full rounded-3xl border border-sky-400/40 bg-[#070f28]/90 shadow-[inset_0_1px_8px_rgba(190,220,255,0.2),0_20px_45px_rgba(8,20,58,0.65)] flex items-center justify-center">
+              <div className="relative h-32 w-32">
+                {/* Holographic glow ring */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-sky-400/40 via-purple-400/30 to-amber-400/20 blur-2xl animate-pulse" aria-hidden />
+                <div className="absolute inset-0 rounded-full border-2 border-sky-400/20 animate-spin-slow" aria-hidden 
+                  style={{ animationDuration: '8s' }} />
+                
+                {/* Main badge container with glass effect */}
+                <div className="relative h-full w-full rounded-full border-2 shadow-[inset_0_2px_12px_rgba(255,255,255,0.1),0_8px_32px_rgba(14,165,233,0.4)]"
+                  style={{
+                    borderColor: 'rgba(56, 189, 248, 0.5)',
+                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 100%)',
+                    backdropFilter: 'blur(12px)',
+                  }}
+                >
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-sky-500/10 via-transparent to-purple-500/10" aria-hidden />
+                  <div className="flex h-full w-full items-center justify-center">
                   {glyph ? (
-                    <span className="text-5xl" aria-hidden>{glyph}</span>
+                    <span className="text-3xl sm:text-4xl font-black text-[#ffd700] drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]">{glyph}</span>
                   ) : chainIcon ? (
-                    <Image
-                      src={chainIcon}
-                      alt={`${chainLabel} icon`}
-                      width={64}
-                      height={64}
-                      className="h-16 w-16 rounded-2xl object-contain drop-shadow-[0_12px_24px_rgba(90,210,255,0.45)] transform transition-transform duration-500 ease-out hover:scale-105"
-                      unoptimized
-                    />
+                    <Image src={chainIcon} alt={chainLabel} width={48} height={48} className="drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
                   ) : (
-                    <span className="text-4xl font-black text-sky-200">{chainLabel?.slice(0, 2) ?? 'XP'}</span>
+                    <span className="text-3xl sm:text-4xl font-black text-[#ffd700] drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]">{chainLabel?.slice(0, 2) ?? 'XP'}</span>
                   )}
+                  </div>
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-xs uppercase tracking-[0.34em] text-slate-300">Chain</div>
-                <div className="text-lg font-semibold text-sky-200">{chainLabel}</div>
-                {badgeLabel ? <div className="text-[11px] text-slate-400 mt-1">{badgeLabel}</div> : null}
+                <div className="text-xs uppercase tracking-[0.36em] text-[#ffd700]/60">Chain</div>
+                <div className="text-xl font-bold text-[#ffd700] drop-shadow-[0_2px_12px_rgba(255,215,0,0.6)]">{ chainLabel}</div>
+                {badgeLabel ? <div className="text-[11px] text-[#ffd700]/50 mt-1">{badgeLabel}</div> : null}
               </div>
             </div>
             <div className="relative flex flex-col gap-6">
               <div>
-                <div id={titleId} className="flex items-center gap-2 text-sm uppercase tracking-[0.25em] text-slate-300">
-                  {eventIcon ? <span className="text-xl leading-none" aria-hidden>{eventIcon}</span> : null}
-                  <span>{headline || 'XP Boost Unlocked'}</span>
+                <div className="flex items-center gap-2 text-xs sm:text-sm uppercase tracking-[0.25em] text-[#ffd700]/80">
+                  {eventIcon ? <span className="text-xl sm:text-2xl leading-none animate-pulse" aria-hidden style={{animationDuration: '2s'}}>{eventIcon}</span> : null}
+                  <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{headline || 'XP Boost Unlocked'}</span>
                 </div>
-                <div className="text-4xl font-black text-white drop-shadow-[0_16px_48px_rgba(5,15,46,0.65)]">
+                <div className="text-3xl sm:text-4xl font-black text-[#ffd700] drop-shadow-[0_0_30px_rgba(255,215,0,0.8),0_4px_20px_rgba(0,0,0,0.9)]" style={{textShadow: '0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4), 0 4px 20px rgba(0,0,0,0.9)'}}>
                   Level {level} • {tierName || 'Adventurer'}
                 </div>
                 {tierTagline ? (
@@ -277,44 +314,45 @@ export function ProgressXP({
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-400">
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-[#ffd700]/70">
                   <span>Progress to next tier</span>
-                  <span>{Math.round(animatedPercent)}%</span>
+                  <span className="font-bold text-[#ffd700]">{Math.round(animatedPercent)}%</span>
                 </div>
-                <div className="relative h-4 overflow-hidden rounded-full border border-sky-300/40 bg-[#08122e]">
+                <div className="relative h-3 sm:h-4 overflow-hidden rounded-full border-2 border-[#ffd700]/30 bg-[#08122e] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sky-400 via-emerald-400 to-amber-300 shadow-[0_0_25px_rgba(90,210,255,0.45)]"
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.8),inset_0_1px_2px_rgba(255,255,255,0.5)]"
                     style={{ width: `${Math.max(8, animatedPercent)}%`, transition: 'width 0.4s ease-out' }}
                   />
-                  <div className="absolute inset-0 animate-pulse bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent mix-blend-screen" aria-hidden />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-[#ffd700]/30 via-transparent to-transparent mix-blend-screen animate-pulse" aria-hidden style={{animationDuration: '2s'}} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] animate-[shimmer_2s_ease-in-out_infinite]" aria-hidden />
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-300">
-                  <span>{formatInt(animatedXp)} XP earned</span>
-                  <span>
+                <div className="flex items-center justify-between text-xs text-[#ffd700]/80 font-semibold">
+                  <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{formatInt(animatedXp)} XP earned</span>
+                  <span className="text-[#ffd700]">
                     {formatInt(xpIntoLevel)} / {formatInt(xpForLevel)} XP
                   </span>
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-700/70 bg-[#070f25]/70 p-4 text-center">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Current Rank</div>
-                  <div className="mt-1 text-lg font-semibold text-sky-200">{tierName || 'Adventurer'}</div>
+                <div className="rounded-2xl border-2 border-[#ffd700]/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-[#ffd700]/50">Current Rank</div>
+                  <div className="mt-1 text-lg font-semibold text-[#ffd700]">{tierName || 'Adventurer'}</div>
                 </div>
                 <div className="rounded-2xl border border-slate-700/70 bg-[#07122d]/70 p-4 text-center">
                   <div className="text-[11px] uppercase tracking-[0.2em] text-slate-400">XP Earned</div>
                   <div className="mt-1 text-lg font-semibold text-emerald-300">+{formatInt(xpEarned)}</div>
                 </div>
-                <div className="rounded-2xl border border-slate-700/70 bg-[#0a1535]/70 p-4 text-center">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Total XP</div>
-                  <div className="mt-1 text-lg font-semibold text-amber-200">{formatInt(totalPoints)}</div>
+                <div className="rounded-2xl border-2 border-[#ffd700]/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-[#ffd700]/50">Total Points</div>
+                  <div className="mt-1 text-lg font-semibold text-[#ffd700]">{formatInt(totalPoints || 0)}</div>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
                 {canShare ? (
                   <button
-                    className="pixel-button flex-1 min-w-[180px] justify-center border border-sky-500/60 bg-gradient-to-r from-sky-500 via-purple-500 to-amber-400 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#030611] shadow-[0_18px_36px_rgba(90,210,255,0.35)] transition hover:scale-[1.01] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    className="pixel-button flex-1 min-w-[140px] sm:min-w-[180px] justify-center border-2 border-[#ffd700]/60 bg-gradient-to-r from-[#ffd700]/30 via-[#ffed4e]/20 to-[#ffd700]/30 px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ffd700] shadow-[0_8px_32px_rgba(255,215,0,0.4),0_0_40px_rgba(255,215,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.3)] transition hover:scale-[1.02] hover:shadow-[0_12px_48px_rgba(255,215,0,0.6),0_0_60px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd700]"
                     onClick={() => {
                       if (onShare) {
                         onShare()
@@ -328,7 +366,7 @@ export function ProgressXP({
                 ) : null}
                 {visitUrl ? (
                   <button
-                    className="pixel-button flex-1 min-w-[160px] justify-center border border-slate-600/70 bg-[#060b1d] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200 transition hover:bg-[#0b132d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-200"
+                    className="pixel-button flex-1 min-w-[120px] sm:min-w-[160px] justify-center border-2 border-[#ffd700]/30 bg-[#060b1d] px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ffd700]/80 transition hover:bg-[#0b132d] hover:border-[#ffd700]/50 hover:text-[#ffd700] hover:shadow-[0_4px_16px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd700]"
                     onClick={() => {
                       if (onVisit) onVisit()
                       else window.open(visitUrl, '_blank', 'noopener')
@@ -339,6 +377,7 @@ export function ProgressXP({
                 ) : null}
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

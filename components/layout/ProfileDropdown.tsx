@@ -13,11 +13,18 @@ export function ProfileDropdown() {
   const [profile, setProfile] = useState<FarcasterUser | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Fix hydration mismatch - only render after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!address || !isConnected) {
       setProfile(null)
+      setLoading(false)
       return
     }
 
@@ -29,13 +36,11 @@ export function ProfileDropdown() {
         const data = await fetchUserByAddress(address)
         if (!cancelled) {
           setProfile(data ?? null)
+          setLoading(false)
         }
       } catch {
         if (!cancelled) {
           setProfile(null)
-        }
-      } finally {
-        if (!cancelled) {
           setLoading(false)
         }
       }
@@ -75,6 +80,15 @@ export function ProfileDropdown() {
       return () => document.removeEventListener('keydown', handleEscape)
     }
   }, [isOpen])
+
+  // Prevent hydration mismatch - wait for client mount
+  if (!mounted) {
+    return (
+      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5">
+        <div className="h-4 w-4 animate-pulse rounded-full bg-white/20" />
+      </div>
+    )
+  }
 
   if (!isConnected || !address) {
     return (

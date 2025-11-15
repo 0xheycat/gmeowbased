@@ -297,6 +297,7 @@ export function EligibilityStep({
 							className="pixel-input"
 							value={draft.eligibilityMinimum}
 							onChange={(event) => onChange({ eligibilityMinimum: sanitizeNumericInput(event.target.value, { allowDecimals: true }) })}
+							placeholder={draft.eligibilityAssetType === 'token' ? 'e.g., 100 or 0.5' : 'e.g., 1 or 3'}
 							aria-invalid={Boolean(minimumError)}
 						/>
 					</Field>
