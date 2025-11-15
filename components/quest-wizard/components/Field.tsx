@@ -45,7 +45,11 @@ export function Field({ label, description, error, children }: FieldProps) {
 		<fieldset
 			aria-describedby={describedBy}
 			aria-invalid={Boolean(error)}
-			className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+			className={`space-y-3 rounded-2xl border p-4 transition-all duration-300 ${
+				error
+					? 'border-rose-500/60 bg-rose-500/5 shadow-[0_0_20px_rgba(244,63,94,0.15)]'
+					: 'border-white/10 bg-white/[0.04]'
+			}`}
 		>
 			<legend id={legendId} className="text-xs font-semibold uppercase tracking-wide text-slate-100">
 				{label}

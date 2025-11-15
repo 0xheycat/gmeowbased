@@ -4,6 +4,7 @@ import { useState, useEffect, useId, useMemo, useRef } from 'react'
 import type { NftOption } from '../shared'
 import type { FieldControlA11yProps } from './a11y'
 import { SelectorState } from './SelectorState'
+import { AssetListSkeleton } from './LoadingSkeleton'
 import { CHAIN_LABEL } from '@/lib/gm-utils'
 import { formatEth } from '../shared'
 
@@ -153,13 +154,30 @@ export function NftSelector({
 						</div>
 						<p className="mt-2 text-[10px] text-slate-400">Press Enter to refresh.</p>
 					</form>
-						<div className="max-h-72 overflow-y-auto ock-scrollbar">
+					<div 
+						className="max-h-72 overflow-y-auto ock-scrollbar"
+						role="region"
+						aria-live="polite"
+						aria-atomic="false"
+					>
 						{loading ? (
-							<SelectorState variant="loading" message="Searching Gmeow NFT catalog…" />
+							<AssetListSkeleton count={4} />
 						) : error ? (
 							<SelectorState variant="error" message={error} />
 						) : filteredCollections.length === 0 ? (
-							<SelectorState variant="empty" message="No collections matched this query." />
+							searchValue.trim() ? (
+								<SelectorState 
+									variant="no-results" 
+									message={`No NFT collections found for "${searchValue.trim()}"`}
+									hint="Try searching by collection name or contract address (0x…). Press Enter to refresh results."
+								/>
+							) : (
+								<SelectorState 
+									variant="empty" 
+									message="No NFT collections available"
+									hint="Start typing to search the verified NFT catalog"
+								/>
+							)
 						) : (
 								<ul className="divide-y divide-white/5" role="listbox" id={listboxId} aria-labelledby={ariaLabelledby}>
 								{filteredCollections.map((nft) => {

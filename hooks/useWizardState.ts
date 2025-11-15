@@ -24,6 +24,35 @@ export type UseWizardStateOptions = {
 	}) => number
 }
 
+/**
+ * Manages quest wizard state including step navigation, draft management, and validation.
+ * 
+ * This hook provides the core state management for the quest creation wizard, handling:
+ * - Step-by-step navigation with validation
+ * - Quest draft updates via reducer pattern
+ * - Step touch tracking for UX improvements
+ * - Header collapse state
+ * 
+ * @param options - Configuration options
+ * @param options.pushNotification - Function to display notifications to the user
+ * @returns Wizard state and control functions
+ * 
+ * @example
+ * ```tsx
+ * const wizard = useWizardState({
+ *   pushNotification: (notif) => toast.show(notif)
+ * })
+ * 
+ * // Navigate forward
+ * wizard.onNext(validationResults)
+ * 
+ * // Update quest draft
+ * wizard.onDraftChange({ name: 'My Quest', rewardAmount: '100' })
+ * 
+ * // Reset to initial state
+ * wizard.onReset()
+ * ```
+ */
 export function useWizardState({
 	pushNotification,
 }: UseWizardStateOptions): WizardStateReturn {

@@ -5,7 +5,7 @@
 
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useAccount, useConnect } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
 import { MiniKitAuthPanel } from '@/components/quest-wizard/components/MiniKitAuthPanel'
 import { WizardHeader } from '@/components/quest-wizard/components/WizardHeader'
@@ -14,7 +14,6 @@ import { useWizardAnimation } from '@/hooks/useWizardAnimation'
 import { useWizardState } from '@/hooks/useWizardState'
 import { useAssetCatalog } from '@/hooks/useAssetCatalog'
 import { useMiniKitAuth } from '@/hooks/useMiniKitAuth'
-import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useQuestVerification } from '@/hooks/useQuestVerification'
 import { usePolicyEnforcement } from '@/hooks/usePolicyEnforcement'
 import { useWizardEffects } from '@/hooks/useWizardEffects'
@@ -37,16 +36,20 @@ import { Stepper } from '@/components/quest-wizard/components/Stepper'
 import { StepPanel } from '@/components/quest-wizard/components/StepPanel'
 import { PreviewCard } from '@/components/quest-wizard/components/PreviewCard'
 import { DebugPanel } from '@/components/quest-wizard/components/DebugPanel'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 
 export default function QuestWizard() {
 	const { context, isFrameReady, setFrameReady } = useMiniKit()
 	const { signIn: signInWithMiniKit } = useAuthenticate()
-	const { address, connector: activeConnector, isConnected } = useAccount()
-	const { connect, connectAsync, connectors } = useConnect()
+	const { address, isConnected } = useAccount()
 	const { push: pushNotification, dismiss: dismissNotification } = useNotifications()
 	const isMobile = useMediaQuery('(max-width: 768px)')
 	const wizardState = useWizardState({ pushNotification })
 	const { draft, stepIndex, headerCollapsed, touchedSteps } = wizardState
+	
+	// Success celebration state
+	const [showSuccessCelebration, setShowSuccessCelebration] = useState(false)
+	const [celebrationPayload] = useState<XpEventPayload | null>(null)
 	const assetCatalog = useAssetCatalog({ isMobile, stepIndex })
 	const {
 		tokens,
@@ -71,17 +74,6 @@ export default function QuestWizard() {
 		isFrameReady,
 		isMiniAppSession,
 		signInWithMiniKit,
-		pushNotification,
-		dismissNotification,
-	})
-
-	const wallet = useWalletConnection({
-		isMiniAppSession,
-		isConnected,
-		activeConnector,
-		connectors,
-		connect,
-		connectAsync,
 		pushNotification,
 		dismissNotification,
 	})
@@ -154,14 +146,14 @@ export default function QuestWizard() {
 					context={context}
 					profile={auth.profile}
 					loadingProfile={auth.profileLoading}
-					signInResult={auth.signInResult}
-					resolvedFid={auth.resolvedFid}
-					step={stepIndex}
+				signInResult={auth.signInResult}
+				resolvedFid={auth.resolvedFid}
+				step={stepIndex}
 				collapsed={headerCollapsed}
 				onToggleCollapsed={() => wizardState.setHeaderCollapsed(!headerCollapsed)}
 				walletAddress={address}
-					walletState={wallet.walletAutoState}
-				/>
+				isWalletConnected={isConnected}
+			/>
 				<MiniKitAuthPanel
 					context={context}
 					isFrameReady={isFrameReady}
@@ -236,12 +228,18 @@ export default function QuestWizard() {
 						animate={asideMotion.animate}
 						transition={asideMotion.transition}
 					>
-						<PreviewCard summary={summary} stepIndex={stepIndex} tokenEscrowStatus={tokenEscrowStatus} rewardMode={draft.rewardMode} />
+						<PreviewCard summary={summary} draft={draft} stepIndex={stepIndex} tokenEscrowStatus={tokenEscrowStatus} rewardMode={draft.rewardMode} />
 						<DebugPanel draft={draft} tokens={tokens} nfts={nfts} assetsLoading={assetsLoading} assetsError={assetsError} assetWarnings={assetWarnings} />
-					</motion.aside>
-				</main>
-			</div>
+				</motion.aside>
+			</main>
 		</div>
+		
+		{/* Success Celebration Overlay */}
+		<XPEventOverlay
+			open={showSuccessCelebration}
+			payload={celebrationPayload}
+			onClose={() => setShowSuccessCelebration(false)}
+		/>
+	</div>
 	)
 }
-

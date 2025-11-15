@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { fetchUserByUsername } from '@/lib/neynar'
 
 const STORAGE_KEY = 'gmeow:intro.hero.v1'
 const DEFAULT_IDENTIFY_ENDPOINT = '/api/frame/identify'
@@ -254,6 +255,10 @@ export function MegaIntro({
   const [closing, setClosing] = useState(false)
   const [identity, setIdentity] = useState<IdentityShape | null>(null)
   const [identityStatus, setIdentityStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [usernameInput, setUsernameInput] = useState('')
+  const [usernameLoading, setUsernameLoading] = useState(false)
+  const [usernameUser, setUsernameUser] = useState<IdentityShape | null>(null)
+  const [loadingStage, setLoadingStage] = useState<'scanning' | 'checking' | 'ready' | null>(null)
 
   const closeTimerRef = useRef<number | null>(null)
   const startTimeRef = useRef<number | null>(null)
@@ -356,6 +361,8 @@ export function MegaIntro({
 
     async function loadIdentity() {
       setIdentityStatus('loading')
+      // Debounce to prevent blocking mobile UI
+      await new Promise(resolve => setTimeout(resolve, 100))
       try {
         const res = await fetch(endpoint, { signal: controller.signal, method: 'GET' })
         if (!res.ok) throw new Error(`Identify endpoint responded with ${res.status}`)
@@ -410,6 +417,54 @@ export function MegaIntro({
     }
   }, [visible, identifyEndpoint, identityStatus])
 
+  // Add loading stage animation effect
+  useEffect(() => {
+    if (identityStatus === 'loading') {
+      setLoadingStage('scanning')
+      const timer1 = setTimeout(() => setLoadingStage('checking'), 1200)
+      const timer2 = setTimeout(() => setLoadingStage('ready'), 2400)
+      return () => {
+        clearTimeout(timer1)
+        clearTimeout(timer2)
+      }
+    } else if (identityStatus === 'ready') {
+      setLoadingStage('ready')
+    } else {
+      setLoadingStage(null)
+    }
+  }, [identityStatus])
+
+  // Username lookup handler
+  const handleUsernameSubmit = useCallback(async () => {
+    const username = usernameInput.trim().replace(/^@/, '')
+    if (!username || usernameLoading) return
+    
+    setUsernameLoading(true)
+    try {
+      const user = await fetchUserByUsername(username)
+      if (user) {
+        const mappedUser: IdentityShape = {
+          username: user.username ?? null,
+          displayName: user.displayName ?? null,
+          fid: user.fid ?? null,
+          walletAddress: (user.verifications?.[0] as `0x${string}`) ?? null,
+          custodyAddress: user.custodyAddress ?? null,
+          powerBadge: user.powerBadge ?? false,
+        }
+        setUsernameUser(mappedUser)
+        // Optionally update identity
+        if (!identity || identityStatus === 'error') {
+          setIdentity(mappedUser)
+          setIdentityStatus('ready')
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch user by username:', error)
+    } finally {
+      setUsernameLoading(false)
+    }
+  }, [usernameInput, usernameLoading, identity, identityStatus])
+
   useEffect(() => {
     if (!visible) return
     if (!prefetchEndpoint) return
@@ -426,23 +481,28 @@ export function MegaIntro({
   }, [])
 
   const heroNotice = useMemo(() => {
+    if (loadingStage === 'scanning') return '✨ Scanning your profile...'
+    if (loadingStage === 'checking') return '🔍 Checking OG eligibility...'
     if (identityStatus === 'loading') return 'Linking your Farcaster identity…'
     if (identity) {
       const handle = toTitle(identity)
       const badge = identity.powerBadge ? ' • Power badge detected' : ''
-      return `Signed in${handle ? ` as ${handle}` : ''}${badge}`
+      const isOG = identity.fid != null && identity.fid < 10000
+      const ogTag = isOG ? ' 🏆 OG Pioneer Detected!' : ''
+      return `Signed in${handle ? ` as ${handle}` : ''}${badge}${ogTag}`
     }
     if (identityStatus === 'error') return 'Could not reach Neynar — continue in offline mode.'
     return 'Quest creator opens in sandbox mode until you link a Farcaster handle.'
-  }, [identity, identityStatus])
+  }, [identity, identityStatus, loadingStage])
 
   const eligibilitySignals = useMemo<EligibilitySignal[]>(() => {
+    const isOG = identity?.fid != null && identity.fid < 10000
     return [
       {
         label: 'Farcaster identity',
         detail:
           identity?.fid != null
-            ? `FID ${identity.fid}`
+            ? `FID ${identity.fid}${isOG ? ' 🏆 OG Pioneer' : ''}`
             : identityStatus === 'loading'
               ? 'Resolving via Neynar…'
               : 'We link your Farcaster handle automatically on first publish.',
@@ -462,6 +522,11 @@ export function MegaIntro({
           : 'Optional, but earns higher partner trust scores.',
         status: identity?.powerBadge ? 'success' : 'info',
       },
+      ...(isOG ? [{
+        label: '100 XP Bonus Eligible',
+        detail: 'OG users (FID < 10,000) + new users qualify for welcome bonus!',
+        status: 'success' as const,
+      }] : []),
     ]
   }, [identity, identityStatus])
 
@@ -546,6 +611,62 @@ export function MegaIntro({
                 </li>
               ))}
             </ul>
+            
+            {/* Username lookup input */}
+            {(!identity || identityStatus === 'error') && (
+              <div className="username-lookup" style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255, 215, 0, 0.05)', border: '1px solid rgba(255, 215, 0, 0.2)', borderRadius: '12px' }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#ffd700', marginBottom: '0.75rem' }}>
+                  🔍 Lookup Farcaster User
+                </p>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleUsernameSubmit()
+                    }}
+                    placeholder="Enter @username"
+                    disabled={usernameLoading}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem 0.75rem',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid rgba(255, 215, 0, 0.3)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '0.875rem',
+                    }}
+                  />
+                  <button
+                    onClick={handleUsernameSubmit}
+                    disabled={!usernameInput.trim() || usernameLoading}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: usernameLoading ? 'rgba(255, 215, 0, 0.2)' : 'linear-gradient(135deg, #ffd700, #ffed4e)',
+                      border: '1px solid #ffd700',
+                      borderRadius: '8px',
+                      color: '#000',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: usernameLoading ? 'wait' : 'pointer',
+                    }}
+                  >
+                    {usernameLoading ? '...' : 'Lookup'}
+                  </button>
+                </div>
+                {usernameUser && (
+                  <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', fontSize: '0.75rem', color: '#ffd700' }}>
+                    ✅ Found: @{usernameUser.username} (FID: {usernameUser.fid})
+                    {usernameUser.fid && usernameUser.fid < 10000 && (
+                      <span style={{ display: 'block', marginTop: '0.25rem', fontWeight: '600' }}>
+                        🏆 OG Pioneer Detected!
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </article>
 
           <article className="grid-card">

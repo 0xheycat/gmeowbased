@@ -51,7 +51,7 @@ export function QuestCreatorMiniKitProvider({ children }: { children: ReactNode 
 			}}
 			miniKit={{
 				enabled: true,
-				autoConnect: true,
+				autoConnect: true, // Enable auto-connect for MiniKit users
 			}}
 		>
 			{children}

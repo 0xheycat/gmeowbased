@@ -2,12 +2,14 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent } from 'react'
-import type { FieldControlA11yProps } from '@/components/quest-wizard/components/a11y'
-import { SelectorState } from '@/components/quest-wizard/components/SelectorState'
-import { formatUsd, type TokenOption } from '@/components/quest-wizard/shared'
+import { useState, useEffect, useId, useMemo, useRef, useCallback } from 'react'
+import type { TokenOption } from '../shared'
+import type { FieldControlA11yProps } from './a11y'
+import { SelectorState } from './SelectorState'
+import { AssetListSkeleton } from './LoadingSkeleton'
 import { CHAIN_LABEL } from '@/lib/gm-utils'
+import { formatUsd } from '../shared'
 
 export type TokenSelectorProps = {
 	tokens: TokenOption[]
@@ -342,13 +344,32 @@ export function TokenSelector({
 					<div className="border-b border-white/10 bg-slate-950/80 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-slate-500">
 						Results refresh automatically as you type.
 					</div>
-					<div className="max-h-60 overflow-y-auto ock-scrollbar" aria-live="polite" role="listbox" id={listboxId} aria-labelledby={ariaLabelledby}>
+					<div 
+						className="max-h-60 overflow-y-auto ock-scrollbar" 
+						role="listbox" 
+						id={listboxId} 
+						aria-labelledby={ariaLabelledby}
+						aria-live="polite"
+						aria-atomic="false"
+					>
 						{loading ? (
-							<SelectorState variant="loading" message="Searching Gmeow token catalog…" />
+							<AssetListSkeleton count={5} />
 						) : error ? (
 							<SelectorState variant="error" message={error} />
 						) : filteredOptionsRef.current.length === 0 ? (
-							<SelectorState variant="empty" message="No tokens matched this query." />
+							searchValue.trim() ? (
+								<SelectorState 
+									variant="no-results" 
+									message={`No tokens found for "${searchValue.trim()}"`}
+									hint="Try searching by token symbol (e.g., USDC), name, or contract address (0x…)"
+								/>
+							) : (
+								<SelectorState 
+									variant="empty" 
+									message="No tokens available"
+									hint="Start typing to search the verified token catalog"
+								/>
+							)
 						) : (
 							<ul className="divide-y divide-white/5">
 								{filteredOptionsRef.current.map((entry, index) => {

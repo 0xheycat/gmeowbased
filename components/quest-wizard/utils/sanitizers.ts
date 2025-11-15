@@ -1,11 +1,27 @@
 /**
- * Input Sanitization Utilities
- * Clean and validate user input
+ * Input sanitization and validation utilities for security and data integrity.
+ * 
+ * These utilities protect against XSS attacks, validate user input, and ensure
+ * data consistency throughout the application.
  */
 
 /**
- * Sanitize positive number input (remove invalid characters)
- * @returns Sanitized string or fallback if invalid
+ * Sanitize positive number input (remove invalid characters).
+ * 
+ * Ensures input is a valid positive number, stripping whitespace and
+ * validating the numeric value.
+ * 
+ * @param value - User input string to sanitize
+ * @param fallback - Value to return if input is invalid
+ * @returns Sanitized positive number string, or fallback if invalid
+ * 
+ * @example
+ * ```ts
+ * sanitizePositiveNumberInput('123', '0')    // '123'
+ * sanitizePositiveNumberInput('  456 ', '0') // '456'
+ * sanitizePositiveNumberInput('-100', '0')   // '0' (negative not allowed)
+ * sanitizePositiveNumberInput('abc', '0')    // '0' (not a number)
+ * ```
  */
 export function sanitizePositiveNumberInput(value: string | undefined, fallback: string): string {
 	if (typeof value !== 'string') return fallback
@@ -17,7 +33,22 @@ export function sanitizePositiveNumberInput(value: string | undefined, fallback:
 }
 
 /**
- * Sanitize numeric input (allow negative, decimals)
+ * Sanitize numeric input (allow negative numbers and decimals).
+ * 
+ * Validates input as a numeric value, allowing negative numbers
+ * and decimal points.
+ * 
+ * @param value - User input string to sanitize
+ * @param fallback - Value to return if input is invalid
+ * @returns Sanitized numeric string, or fallback if invalid
+ * 
+ * @example
+ * ```ts
+ * sanitizeNumericInput('123', '0')      // '123'
+ * sanitizeNumericInput('-45.67', '0')   // '-45.67'
+ * sanitizeNumericInput('12.34', '0')    // '12.34'
+ * sanitizeNumericInput('abc', '0')      // '0'
+ * ```
  */
 export function sanitizeNumericInput(value: string | undefined, fallback: string): string {
 	if (typeof value !== 'string') return fallback
