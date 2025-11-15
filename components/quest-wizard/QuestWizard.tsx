@@ -15,6 +15,7 @@ import { useAssetCatalog } from '@/hooks/useAssetCatalog'
 import { useMiniKitAuth } from '@/hooks/useMiniKitAuth'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useQuestVerification } from '@/hooks/useQuestVerification'
+import { usePolicyEnforcement } from '@/hooks/usePolicyEnforcement'
 import {
 	formatUnknownError,
 	isAbortError,
@@ -107,14 +108,6 @@ export default function QuestWizard() {
 
 	const [prefilledFollow, setPrefilledFollow] = useState(false)
 	const [escrowNow, setEscrowNow] = useState(() => Date.now())
-	const policyNoticeRef = useRef({
-		partnerDowngraded: false,
-		raffleDisabled: false,
-		partnerChainsTrimmed: false,
-		eligibilityAsset: null as string | null,
-		rewardAsset: null as string | null,
-		gateEnforced: false,
-	})
 	// @edit-start 2025-11-12 — Respect user reduced-motion preferences for wizard transitions
 	const prefersReducedMotion = useReducedMotion()
 	const sectionMotion = useMemo(
@@ -177,6 +170,16 @@ export default function QuestWizard() {
 		verificationPayload,
 	})
 
+	usePolicyEnforcement({
+		draft,
+		questPolicy,
+		requiredAssetGate,
+		tokenLookup,
+		nftLookup,
+		onDraftChange: wizardState.onDraftChange,
+		pushNotification,
+	})
+
 	const activeStep = STEPS[stepIndex]
 	const activeValidation = validation[activeStep.key]
 	const activeStepTouched = touchedSteps[activeStep.key]
@@ -197,16 +200,6 @@ export default function QuestWizard() {
 	)
 
 	useEffect(() => {
-		if (questPolicy.allowPartnerMode) {
-			policyNoticeRef.current.partnerDowngraded = false
-			policyNoticeRef.current.partnerChainsTrimmed = false
-		}
-		if (questPolicy.allowRaffle) {
-			policyNoticeRef.current.raffleDisabled = false
-		}
-	}, [questPolicy.allowPartnerMode, questPolicy.allowRaffle])
-
-	useEffect(() => {
 		if (typeof window === 'undefined') return undefined
 		if (tokenEscrowStatus?.state !== 'warming') return undefined
 		const interval = window.setInterval(() => {
@@ -216,167 +209,8 @@ export default function QuestWizard() {
 	}, [tokenEscrowStatus?.state])
 
 	useEffect(() => {
-		if (!questPolicy.requireVerifiedAssets) {
-			policyNoticeRef.current.eligibilityAsset = null
-			policyNoticeRef.current.rewardAsset = null
-		}
-	}, [questPolicy.requireVerifiedAssets])
-
-	useEffect(() => {
 		setEscrowNow(Date.now())
 	}, [draft.rewardTokenDepositTx, draft.rewardTokenDepositDetectedAtISO, draft.rewardTokenDepositAmount])
-
-	useEffect(() => {
-		if (!questPolicy.forceHoldQuestGate || !requiredAssetGate) {
-			policyNoticeRef.current.gateEnforced = false
-		}
-	}, [questPolicy.forceHoldQuestGate, requiredAssetGate])
-
-	// Enforce hold-quest gating requirements based on policy
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
-	useEffect(() => {
-		if (!questPolicy.forceHoldQuestGate) return
-		if (!requiredAssetGate) return
-		const desiredAssetType = requiredAssetGate
-		const patch: Partial<QuestDraft> = {}
-		let changed = false
-		if (draft.eligibilityMode === 'open') {
-			patch.eligibilityMode = 'simple'
-			changed = true
-		}
-		if (draft.eligibilityMode === 'partner' && !questPolicy.allowPartnerMode) {
-			patch.eligibilityMode = 'simple'
-			changed = true
-		}
-		if (draft.eligibilityAssetType !== desiredAssetType) {
-			patch.eligibilityAssetType = desiredAssetType
-			patch.eligibilityAssetId = undefined
-			changed = true
-		}
-		if (changed) {
-			wizardState.onDraftChange(patch)
-			if (!policyNoticeRef.current.gateEnforced) {
-				pushNotification({
-					tone: 'info',
-					title: 'Hold quests require a gate',
-					description: 'Quest type enforcement automatically enabled the correct gating mode.',
-				})
-				policyNoticeRef.current.gateEnforced = true
-			}
-		}
-	}, [draft.eligibilityAssetType, draft.eligibilityMode, questPolicy.allowPartnerMode, questPolicy.forceHoldQuestGate, requiredAssetGate, pushNotification, wizardState.onDraftChange])
-
-	// Downgrade partner mode if not allowed by policy
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
-	useEffect(() => {
-		if (questPolicy.allowPartnerMode) return
-		if (draft.eligibilityMode !== 'partner') return
-		wizardState.onDraftChange({
-			eligibilityMode: questPolicy.forceHoldQuestGate ? 'simple' : 'open',
-			eligibilityChainList: [],
-		})
-		if (!policyNoticeRef.current.partnerDowngraded) {
-			pushNotification({
-				tone: 'info',
-				title: 'Partner mode locked',
-				description: 'Your tier focuses on simple gates for now. Reach out to the ops team to unlock partner mode.',
-			})
-			policyNoticeRef.current.partnerDowngraded = true
-		}
-	}, [draft.eligibilityMode, pushNotification, questPolicy.allowPartnerMode, questPolicy.forceHoldQuestGate, wizardState.onDraftChange])
-
-	// Enforce max partner chains limit
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
-	useEffect(() => {
-		if (draft.eligibilityMode !== 'partner') return
-		const maxChains = questPolicy.maxPartnerChains
-		if (!Number.isFinite(maxChains)) return
-		const limit = Math.max(1, Math.floor(Number(maxChains)))
-		if (draft.eligibilityChainList.length <= limit) return
-		const trimmed = draft.eligibilityChainList.slice(0, limit)
-		wizardState.onDraftChange({ eligibilityChainList: trimmed })
-		if (!policyNoticeRef.current.partnerChainsTrimmed) {
-			pushNotification({
-				tone: 'info',
-				title: `Partner chains limited to ${limit}`,
-				description: 'Higher limits unlock with the partner success tier. Extra chains were removed from this quest.',
-			})
-			policyNoticeRef.current.partnerChainsTrimmed = true
-		}
-	}, [draft.eligibilityChainList, draft.eligibilityMode, pushNotification, questPolicy.maxPartnerChains, wizardState.onDraftChange])
-
-	// Clear eligibility asset if not verified (policy requirement)
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
-	useEffect(() => {
-		if (!questPolicy.requireVerifiedAssets) return
-		const assetId = draft.eligibilityAssetId?.toLowerCase()
-		if (!assetId) {
-			policyNoticeRef.current.eligibilityAsset = null
-			return
-		}
-		const asset =
-			draft.eligibilityAssetType === 'token'
-				? tokenLookup[assetId]
-				: nftLookup[assetId]
-		if (isAssetAllowed(asset, questPolicy)) {
-			policyNoticeRef.current.eligibilityAsset = null
-			return
-		}
-		wizardState.onDraftChange({ eligibilityAssetId: undefined })
-		if (policyNoticeRef.current.eligibilityAsset !== assetId) {
-			pushNotification({
-				tone: 'warning',
-				title: 'Verified asset required',
-				description: 'Pick a verified token or collection to keep this quest Mini App ready.',
-			})
-			policyNoticeRef.current.eligibilityAsset = assetId
-		}
-	}, [draft.eligibilityAssetId, draft.eligibilityAssetType, questPolicy, pushNotification, tokenLookup, nftLookup, wizardState.onDraftChange])
-
-	// Clear reward asset if not verified (policy requirement)
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
-	useEffect(() => {
-		if (!questPolicy.requireVerifiedAssets) return
-		if (draft.rewardMode !== 'token' && draft.rewardMode !== 'nft') {
-			policyNoticeRef.current.rewardAsset = null
-			return
-		}
-		const assetId = draft.rewardAssetId?.toLowerCase()
-		if (!assetId) {
-			policyNoticeRef.current.rewardAsset = null
-			return
-		}
-		const asset = draft.rewardMode === 'token' ? tokenLookup[assetId] : nftLookup[assetId]
-		if (isAssetAllowed(asset, questPolicy)) {
-			policyNoticeRef.current.rewardAsset = null
-			return
-		}
-		wizardState.onDraftChange({ rewardAssetId: undefined, rewardToken: '', rewardTokenPerUser: '0' })
-		if (policyNoticeRef.current.rewardAsset !== assetId) {
-			pushNotification({
-				tone: 'warning',
-				title: 'Reward asset needs verification',
-				description: 'Swap to a verified contract before launching your quest.',
-			})
-			policyNoticeRef.current.rewardAsset = assetId
-		}
-	}, [draft.rewardAssetId, draft.rewardMode, pushNotification, questPolicy, tokenLookup, nftLookup, wizardState.onDraftChange])
-
-	// Disable raffle if not allowed by policy
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
-	useEffect(() => {
-		if (questPolicy.allowRaffle) return
-		if (!draft.raffleEnabled) return
-		wizardState.onDraftChange({ raffleEnabled: false })
-		if (!policyNoticeRef.current.raffleDisabled) {
-			pushNotification({
-				tone: 'info',
-				title: 'Raffle rewards disabled',
-				description: 'Raffles unlock for partner and admin tiers. Points rewards stay available.',
-			})
-			policyNoticeRef.current.raffleDisabled = true
-		}
-	}, [draft.raffleEnabled, pushNotification, questPolicy.allowRaffle, wizardState.onDraftChange])
 
 	// Frame readiness check for MiniKit
 	useEffect(() => {
