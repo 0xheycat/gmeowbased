@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react'
 import { X, ArrowRight, Sparkle, Users, Lightning, Gift, Shield, Crown } from '@phosphor-icons/react'
 import Image from 'next/image'
+import { useAccount } from 'wagmi'
+import { ConnectWallet } from '@/components/ConnectWallet'
 import '@/app/styles/quest-card-yugioh.css'
+
+type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
 
 type OnboardingStage = {
   id: number
@@ -16,122 +20,181 @@ type OnboardingStage = {
   features: string[]
   contractFeature?: string
   cardArtwork?: string
-  tier?: 'common' | 'rare' | 'epic' | 'legendary'
+  tier?: TierType
   showMintButton?: boolean
   rewardStat?: string
   participantsStat?: string
+  isFinal?: boolean
+}
+
+type FarcasterProfile = {
+  fid: number
+  displayName: string
+  username: string
+  pfpUrl: string
+  neynarScore?: number
+  tier?: TierType
+}
+
+const TIER_CONFIG = {
+  mythic: { 
+    min: 1.0, 
+    max: Infinity, 
+    color: '#9C27FF', 
+    label: 'Mythic', 
+    points: 1000,
+    bgGradient: 'from-purple-900/20 via-violet-800/15 to-purple-900/20'
+  },
+  legendary: { 
+    min: 0.8, 
+    max: 1.0, 
+    color: '#FFD966', 
+    label: 'Legendary', 
+    points: 400,
+    bgGradient: 'from-yellow-900/20 via-amber-800/15 to-yellow-900/20'
+  },
+  epic: { 
+    min: 0.5, 
+    max: 0.8, 
+    color: '#61DFFF', 
+    label: 'Epic', 
+    points: 200,
+    bgGradient: 'from-cyan-900/20 via-blue-800/15 to-cyan-900/20'
+  },
+  rare: { 
+    min: 0.3, 
+    max: 0.5, 
+    color: '#A18CFF', 
+    label: 'Rare', 
+    points: 100,
+    bgGradient: 'from-indigo-900/20 via-purple-800/15 to-indigo-900/20'
+  },
+  common: { 
+    min: 0, 
+    max: 0.3, 
+    color: '#D3D7DC', 
+    label: 'Common', 
+    points: 0,
+    bgGradient: 'from-gray-900/20 via-slate-800/15 to-gray-900/20'
+  }
+}
+
+const BASELINE_REWARDS = {
+  points: 50,
+  xp: 30
 }
 
 const ONBOARDING_STAGES: OnboardingStage[] = [
   {
     id: 1,
-    title: 'Quest Card Hunter',
-    subtitle: 'Collect Yu-Gi-Oh Style Quest Cards',
+    title: 'Welcome to Gmeowbased',
+    subtitle: 'Your Daily Quest Hub',
     description:
-      'Hunt legendary quest cards across Base, Celo, Optimism, Unichain, and Ink. Each quest is a collectible trading card with unique artwork, stats, and on-chain rewards.',
+      'Join thousands earning points across Base, Celo, Optimism, Unichain, and Ink. Complete quests, build streaks, and collect NFT badges.',
     points: 10,
     bonusPoints: 5,
     icon: Sparkle,
     features: [
-      'Browse quest cards in Yu-Gi-Oh inspired design',
-      'Check ATK (rewards) and DEF (difficulty) stats',
-      'Claim NFT badges for completed quests',
-      'No wallet required to start hunting',
+      'Browse quests in Yu-Gi-Oh inspired cards',
+      'No wallet required to start',
+      'Claim rewards on-chain later',
+      'Connect via Farcaster for bonuses',
     ],
-    contractFeature: 'Quest Card System + NFT Minting',
+    contractFeature: 'Multi-Chain Quest System',
     cardArtwork: '/logo.png',
     tier: 'common',
     showMintButton: false,
-    rewardStat: '100 XP',
-    participantsStat: '∞',
+    rewardStat: 'Start',
+    participantsStat: 'Open',
   },
   {
     id: 2,
-    title: 'Power Badge [NFT]',
-    subtitle: 'Mint Your First Soulbound NFT',
+    title: 'Connect Your Identity',
+    subtitle: 'Link Farcaster Profile',
     description:
-      'Build your daily GM streak to unlock powerful multipliers. Mint exclusive Power Badge NFTs to boost all quest rewards and unlock partner-exclusive cards.',
+      'Connect your Farcaster account to unlock tier-based rewards. Your Neynar score determines your starting tier and bonus points.',
+    points: 50,
+    bonusPoints: 10,
+    icon: Users,
+    features: [
+      'Auto-detect Farcaster profile',
+      'Calculate Neynar influence score',
+      'Unlock tier-based rewards',
+      'Display avatar and username',
+    ],
+    contractFeature: 'Farcaster + Neynar Integration',
+    cardArtwork: '/logo.png',
+    tier: 'rare',
+    showMintButton: false,
+    rewardStat: '+50 Base',
+    participantsStat: 'FC Users',
+  },
+  {
+    id: 3,
+    title: 'Streak & Power Badges',
+    subtitle: 'Build Your Collection',
+    description:
+      'Build daily GM streaks for multipliers. Mint Power Badge NFTs to boost all quest rewards and access exclusive partner quests.',
     points: 10,
     bonusPoints: 5,
     icon: Lightning,
     features: [
-      '7-day streak: +10% bonus (11 XP per GM)',
-      '30-day streak: +25% bonus (12.5 XP per GM)',
-      '100-day streak: +50% bonus (15 XP per GM)',
-      'Power Badge NFT: +10% on ALL quest rewards',
+      '7-day streak: +10% bonus',
+      '30-day streak: +25% bonus',
+      '100-day streak: +50% bonus',
+      'Power Badge NFT: +10% forever',
     ],
     contractFeature: 'Soulbound Power Badge (ERC-721)',
     cardArtwork: '/logo.png',
-    tier: 'rare',
-    showMintButton: true,
-    rewardStat: '+10%',
-    participantsStat: 'OG Only',
-  },
-  {
-    id: 3,
-    title: 'Achievement Collector',
-    subtitle: 'Turn Victories into Collectibles',
-    description:
-      'Every milestone becomes a mintable NFT badge. Claim soulbound achievements for streaks, leaderboard ranks, and legendary quest completions. Flex your collection across Farcaster.',
-    points: 0,
-    bonusPoints: 10,
-    icon: Shield,
-    features: [
-      'Mint Soulbound Badge NFTs for achievements',
-      'OG Caster badge: FID < 10,000 auto-mint',
-      'Leaderboard badges: Top 10 each season',
-      'Guild Victory NFTs: Shared team rewards',
-    ],
-    contractFeature: 'SoulboundBadge.sol (Non-transferable)',
-    cardArtwork: '/logo.png',
     tier: 'epic',
     showMintButton: true,
-    rewardStat: 'NFT Badge',
-    participantsStat: 'Top 10',
+    rewardStat: '+10%',
+    participantsStat: 'Streakers',
   },
   {
     id: 4,
-    title: 'Guild Treasury Master',
-    subtitle: 'Pool Resources, Share NFTs',
+    title: 'Guild & Team Rewards',
+    subtitle: 'Join Forces',
     description:
-      'Create guilds with shared treasuries. Complete team quests for rare cards. Top guilds mint exclusive Guild Victory NFTs that all members can claim.',
+      'Create or join guilds with shared treasuries. Complete team quests for rare cards. Top guilds mint exclusive Victory NFTs.',
     points: 100,
     bonusPoints: 50,
-    icon: Users,
+    icon: Shield,
     features: [
-      'Create guild: 100 XP cost (one-time)',
-      'Shared treasury for team rewards',
+      'Create guild: 100 XP cost',
+      'Shared treasury for rewards',
       'Guild-exclusive quest cards',
-      'Mint Guild Victory NFTs for top 3 teams',
+      'Victory NFTs for top 3 teams',
     ],
-    contractFeature: 'Guild Treasury + Shared NFT Claims',
+    contractFeature: 'Guild Treasury System',
     cardArtwork: '/logo.png',
     tier: 'epic',
     showMintButton: true,
     rewardStat: '500 XP',
-    participantsStat: '5 Members',
+    participantsStat: '5+ Members',
   },
   {
     id: 5,
-    title: 'Legendary Recruiter',
-    subtitle: 'Grow Your Squad, Earn Collectibles',
+    title: 'Welcome, {username}',
+    subtitle: '{tier} Rank Unlocked',
     description:
-      'Share your referral code to mint Recruiter Badge NFTs. Each tier unlocks new card packs and exclusive quest access. Build your recruiting empire.',
-    points: 50,
-    bonusPoints: 25,
+      "Your Farcaster profile is connected! Based on your Neynar score of {score}, you have earned {tier} rank with special bonuses.",
+    points: 50, // Baseline
+    bonusPoints: 0, // Calculated from tier
     icon: Gift,
     features: [
-      'Earn 50 XP per referral + mint progress',
-      '1 referral: Bronze Recruiter NFT',
-      '5 referrals: Silver Recruiter NFT',
-      '10 referrals: Gold Recruiter NFT (Legendary)',
+      'Baseline: +50 points, +30 XP',
+      '{tier} Bonus: +{tierPoints} points',
+      'Total Rewards: {totalPoints} points',
+      '{mintEligible}',
     ],
-    contractFeature: 'Recruiter Badge NFTs (Tiered Minting)',
-    cardArtwork: '/logo.png',
-    tier: 'legendary',
-    showMintButton: true,
-    rewardStat: '50 XP/ea',
-    participantsStat: '10+ Refs',
+    contractFeature: 'Farcaster + Neynar Integration',
+    cardArtwork: '{pfpUrl}', // User's Farcaster profile pic
+    tier: 'mythic' as TierType, // Will be overridden by actual tier
+    showMintButton: false, // Will be true for Mythic only
+    rewardStat: '+{totalPoints}',
+    participantsStat: 'FID {fid}',
+    isFinal: true,
   },
 ]
 
@@ -146,6 +209,90 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
   const [visible, setVisible] = useState(false)
   const [stage, setStage] = useState(0)
   const [closing, setClosing] = useState(false)
+  const [farcasterProfile, setFarcasterProfile] = useState<FarcasterProfile | null>(null)
+  const [isClaiming, setIsClaiming] = useState(false)
+  const [hasOnboarded, setHasOnboarded] = useState(false)
+  const { address, isConnected } = useAccount()
+
+  // Helper function to calculate tier from Neynar score
+  const getTierFromScore = (score: number): TierType => {
+    if (score >= TIER_CONFIG.mythic.min) return 'mythic'
+    if (score >= TIER_CONFIG.legendary.min) return 'legendary'
+    if (score >= TIER_CONFIG.epic.min) return 'epic'
+    if (score >= TIER_CONFIG.rare.min) return 'rare'
+    return 'common'
+  }
+
+  // Load Farcaster profile on mount
+  useEffect(() => {
+    const loadFarcasterProfile = async () => {
+      try {
+        // Check if user already completed onboarding
+        const statusRes = await fetch('/api/onboard/status')
+        const statusData = await statusRes.json()
+        if (statusData.onboarded) {
+          setHasOnboarded(true)
+          return
+        }
+
+        // Load Farcaster profile from current session
+        const profileRes = await fetch('/api/user/profile')
+        const profileData = await profileRes.json()
+        
+        if (profileData.fid) {
+          // Fetch Neynar score
+          const neynarRes = await fetch(`/api/neynar/score?fid=${profileData.fid}`)
+          const neynarData = await neynarRes.json()
+          
+          const tier = getTierFromScore(neynarData.score || 0)
+          
+          setFarcasterProfile({
+            fid: profileData.fid,
+            displayName: profileData.displayName || profileData.username,
+            username: profileData.username,
+            pfpUrl: profileData.pfpUrl,
+            neynarScore: neynarData.score,
+            tier,
+          })
+        }
+      } catch (error) {
+        console.error('Failed to load Farcaster profile:', error)
+      }
+    }
+
+    loadFarcasterProfile()
+  }, [])
+
+  // Handle claim rewards
+  const handleClaimRewards = async () => {
+    if (!farcasterProfile || hasOnboarded) return
+
+    setIsClaiming(true)
+    try {
+      const response = await fetch('/api/onboard/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fid: farcasterProfile.fid,
+          tier: farcasterProfile.tier,
+          neynarScore: farcasterProfile.neynarScore,
+          address: address || null,
+        }),
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setHasOnboarded(true)
+        // Show success notification
+        console.log('Onboarding rewards claimed:', data)
+      }
+    } catch (error) {
+      console.error('Failed to claim rewards:', error)
+    } finally {
+      setIsClaiming(false)
+    }
+  }
 
   useEffect(() => {
     if (forceShow) {
@@ -194,8 +341,40 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
   if (!visible) return null
 
+  // Prepare Stage 5 data with user profile
   const currentStage = ONBOARDING_STAGES[stage]
-  const Icon = currentStage.icon
+  const isFinalStage = currentStage.isFinal && farcasterProfile
+  
+  let displayStage = { ...currentStage }
+  
+  if (isFinalStage && farcasterProfile) {
+    const tierConfig = TIER_CONFIG[farcasterProfile.tier || 'common']
+    const tierPoints = tierConfig.points
+    const totalPoints = BASELINE_REWARDS.points + tierPoints
+    const isMythic = farcasterProfile.tier === 'mythic'
+    
+    displayStage = {
+      ...currentStage,
+      title: currentStage.title.replace('{username}', farcasterProfile.displayName),
+      subtitle: currentStage.subtitle.replace('{tier}', tierConfig.label),
+      description: currentStage.description
+        .replace('{score}', (farcasterProfile.neynarScore || 0).toFixed(2))
+        .replace('{tier}', tierConfig.label),
+      tier: farcasterProfile.tier || 'common',
+      cardArtwork: farcasterProfile.pfpUrl,
+      showMintButton: isMythic,
+      rewardStat: `+${totalPoints}`,
+      participantsStat: `FID ${farcasterProfile.fid}`,
+      features: [
+        `Baseline: +${BASELINE_REWARDS.points} points, +${BASELINE_REWARDS.xp} XP`,
+        `${tierConfig.label} Bonus: +${tierPoints} points`,
+        `Total Rewards: ${totalPoints} points + ${BASELINE_REWARDS.xp} XP`,
+        isMythic ? '🎉 OG NFT Badge eligible!' : `Keep growing to reach ${TIER_CONFIG.legendary.label}!`,
+      ],
+    }
+  }
+
+  const Icon = displayStage.icon
   const progress = ((stage + 1) / ONBOARDING_STAGES.length) * 100
 
   return (
@@ -239,13 +418,13 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         </div>
 
         {/* Yu-Gi-Oh Style Quest Card */}
-        <article className="quest-card-yugioh" data-tier={currentStage.tier}>
+        <article className="quest-card-yugioh" data-tier={displayStage.tier}>
           <div className="quest-card-yugioh__body">
             
             {/* Title bar with card name */}
             <div className="quest-card-yugioh__title-bar">
-              <h3 className="quest-card-yugioh__name">{currentStage.title}</h3>
-              <span className="quest-card-yugioh__serial">#{currentStage.id.toString().padStart(3, '0')}</span>
+              <h3 className="quest-card-yugioh__name">{displayStage.title}</h3>
+              <span className="quest-card-yugioh__serial">#{displayStage.id.toString().padStart(3, '0')}</span>
             </div>
 
             {/* Attribute corner (Stage icon) */}
@@ -254,7 +433,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 <Icon size={32} weight="bold" />
               </div>
               <div className="quest-card-yugioh__level-stars">
-                {Array.from({ length: currentStage.id }).map((_, i) => (
+                {Array.from({ length: displayStage.id }).map((_, i) => (
                   <span key={i}>★</span>
                 ))}
               </div>
@@ -262,11 +441,11 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
             {/* Artwork frame */}
             <div className="quest-card-yugioh__artwork-frame">
-              {currentStage.cardArtwork ? (
+              {displayStage.cardArtwork ? (
                 <>
                   <Image
-                    src={currentStage.cardArtwork}
-                    alt={currentStage.title}
+                    src={displayStage.cardArtwork}
+                    alt={displayStage.title}
                     fill
                     className="quest-card-yugioh__artwork"
                     sizes="400px"
@@ -284,21 +463,21 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             {/* Type bar */}
             <div className="quest-card-yugioh__type-bar">
               <span className="quest-card-yugioh__type-text">
-                {currentStage.showMintButton ? '🎴 NFT MINTABLE' : '⚔️ QUEST CARD'} • {currentStage.subtitle}
+                {displayStage.showMintButton ? '🎴 NFT MINTABLE' : '⚔️ QUEST CARD'} • {displayStage.subtitle}
               </span>
             </div>
 
             {/* Description box */}
             <div className="quest-card-yugioh__description-box">
               <p className="quest-card-yugioh__description-headline">
-                {currentStage.subtitle}
+                {displayStage.subtitle}
               </p>
               <p className="quest-card-yugioh__description-text">
-                {currentStage.description}
+                {displayStage.description}
               </p>
               
               <div className="quest-card-yugioh__meta-list">
-                {currentStage.features.map((feature, idx) => (
+                {displayStage.features.map((feature, idx) => (
                   <div key={idx} className="quest-card-yugioh__meta-item">
                     ✦ {feature}
                   </div>
@@ -310,27 +489,27 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             <div className="quest-card-yugioh__stats-footer">
               <div className="quest-card-yugioh__stat quest-card-yugioh__stat--reward">
                 <span className="quest-card-yugioh__stat-label">Rewards</span>
-                <span className="quest-card-yugioh__stat-value">{currentStage.rewardStat || `${currentStage.points} XP`}</span>
+                <span className="quest-card-yugioh__stat-value">{displayStage.rewardStat || `${displayStage.points} XP`}</span>
               </div>
 
-              {currentStage.bonusPoints && currentStage.bonusPoints > 0 && (
+              {displayStage.bonusPoints && displayStage.bonusPoints > 0 && (
                 <div className="quest-card-yugioh__stat">
                   <span className="quest-card-yugioh__stat-label">Bonus</span>
-                  <span className="quest-card-yugioh__stat-value">+{currentStage.bonusPoints}</span>
+                  <span className="quest-card-yugioh__stat-value">+{displayStage.bonusPoints}</span>
                 </div>
               )}
 
               <div className="quest-card-yugioh__stat quest-card-yugioh__stat--participants">
                 <span className="quest-card-yugioh__stat-label">Players</span>
-                <span className="quest-card-yugioh__stat-value">{currentStage.participantsStat || '∞'}</span>
+                <span className="quest-card-yugioh__stat-value">{displayStage.participantsStat || '∞'}</span>
               </div>
             </div>
 
             {/* Contract reference */}
-            {currentStage.contractFeature && (
+            {displayStage.contractFeature && (
               <div className="quest-card-yugioh__action-footer">
                 <span className="text-[0.65rem] text-[#d4af37]">
-                  🎴 {currentStage.contractFeature}
+                  🎴 {displayStage.contractFeature}
                 </span>
               </div>
             )}
@@ -339,43 +518,91 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
         {/* Action buttons below card */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          {currentStage.showMintButton && (
-            <button
-              type="button"
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#ffd700] px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-            >
-              <Crown size={20} weight="fill" />
-              Mint NFT Badge
-            </button>
-          )}
-          
-          {stage < ONBOARDING_STAGES.length - 1 ? (
+          {/* Stage 5 specific buttons */}
+          {isFinalStage ? (
             <>
+              {/* Claim Rewards button for all users */}
               <button
                 type="button"
-                onClick={handleNext}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                onClick={handleClaimRewards}
+                disabled={isClaiming || hasOnboarded}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next Card
-                <ArrowRight size={20} weight="bold" />
+                {isClaiming ? (
+                  <>Loading...</>
+                ) : hasOnboarded ? (
+                  <>✓ Rewards Claimed</>
+                ) : (
+                  <>
+                    <Gift size={20} weight="fill" />
+                    Claim Rewards
+                  </>
+                )}
               </button>
-              <button
-                type="button"
-                onClick={handleSkip}
-                className="flex-shrink-0 rounded-xl border-2 border-white/20 bg-white/5 px-6 py-3 font-bold text-white/70 backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10 hover:text-white sm:w-auto"
-              >
-                Skip Tour
-              </button>
+
+              {/* Mint OG NFT button - Mythic only */}
+              {displayStage.showMintButton && (
+                <>
+                  {!isConnected && (
+                    <div className="flex-1">
+                      <ConnectWallet />
+                    </div>
+                  )}
+                  {isConnected && (
+                    <button
+                      type="button"
+                      disabled={!hasOnboarded}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#ffd700] px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Crown size={20} weight="fill" />
+                      Mint OG Badge
+                    </button>
+                  )}
+                </>
+              )}
             </>
           ) : (
-            <button
-              type="button"
-              onClick={handleComplete}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-            >
-              <Sparkle size={20} weight="fill" />
-              Start Collecting Cards
-            </button>
+            <>
+              {/* Regular mint button for stages 2-4 */}
+              {displayStage.showMintButton && (
+                <button
+                  type="button"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#ffd700] px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                >
+                  <Crown size={20} weight="fill" />
+                  Mint NFT Badge
+                </button>
+              )}
+              
+              {stage < ONBOARDING_STAGES.length - 1 ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                  >
+                    Next Card
+                    <ArrowRight size={20} weight="bold" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSkip}
+                    className="flex-shrink-0 rounded-xl border-2 border-white/20 bg-white/5 px-6 py-3 font-bold text-white/70 backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10 hover:text-white sm:w-auto"
+                  >
+                    Skip Tour
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleComplete}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                >
+                  <Sparkle size={20} weight="fill" />
+                  Start Hunting
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
