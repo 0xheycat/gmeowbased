@@ -79,7 +79,7 @@ System design and technical architecture:
 ## 🔗 Important Links
 
 - **Live Site**: [gmeowhq.art](https://gmeowhq.art)
-- **Documentation**: [doc.gmeowhq.art](https://doc.gmeowhq.art) *(coming soon)*
+- **Documentation**: [docs.gmeow.art](https://docs.gmeow.art) *(coming soon)*
 - **GitHub**: [0xheycat/gmeowbased](https://github.com/0xheycat/gmeowbased)
 - **Farcaster**: [@gmeowbased](https://warpcast.com/gmeowbased)
 
