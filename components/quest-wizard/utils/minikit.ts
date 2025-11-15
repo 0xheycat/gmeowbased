@@ -1,4 +1,5 @@
-import { parseSignInMessage, type ParsedMiniKitSignIn } from '@coinbase/onchainkit/minikit'
+import { parseSignInMessage } from '@coinbase/onchainkit/minikit'
+import type { ParsedMiniKitSignIn } from '@/components/quest-wizard/types'
 
 /**
  * Safely parse MiniKit sign-in message with error handling
