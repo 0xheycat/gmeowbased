@@ -10,7 +10,7 @@
  */
 
 import { statSync, readFileSync } from 'fs'
-import { relative, basename, dirname, join } from 'path'
+import { relative, basename } from 'path'
 import { glob } from 'glob'
 
 interface OutdatedDoc {
@@ -51,18 +51,8 @@ function extractReferencedFiles(content: string, docFile: string): string[] {
     }
   }
   
-  // Infer related files based on doc name
-  const docName = basename(docFile, '.md')
-  
-  // Check for matching component/lib files
-  const potentialPaths = [
-    `components/${docName}.tsx`,
-    `components/${docName}.ts`,
-    `lib/${docName}.ts`,
-    `lib/${docName}.tsx`,
-    `app/**/${docName}.tsx`,
-    `app/**/${docName}.ts`
-  ]
+  // Reserved for future: infer related files based on doc name
+  // and check for matching component/lib files
   
   return Array.from(files)
 }
@@ -137,7 +127,7 @@ async function checkOutdated(docFile: string, thresholdDays: number): Promise<Ou
       if (fileStat.mtimeMs > docStat.mtimeMs && (docAge - fileAge) > thresholdDays) {
         newerFiles.push({ file, age: fileAge })
       }
-    } catch (err) {
+    } catch {
       // File doesn't exist, skip
     }
   }
@@ -183,6 +173,7 @@ function formatOutdated(doc: OutdatedDoc): string {
 /**
  * Generate report markdown
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function _generateReport(outdated: OutdatedDoc[]): string {
   const md: string[] = []
   

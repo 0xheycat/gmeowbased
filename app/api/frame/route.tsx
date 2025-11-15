@@ -1019,7 +1019,6 @@ function buildFrameHtml(params: {
     heroBadge,
     heroStats = [],
     heroList = [],
-    defaultFrameImage,
   } = params
   const pageTitle = escapeHtml(title)
   const rawDescription = description || ''

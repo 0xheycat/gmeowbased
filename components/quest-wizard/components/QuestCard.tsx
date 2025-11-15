@@ -11,8 +11,7 @@
 
 'use client'
 
-import { useState, useRef, useEffect, type MouseEvent } from 'react'
-import Image from 'next/image'
+import { useState, useRef, type MouseEvent } from 'react'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import type { QuestSummary } from '../shared'
 
@@ -118,15 +117,16 @@ export function QuestCard({ summary, variant = 'rare', showFlip = true, classNam
 							</div>
 						</div>
 
-						{/* Card image/illustration area */}
-								<div className="relative h-[200px] overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950">
-									{summary.mediaPreview ? (
-										<img 
-											src={summary.mediaPreview} 
-											alt={summary.title}
-											className="h-full w-full object-cover opacity-60"
-										/>
-									) : (
+					{/* Card image/illustration area */}
+							<div className="relative h-[200px] overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950">
+								{summary.mediaPreview ? (
+									/* eslint-disable-next-line @next/next/no-img-element */
+									<img 
+										src={summary.mediaPreview} 
+										alt={summary.title}
+										className="h-full w-full object-cover opacity-60"
+									/>
+								) : (
 								<div className="flex h-full items-center justify-center">
 									<div className="text-6xl opacity-20">🎴</div>
 								</div>

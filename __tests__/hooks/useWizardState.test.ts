@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useWizardState } from '@/hooks/useWizardState'
-import { createMockNotifications, createMockQuestDraft } from '../test-utils'
+import { createMockNotifications } from '../test-utils'
 
 describe('useWizardState', () => {
 	let mockNotifications: ReturnType<typeof createMockNotifications>
@@ -323,6 +323,7 @@ describe('useWizardState', () => {
 
 			// After navigation, some step should be touched
 			const hasTouchedSteps = Object.values(result.current.touchedSteps).some(v => v)
+			expect(hasTouchedSteps).toBe(true)
 
 			act(() => {
 				result.current.onReset()
