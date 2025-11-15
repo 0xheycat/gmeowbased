@@ -5,7 +5,8 @@
  */
 
 import type { QuestDraft } from './shared'
-import { QUEST_TYPES } from '@/lib/gm-utils'
+// QUEST_TYPES is available via QuestDraft type from shared.ts
+// import { QUEST_TYPES } from '@/lib/gm-utils'
 
 export type QuestTemplate = {
 	id: string
