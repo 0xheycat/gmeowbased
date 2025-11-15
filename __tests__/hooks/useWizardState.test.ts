@@ -114,10 +114,10 @@ describe('useWizardState', () => {
 		it('should mark step as touched when navigating next', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
-				basics: { valid: true, errors: [] },
-				eligibility: { valid: true, errors: [] },
-				rewards: { valid: true, errors: [] },
-				preview: { valid: true, errors: [] },
+				basics: { valid: true, errors: {} },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
 			}
 
 			act(() => {
@@ -132,9 +132,9 @@ describe('useWizardState', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
 				basics: { valid: false, errors: ['Name is required'] },
-				eligibility: { valid: true, errors: [] },
-				rewards: { valid: true, errors: [] },
-				finalize: { valid: true, errors: [] },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				finalize: { valid: true, errors: {} },
 			}
 
 			act(() => {
@@ -152,10 +152,10 @@ describe('useWizardState', () => {
 		it('should not navigate past last step', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
-				basics: { valid: true, errors: [] },
-				eligibility: { valid: true, errors: [] },
-				rewards: { valid: true, errors: [] },
-				preview: { valid: true, errors: [] },
+				basics: { valid: true, errors: {} },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
 			}
 
 			// Navigate to last step
@@ -178,10 +178,10 @@ describe('useWizardState', () => {
 		it('should navigate to previous step', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
-				basics: { valid: true, errors: [] },
-				eligibility: { valid: true, errors: [] },
-				rewards: { valid: true, errors: [] },
-				preview: { valid: true, errors: [] },
+				basics: { valid: true, errors: {} },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
 			}
 
 			act(() => {
@@ -211,10 +211,10 @@ describe('useWizardState', () => {
 		it('should navigate to specific step', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
-				basics: { valid: true, errors: [] },
-				eligibility: { valid: true, errors: [] },
-				rewards: { valid: true, errors: [] },
-				preview: { valid: true, errors: [] },
+				basics: { valid: true, errors: {} },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
 			}
 
 			act(() => {
@@ -227,10 +227,10 @@ describe('useWizardState', () => {
 		it('should not jump to step if current step is invalid', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
-				basics: { valid: false, errors: ['Invalid'] },
-				eligibility: { valid: true, errors: [] },
-				rewards: { valid: true, errors: [] },
-				preview: { valid: true, errors: [] },
+				basics: { valid: false, errors: { field: 'Invalid' } },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
 			}
 
 			act(() => {
@@ -287,10 +287,10 @@ describe('useWizardState', () => {
 		it('should reset stepIndex remains unchanged on reset', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
-				basics: { valid: true, errors: [] },
-				eligibility: { valid: true, errors: [] },
-				rewards: { valid: true, errors: [] },
-				preview: { valid: true, errors: [] },
+				basics: { valid: true, errors: {} },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
 			}
 
 			act(() => {
@@ -311,10 +311,10 @@ describe('useWizardState', () => {
 		it('should reset touched steps', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
-				basics: { valid: true, errors: [] },
-				eligibility: { valid: true, errors: [] },
-				rewards: { valid: true, errors: [] },
-				preview: { valid: true, errors: [] },
+				basics: { valid: true, errors: {} },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
 			}
 
 			act(() => {
