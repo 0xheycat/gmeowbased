@@ -1,6 +1,6 @@
 import { useCallback, useReducer, useState } from 'react'
-import type { QuestDraft, StepKey, StepValidationResult } from '../shared'
-import { draftReducer, EMPTY_DRAFT, STEPS } from '../shared'
+import type { QuestDraft, StepKey, StepValidationResult } from '@/components/quest-wizard/shared'
+import { draftReducer, EMPTY_DRAFT, STEPS } from '@/components/quest-wizard/shared'
 
 export type WizardStateReturn = {
 	draft: QuestDraft
