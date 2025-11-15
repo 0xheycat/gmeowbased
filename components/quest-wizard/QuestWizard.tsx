@@ -1,6 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+/* eslint-disable react-hooks/exhaustive-deps */
+// wizardState methods are memoized with useCallback, safe to use in dependencies
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useAccount, useConnect } from 'wagmi'
 import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
@@ -21,6 +24,7 @@ import {
 	summarizeDraft,
 	buildVerificationPayload,
 } from '@/components/quest-wizard/helpers'
+import { useWizardState } from '@/hooks/useWizardState'
 import {
 	type AuthStatus,
 	type MiniAppSignInResult,
@@ -34,15 +38,12 @@ import {
 	DEFAULT_CHAIN_FILTER,
 	DEFAULT_NFT_QUERY,
 	DEFAULT_TOKEN_QUERY,
-	EMPTY_DRAFT,
-	draftReducer,
 	STEPS,
 	type AssetSnapshot,
 	type NftOption,
 	type QuestDraft,
 	type QuestVerificationState,
 	type QuestVerificationSuccess,
-	type StepKey,
 	type TokenOption,
 	normalizeFid,
 } from '@/components/quest-wizard/shared'
@@ -67,14 +68,13 @@ export default function QuestWizard() {
 	const { address, connector: activeConnector, isConnected } = useAccount()
 	const { connect, connectAsync, connectors } = useConnect()
 	const { push: pushNotification, dismiss: dismissNotification } = useNotifications()
-	const [stepIndex, setStepIndex] = useState(0)
-	const [headerCollapsed, setHeaderCollapsed] = useState(false)
+	const wizardState = useWizardState(pushNotification)
+	const { draft, stepIndex, headerCollapsed, touchedSteps } = wizardState
 	const [prefilledFollow, setPrefilledFollow] = useState(false)
 	const [authStatus, setAuthStatus] = useState<AuthStatus>('idle')
 	const [authError, setAuthError] = useState<string | null>(null)
 	const [profile, setProfile] = useState<FarcasterUser | null>(null)
 	const [profileLoading, setProfileLoading] = useState(false)
-	const [draft, dispatch] = useReducer(draftReducer, EMPTY_DRAFT)
 	const [tokens, setTokens] = useState<TokenOption[]>([])
 	const [tokenWarnings, setTokenWarnings] = useState<string[]>([])
 	const [nfts, setNfts] = useState<NftOption[]>([])
@@ -87,7 +87,6 @@ export default function QuestWizard() {
 	const [nftError, setNftError] = useState<string | null>(null)
 	const [signInResult, setSignInResult] = useState<MiniAppSignInResult | null>(null)
 	const [walletAutoState, setWalletAutoState] = useState<WalletAutoState>({ status: 'idle', connectorName: null, lastError: null })
-	const [touchedSteps, setTouchedSteps] = useState<Record<StepKey, boolean>>({ basics: false, eligibility: false, rewards: false, preview: false })
 	const [hasLoadedTokens, setHasLoadedTokens] = useState(false)
 	const [hasLoadedNfts, setHasLoadedNfts] = useState(false)
 	const [escrowNow, setEscrowNow] = useState(() => Date.now())
@@ -305,48 +304,8 @@ export default function QuestWizard() {
 		}
 	}, [questPolicy.forceHoldQuestGate, requiredAssetGate])
 
-	const markStepTouched = useCallback((key: StepKey) => {
-		setTouchedSteps((prev) => (prev[key] ? prev : { ...prev, [key]: true }))
-	}, [])
-
-	const handleStepSelect = useCallback(
-		(index: number) => {
-			if (index === stepIndex) return
-			const currentStep = STEPS[stepIndex]
-			const currentValidation = validation[currentStep.key]
-			if (index > stepIndex && !currentValidation.valid) {
-				markStepTouched(currentStep.key)
-				pushNotification({
-					tone: 'warning',
-					title: `Complete ${currentStep.label}`,
-					description: 'Fill in the highlighted fields before advancing to the next step.',
-				})
-				return
-			}
-			setStepIndex(index)
-		},
-		[markStepTouched, pushNotification, stepIndex, validation],
-	)
-
-	const handleNextStep = useCallback(() => {
-		const currentStep = STEPS[stepIndex]
-		const currentValidation = validation[currentStep.key]
-		if (!currentValidation.valid) {
-			markStepTouched(currentStep.key)
-			pushNotification({
-				tone: 'warning',
-				title: `Finish ${currentStep.label}`,
-				description: 'Complete the required fields to continue the wizard.',
-			})
-			return
-		}
-		setStepIndex((prev) => Math.min(prev + 1, STEPS.length - 1))
-	}, [markStepTouched, pushNotification, stepIndex, validation])
-
-	const handlePrevStep = useCallback(() => {
-		setStepIndex((prev) => Math.max(prev - 1, 0))
-	}, [])
-
+	// Enforce hold-quest gating requirements based on policy
+	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
 	useEffect(() => {
 		if (!questPolicy.forceHoldQuestGate) return
 		if (!requiredAssetGate) return
@@ -367,7 +326,7 @@ export default function QuestWizard() {
 			changed = true
 		}
 		if (changed) {
-			dispatch({ type: 'merge', patch })
+			wizardState.onDraftChange(patch)
 			if (!policyNoticeRef.current.gateEnforced) {
 				pushNotification({
 					tone: 'info',
@@ -377,17 +336,16 @@ export default function QuestWizard() {
 				policyNoticeRef.current.gateEnforced = true
 			}
 		}
-	}, [draft.eligibilityAssetType, draft.eligibilityMode, questPolicy.allowPartnerMode, questPolicy.forceHoldQuestGate, requiredAssetGate, pushNotification])
+	}, [draft.eligibilityAssetType, draft.eligibilityMode, questPolicy.allowPartnerMode, questPolicy.forceHoldQuestGate, requiredAssetGate, pushNotification, wizardState.onDraftChange])
 
+	// Downgrade partner mode if not allowed by policy
+	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
 	useEffect(() => {
 		if (questPolicy.allowPartnerMode) return
 		if (draft.eligibilityMode !== 'partner') return
-		dispatch({
-			type: 'merge',
-			patch: {
-				eligibilityMode: questPolicy.forceHoldQuestGate ? 'simple' : 'open',
-				eligibilityChainList: [],
-			},
+		wizardState.onDraftChange({
+			eligibilityMode: questPolicy.forceHoldQuestGate ? 'simple' : 'open',
+			eligibilityChainList: [],
 		})
 		if (!policyNoticeRef.current.partnerDowngraded) {
 			pushNotification({
@@ -397,8 +355,10 @@ export default function QuestWizard() {
 			})
 			policyNoticeRef.current.partnerDowngraded = true
 		}
-	}, [draft.eligibilityMode, pushNotification, questPolicy.allowPartnerMode, questPolicy.forceHoldQuestGate])
+	}, [draft.eligibilityMode, pushNotification, questPolicy.allowPartnerMode, questPolicy.forceHoldQuestGate, wizardState.onDraftChange])
 
+	// Enforce max partner chains limit
+	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
 	useEffect(() => {
 		if (draft.eligibilityMode !== 'partner') return
 		const maxChains = questPolicy.maxPartnerChains
@@ -406,7 +366,7 @@ export default function QuestWizard() {
 		const limit = Math.max(1, Math.floor(Number(maxChains)))
 		if (draft.eligibilityChainList.length <= limit) return
 		const trimmed = draft.eligibilityChainList.slice(0, limit)
-		dispatch({ type: 'merge', patch: { eligibilityChainList: trimmed } })
+		wizardState.onDraftChange({ eligibilityChainList: trimmed })
 		if (!policyNoticeRef.current.partnerChainsTrimmed) {
 			pushNotification({
 				tone: 'info',
@@ -415,8 +375,10 @@ export default function QuestWizard() {
 			})
 			policyNoticeRef.current.partnerChainsTrimmed = true
 		}
-	}, [draft.eligibilityChainList, draft.eligibilityMode, pushNotification, questPolicy.maxPartnerChains])
+	}, [draft.eligibilityChainList, draft.eligibilityMode, pushNotification, questPolicy.maxPartnerChains, wizardState.onDraftChange])
 
+	// Clear eligibility asset if not verified (policy requirement)
+	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
 	useEffect(() => {
 		if (!questPolicy.requireVerifiedAssets) return
 		const assetId = draft.eligibilityAssetId?.toLowerCase()
@@ -432,7 +394,7 @@ export default function QuestWizard() {
 			policyNoticeRef.current.eligibilityAsset = null
 			return
 		}
-		dispatch({ type: 'merge', patch: { eligibilityAssetId: undefined } })
+		wizardState.onDraftChange({ eligibilityAssetId: undefined })
 		if (policyNoticeRef.current.eligibilityAsset !== assetId) {
 			pushNotification({
 				tone: 'warning',
@@ -441,8 +403,10 @@ export default function QuestWizard() {
 			})
 			policyNoticeRef.current.eligibilityAsset = assetId
 		}
-	}, [draft.eligibilityAssetId, draft.eligibilityAssetType, questPolicy, pushNotification, tokenLookup, nftLookup])
+	}, [draft.eligibilityAssetId, draft.eligibilityAssetType, questPolicy, pushNotification, tokenLookup, nftLookup, wizardState.onDraftChange])
 
+	// Clear reward asset if not verified (policy requirement)
+	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
 	useEffect(() => {
 		if (!questPolicy.requireVerifiedAssets) return
 		if (draft.rewardMode !== 'token' && draft.rewardMode !== 'nft') {
@@ -459,7 +423,7 @@ export default function QuestWizard() {
 			policyNoticeRef.current.rewardAsset = null
 			return
 		}
-		dispatch({ type: 'merge', patch: { rewardAssetId: undefined, rewardToken: '', rewardTokenPerUser: '0' } })
+		wizardState.onDraftChange({ rewardAssetId: undefined, rewardToken: '', rewardTokenPerUser: '0' })
 		if (policyNoticeRef.current.rewardAsset !== assetId) {
 			pushNotification({
 				tone: 'warning',
@@ -468,12 +432,14 @@ export default function QuestWizard() {
 			})
 			policyNoticeRef.current.rewardAsset = assetId
 		}
-	}, [draft.rewardAssetId, draft.rewardMode, pushNotification, questPolicy, tokenLookup, nftLookup])
+	}, [draft.rewardAssetId, draft.rewardMode, pushNotification, questPolicy, tokenLookup, nftLookup, wizardState.onDraftChange])
 
+	// Disable raffle if not allowed by policy
+	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
 	useEffect(() => {
 		if (questPolicy.allowRaffle) return
 		if (!draft.raffleEnabled) return
-		dispatch({ type: 'merge', patch: { raffleEnabled: false } })
+		wizardState.onDraftChange({ raffleEnabled: false })
 		if (!policyNoticeRef.current.raffleDisabled) {
 			pushNotification({
 				tone: 'info',
@@ -482,14 +448,17 @@ export default function QuestWizard() {
 			})
 			policyNoticeRef.current.raffleDisabled = true
 		}
-	}, [draft.raffleEnabled, pushNotification, questPolicy.allowRaffle])
+	}, [draft.raffleEnabled, pushNotification, questPolicy.allowRaffle, wizardState.onDraftChange])
 
+	// Frame readiness check for MiniKit
 	useEffect(() => {
 		if (!isFrameReady && typeof setFrameReady === 'function') {
 			setFrameReady()
 		}
 	}, [isFrameReady, setFrameReady])
 
+	// Prefill follow username from MiniKit context
+	// eslint-disable-next-line react-hooks/exhaustive-deps -- wizardState.onDraftChange is memoized
 	useEffect(() => {
 		if (prefilledFollow) return
 		if (draft.followUsername) {
@@ -503,9 +472,9 @@ export default function QuestWizard() {
 			setPrefilledFollow(true)
 			return
 		}
-		dispatch({ type: 'merge', patch: { followUsername: normalized.trim() } })
+		wizardState.onDraftChange({ followUsername: normalized.trim() })
 		setPrefilledFollow(true)
-	}, [prefilledFollow, contextUser?.username, draft.followUsername])
+	}, [prefilledFollow, contextUser?.username, draft.followUsername, wizardState.onDraftChange])
 
 	useEffect(() => {
 		if (signInResult) {
@@ -911,11 +880,8 @@ export default function QuestWizard() {
 		}
 	}, [fetchNftCatalog, hasLoadedNfts, stepIndex, nftQuery])
 
-	const handleMerge = (patch: Partial<QuestDraft>) => dispatch({ type: 'merge', patch })
-	const handleReset = () => {
-		dispatch({ type: 'reset' })
-		setTouchedSteps({ basics: false, eligibility: false, rewards: false, preview: false })
-	}
+	const handleMerge = (patch: Partial<QuestDraft>) => wizardState.onDraftChange(patch)
+	const handleReset = () => wizardState.onReset()
 
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
@@ -927,9 +893,9 @@ export default function QuestWizard() {
 					signInResult={signInResult}
 					resolvedFid={resolvedFid}
 					step={stepIndex}
-					collapsed={headerCollapsed}
-					onToggleCollapsed={() => setHeaderCollapsed((prev) => !prev)}
-					walletAddress={address}
+				collapsed={headerCollapsed}
+				onToggleCollapsed={() => wizardState.setHeaderCollapsed(!headerCollapsed)}
+				walletAddress={address}
 					walletState={walletAutoState}
 				/>
 				<MiniKitAuthPanel
@@ -954,7 +920,7 @@ export default function QuestWizard() {
 					</p>
 				</header>
 
-				<Stepper activeIndex={stepIndex} steps={renderedSteps} onSelect={handleStepSelect} />
+				<Stepper activeIndex={stepIndex} steps={renderedSteps} onSelect={(index) => wizardState.onStepSelect(index, validation)} />
 
 				<main className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
 					<motion.section
@@ -989,9 +955,9 @@ export default function QuestWizard() {
 							onNftSearch={handleNftSearch}
 							onRefreshCatalog={handleAssetRescan}
 							onChange={handleMerge}
-							onNext={handleNextStep}
-							onPrev={handlePrevStep}
-							onReset={handleReset}
+						onNext={() => wizardState.onNextStep(validation)}
+						onPrev={wizardState.onPrevStep}
+						onReset={handleReset}
 							validation={activeValidation}
 							showValidation={Boolean(activeStepTouched)}
 							tokenEscrowStatus={tokenEscrowStatus}
