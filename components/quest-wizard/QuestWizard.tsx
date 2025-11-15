@@ -10,6 +10,8 @@ import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
 import { MiniKitAuthPanel } from '@/components/quest-wizard/components/MiniKitAuthPanel'
 import { WizardHeader } from '@/components/quest-wizard/components/WizardHeader'
 import { useMediaQuery } from '@/components/quest-wizard/hooks/useMediaQuery'
+import { useWizardState } from '@/hooks/useWizardState'
+import { useAssetCatalog } from '@/hooks/useAssetCatalog'
 import {
 	formatUnknownError,
 	isAbortError,
@@ -24,7 +26,6 @@ import {
 	summarizeDraft,
 	buildVerificationPayload,
 } from '@/components/quest-wizard/helpers'
-import { useWizardState } from '@/hooks/useWizardState'
 import {
 	type AuthStatus,
 	type MiniAppSignInResult,
@@ -34,17 +35,10 @@ import {
 
 // @edit-start 2025-02-14 — Use shared quest wizard module from components namespace
 import {
-	ASSET_SNAPSHOT_TTL_MS,
-	DEFAULT_CHAIN_FILTER,
-	DEFAULT_NFT_QUERY,
-	DEFAULT_TOKEN_QUERY,
 	STEPS,
-	type AssetSnapshot,
-	type NftOption,
 	type QuestDraft,
 	type QuestVerificationState,
 	type QuestVerificationSuccess,
-	type TokenOption,
 	normalizeFid,
 } from '@/components/quest-wizard/shared'
 // @edit-end
@@ -68,36 +62,37 @@ export default function QuestWizard() {
 	const { address, connector: activeConnector, isConnected } = useAccount()
 	const { connect, connectAsync, connectors } = useConnect()
 	const { push: pushNotification, dismiss: dismissNotification } = useNotifications()
+	const isMobile = useMediaQuery('(max-width: 768px)')
 	const wizardState = useWizardState(pushNotification)
 	const { draft, stepIndex, headerCollapsed, touchedSteps } = wizardState
+	const assetCatalog = useAssetCatalog({ isMobile, stepIndex })
+	const {
+		tokens,
+		nfts,
+		tokenQuery,
+		nftQuery,
+		tokenLoading,
+		nftLoading,
+		tokenError,
+		nftError,
+		tokenWarnings,
+		nftWarnings,
+		assetsLoading,
+		assetsError,
+		assetWarnings,
+	} = assetCatalog
 	const [prefilledFollow, setPrefilledFollow] = useState(false)
 	const [authStatus, setAuthStatus] = useState<AuthStatus>('idle')
 	const [authError, setAuthError] = useState<string | null>(null)
 	const [profile, setProfile] = useState<FarcasterUser | null>(null)
 	const [profileLoading, setProfileLoading] = useState(false)
-	const [tokens, setTokens] = useState<TokenOption[]>([])
-	const [tokenWarnings, setTokenWarnings] = useState<string[]>([])
-	const [nfts, setNfts] = useState<NftOption[]>([])
-	const [nftWarnings, setNftWarnings] = useState<string[]>([])
-	const [tokenQuery, setTokenQuery] = useState(DEFAULT_TOKEN_QUERY)
-	const [nftQuery, setNftQuery] = useState(DEFAULT_NFT_QUERY)
-	const [tokenLoading, setTokenLoading] = useState(false)
-	const [nftLoading, setNftLoading] = useState(false)
-	const [tokenError, setTokenError] = useState<string | null>(null)
-	const [nftError, setNftError] = useState<string | null>(null)
 	const [signInResult, setSignInResult] = useState<MiniAppSignInResult | null>(null)
 	const [walletAutoState, setWalletAutoState] = useState<WalletAutoState>({ status: 'idle', connectorName: null, lastError: null })
-	const [hasLoadedTokens, setHasLoadedTokens] = useState(false)
-	const [hasLoadedNfts, setHasLoadedNfts] = useState(false)
 	const [escrowNow, setEscrowNow] = useState(() => Date.now())
 	const triedMiniAuthRef = useRef(false)
 	const triedWalletAutoRef = useRef(false)
-	const tokenFetchControllerRef = useRef<AbortController | null>(null)
-	const nftFetchControllerRef = useRef<AbortController | null>(null)
 	const pendingAuthToastRef = useRef<number | null>(null)
 	const pendingWalletToastRef = useRef<number | null>(null)
-	const tokenSnapshotCacheRef = useRef<Map<string, AssetSnapshot<TokenOption>>>(new Map())
-	const nftSnapshotCacheRef = useRef<Map<string, AssetSnapshot<NftOption>>>(new Map())
 	const verificationCacheRef = useRef<Map<string, QuestVerificationSuccess>>(new Map())
 	const verificationAbortRef = useRef<AbortController | null>(null)
 	const policyNoticeRef = useRef({
@@ -109,7 +104,6 @@ export default function QuestWizard() {
 		gateEnforced: false,
 	})
 	const [verificationState, setVerificationState] = useState<QuestVerificationState>({ status: 'idle', lastKey: null, data: null, error: null })
-	const isMobile = useMediaQuery('(max-width: 768px)')
 	// @edit-start 2025-11-12 — Respect user reduced-motion preferences for wizard transitions
 	const prefersReducedMotion = useReducedMotion()
 	const sectionMotion = useMemo(
@@ -160,10 +154,6 @@ export default function QuestWizard() {
 	const creatorTier = useMemo<CreatorTier>(() => resolveCreatorTier({ fid: resolvedFid ?? undefined, address }), [resolvedFid, address])
 	const questPolicy = useMemo(() => getQuestPolicy(creatorTier), [creatorTier])
 	const requiredAssetGate = useMemo(() => questTypeRequiresGate(draft.questTypeKey), [draft.questTypeKey])
-
-	const assetsLoading = tokenLoading || nftLoading
-	const assetsError = tokenError ?? nftError
-	const assetWarnings = useMemo(() => [...tokenWarnings, ...nftWarnings], [tokenWarnings, nftWarnings])
 
 	const tokenLookup = useMemo(() => createTokenLookup(tokens), [tokens])
 	const nftLookup = useMemo(() => createNftLookup(nfts), [nfts])
@@ -696,189 +686,6 @@ export default function QuestWizard() {
 		}
 	}, [activeConnector, isConnected, setWalletAutoState])
 
-	const fetchTokenCatalog = useCallback(
-		async (term: string, chains: string = DEFAULT_CHAIN_FILTER, options: { force?: boolean } = {}) => {
-			const trimmed = term.trim()
-			const cacheKey = `${chains}::${trimmed.toLowerCase()}`
-			const cached = tokenSnapshotCacheRef.current.get(cacheKey)
-			if (!options.force && cached && Date.now() - cached.timestamp < ASSET_SNAPSHOT_TTL_MS) {
-				setTokens(cached.items)
-				setTokenWarnings(cached.warnings)
-				setTokenLoading(false)
-				setTokenError(null)
-				return
-			}
-
-			tokenFetchControllerRef.current?.abort()
-			const controller = new AbortController()
-			tokenFetchControllerRef.current = controller
-			setTokenLoading(true)
-			setTokenError(null)
-
-			try {
-				const params = new URLSearchParams()
-				params.set('section', 'tokens')
-				params.set('includePrice', 'true')
-				params.set('limit', isMobile ? '12' : '20')
-				params.set('chains', chains)
-				if (trimmed.length > 0) {
-					params.set('tokenTerm', trimmed)
-				}
-
-				const response = await fetch(`/api/farcaster/assets?${params.toString()}`, {
-					cache: 'no-store',
-					signal: controller.signal,
-				})
-				let data: any = null
-				try {
-					data = await response.json()
-				} catch {
-					throw new Error('Failed to parse token catalog response')
-				}
-
-				if (!response.ok || !data?.ok) {
-					const fallback = `Failed to load tokens (status ${response.status})`
-					const message = typeof data?.error === 'string' && data.error.length > 0 ? data.error : fallback
-					throw new Error(message)
-				}
-
-				const nextTokens = Array.isArray(data.tokens) ? (data.tokens as TokenOption[]) : []
-				const nextWarnings = Array.isArray(data.tokenWarnings) ? data.tokenWarnings : []
-				tokenSnapshotCacheRef.current.set(cacheKey, { items: nextTokens, warnings: nextWarnings, timestamp: Date.now() })
-				setTokens(nextTokens)
-				setTokenWarnings(nextWarnings)
-			} catch (error) {
-				if (isAbortError(error)) {
-					return
-				}
-				const message = error instanceof Error ? error.message : 'Failed to load tokens'
-				tokenSnapshotCacheRef.current.delete(cacheKey)
-				setTokens([])
-				setTokenWarnings([])
-				setTokenError(message)
-			} finally {
-				if (tokenFetchControllerRef.current === controller) {
-					tokenFetchControllerRef.current = null
-				}
-				setTokenLoading(false)
-			}
-		},
-		[isMobile],
-	)
-
-	const fetchNftCatalog = useCallback(
-		async (query: string, chains: string = DEFAULT_CHAIN_FILTER, options: { force?: boolean } = {}) => {
-			const trimmed = query.trim()
-			const cacheKey = `${chains}::${trimmed.toLowerCase()}`
-			const cached = nftSnapshotCacheRef.current.get(cacheKey)
-			if (!options.force && cached && Date.now() - cached.timestamp < ASSET_SNAPSHOT_TTL_MS) {
-				setNfts(cached.items)
-				setNftWarnings(cached.warnings)
-				setNftLoading(false)
-				setNftError(null)
-				return
-			}
-
-			nftFetchControllerRef.current?.abort()
-			const controller = new AbortController()
-			nftFetchControllerRef.current = controller
-			setNftLoading(true)
-			setNftError(null)
-
-			try {
-				const params = new URLSearchParams()
-				params.set('section', 'nfts')
-				params.set('chains', chains)
-				params.set('limit', isMobile ? '12' : '20')
-				if (trimmed.length > 0) {
-					params.set('nftQuery', trimmed)
-				}
-
-				const response = await fetch(`/api/farcaster/assets?${params.toString()}`, {
-					cache: 'no-store',
-					signal: controller.signal,
-				})
-				let data: any = null
-				try {
-					data = await response.json()
-				} catch {
-					throw new Error('Failed to parse NFT catalog response')
-				}
-
-				if (!response.ok || !data?.ok) {
-					const fallback = `Failed to load NFT collections (status ${response.status})`
-					const message = typeof data?.error === 'string' && data.error.length > 0 ? data.error : fallback
-					throw new Error(message)
-				}
-
-				const nextNfts = Array.isArray(data.nfts) ? (data.nfts as NftOption[]) : []
-				const nextWarnings = Array.isArray(data.nftWarnings) ? data.nftWarnings : []
-				nftSnapshotCacheRef.current.set(cacheKey, { items: nextNfts, warnings: nextWarnings, timestamp: Date.now() })
-				setNfts(nextNfts)
-				setNftWarnings(nextWarnings)
-			} catch (error) {
-				if (isAbortError(error)) {
-					return
-				}
-				const message = error instanceof Error ? error.message : 'Failed to load NFT collections'
-				nftSnapshotCacheRef.current.delete(cacheKey)
-				setNfts([])
-				setNftWarnings([])
-				setNftError(message)
-			} finally {
-				if (nftFetchControllerRef.current === controller) {
-					nftFetchControllerRef.current = null
-				}
-				setNftLoading(false)
-			}
-		},
-		[isMobile],
-	)
-
-	const handleAssetRescan = useCallback(() => {
-		setHasLoadedTokens(true)
-		setHasLoadedNfts(true)
-		void Promise.all([
-			fetchTokenCatalog(tokenQuery, DEFAULT_CHAIN_FILTER, { force: true }),
-			fetchNftCatalog(nftQuery, DEFAULT_CHAIN_FILTER, { force: true }),
-		])
-	}, [fetchTokenCatalog, fetchNftCatalog, nftQuery, tokenQuery])
-
-	const handleVerifyDraft = useCallback((options?: { force?: boolean }) => runDraftVerification(options), [runDraftVerification])
-
-	const handleTokenSearch = useCallback(
-		(term: string) => {
-			const nextTerm = term.trim()
-			setTokenQuery(nextTerm)
-			setHasLoadedTokens(true)
-			void fetchTokenCatalog(nextTerm)
-		},
-		[fetchTokenCatalog],
-	)
-
-	const handleNftSearch = useCallback(
-		(query: string) => {
-			const nextQuery = query.trim().length > 0 ? query.trim() : DEFAULT_NFT_QUERY
-			setNftQuery(nextQuery)
-			setHasLoadedNfts(true)
-			void fetchNftCatalog(nextQuery)
-		},
-		[fetchNftCatalog],
-	)
-
-	useEffect(() => {
-		if ((stepIndex === 1 || stepIndex === 2) && !hasLoadedTokens) {
-			setHasLoadedTokens(true)
-			void fetchTokenCatalog(tokenQuery)
-		}
-	}, [fetchTokenCatalog, hasLoadedTokens, stepIndex, tokenQuery])
-
-	useEffect(() => {
-		if ((stepIndex === 1 || stepIndex === 2) && !hasLoadedNfts) {
-			setHasLoadedNfts(true)
-			void fetchNftCatalog(nftQuery)
-		}
-	}, [fetchNftCatalog, hasLoadedNfts, stepIndex, nftQuery])
 
 	const handleMerge = (patch: Partial<QuestDraft>) => wizardState.onDraftChange(patch)
 	const handleReset = () => wizardState.onReset()
@@ -949,21 +756,21 @@ export default function QuestWizard() {
 							tokenError={tokenError}
 							nftLoading={nftLoading}
 							nftError={nftError}
-							tokenQuery={tokenQuery}
-							nftQuery={nftQuery}
-							onTokenSearch={handleTokenSearch}
-							onNftSearch={handleNftSearch}
-							onRefreshCatalog={handleAssetRescan}
-							onChange={handleMerge}
-						onNext={() => wizardState.onNextStep(validation)}
-						onPrev={wizardState.onPrevStep}
-						onReset={handleReset}
-							validation={activeValidation}
-							showValidation={Boolean(activeStepTouched)}
-							tokenEscrowStatus={tokenEscrowStatus}
-							verificationState={verificationState}
-							onVerifyDraft={handleVerifyDraft}
-						/>
+						tokenQuery={tokenQuery}
+						nftQuery={nftQuery}
+						onTokenSearch={assetCatalog.onTokenSearch}
+						onNftSearch={assetCatalog.onNftSearch}
+						onRefreshCatalog={assetCatalog.onRefreshCatalog}
+					onChange={handleMerge}
+					onNext={() => wizardState.onNext(validation)}
+					onPrev={wizardState.onPrev}
+					onReset={handleReset}
+						validation={activeValidation}
+						showValidation={Boolean(activeStepTouched)}
+						tokenEscrowStatus={tokenEscrowStatus}
+						verificationState={verificationState}
+						onVerifyDraft={runDraftVerification}
+					/>
 					</motion.section>
 
 					<motion.aside
