@@ -79,8 +79,17 @@ export const STEPS: Array<{ key: StepKey; label: string; description: string }> 
 	{ key: 'preview', label: 'Preview & publish', description: 'Review the generated metadata before shipping' },
 ]
 
+export type StepperProps = {
+	activeIndex: number
+	steps: Array<{ key: StepKey; label: string; description: string; status: 'done' | 'active' | 'waiting' }>
+	onSelect(index: number): void
+}
+
 export type TokenLookup = Record<string, TokenOption>
 export type NftLookup = Record<string, NftOption>
+
+// Import types from lib for StepPanelProps - these need to be accessible
+export type { QuestPolicy, CreatorTier } from '@/lib/quest-policy'
 
 export type AssetSnapshot<T> = {
 	items: T[]
@@ -105,6 +114,40 @@ export type QuestVerificationState = {
 	lastKey: string | null
 	data: QuestVerificationSuccess | null
 	error: string | null
+}
+
+export type StepPanelProps = {
+	index: number
+	step: { key: StepKey; label: string; description: string }
+	draft: QuestDraft
+	policy: import('@/lib/quest-policy').QuestPolicy
+	requiredGate: ReturnType<typeof import('@/lib/quest-policy').questTypeRequiresGate>
+	summary: QuestSummary
+	tokens: TokenOption[]
+	nfts: NftOption[]
+	tokenLookup: TokenLookup
+	nftLookup: NftLookup
+	assetsLoading: boolean
+	assetsError: string | null
+	assetWarnings: string[]
+	tokenLoading: boolean
+	tokenError: string | null
+	nftLoading: boolean
+	nftError: string | null
+	tokenQuery: string
+	nftQuery: string
+	onTokenSearch(term: string): void
+	onNftSearch(term: string): void
+	onRefreshCatalog(): void
+	onChange(patch: Partial<QuestDraft>): void
+	onNext(): void
+	onPrev(): void
+	onReset(): void
+	validation: StepValidationResult
+	showValidation: boolean
+	tokenEscrowStatus: TokenEscrowStatus | null
+	verificationState: QuestVerificationState
+	onVerifyDraft(options?: { force?: boolean }): Promise<QuestVerificationSuccess | null> | null | void
 }
 
 export const QUEST_TYPE_OPTIONS = Object.keys(QUEST_TYPES) as Array<keyof typeof QUEST_TYPES>
