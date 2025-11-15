@@ -8,9 +8,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TemplateSkeletonGrid } from './LoadingSkeleton'
 import { 
-	QUEST_TEMPLATES, 
 	getTemplatesByCategory, 
 	getPopularTemplates,
 	applyTemplate,

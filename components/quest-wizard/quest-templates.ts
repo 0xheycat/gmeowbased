@@ -4,8 +4,7 @@
  * Pre-configured quest templates to help users create common quest types faster.
  */
 
-import type { QuestDraft, TokenOption, NftOption } from './shared'
-import { QUEST_TYPES, type ChainKey } from '@/lib/gm-utils'
+import type { QuestDraft } from './shared'
 
 export type QuestTemplate = {
 	id: string
