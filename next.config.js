@@ -1,7 +1,21 @@
+import nextra from 'nextra'
+
+const withNextra = nextra({
+  defaultShowCopyCode: true,
+  search: {
+    codeblocks: true
+  },
+  latex: true
+})
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // output: 'standalone', // Removed for Vercel ESM compatibility - not needed for Vercel deployments
   // Removed redirect for /.well-known/farcaster.json to serve local manifest with baseBuilder
+  
+  // Support MDX files for Nextra docs
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
+  
   async headers() {
     return [
       {
@@ -103,4 +117,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+export default withNextra(nextConfig)
