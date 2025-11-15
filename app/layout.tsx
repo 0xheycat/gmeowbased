@@ -50,24 +50,24 @@ const gmFrame = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: 'Gmeow Adventure — Multi-Chain Quest Game',
+  title: 'Gmeowbased — Multi-Chain Quest Game',
   description:
-    'Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
+    'Join the epic Gmeowbased! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
   openGraph: {
-    title: 'Gmeow Adventure — Multi-Chain Quest Game',
+    title: 'Gmeowbased — Multi-Chain Quest Game',
     description:
-      'Begin your Gmeow Adventure! Conquer daily GM streaks, complete cross-chain quests, join guilds, and earn exclusive rewards.',
+      'Begin your Gmeowbased! Conquer daily GM streaks, complete cross-chain quests, join guilds, and earn exclusive rewards.',
     type: 'website',
-    siteName: 'GMeow Adventure',
-    images: [{ url: `${baseUrl}/logo.png`, width: 1024, height: 1024, alt: 'Gmeow Adventure Crest' }],
+    siteName: 'Gmeowbased',
+    images: [{ url: `${baseUrl}/logo.png`, width: 1024, height: 1024, alt: 'Gmeowbased Crest' }],
     url: baseUrl,
   },
   robots: { index: true, follow: true },
   other: {
     'farcaster:card': 'wide',
-    'farcaster:title': 'Gmeow Adventure — Quest & Conquer',
+    'farcaster:title': 'Gmeowbased — Quest & Conquer',
     'farcaster:description':
-      'Embark on the Gmeow Adventure! Daily GM streaks, epic quests, guild battles, and multi-chain rewards await.',
+      'Embark on Gmeowbased! Daily GM streaks, epic quests, guild battles, and multi-chain rewards await.',
     'farcaster:site': '@0xheycat',
     'farcaster:creator': '@0xheycat',
     'farcaster:image': `${baseUrl}/logo.png`,

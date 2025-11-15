@@ -70,13 +70,13 @@ export function GmeowHeader() {
       {/* LEFT */}
       <div className="flex items-center gap-2 sm:gap-3">
         <Link href="/" className="flex items-center gap-2 sm:gap-3">
-          <span className="theme-shell-icon theme-shell-icon--badge grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-lg border text-sm sm:text-base font-semibold">
-            😺
-          </span>
+          <div className="theme-shell-icon theme-shell-icon--badge grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-lg border">
+            <LayoutModeSwitch className="scale-90 sm:scale-100" />
+          </div>
 
           <span className="hidden flex-col leading-tight sm:flex">
             <span className="theme-shell-label text-[10px] sm:text-xs uppercase tracking-[0.3em]">
-              Gmeow Adventure
+              Gmeowbased
             </span>
             <span className="theme-shell-title text-xs sm:text-sm font-semibold">
               Flight Deck
@@ -156,7 +156,6 @@ export function GmeowHeader() {
       {/* RIGHT */}
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
         <ProfileDropdown />
-        <LayoutModeSwitch className="hidden md:inline-flex" />
         <ThemeToggle />
       </div>
     </header>
