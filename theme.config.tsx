@@ -41,7 +41,7 @@ const config = {
   head: () => {
     const { asPath, defaultLocale, locale } = useRouter()
     const url =
-      'https://doc.gmeowhq.art' +
+      'https://docs.gmeow.art' +
       (defaultLocale === locale ? asPath : `/${locale}${asPath}`)
     
     return (
