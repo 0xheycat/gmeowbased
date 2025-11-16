@@ -11,7 +11,7 @@ const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
 const gmEmbed = {
   version: '1',
-  imageUrl: `${baseUrl}/gmeow.gif`,
+  imageUrl: `${baseUrl}/og-image.png`,
   button: {
     title: '✨ Enter Gmeow',
     action: {
