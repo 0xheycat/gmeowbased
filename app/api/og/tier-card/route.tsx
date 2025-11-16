@@ -260,8 +260,10 @@ function TierCard({ fid, tier, username, avatar, score, badgeName }: TierCardPro
                 boxShadow: `0 0 40px ${config.color}50`,
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
               <img
                 src={avatar}
+                alt=""
                 width={160}
                 height={160}
                 style={{ objectFit: 'cover' }}
