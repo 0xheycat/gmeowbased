@@ -30,7 +30,6 @@ import {
   sanitizeQuestId,
   sanitizeChainKey as validateChainKey,
   sanitizeFrameType,
-  sanitizeUrl,
   sanitizeButtons,
 } from '@/lib/frame-validation'
 export const runtime = 'nodejs'
@@ -1192,6 +1191,7 @@ function buildFrameHtml(params: {
     <!-- Farcaster Frame vNext (Mini App Embed Format) -->
     <meta property="fc:frame" content="vNext" />
     ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="3:2" />` : ''}
+    ${buttonHtml}
     ${fcMetaTags}
     <style>
       :root {
