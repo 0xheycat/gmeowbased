@@ -33,7 +33,7 @@ const nextConfig = {
         source: '/:path*',
         headers: [
           { key: 'X-Frame-Options', value: 'ALLOWALL' },
-          { key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://*.base.dev https://*.gmeowhq.art https://*.farcaster.xyz https://*.warpcast.com" },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://gmeowhq.art https://*.gmeowhq.art https://*.base.dev https://*.farcaster.xyz https://*.warpcast.com" },
         ],
       },
     ]
