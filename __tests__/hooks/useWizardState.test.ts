@@ -81,16 +81,12 @@ describe('useWizardState', () => {
 			act(() => {
 				result.current.onDraftChange({
 					rewardMode: 'token',
-					rewardAssetAddress: '0x123' as `0x${string}`,
-					rewardAssetChainId: 8453,
-					rewardAmount: '1000',
+					rewardAssetId: '0x123',
 				})
 			})
 
 			expect(result.current.draft.rewardMode).toBe('token')
-			expect(result.current.draft.rewardAssetAddress).toBe('0x123')
-			expect(result.current.draft.rewardAssetChainId).toBe(8453)
-			expect(result.current.draft.rewardAmount).toBe('1000')
+			expect(result.current.draft.rewardAssetId).toBe('0x123')
 		})
 	})
 
@@ -102,12 +98,13 @@ describe('useWizardState', () => {
 				eligibility: { valid: true, errors: {} },
 				rewards: { valid: true, errors: {} },
 				preview: { valid: true, errors: {} },
+				finalize: { valid: true, errors: {} },
 			}
 
 			act(() => {
 				result.current.onNext(mockValidation)
 			})
-
+			
 			expect(result.current.stepIndex).toBe(1)
 		})
 
@@ -131,9 +128,10 @@ describe('useWizardState', () => {
 		it('should not navigate next if validation fails', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
 			const mockValidation = {
-				basics: { valid: false, errors: ['Name is required'] },
+				basics: { valid: false, errors: { name: 'Name is required' } },
 				eligibility: { valid: true, errors: {} },
 				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
 				finalize: { valid: true, errors: {} },
 			}
 
@@ -270,7 +268,6 @@ describe('useWizardState', () => {
 				result.current.onDraftChange({
 					name: 'Test Quest',
 					headline: 'Test Headline',
-					rewardAmount: '500',
 				})
 			})
 
