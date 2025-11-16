@@ -1188,9 +1188,8 @@ function buildFrameHtml(params: {
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
-    <!-- Farcaster Frame vNext (Mini App Embed Format) -->
-    <meta property="fc:frame" content="vNext" />
-    ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="3:2" />` : ''}
+    <!-- Farcaster Frame v1.0 (inline rendering in feed) -->
+    ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />` : ''}
     ${buttonHtml}
     ${fcMetaTags}
     <style>
