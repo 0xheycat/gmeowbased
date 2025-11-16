@@ -11,7 +11,9 @@ const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
 const gmEmbed = {
   version: '1',
-  imageUrl: `${baseUrl}/og-image.png`,
+  imageUrl: `${baseUrl}/splash.png`,
+  iconUrl: `${baseUrl}/icon.png`,
+  webhookUrl: `${baseUrl}/api/neynar/webhook`,
   button: {
     title: '✨ Enter Gmeow',
     action: {
@@ -27,6 +29,9 @@ const gmEmbed = {
 const gmFrame = {
   version: 'next',
   imageUrl: `${baseUrl}/splash.png`,
+  postUrl: `${baseUrl}/api/frame`,
+  webhookUrl: `${baseUrl}/api/neynar/webhook`,
+  splashBackgroundColor: '#0B0A16',
   buttons: [
     {
       title: 'Launch Miniapp',
@@ -44,8 +49,6 @@ const gmFrame = {
       },
     },
   ],
-  postUrl: `${baseUrl}/api/frame`,
-  splashBackgroundColor: '#0B0A16',
 }
 
 export const metadata: Metadata = {
