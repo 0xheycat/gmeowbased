@@ -18,7 +18,7 @@ const gmEmbed = {
       type: 'launch_miniapp',
       name: 'GMeow',
       url: baseUrl,
-      splashImageUrl: `${baseUrl}/gmeow.gif`,
+      splashImageUrl: `${baseUrl}/splash.png`,
       splashBackgroundColor: '#0B0A16',
     },
   },
@@ -26,7 +26,7 @@ const gmEmbed = {
 
 const gmFrame = {
   version: 'next',
-  imageUrl: `${baseUrl}/gmeow.gif`,
+  imageUrl: `${baseUrl}/splash.png`,
   buttons: [
     {
       title: 'Launch Miniapp',
