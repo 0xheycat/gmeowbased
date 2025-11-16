@@ -25,6 +25,14 @@ import gm, {
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
 import { buildFrameShareUrl } from '@/lib/share'
+import {
+  sanitizeFID,
+  sanitizeQuestId,
+  sanitizeChainKey as validateChainKey,
+  sanitizeFrameType,
+  sanitizeUrl,
+  sanitizeButtons,
+} from '@/lib/frame-validation'
 export const runtime = 'nodejs'
 export const revalidate = 500
 // If you maintain a neynar helper module, use it; otherwise this file contains
@@ -1128,8 +1136,15 @@ function buildFrameHtml(params: {
     ${overlayFooterHtml}
   `
   const accessibleDescriptionHtml = `<p>${desc || pageTitle}</p>`
-  const linkButtons = buttons.filter((btn) => (btn.action ?? 'link') === 'link' && !!btn.target)
-  const buttonHtml = buttons
+  
+  // Enforce 4-button limit per Farcaster vNext spec
+  const { buttons: validatedButtons, truncated, originalCount } = sanitizeButtons(buttons)
+  if (truncated) {
+    console.warn(`[buildFrameHtml] Button limit exceeded: ${originalCount} buttons provided, truncated to 4`)
+  }
+  
+  const linkButtons = validatedButtons.filter((btn) => (btn.action ?? 'link') === 'link' && !!btn.target)
+  const buttonHtml = validatedButtons
     .map((btn, idx) => {
       const index = idx + 1
       const action = btn.action ?? 'link'
@@ -1174,19 +1189,9 @@ function buildFrameHtml(params: {
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
-    <!-- Farcaster Frame vNext -->
+    <!-- Farcaster Frame vNext (Mini App Embed Format) -->
     <meta property="fc:frame" content="vNext" />
-    ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />` : ''}
-    ${buttons.map((btn, idx) => {
-      const index = idx + 1
-      const action = btn.action ?? 'link'
-      const label = escapeHtml(btn.label)
-      const target = btn.target ? escapeHtml(btn.target) : ''
-      const actionTag = action !== 'link' ? `\n    <meta property="fc:frame:button:${index}:action" content="${action}" />` : ''
-      const targetTag = target ? `\n    <meta property="fc:frame:button:${index}:target" content="${target}" />` : ''
-      return `<meta property="fc:frame:button:${index}" content="${label}" />${actionTag}${targetTag}`
-    }).join('\n    ')}
-    ${buttonHtml}
+    ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="3:2" />` : ''}
     ${fcMetaTags}
     <style>
       :root {
@@ -1864,6 +1869,43 @@ export async function GET(req: Request) {
   try {
     const params: FrameRequest = Object.fromEntries(url.searchParams.entries())
     tracePush(traces, 'request-received', params)
+    
+    // Input validation per GI-8 security requirements
+    if (params.fid) {
+      const validFid = sanitizeFID(params.fid)
+      if (!validFid) {
+        tracePush(traces, 'validation-failed', { field: 'fid', value: params.fid })
+        return new NextResponse('Invalid FID parameter', { status: 400 })
+      }
+      params.fid = validFid
+    }
+    
+    if (params.questId) {
+      const validQuestId = sanitizeQuestId(params.questId)
+      if (validQuestId === null) {
+        tracePush(traces, 'validation-failed', { field: 'questId', value: params.questId })
+        return new NextResponse('Invalid questId parameter', { status: 400 })
+      }
+      params.questId = validQuestId
+    }
+    
+    if (params.chain) {
+      const validChain = validateChainKey(params.chain)
+      if (!validChain) {
+        tracePush(traces, 'validation-failed', { field: 'chain', value: params.chain })
+        return new NextResponse(`Invalid chain parameter. Must be one of: ${CHAIN_KEYS.join(', ')}`, { status: 400 })
+      }
+      params.chain = validChain
+    }
+    
+    if (params.type) {
+      const validType = sanitizeFrameType(params.type)
+      if (!validType) {
+        tracePush(traces, 'validation-failed', { field: 'type', value: params.type })
+        return new NextResponse('Invalid frame type parameter', { status: 400 })
+      }
+      params.type = validType
+    }
 
     const type: FrameType = (params.type || 'generic') as FrameType
     const asJson = wantsJson(req, url) || toBooleanFlag(params.json)
