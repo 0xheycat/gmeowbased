@@ -25,6 +25,9 @@ export type AnalyticsEvent =
   | 'badge_shared'
   | 'cast_published'
   | 'cast_publish_error'
+  | 'viral_bonus_awarded'
+  | 'cast_viral_milestone'
+  | 'leaderboard_rank_up'
 
 export type AnalyticsProperties = {
   // Wizard context
@@ -62,6 +65,14 @@ export type AnalyticsProperties = {
   castHash?: string
   castUrl?: string
   error?: string
+  bonusXp?: number
+  viralTier?: string
+  totalXp?: number
+  incrementalXp?: number
+  score?: number
+  source?: string
+  previousRank?: number
+  newRank?: number
   timestamp?: string
   
   // Performance context
