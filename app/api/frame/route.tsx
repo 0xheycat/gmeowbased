@@ -1024,7 +1024,8 @@ function buildFrameHtml(params: {
   const rawDescription = description || ''
   const desc = escapeHtml(rawDescription)
   const urlEsc = escapeHtml(url || '')
-  const imageEsc = image ? escapeHtml(image) : ''
+  // Fallback to gmeow.gif if no image provided
+  const imageEsc = image ? escapeHtml(image) : (frameOrigin ? escapeHtml(`${frameOrigin}/gmeow.gif`) : '')
   const overlayHidden = Boolean(hideOverlay)
   const descriptionSegments = rawDescription
     .split(' • ')
@@ -1868,7 +1869,7 @@ export async function GET(req: Request) {
     const debugMode = toBooleanFlag(params.debug)
     const debugPayload = debugMode ? traces : undefined
     const origin = resolveRequestOrigin(req, url)
-    const defaultFrameImage = `${origin}/og-image.png`
+    const defaultFrameImage = `${origin}/gmeow.gif`
 
     const handler = FRAME_HANDLERS[type]
     if (handler) {

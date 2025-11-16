@@ -262,9 +262,7 @@ test.describe('Accessibility on Devices', () => {
       const box = await element.boundingBox()
       
       if (box && await element.isVisible()) {
-        // WCAG 2.5.5 Level AAA: 44x44px minimum
-        const meetsAAA = box.width >= 44 && box.height >= 44
-        
+        // WCAG 2.5.5 Level AAA: 44x44px minimum (not enforced, but ideal)
         // WCAG 2.5.5 Level AA: 24x24px minimum (future standard)
         const meetsAA = box.width >= 24 && box.height >= 24
         
