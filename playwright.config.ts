@@ -18,14 +18,69 @@ export default defineConfig({
   },
 
   projects: [
+    // Desktop browsers
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
     {
-      name: 'mobile',
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    // Tablets
+    {
+      name: 'tablet-ipad',
+      use: { 
+        ...devices['iPad Pro'],
+        viewport: { width: 1024, height: 1366 },
+      },
+    },
+    {
+      name: 'tablet-android',
+      use: { 
+        ...devices['Galaxy Tab S4'],
+        viewport: { width: 1024, height: 768 },
+      },
+    },
+
+    // Mobile - iOS
+    {
+      name: 'mobile-iphone-12',
       use: { ...devices['iPhone 12'] },
+    },
+    {
+      name: 'mobile-iphone-se',
+      use: { ...devices['iPhone SE'] },
+    },
+    {
+      name: 'mobile-iphone-14-pro',
+      use: { ...devices['iPhone 14 Pro Max'] },
+    },
+
+    // Mobile - Android
+    {
+      name: 'mobile-pixel-5',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'mobile-galaxy-s9',
+      use: { ...devices['Galaxy S9+'] },
+    },
+
+    // Small mobile devices
+    {
+      name: 'mobile-small',
+      use: {
+        viewport: { width: 375, height: 667 },
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15',
+        isMobile: true,
+        hasTouch: true,
+      },
     },
   ],
 
