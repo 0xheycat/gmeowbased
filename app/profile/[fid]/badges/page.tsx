@@ -128,7 +128,7 @@ export default function UserBadgesPage() {
             {/* User Info */}
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-white mb-1">
-                {user?.displayName || `User ${fid}`}'s Badges
+                {user?.displayName || `User ${fid}`}&apos;s Badges
               </h1>
               <p className="text-sm text-white/60">
                 @{user?.username || `fid-${fid}`} • FID {fid}
