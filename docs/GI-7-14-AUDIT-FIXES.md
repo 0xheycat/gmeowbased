@@ -319,25 +319,25 @@ User shares → /frame/quest/123?chain=base
 
 **Test Badge Frame:**
 ```bash
-curl -I https://staging.gmeowbased.com/frame/badge/123
+curl -I https://gmeowhq.art/frame/badge/123
 # Expected: 200 OK, HTML response with fc:frame meta
 ```
 
 **Test Quest Frame with Chain:**
 ```bash
-curl https://staging.gmeowbased.com/frame/quest/5?chain=base | grep "fc:miniapp:frame:button"
+curl https://gmeowhq.art/frame/quest/5?chain=base | grep "fc:miniapp:frame:button"
 # Expected: Max 4 button meta tags
 ```
 
 **Test Invalid FID:**
 ```bash
-curl -I https://staging.gmeowbased.com/frame/badge/99999999999
+curl -I https://gmeowhq.art/frame/badge/99999999999
 # Expected: 400 Bad Request, "Invalid FID parameter"
 ```
 
 **Test Invalid Chain:**
 ```bash
-curl -I https://staging.gmeowbased.com/frame/leaderboard?chain=ethereum
+curl -I https://gmeowhq.art/frame/leaderboard?chain=ethereum
 # Expected: 400 Bad Request, "Invalid chain parameter. Must be one of: base, op, celo, unichain, ink"
 ```
 
@@ -539,7 +539,7 @@ All changes are backward compatible:
 Run before production deployment:
 ```bash
 # Test sustained load
-ab -n 10000 -c 100 https://staging.gmeowbased.com/frame/quest/1
+ab -n 10000 -c 100 https://gmeowhq.art/frame/quest/1
 
 # Expected results:
 # - Mean response time: <200ms
@@ -631,7 +631,7 @@ ORDER BY hour DESC, failures DESC;
 
 **Test 1: Valid Frame Generation**
 ```bash
-curl https://staging.gmeowbased.com/frame/quest/5
+curl https://gmeowhq.art/frame/quest/5
 # MUST contain: <meta property="fc:miniapp:frame:button:1" ...
 # MUST NOT contain: <meta property="fc:frame:button:1" ...
 # MUST have: ≤4 button meta tags
@@ -639,7 +639,7 @@ curl https://staging.gmeowbased.com/frame/quest/5
 
 **Test 2: Invalid Input Rejection**
 ```bash
-curl -I https://staging.gmeowbased.com/frame/badge/abc
+curl -I https://gmeowhq.art/frame/badge/abc
 # MUST return: 400 Bad Request
 # MUST include: "Invalid FID parameter"
 ```
@@ -653,7 +653,7 @@ curl -I https://staging.gmeowbased.com/frame/badge/abc
 
 **Test 4: Chain Validation**
 ```bash
-curl -I "https://staging.gmeowbased.com/frame/quest/1?chain=solana"
+curl -I "https://gmeowhq.art/frame/quest/1?chain=solana"
 # MUST return: 400 Bad Request
 # MUST include: "Invalid chain parameter. Must be one of: base, op, celo, unichain, ink"
 ```
