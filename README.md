@@ -779,7 +779,7 @@ pnpm run dev:tunnel
 ## Project Structure
 
 ```
-Gmeow50_/
+Gmeowbased/
 ├── app/                          # Next.js App Router
 │   ├── page.tsx                  # Homepage (Command Deck)
 │   ├── layout.tsx                # Root layout + providers
