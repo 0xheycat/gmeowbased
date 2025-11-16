@@ -49,6 +49,24 @@ export async function GET(
     frameUrl.searchParams.set('debug', debugParam)
   }
   
-  // Redirect to API frame handler
-  return NextResponse.redirect(frameUrl.toString(), 302)
+  // Fetch frame HTML from API handler (crawlers don't follow redirects)
+  const frameResponse = await fetch(frameUrl.toString(), {
+    headers: {
+      'User-Agent': req.headers.get('User-Agent') || 'Farcaster-Crawler/1.0',
+    },
+  })
+  
+  if (!frameResponse.ok) {
+    return new NextResponse('Frame generation failed', { status: 500 })
+  }
+  
+  const frameHtml = await frameResponse.text()
+  
+  return new NextResponse(frameHtml, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+    },
+  })
 }
