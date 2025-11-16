@@ -52,17 +52,17 @@ const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || process.env.NEXT_PUBLIC_NEY
 
 const FRAME_VERSION = '1.2'
 
-const MINIAPP_FRAME_PREFIX = 'fc:miniapp:frame'
-const MINIAPP_BUTTON_PREFIX = `${MINIAPP_FRAME_PREFIX}:button`
+// Standard Farcaster Frame meta tag prefix (used even with vNext)
+const FRAME_PREFIX = 'fc:frame'
 
-function miniappFrameKey(...parts: Array<string | number>): string {
-  if (parts.length === 0) return MINIAPP_FRAME_PREFIX
-  return `${MINIAPP_FRAME_PREFIX}:${parts.join(':')}`
+function frameKey(...parts: Array<string | number>): string {
+  if (parts.length === 0) return FRAME_PREFIX
+  return `${FRAME_PREFIX}:${parts.join(':')}`
 }
 
-function miniappButtonKey(index: number, ...parts: Array<string | number>): string {
+function frameButtonKey(index: number, ...parts: Array<string | number>): string {
   const suffix = parts.length ? `:${parts.join(':')}` : ''
-  return `${MINIAPP_BUTTON_PREFIX}:${index}${suffix}`
+  return `${FRAME_PREFIX}:button:${index}${suffix}`
 }
 
 const DEFAULT_HTML_HEADERS: Record<string, string> = {
@@ -375,37 +375,37 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const href = hrefUrl.toString()
 
   const fcMeta: Record<string, string> = {
-    [miniappFrameKey('entity')]: 'leaderboard',
-    [miniappFrameKey('chain')]: isGlobal ? 'all' : chainKey,
-    [miniappFrameKey('chain_name')]: chainDisplay,
-    [miniappFrameKey('leaderboard', 'mode')]: isGlobal ? 'global' : 'chain',
-    [miniappFrameKey('leaderboard', 'total')]: String(totalPilots),
-    [miniappFrameKey('leaderboard', 'updated_at')]: updatedIso,
+    [frameKey('entity')]: 'leaderboard',
+    [frameKey('chain')]: isGlobal ? 'all' : chainKey,
+    [frameKey('chain_name')]: chainDisplay,
+    [frameKey('leaderboard', 'mode')]: isGlobal ? 'global' : 'chain',
+    [frameKey('leaderboard', 'total')]: String(totalPilots),
+    [frameKey('leaderboard', 'updated_at')]: updatedIso,
   }
-  if (chainIcon) fcMeta[miniappFrameKey('chain_icon')] = chainIcon
-  if (seasonLabel) fcMeta[miniappFrameKey('leaderboard', 'season')] = seasonLabel
-  if (rawSeason) fcMeta[miniappFrameKey('leaderboard', 'season_key')] = rawSeason
-  if (seasonSupportedFlag === false) fcMeta[miniappFrameKey('leaderboard', 'season_supported')] = 'false'
-  if (leaderboardPayload?.profileSupported === false) fcMeta[miniappFrameKey('leaderboard', 'profile_supported')] = 'false'
+  if (chainIcon) fcMeta[frameKey('chain_icon')] = chainIcon
+  if (seasonLabel) fcMeta[frameKey('leaderboard', 'season')] = seasonLabel
+  if (rawSeason) fcMeta[frameKey('leaderboard', 'season_key')] = rawSeason
+  if (seasonSupportedFlag === false) fcMeta[frameKey('leaderboard', 'season_supported')] = 'false'
+  if (leaderboardPayload?.profileSupported === false) fcMeta[frameKey('leaderboard', 'profile_supported')] = 'false'
   if (topEntry) {
-    fcMeta[miniappFrameKey('leaderboard', 'leader_address')] = topEntry.address
-    if (topEntry.farcasterFid > 0) fcMeta[miniappFrameKey('leaderboard', 'leader_fid')] = String(topEntry.farcasterFid)
+    fcMeta[frameKey('leaderboard', 'leader_address')] = topEntry.address
+    if (topEntry.farcasterFid > 0) fcMeta[frameKey('leaderboard', 'leader_fid')] = String(topEntry.farcasterFid)
   }
   if (referralCode) {
-    fcMeta[miniappFrameKey('leaderboard', 'referral_code')] = referralCode
+    fcMeta[frameKey('leaderboard', 'referral_code')] = referralCode
   }
   displayEntries.forEach((entry, idx) => {
     const slot = idx + 1
     const displayName = formatPilotName(entry)
     const slotKey = String(slot)
-    fcMeta[miniappFrameKey('leaderboard', slotKey, 'rank')] = String(entry.rank)
-    fcMeta[miniappFrameKey('leaderboard', slotKey, 'name')] = displayName
-    fcMeta[miniappFrameKey('leaderboard', slotKey, 'points')] = String(entry.points)
-    if (entry.completed > 0) fcMeta[miniappFrameKey('leaderboard', slotKey, 'completed')] = String(entry.completed)
-    fcMeta[miniappFrameKey('leaderboard', slotKey, 'chain')] = entry.chain
-    if (entry.farcasterFid > 0) fcMeta[miniappFrameKey('leaderboard', slotKey, 'fid')] = String(entry.farcasterFid)
-    fcMeta[miniappFrameKey('leaderboard', slotKey, 'address')] = entry.address
-    if (entry.pfpUrl) fcMeta[miniappFrameKey('leaderboard', slotKey, 'pfp')] = entry.pfpUrl
+    fcMeta[frameKey('leaderboard', slotKey, 'rank')] = String(entry.rank)
+    fcMeta[frameKey('leaderboard', slotKey, 'name')] = displayName
+    fcMeta[frameKey('leaderboard', slotKey, 'points')] = String(entry.points)
+    if (entry.completed > 0) fcMeta[frameKey('leaderboard', slotKey, 'completed')] = String(entry.completed)
+    fcMeta[frameKey('leaderboard', slotKey, 'chain')] = entry.chain
+    if (entry.farcasterFid > 0) fcMeta[frameKey('leaderboard', slotKey, 'fid')] = String(entry.farcasterFid)
+    fcMeta[frameKey('leaderboard', slotKey, 'address')] = entry.address
+    if (entry.pfpUrl) fcMeta[frameKey('leaderboard', slotKey, 'pfp')] = entry.pfpUrl
   })
 
   const jsonPayload = {
@@ -1150,10 +1150,10 @@ function buildFrameHtml(params: {
       const label = escapeHtml(btn.label)
       const rawTarget = btn.target ?? ''
       const target = rawTarget ? escapeHtml(rawTarget) : ''
-      const actionMeta = action === 'link' ? '' : `<meta property="${miniappButtonKey(index, 'action')}" content="${action}" />`
-      const targetMeta = target ? `\n<meta property="${miniappButtonKey(index, 'target')}" content="${target}" />` : ''
+      const actionMeta = action === 'link' ? '' : `<meta property="${frameButtonKey(index, 'action')}" content="${action}" />`
+      const targetMeta = target ? `\n<meta property="${frameButtonKey(index, 'target')}" content="${target}" />` : ''
       const joiner = actionMeta ? `\n${actionMeta}` : ''
-      return `<meta property="${miniappButtonKey(index)}" content="${label}" />${joiner}${targetMeta}`
+      return `<meta property="${frameButtonKey(index)}" content="${label}" />${joiner}${targetMeta}`
     })
     .join('\n')
   const primaryLink = linkButtons[0]
@@ -1161,10 +1161,10 @@ function buildFrameHtml(params: {
     ? `<a class="btn" href="${escapeHtml(primaryLink.target)}">${escapeHtml(primaryLink.label)}</a>`
     : ''
   const metaDefaults: Record<string, string> = {
-    [miniappFrameKey('version')]: String(frameVersion ?? '1.2'),
+    [frameKey('version')]: String(frameVersion ?? '1.2'),
   }
-  if (frameOrigin) metaDefaults[miniappFrameKey('origin')] = frameOrigin
-  if (chainKey) metaDefaults[miniappFrameKey('chain_key')] = chainKey
+  if (frameOrigin) metaDefaults[frameKey('origin')] = frameOrigin
+  if (chainKey) metaDefaults[frameKey('chain_key')] = chainKey
   const mergedMeta: Record<string, string> = {
     ...metaDefaults,
     ...(fcMeta ?? {}),
@@ -2049,17 +2049,17 @@ export async function GET(req: Request) {
         ? questMeta.cta.trim()
         : `Start Quest on ${questChainName}`
       const fcMeta: Record<string, string> = {
-        [miniappFrameKey('entity')]: 'quest',
-        [miniappFrameKey('questId')]: String(questIdNum),
-        [miniappFrameKey('chain')]: chainKey,
-        [miniappFrameKey('requirement')]: qtypeKey,
-        [miniappFrameKey('chain_name')]: questChainName,
-        [miniappFrameKey('brand')]: 'GMEOWBASED ADVENTURE',
+        [frameKey('entity')]: 'quest',
+        [frameKey('questId')]: String(questIdNum),
+        [frameKey('chain')]: chainKey,
+        [frameKey('requirement')]: qtypeKey,
+        [frameKey('chain_name')]: questChainName,
+        [frameKey('brand')]: 'GMEOWBASED ADVENTURE',
       }
-      if (rewardSummary) fcMeta[miniappFrameKey('quest_reward')] = rewardSummary
-      if (spotsLeft !== null) fcMeta[miniappFrameKey('quest_spots_left')] = String(spotsLeft)
-      if (expiresText) fcMeta[miniappFrameKey('quest_expires')] = expiresText
-      if (questChainIcon) fcMeta[miniappFrameKey('chain_icon')] = questChainIcon
+      if (rewardSummary) fcMeta[frameKey('quest_reward')] = rewardSummary
+      if (spotsLeft !== null) fcMeta[frameKey('quest_spots_left')] = String(spotsLeft)
+      if (expiresText) fcMeta[frameKey('quest_expires')] = expiresText
+      if (questChainIcon) fcMeta[frameKey('chain_icon')] = questChainIcon
       const out = { ok: true, type: 'quest', quest, title, description, chain: chainKey, chainName: questChainName, chainIcon: questChainIcon, traces }
       if (asJson) return respondJson(out)
 
@@ -2131,7 +2131,7 @@ export async function GET(req: Request) {
         return respondJson({ ok: true, type: 'verify', fid, cast, questId, traces })
       }
       const frameBtnUrl = `${origin}/api/quests/verify?debug=1&fid=${fid}${cast ? `&cast=${encodeURIComponent(String(cast))}` : ''}`
-      const fcMeta = { [miniappFrameKey('entity')]: 'verify' }
+      const fcMeta = { [frameKey('entity')]: 'verify' }
       const html = buildFrameHtml({
         title,
         description,
@@ -2190,8 +2190,8 @@ export async function GET(req: Request) {
         url: guildUrl,
         buttons: guildButtons,
         fcMeta: {
-          [miniappFrameKey('entity')]: 'guild',
-          [miniappFrameKey('guildId')]: String(guildId),
+          [frameKey('entity')]: 'guild',
+          [frameKey('guildId')]: String(guildId),
         },
         debug: debugPayload,
         frameOrigin: origin,
@@ -2212,9 +2212,9 @@ export async function GET(req: Request) {
       descriptionPieces.push('Each completed quest powers up the guild streaks.')
       if (user) descriptionPieces.push(`Tracked to ${shortenHex(String(user))}`)
       const description = descriptionPieces.join(' • ')
-      const fcMeta: Record<string, string> = { [miniappFrameKey('entity')]: 'referral' }
-      if (code) fcMeta[miniappFrameKey('referral_code')] = String(code)
-      if (user) fcMeta[miniappFrameKey('referral_owner')] = String(user)
+      const fcMeta: Record<string, string> = { [frameKey('entity')]: 'referral' }
+      if (code) fcMeta[frameKey('referral_code')] = String(code)
+      if (user) fcMeta[frameKey('referral_owner')] = String(user)
       if (asJson) return respondJson({ ok: true, type: 'referral', user, code, shareUrl, description, traces })
       const shareUrlOverride = toAbsoluteUrl(toOptionalString(params.shareUrl), origin) ?? shareUrl
       const copyUrlParam = toAbsoluteUrl(toOptionalString(params.copyUrl), origin)
@@ -2382,20 +2382,20 @@ export async function GET(req: Request) {
       const hubUrl = `${origin}/#onchain-hub`
       const explorer = explorerRaw.replace(/\/$/, '')
       const fcMeta: Record<string, string> = {
-        [miniappFrameKey('entity')]: 'onchainstats',
-        [miniappFrameKey('chain')]: chainKey,
-        [miniappFrameKey('chain_name')]: chainDisplay,
+        [frameKey('entity')]: 'onchainstats',
+        [frameKey('chain')]: chainKey,
+        [frameKey('chain_name')]: chainDisplay,
       }
-      if (chainIcon) fcMeta[miniappFrameKey('chain_icon')] = chainIcon
-      if (userParam) fcMeta[miniappFrameKey('onchain', 'user')] = userParam
-      if (resolvedProfile?.username) fcMeta[miniappFrameKey('onchain', 'username')] = `@${resolvedProfile.username}`
-      if (resolvedProfile?.displayName) fcMeta[miniappFrameKey('onchain', 'display_name')] = resolvedProfile.displayName
-      if (resolvedProfile?.pfpUrl) fcMeta[miniappFrameKey('onchain', 'pfp')] = resolvedProfile.pfpUrl
-      if (resolvedFid) fcMeta[miniappFrameKey('onchain', 'fid')] = String(resolvedFid)
-      if (isAddress && userParam) fcMeta[miniappFrameKey('onchain', 'user_address')] = userParam
+      if (chainIcon) fcMeta[frameKey('chain_icon')] = chainIcon
+      if (userParam) fcMeta[frameKey('onchain', 'user')] = userParam
+      if (resolvedProfile?.username) fcMeta[frameKey('onchain', 'username')] = `@${resolvedProfile.username}`
+      if (resolvedProfile?.displayName) fcMeta[frameKey('onchain', 'display_name')] = resolvedProfile.displayName
+      if (resolvedProfile?.pfpUrl) fcMeta[frameKey('onchain', 'pfp')] = resolvedProfile.pfpUrl
+      if (resolvedFid) fcMeta[frameKey('onchain', 'fid')] = String(resolvedFid)
+      if (isAddress && userParam) fcMeta[frameKey('onchain', 'user_address')] = userParam
       for (const [key, value] of Object.entries(metrics)) {
         if (!value || value === '—') continue
-        fcMeta[miniappFrameKey('onchain', key)] = value
+        fcMeta[frameKey('onchain', key)] = value
       }
       // Generate dynamic OG image URL with stats
       const imageParams = new URLSearchParams()
@@ -2553,34 +2553,34 @@ export async function GET(req: Request) {
       const description = descriptionPieces.filter(Boolean).join(' • ')
       const urlOpen = `${origin}/points${user ? `?user=${encodeURIComponent(String(user))}` : ''}`
       const fcMeta: Record<string, string> = {
-        [miniappFrameKey('entity')]: 'points',
-        [miniappFrameKey('chain')]: String(chainKey),
-        [miniappFrameKey('chain_name')]: chainDisplay,
+        [frameKey('entity')]: 'points',
+        [frameKey('chain')]: String(chainKey),
+        [frameKey('chain_name')]: chainDisplay,
       }
-      if (chainIcon) fcMeta[miniappFrameKey('chain_icon')] = chainIcon
-      if (user) fcMeta[miniappFrameKey('points_user')] = String(user)
+      if (chainIcon) fcMeta[frameKey('chain_icon')] = chainIcon
+      if (user) fcMeta[frameKey('points_user')] = String(user)
       if (stats) {
-        fcMeta[miniappFrameKey('points_available')] = formatBigInt(stats.available)
-        fcMeta[miniappFrameKey('points_locked')] = formatBigInt(stats.locked)
-        fcMeta[miniappFrameKey('points_total')] = formatBigInt(stats.total)
+        fcMeta[frameKey('points_available')] = formatBigInt(stats.available)
+        fcMeta[frameKey('points_locked')] = formatBigInt(stats.locked)
+        fcMeta[frameKey('points_total')] = formatBigInt(stats.total)
       }
       if (levelValue != null && levelValue > 0) {
-        fcMeta[miniappFrameKey('points_level')] = String(Math.round(levelValue))
+        fcMeta[frameKey('points_level')] = String(Math.round(levelValue))
       }
       if (xpCurrentValue != null) {
-        fcMeta[miniappFrameKey('points_xp_current')] = String(Math.round(xpCurrentValue))
+        fcMeta[frameKey('points_xp_current')] = String(Math.round(xpCurrentValue))
       }
       if (xpMaxValue != null) {
-        fcMeta[miniappFrameKey('points_xp_max')] = String(Math.round(xpMaxValue))
+        fcMeta[frameKey('points_xp_max')] = String(Math.round(xpMaxValue))
       }
       if (xpToNextValue != null) {
-        fcMeta[miniappFrameKey('points_xp_to_next')] = String(Math.round(xpToNextValue))
+        fcMeta[frameKey('points_xp_to_next')] = String(Math.round(xpToNextValue))
       }
-      if (tierName) fcMeta[miniappFrameKey('points_tier')] = tierName
+      if (tierName) fcMeta[frameKey('points_tier')] = tierName
       if (tierPercentValue != null) {
-        fcMeta[miniappFrameKey('points_tier_percent')] = String(Math.round(tierPercentValue))
+        fcMeta[frameKey('points_tier_percent')] = String(Math.round(tierPercentValue))
       }
-      if (tierTagline) fcMeta[miniappFrameKey('points_tier_tagline')] = tierTagline
+      if (tierTagline) fcMeta[frameKey('points_tier_tagline')] = tierTagline
       const jsonPayload = {
         ok: true,
         type: 'points' as const,
@@ -2630,7 +2630,7 @@ export async function GET(req: Request) {
         image: defaultFrameImage,
         url: href,
         buttons: [{ label: 'Open GM Ritual', target: href }],
-        fcMeta: { [miniappFrameKey('entity')]: 'gm' },
+        fcMeta: { [frameKey('entity')]: 'gm' },
         debug: debugPayload,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
@@ -2650,7 +2650,7 @@ export async function GET(req: Request) {
       image: defaultFrameImage,
       url: href,
       buttons: [{ label: 'Open GMEOW', target: href }],
-      fcMeta: { [miniappFrameKey('entity')]: 'gmeow' },
+      fcMeta: { [frameKey('entity')]: 'gmeow' },
       debug: debugPayload,
       frameOrigin: origin,
       frameVersion: FRAME_VERSION,
@@ -2671,7 +2671,7 @@ export async function GET(req: Request) {
       image: `${fallbackOrigin}/og-image.png`,
       url: fallbackOrigin,
       buttons: [{ label: 'Open GMEOW', target: fallbackOrigin }],
-      fcMeta: { [miniappFrameKey('entity')]: 'error' },
+      fcMeta: { [frameKey('entity')]: 'error' },
       debug: debugMode ? traces : undefined,
       frameOrigin: fallbackOrigin,
       frameVersion: FRAME_VERSION,
