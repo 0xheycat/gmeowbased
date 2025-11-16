@@ -21,8 +21,10 @@ export type AnalyticsEvent =
   | 'asset_selected'
   | 'escrow_deposited'
   | 'view_toggled'
-  // Phase 5.5: Viral share tracking
+  // Phase 5.5-5.7: Viral share tracking
   | 'badge_shared'
+  | 'cast_published'
+  | 'cast_publish_error'
 
 export type AnalyticsProperties = {
   // Wizard context
@@ -52,11 +54,14 @@ export type AnalyticsProperties = {
   errorMessage?: string
   validationErrors?: number | string // Allow both for flexibility
   
-  // Phase 5.5: Viral share context
+  // Phase 5.5-5.7: Viral share context
   fid?: string
   tier?: string
   badgeName?: string
   shareMethod?: 'warpcast_deeplink' | 'direct_cast' | 'copy_link'
+  castHash?: string
+  castUrl?: string
+  error?: string
   timestamp?: string
   
   // Performance context

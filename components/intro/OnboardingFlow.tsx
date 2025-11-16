@@ -1095,13 +1095,15 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           </div>
         )}
 
-        {/* Phase 5.5: Share Button - Show after rewards claimed */}
+        {/* Phase 5.5-5.7: Share Button - Show after rewards claimed */}
         {isFinalStage && hasOnboarded && assignedBadge && (
           <div className="mt-4">
             <ShareButton
               fid={farcasterProfile?.fid?.toString() || '0'}
+              badgeId={assignedBadge.badge_id}
               tier={assignedBadge.tier}
               badgeName={assignedBadge.metadata?.name}
+              variant="cast-api"
             />
           </div>
         )}

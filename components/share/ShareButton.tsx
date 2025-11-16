@@ -1,13 +1,16 @@
 /**
- * Phase 5.5: Share Button Component
+ * Phase 5.5-5.7: Share Button Component
  * 
- * Warpcast deep link integration for viral badge sharing
+ * Dual sharing methods:
+ * 1. Warpcast deep link (Phase 5.5) - manual compose with pre-filled text
+ * 2. Cast API publish (Phase 5.7) - automated posting with OG image embed
+ * 
  * Positioned below Stage 5 badge reveal with glass morphism styling
  */
 
 'use client'
 
-import { ShareFat, CheckCircle } from '@phosphor-icons/react'
+import { ShareFat, CheckCircle, Sparkle } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { trackEvent } from '@/lib/analytics'
 
@@ -16,8 +19,10 @@ type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
 interface ShareButtonProps {
   fid: string
   tier: TierType
+  badgeId: string
   badgeName?: string
   className?: string
+  variant?: 'deeplink' | 'cast-api' // Default: 'deeplink'
 }
 
 const TIER_CONFIG = {
@@ -58,8 +63,18 @@ const TIER_CONFIG = {
   }
 }
 
-export default function ShareButton({ fid, tier, badgeName, className = '' }: ShareButtonProps) {
+export default function ShareButton({ 
+  fid, 
+  tier, 
+  badgeId,
+  badgeName, 
+  className = '',
+  variant = 'deeplink' 
+}: ShareButtonProps) {
   const [shared, setShared] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [castUrl, setCastUrl] = useState<string | null>(null)
   const tierConfig = TIER_CONFIG[tier]
 
   const generateShareText = () => {
@@ -70,7 +85,7 @@ export default function ShareButton({ fid, tier, badgeName, className = '' }: Sh
     return `${emoji} Just unlocked ${badge} on @gmeowbased! 🎯\n\nFID: ${fid} | Tier: ${tierLabel}\n\nJoin the adventure: gmeowhq.art`
   }
 
-  const handleShare = () => {
+  const handleDeeplinkShare = () => {
     const text = generateShareText()
     const encodedText = encodeURIComponent(text)
     
@@ -94,20 +109,92 @@ export default function ShareButton({ fid, tier, badgeName, className = '' }: Sh
     setTimeout(() => setShared(false), 3000)
   }
 
+  const handleCastAPIShare = async () => {
+    setPublishing(true)
+    setError(null)
+    setCastUrl(null)
+
+    try {
+      const response = await fetch('/api/cast/badge-share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fid,
+          badgeId,
+          tier,
+          badgeName,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Failed to publish cast')
+      }
+
+      // Track cast published event
+      trackEvent('cast_published', {
+        fid,
+        tier,
+        badgeName,
+        castHash: data.cast?.hash,
+        castUrl: data.cast?.url,
+        timestamp: new Date().toISOString(),
+      })
+
+      // Show success state with cast URL
+      setCastUrl(data.cast?.url || null)
+      setShared(true)
+      setTimeout(() => {
+        setShared(false)
+        setCastUrl(null)
+      }, 5000)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to publish cast'
+      setError(errorMessage)
+      
+      // Track error
+      trackEvent('cast_publish_error', {
+        fid,
+        tier,
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      })
+      
+      // Clear error after 5 seconds
+      setTimeout(() => setError(null), 5000)
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  const handleShare = () => {
+    if (variant === 'cast-api') {
+      handleCastAPIShare()
+    } else {
+      handleDeeplinkShare()
+    }
+  }
+
   return (
     <button
       onClick={handleShare}
-      disabled={shared}
+      disabled={shared || publishing}
       className={`
         group relative w-full overflow-hidden
         rounded-xl
         transition-all duration-300
         motion-reduce:transition-none
         ${shared ? 'scale-95' : 'hover:scale-[1.02] active:scale-98'}
+        ${publishing ? 'opacity-75 cursor-wait' : ''}
         motion-reduce:transform-none
         ${className}
       `}
-      aria-label={`Share your ${tierConfig.label} badge on Warpcast`}
+      aria-label={
+        variant === 'cast-api'
+          ? `Post your ${tierConfig.label} badge to Warpcast`
+          : `Share your ${tierConfig.label} badge on Warpcast`
+      }
     >
       {/* Glass morphism background */}
       <div className={`
@@ -136,7 +223,49 @@ export default function ShareButton({ fid, tier, badgeName, className = '' }: Sh
         role="status"
         aria-live="polite"
       >
-        {shared ? (
+        {error ? (
+          <>
+            <span 
+              className="font-bold text-sm tracking-wide text-red-400"
+            >
+              {error}
+            </span>
+          </>
+        ) : publishing ? (
+          <>
+            <Sparkle 
+              size={24} 
+              weight="fill"
+              style={{ color: tierConfig.color }}
+              className="animate-spin"
+            />
+            <span 
+              className="font-bold text-lg tracking-wide"
+              style={{ color: tierConfig.color }}
+            >
+              Publishing...
+            </span>
+          </>
+        ) : shared && castUrl ? (
+          <>
+            <CheckCircle 
+              size={24} 
+              weight="fill" 
+              style={{ color: tierConfig.color }}
+              className="animate-in zoom-in duration-200"
+            />
+            <a
+              href={castUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-lg tracking-wide underline"
+              style={{ color: tierConfig.color }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              View Cast
+            </a>
+          </>
+        ) : shared ? (
           <>
             <CheckCircle 
               size={24} 
@@ -148,7 +277,7 @@ export default function ShareButton({ fid, tier, badgeName, className = '' }: Sh
               className="font-bold text-lg tracking-wide"
               style={{ color: tierConfig.color }}
             >
-              Shared on Warpcast!
+              {variant === 'cast-api' ? 'Posted to Warpcast!' : 'Shared on Warpcast!'}
             </span>
           </>
         ) : (
@@ -168,7 +297,7 @@ export default function ShareButton({ fid, tier, badgeName, className = '' }: Sh
               className="font-bold text-lg tracking-wide"
               style={{ color: tierConfig.color }}
             >
-              Share on Warpcast
+              {variant === 'cast-api' ? 'Post to Warpcast' : 'Share on Warpcast'}
             </span>
           </>
         )}

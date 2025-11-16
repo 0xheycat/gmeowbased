@@ -1,6 +1,8 @@
-# 🚦 GMEOW Quality Gates (GI-7 → GI-13)
+# 🚦 GMEOW Quality Gates (GI-7 → GI-14)
 
 **Mandatory Quality Checkpoints** — Always pause and request approval after every audit or drift report.
+
+**New in v2.1**: GI-14 (Safe-Delete Verification) for preventing accidental file removal
 
 ---
 
@@ -422,6 +424,100 @@ Avoid unnecessary audits unless user explicitly requests
 
 ---
 
+## 🚨 GI-14: Safe-Delete Verification (CRITICAL)
+
+### When to Run
+- ✅ Before deleting ANY file or component
+- ✅ Files include: `*.ts`, `*.tsx`, `*.md`, `/lib/*`, `/app/api/*`, `/components/*`, etc.
+
+### Goal
+Prevent accidental deletion of files still referenced, imported, dynamically loaded, or required by:
+- Frames (vNext spec)
+- API routes
+- Share logic
+- Onboarding flow
+- Badge system
+- Neynar integrations
+
+### 10-Step Mandatory Workflow
+
+#### Step 1: Create Safety Branch
+```bash
+git checkout -b safe/remove-<filename>-<sha>
+```
+
+#### Step 2: Full Usage Scan
+```bash
+rg "<FileNameWithoutExt>" -n
+rg "import\(" -n | grep "<FileName>"
+rg "require\(" -n | grep "<FileName>"
+```
+
+**Agent MUST Output**: All hits + clear summary ("0 active references" or "STOP: X references found")
+
+#### Step 3: Dependency Graph Check
+```bash
+madge --extensions ts,tsx --warning src
+```
+**If file appears as node** → **STOP**
+
+#### Step 4-6: Build Validation
+```bash
+pnpm tsc --noEmit
+pnpm lint
+pnpm build
+```
+**If any fails** → **STOP**
+
+#### Step 7: Runtime Evaluation
+```bash
+pnpm dev
+```
+**Ask user to verify**: onboarding, badges, share, frames, profile pages
+
+#### Step 8: CI/Docs/Git Audit
+```bash
+rg "<FileName>" -n .github/ docs/
+git log -S "<FileName>"
+```
+
+#### Step 9: 48h Soft Delete
+Replace with deprecation stub:
+```tsx
+console.warn('[DEPRECATED] <ComponentName> is no longer in use.')
+export default function Deprecated() { return null }
+```
+Deploy to staging, monitor for 48h
+
+#### Step 10: Hard Delete (After 48h)
+```bash
+git rm <file>
+```
+Run related gates: GI-8, GI-11, GI-12, GI-13 (ask first)
+
+### 🛑 AUTO-BLOCK Rules
+
+**Deletion NOT allowed if ANY true**:
+1. ❌ File imported anywhere
+2. ❌ In dependency graph
+3. ❌ In build output
+4. ❌ Referenced by share/frame/onboarding/badges
+5. ❌ In `/lib` affecting Neynar
+6. ❌ In MCP specs or `/docs`
+7. ❌ Affects `/app/api` or frame-vNext
+
+**Agent MUST STOP** and report blocking references
+
+### Approval Required
+⚠️ **REQUIRED** after Step 2, Step 9, Step 10
+
+### Purpose
+100% safe file deletions, zero breakage, maintain build stability
+
+**📖 Full Details**: `/memories/gi-14-safe-delete-verification.md`
+
+---
+
 ## 📋 Implementation Workflow Example
 
 ### Starting Phase 5
@@ -461,7 +557,17 @@ Avoid unnecessary audits unless user explicitly requests
    → If YES: Run accessibility, mobile, breakpoint checks
    → If NO: Skip and continue
    
-6. GI-10: Release Readiness
+6. GI-14: Safe-Delete Verification (Before Deletion)
+   Agent: "Starting safe-delete verification for BadgeShareCard.tsx..."
+   → Create safety branch
+   → Run usage scan (rg, madge, tsc)
+   → Check for active references
+   → If safe: 48h soft delete (deprecation stub)
+   → Monitor for 48h
+   → Hard delete after verification
+   → Run related GI gates (GI-8, GI-11, GI-12, GI-13)
+   
+7. GI-10: Release Readiness
    Agent: "Phase 5 complete, running 11-gate release readiness..."
    → Validate all 11 gates
    → Generate checklist report
@@ -481,6 +587,7 @@ Avoid unnecessary audits unless user explicitly requests
 | **GI-11** | Frame code | URL safety check | None |
 | **GI-12** | Frame deploy | Button validation + MCP sync | If drift |
 | **GI-13** | UI changes | Ask first, then audit | If yes |
+| **GI-14** | File deletion | 10-step verification | Required |
 
 ---
 
@@ -489,10 +596,12 @@ Avoid unnecessary audits unless user explicitly requests
 1. **Always pause** for user approval at required checkpoints
 2. **Always run MCP sync** before editing frame/API files (GI-12)
 3. **Always ask first** before running UI audits (GI-13)
-4. **Always apply safe patching rules** (check existence, patch not replace)
-5. **Never skip** security gates (rate limiting, sanitization, validation)
-6. **Never edit** old SQL migrations (create new migration instead)
-7. **Never overwrite** files without explicit instruction
+4. **Always run GI-14** before deleting ANY file (10-step verification)
+5. **Always apply safe patching rules** (check existence, patch not replace)
+6. **Never skip** security gates (rate limiting, sanitization, validation)
+7. **Never edit** old SQL migrations (create new migration instead)
+8. **Never overwrite** files without explicit instruction
+9. **Never delete** without completing all GI-14 steps (48h soft delete minimum)
 
 ---
 
