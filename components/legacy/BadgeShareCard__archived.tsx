@@ -1,3 +1,27 @@
+/**
+ * @deprecated ARCHIVED COMPONENT - DO NOT USE
+ * 
+ * This component was created in Phase 3C but never integrated into production.
+ * Archived on 2025-11-16 following GI-14 Deep Component Usage Audit.
+ * 
+ * Audit Results:
+ * - Zero runtime imports detected
+ * - Zero JSX usage detected
+ * - Zero frame/API/Neynar references
+ * - Zero app route usage
+ * - Only historical documentation references from Phase 3C
+ * 
+ * Historical Context:
+ * Built for badge sharing UI, but frame-based sharing was implemented
+ * via API endpoints instead (app/api/frame/badge/*). This React component
+ * was never integrated into any pages or routes.
+ * 
+ * See: docs/GI-14-SAFE-DELETE-BadgeShareCard.md for complete audit report
+ * 
+ * Preserved in legacy/ for historical reference only.
+ * Use app/api/frame/badge/* endpoints for badge frame generation instead.
+ */
+
 'use client'
 
 import { useState } from 'react'
