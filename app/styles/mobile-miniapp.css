@@ -200,6 +200,20 @@ img {
   max-width: 100%;
 }
 
+/* Mobile Navigation - Fixed Bottom */
+.pixel-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(11, 10, 22, 0.95);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+}
+
 /* Optimize for notched devices */
 @supports (padding: max(0px)) {
   .pixel-nav {
