@@ -8,8 +8,8 @@ import {
   getTierGradient,
 } from '@/lib/frame-badge'
 
-export const runtime = 'nodejs'
-export const revalidate = 300
+export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
 const WIDTH = 1200
 const HEIGHT = 628
@@ -22,7 +22,7 @@ const HEIGHT = 628
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const fidParam = searchParams.get('fid')
     const badgeIdParam = searchParams.get('badgeId')
     const stateParam = searchParams.get('state')

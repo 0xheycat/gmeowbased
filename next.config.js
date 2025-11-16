@@ -29,11 +29,11 @@ const nextConfig = {
         ],
       },
       {
-        // Allow embedding from base.dev and gmeowhq.art
+        // Allow embedding as miniapp in any Farcaster client
         source: '/:path*',
         headers: [
           { key: 'X-Frame-Options', value: 'ALLOWALL' },
-          { key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://gmeowhq.art https://*.gmeowhq.art https://*.base.dev https://*.farcaster.xyz https://*.warpcast.com" },
+          { key: 'Content-Security-Policy', value: "frame-ancestors *" },
         ],
       },
     ]
