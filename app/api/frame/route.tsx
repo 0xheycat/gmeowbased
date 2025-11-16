@@ -1024,8 +1024,10 @@ function buildFrameHtml(params: {
   const rawDescription = description || ''
   const desc = escapeHtml(rawDescription)
   const urlEsc = escapeHtml(url || '')
-  // Fallback to gmeow.gif if no image provided
-  const imageEsc = image ? escapeHtml(image) : (frameOrigin ? escapeHtml(`${frameOrigin}/gmeow.gif`) : '')
+  // CRITICAL: Farcaster requires fc:frame:image tag - fallback to gmeow.gif if no image provided
+  // This preserves dynamic OG images but ensures frames always have an image
+  const resolvedImage = image || (frameOrigin ? `${frameOrigin}/splash.png` : '')
+  const imageEsc = resolvedImage ? escapeHtml(resolvedImage) : ''
   const overlayHidden = Boolean(hideOverlay)
   const descriptionSegments = rawDescription
     .split(' • ')
@@ -1869,7 +1871,7 @@ export async function GET(req: Request) {
     const debugMode = toBooleanFlag(params.debug)
     const debugPayload = debugMode ? traces : undefined
     const origin = resolveRequestOrigin(req, url)
-    const defaultFrameImage = `${origin}/gmeow.gif`
+    const defaultFrameImage = `${origin}/og-image.png`
 
     const handler = FRAME_HANDLERS[type]
     if (handler) {
