@@ -119,6 +119,11 @@ async function awardViralBonus(
   
   const supabase = getSupabaseServerClient()
   
+  if (!supabase) {
+    console.error('[Webhook] Database connection failed')
+    return false
+  }
+  
   try {
     // GI-11: Update user points atomically
     const { error: pointsError } = await supabase.rpc('increment_user_xp', {
@@ -134,7 +139,7 @@ async function awardViralBonus(
     
     // GI-13: Track analytics event
     await trackEvent('viral_bonus_awarded', {
-      fid,
+      fid: fid.toString(),
       castHash,
       bonusXp,
       source: 'neynar_webhook',
@@ -163,6 +168,11 @@ async function updateCastMetrics(
   bonusXp: number
 ) {
   const supabase = getSupabaseServerClient()
+  
+  if (!supabase) {
+    console.error('[Webhook] Database connection failed')
+    return null
+  }
   
   try {
     const { data, error } = await supabase
@@ -258,6 +268,15 @@ export async function POST(request: NextRequest) {
     
     // GI-11: Get existing cast record
     const supabase = getSupabaseServerClient()
+    
+    if (!supabase) {
+      console.error('[Webhook] Database connection failed')
+      return NextResponse.json(
+        { error: 'Internal Error', message: 'Database connection failed' },
+        { status: 500 }
+      )
+    }
+    
     const { data: existingCast, error: fetchError } = await supabase
       .from('badge_casts')
       .select('*')
