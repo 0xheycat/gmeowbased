@@ -1,7 +1,7 @@
 // app/frame/leaderboard/route.tsx
 /**
  * Warpcast-safe frame endpoint for leaderboard sharing
- * GI-11 compliant: Uses /frame/* pattern for user-facing URLs
+ * GI-11 compliant: Uses /frame/* pattern for user-facing URL
  */
 
 import { NextResponse } from 'next/server'
