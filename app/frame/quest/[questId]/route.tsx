@@ -12,10 +12,11 @@ export const revalidate = 300
 
 export async function GET(
   req: Request,
-  { params }: { params: { questId: string } }
+  { params }: { params: Promise<{ questId: string }> }
 ) {
   // Validate quest ID from URL path
-  const questId = sanitizeQuestId(params.questId)
+  const { questId: questIdParam } = await params
+  const questId = sanitizeQuestId(questIdParam)
   
   if (questId === null) {
     return new NextResponse('Invalid quest ID', { status: 400 })

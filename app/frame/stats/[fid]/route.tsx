@@ -12,10 +12,11 @@ export const revalidate = 300
 
 export async function GET(
   req: Request,
-  { params }: { params: { fid: string } }
+  { params }: { params: Promise<{ fid: string }> }
 ) {
   // Validate FID from URL path
-  const fid = sanitizeFID(params.fid)
+  const { fid: fidParam } = await params
+  const fid = sanitizeFID(fidParam)
   
   if (!fid) {
     return new NextResponse('Invalid FID', { status: 400 })
