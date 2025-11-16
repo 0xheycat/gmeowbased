@@ -1,14 +1,120 @@
 import { randomUUID } from 'crypto'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { createPublicClient, http, parseAbiItem, type AbiEvent } from 'viem'
 import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gm-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 
 const BADGE_TABLE = process.env.SUPABASE_BADGE_TEMPLATE_TABLE || 'badge_templates'
+const USER_BADGES_TABLE = 'user_badges'
 const BADGE_BUCKET = process.env.SUPABASE_BADGE_BUCKET || 'badge-art'
 const TEMPLATE_CACHE_TTL_MS = Number(process.env.BADGE_TEMPLATE_CACHE_TTL_MS ?? 15_000)
 const MINT_CACHE_TTL_MS = Number(process.env.BADGE_MINT_CACHE_TTL_MS ?? 30_000)
 const BADGE_MINT_LOOKBACK_BLOCKS = BigInt(process.env.BADGE_MINT_LOOKBACK_BLOCKS ?? 400_000)
+
+// ========================================
+// SERVER-SIDE CACHE
+// ========================================
+
+type CacheEntry<T> = {
+  data: T
+  timestamp: number
+}
+
+class ServerCache<T> {
+  private cache = new Map<string, CacheEntry<T>>()
+  private ttl: number
+
+  constructor(ttlMs: number) {
+    this.ttl = ttlMs
+  }
+
+  get(key: string): T | null {
+    const entry = this.cache.get(key)
+    if (!entry) return null
+
+    const age = Date.now() - entry.timestamp
+    if (age > this.ttl) {
+      this.cache.delete(key)
+      return null
+    }
+
+    return entry.data
+  }
+
+  set(key: string, data: T): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+    })
+  }
+
+  clear(key?: string): void {
+    if (key) {
+      this.cache.delete(key)
+    } else {
+      this.cache.clear()
+    }
+  }
+
+  size(): number {
+    return this.cache.size
+  }
+}
+
+// Cache instances
+const badgeRegistryCache = new ServerCache<BadgeRegistry>(5 * 60 * 1000) // 5 minutes
+const userBadgesCache = new ServerCache<UserBadge[]>(2 * 60 * 1000) // 2 minutes
+const badgeByTierCache = new ServerCache<BadgeRegistry['badges'][0] | null>(5 * 60 * 1000) // 5 minutes
+
+export type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
+
+export type BadgeRegistry = {
+  version: string
+  lastUpdated: string
+  description: string
+  tiers: Record<TierType, {
+    name: string
+    color: string
+    scoreRange: { min: number; max: number }
+    pointsBonus: number
+    bgGradient: string
+  }>
+  badges: Array<{
+    id: string
+    name: string
+    slug: string
+    badgeType: string
+    tier: TierType
+    description: string
+    chain: string
+    contractAddress: string
+    pointsCost: number
+    imageUrl: string
+    artPath: string
+    active: boolean
+    autoAssign: boolean
+    assignmentRule: string
+    metadata: Record<string, unknown>
+  }>
+}
+
+export type UserBadge = {
+  id: string
+  fid: number
+  badgeId: string
+  badgeType: string
+  tier: TierType
+  assignedAt: string
+  minted: boolean
+  mintedAt?: string | null
+  txHash?: string | null
+  chain?: string | null
+  contractAddress?: string | null
+  tokenId?: number | null
+  metadata?: Record<string, unknown>
+}
 
 export type BadgeTemplate = {
   id: string
@@ -444,3 +550,452 @@ export async function invalidateBadgeCaches() {
   templateCache.current = null
   mintedCache.clear()
 }
+
+/**
+ * Load badge registry from JSON file with caching
+ */
+export function loadBadgeRegistry(): BadgeRegistry {
+  const cached = badgeRegistryCache.get('registry')
+  if (cached) return cached
+  
+  try {
+    const registryPath = join(process.cwd(), 'planning', 'badge', 'badge-registry.json')
+    const content = readFileSync(registryPath, 'utf-8')
+    const registry = JSON.parse(content) as BadgeRegistry
+    badgeRegistryCache.set('registry', registry)
+    return registry
+  } catch (error) {
+    console.error('Failed to load badge registry:', error)
+    throw new Error('Badge registry not found or invalid')
+  }
+}
+
+/**
+ * Calculate tier from Neynar influence score
+ */
+export function getTierFromScore(score: number): TierType {
+  if (score >= 1.0) return 'mythic'
+  if (score >= 0.8) return 'legendary'
+  if (score >= 0.5) return 'epic'
+  if (score >= 0.3) return 'rare'
+  return 'common'
+}
+
+/**
+ * Get tier configuration from registry
+ */
+export function getTierConfig(tier: TierType): BadgeRegistry['tiers'][TierType] {
+  const registry = loadBadgeRegistry()
+  return registry.tiers[tier]
+}
+
+/**
+ * Get badge definition from registry by ID
+ */
+export function getBadgeFromRegistry(badgeId: string): BadgeRegistry['badges'][number] | null {
+  const registry = loadBadgeRegistry()
+  return registry.badges.find(b => b.id === badgeId) || null
+}
+
+/**
+ * Get badge definition from registry by tier with caching
+ */
+export function getBadgeByTier(tier: TierType): BadgeRegistry['badges'][number] | null {
+  const cacheKey = `tier:${tier}`
+  const cached = badgeByTierCache.get(cacheKey)
+  if (cached !== undefined) return cached
+  
+  const registry = loadBadgeRegistry()
+  // Find first auto-assign badge for this tier
+  const badge = registry.badges.find(b => b.tier === tier && b.autoAssign && b.assignmentRule === 'neynar_score_tier') || null
+  
+  badgeByTierCache.set(cacheKey, badge)
+  return badge
+}
+
+/**
+ * Assign badge to user in database
+ */
+export async function assignBadgeToUser(params: {
+  fid: number
+  badgeId: string
+  badgeType: string
+  tier: TierType
+  metadata?: Record<string, unknown>
+}): Promise<UserBadge> {
+  assertSupabase()
+  const supabase = getSupabaseServerClient()
+  if (!supabase) throw new Error('Supabase client unavailable')
+
+  const badge = getBadgeFromRegistry(params.badgeId)
+  if (!badge) throw new Error(`Badge ${params.badgeId} not found in registry`)
+
+  // Check if user already has this badge
+  const { data: existing } = await supabase
+    .from(USER_BADGES_TABLE)
+    .select('*')
+    .eq('fid', params.fid)
+    .eq('badge_type', params.badgeType)
+    .maybeSingle()
+
+  if (existing) {
+    // Badge already assigned
+    return {
+      id: existing.id,
+      fid: existing.fid,
+      badgeId: existing.badge_id,
+      badgeType: existing.badge_type,
+      tier: existing.tier as TierType,
+      assignedAt: existing.assigned_at,
+      minted: existing.minted,
+      mintedAt: existing.minted_at,
+      txHash: existing.tx_hash,
+      chain: existing.chain,
+      contractAddress: existing.contract_address,
+      tokenId: existing.token_id,
+      metadata: existing.metadata || {},
+    }
+  }
+
+  // Create new badge assignment
+  const payload = {
+    fid: params.fid,
+    badge_id: params.badgeId,
+    badge_type: params.badgeType,
+    tier: params.tier,
+    assigned_at: new Date().toISOString(),
+    minted: false,
+    chain: badge.chain,
+    metadata: params.metadata || {},
+  }
+
+  const { data, error } = await supabase
+    .from(USER_BADGES_TABLE)
+    .insert(payload)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to assign badge: ${error.message}`)
+  }
+
+  return {
+    id: data.id,
+    fid: data.fid,
+    badgeId: data.badge_id,
+    badgeType: data.badge_type,
+    tier: data.tier as TierType,
+    assignedAt: data.assigned_at,
+    minted: data.minted,
+    mintedAt: data.minted_at,
+    txHash: data.tx_hash,
+    chain: data.chain,
+    contractAddress: data.contract_address,
+    tokenId: data.token_id,
+    metadata: data.metadata || {},
+  }
+}
+
+/**
+ * Get all badges assigned to a user with caching
+ */
+export async function getUserBadges(fid: number): Promise<UserBadge[]> {
+  assertSupabase()
+  
+  const cacheKey = `user:${fid}`
+  const cached = userBadgesCache.get(cacheKey)
+  if (cached) return cached
+  
+  const supabase = getSupabaseServerClient()
+  if (!supabase) return []
+
+  const { data, error } = await supabase
+    .from(USER_BADGES_TABLE)
+    .select('*')
+    .eq('fid', fid)
+    .order('assigned_at', { ascending: false })
+
+  if (error) {
+    console.error('Failed to fetch user badges:', error)
+    return []
+  }
+
+  const badges = (data || []).map(row => ({
+    id: row.id,
+    fid: row.fid,
+    badgeId: row.badge_id,
+    badgeType: row.badge_type,
+    tier: row.tier as TierType,
+    assignedAt: row.assigned_at,
+    minted: row.minted,
+    mintedAt: row.minted_at,
+    txHash: row.tx_hash,
+    chain: row.chain,
+    contractAddress: row.contract_address,
+    tokenId: row.token_id,
+    metadata: row.metadata || {},
+  }))
+  
+  userBadgesCache.set(cacheKey, badges)
+  return badges
+}
+
+/**
+ * Update badge mint status
+ */
+export async function updateBadgeMintStatus(params: {
+  fid: number
+  badgeType: string
+  txHash: string
+  tokenId?: number
+  contractAddress?: string
+}): Promise<void> {
+  assertSupabase()
+  const supabase = getSupabaseServerClient()
+  if (!supabase) throw new Error('Supabase client unavailable')
+
+  const { error } = await supabase
+    .from(USER_BADGES_TABLE)
+    .update({
+      minted: true,
+      minted_at: new Date().toISOString(),
+      tx_hash: params.txHash,
+      token_id: params.tokenId,
+      contract_address: params.contractAddress,
+    })
+    .eq('fid', params.fid)
+    .eq('badge_type', params.badgeType)
+
+  if (error) {
+    throw new Error(`Failed to update badge mint status: ${error.message}`)
+  }
+  
+  // Invalidate cache after mint
+  userBadgesCache.clear(`user:${params.fid}`)
+}
+
+// ========================================
+// MINT QUEUE MANAGEMENT
+// ========================================
+
+export type MintQueueEntry = {
+  id: string
+  fid: number
+  walletAddress: string
+  badgeType: string
+  status: 'pending' | 'minting' | 'minted' | 'failed'
+  txHash?: string | null
+  mintedAt?: string | null
+  createdAt: string
+  updatedAt: string
+  error?: string | null
+  retryCount?: number
+}
+
+type MintQueueRow = {
+  id: number
+  fid: number
+  wallet_address: string
+  badge_type: string
+  status: string
+  tx_hash?: string | null
+  minted_at?: string | null
+  created_at: string
+  updated_at: string
+  error?: string | null
+  retry_count?: number
+}
+
+function transformMintQueueRow(row: MintQueueRow): MintQueueEntry {
+  return {
+    id: String(row.id),
+    fid: row.fid,
+    walletAddress: row.wallet_address,
+    badgeType: row.badge_type,
+    status: row.status as MintQueueEntry['status'],
+    txHash: row.tx_hash,
+    mintedAt: row.minted_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    error: row.error,
+    retryCount: row.retry_count || 0,
+  }
+}
+
+/**
+ * Get pending mints from queue
+ */
+export async function getPendingMints(limit = 10): Promise<MintQueueEntry[]> {
+  assertSupabase()
+  const supabase = getSupabaseServerClient()
+  if (!supabase) return []
+
+  const { data, error } = await supabase
+    .from('mint_queue')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(limit)
+
+  if (error) {
+    console.error('Failed to fetch pending mints:', error)
+    return []
+  }
+
+  return (data || []).map(row => transformMintQueueRow(row as MintQueueRow))
+}
+
+/**
+ * Get failed mints from queue
+ */
+export async function getFailedMints(limit = 50): Promise<MintQueueEntry[]> {
+  assertSupabase()
+  const supabase = getSupabaseServerClient()
+  if (!supabase) return []
+
+  const { data, error } = await supabase
+    .from('mint_queue')
+    .select('*')
+    .eq('status', 'failed')
+    .order('updated_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    console.error('Failed to fetch failed mints:', error)
+    return []
+  }
+
+  return (data || []).map(row => transformMintQueueRow(row as MintQueueRow))
+}
+
+/**
+ * Update mint queue status
+ */
+export async function updateMintQueueStatus(
+  id: string,
+  status: 'pending' | 'minting' | 'minted' | 'failed',
+  error?: string
+): Promise<void> {
+  assertSupabase()
+  const supabase = getSupabaseServerClient()
+  if (!supabase) throw new Error('Supabase client unavailable')
+
+  const updates: Record<string, unknown> = {
+    status,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (status === 'failed' && error) {
+    updates.error = error
+    // Increment retry count
+    const { data: current } = await supabase
+      .from('mint_queue')
+      .select('retry_count')
+      .eq('id', Number(id))
+      .maybeSingle()
+    
+    const retryCount = (current?.retry_count || 0) + 1
+    updates.retry_count = retryCount
+  }
+
+  if (status === 'minted') {
+    updates.minted_at = new Date().toISOString()
+    updates.error = null // Clear any previous errors
+  }
+
+  const { error: updateError } = await supabase
+    .from('mint_queue')
+    .update(updates)
+    .eq('id', Number(id))
+
+  if (updateError) {
+    throw new Error(`Failed to update mint queue status: ${updateError.message}`)
+  }
+}
+
+/**
+ * Queue a badge for minting
+ */
+export async function queueMintForBadge(
+  fid: number,
+  badgeType: string,
+  walletAddress: string
+): Promise<string> {
+  assertSupabase()
+  const supabase = getSupabaseServerClient()
+  if (!supabase) throw new Error('Supabase client unavailable')
+
+  // Check if already queued
+  const { data: existing } = await supabase
+    .from('mint_queue')
+    .select('id, status')
+    .eq('fid', fid)
+    .eq('badge_type', badgeType)
+    .in('status', ['pending', 'minting'])
+    .maybeSingle()
+
+  if (existing) {
+    return String(existing.id)
+  }
+
+  // Create new queue entry
+  const { data, error } = await supabase
+    .from('mint_queue')
+    .insert({
+      fid,
+      wallet_address: walletAddress,
+      badge_type: badgeType,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to queue mint: ${error.message}`)
+  }
+
+  return String(data.id)
+}
+
+/**
+ * Retry a failed mint
+ */
+export async function retryMint(queueId: string): Promise<void> {
+  await updateMintQueueStatus(queueId, 'pending')
+}
+
+/**
+ * Get mint queue statistics
+ */
+export async function getMintQueueStats(): Promise<{
+  pending: number
+  minting: number
+  minted: number
+  failed: number
+}> {
+  assertSupabase()
+  const supabase = getSupabaseServerClient()
+  if (!supabase) return { pending: 0, minting: 0, minted: 0, failed: 0 }
+
+  const { data, error } = await supabase
+    .from('mint_queue')
+    .select('status')
+
+  if (error) {
+    console.error('Failed to fetch mint queue stats:', error)
+    return { pending: 0, minting: 0, minted: 0, failed: 0 }
+  }
+
+  const stats = { pending: 0, minting: 0, minted: 0, failed: 0 }
+  for (const row of data || []) {
+    const status = row.status as keyof typeof stats
+    if (status in stats) {
+      stats[status]++
+    }
+  }
+
+  return stats
+}
+
