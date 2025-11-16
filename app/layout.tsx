@@ -11,9 +11,13 @@ const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
 const gmEmbed = {
   version: '1',
-  imageUrl: `${baseUrl}/splash.png`,
+  name: 'Gmeowbased Adventure',
+  homeUrl: baseUrl,
   iconUrl: `${baseUrl}/icon.png`,
+  imageUrl: `${baseUrl}/og-image.png`,
   webhookUrl: `${baseUrl}/api/neynar/webhook`,
+  subtitle: 'Daily GM Quest Hub',
+  description: 'Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
   button: {
     title: '✨ Enter Gmeow',
     action: {
@@ -28,9 +32,12 @@ const gmEmbed = {
 
 const gmFrame = {
   version: 'next',
-  imageUrl: `${baseUrl}/splash.png`,
+  name: 'Gmeowbased Adventure',
+  homeUrl: baseUrl,
+  imageUrl: `${baseUrl}/og-image.png`,
   postUrl: `${baseUrl}/api/frame`,
   webhookUrl: `${baseUrl}/api/neynar/webhook`,
+  splashImageUrl: `${baseUrl}/splash.png`,
   splashBackgroundColor: '#0B0A16',
   buttons: [
     {
@@ -82,6 +89,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="fc:frame" content={JSON.stringify(gmFrame)} />
+        <meta name="fc:frame:image" content={`${baseUrl}/og-image.png`} />
+        <meta name="fc:frame:image:aspect_ratio" content="1.91:1" />
+      </head>
       <body className="min-h-screen pixel-page" style={{ color: 'var(--text-color)' }}>
         <MiniAppProvider>
           <GmeowLayout>{children}</GmeowLayout>
