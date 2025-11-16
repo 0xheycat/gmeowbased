@@ -21,7 +21,7 @@ const gmEmbed = {
   button: {
     title: '✨ Enter Gmeow',
     action: {
-      type: 'launch_miniapp',
+      type: 'launch_frame',
       name: 'GMeow',
       url: baseUrl,
       splashImageUrl: `${baseUrl}/splash.png`,
@@ -31,31 +31,18 @@ const gmEmbed = {
 }
 
 const gmFrame = {
-  version: 'next',
-  name: 'Gmeowbased Adventure',
-  homeUrl: baseUrl,
+  version: '1',
   imageUrl: `${baseUrl}/og-image.png`,
-  postUrl: `${baseUrl}/api/frame`,
-  webhookUrl: `${baseUrl}/api/neynar/webhook`,
-  splashImageUrl: `${baseUrl}/splash.png`,
-  splashBackgroundColor: '#0B0A16',
-  buttons: [
-    {
-      title: 'Launch Miniapp',
-      action: {
-        type: 'launch_miniapp',
-        name: 'GMeow',
-        url: baseUrl,
-      },
+  button: {
+    title: '🎮 Launch Game',
+    action: {
+      type: 'launch_frame',
+      name: 'Gmeowbased Adventure',
+      url: baseUrl,
+      splashImageUrl: `${baseUrl}/splash.png`,
+      splashBackgroundColor: '#0B0A16',
     },
-    {
-      title: 'View Dashboard',
-      action: {
-        type: 'link',
-        url: `${baseUrl}/Dashboard`,
-      },
-    },
-  ],
+  },
 }
 
 export const metadata: Metadata = {
@@ -91,8 +78,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="fc:frame" content={JSON.stringify(gmFrame)} />
-        <meta name="fc:frame:image" content={`${baseUrl}/og-image.png`} />
-        <meta name="fc:frame:image:aspect_ratio" content="1.91:1" />
       </head>
       <body className="min-h-screen pixel-page" style={{ color: 'var(--text-color)' }}>
         <MiniAppProvider>
