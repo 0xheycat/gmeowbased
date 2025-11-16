@@ -5,6 +5,7 @@ import { X, ArrowRight, Sparkle, Users, Lightning, Gift, Shield, Crown } from '@
 import Image from 'next/image'
 import { useAccount } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
+import ShareButton from '@/components/share/ShareButton'
 import confetti from 'canvas-confetti'
 import { getBadgeArtworkBackground } from '@/lib/badge-artwork'
 import '@/app/styles/quest-card-yugioh.css'
@@ -1091,6 +1092,17 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Phase 5.5: Share Button - Show after rewards claimed */}
+        {isFinalStage && hasOnboarded && assignedBadge && (
+          <div className="mt-4">
+            <ShareButton
+              fid={farcasterProfile?.fid?.toString() || '0'}
+              tier={assignedBadge.tier}
+              badgeName={assignedBadge.metadata?.name}
+            />
           </div>
         )}
 
