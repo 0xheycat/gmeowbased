@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-BASE_URL="${BASE_URL:-https://gmeowbased.com}"
+BASE_URL="${BASE_URL:-https://gmeowhq.art}"
 TEST_FID="${TEST_FID:-12345}"
 TEST_BADGE_ID="${TEST_BADGE_ID:-gmeow-vanguard}"
 TEMP_DIR="/tmp/phase-3c-test"

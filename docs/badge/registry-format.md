@@ -174,8 +174,8 @@ interface FrameConfig {
   metadata: {
     name: 'Gmeow Vanguard',
     description: 'Awarded to legendary users with high influence',
-    imageUrl: 'https://gmeowbased.com/badges/gmeow-vanguard.png',
-    externalUrl: 'https://gmeowbased.com/badges/gmeow-vanguard',
+    imageUrl: 'https://gmeowhq.art/badges/gmeow-vanguard.png',
+    externalUrl: 'https://gmeowhq.art/badges/gmeow-vanguard',
     attributes: [
       { trait_type: 'Tier', value: 'Legendary' },
       { trait_type: 'Category', value: 'Achievement' },
@@ -207,7 +207,7 @@ interface FrameConfig {
   metadata: {
     name: 'Early Adopter',
     description: 'Joined Gmeowbased in Season 1',
-    imageUrl: 'https://gmeowbased.com/badges/early-adopter.png',
+    imageUrl: 'https://gmeowhq.art/badges/early-adopter.png',
     attributes: [
       { trait_type: 'Tier', value: 'Epic' },
       { trait_type: 'Category', value: 'Milestone' },
@@ -231,7 +231,7 @@ interface FrameConfig {
   metadata: {
     name: 'GM Streak Champion',
     description: 'Maintained a 30-day GM streak',
-    imageUrl: 'https://gmeowbased.com/badges/gm-streak-champion.png',
+    imageUrl: 'https://gmeowhq.art/badges/gm-streak-champion.png',
     attributes: [
       { trait_type: 'Tier', value: 'Rare' },
       { trait_type: 'Category', value: 'Special' },
@@ -385,7 +385,7 @@ Add badge to `BADGE_REGISTRY.badges` array:
   metadata: {
     name: 'New Badge Name',
     description: 'Badge description',
-    imageUrl: 'https://gmeowbased.com/badges/new-badge.png',
+    imageUrl: 'https://gmeowhq.art/badges/new-badge.png',
     attributes: [
       { trait_type: 'Tier', value: 'Epic' },
       { trait_type: 'Category', value: 'Achievement' },

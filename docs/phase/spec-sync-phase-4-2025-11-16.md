@@ -135,7 +135,7 @@ await fetch('/v2/farcaster/app/notifications', {
   body: JSON.stringify({
     title: 'New Badge Earned!',
     body: 'You just earned the Vanguard badge (Mythic tier) 🎖️',
-    target_url: 'https://gmeowbased.com/profile/badges'
+    target_url: 'https://gmeowhq.art/profile/badges'
   })
 });
 ```
@@ -397,7 +397,7 @@ export async function sendBadgeAwardNotification(
       fids: [fid],
       title: 'New Badge Earned! 🎖️',
       body: `You just earned the ${badgeName} badge (${badgeTier} tier)`,
-      target_url: `https://gmeowbased.com/profile/${fid}/badges`,
+      target_url: `https://gmeowhq.art/profile/${fid}/badges`,
     }),
   });
 }
@@ -444,7 +444,7 @@ NEYNAR_WEBHOOK_SECRET=your_webhook_secret_for_hmac_verification
 1. Navigate to dev.neynar.com/app
 2. Create server wallet (for NFT minting)
 3. Enable miniapp notifications
-4. Configure webhook endpoint (optional): `https://gmeowbased.com/api/webhooks/neynar`
+4. Configure webhook endpoint (optional): `https://gmeowhq.art/api/webhooks/neynar`
 
 ---
 

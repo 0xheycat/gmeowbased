@@ -75,7 +75,7 @@ Badge Share Flow:
 
 **Example**:
 ```bash
-curl https://gmeowbased.com/api/frame/badgeShare?fid=12345&badgeId=gmeow-vanguard
+curl https://gmeowhq.art/api/frame/badgeShare?fid=12345&badgeId=gmeow-vanguard
 ```
 
 **Response Structure**:
@@ -84,11 +84,11 @@ curl https://gmeowbased.com/api/frame/badgeShare?fid=12345&badgeId=gmeow-vanguar
 <html>
   <head>
     <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="https://gmeowbased.com/api/frame/badgeShare/image?fid=12345&badgeId=gmeow-vanguard" />
+    <meta property="fc:frame:image" content="https://gmeowhq.art/api/frame/badgeShare/image?fid=12345&badgeId=gmeow-vanguard" />
     <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
     <meta property="fc:frame:button:1" content="View Full Collection" />
     <meta property="fc:frame:button:1:action" content="link" />
-    <meta property="fc:frame:button:1:target" content="https://gmeowbased.com/profile/12345/badges" />
+    <meta property="fc:frame:button:1:target" content="https://gmeowhq.art/profile/12345/badges" />
     <!-- ... more frame tags ... -->
   </head>
   <body>...</body>
@@ -135,7 +135,7 @@ curl https://gmeowbased.com/api/frame/badgeShare?fid=12345&badgeId=gmeow-vanguar
 
 **Example**:
 ```bash
-curl https://gmeowbased.com/api/frame/badgeShare/image?fid=12345&badgeId=gmeow-vanguard -o badge.png
+curl https://gmeowhq.art/api/frame/badgeShare/image?fid=12345&badgeId=gmeow-vanguard -o badge.png
 ```
 
 ---
@@ -160,7 +160,7 @@ function buildBadgeShareFrameUrl(
 **Example**:
 ```typescript
 const frameUrl = buildBadgeShareFrameUrl(12345, 'gmeow-vanguard')
-// Returns: https://gmeowbased.com/api/frame/badgeShare?fid=12345&badgeId=gmeow-vanguard
+// Returns: https://gmeowhq.art/api/frame/badgeShare?fid=12345&badgeId=gmeow-vanguard
 ```
 
 ### `buildBadgeShareImageUrl()`
@@ -360,14 +360,14 @@ const { buildBadgeShareFrameUrl } = await import('@/lib/frame-badge')
 
 1. **Frame Endpoint**:
    ```bash
-   curl https://gmeowbased.com/api/frame/badgeShare?fid=12345&badgeId=gmeow-vanguard
+   curl https://gmeowhq.art/api/frame/badgeShare?fid=12345&badgeId=gmeow-vanguard
    ```
    - Verify HTML contains frame tags
    - Check OG image URL
 
 2. **OG Image**:
    ```bash
-   curl https://gmeowbased.com/api/frame/badgeShare/image?fid=12345&badgeId=gmeow-vanguard -o test.png
+   curl https://gmeowhq.art/api/frame/badgeShare/image?fid=12345&badgeId=gmeow-vanguard -o test.png
    ```
    - Verify 1200x628 dimensions
    - Check file size < 200 KB
@@ -444,7 +444,7 @@ await limiter.check(request, 100, 'BADGE_FRAME')
 
 2. **Check OG image**:
    ```bash
-   curl -I https://gmeowbased.com/api/frame/badgeShare/image?fid=12345&badgeId=test
+   curl -I https://gmeowhq.art/api/frame/badgeShare/image?fid=12345&badgeId=test
    ```
    - Verify 200 response
    - Check `Content-Type: image/png`
@@ -457,7 +457,7 @@ await limiter.check(request, 100, 'BADGE_FRAME')
 
 1. **Check badge data**:
    ```bash
-   curl https://gmeowbased.com/api/badges/list?fid=12345
+   curl https://gmeowhq.art/api/badges/list?fid=12345
    ```
 
 2. **Verify badge ID format**:

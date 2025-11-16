@@ -230,6 +230,11 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
   const [assignedBadge, setAssignedBadge] = useState<UserBadge | null>(null)
   const { address, isConnected } = useAccount()
 
+  // Phase 4.7: Typewriter animation state
+  const [revealStage, setRevealStage] = useState<'hidden' | 'tier' | 'rewards' | 'complete'>('hidden')
+  const [typedTierText, setTypedTierText] = useState('')
+  const [typedRewardsText, setTypedRewardsText] = useState('')
+
   // Helper function to calculate tier from Neynar score
   const getTierFromScore = (score: number): TierType => {
     if (score >= TIER_CONFIG.mythic.min) return 'mythic'
@@ -279,6 +284,58 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
     loadFarcasterProfile()
   }, [])
 
+  // Phase 4.7: Typewriter animation effect for Stage 5 reveal
+  useEffect(() => {
+    if (stage !== 4 || !farcasterProfile || revealStage === 'complete') return
+
+    const tierConfig = TIER_CONFIG[farcasterProfile.tier || 'common']
+    const tierText = `${tierConfig.label} Rank`
+    const tierPoints = tierConfig.points
+    const totalPoints = BASELINE_REWARDS.points + tierPoints
+    const rewardsText = `+${totalPoints} Points Unlocked`
+
+    if (revealStage === 'hidden') {
+      // Start tier text animation after 300ms
+      const startTimeout = setTimeout(() => {
+        setRevealStage('tier')
+        let currentIndex = 0
+        const tierInterval = setInterval(() => {
+          if (currentIndex < tierText.length) {
+            setTypedTierText(tierText.slice(0, currentIndex + 1))
+            currentIndex++
+          } else {
+            clearInterval(tierInterval)
+            // Start rewards animation after tier is complete
+            setTimeout(() => {
+              setRevealStage('rewards')
+            }, 400)
+          }
+        }, 50) // 50ms per character
+      }, 300)
+
+      return () => clearTimeout(startTimeout)
+    }
+
+    if (revealStage === 'rewards') {
+      // Animate rewards text
+      let currentIndex = 0
+      const rewardsInterval = setInterval(() => {
+        if (currentIndex < rewardsText.length) {
+          setTypedRewardsText(rewardsText.slice(0, currentIndex + 1))
+          currentIndex++
+        } else {
+          clearInterval(rewardsInterval)
+          // Mark complete after rewards are shown
+          setTimeout(() => {
+            setRevealStage('complete')
+          }, 200)
+        }
+      }, 40) // 40ms per character (slightly faster)
+
+      return () => clearInterval(rewardsInterval)
+    }
+  }, [stage, farcasterProfile, revealStage])
+
   // Handle claim rewards
   const handleClaimRewards = async () => {
     if (!farcasterProfile || hasOnboarded) return
@@ -299,6 +356,9 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
       if (data.success) {
         setHasOnboarded(true)
         
+        // Phase 4.7: Start reveal animation
+        setRevealStage('hidden')
+        
         // Fetch assigned badge
         if (data.badge) {
           const badgesRes = await fetch(`/api/badges/list?fid=${farcasterProfile.fid}`)
@@ -314,7 +374,13 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           }
         }
         
-        // Show success notification
+        // Phase 4.7: Show success notification with Phase 4 status
+        if (data.phase4?.instantMinting) {
+          console.log('🎉 Mythic badge minted instantly via Neynar!')
+        }
+        if (data.badge?.txHash) {
+          console.log('Mint transaction:', data.badge.txHash)
+        }
         console.log('Onboarding rewards claimed:', data)
       }
     } catch (error) {

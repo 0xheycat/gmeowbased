@@ -171,7 +171,7 @@ const result = await sendBadgeAwardNotification(
   14206, // Farcaster ID
   'Vanguard', // Badge name
   'mythic', // Tier: 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
-  'https://gmeowbased.com/profile/14206/badges' // Optional target URL
+  'https://gmeowhq.art/profile/14206/badges' // Optional target URL
 )
 
 if (result.success) {
@@ -363,7 +363,7 @@ NEYNAR_SERVER_WALLET_ID=your_wallet_id_from_neynar_portal
 NEYNAR_API_KEY=your_api_key_from_neynar_portal
 
 # Optional: Frame origin for notification target URLs
-NEXT_PUBLIC_FRAME_ORIGIN=https://gmeowbased.com
+NEXT_PUBLIC_FRAME_ORIGIN=https://gmeowhq.art
 ```
 
 ---

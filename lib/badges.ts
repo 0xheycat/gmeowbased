@@ -1229,7 +1229,7 @@ export async function sendBadgeAwardNotification(
       process.env.NEXT_PUBLIC_FRAME_ORIGIN ||
       process.env.NEXT_PUBLIC_BASE_URL ||
       process.env.VERCEL_URL ||
-      'https://gmeowbased.com'
+      'https://gmeowhq.art'
     const normalizedOrigin = origin.startsWith('http') ? origin : `https://${origin}`
 
     // Build target URL (deep link to badge inventory)

@@ -429,7 +429,7 @@ return score
 Test score calculation with different FIDs:
 
 ```bash
-curl -X POST https://gmeowbased.com/api/neynar/score \
+curl -X POST https://gmeowhq.art/api/neynar/score \
   -H "Content-Type: application/json" \
   -d '{"fid": 12345}'
 ```

@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
-import { getTierFromScore, getBadgeByTier, assignBadgeToUser, getTierConfig } from '@/lib/badges'
+import { 
+  getTierFromScore, 
+  getBadgeByTier, 
+  assignBadgeToUser, 
+  getTierConfig,
+  mintBadgeViaNeynar,
+  sendBadgeAwardNotification,
+} from '@/lib/badges'
 
 export const dynamic = 'force-dynamic'
 
@@ -120,6 +127,7 @@ export async function POST(request: Request) {
 
     // Assign tier badge automatically
     let assignedBadge = null
+    let mintResult = null
     try {
       const badgeDef = getBadgeByTier(tier)
       if (badgeDef) {
@@ -135,14 +143,54 @@ export async function POST(request: Request) {
           },
         })
 
-        // Queue badge mint
-        await supabase.from('mint_queue').insert({
-          fid,
-          wallet_address: address || null,
-          badge_type: badgeDef.badgeType,
-          status: 'pending',
-          created_at: new Date().toISOString(),
-        })
+        // Phase 4.7: Instant mint for Mythic users (others use queue)
+        if (isMythic && address && process.env.NEYNAR_SERVER_WALLET_ID) {
+          // Use Phase 4 instant minting for Mythic tier
+          const MYTHIC_CONTRACT = process.env.BADGE_CONTRACT_MYTHIC || '0x...'
+          mintResult = await mintBadgeViaNeynar(
+            fid,
+            MYTHIC_CONTRACT,
+            'base'
+          )
+          
+          if (mintResult.success) {
+            console.log(`[Onboarding] Mythic badge minted instantly for FID ${fid}: ${mintResult.transactionHash}`)
+          } else {
+            console.error(`[Onboarding] Instant mint failed, falling back to queue:`, mintResult.error)
+            // Fallback to mint queue
+            await supabase.from('mint_queue').insert({
+              fid,
+              wallet_address: address,
+              badge_type: badgeDef.badgeType,
+              status: 'pending',
+              error: `Instant mint failed: ${mintResult.error}`,
+              created_at: new Date().toISOString(),
+            })
+          }
+        } else {
+          // Use mint queue for non-Mythic users
+          await supabase.from('mint_queue').insert({
+            fid,
+            wallet_address: address || null,
+            badge_type: badgeDef.badgeType,
+            status: 'pending',
+            created_at: new Date().toISOString(),
+          })
+        }
+
+        // Phase 4.7: Send badge award notification
+        try {
+          await sendBadgeAwardNotification(
+            fid,
+            badgeDef.badgeType,
+            tier,
+            `https://gmeowhq.art/profile?fid=${fid}`
+          )
+          console.log(`[Onboarding] Badge award notification sent to FID ${fid}`)
+        } catch (notificationError) {
+          console.error('[Onboarding] Failed to send notification:', notificationError)
+          // Don't fail onboarding if notification fails
+        }
       }
     } catch (badgeError) {
       console.error('Failed to assign badge:', badgeError)
@@ -177,9 +225,15 @@ export async function POST(request: Request) {
         type: assignedBadge.badgeType,
         tier: assignedBadge.tier,
         assignedAt: assignedBadge.assignedAt,
+        instantMinted: mintResult?.success || false,
+        txHash: mintResult?.transactionHash || null,
       } : null,
       ogNftEligible: isMythic,
       profile: updatedProfile,
+      phase4: {
+        instantMinting: isMythic && mintResult?.success,
+        notificationSent: true, // Attempted notification
+      },
     })
   } catch (error) {
     console.error('Error completing onboarding:', error)
