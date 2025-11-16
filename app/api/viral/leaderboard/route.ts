@@ -41,8 +41,15 @@ export async function GET(request: NextRequest) {
     
     const supabase = getSupabaseServerClient()
     
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Internal Error', message: 'Database connection failed' },
+        { status: 500 }
+      )
+    }
+    
     // GI-11: Build query with filters
-    let query = supabase
+    const query = supabase
       .from('badge_casts')
       .select('fid, viral_bonus_xp, tier')
     

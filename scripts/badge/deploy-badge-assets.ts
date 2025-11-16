@@ -30,13 +30,14 @@ const CHAINS = ['base', 'op', 'celo', 'unichain', 'ink'] as const
 type ChainKey = typeof CHAINS[number]
 
 // Contract addresses per chain (from .env)
-const CONTRACT_ADDRESSES: Record<ChainKey, string> = {
-  base: process.env.BADGE_CONTRACT_BASE || '0xF13d6f70Af6cf6C47Cd3aFb545d906309eebD1b9',
-  op: process.env.BADGE_CONTRACT_OP || '0xb6055bF4AeD5f10884eC313dE7b733Ceb4dc3446',
-  celo: process.env.BADGE_CONTRACT_CELO || '0x16CF68d057e931aBDFeC67D0B4C3CaF3BA21f9D3',
-  unichain: process.env.BADGE_CONTRACT_UNICHAIN || '0xd54275a6e8db11f5aC5C065eE1E8f10dCA37Ad86',
-  ink: process.env.BADGE_CONTRACT_INK || '0x1fC08c7466dF4134E624bc18520eC0d9CC308765',
-}
+// Note: Currently unused, but kept for future multi-chain support
+// const CONTRACT_ADDRESSES: Record<ChainKey, string> = {
+//   base: process.env.BADGE_CONTRACT_BASE || '0xF13d6f70Af6cf6C47Cd3aFb545d906309eebD1b9',
+//   op: process.env.BADGE_CONTRACT_OP || '0xb6055bF4AeD5f10884eC313dE7b733Ceb4dc3446',
+//   celo: process.env.BADGE_CONTRACT_CELO || '0x16CF68d057e931aBDFeC67D0B4C3CaF3BA21f9D3',
+//   unichain: process.env.BADGE_CONTRACT_UNICHAIN || '0xd54275a6e8db11f5aC5C065eE1E8f10dCA37Ad86',
+//   ink: process.env.BADGE_CONTRACT_INK || '0x1fC08c7466dF4134E624bc18520eC0d9CC308765',
+// }
 
 // Badge registry path
 const REGISTRY_PATH = join(process.cwd(), 'planning', 'badge', 'badge-registry.json')
@@ -134,7 +135,7 @@ async function uploadImage(imagePath: string, storagePath: string): Promise<stri
                       imagePath.endsWith('.png') ? 'image/png' : 
                       'image/jpeg'
   
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from(BADGE_BUCKET)
     .upload(storagePath, imageBuffer, {
       contentType,
@@ -156,7 +157,7 @@ async function uploadImage(imagePath: string, storagePath: string): Promise<stri
 async function uploadMetadata(metadata: NFTMetadata, storagePath: string): Promise<string> {
   const metadataBuffer = Buffer.from(JSON.stringify(metadata, null, 2), 'utf-8')
   
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from(BADGE_BUCKET)
     .upload(storagePath, metadataBuffer, {
       contentType: 'application/json',
