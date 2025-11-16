@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
 }
 
 function getBaseUrl(request: NextRequest): string {
-  const host = request.headers.get('host') || 'gmeowbased.com'
+  const host = request.headers.get('host') || 'gmeowhq.art'
   const protocol = host.includes('localhost') ? 'http' : 'https'
   return `${protocol}://${host}`
 }

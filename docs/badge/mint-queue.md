@@ -236,7 +236,7 @@ const result = await mintBadgeOnChain(
   'gmeow_vanguard',
   {
     name: 'Gmeow Vanguard',
-    image: 'https://gmeowbased.com/badges/gmeow-vanguard.png',
+    image: 'https://gmeowhq.art/badges/gmeow-vanguard.png',
     description: 'Legendary tier badge',
     attributes: [
       { trait_type: 'Tier', value: 'Legendary' },
