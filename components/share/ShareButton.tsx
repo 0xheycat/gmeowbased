@@ -102,7 +102,9 @@ export default function ShareButton({ fid, tier, badgeName, className = '' }: Sh
         group relative w-full overflow-hidden
         rounded-xl
         transition-all duration-300
+        motion-reduce:transition-none
         ${shared ? 'scale-95' : 'hover:scale-[1.02] active:scale-98'}
+        motion-reduce:transform-none
         ${className}
       `}
       aria-label={`Share your ${tierConfig.label} badge on Warpcast`}
@@ -126,10 +128,14 @@ export default function ShareButton({ fid, tier, badgeName, className = '' }: Sh
       `} />
       
       {/* Content */}
-      <div className="
-        relative px-6 py-4
-        flex items-center justify-center gap-3
-      ">
+      <div 
+        className="
+          relative px-6 py-4
+          flex items-center justify-center gap-3
+        "
+        role="status"
+        aria-live="polite"
+      >
         {shared ? (
           <>
             <CheckCircle 
@@ -153,7 +159,9 @@ export default function ShareButton({ fid, tier, badgeName, className = '' }: Sh
               style={{ color: tierConfig.color }}
               className="
                 transition-transform duration-300
+                motion-reduce:transition-none
                 group-hover:scale-110 group-hover:rotate-12
+                motion-reduce:transform-none
               "
             />
             <span 
