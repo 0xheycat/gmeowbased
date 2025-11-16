@@ -1026,7 +1026,7 @@ function buildFrameHtml(params: {
   const urlEsc = escapeHtml(url || '')
   // CRITICAL: Farcaster requires fc:frame:image tag - fallback to gmeow.gif if no image provided
   // This preserves dynamic OG images but ensures frames always have an image
-  const resolvedImage = image || (frameOrigin ? `${frameOrigin}/splash.png` : '')
+  const resolvedImage = image || (frameOrigin ? `${frameOrigin}/og-image.png` : '')
   const imageEsc = resolvedImage ? escapeHtml(resolvedImage) : ''
   const overlayHidden = Boolean(hideOverlay)
   const descriptionSegments = rawDescription
