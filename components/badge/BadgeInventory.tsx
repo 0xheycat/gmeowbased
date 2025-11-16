@@ -68,7 +68,6 @@ export function BadgeInventory({
   maxDisplay,
   onBadgeClick 
 }: BadgeInventoryProps) {
-  const [selectedBadge, setSelectedBadge] = useState<UserBadge | null>(null)
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
 
   const displayBadges = useMemo(() => {
@@ -77,7 +76,6 @@ export function BadgeInventory({
   }, [badges, maxDisplay])
 
   const handleBadgeClick = (badge: UserBadge) => {
-    setSelectedBadge(badge)
     onBadgeClick?.(badge)
   }
 

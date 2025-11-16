@@ -8,7 +8,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { base, optimism, celo } from 'viem/chains'
 import type { ChainKey } from '@/lib/gm-utils'
 import { getRpcUrl } from '@/lib/rpc'
-import type { MintQueueEntry } from '@/lib/badges'
+import { getBadgeFromRegistry, type MintQueueEntry } from '@/lib/badges'
 
 // Chain configurations
 const CHAIN_CONFIG = {
@@ -92,8 +92,9 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
   txHash: string
   tokenId: number
 }> {
-  // Determine chain from badge metadata or default to base
-  const chain: ChainKey = 'base' // TODO: Extract from badge registry based on badgeType
+  // Determine chain from badge registry
+  const badgeDefinition = getBadgeFromRegistry(mint.badgeType)
+  const chain: ChainKey = (badgeDefinition?.chain as ChainKey) || 'base' // Fallback to base if not found
   
   const account = getOracleAccount()
   const chainConfig = getChainConfig(chain)
@@ -165,7 +166,7 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
             break
           }
         }
-      } catch (error) {
+      } catch {
         // Log might not be from our contract
         continue
       }

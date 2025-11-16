@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
 
-const FRAME_WIDTH = 1200
-const FRAME_HEIGHT = 628
-
 /**
  * Farcaster Frame: Badge Showcase
  * Displays user's latest badge with tier styling

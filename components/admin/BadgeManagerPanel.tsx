@@ -10,12 +10,9 @@ import {
   getFailedMints,
   getMintQueueStats,
   retryMint,
-  assignBadgeToUser,
   loadBadgeRegistry,
-  getUserBadges,
   type MintQueueEntry,
   type BadgeRegistry,
-  type UserBadge,
 } from '@/lib/badges'
 
 // @edit-start 2025-02-16 — Rebuilt badge manager panel with metadata autofill and multichain support
@@ -112,7 +109,6 @@ export default function BadgeManagerPanel() {
   const [manualAssignBusy, setManualAssignBusy] = useState(false)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [detailModalBadge, setDetailModalBadge] = useState<TemplateRecord | null>(null)
-  const [detailModalAssignments, setDetailModalAssignments] = useState<UserBadge[]>([])
 
   const loadTemplates = useCallback(
     async (force?: boolean) => {
@@ -227,8 +223,7 @@ export default function BadgeManagerPanel() {
   const openDetailModal = useCallback(async (template: TemplateRecord) => {
     setDetailModalBadge(template)
     setDetailModalOpen(true)
-    // Load assignment history (mock for now - would need API endpoint)
-    setDetailModalAssignments([])
+    // Assignment history would need API endpoint (future enhancement)
   }, [])
 
   useEffect(() => {

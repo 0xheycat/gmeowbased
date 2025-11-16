@@ -7,9 +7,6 @@ import {
   isValidFid,
 } from '@/lib/frame-badge'
 
-const FRAME_WIDTH = 1200
-const FRAME_HEIGHT = 628
-
 function getBaseUrl(request: NextRequest): string {
   const protocol = request.headers.get('x-forwarded-proto') || 'https'
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
