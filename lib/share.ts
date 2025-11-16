@@ -3,13 +3,14 @@ import type { ChainKey } from '@/lib/gm-utils'
 type Primitive = string | number | boolean
 
 export type FrameShareInput = {
-  type: 'guild' | 'quest' | 'leaderboard' | 'referral' | 'points' | 'gm' | 'verify' | 'onchainstats'
+  type: 'guild' | 'quest' | 'leaderboard' | 'referral' | 'points' | 'gm' | 'verify' | 'onchainstats' | 'badge'
   chain?: ChainKey | 'all'
   id?: number | string
   questId?: number | string
   user?: string
   fid?: number | string
   referral?: string
+  badgeId?: string
   extra?: Record<string, Primitive | null | undefined>
 }
 

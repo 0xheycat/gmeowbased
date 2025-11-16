@@ -36,6 +36,21 @@ type FarcasterProfile = {
   tier?: TierType
 }
 
+type UserBadge = {
+  id: string
+  badge_id: string
+  badge_type: string
+  tier: TierType
+  assigned_at: string
+  minted: boolean
+  metadata: {
+    name?: string
+    description?: string
+    imageUrl?: string
+    tierLabel?: string
+  }
+}
+
 const TIER_CONFIG = {
   mythic: { 
     min: 1.0, 
@@ -95,7 +110,7 @@ const ONBOARDING_STAGES: OnboardingStage[] = [
     bonusPoints: 5,
     icon: Sparkle,
     features: [
-      'Browse quests in Yu-Gi-Oh inspired cards',
+      'Browse quests in inspired cards',
       'No wallet required to start',
       'Claim rewards on-chain later',
       'Connect via Farcaster for bonuses',
@@ -212,6 +227,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
   const [farcasterProfile, setFarcasterProfile] = useState<FarcasterProfile | null>(null)
   const [isClaiming, setIsClaiming] = useState(false)
   const [hasOnboarded, setHasOnboarded] = useState(false)
+  const [assignedBadge, setAssignedBadge] = useState<UserBadge | null>(null)
   const { address, isConnected } = useAccount()
 
   // Helper function to calculate tier from Neynar score
@@ -274,8 +290,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fid: farcasterProfile.fid,
-          tier: farcasterProfile.tier,
-          neynarScore: farcasterProfile.neynarScore,
           address: address || null,
         }),
       })
@@ -284,6 +298,22 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
       
       if (data.success) {
         setHasOnboarded(true)
+        
+        // Fetch assigned badge
+        if (data.badge) {
+          const badgesRes = await fetch(`/api/badges/list?fid=${farcasterProfile.fid}`)
+          const badgesData = await badgesRes.json()
+          
+          if (badgesData.success && badgesData.badges.length > 0) {
+            // Get the most recently assigned badge
+            const latestBadge = badgesData.badges.sort(
+              (a: UserBadge, b: UserBadge) => 
+                new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime()
+            )[0]
+            setAssignedBadge(latestBadge)
+          }
+        }
+        
         // Show success notification
         console.log('Onboarding rewards claimed:', data)
       }
@@ -475,6 +505,45 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               <p className="quest-card-yugioh__description-text">
                 {displayStage.description}
               </p>
+              
+              {/* Display assigned badge for Stage 5 after claiming */}
+              {isFinalStage && assignedBadge && (
+                <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-[#d4af37]/20 via-[#ffd700]/10 to-[#d4af37]/20 border-2 border-[#d4af37]/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4af37] to-[#ffd700] flex items-center justify-center">
+                      <Crown size={24} weight="fill" className="text-[#1a1410]" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-[#d4af37] uppercase tracking-wider">
+                        Badge Unlocked!
+                      </div>
+                      <div className="text-lg font-bold text-white">
+                        {assignedBadge.metadata.name || 'Tier Badge'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-white/70 pl-15">
+                    {assignedBadge.metadata.description || 'Your tier badge has been assigned.'}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 pl-15">
+                    <span 
+                      className="inline-block px-2 py-1 rounded text-[0.65rem] font-bold uppercase tracking-wider"
+                      style={{ 
+                        backgroundColor: TIER_CONFIG[assignedBadge.tier].color + '40',
+                        color: TIER_CONFIG[assignedBadge.tier].color,
+                        border: `1px solid ${TIER_CONFIG[assignedBadge.tier].color}`
+                      }}
+                    >
+                      {TIER_CONFIG[assignedBadge.tier].label}
+                    </span>
+                    {!assignedBadge.minted && (
+                      <span className="text-[0.65rem] text-white/50">
+                        • Mint pending
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <div className="quest-card-yugioh__meta-list">
                 {displayStage.features.map((feature, idx) => (

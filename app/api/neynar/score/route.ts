@@ -3,9 +3,34 @@ import { getNeynarServerClient } from '@/lib/neynar-server'
 
 export const dynamic = 'force-dynamic'
 
+type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
+
+/**
+ * Calculate tier from Neynar influence score
+ */
+function getTierFromScore(score: number): TierType {
+  if (score >= 1.0) return 'mythic'
+  if (score >= 0.8) return 'legendary'
+  if (score >= 0.5) return 'epic'
+  if (score >= 0.3) return 'rare'
+  return 'common'
+}
+
 /**
  * GET /api/neynar/score?fid=123
- * Fetch Neynar score for a given FID
+ * Fetch REAL Neynar influence score using lookupUserByFid
+ * 
+ * Scoring algorithm:
+ * - Base score from follower count (0-0.5)
+ * - Power badge bonus (+0.3)
+ * - Engagement ratio bonus (0-0.2)
+ * 
+ * Tier mapping:
+ * - Mythic: ≥1.0
+ * - Legendary: 0.8-1.0
+ * - Epic: 0.5-0.8
+ * - Rare: 0.3-0.5
+ * - Common: <0.3
  */
 export async function GET(request: Request) {
   try {
@@ -29,50 +54,98 @@ export async function GET(request: Request) {
 
     const neynarClient = getNeynarServerClient()
 
-    // Fetch user score from Neynar
-    // Using the fetchBulkUsers endpoint to get user details
-    const userBulk = await neynarClient.fetchBulkUsers({ fids: [fidNumber] })
+    // Use fetchBulkUsers for real Neynar data
+    const response = await neynarClient.fetchBulkUsers({ fids: [fidNumber] })
     
-    if (!userBulk?.users?.[0]) {
+    if (!response?.users?.[0]) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       )
     }
 
-    const user = userBulk.users[0]
-    
-    // Calculate a simple influence score based on:
-    // - Follower count
-    // - Following count (engagement)
-    // - Power badge (verified status)
+    const user = response.users[0]
+
+    // Extract engagement metrics
     const followerCount = user.follower_count || 0
     const followingCount = user.following_count || 0
     const hasPowerBadge = user.power_badge || false
+    const verifications = user.verifications || []
+    const activeStatus = (user as any).active_status || 'inactive'
 
-    // Normalized score (0 to 1.0+)
-    // - 1000+ followers = 0.5 base
-    // - Power badge = +0.3
-    // - Engagement ratio = +0.2
-    let score = Math.min(followerCount / 2000, 0.5)
-    if (hasPowerBadge) score += 0.3
-    
-    const engagementRatio = followingCount > 0 ? followerCount / followingCount : 0
-    if (engagementRatio > 2) score += 0.2
-    else if (engagementRatio > 1) score += 0.1
+    // Calculate influence score (0 to 1.0+)
+    let score = 0
+
+    // 1. Base follower score (0-0.5)
+    // Linear scaling: 0 followers = 0, 2000+ followers = 0.5
+    score += Math.min(followerCount / 2000, 0.5)
+
+    // 2. Power badge premium (+0.3)
+    if (hasPowerBadge) {
+      score += 0.3
+    }
+
+    // 3. Engagement ratio bonus (0-0.2)
+    // High follower/following ratio = influential
+    if (followingCount > 0) {
+      const engagementRatio = followerCount / followingCount
+      if (engagementRatio >= 3) {
+        score += 0.2 // Very influential
+      } else if (engagementRatio >= 2) {
+        score += 0.15 // Influential
+      } else if (engagementRatio >= 1) {
+        score += 0.1 // Moderately influential
+      }
+    } else if (followerCount > 100) {
+      // Edge case: many followers but follows nobody
+      score += 0.15
+    }
+
+    // 4. Active status bonus (+0.05)
+    if (activeStatus === 'active') {
+      score += 0.05
+    }
+
+    // 5. Verified addresses bonus (+0.05 per verification, max +0.15)
+    const verificationBonus = Math.min(verifications.length * 0.05, 0.15)
+    score += verificationBonus
+
+    // Round to 2 decimal places
+    const finalScore = Math.round(score * 100) / 100
+
+    // Calculate tier
+    const tier = getTierFromScore(finalScore)
 
     return NextResponse.json({
       fid: fidNumber,
-      score: Math.round(score * 100) / 100, // Round to 2 decimals
-      followerCount,
-      followingCount,
-      powerBadge: hasPowerBadge,
+      score: finalScore,
+      tier,
+      metrics: {
+        followerCount,
+        followingCount,
+        powerBadge: hasPowerBadge,
+        verifications: verifications.length,
+        activeStatus,
+        engagementRatio: followingCount > 0 
+          ? Math.round((followerCount / followingCount) * 100) / 100 
+          : null,
+      },
+      breakdown: {
+        baseScore: Math.min(followerCount / 2000, 0.5),
+        powerBadgeBonus: hasPowerBadge ? 0.3 : 0,
+        engagementBonus: finalScore - Math.min(followerCount / 2000, 0.5) - (hasPowerBadge ? 0.3 : 0),
+      },
     })
   } catch (error) {
     console.error('Error fetching Neynar score:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch score', score: 0 },
+      { 
+        error: 'Failed to fetch score', 
+        score: 0,
+        tier: 'common',
+      },
       { status: 500 }
     )
   }
 }
+

@@ -5,6 +5,18 @@ import clsx from 'clsx'
 
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import {
+  getPendingMints,
+  getFailedMints,
+  getMintQueueStats,
+  retryMint,
+  assignBadgeToUser,
+  loadBadgeRegistry,
+  getUserBadges,
+  type MintQueueEntry,
+  type BadgeRegistry,
+  type UserBadge,
+} from '@/lib/badges'
 
 // @edit-start 2025-02-16 — Rebuilt badge manager panel with metadata autofill and multichain support
 const CHAIN_LABEL: Record<ChainKey, string> = {
@@ -87,6 +99,21 @@ export default function BadgeManagerPanel() {
 
   const isEditing = editingId != null
 
+  // Phase 3B: New state for additional features
+  const [activeTab, setActiveTab] = useState<'templates' | 'queue' | 'registry' | 'assign'>('templates')
+  const [mintQueue, setMintQueue] = useState<MintQueueEntry[]>([])
+  const [queueFilter, setQueueFilter] = useState<'all' | 'pending' | 'minting' | 'minted' | 'failed'>('all')
+  const [queueLoading, setQueueLoading] = useState(false)
+  const [queueStats, setQueueStats] = useState({ pending: 0, minting: 0, minted: 0, failed: 0 })
+  const [badgeRegistry, setBadgeRegistry] = useState<BadgeRegistry | null>(null)
+  const [registryLoading, setRegistryLoading] = useState(false)
+  const [manualAssignFid, setManualAssignFid] = useState('')
+  const [manualAssignBadgeType, setManualAssignBadgeType] = useState('')
+  const [manualAssignBusy, setManualAssignBusy] = useState(false)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [detailModalBadge, setDetailModalBadge] = useState<TemplateRecord | null>(null)
+  const [detailModalAssignments, setDetailModalAssignments] = useState<UserBadge[]>([])
+
   const loadTemplates = useCallback(
     async (force?: boolean) => {
       setLoading(true)
@@ -110,9 +137,112 @@ export default function BadgeManagerPanel() {
     [notify],
   )
 
+  // Phase 3B: Mint Queue Management
+  const loadMintQueue = useCallback(async () => {
+    setQueueLoading(true)
+    try {
+      const [pending, failed, stats] = await Promise.all([
+        getPendingMints(50),
+        getFailedMints(50),
+        getMintQueueStats(),
+      ])
+      
+      let queue: MintQueueEntry[] = []
+      if (queueFilter === 'all') {
+        queue = [...pending, ...failed].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      } else if (queueFilter === 'pending') {
+        queue = pending
+      } else if (queueFilter === 'failed') {
+        queue = failed
+      }
+      
+      setMintQueue(queue)
+      setQueueStats(stats)
+    } catch (e: any) {
+      notify({ type: 'error', title: 'Failed to load mint queue', message: e?.message || 'Unknown error' })
+    } finally {
+      setQueueLoading(false)
+    }
+  }, [queueFilter, notify])
+
+  const handleRetryMint = useCallback(async (queueId: string) => {
+    try {
+      await retryMint(queueId)
+      notify({ type: 'success', title: 'Mint retry queued', message: 'Badge mint has been reset to pending' })
+      await loadMintQueue()
+    } catch (e: any) {
+      notify({ type: 'error', title: 'Retry failed', message: e?.message || 'Unable to retry mint' })
+    }
+  }, [loadMintQueue, notify])
+
+  // Phase 3B: Badge Registry Viewer
+  const loadBadgeRegistryData = useCallback(async () => {
+    setRegistryLoading(true)
+    try {
+      const registry = loadBadgeRegistry()
+      setBadgeRegistry(registry)
+    } catch (e: any) {
+      notify({ type: 'error', title: 'Failed to load registry', message: e?.message || 'Unknown error' })
+    } finally {
+      setRegistryLoading(false)
+    }
+  }, [notify])
+
+  // Phase 3B: Manual Assignment
+  const handleManualAssign = useCallback(async () => {
+    const fid = Number(manualAssignFid)
+    if (!fid || !Number.isFinite(fid) || fid <= 0) {
+      notify({ type: 'error', title: 'Invalid FID', message: 'Enter a valid Farcaster ID' })
+      return
+    }
+    if (!manualAssignBadgeType.trim()) {
+      notify({ type: 'error', title: 'Missing badge type', message: 'Select a badge type to assign' })
+      return
+    }
+
+    setManualAssignBusy(true)
+    try {
+      const res = await fetch('/api/badges/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fid, badgeId: manualAssignBadgeType }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || `HTTP ${res.status}`)
+      }
+      notify({ type: 'success', title: 'Badge assigned', message: `Assigned ${manualAssignBadgeType} to FID ${fid}` })
+      setManualAssignFid('')
+      setManualAssignBadgeType('')
+    } catch (e: any) {
+      notify({ type: 'error', title: 'Assignment failed', message: e?.message || 'Unable to assign badge' })
+    } finally {
+      setManualAssignBusy(false)
+    }
+  }, [manualAssignFid, manualAssignBadgeType, notify])
+
+  // Phase 3B: Badge Detail Modal
+  const openDetailModal = useCallback(async (template: TemplateRecord) => {
+    setDetailModalBadge(template)
+    setDetailModalOpen(true)
+    // Load assignment history (mock for now - would need API endpoint)
+    setDetailModalAssignments([])
+  }, [])
+
   useEffect(() => {
     void loadTemplates()
   }, [loadTemplates])
+
+  // Phase 3B: Load data when switching tabs
+  useEffect(() => {
+    if (activeTab === 'queue') {
+      void loadMintQueue()
+    } else if (activeTab === 'registry') {
+      void loadBadgeRegistryData()
+    }
+  }, [activeTab, loadMintQueue, loadBadgeRegistryData])
 
   const chainOptions = useMemo(
     () => (CHAIN_KEYS as ChainKey[]).map((key) => ({ value: key, label: CHAIN_LABEL[key] })),
@@ -571,29 +701,93 @@ export default function BadgeManagerPanel() {
       <div className="mx-auto w-full max-w-6xl rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-emerald-500/10">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="pixel-section-title text-lg">Badge templates</h2>
+            <h2 className="pixel-section-title text-lg">Badge Management</h2>
             <p className="text-[11px] text-[var(--px-sub)]">
-              Manage badge art, metadata, and mint costs for the Gmeow badge pipeline.
+              Manage badge templates, mint queue, registry, and assignments.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="pixel-button btn-sm"
-              onClick={() => loadTemplates(true)}
-              disabled={loading}
-            >
-              {loading ? 'Refreshing…' : 'Refresh'}
-            </button>
-            <button
-              type="button"
-              className="pixel-button btn-sm border-emerald-400/60 bg-emerald-500/15 text-emerald-100 hover:border-emerald-300/60"
-              onClick={openCreateForm}
-            >
-              New template
-            </button>
-          </div>
         </div>
+
+        {/* Phase 3B: Tab Navigation */}
+        <nav className="mb-5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('templates')}
+            className={clsx(
+              'pixel-button btn-sm transition',
+              activeTab === 'templates'
+                ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
+                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+            )}
+          >
+            Templates
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('queue')}
+            className={clsx(
+              'pixel-button btn-sm transition',
+              activeTab === 'queue'
+                ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
+                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+            )}
+          >
+            Mint Queue
+            {queueStats.pending > 0 && (
+              <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-[2px] text-[10px] font-semibold text-emerald-200">
+                {queueStats.pending}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('registry')}
+            className={clsx(
+              'pixel-button btn-sm transition',
+              activeTab === 'registry'
+                ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
+                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+            )}
+          >
+            Registry
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('assign')}
+            className={clsx(
+              'pixel-button btn-sm transition',
+              activeTab === 'assign'
+                ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
+                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+            )}
+          >
+            Manual Assign
+          </button>
+        </nav>
+
+        {/* Templates Tab (existing content) */}
+        {activeTab === 'templates' && (
+          <div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-white">Badge Templates</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="pixel-button btn-sm"
+                  onClick={() => loadTemplates(true)}
+                  disabled={loading}
+                >
+                  {loading ? 'Refreshing…' : 'Refresh'}
+                </button>
+                <button
+                  type="button"
+                  className="pixel-button btn-sm border-emerald-400/60 bg-emerald-500/15 text-emerald-100 hover:border-emerald-300/60"
+                  onClick={openCreateForm}
+                >
+                  New template
+                </button>
+              </div>
+            </div>
 
         {error ? (
           <div className="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
@@ -679,6 +873,13 @@ export default function BadgeManagerPanel() {
                 </button>
                 <button
                   type="button"
+                  className="pixel-button btn-xs border-sky-400/60 bg-sky-500/15 text-sky-200 hover:border-sky-300/60"
+                  onClick={() => openDetailModal(template)}
+                >
+                  Details
+                </button>
+                <button
+                  type="button"
                   className="pixel-button btn-xs border-red-400/60 bg-red-500/15 text-red-200 hover:border-red-300/60"
                   onClick={() => handleDelete(template)}
                 >
@@ -688,6 +889,410 @@ export default function BadgeManagerPanel() {
             </div>
           ))}
         </div>
+          </div>
+        )}
+
+        {/* Phase 3B: Mint Queue Tab */}
+        {activeTab === 'queue' && (
+          <div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-white">Mint Queue</h3>
+              <button
+                type="button"
+                className="pixel-button btn-sm"
+                onClick={loadMintQueue}
+                disabled={queueLoading}
+              >
+                {queueLoading ? 'Loading…' : 'Refresh'}
+              </button>
+            </div>
+
+            {/* Queue Stats */}
+            <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">Pending</div>
+                <div className="mt-1 text-2xl font-bold text-emerald-400">{queueStats.pending}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">Minting</div>
+                <div className="mt-1 text-2xl font-bold text-amber-400">{queueStats.minting}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">Minted</div>
+                <div className="mt-1 text-2xl font-bold text-white">{queueStats.minted}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">Failed</div>
+                <div className="mt-1 text-2xl font-bold text-red-400">{queueStats.failed}</div>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="mb-4 flex flex-wrap gap-2">
+              {(['all', 'pending', 'minting', 'minted', 'failed'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setQueueFilter(filter)}
+                  className={clsx(
+                    'pixel-button btn-xs transition',
+                    queueFilter === filter
+                      ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
+                      : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+                  )}
+                >
+                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Queue Table */}
+            {queueLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, idx) => (
+                  <div key={idx} className="h-16 animate-pulse rounded-2xl bg-white/10" />
+                ))}
+              </div>
+            ) : mintQueue.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+                No mints in queue with status: {queueFilter}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {mintQueue.map((mint) => (
+                  <div key={mint.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-white">FID {mint.fid}</span>
+                          <span className="text-[11px] text-[var(--px-sub)]">{mint.badgeType}</span>
+                          <span
+                            className={clsx(
+                              'pixel-pill text-[10px]',
+                              mint.status === 'pending' && 'bg-emerald-500/20 text-emerald-200',
+                              mint.status === 'minting' && 'bg-amber-500/20 text-amber-200',
+                              mint.status === 'minted' && 'bg-white/10 text-white/70',
+                              mint.status === 'failed' && 'bg-red-500/20 text-red-200'
+                            )}
+                          >
+                            {mint.status}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-[11px] text-[var(--px-sub)]">
+                          Created: {new Date(mint.createdAt).toLocaleString()}
+                        </div>
+                        {mint.error && (
+                          <div className="mt-2 rounded border border-red-400/30 bg-red-500/10 p-2 text-[11px] text-red-200">
+                            {mint.error}
+                          </div>
+                        )}
+                        {mint.txHash && (
+                          <div className="mt-1 text-[11px] text-[var(--px-sub)]">
+                            Tx: <span className="font-mono">{mint.txHash.slice(0, 16)}...</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {mint.status === 'failed' && (
+                          <button
+                            type="button"
+                            className="pixel-button btn-xs border-emerald-400/60 bg-emerald-500/15 text-emerald-100"
+                            onClick={() => handleRetryMint(mint.id)}
+                          >
+                            Retry (Attempt {(mint.retryCount || 0) + 1})
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Phase 3B: Badge Registry Tab */}
+        {activeTab === 'registry' && (
+          <div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-white">Badge Registry</h3>
+              <button
+                type="button"
+                className="pixel-button btn-sm"
+                onClick={loadBadgeRegistryData}
+                disabled={registryLoading}
+              >
+                {registryLoading ? 'Loading…' : 'Refresh'}
+              </button>
+            </div>
+
+            {registryLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <div key={idx} className="h-24 animate-pulse rounded-2xl bg-white/10" />
+                ))}
+              </div>
+            ) : !badgeRegistry ? (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+                Failed to load badge registry
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Registry Info */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="grid gap-2 text-[12px]">
+                    <div className="flex justify-between">
+                      <span className="text-[var(--px-sub)]">Version:</span>
+                      <span className="font-semibold text-white">{badgeRegistry.version}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--px-sub)]">Last Updated:</span>
+                      <span className="font-semibold text-white">{badgeRegistry.lastUpdated}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--px-sub)]">Total Badges:</span>
+                      <span className="font-semibold text-white">{badgeRegistry.badges.length}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tier Overview */}
+                <div>
+                  <h4 className="mb-3 text-sm font-semibold text-white">Tiers</h4>
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {Object.entries(badgeRegistry.tiers).map(([key, tier]) => (
+                      <div key={key} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: tier.color }}
+                          />
+                          <span className="text-sm font-semibold text-white">{tier.name}</span>
+                        </div>
+                        <div className="mt-2 text-[11px] text-[var(--px-sub)]">
+                          Score: {tier.scoreRange.min.toFixed(2)} - {tier.scoreRange.max.toFixed(2)}
+                        </div>
+                        <div className="text-[11px] text-[var(--px-sub)]">
+                          Bonus: +{tier.pointsBonus} points
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Badges List */}
+                <div>
+                  <h4 className="mb-3 text-sm font-semibold text-white">Registry Badges</h4>
+                  <div className="space-y-2">
+                    {badgeRegistry.badges.map((badge) => (
+                      <div key={badge.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <div className="flex items-start gap-3">
+                          {badge.imageUrl && (
+                            <div className="h-12 w-12 overflow-hidden rounded-xl border border-white/10">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={badge.imageUrl} alt={badge.name} className="h-full w-full object-cover" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-white">{badge.name}</span>
+                              <span
+                                className="pixel-pill text-[10px]"
+                                style={{ backgroundColor: `${badgeRegistry.tiers[badge.tier].color}20`, color: badgeRegistry.tiers[badge.tier].color }}
+                              >
+                                {badge.tier}
+                              </span>
+                              {badge.autoAssign && (
+                                <span className="pixel-pill bg-emerald-500/20 text-[10px] text-emerald-200">
+                                  Auto
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1 text-[11px] text-[var(--px-sub)]">{badge.description}</div>
+                            <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                              <span className="text-[var(--px-sub)]">Type: <span className="font-mono text-white">{badge.badgeType}</span></span>
+                              <span className="text-[var(--px-sub)]">•</span>
+                              <span className="text-[var(--px-sub)]">Chain: {badge.chain}</span>
+                              {badge.assignmentRule && (
+                                <>
+                                  <span className="text-[var(--px-sub)]">•</span>
+                                  <span className="text-[var(--px-sub)]">Rule: {badge.assignmentRule}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Phase 3B: Manual Assignment Tab */}
+        {activeTab === 'assign' && (
+          <div>
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-white">Manual Badge Assignment</h3>
+              <p className="text-[11px] text-[var(--px-sub)]">Assign a badge to a specific Farcaster ID</p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="flex flex-col gap-1 text-[12px]">
+                  <span className="text-white">Farcaster ID (FID)</span>
+                  <input
+                    type="number"
+                    className="pixel-input"
+                    value={manualAssignFid}
+                    onChange={(e) => setManualAssignFid(e.target.value)}
+                    placeholder="e.g., 123456"
+                    disabled={manualAssignBusy}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-[12px]">
+                  <span className="text-white">Badge Type</span>
+                  <input
+                    type="text"
+                    className="pixel-input"
+                    value={manualAssignBadgeType}
+                    onChange={(e) => setManualAssignBadgeType(e.target.value)}
+                    placeholder="e.g., og_member"
+                    disabled={manualAssignBusy}
+                  />
+                  <span className="text-[10px] text-[var(--px-sub)]">
+                    Match badge type from registry or templates
+                  </span>
+                </label>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  className="pixel-button btn-sm border-emerald-400/60 bg-emerald-500/15 text-emerald-100"
+                  onClick={handleManualAssign}
+                  disabled={manualAssignBusy}
+                >
+                  {manualAssignBusy ? 'Assigning…' : 'Assign Badge'}
+                </button>
+              </div>
+            </div>
+
+            {/* Available Badge Types Reference */}
+            {badgeRegistry && (
+              <div className="mt-5">
+                <h4 className="mb-3 text-sm font-semibold text-white">Available Badge Types</h4>
+                <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                  {badgeRegistry.badges.map((badge) => (
+                    <button
+                      key={badge.id}
+                      type="button"
+                      onClick={() => setManualAssignBadgeType(badge.badgeType)}
+                      className="rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-emerald-400/40 hover:bg-white/10"
+                    >
+                      <div className="text-sm font-semibold text-white">{badge.name}</div>
+                      <div className="mt-1 font-mono text-[11px] text-[var(--px-sub)]">{badge.badgeType}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Phase 3B: Badge Detail Modal */}
+        {detailModalOpen && detailModalBadge && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-6 shadow-xl">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="pixel-section-title text-lg">Badge Details</h3>
+                <button
+                  className="pixel-button btn-xs"
+                  onClick={() => setDetailModalOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Badge Preview */}
+                <div className="flex items-start gap-4">
+                  {detailModalBadge.imageUrl && (
+                    <div className="h-24 w-24 overflow-hidden rounded-xl border border-white/10">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={detailModalBadge.imageUrl}
+                        alt={detailModalBadge.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-lg font-semibold text-white">{detailModalBadge.name}</h4>
+                    <div className="mt-1 text-[12px] text-[var(--px-sub)]">{detailModalBadge.description}</div>
+                  </div>
+                </div>
+
+                {/* Badge Info */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <h5 className="mb-3 text-sm font-semibold text-white">Information</h5>
+                  <dl className="grid gap-2 text-[12px]">
+                    <div className="flex justify-between">
+                      <dt className="text-[var(--px-sub)]">Badge Type:</dt>
+                      <dd className="font-mono text-white">{detailModalBadge.badgeType}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-[var(--px-sub)]">Slug:</dt>
+                      <dd className="font-mono text-white">{detailModalBadge.slug}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-[var(--px-sub)]">Chain:</dt>
+                      <dd className="text-white">{CHAIN_LABEL[detailModalBadge.chain]}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-[var(--px-sub)]">Points Cost:</dt>
+                      <dd className="text-white">{detailModalBadge.pointsCost.toLocaleString()}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-[var(--px-sub)]">Status:</dt>
+                      <dd>
+                        <span
+                          className={clsx(
+                            'pixel-pill text-[10px]',
+                            detailModalBadge.active
+                              ? 'bg-emerald-500/20 text-emerald-200'
+                              : 'bg-white/10 text-white/60'
+                          )}
+                        >
+                          {detailModalBadge.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+
+                {/* Metadata */}
+                {detailModalBadge.metadata && (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <h5 className="mb-3 text-sm font-semibold text-white">Metadata</h5>
+                    <pre className="max-h-60 overflow-auto rounded border border-white/10 bg-black/40 p-3 font-mono text-[11px] text-white/80">
+                      {JSON.stringify(detailModalBadge.metadata, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
+                {/* Assignment History Placeholder */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <h5 className="mb-3 text-sm font-semibold text-white">Assignment History</h5>
+                  <div className="text-[12px] text-[var(--px-sub)]">
+                    Assignment history tracking coming soon...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {formOpen ? (
           <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/70 p-4">

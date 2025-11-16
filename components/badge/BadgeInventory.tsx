@@ -1,0 +1,281 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import Image from 'next/image'
+import { Crown, Sparkle, Lock } from '@phosphor-icons/react'
+export type UserBadge = {
+  id: string
+  fid: number
+  badgeId: string
+  badgeType: string
+  tier: TierType
+  assignedAt: string
+  minted: boolean
+  mintedAt?: string | null
+  txHash?: string | null
+  chain?: string | null
+  contractAddress?: string | null
+  tokenId?: number | null
+  metadata?: {
+    name?: string
+    description?: string
+    imageUrl?: string
+    tierLabel?: string
+    [key: string]: unknown
+  }
+}
+
+type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
+
+const TIER_CONFIG: Record<TierType, { color: string; label: string; glow: string }> = {
+  mythic: { 
+    color: '#9C27FF', 
+    label: 'Mythic',
+    glow: '0 0 20px rgba(156, 39, 255, 0.6), 0 0 40px rgba(156, 39, 255, 0.4)'
+  },
+  legendary: { 
+    color: '#FFD966', 
+    label: 'Legendary',
+    glow: '0 0 20px rgba(255, 217, 102, 0.6), 0 0 40px rgba(255, 217, 102, 0.4)'
+  },
+  epic: { 
+    color: '#61DFFF', 
+    label: 'Epic',
+    glow: '0 0 15px rgba(97, 223, 255, 0.5), 0 0 30px rgba(97, 223, 255, 0.3)'
+  },
+  rare: { 
+    color: '#A18CFF', 
+    label: 'Rare',
+    glow: '0 0 15px rgba(161, 140, 255, 0.5), 0 0 30px rgba(161, 140, 255, 0.3)'
+  },
+  common: { 
+    color: '#D3D7DC', 
+    label: 'Common',
+    glow: '0 0 10px rgba(211, 215, 220, 0.3)'
+  }
+}
+
+interface BadgeInventoryProps {
+  badges: UserBadge[]
+  compact?: boolean
+  maxDisplay?: number
+  onBadgeClick?: (badge: UserBadge) => void
+}
+
+export function BadgeInventory({ 
+  badges, 
+  compact = false, 
+  maxDisplay,
+  onBadgeClick 
+}: BadgeInventoryProps) {
+  const [selectedBadge, setSelectedBadge] = useState<UserBadge | null>(null)
+  const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
+
+  const displayBadges = useMemo(() => {
+    if (maxDisplay) return badges.slice(0, maxDisplay)
+    return badges
+  }, [badges, maxDisplay])
+
+  const handleBadgeClick = (badge: UserBadge) => {
+    setSelectedBadge(badge)
+    onBadgeClick?.(badge)
+  }
+
+  if (badges.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <Lock size={48} weight="duotone" className="text-white/20 mb-4" />
+        <p className="text-lg font-bold text-white/60 mb-2">No Badges Yet</p>
+        <p className="text-sm text-white/40">
+          Complete onboarding or join quests to earn your first badge!
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      {/* Fortnite-style Grid */}
+      <div className={`grid gap-4 ${compact ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}>
+        {displayBadges.map((badge) => {
+          const tier = badge.tier as TierType
+          const tierConfig = TIER_CONFIG[tier]
+          const isHovered = hoveredBadge === badge.id
+          const hasHolographicFoil = tier === 'mythic' || tier === 'legendary'
+
+          return (
+            <button
+              key={badge.id}
+              onClick={() => handleBadgeClick(badge)}
+              onMouseEnter={() => setHoveredBadge(badge.id)}
+              onMouseLeave={() => setHoveredBadge(null)}
+              className="relative group cursor-pointer"
+              style={{
+                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                transition: 'transform 0.2s ease-out',
+              }}
+            >
+              {/* Badge Card Container */}
+              <div
+                className="relative aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-black/80 via-black/60 to-black/80 backdrop-blur-sm border-2 transition-all duration-300"
+                style={{
+                  borderColor: tierConfig.color,
+                  boxShadow: isHovered ? tierConfig.glow : `0 0 0 rgba(0,0,0,0)`,
+                }}
+              >
+                {/* Holographic Foil Effect (Mythic & Legendary only) */}
+                {hasHolographicFoil && (
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none"
+                    style={{
+                      background: `
+                        linear-gradient(
+                          135deg, 
+                          transparent 20%,
+                          ${tierConfig.color}40 40%,
+                          ${tierConfig.color}80 50%,
+                          ${tierConfig.color}40 60%,
+                          transparent 80%
+                        )
+                      `,
+                      backgroundSize: '200% 200%',
+                      animation: 'holographic-shift 3s ease-in-out infinite',
+                    }}
+                  />
+                )}
+
+                {/* Badge Image */}
+                <div className="relative w-full h-full p-4 flex items-center justify-center">
+                  {badge.metadata?.imageUrl ? (
+                    <Image
+                      src={badge.metadata.imageUrl as string}
+                      alt={badge.metadata.name || badge.badgeType}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Crown 
+                        size={64} 
+                        weight="duotone" 
+                        style={{ color: tierConfig.color }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Tier Badge Overlay */}
+                <div 
+                  className="absolute top-2 right-2 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm"
+                  style={{
+                    backgroundColor: `${tierConfig.color}40`,
+                    color: tierConfig.color,
+                    border: `1px solid ${tierConfig.color}`,
+                  }}
+                >
+                  {tierConfig.label}
+                </div>
+
+                {/* Minted Status */}
+                {badge.minted && (
+                  <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-white backdrop-blur-sm">
+                    <Sparkle size={12} weight="fill" />
+                    Minted
+                  </div>
+                )}
+
+                {/* Bottom Info Bar */}
+                <div 
+                  className="absolute bottom-0 left-0 right-0 px-3 py-2 backdrop-blur-md"
+                  style={{
+                    background: `linear-gradient(to top, ${tierConfig.color}80, ${tierConfig.color}20)`,
+                  }}
+                >
+                  <p className="text-xs font-bold text-white truncate">
+                    {badge.metadata?.name || badge.badgeType}
+                  </p>
+                  {!badge.minted && (
+                    <p className="text-[10px] text-white/70">Mint Pending</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Hover Tooltip */}
+              {isHovered && (
+                <div 
+                  className="absolute z-50 left-1/2 -translate-x-1/2 -top-2 -translate-y-full w-64 p-4 rounded-xl shadow-2xl pointer-events-none"
+                  style={{
+                    backgroundColor: '#0a0a0a',
+                    border: `2px solid ${tierConfig.color}`,
+                    boxShadow: tierConfig.glow,
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span 
+                      className="px-2 py-1 rounded text-[10px] font-bold uppercase"
+                      style={{
+                        backgroundColor: `${tierConfig.color}40`,
+                        color: tierConfig.color,
+                        border: `1px solid ${tierConfig.color}`,
+                      }}
+                    >
+                      {tierConfig.label}
+                    </span>
+                    {badge.minted && (
+                      <span className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/80 text-white">
+                        <Sparkle size={10} weight="fill" />
+                        Minted
+                      </span>
+                    )}
+                  </div>
+
+                  <h4 className="text-sm font-bold text-white mb-1">
+                    {badge.metadata?.name || badge.badgeType}
+                  </h4>
+
+                  {badge.metadata?.description && (
+                    <p className="text-xs text-white/70 mb-2">
+                      {String(badge.metadata.description)}
+                    </p>
+                  )}
+
+                  <div className="space-y-1 text-[10px] text-white/50">
+                    <p>Assigned: {new Date(badge.assignedAt).toLocaleDateString()}</p>
+                    {badge.minted && badge.mintedAt && (
+                      <p>Minted: {new Date(badge.mintedAt).toLocaleDateString()}</p>
+                    )}
+                    {badge.txHash && (
+                      <p className="truncate">TX: {badge.txHash.slice(0, 10)}...</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Show More Indicator */}
+      {maxDisplay && badges.length > maxDisplay && (
+        <div className="mt-6 text-center">
+          <p className="text-sm text-white/50">
+            Showing {maxDisplay} of {badges.length} badges
+          </p>
+        </div>
+      )}
+
+      {/* Holographic Animation Keyframes */}
+      <style jsx>{`
+        @keyframes holographic-shift {
+          0%, 100% {
+            background-position: 0% 0%;
+          }
+          50% {
+            background-position: 100% 100%;
+          }
+        }
+      `}</style>
+    </div>
+  )
+}
