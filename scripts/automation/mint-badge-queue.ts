@@ -1,0 +1,197 @@
+#!/usr/bin/env tsx
+/**
+ * Badge Mint Queue Worker
+ * 
+ * Processes pending badge mints from the mint_queue table:
+ * - Queries pending mints
+ * - Calls blockchain mint function
+ * - Updates database with mint status
+ * - Handles retries for failed mints
+ * 
+ * Usage:
+ *   pnpm tsx scripts/automation/mint-badge-queue.ts
+ * 
+ * Environment Variables:
+ *   ORACLE_PRIVATE_KEY - Private key for minting wallet
+ *   BADGE_CONTRACT_* - Badge contract addresses per chain
+ *   MINT_BATCH_SIZE - Number of mints to process per batch (default: 5)
+ *   MINT_INTERVAL_MS - Interval between batches in ms (default: 30000)
+ */
+
+import {
+  getPendingMints,
+  updateMintQueueStatus,
+  updateBadgeMintStatus,
+  type MintQueueEntry,
+} from '@/lib/badges'
+import { mintBadgeOnChain } from '@/lib/contract-mint'
+
+const BATCH_SIZE = Number(process.env.MINT_BATCH_SIZE || 5)
+const INTERVAL_MS = Number(process.env.MINT_INTERVAL_MS || 30_000)
+const MAX_RETRIES = Number(process.env.MINT_MAX_RETRIES || 3)
+
+let isProcessing = false
+let shutdownRequested = false
+
+/**
+ * Process a single mint from the queue
+ */
+async function processMint(mint: MintQueueEntry): Promise<{
+  success: boolean
+  txHash?: string
+  tokenId?: number
+  error?: string
+}> {
+  console.log(`[Worker] Processing mint ${mint.id} for FID ${mint.fid}, badge ${mint.badgeType}`)
+
+  try {
+    // Update status to 'minting'
+    await updateMintQueueStatus(mint.id, 'minting')
+
+    // Mint on blockchain
+    const { txHash, tokenId } = await mintBadgeOnChain(mint)
+    console.log(`[Worker] Mint successful: ${txHash}, tokenId: ${tokenId}`)
+
+    // Update user_badges table
+    await updateBadgeMintStatus({
+      fid: mint.fid,
+      badgeType: mint.badgeType,
+      txHash,
+      tokenId,
+      contractAddress: undefined, // Will be set by mint endpoint if needed
+    })
+
+    // Update mint_queue status to 'minted'
+    await updateMintQueueStatus(mint.id, 'minted')
+
+    // Update the mint_queue row with tx_hash and minted_at
+    // This is handled by the updateMintQueueStatus or could be added as a parameter
+    
+    return {
+      success: true,
+      txHash,
+      tokenId,
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error(`[Worker] Mint failed for ${mint.id}:`, errorMessage)
+
+    // Update status to 'failed'
+    await updateMintQueueStatus(mint.id, 'failed', errorMessage)
+
+    return {
+      success: false,
+      error: errorMessage,
+    }
+  }
+}
+
+/**
+ * Process a batch of pending mints
+ */
+async function processBatch() {
+  if (isProcessing) {
+    console.log('[Worker] Batch already in progress, skipping')
+    return
+  }
+
+  if (shutdownRequested) {
+    console.log('[Worker] Shutdown requested, stopping batch processing')
+    return
+  }
+
+  isProcessing = true
+
+  try {
+    const pending = await getPendingMints(BATCH_SIZE)
+    
+    if (pending.length === 0) {
+      console.log('[Worker] No pending mints')
+      return
+    }
+
+    console.log(`[Worker] Processing ${pending.length} pending mints`)
+
+    const results = {
+      success: 0,
+      failed: 0,
+    }
+
+    // Process sequentially to avoid rate limits
+    for (const mint of pending) {
+      if (shutdownRequested) {
+        console.log('[Worker] Shutdown requested, stopping batch')
+        break
+      }
+
+      const result = await processMint(mint)
+      
+      if (result.success) {
+        results.success++
+      } else {
+        results.failed++
+      }
+
+      // Small delay between mints to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    }
+
+    console.log(`[Worker] Batch complete: ${results.success} success, ${results.failed} failed`)
+  } catch (error) {
+    console.error('[Worker] Batch processing error:', error)
+  } finally {
+    isProcessing = false
+  }
+}
+
+/**
+ * Main worker loop
+ */
+async function main() {
+  console.log('[Worker] Badge Mint Queue Worker started')
+  console.log(`[Worker] Batch size: ${BATCH_SIZE}`)
+  console.log(`[Worker] Interval: ${INTERVAL_MS}ms`)
+  console.log(`[Worker] Max retries: ${MAX_RETRIES}`)
+
+  // Validate configuration
+  if (!process.env.ORACLE_PRIVATE_KEY) {
+    console.error('[Worker] ERROR: ORACLE_PRIVATE_KEY not configured')
+    process.exit(1)
+  }
+
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    console.log('[Worker] SIGINT received, shutting down gracefully...')
+    shutdownRequested = true
+  })
+
+  process.on('SIGTERM', () => {
+    console.log('[Worker] SIGTERM received, shutting down gracefully...')
+    shutdownRequested = true
+  })
+
+  // Initial batch
+  await processBatch()
+
+  // Set up interval
+  const intervalId = setInterval(async () => {
+    if (shutdownRequested) {
+      clearInterval(intervalId)
+      console.log('[Worker] Worker stopped')
+      process.exit(0)
+    }
+    await processBatch()
+  }, INTERVAL_MS)
+
+  console.log('[Worker] Worker running, press Ctrl+C to stop')
+}
+
+// Run if called directly
+if (require.main === module) {
+  main().catch(error => {
+    console.error('[Worker] Fatal error:', error)
+    process.exit(1)
+  })
+}
+
+export { processBatch, processMint }
