@@ -999,3 +999,338 @@ export async function getMintQueueStats(): Promise<{
   return stats
 }
 
+// ========================================
+// NEYNAR NFT MINTING (Phase 4)
+// ========================================
+
+export type NeynarMintResult = {
+  success: boolean
+  transactionHash?: string
+  error?: string
+  errorCode?: string
+}
+
+/**
+ * Mint badge NFT via Neynar API (1-click minting)
+ * 
+ * Uses Neynar server wallet to mint NFT directly to user's FID.
+ * No wallet transaction required from user.
+ * 
+ * @param fid - Farcaster ID of recipient
+ * @param contractAddress - NFT contract address (ERC-721 or ERC-1155)
+ * @param network - Network to mint on ('base' | 'base-sepolia' | 'optimism' | etc.)
+ * @param tokenId - Optional token ID for ERC-1155 contracts
+ * @returns Mint result with transaction hash or error
+ * 
+ * @example
+ * const result = await mintBadgeViaNeynar(14206, '0x8F01...D9A8B', 'base');
+ * if (result.success) {
+ *   console.log('Minted!', result.transactionHash);
+ * }
+ */
+export async function mintBadgeViaNeynar(
+  fid: number,
+  contractAddress: string,
+  network: 'base' | 'base-sepolia' | 'optimism' | 'celo' = 'base',
+  tokenId?: string
+): Promise<NeynarMintResult> {
+  // Validate inputs
+  if (!fid || fid <= 0) {
+    return { success: false, error: 'Invalid FID', errorCode: 'INVALID_FID' }
+  }
+
+  if (!contractAddress || !contractAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+    return { success: false, error: 'Invalid contract address', errorCode: 'INVALID_CONTRACT' }
+  }
+
+  // Check for Neynar server wallet ID
+  const walletId = process.env.NEYNAR_SERVER_WALLET_ID
+  if (!walletId) {
+    console.error('[mintBadgeViaNeynar] NEYNAR_SERVER_WALLET_ID not configured')
+    return {
+      success: false,
+      error: 'Neynar server wallet not configured',
+      errorCode: 'MISSING_WALLET_ID',
+    }
+  }
+
+  try {
+    // Prepare mint request
+    const mintBody: {
+      nft_contract_address: string
+      network: string
+      recipients: Array<{ fid: number; quantity: number; token_id?: string }>
+      async: boolean
+    } = {
+      nft_contract_address: contractAddress,
+      network,
+      recipients: [
+        {
+          fid,
+          quantity: 1,
+          ...(tokenId ? { token_id: tokenId } : {}),
+        },
+      ],
+      async: false, // Wait for transaction confirmation
+    }
+
+    // Call Neynar NFT minting API
+    const response = await fetch('https://api.neynar.com/farcaster/nft/mint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-wallet-id': walletId,
+      },
+      body: JSON.stringify(mintBody),
+    })
+
+    // Handle response
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[mintBadgeViaNeynar] API error:', response.status, errorText)
+      return {
+        success: false,
+        error: `Neynar API error: ${response.status}`,
+        errorCode: 'API_ERROR',
+      }
+    }
+
+    const result = await response.json()
+
+    // Extract transaction hash from response
+    const transaction = result.transactions?.[0]
+    if (!transaction) {
+      return {
+        success: false,
+        error: 'No transaction returned from Neynar',
+        errorCode: 'NO_TRANSACTION',
+      }
+    }
+
+    // Check transaction status
+    const txStatus = transaction.status || transaction.state
+    if (txStatus === 'success' || txStatus === 'confirmed' || txStatus === 'minted') {
+      return {
+        success: true,
+        transactionHash: transaction.transaction_hash || transaction.hash || transaction.tx_hash,
+      }
+    } else if (txStatus === 'failed' || txStatus === 'error') {
+      return {
+        success: false,
+        error: transaction.error || 'Minting transaction failed',
+        errorCode: 'TX_FAILED',
+      }
+    } else {
+      // Pending or unknown status
+      return {
+        success: true,
+        transactionHash: transaction.transaction_hash || transaction.hash || transaction.tx_hash,
+      }
+    }
+  } catch (error) {
+    console.error('[mintBadgeViaNeynar] Exception:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      errorCode: 'EXCEPTION',
+    }
+  }
+}
+
+/**
+ * Batch mint badges to multiple users via Neynar API
+ * 
+ * @param recipients - Array of {fid, contractAddress, network, tokenId?}
+ * @returns Array of mint results
+ * 
+ * @example
+ * const results = await batchMintBadgesViaNeynar([
+ *   { fid: 14206, contractAddress: '0x...', network: 'base' },
+ *   { fid: 14207, contractAddress: '0x...', network: 'base' },
+ * ]);
+ */
+export async function batchMintBadgesViaNeynar(
+  recipients: Array<{
+    fid: number
+    contractAddress: string
+    network?: 'base' | 'base-sepolia' | 'optimism' | 'celo'
+    tokenId?: string
+  }>
+): Promise<NeynarMintResult[]> {
+  // Mint sequentially to avoid rate limits
+  const results: NeynarMintResult[] = []
+  for (const recipient of recipients) {
+    const result = await mintBadgeViaNeynar(
+      recipient.fid,
+      recipient.contractAddress,
+      recipient.network || 'base',
+      recipient.tokenId
+    )
+    results.push(result)
+
+    // Small delay to avoid rate limiting
+    if (recipients.length > 1) {
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+  }
+  return results
+}
+
+// ========================================
+// BADGE AWARD NOTIFICATIONS (Phase 4)
+// ========================================
+
+export type BadgeNotificationResult = {
+  success: boolean
+  error?: string
+  errorCode?: string
+}
+
+/**
+ * Send badge award push notification to user
+ * 
+ * Sends push notification to user's Farcaster client when they earn a badge.
+ * Requires user to have miniapp installed + notifications enabled.
+ * 
+ * @param fid - Farcaster ID of recipient
+ * @param badgeName - Name of badge earned (e.g., "Vanguard")
+ * @param badgeTier - Tier of badge (mythic, legendary, epic, rare, common)
+ * @param targetUrl - Optional deep link URL (defaults to badge inventory)
+ * @returns Notification result
+ * 
+ * @example
+ * await sendBadgeAwardNotification(14206, 'Vanguard', 'mythic');
+ */
+export async function sendBadgeAwardNotification(
+  fid: number,
+  badgeName: string,
+  badgeTier: TierType,
+  targetUrl?: string
+): Promise<BadgeNotificationResult> {
+  // Validate inputs
+  if (!fid || fid <= 0) {
+    return { success: false, error: 'Invalid FID', errorCode: 'INVALID_FID' }
+  }
+
+  if (!badgeName) {
+    return { success: false, error: 'Badge name required', errorCode: 'INVALID_BADGE_NAME' }
+  }
+
+  // Check for Neynar API key
+  const apiKey = process.env.NEYNAR_API_KEY || process.env.NEXT_PUBLIC_NEYNAR_API_KEY
+  if (!apiKey) {
+    console.warn('[sendBadgeAwardNotification] NEYNAR_API_KEY not configured, skipping notification')
+    return { success: false, error: 'API key not configured', errorCode: 'MISSING_API_KEY' }
+  }
+
+  try {
+    // Get origin for target URL
+    const origin =
+      process.env.NEXT_PUBLIC_FRAME_ORIGIN ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.VERCEL_URL ||
+      'https://gmeowbased.com'
+    const normalizedOrigin = origin.startsWith('http') ? origin : `https://${origin}`
+
+    // Build target URL (deep link to badge inventory)
+    const finalTargetUrl = targetUrl || `${normalizedOrigin}/profile/${fid}/badges`
+
+    // Tier emoji mapping
+    const tierEmojis: Record<TierType, string> = {
+      mythic: '🌟',
+      legendary: '👑',
+      epic: '💎',
+      rare: '✨',
+      common: '🎖️',
+    }
+
+    const tierEmoji = tierEmojis[badgeTier] || '🎖️'
+    const tierLabel = badgeTier.charAt(0).toUpperCase() + badgeTier.slice(1)
+
+    // Send notification via Neynar API
+    const response = await fetch('https://api.neynar.com/v2/farcaster/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        fids: [fid],
+        title: `New Badge Earned! ${tierEmoji}`,
+        body: `You just earned the ${badgeName} badge (${tierLabel} tier)`,
+        target_url: finalTargetUrl,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[sendBadgeAwardNotification] API error:', response.status, errorText)
+      return {
+        success: false,
+        error: `Neynar API error: ${response.status}`,
+        errorCode: 'API_ERROR',
+      }
+    }
+
+    const result = await response.json()
+
+    // Check if notification was sent
+    if (result.success !== false) {
+      return { success: true }
+    } else {
+      return {
+        success: false,
+        error: result.message || 'Notification send failed',
+        errorCode: 'SEND_FAILED',
+      }
+    }
+  } catch (error) {
+    console.error('[sendBadgeAwardNotification] Exception:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      errorCode: 'EXCEPTION',
+    }
+  }
+}
+
+/**
+ * Send batch badge award notifications to multiple users
+ * 
+ * @param notifications - Array of {fid, badgeName, badgeTier, targetUrl?}
+ * @returns Array of notification results
+ * 
+ * @example
+ * await batchSendBadgeNotifications([
+ *   { fid: 14206, badgeName: 'Vanguard', badgeTier: 'mythic' },
+ *   { fid: 14207, badgeName: 'Builder', badgeTier: 'legendary' },
+ * ]);
+ */
+export async function batchSendBadgeNotifications(
+  notifications: Array<{
+    fid: number
+    badgeName: string
+    badgeTier: TierType
+    targetUrl?: string
+  }>
+): Promise<BadgeNotificationResult[]> {
+  // Send sequentially with delay to respect rate limits
+  // Rate limits: 1 notification per 30 seconds per token, 100 per day per token
+  const results: BadgeNotificationResult[] = []
+  for (const notif of notifications) {
+    const result = await sendBadgeAwardNotification(
+      notif.fid,
+      notif.badgeName,
+      notif.badgeTier,
+      notif.targetUrl
+    )
+    results.push(result)
+
+    // Delay between notifications (respect 30s rate limit)
+    if (notifications.length > 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+  }
+  return results
+}
+

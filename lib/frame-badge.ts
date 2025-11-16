@@ -59,17 +59,48 @@ export function buildBadgeShareImageUrl(
  * 
  * @param badge - User badge data
  * @param username - Optional username for personalization
+ * @param bestFriendUsernames - Optional array of best friend usernames for viral tagging (e.g., ['alice', 'bob'])
  * @returns Share text for Warpcast composer
+ * 
+ * @example
+ * buildBadgeShareText(badge, 'alice', ['bob', 'charlie'])
+ * // Returns: "Just earned the Vanguard badge (Mythic tier) on @gmeowbased! 🎖️ Check it out @bob @charlie!"
  */
-export function buildBadgeShareText(badge: UserBadge, username?: string): string {
+export function buildBadgeShareText(
+  badge: UserBadge,
+  username?: string,
+  bestFriendUsernames?: string[]
+): string {
   const badgeName = (badge.metadata as { name?: string })?.name || badge.badgeType
   const tierLabel = badge.tier.charAt(0).toUpperCase() + badge.tier.slice(1)
 
-  if (username) {
-    return `Just earned the ${badgeName} badge (${tierLabel} tier) on @gmeowbased! 🎖️ Check out my collection!`
+  // Tier-specific emoji mapping (viral appeal)
+  const tierEmojis: Record<string, string> = {
+    mythic: '🌟',
+    legendary: '👑',
+    epic: '💎',
+    rare: '✨',
+    common: '🎖️',
+  }
+  const tierEmoji = tierEmojis[badge.tier.toLowerCase()] || '🎖️'
+
+  // Build base message
+  let text = username
+    ? `Just earned the ${badgeName} badge (${tierLabel} tier) on @gmeowbased! ${tierEmoji}`
+    : `Check out this ${badgeName} badge (${tierLabel} tier) from @gmeowbased! ${tierEmoji}`
+
+  // Add viral tagging (best friends mention)
+  if (bestFriendUsernames && bestFriendUsernames.length > 0) {
+    // Tag up to 3 best friends for optimal viral spread
+    const tagsToUse = bestFriendUsernames.slice(0, 3)
+    const tagString = tagsToUse.map(u => `@${u.replace(/^@/, '')}`).join(' ')
+    text += ` Check it out ${tagString}!`
+  } else {
+    // Default CTA without tags
+    text += ' Check out my collection!'
   }
 
-  return `Check out this ${badgeName} badge (${tierLabel} tier) from @gmeowbased! 🎖️`
+  return text
 }
 
 /**
@@ -156,4 +187,64 @@ export function getTierGradient(tier: string): { start: string; end: string } {
   }
 
   return gradients[tier.toLowerCase()] || gradients.common
+}
+
+/**
+ * Fetch user's best friends from Neynar API (for viral tagging)
+ * 
+ * Returns up to 5 relevant followers (best friends) based on engagement.
+ * Uses Neynar's "relevant followers" algorithm.
+ * 
+ * @param fid - Farcaster ID
+ * @returns Array of best friend usernames (max 5)
+ * 
+ * @example
+ * const friends = await fetchBestFriendsForSharing(14206);
+ * // Returns: ['alice', 'bob', 'charlie']
+ */
+export async function fetchBestFriendsForSharing(fid: number): Promise<string[]> {
+  // Validate FID
+  if (!fid || fid <= 0) {
+    return []
+  }
+
+  // Check for Neynar API key
+  const apiKey = process.env.NEYNAR_API_KEY || process.env.NEXT_PUBLIC_NEYNAR_API_KEY
+  if (!apiKey) {
+    console.warn('[fetchBestFriendsForSharing] NEYNAR_API_KEY not configured')
+    return []
+  }
+
+  try {
+    // Call Neynar Best Friends API (relevant followers)
+    const response = await fetch(
+      `https://api.neynar.com/v2/farcaster/followers/relevant?target_fid=${fid}&viewer_fid=${fid}`,
+      {
+        headers: {
+          'x-api-key': apiKey,
+          Accept: 'application/json',
+        },
+        cache: 'no-store',
+      }
+    )
+
+    if (!response.ok) {
+      console.error('[fetchBestFriendsForSharing] API error:', response.status)
+      return []
+    }
+
+    const result = await response.json()
+
+    // Extract usernames from relevant followers
+    const followers = result.users || result.result?.users || []
+    const usernames = followers
+      .slice(0, 5) // Max 5 best friends
+      .map((user: { username?: string }) => user.username)
+      .filter((username: string | undefined): username is string => Boolean(username))
+
+    return usernames
+  } catch (error) {
+    console.error('[fetchBestFriendsForSharing] Exception:', error)
+    return []
+  }
 }
