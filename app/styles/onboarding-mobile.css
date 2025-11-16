@@ -125,6 +125,21 @@
   }
 }
 
+/* Mobile viewport adjustment for bottom navigation */
+@media (max-width: 768px) {
+  /* Onboarding modal should not overlap bottom navigation */
+  .fixed.inset-0.z-\[9999\] {
+    padding-bottom: 80px; /* Space for pixel-nav */
+  }
+  
+  /* Center onboarding content above mobile nav */
+  .fixed.inset-0.z-\[9999\] > div {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 /* Extra small devices (phones in portrait) */
 @media (max-width: 375px) {
   .quest-card-yugioh {
