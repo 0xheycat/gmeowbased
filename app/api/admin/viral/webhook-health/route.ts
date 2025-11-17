@@ -47,11 +47,14 @@ export async function GET(req: NextRequest) {
 
     // 2. Query webhook events from gmeow_rank_events
     // Phase 5.1 logs webhook-received and webhook-error events
+    const yesterday = new Date()
+    yesterday.setHours(yesterday.getHours() - 24)
+
     const { data: webhookEvents, error } = await supabase
       .from('gmeow_rank_events')
       .select('event_type, metadata, created_at')
       .in('event_type', ['webhook-received', 'webhook-error'])
-      .gte('created_at', `now() - interval '24 hours'`)
+      .gte('created_at', yesterday.toISOString())
       .order('created_at', { ascending: false })
 
     if (error) {
