@@ -35,21 +35,6 @@ type NotificationStats = {
   avg_delivery_time_ms: number | null
 }
 
-function getTimeframeInterval(timeframe: string): string {
-  switch (timeframe) {
-    case '24h':
-      return '24 hours'
-    case '7d':
-      return '7 days'
-    case '30d':
-      return '30 days'
-    case 'all':
-      return '10 years' // effectively no limit
-    default:
-      return '7 days'
-  }
-}
-
 export async function GET(req: NextRequest) {
   try {
     // 1. Admin auth check
@@ -64,7 +49,6 @@ export async function GET(req: NextRequest) {
     // 2. Parse query params
     const { searchParams } = new URL(req.url)
     const timeframe = searchParams.get('timeframe') ?? '7d'
-    const interval = getTimeframeInterval(timeframe)
 
     const supabase = getSupabaseServerClient()
     if (!supabase) {
@@ -76,11 +60,22 @@ export async function GET(req: NextRequest) {
 
     // 3. Query notification events from gmeow_rank_events
     // Phase 5.1 logs notification-sent and notification-failed events
+    const cutoffDate = new Date()
+    if (timeframe === '24h') {
+      cutoffDate.setHours(cutoffDate.getHours() - 24)
+    } else if (timeframe === '7d') {
+      cutoffDate.setDate(cutoffDate.getDate() - 7)
+    } else if (timeframe === '30d') {
+      cutoffDate.setDate(cutoffDate.getDate() - 30)
+    } else {
+      cutoffDate.setFullYear(cutoffDate.getFullYear() - 10) // 'all' timeframe
+    }
+
     const { data: events, error } = await supabase
       .from('gmeow_rank_events')
       .select('event_type, metadata, created_at')
       .in('event_type', ['notification-sent', 'notification-failed'])
-      .gte('created_at', `now() - interval '${interval}'`)
+      .gte('created_at', cutoffDate.toISOString())
       .order('created_at', { ascending: true })
 
     if (error) {
