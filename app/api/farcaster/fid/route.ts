@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { Address } from 'viem'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { AddressSchema } from '@/lib/validation/api-schemas'
 import { fetchFidByAddress } from '@/lib/neynar'
 
 function isAddress(a?: string): a is Address {
