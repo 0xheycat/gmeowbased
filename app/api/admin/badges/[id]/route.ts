@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { AdminBadgeUpdateSchema } from '@/lib/validation/api-schemas'
 import { deleteBadgeTemplate, getBadgeTemplateById, invalidateBadgeCaches, updateBadgeTemplate } from '@/lib/badges'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
@@ -120,6 +121,20 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
   try {
     const body = await req.json()
+    
+    // Zod validation
+    const validation = AdminBadgeUpdateSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: 'Invalid badge update data',
+          details: validation.error.flatten()
+        },
+        { status: 400 }
+      )
+    }
+    
     const updates = normalizeInput(body, true)
     const id = await resolveId(context)
     const template = await updateBadgeTemplate(id, updates)

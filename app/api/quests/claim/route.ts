@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { QuestClaimSchema } from '@/lib/validation/api-schemas'
 
 // Demo in-memory store; swap to DB/KV in prod
 const claims = new Map<string, { at: number; metaHash: string | null }>()
@@ -17,6 +18,20 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json()
+    
+    // Zod validation
+    const validation = QuestClaimSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { 
+          ok: false, 
+          reason: 'Invalid claim data',
+          details: validation.error.flatten()
+        },
+        { status: 400 }
+      )
+    }
+    
     const { chain, questId, address, metaHash } = body || {}
     if (!chain || questId == null || !address) {
       return NextResponse.json({ ok: false, reason: 'Missing fields' }, { status: 400 })
