@@ -22,7 +22,7 @@ describe('viral-engagement-sync', () => {
   describe('fetchCastEngagement', () => {
     it('should fetch engagement metrics from Neynar API', async () => {
       const mockClient = {
-        lookupCastByHashOrWarpcastUrl: jest.fn().mockResolvedValue({
+        lookupCastByHashOrUrl: jest.fn().mockResolvedValue({
           cast: {
             reactions: {
               likes_count: 10,
@@ -46,7 +46,7 @@ describe('viral-engagement-sync', () => {
         replies: 3,
       })
 
-      expect(mockClient.lookupCastByHashOrWarpcastUrl).toHaveBeenCalledWith({
+      expect(mockClient.lookupCastByHashOrUrl).toHaveBeenCalledWith({
         identifier: '0xtest123',
         type: 'hash',
       })
@@ -54,7 +54,7 @@ describe('viral-engagement-sync', () => {
 
     it('should handle API errors with retry logic', async () => {
       const mockClient = {
-        lookupCastByHashOrWarpcastUrl: jest
+        lookupCastByHashOrUrl: jest
           .fn()
           .mockRejectedValueOnce(new Error('Network error'))
           .mockRejectedValueOnce(new Error('Network error'))
@@ -72,7 +72,7 @@ describe('viral-engagement-sync', () => {
       const metrics = await fetchCastEngagement('0xtest456')
 
       expect(metrics.likes).toBe(5)
-      expect(mockClient.lookupCastByHashOrWarpcastUrl).toHaveBeenCalledTimes(3)
+      expect(mockClient.lookupCastByHashOrUrl).toHaveBeenCalledTimes(3)
     })
 
     it('should validate input and reject invalid cast hash', async () => {
@@ -81,7 +81,7 @@ describe('viral-engagement-sync', () => {
 
     it('should enforce non-negative engagement metrics', async () => {
       const mockClient = {
-        lookupCastByHashOrWarpcastUrl: jest.fn().mockResolvedValue({
+        lookupCastByHashOrUrl: jest.fn().mockResolvedValue({
           cast: {
             reactions: {
               likes_count: -5, // Invalid negative value
