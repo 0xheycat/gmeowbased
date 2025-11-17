@@ -14,6 +14,7 @@
 import { redirect } from 'next/navigation'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { headers } from 'next/headers'
+import { NextRequest } from 'next/server'
 import Link from 'next/link'
 
 // Client components
@@ -26,7 +27,7 @@ import WebhookHealthMonitor from '@/components/admin/viral/WebhookHealthMonitor'
 export default async function ViralAdminPage() {
   // Admin auth check
   const headersList = await headers()
-  const request = new Request('https://dummy.com', {
+  const request = new NextRequest('https://dummy.com', {
     headers: headersList,
   })
 

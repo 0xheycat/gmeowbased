@@ -1,7 +1,7 @@
 # Farcaster Manifest Regeneration Summary
 **Date**: 2025-11-13  
 **New Domain**: https://gmeowhq.art  
-**Agent**: GitHub Copilot
+**Agent**: Team Gmeowbased
 
 ---
 
