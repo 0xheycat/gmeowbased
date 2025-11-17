@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
+import { withErrorHandler } from '@/lib/error-handler'
 
 type WebhookHealth = {
   last_webhook_at: string | null
@@ -27,7 +28,7 @@ type WebhookHealth = {
   }>
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -38,9 +39,8 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  try {
-    // 1. Admin auth check
-    const auth = await validateAdminRequest(req)
+  // 1. Admin auth check
+  const auth = await validateAdminRequest(req)
     if (!auth.ok && auth.reason !== 'admin_security_disabled') {
       return NextResponse.json(
         { ok: false, error: 'admin_auth_required', reason: auth.reason },
@@ -153,20 +153,8 @@ export async function GET(req: NextRequest) {
       health.avg_processing_time_ms = Math.round(sum / processingTimes.length)
     }
 
-    // 6. Return health metrics
     return NextResponse.json({
       ok: true,
       health,
     })
-  } catch (error) {
-    console.error('[webhook-health] Unexpected error:', error)
-    return NextResponse.json(
-      {
-        ok: false,
-        error: 'internal_error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
-  }
-}
+})

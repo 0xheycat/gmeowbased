@@ -3,6 +3,7 @@ import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { getViralTier, calculateEngagementScore, type EngagementMetrics } from '@/lib/viral-bonus'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,7 +42,7 @@ type TierBreakdown = {
   active: number
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -52,9 +53,8 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  try {
-    const { searchParams } = new URL(request.url)
-    const fidParam = searchParams.get('fid')
+  const { searchParams } = new URL(request.url)
+  const fidParam = searchParams.get('fid')
     
     // GI-11: Input validation
     if (!fidParam) {
@@ -176,7 +176,6 @@ export async function GET(request: NextRequest) {
       else if (tier.name === 'Active') tierBreakdown.active++
     })
     
-    // GI-13: Return structured, user-friendly response
     return NextResponse.json({
       fid,
       totalViralXp,
@@ -185,11 +184,4 @@ export async function GET(request: NextRequest) {
       tierBreakdown,
       averageXpPerCast: casts.length > 0 ? Math.round(totalViralXp / casts.length) : 0,
     })
-  } catch (error) {
-    console.error('[Viral Stats] Unexpected error:', error)
-    return NextResponse.json(
-      { error: 'Internal Error', message: 'Failed to process request' },
-      { status: 500 }
-    )
-  }
-}
+})

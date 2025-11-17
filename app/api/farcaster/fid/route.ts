@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { Address } from 'viem'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { fetchFidByAddress } from '@/lib/neynar'
+import { withErrorHandler, handleValidationError, handleRateLimitError, handleExternalApiError } from '@/lib/error-handler'
 
 function isAddress(a?: string): a is Address {
   return !!a && /^0x[a-fA-F0-9]{40}$/.test(a)
@@ -9,26 +10,25 @@ function isAddress(a?: string): a is Address {
 
 export const runtime = 'nodejs'
 
-export async function GET(req: Request) {
+export const GET = withErrorHandler(async (req: Request) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded' },
-      { status: 429 }
-    )
+    return handleRateLimitError(60)
   }
 
+  const { searchParams } = new URL(req.url)
+  const address = searchParams.get('address') || ''
+  
+  if (!isAddress(address)) {
+    return handleValidationError(new Error(`Invalid Ethereum address format: ${address}`))
+  }
+  
   try {
-    const { searchParams } = new URL(req.url)
-    const address = searchParams.get('address') || ''
-    if (!isAddress(address)) {
-      return NextResponse.json({ ok: false, reason: 'Invalid address' }, { status: 422 })
-    }
     const fid = await fetchFidByAddress(address)
     return NextResponse.json({ ok: true, fid: fid ?? 0 })
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, reason: e?.message || 'failed' }, { status: 500 })
+  } catch (error) {
+    throw handleExternalApiError(error instanceof Error ? error : new Error('Failed to fetch FID'), 'Neynar')
   }
-}
+})

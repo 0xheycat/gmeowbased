@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
 import { FIDSchema } from '@/lib/validation/api-schemas'
+import { withErrorHandler } from '@/lib/error-handler'
 
 /**
  * Farcaster Frame: Badge Showcase
  * Displays user's latest badge with tier styling
  * Route: /api/frame/badge?fid=xxx
  */
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -16,9 +17,8 @@ export async function GET(request: NextRequest) {
     return new NextResponse('Rate limit exceeded', { status: 429 })
   }
 
-  try {
-    const { searchParams } = new URL(request.url)
-    const fidParam = searchParams.get('fid')
+  const { searchParams } = new URL(request.url)
+  const fidParam = searchParams.get('fid')
 
     if (!fidParam) {
       return new NextResponse('Missing fid parameter', { status: 400 })
@@ -155,11 +155,7 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'public, max-age=300, s-maxage=300',
       },
     })
-  } catch (error) {
-    console.error('[Frame Badge] Error:', error)
-    return new NextResponse('Internal server error', { status: 500 })
-  }
-}
+})
 
 function getBaseUrl(request: NextRequest): string {
   const host = request.headers.get('host') || 'gmeowhq.art'

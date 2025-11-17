@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getNeynarServerClient } from '@/lib/neynar-server'
+import { withErrorHandler, handleValidationError, handleNotFoundError, handleExternalApiError } from '@/lib/error-handler'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,37 +33,35 @@ function getTierFromScore(score: number): TierType {
  * - Rare: 0.3-0.5
  * - Common: <0.3
  */
-export async function GET(request: Request) {
+export const GET = withErrorHandler(async (request: Request) => {
+  const { searchParams } = new URL(request.url)
+  const fid = searchParams.get('fid')
+
+  if (!fid) {
+    return handleValidationError(new Error('Missing fid parameter'))
+  }
+
+  const fidNumber = parseInt(fid, 10)
+  if (isNaN(fidNumber) || fidNumber <= 0) {
+    return handleValidationError(new Error(`Invalid fid parameter: ${fid}`))
+  }
+
+  const neynarClient = getNeynarServerClient()
+
+  // Use fetchBulkUsers for real Neynar data
+  let response
   try {
-    const { searchParams } = new URL(request.url)
-    const fid = searchParams.get('fid')
-
-    if (!fid) {
-      return NextResponse.json(
-        { error: 'Missing fid parameter' },
-        { status: 400 }
-      )
-    }
-
-    const fidNumber = parseInt(fid, 10)
-    if (isNaN(fidNumber)) {
-      return NextResponse.json(
-        { error: 'Invalid fid parameter' },
-        { status: 400 }
-      )
-    }
-
-    const neynarClient = getNeynarServerClient()
-
-    // Use fetchBulkUsers for real Neynar data
-    const response = await neynarClient.fetchBulkUsers({ fids: [fidNumber] })
-    
-    if (!response?.users?.[0]) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
+    response = await neynarClient.fetchBulkUsers({ fids: [fidNumber] })
+  } catch (error) {
+    throw handleExternalApiError(
+      error instanceof Error ? error : new Error('Failed to fetch user data'),
+      'Neynar'
+    )
+  }
+  
+  if (!response?.users?.[0]) {
+    return handleNotFoundError('User')
+  }
 
     const user = response.users[0]
 
@@ -130,22 +129,10 @@ export async function GET(request: Request) {
           ? Math.round((followerCount / followingCount) * 100) / 100 
           : null,
       },
-      breakdown: {
-        baseScore: Math.min(followerCount / 2000, 0.5),
-        powerBadgeBonus: hasPowerBadge ? 0.3 : 0,
-        engagementBonus: finalScore - Math.min(followerCount / 2000, 0.5) - (hasPowerBadge ? 0.3 : 0),
-      },
-    })
-  } catch (error) {
-    console.error('Error fetching Neynar score:', error)
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch score', 
-        score: 0,
-        tier: 'common',
-      },
-      { status: 500 }
-    )
-  }
-}
-
+    breakdown: {
+      baseScore: Math.min(followerCount / 2000, 0.5),
+      powerBadgeBonus: hasPowerBadge ? 0.3 : 0,
+      engagementBonus: finalScore - Math.min(followerCount / 2000, 0.5) - (hasPowerBadge ? 0.3 : 0),
+    },
+  })
+})

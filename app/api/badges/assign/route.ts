@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { assignBadgeToUser, getBadgeFromRegistry } from '@/lib/badges'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { BadgeAssignSchema } from '@/lib/validation/api-schemas'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,12 +19,11 @@ type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
  *   metadata?: Record<string, unknown>
  * }
  */
-export async function POST(request: Request) {
-  try {
-    const body = await request.json()
-    
-    // Validate input with Zod
-    const validationResult = BadgeAssignSchema.safeParse(body)
+export const POST = withErrorHandler(async (request: Request) => {
+  const body = await request.json()
+  
+  // Validate input with Zod
+  const validationResult = BadgeAssignSchema.safeParse(body)
     if (!validationResult.success) {
       console.error('[Badge Assign] Validation failed:', validationResult.error.issues)
       return NextResponse.json(
@@ -88,16 +88,5 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       badge,
-      mintQueued: !!profile?.wallet_address,
     })
-  } catch (error) {
-    console.error('Error assigning badge:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to assign badge' 
-      },
-      { status: 500 }
-    )
-  }
-}
+})

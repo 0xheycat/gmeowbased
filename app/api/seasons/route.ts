@@ -3,19 +3,23 @@ import { NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
 import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey } from '@/lib/gm-utils'
 import { getRpcUrl } from '@/lib/rpc'
+import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
 
 const CACHE_TTL = 30_000
 let cache: { key: string; at: number; data: SeasonsResponse } | null = null
 
 const HAS_SEASON_ABI = gmContractHasFunction('getAllSeasons') && gmContractHasFunction('getSeason')
 
-export async function GET(req: Request) {
-  try {
-    const url = new URL(req.url)
-    const chain = (url.searchParams.get('chain') || 'base') as ChainKey
-    const contractAddr = CONTRACT_ADDRESSES[chain]
-    const chainId = CHAIN_IDS[chain]
-    if (!contractAddr || !chainId) return NextResponse.json({ ok: false, reason: 'bad chain' }, { status: 400 })
+export const GET = withErrorHandler(async (req: Request) => {
+  const url = new URL(req.url)
+  const chain = (url.searchParams.get('chain') || 'base') as ChainKey
+  
+  // Validate chain parameter
+  const contractAddr = CONTRACT_ADDRESSES[chain]
+  const chainId = CHAIN_IDS[chain]
+  if (!contractAddr || !chainId) {
+    return handleValidationError(new Error(`Invalid chain parameter: ${chain}. Supported chains: ${Object.keys(CONTRACT_ADDRESSES).join(', ')}`))
+  }
 
     const key = `seasons:${chain}`
     if (cache && cache.key === key && Date.now() - cache.at < CACHE_TTL) {
@@ -28,27 +32,32 @@ export async function GET(req: Request) {
       return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
     }
 
-    let rpc = ''
-    try {
-      rpc = getRpcUrl(chain)
-    } catch {
-      rpc = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_BASE || ''
+  let rpc = ''
+  try {
+    rpc = getRpcUrl(chain)
+  } catch (error) {
+    rpc = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_BASE || ''
+    if (!rpc) {
+      throw handleExternalApiError(error instanceof Error ? error : new Error('RPC URL not configured'), 'RPC')
     }
-    const client = createPublicClient({ transport: http(rpc) })
+  }
+  const client = createPublicClient({ transport: http(rpc) })
 
-    // Read all seasons count via getAllSeasons (returns ids)
-    let ids: readonly bigint[] = []
-    try {
-      const res = await client.readContract({
-        address: contractAddr,
-        abi: GM_CONTRACT_ABI,
-        functionName: 'getAllSeasons',
-        args: [],
-      })
-      ids = Array.isArray(res) ? (res as unknown as readonly bigint[]) : []
-    } catch {
-      ids = []
-    }
+  // Read all seasons count via getAllSeasons (returns ids)
+  let ids: readonly bigint[] = []
+  try {
+    const res = await client.readContract({
+      address: contractAddr,
+      abi: GM_CONTRACT_ABI,
+      functionName: 'getAllSeasons',
+      args: [],
+    })
+    ids = Array.isArray(res) ? (res as unknown as readonly bigint[]) : []
+  } catch (error) {
+    // Empty season list is acceptable fallback
+    console.warn(`[Seasons] Failed to read getAllSeasons for ${chain}:`, error)
+    ids = []
+  }
 
     const out: SeasonInfo[] = []
     const now = Date.now() / 1000
@@ -77,15 +86,11 @@ export async function GET(req: Request) {
       }
     }
 
-    // mark "current" explicitly
-    const data: SeasonsResponse = { ok: true, chain, seasons: out.sort((a, b) => b.id - a.id) }
-    cache = { key, at: Date.now(), data }
-    return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'failed'
-    return NextResponse.json({ ok: false, reason: message }, { status: 500 })
-  }
-}
+  // mark "current" explicitly
+  const data: SeasonsResponse = { ok: true, chain, seasons: out.sort((a, b) => b.id - a.id) }
+  cache = { key, at: Date.now(), data }
+  return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
+})
 
 type SeasonTuple = readonly [bigint, bigint, bigint, boolean, string, boolean]
 type SeasonInfo = {
