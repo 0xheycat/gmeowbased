@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 
 /**
  * Badge Analytics Endpoint
@@ -7,6 +8,17 @@ import { getSupabaseServerClient } from '@/lib/supabase-server'
  * Returns: new badges in last 24h, badge distribution by tier, top 20 users by tier
  */
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const ip = getClientIp(request)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const supabase = getSupabaseServerClient()
     if (!supabase) {
