@@ -1142,6 +1142,23 @@ function buildFrameHtml(params: {
     console.warn(`[buildFrameHtml] Button limit exceeded: ${originalCount} buttons provided, truncated to 4`)
   }
   
+  // Build JSON frame format for new Farcaster (post-rebrand)
+  const primaryButton = validatedButtons[0]
+  const frameJsonMeta = primaryButton && frameOrigin && imageEsc ? {
+    version: 'next',
+    imageUrl: resolvedImage,
+    button: {
+      title: primaryButton.label,
+      action: {
+        type: 'launch_frame',
+        name: title,
+        url: frameOrigin,
+        splashImageUrl: `${frameOrigin}/splash.png`,
+        splashBackgroundColor: '#0B0A16',
+      }
+    }
+  } : null
+  
   const linkButtons = validatedButtons.filter((btn) => (btn.action ?? 'link') === 'link' && !!btn.target)
   const buttonHtml = validatedButtons
     .map((btn, idx) => {
@@ -1177,6 +1194,9 @@ function buildFrameHtml(params: {
     ? `<details class="debug-panel" open><summary>Debug payload</summary><pre>${escapeHtml(JSON.stringify(debug, null, 2))}</pre></details>`
     : ''
   const chainDataAttr = chainKey ? ` data-chain="${escapeHtml(chainKey)}"` : ''
+  const frameJsonMetaTag = frameJsonMeta 
+    ? `<meta name="fc:frame" content='${JSON.stringify(frameJsonMeta).replace(/'/g, "&#39;")}' />`
+    : ''
   return `<!doctype html>
   <html lang="en"${chainDataAttr}>
   <head>
@@ -1184,6 +1204,7 @@ function buildFrameHtml(params: {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>${pageTitle}</title>
     <meta name="description" content="${desc}" />
+    ${frameJsonMetaTag}
     <meta property="og:title" content="${pageTitle}" />
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
