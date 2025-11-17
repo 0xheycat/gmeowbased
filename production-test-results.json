@@ -1,0 +1,1699 @@
+{
+  "passed": [
+    {
+      "name": "Leaderboard",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 311,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:12.690Z"
+    },
+    {
+      "name": "User Profile",
+      "method": "GET",
+      "path": "/api/user/profile?fid=3",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 819,
+      "passed": true,
+      "data": {
+        "fid": 3,
+        "username": "dwr",
+        "displayName": "Dan Romero",
+        "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/bc698287-5adc-4cc5-a503-de16963ed900/original",
+        "bio": "Working on Farcaster",
+        "followerCount": 605262,
+        "followingCount": 1449,
+        "powerBadge": true,
+        "verifiedAddresses": {
+          "eth_addresses": [
+            "0x187c7b0393ebe86378128f2653d0930e33218899",
+            "0x6ce09ed5526de4afe4a981ad86d17b2f5c92fea5"
+          ],
+          "sol_addresses": [
+            "ExAqci8uUVKtqHqFW58fmwgMMY9PATfRGGyv6837j9Lx"
+          ],
+          "primary": {
+            "eth_address": "0x6ce09ed5526de4afe4a981ad86d17b2f5c92fea5",
+            "sol_address": "ExAqci8uUVKtqHqFW58fmwgMMY9PATfRGGyv6837j9Lx"
+          }
+        },
+        "custodyAddress": "0x6b0bda3f2ffed5efc83fa8c024acff1dd45793f1"
+      },
+      "timestamp": "2025-11-17T19:41:13.511Z"
+    },
+    {
+      "name": "Viral Stats",
+      "method": "GET",
+      "path": "/api/viral/stats?fid=3",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 1058,
+      "passed": true,
+      "data": {
+        "fid": 3,
+        "totalViralXp": 0,
+        "totalCasts": 0,
+        "topCasts": [],
+        "tierBreakdown": {
+          "mega_viral": 0,
+          "viral": 0,
+          "popular": 0,
+          "engaging": 0,
+          "active": 0
+        },
+        "message": "No badge casts found. Share your first badge to start earning viral XP!"
+      },
+      "timestamp": "2025-11-17T19:41:14.572Z"
+    },
+    {
+      "name": "Analytics Summary",
+      "method": "GET",
+      "path": "/api/analytics/summary",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 593,
+      "passed": true,
+      "data": {
+        "refreshedAt": 1763408475021,
+        "summary": {
+          "tips": {
+            "value": 0,
+            "delta": 0
+          },
+          "quests": {
+            "value": 0,
+            "delta": 0
+          },
+          "guilds": {
+            "value": 0,
+            "delta": 0
+          },
+          "badges": {
+            "value": 0,
+            "delta": 0
+          }
+        },
+        "trends": {
+          "tips": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "quests": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "guilds": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "alerts": []
+      },
+      "timestamp": "2025-11-17T19:41:15.167Z"
+    },
+    {
+      "name": "Frame Identify",
+      "method": "GET",
+      "path": "/api/frame/identify?fid=3",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 343,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "identity": {
+          "username": "dwr",
+          "displayName": "Dan Romero",
+          "fid": 3,
+          "walletAddress": "0x187c7b0393ebe86378128f2653d0930e33218899",
+          "custodyAddress": "0x6b0bda3f2ffed5efc83fa8c024acff1dd45793f1",
+          "powerBadge": true
+        }
+      },
+      "timestamp": "2025-11-17T19:41:15.512Z"
+    },
+    {
+      "name": "Admin Webhook Health",
+      "method": "GET",
+      "path": "/api/admin/viral/webhook-health",
+      "status": 401,
+      "expectedStatus": 401,
+      "duration": 75,
+      "passed": true,
+      "data": {
+        "error": "admin_auth_required"
+      },
+      "timestamp": "2025-11-17T19:41:16.743Z"
+    },
+    {
+      "name": "Admin Badges List",
+      "method": "GET",
+      "path": "/api/admin/badges",
+      "status": 401,
+      "expectedStatus": 401,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "error": "admin_auth_required"
+      },
+      "timestamp": "2025-11-17T19:41:16.813Z"
+    },
+    {
+      "name": "Admin Bot Cast",
+      "method": "POST",
+      "path": "/api/admin/bot/cast",
+      "status": 401,
+      "expectedStatus": 401,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "error": "admin_auth_required"
+      },
+      "timestamp": "2025-11-17T19:41:16.881Z"
+    },
+    {
+      "name": "Rate Limit Test 1",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:16.951Z"
+    },
+    {
+      "name": "Rate Limit Test 2",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 66,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.018Z"
+    },
+    {
+      "name": "Rate Limit Test 3",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 74,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.094Z"
+    },
+    {
+      "name": "Rate Limit Test 4",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 58,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.153Z"
+    },
+    {
+      "name": "Rate Limit Test 5",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.222Z"
+    },
+    {
+      "name": "Rate Limit Test 6",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 63,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.285Z"
+    },
+    {
+      "name": "Rate Limit Test 7",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 71,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.357Z"
+    },
+    {
+      "name": "Rate Limit Test 8",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 83,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.441Z"
+    },
+    {
+      "name": "Rate Limit Test 9",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 91,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.533Z"
+    },
+    {
+      "name": "Rate Limit Test 10",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 76,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.610Z"
+    },
+    {
+      "name": "Rate Limit Test 11",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 65,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.677Z"
+    },
+    {
+      "name": "Rate Limit Test 12",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 67,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.745Z"
+    },
+    {
+      "name": "Rate Limit Test 13",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.814Z"
+    },
+    {
+      "name": "Rate Limit Test 14",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.885Z"
+    },
+    {
+      "name": "Rate Limit Test 15",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 75,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:17.961Z"
+    },
+    {
+      "name": "Rate Limit Test 16",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 61,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408447800,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.025Z"
+    },
+    {
+      "name": "Rate Limit Test 17",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 92,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.118Z"
+    },
+    {
+      "name": "Rate Limit Test 18",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 74,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.192Z"
+    },
+    {
+      "name": "Rate Limit Test 19",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.260Z"
+    },
+    {
+      "name": "Rate Limit Test 20",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 67,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.329Z"
+    },
+    {
+      "name": "Rate Limit Test 21",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 63,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.393Z"
+    },
+    {
+      "name": "Rate Limit Test 22",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 67,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.460Z"
+    },
+    {
+      "name": "Rate Limit Test 23",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 64,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.524Z"
+    },
+    {
+      "name": "Rate Limit Test 24",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 63,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.589Z"
+    },
+    {
+      "name": "Rate Limit Test 25",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 148,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.740Z"
+    },
+    {
+      "name": "Rate Limit Test 26",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 80,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.821Z"
+    },
+    {
+      "name": "Rate Limit Test 27",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 71,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.893Z"
+    },
+    {
+      "name": "Rate Limit Test 28",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 67,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:18.961Z"
+    },
+    {
+      "name": "Rate Limit Test 29",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 61,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.022Z"
+    },
+    {
+      "name": "Rate Limit Test 30",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 61,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.087Z"
+    },
+    {
+      "name": "Rate Limit Test 31",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 72,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.161Z"
+    },
+    {
+      "name": "Rate Limit Test 32",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 77,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.238Z"
+    },
+    {
+      "name": "Rate Limit Test 33",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 63,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.303Z"
+    },
+    {
+      "name": "Rate Limit Test 34",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 71,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.376Z"
+    },
+    {
+      "name": "Rate Limit Test 35",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408477904,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.445Z"
+    },
+    {
+      "name": "Rate Limit Test 36",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 63,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.508Z"
+    },
+    {
+      "name": "Rate Limit Test 37",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 64,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.572Z"
+    },
+    {
+      "name": "Rate Limit Test 38",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 98,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.673Z"
+    },
+    {
+      "name": "Rate Limit Test 39",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 96,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.774Z"
+    },
+    {
+      "name": "Rate Limit Test 40",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 94,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.868Z"
+    },
+    {
+      "name": "Rate Limit Test 41",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 73,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:19.943Z"
+    },
+    {
+      "name": "Rate Limit Test 42",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 69,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.012Z"
+    },
+    {
+      "name": "Rate Limit Test 43",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 61,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.074Z"
+    },
+    {
+      "name": "Rate Limit Test 44",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 110,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.187Z"
+    },
+    {
+      "name": "Rate Limit Test 45",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 65,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.252Z"
+    },
+    {
+      "name": "Rate Limit Test 46",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 60,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.313Z"
+    },
+    {
+      "name": "Rate Limit Test 47",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 78,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.392Z"
+    },
+    {
+      "name": "Rate Limit Test 48",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 70,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.464Z"
+    },
+    {
+      "name": "Rate Limit Test 49",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.533Z"
+    },
+    {
+      "name": "Rate Limit Test 50",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 92,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.625Z"
+    },
+    {
+      "name": "Rate Limit Test 51",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 71,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.696Z"
+    },
+    {
+      "name": "Rate Limit Test 52",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 64,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.761Z"
+    },
+    {
+      "name": "Rate Limit Test 53",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 67,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.828Z"
+    },
+    {
+      "name": "Rate Limit Test 54",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 63,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.892Z"
+    },
+    {
+      "name": "Rate Limit Test 55",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 64,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:20.958Z"
+    },
+    {
+      "name": "Rate Limit Test 56",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 63,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.022Z"
+    },
+    {
+      "name": "Rate Limit Test 57",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 66,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.091Z"
+    },
+    {
+      "name": "Rate Limit Test 58",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 65,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.157Z"
+    },
+    {
+      "name": "Rate Limit Test 59",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 71,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.228Z"
+    },
+    {
+      "name": "Rate Limit Test 60",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 64,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.293Z"
+    },
+    {
+      "name": "Malformed JSON",
+      "method": "POST",
+      "path": "/api/onboard/complete",
+      "status": 400,
+      "expectedStatus": 400,
+      "duration": 553,
+      "passed": true,
+      "data": {
+        "success": false,
+        "error": "Missing required field: fid"
+      },
+      "timestamp": "2025-11-17T19:41:27.205Z"
+    }
+  ],
+  "failed": [
+    {
+      "name": "Invalid FID (negative)",
+      "method": "GET",
+      "path": "/api/user/profile?fid=-1",
+      "status": 500,
+      "expectedStatus": 400,
+      "duration": 336,
+      "passed": false,
+      "data": {
+        "error": "Failed to fetch user profile",
+        "details": "Request failed with status code 400"
+      },
+      "timestamp": "2025-11-17T19:41:15.850Z"
+    },
+    {
+      "name": "Invalid FID (string)",
+      "method": "GET",
+      "path": "/api/user/profile?fid=abc",
+      "status": 500,
+      "expectedStatus": 400,
+      "duration": 474,
+      "passed": false,
+      "data": {
+        "error": "Failed to fetch user profile",
+        "details": "Request failed with status code 400"
+      },
+      "timestamp": "2025-11-17T19:41:16.326Z"
+    },
+    {
+      "name": "Invalid FID (zero)",
+      "method": "GET",
+      "path": "/api/user/profile?fid=0",
+      "status": 500,
+      "expectedStatus": 400,
+      "duration": 339,
+      "passed": false,
+      "data": {
+        "error": "Failed to fetch user profile",
+        "details": "Request failed with status code 400"
+      },
+      "timestamp": "2025-11-17T19:41:16.665Z"
+    },
+    {
+      "name": "Rate Limit Test 61",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 429,
+      "duration": 67,
+      "passed": false,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.360Z"
+    },
+    {
+      "name": "Rate Limit Test 62",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 429,
+      "duration": 68,
+      "passed": false,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.429Z"
+    },
+    {
+      "name": "Rate Limit Test 63",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 429,
+      "duration": 67,
+      "passed": false,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.497Z"
+    },
+    {
+      "name": "Rate Limit Test 64",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 429,
+      "duration": 71,
+      "passed": false,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.568Z"
+    },
+    {
+      "name": "Rate Limit Test 65",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 429,
+      "duration": 77,
+      "passed": false,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 0,
+        "total": 1,
+        "top": [],
+        "updatedAt": 1763408478475,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-11-17T19:41:21.646Z"
+    },
+    {
+      "name": "Rate Limiting",
+      "passed": false,
+      "error": "Rate limit not enforced after 65 requests"
+    }
+  ],
+  "skipped": []
+}
