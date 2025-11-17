@@ -183,7 +183,7 @@ export default function WebhookHealthMonitor() {
 
             <div className="rounded-xl border border-white/10 bg-white/5 p-3">
               <div className="text-[10px] uppercase tracking-wider text-white/60">
-                Today's Webhooks
+                Today&apos;s Webhooks
               </div>
               <div className="mt-1 text-[13px] font-bold text-emerald-300">
                 {health.total_webhooks_today.toLocaleString()}

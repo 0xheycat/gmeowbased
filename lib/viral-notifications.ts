@@ -187,6 +187,7 @@ async function getUserNotificationTokens(fid: number): Promise<string[]> {
  * - GI-7: Rate limit awareness
  * - GI-10: Efficient token selection
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function selectAvailableToken(tokens: string[]): string | null {
   // Find first token that's not rate limited
   for (const token of tokens) {
