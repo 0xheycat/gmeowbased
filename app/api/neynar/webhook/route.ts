@@ -7,9 +7,16 @@ import { loadBotStatsConfig } from '@/lib/bot-config'
 import { buildAgentAutoReply } from '@/lib/agent-auto-reply'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib/neynar-bot'
-import { isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { markNotificationTokenDisabled, upsertNotificationToken } from '@/lib/miniapp-notifications'
 import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot-frame-builder'
+// Phase 5.1: Real-time Viral Notifications
+// Source: lib/viral-engagement-sync.ts, lib/viral-achievements.ts
+// MCP Verified: November 17, 2025
+// Approved by: @heycat on November 17, 2025
+import { syncCastEngagement } from '@/lib/viral-engagement-sync'
+import { checkAndAwardAchievements } from '@/lib/viral-achievements'
+import { dispatchViralNotification } from '@/lib/viral-notifications'
 
 export const runtime = 'nodejs'
 
@@ -360,6 +367,93 @@ function buildReplyText(data: NeynarCastEventData): string {
   return trimToCastLimit(base)
 }
 
+// ============================================================================
+// Phase 5.1: Viral Engagement Handler
+// ============================================================================
+/**
+ * Handle viral engagement sync for badge casts
+ * 
+ * This runs async in the background without blocking webhook response.
+ * It syncs engagement metrics, detects tier upgrades, awards achievements,
+ * and dispatches push notifications.
+ * 
+ * Source: lib/viral-engagement-sync.ts, lib/viral-achievements.ts
+ * Quality Gates:
+ * - GI-10: Non-blocking async processing
+ * - GI-7: Comprehensive error handling
+ * 
+ * @param castHash - Hash of cast to sync
+ * @param authorFid - FID of cast author (optional)
+ */
+async function handleViralEngagementSync(
+  castHash: string,
+  authorFid: number | undefined
+): Promise<void> {
+  try {
+    // Only process if cast is a badge cast (check database)
+    const supabase = getSupabaseServerClient()
+    if (!supabase) return
+
+    const { data: badgeCast } = await supabase
+      .from('badge_casts')
+      .select('cast_hash, fid')
+      .eq('cast_hash', castHash)
+      .single()
+
+    if (!badgeCast) {
+      // Not a badge cast, skip
+      return
+    }
+
+    // Sync engagement metrics from Neynar
+    const syncResult = await syncCastEngagement(castHash)
+
+    if (!syncResult.updated) {
+      // No changes, skip
+      return
+    }
+
+    console.log('[webhook] Viral engagement synced:', {
+      castHash: castHash.slice(0, 10),
+      tierUpgrade: syncResult.tierUpgrade,
+      oldTier: syncResult.oldTier,
+      newTier: syncResult.newTier,
+      additionalXp: syncResult.additionalXp,
+    })
+
+    // If tier upgraded, send notification
+    if (syncResult.tierUpgrade && badgeCast.fid) {
+      await dispatchViralNotification({
+        type: 'tier_upgrade',
+        fid: badgeCast.fid,
+        castHash,
+        oldTier: syncResult.oldTier,
+        newTier: syncResult.newTier,
+        xpBonus: syncResult.additionalXp,
+      })
+    }
+
+    // Check and award achievements
+    if (badgeCast.fid) {
+      const achievementsAwarded = await checkAndAwardAchievements(
+        badgeCast.fid,
+        castHash
+      )
+
+      if (achievementsAwarded > 0) {
+        console.log('[webhook] Awarded achievements:', {
+          fid: badgeCast.fid,
+          count: achievementsAwarded,
+        })
+      }
+    }
+  } catch (error) {
+    console.error('[webhook] Viral engagement sync error:', error)
+    // Don't throw - this is background processing
+  }
+}
+// ============================================================================
+
 export async function POST(req: NextRequest) {
   const secret = resolveWebhookSecret()
   if (!secret) {
@@ -407,6 +501,22 @@ export async function POST(req: NextRequest) {
   if (!data || !data.hash) {
     return NextResponse.json({ ok: false, error: 'missing cast data' }, { status: 400 })
   }
+
+  // ========================================================================
+  // Phase 5.1: Real-time Viral Engagement Sync
+  // ========================================================================
+  // When a cast is created or mentioned, check if it's a badge cast
+  // and sync engagement metrics in the background
+  // Source: lib/viral-engagement-sync.ts
+  // Quality Gate: GI-10 (async processing, non-blocking)
+  // ========================================================================
+  if (data.hash) {
+    // Fire and forget - don't block webhook response
+    handleViralEngagementSync(data.hash, data.author?.fid).catch((err: unknown) => {
+      console.error('[webhook] Viral engagement sync failed:', err)
+    })
+  }
+  // ========================================================================
 
   const botFid = resolveBotFid()
   if (!botFid) {
