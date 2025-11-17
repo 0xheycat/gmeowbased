@@ -118,27 +118,36 @@ export function ProfileDropdown() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Trigger button */}
+      {/* Trigger button - Mobile: PFP only (smaller), Desktop: PFP + username */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 pr-3 transition-colors hover:border-[#7CFF7A]/30 hover:bg-[#7CFF7A]/10"
+        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 transition-colors hover:border-[#7CFF7A]/30 hover:bg-[#7CFF7A]/10 sm:pr-3"
         aria-expanded={isOpen}
         aria-haspopup="true"
+        aria-label={`Profile menu for @${username}`}
       >
-        <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-[#7CFF7A]/50">
-          <Image src={pfpUrl} alt={username} fill className="object-cover" sizes="32px" />
+        {/* Mobile: 28px PFP only, Desktop: 32px PFP + username */}
+        <div className="relative h-7 w-7 sm:h-8 sm:w-8 overflow-hidden rounded-full border-2 border-[#7CFF7A]/50">
+          <Image 
+            src={pfpUrl} 
+            alt={username} 
+            fill 
+            className="object-cover" 
+            sizes="(max-width: 640px) 28px, 32px" 
+          />
           {profile?.powerBadge && (
-            <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-yellow-500 text-[10px]">
+            <div className="absolute -right-0.5 -top-0.5 sm:-right-1 sm:-top-1 flex h-3 w-3 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-yellow-500 text-[8px] sm:text-[10px]">
               ⚡
             </div>
           )}
         </div>
+        {/* Desktop only: username + caret */}
         <span className="hidden text-sm font-medium text-white sm:inline">@{username}</span>
         <CaretDown
           size={14}
           weight="bold"
-          className={`text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`hidden sm:block text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 

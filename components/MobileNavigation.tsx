@@ -10,7 +10,6 @@ import {
   Scroll,
   Trophy,
   UsersThree,
-  Cat,
   type IconProps,
 } from '@phosphor-icons/react'
 
@@ -29,7 +28,7 @@ export function MobileNavigation() {
     { href: '/Quest', label: 'Quests', icon: Scroll },
     { href: '/leaderboard', label: 'Ranks', icon: Trophy },
     { href: '/Guild', label: 'Guild', icon: UsersThree },
-    { href: '/profile', label: 'Me', icon: Cat },
+    // Profile removed - accessible via header dropdown
   ]
 
   return (
