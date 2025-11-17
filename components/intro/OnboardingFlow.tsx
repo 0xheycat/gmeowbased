@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { X, ArrowRight, Sparkle, Users, Lightning, Gift, Shield, Crown } from '@phosphor-icons/react'
 import Image from 'next/image'
 import { useAccount } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import ShareButton from '@/components/share/ShareButton'
-import confetti from 'canvas-confetti'
+// GI-10: Confetti loaded dynamically for performance
 import { getBadgeArtworkBackground } from '@/lib/badge-artwork'
 import '@/app/styles/quest-card-yugioh.css'
 import '@/app/styles/quest-card-glass.css'
@@ -106,6 +106,54 @@ const BASELINE_REWARDS = {
 }
 
 /**
+ * Handles errors with categorization and user-friendly messages
+ * GI-7: Comprehensive error handling with retry logic
+ */
+function handleError(
+  error: unknown,
+  context: string,
+  setError: (msg: string) => void,
+  setErrorType: (type: 'network' | 'api' | 'auth' | 'validation' | null) => void
+) {
+  console.error(`[OnboardingFlow Error - ${context}]:`, error)
+  
+  // Network errors
+  if (error instanceof TypeError && error.message.includes('fetch')) {
+    setErrorType('network')
+    setError('Network connection failed. Please check your internet and try again.')
+    return
+  }
+  
+  // API errors with response data
+  if (error instanceof Response) {
+    setErrorType('api')
+    if (error.status === 401 || error.status === 403) {
+      setErrorType('auth')
+      setError('Authentication failed. Please reconnect your Farcaster account.')
+      return
+    }
+    if (error.status >= 500) {
+      setError('Server error. Our team has been notified. Please try again later.')
+      return
+    }
+    setError(`API error (${error.status}): ${error.statusText}`)
+    return
+  }
+  
+  // Validation errors
+  if (error instanceof Error && error.message.includes('Invalid')) {
+    setErrorType('validation')
+    setError(error.message)
+    return
+  }
+  
+  // Generic error fallback
+  setErrorType('api')
+  const errorMsg = error instanceof Error ? error.message : 'An unexpected error occurred'
+  setError(`${context}: ${errorMsg}. Please try again or contact support.`)
+}
+
+/**
  * Validates and sanitizes Farcaster profile picture URL
  * @param pfpUrl - Raw profile picture URL from Farcaster API
  * @returns Validated URL string or fallback placeholder
@@ -147,6 +195,34 @@ function getTierConfettiColors(tier: TierType): string[] {
   }
   return colorMap[tier] || colorMap.common
 }
+
+/**
+ * Skeleton loader component for profile loading state
+ * GI-8: Loading state optimization
+ */
+const ProfileSkeleton = () => (
+  <div className="quest-card-yugioh__artwork-placeholder animate-pulse">
+    <div className="flex flex-col items-center gap-4">
+      {/* Avatar skeleton */}
+      <div className="relative">
+        <div className="h-32 w-32 rounded-full bg-gradient-to-br from-[#d4af37]/30 to-[#ffd700]/10 animate-shimmer" />
+        <div className="absolute inset-0 rounded-full border-4 border-[#d4af37]/20" />
+      </div>
+      
+      {/* Username skeleton */}
+      <div className="flex flex-col items-center gap-2">
+        <div className="h-6 w-40 rounded bg-[#d4af37]/30 animate-shimmer" />
+        <div className="h-4 w-24 rounded bg-[#d4af37]/20 animate-shimmer" style={{ animationDelay: '0.2s' }} />
+      </div>
+      
+      {/* Stats skeleton */}
+      <div className="flex gap-3">
+        <div className="h-8 w-16 rounded-full bg-[#d4af37]/20 animate-shimmer" style={{ animationDelay: '0.4s' }} />
+        <div className="h-8 w-16 rounded-full bg-[#d4af37]/20 animate-shimmer" style={{ animationDelay: '0.6s' }} />
+      </div>
+    </div>
+  </div>
+)
 
 const ONBOARDING_STAGES: OnboardingStage[] = [
   {
@@ -331,25 +407,35 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
     totalXP: number
   } | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorType, setErrorType] = useState<'network' | 'api' | 'auth' | 'validation' | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showSuccessCelebration, setShowSuccessCelebration] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const [isFetchingBadge, setIsFetchingBadge] = useState(false)
 
-  // Helper function to calculate tier from Neynar score
-  const getTierFromScore = (score: number): TierType => {
+  // GI-10: Memoize tier calculation helper
+  const getTierFromScore = useCallback((score: number): TierType => {
     if (score >= TIER_CONFIG.mythic.min) return 'mythic'
     if (score >= TIER_CONFIG.legendary.min) return 'legendary'
     if (score >= TIER_CONFIG.epic.min) return 'epic'
     if (score >= TIER_CONFIG.rare.min) return 'rare'
     return 'common'
-  }
+  }, [])
 
   // Load Farcaster profile on mount
   useEffect(() => {
     const loadFarcasterProfile = async () => {
       try {
         setIsLoading(true)
+        setErrorMessage(null)
+        setErrorType(null)
+        
         // Check if user already completed onboarding
         const statusRes = await fetch('/api/onboard/status')
+        if (!statusRes.ok) {
+          throw new Error(`Onboarding status check failed: ${statusRes.statusText}`)
+        }
+        
         const statusData = await statusRes.json()
         if (statusData.onboarded) {
           setHasOnboarded(true)
@@ -359,13 +445,32 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
         // Load Farcaster profile from current session
         const profileRes = await fetch('/api/user/profile')
+        if (!profileRes.ok) {
+          throw new Error(`Profile fetch failed: ${profileRes.statusText}`)
+        }
+        
         const profileData = await profileRes.json()
         
-        if (profileData.fid) {
-          // Fetch Neynar score
-          const neynarRes = await fetch(`/api/neynar/score?fid=${profileData.fid}`)
-          const neynarData = await neynarRes.json()
+        if (!profileData.fid) {
+          throw new Error('No Farcaster ID found. Please connect your Farcaster account.')
+        }
+        
+        // Fetch Neynar score with timeout
+        const neynarController = new AbortController()
+        const neynarTimeout = setTimeout(() => neynarController.abort(), 10000) // 10s timeout
+        
+        try {
+          const neynarRes = await fetch(
+            `/api/neynar/score?fid=${profileData.fid}`,
+            { signal: neynarController.signal }
+          )
+          clearTimeout(neynarTimeout)
           
+          if (!neynarRes.ok) {
+            throw new Error(`Neynar score fetch failed: ${neynarRes.statusText}`)
+          }
+          
+          const neynarData = await neynarRes.json()
           const tier = getTierFromScore(neynarData.score || 0)
           
           // Phase 5 Spec: Auto-fetch custody + verified addresses for desktop users
@@ -382,15 +487,18 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             try {
               // Fetch full Neynar user object with addresses
               const neynarUserRes = await fetch(`/api/neynar/user?fid=${profileData.fid}`)
-              const neynarUserData = await neynarUserRes.json()
               
-              if (neynarUserData.user) {
-                custodyAddress = neynarUserData.user.custody_address
-                verifiedAddresses = neynarUserData.user.verified_addresses || []
-                console.log('[OnboardingFlow] Desktop address auto-fetch:', {
-                  custody: custodyAddress,
-                  verified: verifiedAddresses.length,
-                })
+              if (neynarUserRes.ok) {
+                const neynarUserData = await neynarUserRes.json()
+                
+                if (neynarUserData.user) {
+                  custodyAddress = neynarUserData.user.custody_address
+                  verifiedAddresses = neynarUserData.user.verified_addresses || []
+                  console.log('[OnboardingFlow] Desktop address auto-fetch:', {
+                    custody: custodyAddress,
+                    verified: verifiedAddresses.length,
+                  })
+                }
               }
             } catch (addressError) {
               console.warn('[OnboardingFlow] Failed to auto-fetch addresses:', addressError)
@@ -398,25 +506,34 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             }
           }
           
+          // Validate profile data before setting state
+          if (!profileData.username || !profileData.pfpUrl) {
+            throw new Error('Incomplete profile data received')
+          }
+          
           setFarcasterProfile({
             fid: profileData.fid,
             displayName: profileData.displayName || profileData.username,
             username: profileData.username,
-            pfpUrl: profileData.pfpUrl,
+            pfpUrl: validatePfpUrl(profileData.pfpUrl),
             neynarScore: neynarData.score,
             tier,
           })
+        } catch (neynarError) {
+          if (neynarError instanceof Error && neynarError.name === 'AbortError') {
+            throw new Error('Neynar score request timed out. Please try again.')
+          }
+          throw neynarError
         }
       } catch (error) {
-        console.error('Failed to load Farcaster profile:', error)
-        setErrorMessage('Failed to load profile. Please refresh the page.')
+        handleError(error, 'Profile Loading', setErrorMessage, setErrorType)
       } finally {
         setIsLoading(false)
       }
     }
 
     loadFarcasterProfile()
-  }, [])
+  }, [getTierFromScore])
 
   // Phase 4.7: Typewriter animation effect for Stage 5 reveal (simplified)
   useEffect(() => {
@@ -451,8 +568,13 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
     setIsClaiming(true)
     setErrorMessage(null)
+    setErrorType(null)
     
     try {
+      // GI-7: Add request timeout
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000) // 15s timeout
+      
       const response = await fetch('/api/onboard/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -460,16 +582,25 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           fid: farcasterProfile.fid,
           address: address || null,
         }),
+        signal: controller.signal,
       })
+      
+      clearTimeout(timeout)
 
       if (!response.ok) {
-        throw new Error(`Failed to claim rewards: ${response.statusText}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to claim rewards: ${response.statusText}`)
       }
 
       const data = await response.json()
       
       if (!data.success) {
         throw new Error(data.error || 'Failed to claim rewards')
+      }
+      
+      // Validate response data
+      if (!data.rewards || typeof data.rewards.totalPoints !== 'number') {
+        throw new Error('Invalid reward data received from server')
       }
 
       // Store claimed rewards
@@ -481,16 +612,31 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
       
       // Fetch assigned badge
       if (data.badge) {
-        const badgesRes = await fetch(`/api/badges/list?fid=${farcasterProfile.fid}`)
-        const badgesData = await badgesRes.json()
-        
-        if (badgesData.success && badgesData.badges.length > 0) {
-          // Get the most recently assigned badge
-          const latestBadge = badgesData.badges.sort(
-            (a: UserBadge, b: UserBadge) => 
-              new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime()
-          )[0]
-          setAssignedBadge(latestBadge)
+        setIsFetchingBadge(true)
+        try {
+          const badgesRes = await fetch(`/api/badges/list?fid=${farcasterProfile.fid}`)
+          
+          if (!badgesRes.ok) {
+            console.warn('Failed to fetch badge details:', badgesRes.statusText)
+            setIsFetchingBadge(false)
+            return // Non-blocking: continue without badge details
+          }
+          
+          const badgesData = await badgesRes.json()
+          
+          if (badgesData.success && badgesData.badges.length > 0) {
+            // Get the most recently assigned badge
+            const latestBadge = badgesData.badges.sort(
+              (a: UserBadge, b: UserBadge) => 
+                new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime()
+            )[0]
+            setAssignedBadge(latestBadge)
+          }
+        } catch (badgeError) {
+          console.warn('Error fetching badge:', badgeError)
+          // Non-blocking: badge fetch failure doesn't block success flow
+        } finally {
+          setIsFetchingBadge(false)
         }
       }
       
@@ -501,46 +647,53 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
       const badgeTier = (data.badge?.tier || 'common') as TierType
       const tierColors = getTierConfettiColors(badgeTier)
       
-      // Trigger tier-specific confetti animation
-      const duration = 3000
-      const animationEnd = Date.now() + duration
-      const defaults = { 
-        startVelocity: 30, 
-        spread: 360, 
-        ticks: 60, 
-        zIndex: 10000,
-        colors: tierColors // Phase 5.4: Tier-specific colors
-      }
-
-      function randomInRange(min: number, max: number) {
-        return Math.random() * (max - min) + min
-      }
-
-      const interval: NodeJS.Timeout = setInterval(function() {
-        const timeLeft = animationEnd - Date.now()
-
-        if (timeLeft <= 0) {
-          clearInterval(interval)
-          // Auto-redirect after celebration
-          setTimeout(() => {
-            handleComplete()
-          }, 2000)
-          return
+      // GI-10: Dynamically import and trigger confetti
+      const triggerConfetti = async () => {
+        const confettiModule = await import('canvas-confetti')
+        const confettiFn = confettiModule.default
+        
+        const duration = 3000
+        const animationEnd = Date.now() + duration
+        const defaults = { 
+          startVelocity: 30, 
+          spread: 360, 
+          ticks: 60, 
+          zIndex: 10000,
+          colors: tierColors
         }
 
-        const particleCount = 50 * (timeLeft / duration)
-        
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-        })
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-        })
-      }, 250)
+        function randomInRange(min: number, max: number) {
+          return Math.random() * (max - min) + min
+        }
+
+        const interval: NodeJS.Timeout = setInterval(function() {
+          const timeLeft = animationEnd - Date.now()
+
+          if (timeLeft <= 0) {
+            clearInterval(interval)
+            // Auto-redirect after celebration
+            setTimeout(() => {
+              handleComplete()
+            }, 2000)
+            return
+          }
+
+          const particleCount = 50 * (timeLeft / duration)
+          
+          confettiFn({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+          })
+          confettiFn({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+          })
+        }, 250)
+      }
+      
+      triggerConfetti()
       
       // Log success details
       if (data.phase4?.instantMinting) {
@@ -552,20 +705,49 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
       console.log('Onboarding rewards claimed:', data)
       
     } catch (error) {
-      console.error('Failed to claim rewards:', error)
-      setErrorMessage(
-        error instanceof Error 
-          ? error.message 
-          : 'Failed to claim rewards. Please try again.'
-      )
+      // GI-7: Enhanced error handling with categorization
+      if (error instanceof Error && error.name === 'AbortError') {
+        setErrorType('network')
+        setErrorMessage('Request timed out. The server is taking too long to respond. Please try again.')
+      } else {
+        handleError(error, 'Claim Rewards', setErrorMessage, setErrorType)
+      }
+      
+      // Auto-increment retry count for analytics
+      setRetryCount(prev => prev + 1)
+      
+      // Log error for monitoring
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'exception', {
+          description: `Onboarding claim failed: ${error instanceof Error ? error.message : 'Unknown'}`,
+          fatal: false,
+        })
+      }
     } finally {
       setIsClaiming(false)
     }
   }
 
-  // Phase 4.8: Retry claim after error
-  const handleRetry = () => {
+  // Phase 4.8: Retry claim after error with exponential backoff
+  const handleRetry = async () => {
+    // GI-7: Limit retries to prevent abuse
+    if (retryCount >= 3) {
+      setErrorMessage('Maximum retry attempts reached. Please refresh the page or contact support.')
+      setErrorType('validation')
+      return
+    }
+    
     setErrorMessage(null)
+    setErrorType(null)
+    
+    // Exponential backoff: wait 2^retryCount seconds
+    const backoffMs = Math.min(1000 * Math.pow(2, retryCount), 8000)
+    
+    if (backoffMs > 1000) {
+      setErrorMessage(`Retrying in ${backoffMs / 1000} seconds...`)
+      await new Promise(resolve => setTimeout(resolve, backoffMs))
+    }
+    
     handleClaimRewards()
   }
 
@@ -673,45 +855,51 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
     }, 300)
   }
 
-  if (!visible) return null
-
-  // Prepare Stage 5 data with user profile
-  const currentStage = ONBOARDING_STAGES[stage]
-  const isFinalStage = currentStage.isFinal && farcasterProfile
-  
-  let displayStage = { ...currentStage }
-  
-  if (isFinalStage && farcasterProfile) {
-    const tierConfig = TIER_CONFIG[farcasterProfile.tier || 'common']
-    const tierPoints = tierConfig.points
-    const totalPoints = claimedRewards?.totalPoints || (BASELINE_REWARDS.points + tierPoints)
-    const totalXP = claimedRewards?.totalXP || BASELINE_REWARDS.xp
-    const isMythic = farcasterProfile.tier === 'mythic'
+  // GI-10: Memoize expensive display stage calculation (before early return to fix hooks rule)
+  const displayStage = useMemo(() => {
+    const currentStage = ONBOARDING_STAGES[stage]
+    const isFinalStage = currentStage.isFinal && farcasterProfile
     
-    displayStage = {
-      ...currentStage,
-      title: currentStage.title.replace('{username}', farcasterProfile.displayName),
-      subtitle: currentStage.subtitle.replace('{tier}', tierConfig.label),
-      description: currentStage.description
-        .replace('{score}', (farcasterProfile.neynarScore || 0).toFixed(2))
-        .replace('{tier}', tierConfig.label),
-      tier: farcasterProfile.tier || 'common',
-      cardArtwork: validatePfpUrl(farcasterProfile.pfpUrl), // GI-7: Validated URL
-      showMintButton: isMythic && hasOnboarded,
-      rewardStat: `+${totalPoints}`,
-      participantsStat: `FID ${farcasterProfile.fid}`,
-      bonusPoints: tierPoints,
-      features: [
-        `Baseline: +${BASELINE_REWARDS.points} points, +${BASELINE_REWARDS.xp} XP`,
-        `${tierConfig.label} Bonus: +${tierPoints} points`,
-        `Total Rewards: ${totalPoints} points + ${totalXP} XP`,
-        isMythic ? '🎉 OG NFT Badge eligible!' : `Keep growing to reach ${TIER_CONFIG.legendary.label}!`,
-      ],
+    let computed = { ...currentStage }
+    
+    if (isFinalStage && farcasterProfile) {
+      const tierConfig = TIER_CONFIG[farcasterProfile.tier || 'common']
+      const tierPoints = tierConfig.points
+      const totalPoints = claimedRewards?.totalPoints || (BASELINE_REWARDS.points + tierPoints)
+      const totalXP = claimedRewards?.totalXP || BASELINE_REWARDS.xp
+      const isMythic = farcasterProfile.tier === 'mythic'
+      
+      computed = {
+        ...currentStage,
+        title: currentStage.title.replace('{username}', farcasterProfile.displayName),
+        subtitle: currentStage.subtitle.replace('{tier}', tierConfig.label),
+        description: currentStage.description
+          .replace('{score}', (farcasterProfile.neynarScore || 0).toFixed(2))
+          .replace('{tier}', tierConfig.label),
+        tier: farcasterProfile.tier || 'common',
+        cardArtwork: validatePfpUrl(farcasterProfile.pfpUrl),
+        showMintButton: isMythic && hasOnboarded,
+        rewardStat: `+${totalPoints}`,
+        participantsStat: `FID ${farcasterProfile.fid}`,
+        bonusPoints: tierPoints,
+        features: [
+          `Baseline: +${BASELINE_REWARDS.points} points, +${BASELINE_REWARDS.xp} XP`,
+          `${tierConfig.label} Bonus: +${tierPoints} points`,
+          `Total Rewards: ${totalPoints} points + ${totalXP} XP`,
+          isMythic ? '🎉 OG NFT Badge eligible!' : `Keep growing to reach ${TIER_CONFIG.legendary.label}!`,
+        ],
+      }
     }
-  }
+    
+    return { currentStage, isFinalStage, displayStage: computed }
+  }, [stage, farcasterProfile, claimedRewards, hasOnboarded])
 
-  const Icon = displayStage.icon
+  const { isFinalStage, displayStage: displayedStage } = displayStage
+
+  const Icon = displayedStage.icon
   const progress = ((stage + 1) / ONBOARDING_STAGES.length) * 100
+
+  if (!visible) return null
 
   return (
     <div
@@ -720,35 +908,39 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
       }`}
       role="dialog"
       aria-modal="true"
-      aria-label="Onboarding flow"
+      aria-labelledby="onboarding-title"
+      aria-describedby="onboarding-description"
+      aria-live="polite"
     >
       <div
         className={`relative mx-4 w-full max-w-5xl transform transition-all duration-300 ${
           closing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
         }`}
       >
-        {/* Close button */}
+        {/* Close button - GI-9: Enhanced accessibility */}
         <button
           type="button"
           onClick={handleSkip}
-          className="absolute -right-2 -top-2 z-50 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#d4af37] bg-gradient-to-br from-[#d4af37] to-[#8b7327] text-[#1a1410] shadow-lg transition-all hover:scale-110 hover:shadow-xl"
-          aria-label="Close onboarding"
+          className="absolute -right-2 -top-2 z-50 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#d4af37] bg-gradient-to-br from-[#d4af37] to-[#8b7327] text-[#1a1410] shadow-lg transition-all hover:scale-110 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#d4af37]/50"
+          aria-label={`Close onboarding (stage ${stage + 1} of ${ONBOARDING_STAGES.length})`}
+          title="Close onboarding and skip tour"
         >
-          <X size={20} weight="bold" />
+          <X size={20} weight="bold" aria-hidden="true" />
         </button>
 
-        {/* Progress bar */}
-        <div className="mb-6">
+        {/* Progress bar - GI-9: ARIA labels */}
+        <div className="mb-6" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label={`Onboarding progress: ${Math.round(progress)}% complete`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]" id="onboarding-title">
               Card {stage + 1} of {ONBOARDING_STAGES.length}
             </span>
-            <span className="text-xs font-bold text-[#d4af37]">{Math.round(progress)}%</span>
+            <span className="text-xs font-bold text-[#d4af37]" aria-live="polite">{Math.round(progress)}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-[#1a1410] border-2 border-[#d4af37]/30">
             <div
               className="h-full bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#d4af37] transition-all duration-500"
               style={{ width: `${progress}%` }}
+              role="presentation"
             />
           </div>
           
@@ -801,39 +993,36 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               } ${
                 revealStage !== 'hidden' ? 'gacha-scale-in' : ''
               }`.trim()} 
-              data-tier={displayStage.tier}
+              data-tier={displayedStage.tier}
+              role="article"
+              aria-labelledby="stage-title"
+              aria-describedby="stage-description"
             >
             <div className="quest-card-yugioh__body">
             
             {/* Title bar with card name */}
             <div className="quest-card-yugioh__title-bar">
-              <h3 className="quest-card-yugioh__name">{displayStage.title}</h3>
-              <span className="quest-card-yugioh__serial">#{displayStage.id.toString().padStart(3, '0')}</span>
+              <h3 className="quest-card-yugioh__name" id="stage-title">{displayedStage.title}</h3>
+              <span className="quest-card-yugioh__serial" aria-label={`Card number ${displayedStage.id.toString().padStart(3, '0')}`}>#{displayedStage.id.toString().padStart(3, '0')}</span>
             </div>
 
             {/* Attribute corner (Stage icon) */}
-            <div className="quest-card-yugioh__attribute-corner">
+            <div className="quest-card-yugioh__attribute-corner" aria-label="Stage icon">
               <div className="quest-card-yugioh__chain-icon">
-                <Icon size={32} weight="bold" />
+                <Icon size={32} weight="bold" aria-hidden="true" />
               </div>
-              <div className="quest-card-yugioh__level-stars">
-                {Array.from({ length: displayStage.id }).map((_, i) => (
+              <div className="quest-card-yugioh__level-stars" role="img" aria-label={`Stage ${displayedStage.id} of ${ONBOARDING_STAGES.length}`}>
+                {Array.from({ length: displayedStage.id }).map((_, i) => (
                   <span key={i}>★</span>
                 ))}
               </div>
             </div>
 
             {/* Artwork frame - Phase 4.8: Add loading state and Neynar score display */}
-            <div className="quest-card-yugioh__artwork-frame">
+            <div className="quest-card-yugioh__artwork-frame" role="img" aria-label={isFinalStage && farcasterProfile ? `${farcasterProfile.displayName}'s profile picture` : displayedStage.title}>
               {isLoading && isFinalStage ? (
-                <div className="quest-card-yugioh__artwork-placeholder animate-pulse">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="h-20 w-20 rounded-full bg-[#d4af37]/30" />
-                    <div className="h-4 w-32 rounded bg-[#d4af37]/20" />
-                    <div className="h-3 w-24 rounded bg-[#d4af37]/20" />
-                  </div>
-                </div>
-              ) : displayStage.cardArtwork ? (
+                <ProfileSkeleton />
+              ) : displayedStage.cardArtwork ? (
                 <>
                   <div className="relative">
                     {/* Phase 5.2: Badge artwork as background layer */}
@@ -850,8 +1039,8 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                     
                     {/* User's Farcaster avatar (foreground) */}
                     <Image
-                      src={displayStage.cardArtwork}
-                      alt={displayStage.title}
+                      src={displayedStage.cardArtwork}
+                      alt={displayedStage.title}
                       fill
                       className="quest-card-yugioh__artwork"
                       sizes="400px"
@@ -861,13 +1050,14 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                     
                     {/* Phase 4.8: Neynar score badge overlay for Stage 5 */}
                     {isFinalStage && farcasterProfile?.neynarScore !== undefined && (
-                      <div className="absolute top-4 right-4 z-10">
+                      <div className="absolute top-4 right-4 z-10" role="img" aria-label={`Neynar reputation score: ${farcasterProfile.neynarScore.toFixed(2)} out of 1.0`}>
                         <div 
                           className="flex flex-col items-center justify-center rounded-full border-4 bg-black/80 backdrop-blur-sm w-20 h-20 shadow-lg"
                           style={{ 
                             borderColor: TIER_CONFIG[farcasterProfile.tier || 'common'].color 
                           }}
                           title={`Neynar Score: ${farcasterProfile.neynarScore.toFixed(2)}`}
+                          aria-hidden="false"
                         >
                           <div 
                             className="text-2xl font-bold"
@@ -893,21 +1083,34 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             {/* Type bar */}
             <div className="quest-card-yugioh__type-bar">
               <span className="quest-card-yugioh__type-text">
-                {displayStage.showMintButton ? '🎴 NFT MINTABLE' : '⚔️ QUEST CARD'} • {displayStage.subtitle}
+                {displayedStage.showMintButton ? '🎴 NFT MINTABLE' : '⚔️ QUEST CARD'} • {displayedStage.subtitle}
               </span>
             </div>
 
             {/* Description box */}
             <div className="quest-card-yugioh__description-box">
-              <p className="quest-card-yugioh__description-headline">
-                {displayStage.subtitle}
+              <p className="quest-card-yugioh__description-headline" id="onboarding-description">
+                {displayedStage.subtitle}
               </p>
               <p className="quest-card-yugioh__description-text">
-                {displayStage.description}
+                {displayedStage.description}
               </p>
               
               {/* Phase 5.4: Badge unlock with pop animation */}
-              {isFinalStage && assignedBadge && (
+              {isFetchingBadge && (
+                <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-[#d4af37]/10 via-[#ffd700]/5 to-[#d4af37]/10 border-2 border-[#d4af37]/30">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4af37]/30 to-[#ffd700]/20 flex items-center justify-center animate-pulse">
+                      <Crown size={24} className="text-[#d4af37] animate-spin" style={{ animationDuration: '3s' }} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="h-4 w-32 bg-[#d4af37]/20 rounded animate-pulse" />
+                      <div className="h-3 w-48 bg-[#d4af37]/10 rounded animate-pulse mt-2" style={{ animationDelay: '0.2s' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!isFetchingBadge && isFinalStage && assignedBadge && (
                 <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-[#d4af37]/20 via-[#ffd700]/10 to-[#d4af37]/20 border-2 border-[#d4af37]/50 gacha-badge-pop">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4af37] to-[#ffd700] flex items-center justify-center">
@@ -947,7 +1150,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               
               {/* Phase 5.4: Feature list with stagger animation */}
               <div className="quest-card-yugioh__meta-list">
-                {displayStage.features.map((feature, idx) => (
+                {displayedStage.features.map((feature, idx) => (
                   <div 
                     key={idx} 
                     className={`quest-card-yugioh__meta-item ${
@@ -977,29 +1180,29 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 <>
                   <div className="quest-card-yugioh__stat quest-card-yugioh__stat--reward">
                     <span className="quest-card-yugioh__stat-label">Rewards</span>
-                    <span className="quest-card-yugioh__stat-value">{displayStage.rewardStat || `${displayStage.points} XP`}</span>
+                    <span className="quest-card-yugioh__stat-value">{displayedStage.rewardStat || `${displayedStage.points} XP`}</span>
                   </div>
 
-                  {displayStage.bonusPoints && displayStage.bonusPoints > 0 && (
+                  {displayedStage.bonusPoints && displayedStage.bonusPoints > 0 && (
                     <div className="quest-card-yugioh__stat">
                       <span className="quest-card-yugioh__stat-label">Bonus</span>
-                      <span className="quest-card-yugioh__stat-value">+{displayStage.bonusPoints}</span>
+                      <span className="quest-card-yugioh__stat-value">+{displayedStage.bonusPoints}</span>
                     </div>
                   )}
 
                   <div className="quest-card-yugioh__stat quest-card-yugioh__stat--participants">
                     <span className="quest-card-yugioh__stat-label">Players</span>
-                    <span className="quest-card-yugioh__stat-value">{displayStage.participantsStat || '∞'}</span>
+                    <span className="quest-card-yugioh__stat-value">{displayedStage.participantsStat || '∞'}</span>
                   </div>
                 </>
               )}
             </div>
 
             {/* Contract reference */}
-            {displayStage.contractFeature && (
+            {displayedStage.contractFeature && (
               <div className="quest-card-yugioh__action-footer">
                 <span className="text-[0.65rem] text-[#d4af37]">
-                  🎴 {displayStage.contractFeature}
+                  🎴 {displayedStage.contractFeature}
                 </span>
               </div>
             )}
@@ -1012,13 +1215,13 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             <div className="quest-card-glass__body">
               {/* Stage badge indicator */}
               <div className="quest-card-glass__stage-badge">
-                {displayStage.id}
+                {displayedStage.id}
               </div>
 
               {/* Header section */}
               <div className="quest-card-glass__header">
-                <h3 className="quest-card-glass__title">{displayStage.title}</h3>
-                <p className="quest-card-glass__subtitle">{displayStage.subtitle}</p>
+                <h3 className="quest-card-glass__title">{displayedStage.title}</h3>
+                <p className="quest-card-glass__subtitle">{displayedStage.subtitle}</p>
               </div>
 
               {/* Icon display */}
@@ -1031,12 +1234,12 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               {/* Description */}
               <div className="quest-card-glass__description">
                 <p className="quest-card-glass__description-text">
-                  {displayStage.description}
+                  {displayedStage.description}
                 </p>
 
                 {/* Features list */}
                 <div className="quest-card-glass__features">
-                  {displayStage.features.map((feature, idx) => (
+                  {displayedStage.features.map((feature, idx) => (
                     <div key={idx} className="quest-card-glass__feature-item">
                       <div className="quest-card-glass__feature-icon">✓</div>
                       <span className="quest-card-glass__feature-text">{feature}</span>
@@ -1050,32 +1253,52 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 <div className="quest-card-glass__progress-bar">
                   <div 
                     className="quest-card-glass__progress-fill" 
-                    style={{ width: `${((displayStage.id) / ONBOARDING_STAGES.length) * 100}%` }}
+                    style={{ width: `${((displayedStage.id) / ONBOARDING_STAGES.length) * 100}%` }}
                   />
                 </div>
                 <span className="quest-card-glass__progress-text">
-                  {displayStage.points} XP
+                  {displayedStage.points} XP
                 </span>
               </div>
             </div>
           </article>
         )}
 
-        {/* Phase 4.8: Error notification toast */}
+        {/* Phase 4.8: Error notification toast - GI-7: Enhanced with error types */}
         {errorMessage && (
           <div className="error-shake mt-4 rounded-xl border-2 border-red-500/50 bg-red-950/50 px-4 py-3 backdrop-blur-sm">
             <div className="flex items-start gap-3">
-              <span className="text-2xl">⚠️</span>
+              <span className="text-2xl">
+                {errorType === 'network' && '📡'}
+                {errorType === 'api' && '⚠️'}
+                {errorType === 'auth' && '🔒'}
+                {errorType === 'validation' && '❌'}
+                {!errorType && '⚠️'}
+              </span>
               <div className="flex-1">
-                <p className="font-bold text-red-400">Error</p>
+                <p className="font-bold text-red-400">
+                  {errorType === 'network' && 'Network Error'}
+                  {errorType === 'api' && 'Server Error'}
+                  {errorType === 'auth' && 'Authentication Error'}
+                  {errorType === 'validation' && 'Validation Error'}
+                  {!errorType && 'Error'}
+                </p>
                 <p className="text-sm text-red-300">{errorMessage}</p>
+                {retryCount > 0 && retryCount < 3 && (
+                  <p className="mt-1 text-xs text-red-400/70">
+                    Attempt {retryCount} of 3
+                  </p>
+                )}
               </div>
-              <button
-                onClick={handleRetry}
-                className="rounded-lg border border-red-500 bg-red-900/50 px-3 py-1 text-sm font-bold text-red-200 transition-all hover:bg-red-800/50"
-              >
-                Retry
-              </button>
+              {retryCount < 3 && !errorMessage.includes('Maximum retry') && (
+                <button
+                  onClick={handleRetry}
+                  disabled={errorMessage.includes('Retrying in')}
+                  className="rounded-lg border border-red-500 bg-red-900/50 px-3 py-1 text-sm font-bold text-red-200 transition-all hover:bg-red-800/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Retry
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -1118,17 +1341,26 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 type="button"
                 onClick={handleClaimRewards}
                 disabled={isClaiming || hasOnboarded || isLoading}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-[#7CFF7A]/50"
+                aria-label={isClaiming ? 'Claiming rewards, please wait' : hasOnboarded ? 'Rewards already claimed' : 'Claim your onboarding rewards'}
+                aria-busy={isClaiming}
+                aria-live="polite"
               >
                 {isClaiming ? (
                   <>
                     <span className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-black/30 border-t-black" />
-                    Claiming Rewards...
+                    <span className="animate-pulse">Claiming Rewards...</span>
                   </>
                 ) : hasOnboarded ? (
-                  <>✓ Rewards Claimed</>
+                  <>
+                    <span className="animate-bounce">✓</span>
+                    Rewards Claimed
+                  </>
                 ) : isLoading ? (
-                  <>Loading...</>
+                  <>
+                    <span className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-black/30 border-t-black" />
+                    <span className="animate-pulse">Loading...</span>
+                  </>
                 ) : (
                   <>
                     <Gift size={20} weight="fill" />
@@ -1138,7 +1370,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               </button>
 
               {/* Mint OG NFT button - Mythic only */}
-              {displayStage.showMintButton && (
+              {displayedStage.showMintButton && (
                 <>
                   {!isConnected && (
                     <div className="flex-1">
@@ -1161,7 +1393,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           ) : (
             <>
               {/* Regular mint button for stages 2-4 */}
-              {displayStage.showMintButton && (
+              {displayedStage.showMintButton && (
                 <button
                   type="button"
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#ffd700] px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
@@ -1176,10 +1408,11 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#7CFF7A]/50"
+                    aria-label={`Continue to stage ${stage + 2} of ${ONBOARDING_STAGES.length}`}
                   >
                     Next Card
-                    <ArrowRight size={20} weight="bold" />
+                    <ArrowRight size={20} weight="bold" aria-hidden="true" />
                   </button>
                   
                   {/* Phase 4.8: Skip to rewards button for early stages */}
