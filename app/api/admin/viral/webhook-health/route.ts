@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
 
@@ -27,6 +28,16 @@ type WebhookHealth = {
 }
 
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     // 1. Admin auth check
     const auth = await validateAdminRequest(req)

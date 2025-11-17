@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
 
 const ONCHAINKIT_API_KEY = process.env.ONCHAINKIT_API_KEY ?? process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ?? ''
@@ -92,6 +93,16 @@ export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const params = request.nextUrl.searchParams
   const section = (params.get('section') ?? 'tokens').toLowerCase()
   const chains = parseChains(params.get('chains'))
