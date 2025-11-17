@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import type { TipBroadcast } from '@/lib/tips-types'
 import { subscribeToTips } from '@/lib/tips-broker'
 
@@ -11,6 +12,13 @@ function formatEvent(event: string, data: unknown) {
 }
 
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return new Response('Rate limit exceeded', { status: 429 })
+  }
+
   const { searchParams } = new URL(req.url)
   const addressRaw = searchParams.get('address') || ''
   const address = addressRaw ? addressRaw.toLowerCase() : ''

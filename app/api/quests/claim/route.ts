@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 
 // Demo in-memory store; swap to DB/KV in prod
 const claims = new Map<string, { at: number; metaHash: string | null }>()
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const body = await req.json()
     const { chain, questId, address, metaHash } = body || {}
