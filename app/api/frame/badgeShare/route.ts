@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
+import { FIDSchema } from '@/lib/validation/api-schemas'
 import {
   buildBadgeShareImageUrl,
   getBadgeExplorerUrl,
@@ -39,7 +40,10 @@ export async function GET(request: NextRequest) {
     }
 
     const fid = parseInt(fidParam, 10)
-    if (!isValidFid(fid)) {
+    
+    // Zod validation
+    const fidValidation = FIDSchema.safeParse(fid)
+    if (!fidValidation.success || !isValidFid(fid)) {
       return new NextResponse('Invalid fid parameter', { status: 400 })
     }
 
