@@ -1,5 +1,6 @@
 // /api/leaderboard/route.ts
 import { NextResponse } from 'next/server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { CONTRACT_ADDRESSES, gmContractHasFunction, type ChainKey } from '@/lib/gm-utils'
 import { computeLeaderboardSlice, PROFILE_SUPPORTED } from '@/lib/leaderboard-aggregator'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
@@ -285,6 +286,16 @@ async function fetchLeaderboardFromSupabase(params: SupabaseFetchParams): Promis
 }
 
 export async function GET(req: Request) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const url = new URL(req.url)
     const chainParam = url.searchParams.get('chain') || 'base'

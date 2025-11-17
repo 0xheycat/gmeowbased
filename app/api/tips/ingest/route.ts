@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIp, webhookLimiter } from '@/lib/rate-limit'
 import { publishTip } from '@/lib/tips-broker'
 import { scoreTipMentionBroadcast } from '@/lib/tips-scoreboard'
 import type { MutableTipBroadcast, TipMentionContext } from '@/lib/tips-types'
@@ -37,6 +38,16 @@ function parseActorIdentifier(value: unknown): string | number | null | undefine
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, webhookLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   if (REQUIRED_TOKEN) {
     const auth = req.headers.get('authorization') || ''
     if (auth !== `Bearer ${REQUIRED_TOKEN}`) return unauthorized()
