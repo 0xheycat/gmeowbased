@@ -1,36 +1,36 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   dispatchViralNotification,
   processPendingNotifications,
 } from '@/lib/viral-notifications'
 
-jest.mock('@/lib/neynar-server')
-jest.mock('@/lib/supabase-server')
+vi.mock('@/lib/neynar-server')
+vi.mock('@/lib/supabase-server')
 
 describe('viral-notifications', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('dispatchViralNotification', () => {
     it('should send tier upgrade notification successfully', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
           data: [{ token: 'test-token-123' }],
           error: null,
         }),
-        rpc: jest.fn().mockResolvedValue({ error: null }),
+        rpc: vi.fn().mockResolvedValue({ error: null }),
       }
 
       const mockClient = {
-        publishFrameNotifications: jest.fn().mockResolvedValue({
+        publishFrameNotifications: vi.fn().mockResolvedValue({
           success: true,
           result: {
             notificationId: 'notif-123',
@@ -41,8 +41,8 @@ describe('viral-notifications', () => {
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
       const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
-      ;(getNeynarServerClient as jest.Mock).mockReturnValue(mockClient)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
+      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
 
       const result = await dispatchViralNotification({
         type: 'tier_upgrade',
@@ -68,18 +68,18 @@ describe('viral-notifications', () => {
 
     it('should send achievement notification successfully', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
           data: [{ token: 'test-token-456' }],
           error: null,
         }),
-        rpc: jest.fn().mockResolvedValue({ error: null }),
+        rpc: vi.fn().mockResolvedValue({ error: null }),
       }
 
       const mockClient = {
-        publishFrameNotifications: jest.fn().mockResolvedValue({
+        publishFrameNotifications: vi.fn().mockResolvedValue({
           success: true,
           result: {
             notificationId: 'notif-456',
@@ -90,8 +90,8 @@ describe('viral-notifications', () => {
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
       const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
-      ;(getNeynarServerClient as jest.Mock).mockReturnValue(mockClient)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
+      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
 
       const result = await dispatchViralNotification({
         type: 'achievement',
@@ -114,23 +114,23 @@ describe('viral-notifications', () => {
 
     it('should handle rate limiting gracefully', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
           data: [{ token: 'test-token-rate-limited' }],
           error: null,
         }),
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
       // Simulate rate limiter blocking token
       const rateLimiter = require('@/lib/viral-notifications').rateLimiter
       if (rateLimiter) {
-        jest.spyOn(rateLimiter, 'canSendNotification').mockReturnValue(false)
-        jest.spyOn(rateLimiter, 'getTimeUntilAvailable').mockReturnValue(25000)
+        vi.spyOn(rateLimiter, 'canSendNotification').mockReturnValue(false)
+        vi.spyOn(rateLimiter, 'getTimeUntilAvailable').mockReturnValue(25000)
       }
 
       const result = await dispatchViralNotification({
@@ -149,17 +149,17 @@ describe('viral-notifications', () => {
 
     it('should handle missing notification tokens', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
           data: [],
           error: null,
         }),
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
       const result = await dispatchViralNotification({
         type: 'tier_upgrade',
@@ -192,9 +192,9 @@ describe('viral-notifications', () => {
   describe('processPendingNotifications', () => {
     it('should process pending notifications in batches', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValueOnce({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValueOnce({
           data: [
             {
               notification_type: 'tier_upgrade',
@@ -213,16 +213,16 @@ describe('viral-notifications', () => {
           ],
           error: null,
         }),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        rpc: jest.fn().mockResolvedValue({ error: null }),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        rpc: vi.fn().mockResolvedValue({ error: null }),
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
-      const mockDispatch = jest.fn().mockResolvedValue({ success: true })
-      jest.spyOn(require('@/lib/viral-notifications'), 'dispatchViralNotification').mockImplementation(mockDispatch)
+      const mockDispatch = vi.fn().mockResolvedValue({ success: true })
+      vi.spyOn(require('@/lib/viral-notifications'), 'dispatchViralNotification').mockImplementation(mockDispatch)
 
       const successCount = await processPendingNotifications()
 
@@ -233,9 +233,9 @@ describe('viral-notifications', () => {
 
     it('should stop processing on rate limit', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({
           data: [
             { notification_type: 'tier_upgrade', fid: 1, cast_hash: '0x1', tier: 'viral', xp_bonus: 250 },
             { notification_type: 'tier_upgrade', fid: 2, cast_hash: '0x2', tier: 'viral', xp_bonus: 250 },
@@ -245,14 +245,14 @@ describe('viral-notifications', () => {
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
-      const mockDispatch = jest
+      const mockDispatch = vi
         .fn()
         .mockResolvedValueOnce({ success: true })
         .mockResolvedValueOnce({ success: false, rateLimited: true })
 
-      jest.spyOn(require('@/lib/viral-notifications'), 'dispatchViralNotification').mockImplementation(mockDispatch)
+      vi.spyOn(require('@/lib/viral-notifications'), 'dispatchViralNotification').mockImplementation(mockDispatch)
 
       const successCount = await processPendingNotifications()
 

@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   checkAchievements,
   awardAchievement,
@@ -12,12 +12,12 @@ import {
   ACHIEVEMENTS,
 } from '@/lib/viral-achievements'
 
-jest.mock('@/lib/supabase-server')
-jest.mock('@/lib/viral-notifications')
+vi.mock('@/lib/supabase-server')
+vi.mock('@/lib/viral-notifications')
 
 describe('viral-achievements', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('ACHIEVEMENTS configuration', () => {
@@ -39,9 +39,9 @@ describe('viral-achievements', () => {
   describe('getUserAchievements', () => {
     it('should fetch user achievements from database', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({
           data: [
             { achievement_type: 'first_viral' },
             { achievement_type: '100_shares' },
@@ -51,7 +51,7 @@ describe('viral-achievements', () => {
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
       const achievements = await getUserAchievements(12345)
 
@@ -67,22 +67,22 @@ describe('viral-achievements', () => {
   describe('checkAchievements', () => {
     it('should detect first_viral achievement', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        in: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        then: jest.fn()
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        then: vi.fn()
           .mockResolvedValueOnce({ count: 1 }) // 1 viral cast
           .mockResolvedValueOnce({ data: [{ recasts_count: 50 }], error: null }) // Total recasts
           .mockResolvedValueOnce({ data: [], error: null }), // No mega viral
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
-      const mockGetUserAchievements = jest.fn().mockResolvedValue([])
-      jest.spyOn(require('@/lib/viral-achievements'), 'getUserAchievements').mockImplementation(mockGetUserAchievements)
+      const mockGetUserAchievements = vi.fn().mockResolvedValue([])
+      vi.spyOn(require('@/lib/viral-achievements'), 'getUserAchievements').mockImplementation(mockGetUserAchievements)
 
       const result = await checkAchievements(12345, '0xtest')
 
@@ -92,22 +92,22 @@ describe('viral-achievements', () => {
 
     it('should detect 10_viral_casts achievement', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        in: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        then: jest.fn()
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        then: vi.fn()
           .mockResolvedValueOnce({ count: 10 }) // 10 viral casts
           .mockResolvedValueOnce({ data: [], error: null })
           .mockResolvedValueOnce({ data: [], error: null }),
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
-      const mockGetUserAchievements = jest.fn().mockResolvedValue(['first_viral'])
-      jest.spyOn(require('@/lib/viral-achievements'), 'getUserAchievements').mockImplementation(mockGetUserAchievements)
+      const mockGetUserAchievements = vi.fn().mockResolvedValue(['first_viral'])
+      vi.spyOn(require('@/lib/viral-achievements'), 'getUserAchievements').mockImplementation(mockGetUserAchievements)
 
       const result = await checkAchievements(12345)
 
@@ -117,12 +117,12 @@ describe('viral-achievements', () => {
 
     it('should detect 100_shares achievement', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        in: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        then: jest.fn()
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        then: vi.fn()
           .mockResolvedValueOnce({ count: 5 })
           .mockResolvedValueOnce({
             data: [
@@ -136,10 +136,10 @@ describe('viral-achievements', () => {
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
-      const mockGetUserAchievements = jest.fn().mockResolvedValue(['first_viral'])
-      jest.spyOn(require('@/lib/viral-achievements'), 'getUserAchievements').mockImplementation(mockGetUserAchievements)
+      const mockGetUserAchievements = vi.fn().mockResolvedValue(['first_viral'])
+      vi.spyOn(require('@/lib/viral-achievements'), 'getUserAchievements').mockImplementation(mockGetUserAchievements)
 
       const result = await checkAchievements(12345)
 
@@ -148,22 +148,22 @@ describe('viral-achievements', () => {
 
     it('should detect mega_viral_master achievement', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        in: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        then: jest.fn()
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        then: vi.fn()
           .mockResolvedValueOnce({ count: 1 })
           .mockResolvedValueOnce({ data: [], error: null })
           .mockResolvedValueOnce({ data: [{ cast_hash: '0xmega' }], error: null }), // Has mega viral
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
-      const mockGetUserAchievements = jest.fn().mockResolvedValue([])
-      jest.spyOn(require('@/lib/viral-achievements'), 'getUserAchievements').mockImplementation(mockGetUserAchievements)
+      const mockGetUserAchievements = vi.fn().mockResolvedValue([])
+      vi.spyOn(require('@/lib/viral-achievements'), 'getUserAchievements').mockImplementation(mockGetUserAchievements)
 
       const result = await checkAchievements(12345)
 
@@ -174,10 +174,10 @@ describe('viral-achievements', () => {
   describe('awardAchievement', () => {
     it('should award achievement and update XP', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: {
             id: 'ach-123',
             fid: 12345,
@@ -185,15 +185,15 @@ describe('viral-achievements', () => {
           },
           error: null,
         }),
-        rpc: jest.fn().mockResolvedValue({ error: null }),
+        rpc: vi.fn().mockResolvedValue({ error: null }),
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
-      const mockDispatch = jest.fn().mockResolvedValue({ success: true })
+      const mockDispatch = vi.fn().mockResolvedValue({ success: true })
       const { dispatchViralNotification } = await import('@/lib/viral-notifications')
-      ;(dispatchViralNotification as jest.Mock).mockImplementation(mockDispatch)
+      ;(dispatchViralNotification as vi.Mock).mockImplementation(mockDispatch)
 
       const success = await awardAchievement(12345, 'first_viral', '0xtest')
 
@@ -213,17 +213,17 @@ describe('viral-achievements', () => {
 
     it('should handle duplicate achievement gracefully', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        insert: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: null,
           error: { code: '23505' }, // PostgreSQL unique violation
         }),
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
       const success = await awardAchievement(12345, 'first_viral')
 
@@ -238,15 +238,15 @@ describe('viral-achievements', () => {
 
   describe('checkAndAwardAchievements', () => {
     it('should check and award multiple achievements in parallel', async () => {
-      const mockCheck = jest.fn().mockResolvedValue({
+      const mockCheck = vi.fn().mockResolvedValue({
         unlocked: ['first_viral', '100_shares'],
         alreadyHas: [],
       })
 
-      const mockAward = jest.fn().mockResolvedValue(true)
+      const mockAward = vi.fn().mockResolvedValue(true)
 
-      jest.spyOn(require('@/lib/viral-achievements'), 'checkAchievements').mockImplementation(mockCheck)
-      jest.spyOn(require('@/lib/viral-achievements'), 'awardAchievement').mockImplementation(mockAward)
+      vi.spyOn(require('@/lib/viral-achievements'), 'checkAchievements').mockImplementation(mockCheck)
+      vi.spyOn(require('@/lib/viral-achievements'), 'awardAchievement').mockImplementation(mockAward)
 
       const count = await checkAndAwardAchievements(12345, '0xtest')
 
@@ -257,18 +257,18 @@ describe('viral-achievements', () => {
     })
 
     it('should handle partial failures', async () => {
-      const mockCheck = jest.fn().mockResolvedValue({
+      const mockCheck = vi.fn().mockResolvedValue({
         unlocked: ['first_viral', '100_shares'],
         alreadyHas: [],
       })
 
-      const mockAward = jest
+      const mockAward = vi
         .fn()
         .mockResolvedValueOnce(true)
         .mockRejectedValueOnce(new Error('Award failed'))
 
-      jest.spyOn(require('@/lib/viral-achievements'), 'checkAchievements').mockImplementation(mockCheck)
-      jest.spyOn(require('@/lib/viral-achievements'), 'awardAchievement').mockImplementation(mockAward)
+      vi.spyOn(require('@/lib/viral-achievements'), 'checkAchievements').mockImplementation(mockCheck)
+      vi.spyOn(require('@/lib/viral-achievements'), 'awardAchievement').mockImplementation(mockAward)
 
       const count = await checkAndAwardAchievements(12345)
 
@@ -279,10 +279,10 @@ describe('viral-achievements', () => {
   describe('getUserAchievementDetails', () => {
     it('should return full achievement details with config', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
           data: [
             {
               id: 'ach-1',
@@ -298,7 +298,7 @@ describe('viral-achievements', () => {
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
       const details = await getUserAchievementDetails(12345)
 
