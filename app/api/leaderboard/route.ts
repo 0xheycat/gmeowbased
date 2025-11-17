@@ -5,6 +5,7 @@ import { CONTRACT_ADDRESSES, gmContractHasFunction, type ChainKey } from '@/lib/
 import { computeLeaderboardSlice, PROFILE_SUPPORTED } from '@/lib/leaderboard-aggregator'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { fetchUsersByAddresses } from '@/lib/neynar'
+import { withErrorHandler } from '@/lib/error-handler'
 
 const CACHE_TTL = 25_000
 const CACHE_HEADERS = { 'cache-control': 's-maxage=30, stale-while-revalidate=60' }
@@ -285,7 +286,7 @@ async function fetchLeaderboardFromSupabase(params: SupabaseFetchParams): Promis
   return null
 }
 
-export async function GET(req: Request) {
+export const GET = withErrorHandler(async (req: Request) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -296,8 +297,7 @@ export async function GET(req: Request) {
     )
   }
 
-  try {
-    const url = new URL(req.url)
+  const url = new URL(req.url)
     const chainParam = url.searchParams.get('chain') || 'base'
     const limit = Math.min(fromQueryInt(url.searchParams.get('limit'), 50), 500)
     const offset = fromQueryInt(url.searchParams.get('offset'), 0)
@@ -372,8 +372,4 @@ export async function GET(req: Request) {
 
     cache = { key: cacheKey, at: Date.now(), data }
     return NextResponse.json(data, { headers: CACHE_HEADERS })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'failed'
-    return NextResponse.json({ ok: false, reason: message }, { status: 500 })
-  }
-}
+})

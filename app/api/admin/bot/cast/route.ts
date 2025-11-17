@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotSignerUuid } from '@/lib/neynar-bot'
-import { extractHttpErrorMessage } from '@/lib/http-error'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
@@ -31,7 +31,7 @@ function parseParentAuthorFid(value: number | string | null | undefined): number
   return parsed > 0 ? parsed : undefined
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -77,16 +77,11 @@ export async function POST(req: NextRequest) {
     idem,
   }
 
-  try {
-    const client = getNeynarServerClient()
-    const response = await client.publishCast(payload)
-    return NextResponse.json({
-      ok: true,
-      cast: response.cast ?? null,
-      publishedAt: new Date().toISOString(),
-    })
-  } catch (error) {
-    const message = extractHttpErrorMessage(error, 'Failed to publish cast via Neynar API')
-    return NextResponse.json({ ok: false, error: message }, { status: 502 })
-  }
-}
+  const client = getNeynarServerClient()
+  const response = await client.publishCast(payload)
+  return NextResponse.json({
+    ok: true,
+    cast: response.cast ?? null,
+    publishedAt: new Date().toISOString(),
+  })
+})

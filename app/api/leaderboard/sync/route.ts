@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { syncSupabaseLeaderboard } from '@/lib/leaderboard-sync'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { withErrorHandler } from '@/lib/error-handler'
 
 const SYNC_TOKEN = process.env.SUPABASE_SYNC_TOKEN || process.env.CRON_SECRET || process.env.SYNC_LEADERBOARD_TOKEN
 
@@ -11,7 +12,7 @@ function isAuthorized(req: Request): boolean {
   return authHeader === expected
 }
 
-export async function POST(req: Request) {
+export const POST = withErrorHandler(async (req: Request) => {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ ok: false, reason: 'supabase_not_configured' }, { status: 500 })
   }
@@ -29,14 +30,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, reason: 'supabase_client_init_failed' }, { status: 500 })
   }
 
-  try {
-    const result = await syncSupabaseLeaderboard({ supabase })
-    return NextResponse.json({ ok: true, ...result })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'sync_failed'
-    console.error('leaderboard sync api failed:', error)
-    return NextResponse.json({ ok: false, reason: message }, { status: 500 })
-  }
-}
+  const result = await syncSupabaseLeaderboard({ supabase })
+  return NextResponse.json({ ok: true, ...result })
+})
 
 export const runtime = 'nodejs'
