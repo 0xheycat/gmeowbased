@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getTelemetrySummary } from '@/lib/telemetry'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
-export async function GET(request: Request) {
+export const GET = withErrorHandler(async (request: Request) => {
   // Apply rate limiting
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
@@ -16,18 +17,10 @@ export async function GET(request: Request) {
     )
   }
 
-  try {
-    const payload = await getTelemetrySummary()
-    return NextResponse.json(payload, {
+  const payload = await getTelemetrySummary()
+  return NextResponse.json(payload, {
       headers: {
         'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
       },
     })
-  } catch (error) {
-    console.error('[telemetry] summary endpoint failed:', (error as Error)?.message || error)
-    return NextResponse.json(
-      { error: 'telemetry-unavailable' },
-      { status: 500 },
-    )
-  }
-}
+})

@@ -1,0 +1,232 @@
+[
+  {
+    "route": "/api/onboard/complete",
+    "method": "POST",
+    "status": "SKIP",
+    "error": "Requires valid Neynar FID"
+  },
+  {
+    "route": "/api/profile/3",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 29
+  },
+  {
+    "route": "/api/profile/3/stats",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/profile/3/badges",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/leaderboard",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 3
+  },
+  {
+    "route": "/api/leaderboard/global",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/viral/stats?fid=3",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/viral/leaderboard",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/frame/identify?fid=3",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/frame/badge?fid=3",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 2
+  },
+  {
+    "route": "/api/frame/badgeShare?fid=3",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/analytics/summary",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/analytics/events",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/farcaster/user",
+    "method": "GET",
+    "status": "SKIP",
+    "error": "Requires fid parameter"
+  },
+  {
+    "route": "/api/farcaster/bulk",
+    "method": "POST",
+    "status": "SKIP",
+    "error": "Requires Neynar API key"
+  },
+  {
+    "route": "/api/notifications?fid=3",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/notifications",
+    "method": "POST",
+    "status": "SKIP",
+    "error": "Requires auth"
+  },
+  {
+    "route": "/api/minikit/auth",
+    "method": "POST",
+    "status": "SKIP",
+    "error": "Requires MiniKit auth payload"
+  },
+  {
+    "route": "/api/admin/viral/webhook-health",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/admin/viral/cast-metrics",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/admin/viral/achievements",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/admin/viral/tier-history",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/admin/badges",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/admin/badges/upload",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/admin/bot/cast",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/admin/bot/activity",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 1
+  },
+  {
+    "route": "/api/admin/bot/reset-client",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/admin/auth/login",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/webhooks/neynar/user",
+    "method": "POST",
+    "status": "SKIP",
+    "error": "Requires Neynar webhook signature"
+  },
+  {
+    "route": "/api/webhooks/neynar/cast",
+    "method": "POST",
+    "status": "SKIP",
+    "error": "Requires Neynar webhook signature"
+  },
+  {
+    "route": "/api/webhooks/badge-share",
+    "method": "POST",
+    "status": "SKIP",
+    "error": "Requires webhook payload"
+  },
+  {
+    "route": "/api/profile/invalid",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 0
+  },
+  {
+    "route": "/api/profile/-1",
+    "method": "GET",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 2
+  },
+  {
+    "route": "/api/farcaster/bulk",
+    "method": "POST",
+    "status": "FAIL",
+    "error": "fetch failed",
+    "duration": 2
+  }
+]

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ type LeaderboardEntry = {
   topTierEmoji: string
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -40,8 +41,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  try {
-    const { searchParams } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
     
     // GI-11: Input validation with defaults
     const limitParam = searchParams.get('limit') || '50'
@@ -165,7 +165,6 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    // GI-13: Return structured leaderboard response
     return NextResponse.json({
       leaderboard,
       totalUsers: fidStats.size,
@@ -174,11 +173,4 @@ export async function GET(request: NextRequest) {
       limit,
       generatedAt: new Date().toISOString(),
     })
-  } catch (error) {
-    console.error('[Viral Leaderboard] Unexpected error:', error)
-    return NextResponse.json(
-      { error: 'Internal Error', message: 'Failed to process request' },
-      { status: 500 }
-    )
-  }
-}
+})

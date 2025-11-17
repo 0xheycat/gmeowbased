@@ -241,7 +241,7 @@ export function handleInternalError(error: Error, context?: Record<string, any>)
 /**
  * Wrap async handler with error handling
  * 
- * @param handler - Async request handler
+ * @param handler - Async request handler (supports both Request and NextRequest)
  * @returns Wrapped handler with error handling
  * 
  * @example
@@ -252,10 +252,10 @@ export function handleInternalError(error: Error, context?: Record<string, any>)
  * })
  * ```
  */
-export function withErrorHandler(
-  handler: (request: Request) => Promise<NextResponse>
+export function withErrorHandler<T extends Request = Request>(
+  handler: (request: T) => Promise<NextResponse>
 ) {
-  return async (request: Request): Promise<NextResponse> => {
+  return async (request: T): Promise<NextResponse> => {
     try {
       return await handler(request)
     } catch (error) {

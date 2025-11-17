@@ -18,6 +18,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { withErrorHandler } from '@/lib/error-handler'
 
 type BadgeMetric = {
   badgeId: string
@@ -35,9 +36,8 @@ type BadgeMetric = {
   lastCastAt: string
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url)
     
     // GI-11: Input validation with defaults
     const fidParam = searchParams.get('fid')
@@ -190,18 +190,7 @@ export async function GET(request: NextRequest) {
       totalXp,
       fid,
     })
-    
-  } catch (err) {
-    console.error('[Badge Metrics] Unexpected error:', err)
-    return NextResponse.json(
-      { 
-        error: 'Internal Error', 
-        message: err instanceof Error ? err.message : 'An unexpected error occurred' 
-      },
-      { status: 500 }
-    )
-  }
-}
+})
 
 /**
  * Format badge ID into human-readable name

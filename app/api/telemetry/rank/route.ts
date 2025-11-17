@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
 import { recordRankEvent, type RankTelemetryEventInput, type RankTelemetryEventKind } from '@/lib/telemetry'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
@@ -81,7 +82,7 @@ function sanitizePayload(input: unknown): RankTelemetryEventInput | null {
 }
 // @edit-end
 
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandler(async (request: NextRequest) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -92,18 +93,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  try {
-    const body = await request.json()
-    const payload = sanitizePayload(body)
+  const body = await request.json()
+  const payload = sanitizePayload(body)
 
     if (!payload) {
       return NextResponse.json({ error: 'invalid-rank-telemetry' }, { status: 400 })
     }
 
-    await recordRankEvent(payload)
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error('[telemetry] rank POST failed:', (error as Error)?.message || error)
-    return NextResponse.json({ error: 'rank-telemetry-failed' }, { status: 500 })
-  }
-}
+  await recordRankEvent(payload)
+  return NextResponse.json({ ok: true })
+})

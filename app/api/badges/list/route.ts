@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getUserBadges } from '@/lib/badges'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { FIDSchema } from '@/lib/validation/api-schemas'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,7 +10,7 @@ export const dynamic = 'force-dynamic'
  * GET /api/badges/list?fid=123
  * Get all badges assigned to a user
  */
-export async function GET(request: Request) {
+export const GET = withErrorHandler(async (request: Request) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -20,9 +21,8 @@ export async function GET(request: Request) {
     )
   }
 
-  try {
-    const { searchParams } = new URL(request.url)
-    const fid = searchParams.get('fid')
+  const { searchParams } = new URL(request.url)
+  const fid = searchParams.get('fid')
 
     if (!fid) {
       return NextResponse.json(
@@ -48,14 +48,4 @@ export async function GET(request: Request) {
       badges,
       count: badges.length,
     })
-  } catch (error) {
-    console.error('Error fetching user badges:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch user badges' 
-      },
-      { status: 500 }
-    )
-  }
-}
+})
