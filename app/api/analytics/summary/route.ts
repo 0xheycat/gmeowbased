@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server'
 import { getTelemetrySummary } from '@/lib/telemetry'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Apply rate limiting
+  const ip = getClientIp(request)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const payload = await getTelemetrySummary()
     return NextResponse.json(payload, {
