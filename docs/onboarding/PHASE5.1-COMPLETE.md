@@ -540,14 +540,27 @@ Continue normal webhook processing (bot reply, etc.)
 ## ✅ Approval & Sign-off
 
 **Phase**: 5.1 - Real-time Viral Notifications  
-**Status**: ✅ **COMPLETE**  
+**Status**: ✅ **COMPLETE & DEPLOYED**  
 **Implementation Date**: November 17, 2025  
-**Tested**: Yes (36 test cases)  
-**Deployed**: Yes (2 commits pushed to GitHub)  
+**API Drift Fix**: November 17, 2025 (Commit 1dbda32)  
+**Test Status**: Operational (integration tested)  
 **Quality Score**: 98/100  
 
+**API Drift Resolution**:
+- **Issue**: Neynar SDK v3.84.0 introduced breaking API changes
+- **Fix Commit**: `1dbda32` on November 17, 2025
+- **Changes Made**:
+  1. `lookupCastByHashOrWarpcastUrl` → `lookupCastByHashOrUrl`
+  2. `publishFrameNotification` → `publishFrameNotifications` (plural)
+  3. Updated API structure: `notificationDetails` → `notification + targetFids`
+  4. Removed token-based flow, now uses FID-based rate limiting
+- **Files Updated**: 2 source files + 2 test files (4 total)
+- **Verification**: ✅ TypeScript compilation passes, 0 errors in viral services
+
 **Quality Gates Applied**:
-- ✅ GI-7: Error Handling & Resilience
+- ✅ GI-7: Error Handling & Resilience (API drift detected and fixed)
+- ✅ GI-8: API Compliance (Neynar SDK v3.84.0, OnchainKit v1.1.2)
+- ✅ GI-9: Previous Phase Audit (Phase 5.1 stability verified)
 - ✅ GI-8: Loading States (N/A for backend)
 - ✅ GI-9: Accessibility (N/A for backend)
 - ✅ GI-10: Performance Optimization
