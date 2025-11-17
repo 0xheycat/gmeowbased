@@ -32,8 +32,10 @@ export const BadgeAssignSchema = z.object({
 
 export const BadgeMintSchema = z.object({
   fid: FIDSchema,
-  badgeId: z.string().min(1, 'Badge ID is required'),
-  chain: ChainSchema.optional(),
+  badgeType: z.string().min(1, 'Badge type is required'),
+  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid transaction hash format'),
+  tokenId: z.number().int().nonnegative().optional(),
+  contractAddress: AddressSchema.optional(),
 })
 
 // Quest endpoints

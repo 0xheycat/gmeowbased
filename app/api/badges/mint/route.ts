@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { updateBadgeMintStatus } from '@/lib/badges'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { BadgeMintSchema } from '@/lib/validation/api-schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,33 +29,23 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verify authentication (minting service or admin)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+    // Validate input with Zod
     const body = await request.json()
-    const { fid, badgeType, txHash, tokenId, contractAddress } = body
+    const validationResult = BadgeMintSchema.safeParse(body)
 
-    if (!fid || !badgeType || !txHash) {
+    if (!validationResult.success) {
+      console.error('[Badge Mint] Validation failed:', validationResult.error.issues)
       return NextResponse.json(
-        { success: false, error: 'Missing required fields: fid, badgeType, txHash' },
+        {
+          success: false,
+          error: 'Invalid input',
+          details: validationResult.error.issues
+        },
         { status: 400 }
       )
     }
 
-    // Validate txHash format
-    if (!txHash.startsWith('0x') || txHash.length !== 66) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid transaction hash format' },
-        { status: 400 }
-      )
-    }
+    const { fid, badgeType, txHash, tokenId, contractAddress } = validationResult.data
 
     // Check if badge is already minted to prevent duplicates
     const { data: existingBadge } = await supabase
