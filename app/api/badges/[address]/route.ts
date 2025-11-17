@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { AddressSchema } from '@/lib/validation/api-schemas'
 import { fetchMintedBadges } from '@/lib/badges'
 import { CHAIN_IDS, type ChainKey, isAddress } from '@/lib/gm-utils'
 
@@ -8,10 +10,23 @@ export const runtime = 'nodejs'
 type RouteContext = { params: Promise<{ address?: string | string[] }> }
 
 export async function GET(req: NextRequest, context: RouteContext) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const resolved = await context.params
   const rawAddress = resolved?.address
   const addressParam = Array.isArray(rawAddress) ? rawAddress[0] : rawAddress
-  if (!isAddress(addressParam)) {
+  
+  // Validate address format
+  const addressValidation = AddressSchema.safeParse(addressParam)
+  if (!addressValidation.success || !isAddress(addressParam)) {
     return NextResponse.json({ ok: false, error: 'invalid_address' }, { status: 400 })
   }
 
