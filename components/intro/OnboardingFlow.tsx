@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useAccount } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import ShareButton from '@/components/share/ShareButton'
+import { getMiniappContext } from '@/lib/miniappEnv'
 // GI-10: Confetti loaded dynamically for performance
 import { getBadgeArtworkBackground } from '@/lib/badge-artwork'
 import '@/app/styles/quest-card-yugioh.css'
@@ -430,8 +431,52 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         setErrorMessage(null)
         setErrorType(null)
         
+        // AUTO-DETECT FID: Try miniapp context first (highest priority)
+        let fid: number | null = null
+        let fidSource: string = 'unknown'
+        
+        try {
+          const miniappContext = await getMiniappContext()
+          if (miniappContext?.user?.fid) {
+            fid = miniappContext.user.fid
+            fidSource = 'miniapp-context'
+            console.log('[OnboardingFlow] ✅ FID from miniapp context:', fid)
+          }
+        } catch (miniappError) {
+          console.log('[OnboardingFlow] ⚠️ Not in miniapp context:', miniappError)
+        }
+        
+        // If no FID from miniapp, try URL parameter (for desktop/frame users)
+        if (!fid) {
+          const urlParams = new URLSearchParams(window.location.search)
+          const fidParam = urlParams.get('fid')
+          if (fidParam) {
+            fid = parseInt(fidParam, 10)
+            if (!isNaN(fid) && fid > 0) {
+              fidSource = 'url-parameter'
+              console.log('[OnboardingFlow] ✅ FID from URL param:', fid)
+            } else {
+              fid = null
+            }
+          }
+        }
+        
+        // If no FID found anywhere, show error with instructions
+        if (!fid) {
+          console.log('[OnboardingFlow] ❌ No FID detected from any source')
+          setErrorMessage(
+            'Unable to detect your Farcaster account. ' +
+            'Please open this app from Warpcast or add ?fid=YOUR_FID to the URL.'
+          )
+          setErrorType('auth')
+          setIsLoading(false)
+          return
+        }
+        
+        console.log(`[OnboardingFlow] 🔍 Using FID ${fid} (source: ${fidSource})`)
+        
         // Check if user already completed onboarding
-        const statusRes = await fetch('/api/onboard/status')
+        const statusRes = await fetch(`/api/onboard/status?fid=${fid}`)
         if (!statusRes.ok) {
           throw new Error(`Onboarding status check failed: ${statusRes.statusText}`)
         }
@@ -443,16 +488,24 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           return
         }
 
-        // Load Farcaster profile from current session
-        const profileRes = await fetch('/api/user/profile')
+        // Load Farcaster profile with detected FID
+        const profileRes = await fetch(`/api/user/profile?fid=${fid}`)
         if (!profileRes.ok) {
           throw new Error(`Profile fetch failed: ${profileRes.statusText}`)
         }
         
         const profileData = await profileRes.json()
         
+        // Check for anonymous response
+        if (profileData.anonymous) {
+          throw new Error(
+            'Failed to load your Farcaster profile. ' +
+            'Please ensure you have a valid Farcaster account.'
+          )
+        }
+        
         if (!profileData.fid) {
-          throw new Error('No Farcaster ID found. Please connect your Farcaster account.')
+          throw new Error('No Farcaster ID in profile data')
         }
         
         // Fetch Neynar score with timeout
