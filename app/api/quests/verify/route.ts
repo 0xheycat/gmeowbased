@@ -1,6 +1,7 @@
 export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import {
   createPublicClient,
   http,
@@ -1037,6 +1038,16 @@ function prepareRequirementContext(params: {
 /* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const started = Date.now()
   try {
     const body = await req.json().catch(() => null)
@@ -1652,6 +1663,16 @@ export async function POST(req: Request) {
 /* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const url = new URL(req.url)
   const debug = url.searchParams.get('debug')
   if (!debug) return H('Method Not Allowed', 405)
