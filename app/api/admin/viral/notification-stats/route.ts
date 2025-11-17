@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
     // Phase 5.1 logs notification-sent and notification-failed events
     const { data: events, error } = await supabase
       .from('gmeow_rank_events')
-      .select('event_type, event_detail, created_at')
+      .select('event_type, metadata, created_at')
       .in('event_type', ['notification-sent', 'notification-failed'])
       .gte('created_at', `now() - interval '${interval}'`)
       .order('created_at', { ascending: true })
@@ -128,9 +128,9 @@ export async function GET(req: NextRequest) {
 
         // Extract delivery time if available
         try {
-          const detail = typeof event.event_detail === 'string'
-            ? JSON.parse(event.event_detail)
-            : event.event_detail
+          const detail = typeof event.metadata === 'string'
+            ? JSON.parse(event.metadata)
+            : event.metadata
           
           if (detail?.delivery_time_ms && typeof detail.delivery_time_ms === 'number') {
             deliveryTimes.push(detail.delivery_time_ms)
@@ -144,9 +144,9 @@ export async function GET(req: NextRequest) {
 
         // Parse failure reason
         try {
-          const detail = typeof event.event_detail === 'string'
-            ? JSON.parse(event.event_detail)
-            : event.event_detail
+          const detail = typeof event.metadata === 'string'
+            ? JSON.parse(event.metadata)
+            : event.metadata
           
           const reason = detail?.reason ?? 'other'
 

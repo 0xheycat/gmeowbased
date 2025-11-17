@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     // Phase 5.1 logs webhook-received and webhook-error events
     const { data: webhookEvents, error } = await supabase
       .from('gmeow_rank_events')
-      .select('event_type, event_detail, created_at')
+      .select('event_type, metadata, created_at')
       .in('event_type', ['webhook-received', 'webhook-error'])
       .gte('created_at', `now() - interval '24 hours'`)
       .order('created_at', { ascending: false })
@@ -89,9 +89,9 @@ export async function GET(req: NextRequest) {
         // Extract processing time if available
         try {
           const detail =
-            typeof event.event_detail === 'string'
-              ? JSON.parse(event.event_detail)
-              : event.event_detail
+            typeof event.metadata === 'string'
+              ? JSON.parse(event.metadata)
+              : event.metadata
 
           if (detail?.processing_time_ms && typeof detail.processing_time_ms === 'number') {
             processingTimes.push(detail.processing_time_ms)
@@ -106,9 +106,9 @@ export async function GET(req: NextRequest) {
         // Parse error details
         try {
           const detail =
-            typeof event.event_detail === 'string'
-              ? JSON.parse(event.event_detail)
-              : event.event_detail
+            typeof event.metadata === 'string'
+              ? JSON.parse(event.metadata)
+              : event.metadata
 
           // Add to recent errors (limit to 10 most recent)
           if (health.recent_errors.length < 10) {

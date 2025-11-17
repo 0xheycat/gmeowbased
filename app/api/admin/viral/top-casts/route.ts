@@ -35,21 +35,6 @@ type ViralCast = {
   avatar_url?: string
 }
 
-function getTimeframeInterval(timeframe: string): string {
-  switch (timeframe) {
-    case '24h':
-      return '24 hours'
-    case '7d':
-      return '7 days'
-    case '30d':
-      return '30 days'
-    case 'all':
-      return '10 years' // effectively no limit
-    default:
-      return '7 days'
-  }
-}
-
 export async function GET(req: NextRequest) {
   try {
     // 1. Admin auth check
@@ -65,7 +50,6 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const timeframe = searchParams.get('timeframe') ?? '7d'
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '20', 10), 100)
-    const interval = getTimeframeInterval(timeframe)
 
     const supabase = getSupabaseServerClient()
     if (!supabase) {
@@ -76,12 +60,24 @@ export async function GET(req: NextRequest) {
     }
 
     // 3. Query badge_casts for top viral casts
+    // Calculate the cutoff timestamp
+    const cutoffDate = new Date()
+    if (timeframe === '24h') {
+      cutoffDate.setHours(cutoffDate.getHours() - 24)
+    } else if (timeframe === '7d') {
+      cutoffDate.setDate(cutoffDate.getDate() - 7)
+    } else if (timeframe === '30d') {
+      cutoffDate.setDate(cutoffDate.getDate() - 30)
+    } else {
+      cutoffDate.setFullYear(cutoffDate.getFullYear() - 10) // 'all' timeframe
+    }
+
     const { data: casts, error } = await supabase
       .from('badge_casts')
       .select(
         'cast_hash, fid, viral_score, viral_tier, likes_count, recasts_count, replies_count, created_at'
       )
-      .gte('created_at', `now() - interval '${interval}'`)
+      .gte('created_at', cutoffDate.toISOString())
       .gt('viral_score', 0) // Only casts with viral scores
       .order('viral_score', { ascending: false })
       .limit(limit)
