@@ -10,7 +10,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   LineChart,
   Line,
@@ -63,7 +63,7 @@ export default function NotificationAnalytics() {
   const [error, setError] = useState<string | null>(null)
   const [timeframe, setTimeframe] = useState('7d')
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/admin/viral/notification-stats?timeframe=${timeframe}`)
@@ -81,11 +81,11 @@ export default function NotificationAnalytics() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeframe])
 
   useEffect(() => {
     void fetchStats()
-  }, [timeframe])
+  }, [fetchStats])
 
   const getStatusColor = (successRate: number) => {
     if (successRate >= 95) return 'text-emerald-300 border-emerald-400/40 bg-emerald-500/15'

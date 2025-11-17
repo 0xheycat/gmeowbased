@@ -26,7 +26,6 @@ import {
   hasMetricsIncreased,
   calculateIncrementalBonus,
   type EngagementMetrics,
-  type ViralTierConfig,
 } from './viral-bonus'
 
 // ============================================================================

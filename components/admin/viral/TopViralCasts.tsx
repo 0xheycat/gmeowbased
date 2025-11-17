@@ -10,7 +10,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 
 type ViralCast = {
@@ -56,9 +56,9 @@ export default function TopViralCasts() {
   const [casts, setCasts] = useState<ViralCast[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [timeframe, setTimeframe] = useState('7d')
+  const [timeframe, setTimeframe] = useState<'24h' | '7d' | '30d'>('24h')
 
-  const fetchCasts = async () => {
+  const fetchCasts = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/admin/viral/top-casts?timeframe=${timeframe}&limit=20`)
@@ -76,11 +76,11 @@ export default function TopViralCasts() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeframe])
 
   useEffect(() => {
     void fetchCasts()
-  }, [timeframe])
+  }, [fetchCasts])
 
   const formatDate = (timestamp: string) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
@@ -108,7 +108,7 @@ export default function TopViralCasts() {
         <div className="flex items-center gap-2">
           <select
             value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value)}
+            onChange={(e) => setTimeframe(e.target.value as '24h' | '7d' | '30d')}
             className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
           >
             {TIMEFRAME_OPTIONS.map((option) => (

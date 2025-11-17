@@ -10,7 +10,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 
 type TierUpgrade = {
@@ -60,7 +60,7 @@ export default function TierUpgradeFeed({
   const [error, setError] = useState<string | null>(null)
   const [tierFilter, setTierFilter] = useState<string>('all')
 
-  const fetchUpgrades = async () => {
+  const fetchUpgrades = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         limit: limit.toString(),
@@ -86,11 +86,11 @@ export default function TierUpgradeFeed({
     } finally {
       setLoading(false)
     }
-  }
+  }, [tierFilter, limit])
 
   useEffect(() => {
     void fetchUpgrades()
-  }, [tierFilter])
+  }, [fetchUpgrades])
 
   useEffect(() => {
     if (!autoRefresh) return
@@ -100,7 +100,7 @@ export default function TierUpgradeFeed({
     }, refreshInterval)
 
     return () => clearInterval(interval)
-  }, [autoRefresh, refreshInterval, tierFilter])
+  }, [autoRefresh, refreshInterval, fetchUpgrades])
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp)
@@ -164,7 +164,7 @@ export default function TierUpgradeFeed({
         </div>
       ) : upgrades.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
-          No tier upgrades yet. When users reach viral status, they'll appear here.
+          No tier upgrades yet. When users reach viral status, they&apos;ll appear here.
         </div>
       ) : (
         <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">

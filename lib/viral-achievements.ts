@@ -280,7 +280,7 @@ export async function awardAchievement(
     const config = ACHIEVEMENTS[achievementType]
 
     // GI-7: Insert achievement (UNIQUE constraint prevents duplicates)
-    const { data: achievementData, error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from('viral_milestone_achievements')
       .insert({
         fid,
