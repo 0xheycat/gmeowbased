@@ -84,3 +84,58 @@ export const AdminBadgeUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 })
 
+// Frame endpoints
+export const FrameIdentifySchema = z.object({
+  fid: FIDSchema,
+  buttonIndex: z.number().int().min(1).max(4).optional(),
+  messageHash: z.string().optional(),
+})
+
+// Viral endpoints
+export const ViralStatsQuerySchema = z.object({
+  fid: FIDSchema.optional(),
+  timeframe: z.enum(['day', 'week', 'month', 'all']).optional(),
+  limit: z.number().int().min(1).max(100).optional(),
+})
+
+// Leaderboard endpoints
+export const LeaderboardQuerySchema = z.object({
+  chain: ChainSchema.optional(),
+  limit: z.number().int().min(1).max(100).optional(),
+  offset: z.number().int().min(0).optional(),
+})
+
+// Tips endpoints
+export const TipIngestSchema = z.object({
+  fromFid: FIDSchema,
+  toFid: FIDSchema,
+  amount: z.number().positive('Amount must be positive'),
+  currency: z.string().min(1),
+  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
+})
+
+// Farcaster endpoints
+export const FarcasterBulkSchema = z.object({
+  fids: z.array(FIDSchema).min(1).max(100),
+})
+
+// Snapshot endpoints
+export const SnapshotCreateSchema = z.object({
+  type: z.enum(['leaderboard', 'badges', 'quests']),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+})
+
+// Cast endpoints  
+export const CastBadgeShareSchema = z.object({
+  fid: FIDSchema,
+  badgeId: z.string().min(1),
+  message: z.string().max(320).optional(),
+})
+
+// Onboard schema (already exists but documenting)
+export const OnboardCompleteSchema = z.object({
+  fid: FIDSchema,
+  custodyAddress: AddressSchema.optional(),
+  walletAddress: AddressSchema.optional(),
+  verifiedAddresses: z.array(AddressSchema).optional(),
+})

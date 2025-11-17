@@ -1,6 +1,7 @@
 // app/api/frame/identify/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { FIDSchema } from '@/lib/validation/api-schemas'
 
 export const runtime = 'nodejs'
 export const revalidate = 0
@@ -53,6 +54,15 @@ export async function GET(req: NextRequest): Promise<NextResponse<IdentifyRespon
     
     // If we have FID, fetch full profile from Neynar
     if (fid && Number.isFinite(fid) && fid > 0) {
+      // Validate FID
+      const fidValidation = FIDSchema.safeParse(fid)
+      if (!fidValidation.success) {
+        return NextResponse.json({
+          ok: false,
+          error: 'Invalid FID format'
+        }, { status: 400 })
+      }
+      
       try {
         const neynarApiKey = process.env.NEYNAR_API_KEY || process.env.NEXT_PUBLIC_NEYNAR_API_KEY || ''
         if (neynarApiKey) {

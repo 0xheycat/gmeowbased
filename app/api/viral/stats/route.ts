@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { getViralTier, calculateEngagementScore, type EngagementMetrics } from '@/lib/viral-bonus'
+import { FIDSchema } from '@/lib/validation/api-schemas'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -40,6 +42,16 @@ type TierBreakdown = {
 }
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const fidParam = searchParams.get('fid')
@@ -54,9 +66,11 @@ export async function GET(request: NextRequest) {
     
     const fid = parseInt(fidParam, 10)
     
-    if (isNaN(fid) || fid <= 0) {
+    // Zod validation
+    const fidValidation = FIDSchema.safeParse(fid)
+    if (!fidValidation.success) {
       return NextResponse.json(
-        { error: 'Bad Request', message: 'Invalid fid parameter' },
+        { error: 'Bad Request', message: 'Invalid fid parameter', details: fidValidation.error.flatten() },
         { status: 400 }
       )
     }
