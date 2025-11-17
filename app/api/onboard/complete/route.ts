@@ -71,6 +71,7 @@ export async function POST(request: Request) {
     }
 
     const neynar = new NeynarAPIClient({ apiKey: NEYNAR_API_KEY })
+    let neynarUser: any
     try {
       const userResult = await neynar.fetchBulkUsers({ fids: [fid] })
       if (!userResult?.users?.[0]) {
@@ -80,7 +81,8 @@ export async function POST(request: Request) {
           { status: 400 }
       )
       }
-      console.log('[Onboard Complete] ✅ FID verified:', fid, userResult.users[0].username)
+      neynarUser = userResult.users[0]
+      console.log('[Onboard Complete] ✅ FID verified:', fid, neynarUser.username)
     } catch (neynarError) {
       console.error('[Onboard Complete] Neynar verification failed:', neynarError)
       return NextResponse.json(
@@ -114,7 +116,20 @@ export async function POST(request: Request) {
       })
     }
 
-    // 5. Fetch REAL Neynar score (or use provided score)
+    // 5. Extract addresses from Neynar data
+    const custodyAddress = neynarUser.custody_address || null
+    const verifiedAddresses = neynarUser.verified_addresses?.eth_addresses || []
+    const primaryAddress = neynarUser.verified_addresses?.primary?.eth_address || null
+    const walletAddress = address || primaryAddress || (verifiedAddresses.length > 0 ? verifiedAddresses[0] : null)
+
+    console.log('[Onboard Complete] 📍 Addresses extracted:', {
+      custody: custodyAddress,
+      verified: verifiedAddresses,
+      primary: primaryAddress,
+      wallet: walletAddress
+    })
+
+    // 6. Fetch REAL Neynar score (or use provided score)
     let finalScore = neynarScore ?? 0.5 // Default to epic tier
     
     if (!neynarScore) {
@@ -153,7 +168,7 @@ export async function POST(request: Request) {
       isMythic,
     })
 
-    // 6. Update user profile with onboarding data
+    // 7. Update user profile with onboarding data
     const { data: updatedProfile, error: updateError } = await supabase
       .from('user_profiles')
       .upsert({
@@ -163,7 +178,9 @@ export async function POST(request: Request) {
         onboarded_at: new Date().toISOString(),
         points: totalPoints,
         xp: totalXP,
-        wallet_address: address || null,
+        wallet_address: walletAddress,
+        custody_address: custodyAddress,
+        verified_addresses: verifiedAddresses.length > 0 ? verifiedAddresses : null,
         og_nft_eligible: isMythic,
         updated_at: new Date().toISOString(),
       })
