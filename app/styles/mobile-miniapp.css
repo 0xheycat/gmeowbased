@@ -114,6 +114,34 @@
   }
 }
 
+/* Mobile header optimizations - smaller switches on left */
+@media (max-width: 1024px) {
+  .theme-shell-header {
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+  }
+
+  /* Smaller touch targets for header switches (mobile) */
+  .theme-shell-icon--badge {
+    min-height: 32px;
+    min-width: 32px;
+  }
+
+  .layout-switch,
+  .theme-toggle {
+    height: 32px;
+    width: 32px;
+  }
+}
+
+/* Ensure mobile nav has proper spacing */
+@media (max-width: 768px) {
+  .pixel-nav-grid {
+    /* Adjust grid to 5 items instead of 6 */
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 /* Improve touch interactions */
 @media (hover: none) and (pointer: coarse) {
   /* Increase touch target sizes */
