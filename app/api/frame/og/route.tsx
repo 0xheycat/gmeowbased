@@ -58,10 +58,10 @@ const toneBackground: Record<Badge['tone'], string> = {
 
 export async function GET(req: Request) {
   const url = new URL(req.url)
-  const title = readParam(url, 'title', 'GMEOW Retro Deck')
+  const title = readParam(url, 'title', 'Gmeowbased Adventures')
   const subtitle = readParam(url, 'subtitle', 'Daily GM Logistics')
   const chain = readParam(url, 'chain', 'All Chains')
-  const footer = readParam(url, 'footer', 'Warpcast • GMeow Adventure')
+  const footer = readParam(url, 'footer', 'Warpcast • Gmeowbased Adventure')
   const badge = readBadge(url)
   const metrics = readMetrics(url)
 
@@ -164,7 +164,7 @@ export async function GET(req: Request) {
             opacity: 0.78,
           }}
         >
-          <span>GMEOW Command Deck</span>
+          <span>Gmeowbased</span>
           <span>{footer}</span>
         </footer>
       </div>
