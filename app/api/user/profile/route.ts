@@ -17,39 +17,65 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(req: NextRequest) {
   try {
-    // 1. Try query param
     const { searchParams } = new URL(req.url)
-    let fid = searchParams.get('fid')
+    let fid: string | null = null
+    let source: string = 'unknown'
 
-    // 2. Try Farcaster Frame context header
+    // 1. Try query parameter first (explicit FID from URL)
+    fid = searchParams.get('fid')
+    if (fid) source = 'query-param'
+
+    // 2. Try Frame context (sent as header by Warpcast frames)
     if (!fid) {
       const frameContext = req.headers.get('x-farcaster-frame-context')
       if (frameContext) {
         try {
           const context = JSON.parse(frameContext)
           fid = context.untrustedData?.fid?.toString() || context.fid?.toString()
-        } catch {
-          // Invalid JSON, continue
+          if (fid) source = 'frame-context'
+        } catch (e) {
+          console.error('[Profile API] Failed to parse frame context:', e)
         }
       }
     }
 
-    // 3. Try MiniKit context (stored in localStorage, sent via header)
+    // 3. Try MiniKit SDK context (sent by Farcaster miniapp client)
     if (!fid) {
-      const miniKitFid = req.headers.get('x-minikit-fid')
+      // Check for miniapp-specific headers
+      const miniKitFid = req.headers.get('x-minikit-fid') || req.headers.get('x-farcaster-fid')
       if (miniKitFid) {
         fid = miniKitFid
+        source = 'minikit-header'
       }
     }
 
-    // 4. Default FID for testing
+    // 4. Try referer-based detection (Warpcast web referrer)
     if (!fid) {
-      // Return anonymous user - client will prompt for FID input
-      return NextResponse.json({
-        anonymous: true,
-        message: 'No FID found. Please provide FID via ?fid=YOUR_FID',
-      })
+      const referer = req.headers.get('referer') || req.headers.get('referrer')
+      if (referer && (referer.includes('warpcast.com') || referer.includes('farcaster.xyz'))) {
+        // Extract FID from referer URL if present
+        const fidMatch = referer.match(/[?&]fid=([0-9]+)/)
+        if (fidMatch && fidMatch[1]) {
+          fid = fidMatch[1]
+          source = 'referer-url'
+        }
+      }
     }
+
+    // 5. If no FID found, return anonymous mode with guidance
+    if (!fid) {
+      console.log('[Profile API] ⚠️ No FID detected from any source')
+      return NextResponse.json(
+        {
+          anonymous: true,
+          message: 'No Farcaster ID detected. Open this app from Warpcast or provide ?fid= parameter.',
+          sources_checked: ['query-param', 'frame-context', 'minikit-headers', 'referer-url']
+        },
+        { status: 200 }
+      )
+    }
+
+    console.log(`[Profile API] ✅ FID detected: ${fid} (source: ${source})`)
 
     // Fetch user from Neynar
     if (!NEYNAR_API_KEY) {
