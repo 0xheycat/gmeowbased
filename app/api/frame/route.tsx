@@ -1142,21 +1142,19 @@ function buildFrameHtml(params: {
     console.warn(`[buildFrameHtml] Button limit exceeded: ${originalCount} buttons provided, truncated to 4`)
   }
   
-  // Build JSON frame format for new Farcaster (post-rebrand)
+  // Build Frame v1 spec (official Farcaster protocol)
+  // Reference: https://github.com/farcasterxyz/protocol/discussions/205
   const primaryButton = validatedButtons[0]
-  const frameJsonMeta = primaryButton && frameOrigin && imageEsc ? {
-    version: 'next',
+  const frameV1Meta = primaryButton && frameOrigin && imageEsc ? {
+    version: '1',
+    name: title,
+    iconUrl: `${frameOrigin}/icon.png`,
+    homeUrl: url || frameOrigin,
     imageUrl: resolvedImage,
-    button: {
-      title: primaryButton.label,
-      action: {
-        type: 'launch_frame',
-        name: title,
-        url: frameOrigin,
-        splashImageUrl: `${frameOrigin}/splash.png`,
-        splashBackgroundColor: '#0B0A16',
-      }
-    }
+    buttonTitle: primaryButton.label,
+    splashImageUrl: `${frameOrigin}/splash.png`,
+    splashBackgroundColor: '#0B0A16',
+    webhookUrl: `${frameOrigin}/api/neynar/webhook`
   } : null
   
   const linkButtons = validatedButtons.filter((btn) => (btn.action ?? 'link') === 'link' && !!btn.target)
@@ -1194,8 +1192,8 @@ function buildFrameHtml(params: {
     ? `<details class="debug-panel" open><summary>Debug payload</summary><pre>${escapeHtml(JSON.stringify(debug, null, 2))}</pre></details>`
     : ''
   const chainDataAttr = chainKey ? ` data-chain="${escapeHtml(chainKey)}"` : ''
-  const frameJsonMetaTag = frameJsonMeta 
-    ? `<meta name="fc:frame" content='${JSON.stringify(frameJsonMeta).replace(/'/g, "&#39;")}' />`
+  const frameJsonMetaTag = frameV1Meta 
+    ? `<meta name="fc:frame" content='${JSON.stringify(frameV1Meta).replace(/'/g, "&#39;")}' />`
     : ''
   return `<!doctype html>
   <html lang="en"${chainDataAttr}>
