@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
 import { assignBadgeToUser, getBadgeFromRegistry } from '@/lib/badges'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { BadgeAssignSchema } from '@/lib/validation/api-schemas'

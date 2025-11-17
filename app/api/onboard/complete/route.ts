@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { fid, address, neynarScore, badges } = validationResult.data
+    const { fid, address, neynarScore } = validationResult.data
 
     // 2. Verify FID exists via Neynar
     if (!NEYNAR_API_KEY) {

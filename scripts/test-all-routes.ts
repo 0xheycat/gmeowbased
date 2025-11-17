@@ -272,7 +272,8 @@ async function runTests() {
 
   // Export results
   const exportPath = './test-results.json'
-  await Bun.write(exportPath, JSON.stringify(results, null, 2))
+  const fs = await import('fs/promises')
+  await fs.writeFile(exportPath, JSON.stringify(results, null, 2), 'utf-8')
   console.log(`📄 Full results exported to: ${exportPath}\n`)
 
   // Exit code

@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { TelemetryRankSchema } from '@/lib/validation/api-schemas'
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
 import { recordRankEvent, type RankTelemetryEventInput, type RankTelemetryEventKind } from '@/lib/telemetry'
 

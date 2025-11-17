@@ -27,7 +27,7 @@ export const ChainSchema = z.enum(['base', 'op', 'celo', 'unichain', 'ink'])
 export const BadgeAssignSchema = z.object({
   fid: FIDSchema,
   badgeId: z.string().min(1, 'Badge ID is required'),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 export const BadgeMintSchema = z.object({
@@ -42,7 +42,7 @@ export const BadgeMintSchema = z.object({
 export const QuestVerifySchema = z.object({
   fid: FIDSchema,
   questId: z.string().uuid('Invalid quest ID format'),
-  proof: z.record(z.unknown()).optional(),
+  proof: z.record(z.string(), z.unknown()).optional(),
 })
 
 export const QuestClaimSchema = z.object({
@@ -61,7 +61,7 @@ export const AnalyticsSummarySchema = z.object({
 export const TelemetryRankSchema = z.object({
   fid: FIDSchema,
   eventType: z.string().min(1, 'Event type is required'),
-  eventDetail: z.record(z.unknown()).optional(),
+  eventDetail: z.record(z.string(), z.unknown()).optional(),
   points: z.number().int().min(0).optional(),
   chain: ChainSchema.optional(),
 })
@@ -72,7 +72,7 @@ export const AdminBadgeCreateSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   tier: z.enum(['mythic', 'legendary', 'epic', 'rare', 'common']),
   imageUrl: z.string().url('Invalid image URL'),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 export const AdminBadgeUpdateSchema = z.object({
@@ -80,7 +80,7 @@ export const AdminBadgeUpdateSchema = z.object({
   description: z.string().min(1).optional(),
   tier: z.enum(['mythic', 'legendary', 'epic', 'rare', 'common']).optional(),
   imageUrl: z.string().url().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   isActive: z.boolean().optional(),
 })
 
