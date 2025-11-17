@@ -5,20 +5,24 @@ export const dynamic = 'force-dynamic'
 
 /**
  * GET /api/onboard/status
- * Check if the current user has completed onboarding
+ * Check if a user has completed onboarding
+ * Query param: fid (required)
  */
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const fid = searchParams.get('fid')
+
+    if (!fid) {
+      return NextResponse.json({
+        onboarded: false,
+        message: 'FID required'
+      })
+    }
+
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
-      return NextResponse.json({ onboarded: false })
-    }
-    
-    // Get current user from session
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
       return NextResponse.json({ onboarded: false })
     }
 
@@ -26,7 +30,7 @@ export async function GET(request: Request) {
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('onboarded_at, neynar_tier')
-      .eq('fid', user.user_metadata?.fid)
+      .eq('fid', parseInt(fid))
       .single()
 
     if (profileError || !profile) {
