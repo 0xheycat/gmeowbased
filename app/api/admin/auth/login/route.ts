@@ -8,10 +8,18 @@ import {
   validateAccessCode,
   validateTotp,
 } from '@/lib/admin-auth'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+  }
+
   if (!isAdminSecurityEnabled()) {
     return NextResponse.json(
       { ok: false, error: 'Admin security is not configured on this deployment.' },
