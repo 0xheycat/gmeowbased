@@ -124,7 +124,7 @@ export async function fetchCastEngagement(
       const timeout = setTimeout(() => controller.abort(), 10000)
 
       const response = await Promise.race([
-        client.lookupCastByHashOrWarpcastUrl({ identifier: castHash, type: 'hash' }),
+        client.lookupCastByHashOrUrl({ identifier: castHash, type: 'hash' }),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), 10000)
         ),
@@ -259,8 +259,7 @@ export async function syncCastEngagement(
     const oldTier = getViralTier(existingCast.viral_score || 0)
 
     // 5. Calculate incremental XP bonus
-    const bonusResult = calculateIncrementalBonus(oldMetrics, newMetrics)
-    const additionalXp = bonusResult?.additionalXp || 0
+    const additionalXp = calculateIncrementalBonus(oldMetrics, newMetrics)
 
     // 6. Update badge_casts table (GI-10: Single batch update)
     const { error: updateError } = await supabase

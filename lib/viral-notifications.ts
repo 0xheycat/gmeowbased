@@ -283,7 +283,7 @@ function buildAchievementNotification(notification: AchievementNotification) {
  * - GI-10: Timeout handling
  */
 async function sendNeynarNotification(
-  token: string,
+  fid: number,
   title: string,
   body: string,
   targetUrl: string
@@ -305,13 +305,14 @@ async function sendNeynarNotification(
       const timeout = setTimeout(() => controller.abort(), 5000)
 
       const response = await Promise.race([
-        client.publishFrameNotification({
-          notificationDetails: {
+        client.publishFrameNotifications({
+          notification: {
             title,
             body,
-            url: targetUrl,
-            tokens: [token],
+            target_url: targetUrl,
+            uuid: crypto.randomUUID(),
           },
+          targetFids: [fid],
         }),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), 5000)
@@ -322,16 +323,15 @@ async function sendNeynarNotification(
 
       // GI-11: Response validation
       const result = response as any
-      if (result?.success || result?.result?.successfulTokens?.includes(token)) {
-        rateLimiter.recordNotificationSent(token)
+      if (result?.result?.successfulFids?.includes(fid) || result?.success) {
         return {
           success: true,
-          notificationId: result?.result?.notificationId || 'unknown',
+          notificationId: result?.result?.notificationId || crypto.randomUUID(),
         }
       }
 
       // Check for rate limit errors
-      if (result?.rateLimitedTokens?.includes(token)) {
+      if (result?.result?.rateLimitedFids?.includes(fid)) {
         return {
           success: false,
           error: 'Rate limited',
@@ -384,19 +384,16 @@ export async function dispatchViralNotification(
     // Get user's notification tokens
     const tokens = await getUserNotificationTokens(notification.fid)
     if (tokens.length === 0) {
-      return {
-        success: false,
-        error: 'No notification tokens available for user',
-      }
+      console.warn(`[ViralNotifications] No tokens for FID ${notification.fid}, attempting direct send`)
     }
 
-    // Select available token (respecting rate limits)
-    const availableToken = selectAvailableToken(tokens)
-    if (!availableToken) {
-      const timeUntilAvailable = rateLimiter.getTimeUntilAvailable(tokens[0])
+    // Check rate limits (using FID instead of token)
+    const fidKey = `fid:${notification.fid}`
+    if (!rateLimiter.canSendNotification(fidKey)) {
+      const timeUntilAvailable = rateLimiter.getTimeUntilAvailable(fidKey)
       return {
         success: false,
-        error: `All tokens rate limited. Retry in ${Math.ceil(timeUntilAvailable / 1000)}s`,
+        error: `Rate limited. Retry in ${Math.ceil(timeUntilAvailable / 1000)}s`,
         rateLimited: true,
       }
     }
@@ -409,14 +406,15 @@ export async function dispatchViralNotification(
 
     // Send notification
     const result = await sendNeynarNotification(
-      availableToken,
+      notification.fid,
       payload.title,
       payload.body,
       payload.targetUrl
     )
 
-    // Mark as sent in database if successful
+    // Record rate limit and mark as sent if successful
     if (result.success) {
+      rateLimiter.recordNotificationSent(fidKey)
       await markNotificationSent(notification)
     }
 

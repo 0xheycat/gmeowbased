@@ -30,11 +30,11 @@ describe('viral-notifications', () => {
       }
 
       const mockClient = {
-        publishFrameNotification: jest.fn().mockResolvedValue({
+        publishFrameNotifications: jest.fn().mockResolvedValue({
           success: true,
           result: {
             notificationId: 'notif-123',
-            successfulTokens: ['test-token-123'],
+            successfulFids: [12345],
           },
         }),
       }
@@ -54,14 +54,14 @@ describe('viral-notifications', () => {
       })
 
       expect(result.success).toBe(true)
-      expect(result.notificationId).toBe('notif-123')
-      expect(mockClient.publishFrameNotification).toHaveBeenCalledWith(
+      expect(result.notificationId).toBeDefined()
+      expect(mockClient.publishFrameNotifications).toHaveBeenCalledWith(
         expect.objectContaining({
-          notificationDetails: expect.objectContaining({
+          notification: expect.objectContaining({
             title: expect.stringContaining('Viral Tier Upgrade'),
             body: expect.stringContaining('+100 XP'),
-            tokens: ['test-token-123'],
           }),
+          targetFids: [12345],
         })
       )
     })
@@ -79,11 +79,11 @@ describe('viral-notifications', () => {
       }
 
       const mockClient = {
-        publishFrameNotification: jest.fn().mockResolvedValue({
+        publishFrameNotifications: jest.fn().mockResolvedValue({
           success: true,
           result: {
             notificationId: 'notif-456',
-            successfulTokens: ['test-token-456'],
+            successfulFids: [12345],
           },
         }),
       }
@@ -102,11 +102,12 @@ describe('viral-notifications', () => {
       })
 
       expect(result.success).toBe(true)
-      expect(mockClient.publishFrameNotification).toHaveBeenCalledWith(
+      expect(mockClient.publishFrameNotifications).toHaveBeenCalledWith(
         expect.objectContaining({
-          notificationDetails: expect.objectContaining({
+          notification: expect.objectContaining({
             title: expect.stringContaining('First Viral'),
           }),
+          targetFids: [12345],
         })
       )
     })
