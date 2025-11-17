@@ -307,18 +307,28 @@ describe('useWizardState', () => {
 
 		it('should reset touched steps', () => {
 			const { result } = renderHook(() => useWizardState({ pushNotification: mockNotifications.push }))
-			const mockValidation = {
+			
+			// Invalid validation to trigger touched state
+			const invalidValidation = {
+				basics: { valid: false, errors: { name: 'Required' } },
+				eligibility: { valid: true, errors: {} },
+				rewards: { valid: true, errors: {} },
+				preview: { valid: true, errors: {} },
+			}
+
+			const validValidation = {
 				basics: { valid: true, errors: {} },
 				eligibility: { valid: true, errors: {} },
 				rewards: { valid: true, errors: {} },
 				preview: { valid: true, errors: {} },
 			}
 
+			// Try to advance with invalid data to mark step as touched
 			act(() => {
-				result.current.onNext(mockValidation)
+				result.current.onNext(invalidValidation)
 			})
 
-			// After navigation, some step should be touched
+			// After validation failure, step should be touched
 			const hasTouchedSteps = Object.values(result.current.touchedSteps).some(v => v)
 			expect(hasTouchedSteps).toBe(true)
 

@@ -1,8 +1,8 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   syncCastEngagement,
   fetchCastEngagement,
@@ -11,18 +11,18 @@ import {
 } from '@/lib/viral-engagement-sync'
 
 // Mock dependencies
-jest.mock('@/lib/neynar-server')
-jest.mock('@/lib/supabase-server')
+vi.mock('@/lib/neynar-server')
+vi.mock('@/lib/supabase-server')
 
 describe('viral-engagement-sync', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('fetchCastEngagement', () => {
     it('should fetch engagement metrics from Neynar API', async () => {
       const mockClient = {
-        lookupCastByHashOrUrl: jest.fn().mockResolvedValue({
+        lookupCastByHashOrUrl: vi.fn().mockResolvedValue({
           cast: {
             reactions: {
               likes_count: 10,
@@ -36,7 +36,7 @@ describe('viral-engagement-sync', () => {
       }
 
       const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getNeynarServerClient as jest.Mock).mockReturnValue(mockClient)
+      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
 
       const metrics = await fetchCastEngagement('0xtest123')
 
@@ -54,7 +54,7 @@ describe('viral-engagement-sync', () => {
 
     it('should handle API errors with retry logic', async () => {
       const mockClient = {
-        lookupCastByHashOrUrl: jest
+        lookupCastByHashOrUrl: vi
           .fn()
           .mockRejectedValueOnce(new Error('Network error'))
           .mockRejectedValueOnce(new Error('Network error'))
@@ -67,7 +67,7 @@ describe('viral-engagement-sync', () => {
       }
 
       const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getNeynarServerClient as jest.Mock).mockReturnValue(mockClient)
+      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
 
       const metrics = await fetchCastEngagement('0xtest456')
 
@@ -81,7 +81,7 @@ describe('viral-engagement-sync', () => {
 
     it('should enforce non-negative engagement metrics', async () => {
       const mockClient = {
-        lookupCastByHashOrUrl: jest.fn().mockResolvedValue({
+        lookupCastByHashOrUrl: vi.fn().mockResolvedValue({
           cast: {
             reactions: {
               likes_count: -5, // Invalid negative value
@@ -93,7 +93,7 @@ describe('viral-engagement-sync', () => {
       }
 
       const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getNeynarServerClient as jest.Mock).mockReturnValue(mockClient)
+      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
 
       const metrics = await fetchCastEngagement('0xtest')
 
@@ -106,10 +106,10 @@ describe('viral-engagement-sync', () => {
   describe('syncCastEngagement', () => {
     it('should sync engagement and detect tier upgrade', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: {
             cast_hash: '0xtest',
             fid: 12345,
@@ -122,21 +122,21 @@ describe('viral-engagement-sync', () => {
           },
           error: null,
         }),
-        update: jest.fn().mockReturnThis(),
-        rpc: jest.fn().mockResolvedValue({ error: null }),
-        insert: jest.fn().mockResolvedValue({ error: null }),
+        update: vi.fn().mockReturnThis(),
+        rpc: vi.fn().mockResolvedValue({ error: null }),
+        insert: vi.fn().mockResolvedValue({ error: null }),
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
       // Mock fetchCastEngagement to return higher metrics
-      const mockFetch = jest.fn().mockResolvedValue({
+      const mockFetch = vi.fn().mockResolvedValue({
         likes: 10,
         recasts: 5,
         replies: 3,
       })
-      jest.spyOn(require('@/lib/viral-engagement-sync'), 'fetchCastEngagement').mockImplementation(mockFetch)
+      vi.spyOn(require('@/lib/viral-engagement-sync'), 'fetchCastEngagement').mockImplementation(mockFetch)
 
       const result = await syncCastEngagement('0xtest')
 
@@ -147,10 +147,10 @@ describe('viral-engagement-sync', () => {
 
     it('should skip sync if metrics have not increased', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: {
             cast_hash: '0xtest',
             likes_count: 10,
@@ -164,14 +164,14 @@ describe('viral-engagement-sync', () => {
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
-      const mockFetch = jest.fn().mockResolvedValue({
+      const mockFetch = vi.fn().mockResolvedValue({
         likes: 10,
         recasts: 5,
         replies: 3,
       })
-      jest.spyOn(require('@/lib/viral-engagement-sync'), 'fetchCastEngagement').mockImplementation(mockFetch)
+      vi.spyOn(require('@/lib/viral-engagement-sync'), 'fetchCastEngagement').mockImplementation(mockFetch)
 
       const result = await syncCastEngagement('0xtest')
 
@@ -183,7 +183,7 @@ describe('viral-engagement-sync', () => {
     it('should process multiple casts in parallel batches', async () => {
       const castHashes = Array.from({ length: 25 }, (_, i) => `0xtest${i}`)
 
-      const mockSync = jest.fn().mockResolvedValue({
+      const mockSync = vi.fn().mockResolvedValue({
         updated: true,
         tierUpgrade: false,
         oldTier: 'active',
@@ -191,7 +191,7 @@ describe('viral-engagement-sync', () => {
         additionalXp: 25,
       })
 
-      jest.spyOn(require('@/lib/viral-engagement-sync'), 'syncCastEngagement').mockImplementation(mockSync)
+      vi.spyOn(require('@/lib/viral-engagement-sync'), 'syncCastEngagement').mockImplementation(mockSync)
 
       const results = await batchSyncCastEngagement(castHashes)
 
@@ -202,13 +202,13 @@ describe('viral-engagement-sync', () => {
     it('should handle individual failures gracefully', async () => {
       const castHashes = ['0xtest1', '0xtest2', '0xtest3']
 
-      const mockSync = jest
+      const mockSync = vi
         .fn()
         .mockResolvedValueOnce({ updated: true, tierUpgrade: false, oldTier: 'active', newTier: 'engaging', additionalXp: 25 })
         .mockRejectedValueOnce(new Error('Sync failed'))
         .mockResolvedValueOnce({ updated: true, tierUpgrade: false, oldTier: 'active', newTier: 'engaging', additionalXp: 25 })
 
-      jest.spyOn(require('@/lib/viral-engagement-sync'), 'syncCastEngagement').mockImplementation(mockSync)
+      vi.spyOn(require('@/lib/viral-engagement-sync'), 'syncCastEngagement').mockImplementation(mockSync)
 
       const results = await batchSyncCastEngagement(castHashes)
 
@@ -223,11 +223,11 @@ describe('viral-engagement-sync', () => {
   describe('getCastsNeedingSync', () => {
     it('should query badge_casts for recent casts', async () => {
       const mockSupabase = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        gte: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue({
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({
           data: [
             { cast_hash: '0xtest1' },
             { cast_hash: '0xtest2' },
@@ -237,7 +237,7 @@ describe('viral-engagement-sync', () => {
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as jest.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
 
       const casts = await getCastsNeedingSync()
 
