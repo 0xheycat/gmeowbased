@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { FIDSchema } from '@/lib/validation/api-schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +11,16 @@ export const dynamic = 'force-dynamic'
  * Query param: fid (required)
  */
 export async function GET(request: Request) {
+  const ip = getClientIp(request)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const fid = searchParams.get('fid')
@@ -18,6 +30,16 @@ export async function GET(request: Request) {
         onboarded: false,
         message: 'FID required'
       })
+    }
+
+    // Validate FID
+    const fidNumber = parseInt(fid)
+    const validation = FIDSchema.safeParse(fidNumber)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid FID format', details: validation.error.issues },
+        { status: 400 }
+      )
     }
 
     const supabase = getSupabaseServerClient()

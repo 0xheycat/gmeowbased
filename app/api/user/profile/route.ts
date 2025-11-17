@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { NeynarAPIClient } from '@neynar/nodejs-sdk'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { FIDSchema } from '@/lib/validation/api-schemas'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
@@ -16,6 +18,16 @@ export const dynamic = 'force-dynamic'
  * 4. Default to demo FID for testing (18139 - @heycat)
  */
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { searchParams } = new URL(req.url)
     let fid: string | null = null
@@ -76,6 +88,16 @@ export async function GET(req: NextRequest) {
     }
 
     console.log(`[Profile API] ✅ FID detected: ${fid} (source: ${source})`)
+
+    // Validate FID format
+    const fidNumber = parseInt(fid)
+    const validation = FIDSchema.safeParse(fidNumber)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid FID format', details: validation.error.issues },
+        { status: 400 }
+      )
+    }
 
     // Fetch user from Neynar
     if (!NEYNAR_API_KEY) {
