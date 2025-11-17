@@ -1,5 +1,6 @@
 // app/api/frame/identify/route.ts
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 export const revalidate = 0
@@ -27,6 +28,16 @@ type IdentifyResponse = {
  * 3. Session cookies
  */
 export async function GET(req: NextRequest): Promise<NextResponse<IdentifyResponse>> {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { ok: false, error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     // Check for Farcaster context headers (sent by miniapp iframe)
     const farcasterFid = req.headers.get('x-farcaster-fid')

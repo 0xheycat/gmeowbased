@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
 
 /**
@@ -7,6 +8,13 @@ import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
  * Route: /api/frame/badge?fid=xxx
  */
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return new NextResponse('Rate limit exceeded', { status: 429 })
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const fidParam = searchParams.get('fid')
