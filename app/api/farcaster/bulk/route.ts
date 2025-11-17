@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { fetchUsersByAddresses } from '@/lib/neynar'
+import { AddressSchema } from '@/lib/validation/api-schemas'
+import { z } from 'zod'
 
 export const runtime = 'nodejs'
 
@@ -16,7 +18,22 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { addresses } = (await req.json()) as { addresses?: string[] }
+    const body = (await req.json()) as { addresses?: string[] }
+    
+    // Zod validation
+    const BulkAddressSchema = z.object({
+      addresses: z.array(AddressSchema).min(1).max(300)
+    })
+    
+    const validation = BulkAddressSchema.safeParse(body)
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid addresses format', details: validation.error.flatten() }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    const { addresses } = validation.data
     if (!Array.isArray(addresses) || addresses.length === 0) {
       return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
