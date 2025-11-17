@@ -60,10 +60,12 @@ function frameKey(...parts: Array<string | number>): string {
   return `${FRAME_PREFIX}:${parts.join(':')}`
 }
 
-function frameButtonKey(index: number, ...parts: Array<string | number>): string {
-  const suffix = parts.length ? `:${parts.join(':')}` : ''
-  return `${FRAME_PREFIX}:button:${index}${suffix}`
-}
+// NOTE: frameButtonKey is no longer used with the new JSON frame format
+// Keeping for backwards compatibility if needed
+// function frameButtonKey(index: number, ...parts: Array<string | number>): string {
+//   const suffix = parts.length ? `:${parts.join(':')}` : ''
+//   return `${FRAME_PREFIX}:button:${index}${suffix}`
+// }
 
 const DEFAULT_HTML_HEADERS: Record<string, string> = {
   'content-type': 'text/html; charset=utf-8',
@@ -1013,7 +1015,7 @@ function buildFrameHtml(params: {
     image,
     url,
     buttons = [],
-    fcMeta,
+    // fcMeta: _fcMeta, // No longer used with JSON frame format
     debug,
     profile,
     kicker,
@@ -1021,7 +1023,7 @@ function buildFrameHtml(params: {
     chainLabel,
     chainKey,
     frameOrigin,
-    frameVersion,
+    // frameVersion: _frameVersion, // No longer used with JSON frame format
     hideOverlay,
     heroBadge,
     heroStats = [],
@@ -1142,58 +1144,35 @@ function buildFrameHtml(params: {
     console.warn(`[buildFrameHtml] Button limit exceeded: ${originalCount} buttons provided, truncated to 4`)
   }
   
-  // Build Frame v1 spec (official Farcaster protocol)
-  // Reference: https://github.com/farcasterxyz/protocol/discussions/205
+  // Build Frame metadata (Neynar format)
+  // Reference: https://github.com/neynarxyz/create-farcaster-mini-app
   const primaryButton = validatedButtons[0]
-  const frameV1Meta = primaryButton && frameOrigin && imageEsc ? {
-    version: '1',
-    name: title,
-    iconUrl: `${frameOrigin}/icon.png`,
-    homeUrl: url || frameOrigin,
+  const frameEmbedMeta = primaryButton && frameOrigin && imageEsc ? {
+    version: 'next',
     imageUrl: resolvedImage,
-    buttonTitle: primaryButton.label,
-    splashImageUrl: `${frameOrigin}/splash.png`,
-    splashBackgroundColor: '#0B0A16',
-    webhookUrl: `${frameOrigin}/api/neynar/webhook`
+    button: {
+      title: primaryButton.label,
+      action: {
+        type: 'launch_frame',
+        name: title,
+        url: frameOrigin,
+        splashImageUrl: `${frameOrigin}/splash.png`,
+        splashBackgroundColor: '#0B0A16'
+      }
+    }
   } : null
   
   const linkButtons = validatedButtons.filter((btn) => (btn.action ?? 'link') === 'link' && !!btn.target)
-  const buttonHtml = validatedButtons
-    .map((btn, idx) => {
-      const index = idx + 1
-      const action = btn.action ?? 'link'
-      const label = escapeHtml(btn.label)
-      const rawTarget = btn.target ?? ''
-      const target = rawTarget ? escapeHtml(rawTarget) : ''
-      const actionMeta = action === 'link' ? '' : `<meta property="${frameButtonKey(index, 'action')}" content="${action}" />`
-      const targetMeta = target ? `\n<meta property="${frameButtonKey(index, 'target')}" content="${target}" />` : ''
-      const joiner = actionMeta ? `\n${actionMeta}` : ''
-      return `<meta property="${frameButtonKey(index)}" content="${label}" />${joiner}${targetMeta}`
-    })
-    .join('\n')
   const primaryLink = linkButtons[0]
   const primaryLinkHtml = primaryLink && primaryLink.target
     ? `<a class="btn" href="${escapeHtml(primaryLink.target)}">${escapeHtml(primaryLink.label)}</a>`
     : ''
-  const metaDefaults: Record<string, string> = {
-    [frameKey('version')]: String(frameVersion ?? '1.2'),
-  }
-  if (frameOrigin) metaDefaults[frameKey('origin')] = frameOrigin
-  if (chainKey) metaDefaults[frameKey('chain_key')] = chainKey
-  const mergedMeta: Record<string, string> = {
-    ...metaDefaults,
-    ...(fcMeta ?? {}),
-  }
-  const fcMetaTags = Object.entries(mergedMeta)
-    .filter(([, value]) => value !== null && value !== undefined && `${value}`.length > 0)
-    .map(([k, v]) => `<meta property="${escapeHtml(k)}" content="${escapeHtml(String(v))}" />`)
-    .join('\n')
   const debugHtml = debug
     ? `<details class="debug-panel" open><summary>Debug payload</summary><pre>${escapeHtml(JSON.stringify(debug, null, 2))}</pre></details>`
     : ''
   const chainDataAttr = chainKey ? ` data-chain="${escapeHtml(chainKey)}"` : ''
-  const frameJsonMetaTag = frameV1Meta 
-    ? `<meta name="fc:frame" content='${JSON.stringify(frameV1Meta).replace(/'/g, "&#39;")}' />`
+  const frameJsonMetaTag = frameEmbedMeta 
+    ? `<meta name="fc:frame" content='${JSON.stringify(frameEmbedMeta).replace(/'/g, "&#39;")}' />`
     : ''
   return `<!doctype html>
   <html lang="en"${chainDataAttr}>
@@ -1207,13 +1186,6 @@ function buildFrameHtml(params: {
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
-    <!-- Farcaster Frame v1.0 (inline rendering in feed) -->
-    <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:manifest" content="${frameOrigin || ''}/.well-known/farcaster.json" />
-    ${imageEsc ? `<meta property="fc:frame:image" content="${imageEsc}" />\n    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />` : ''}
-    <meta property="fc:frame:post_url" content="${frameOrigin || ''}/api/frame/action" />
-    ${buttonHtml}
-    ${fcMetaTags}
     <style>
       :root {
         --bg:#040510;
