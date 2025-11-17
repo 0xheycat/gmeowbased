@@ -10,17 +10,6 @@ export async function GET() {
         payload: "eyJkb21haW4iOiJnbWVvd2hxLmFydCJ9",
         signature: "ma2xN3r5WlQtga5DzVlKnRmyRpKVswxrrDbS0FkEIXtdns/IyQKA1irzruuaOYVI3vw5jkhEUXOc6vzbDOKNFRs="
       },
-      frame: {
-        version: "1",
-        name: "Gmeowbased Adventure",
-        iconUrl: `${baseUrl}/icon.png`,
-        homeUrl: baseUrl,
-        imageUrl: `${baseUrl}/og-image.png`,
-        buttonTitle: "✨ Enter Gmeow",
-        splashImageUrl: `${baseUrl}/splash.png`,
-        splashBackgroundColor: "#0B0A16",
-        webhookUrl: `${baseUrl}/api/neynar/webhook`
-      },
       miniapp: {
         version: "1",
         name: "Gmeowbased Adventure",
