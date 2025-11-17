@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { NeynarAPIClient } from '@neynar/nodejs-sdk'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { FIDSchema } from '@/lib/validation/api-schemas'
+import { withErrorHandler } from '@/lib/error-handler'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
@@ -17,7 +18,7 @@ export const dynamic = 'force-dynamic'
  * 3. FID from MiniKit context
  * 4. Default to demo FID for testing (18139 - @heycat)
  */
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -28,8 +29,7 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  try {
-    const { searchParams } = new URL(req.url)
+  const { searchParams } = new URL(req.url)
     let fid: string | null = null
     let source: string = 'unknown'
 
@@ -141,11 +141,4 @@ export async function GET(req: NextRequest) {
       verifiedAddresses: fcUser.verified_addresses || [],
       custodyAddress: fcUser.custody_address,
     })
-  } catch (error) {
-    console.error('[user/profile] Error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch user profile', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
-  }
-}
+})

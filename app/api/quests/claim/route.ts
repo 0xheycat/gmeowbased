@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { QuestClaimSchema } from '@/lib/validation/api-schemas'
+import { withErrorHandler } from '@/lib/error-handler'
 
 // Demo in-memory store; swap to DB/KV in prod
 const claims = new Map<string, { at: number; metaHash: string | null }>()
 
-export async function POST(req: Request) {
+export const POST = withErrorHandler(async (req: Request) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -16,8 +17,7 @@ export async function POST(req: Request) {
     )
   }
 
-  try {
-    const body = await req.json()
+  const body = await req.json()
     
     // Zod validation
     const validation = QuestClaimSchema.safeParse(body)
@@ -48,7 +48,4 @@ export async function POST(req: Request) {
     claims.set(key, { at: Date.now(), metaHash: metaHashNormalized })
     // Place to enqueue fulfillment/job
     return NextResponse.json({ ok: true, metaHash: metaHashNormalized })
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, reason: e?.message || 'Bad request' }, { status: 400 })
-  }
-}
+})

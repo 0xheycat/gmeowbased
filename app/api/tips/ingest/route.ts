@@ -3,6 +3,7 @@ import { rateLimit, getClientIp, webhookLimiter } from '@/lib/rate-limit'
 import { publishTip } from '@/lib/tips-broker'
 import { scoreTipMentionBroadcast } from '@/lib/tips-scoreboard'
 import type { MutableTipBroadcast, TipMentionContext } from '@/lib/tips-types'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
@@ -37,7 +38,7 @@ function parseActorIdentifier(value: unknown): string | number | null | undefine
   return undefined
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, webhookLimiter)
   
@@ -139,4 +140,4 @@ export async function POST(req: NextRequest) {
   publishTip(event)
 
   return NextResponse.json({ ok: true })
-}
+})

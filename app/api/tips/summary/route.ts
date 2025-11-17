@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { getTipMentionSummary } from '@/lib/tips-scoreboard'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
-export async function GET(request: Request) {
+export const GET = withErrorHandler(async (request: Request) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -17,4 +18,4 @@ export async function GET(request: Request) {
 
   const summary = getTipMentionSummary()
   return NextResponse.json({ ok: true, summary })
-}
+})

@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server'
 
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { listBadgeTemplates } from '@/lib/badges'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
-export async function GET(request: Request) {
+export const GET = withErrorHandler(async (request: Request) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -16,13 +17,8 @@ export async function GET(request: Request) {
     )
   }
 
-  try {
-    const templates = await listBadgeTemplates({ includeInactive: false })
-    return NextResponse.json({ ok: true, templates }, {
-      headers: { 'cache-control': 's-maxage=60, stale-while-revalidate=120' },
-    })
-  } catch (error) {
-    const message = (error as Error)?.message || 'Failed to load badge templates'
-    return NextResponse.json({ ok: false, error: message, templates: [] }, { status: 500 })
-  }
-}
+  const templates = await listBadgeTemplates({ includeInactive: false })
+  return NextResponse.json({ ok: true, templates }, {
+    headers: { 'cache-control': 's-maxage=60, stale-while-revalidate=120' },
+  })
+})

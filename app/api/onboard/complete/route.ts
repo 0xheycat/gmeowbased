@@ -10,6 +10,7 @@ import {
   mintBadgeViaNeynar,
   sendBadgeAwardNotification,
 } from '@/lib/badges'
+import { withErrorHandler } from '@/lib/error-handler'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
@@ -41,10 +42,9 @@ const BASELINE_REWARDS = {
  * 4. Award baseline + tier bonus rewards
  * 5. Queue badge mint + OG NFT mint (Mythic only)
  */
-export async function POST(request: Request) {
-  try {
-    // 1. Validate input with Zod
-    const body = await request.json()
+export const POST = withErrorHandler(async (request: Request) => {
+  // 1. Validate input with Zod
+  const body = await request.json()
     const validationResult = OnboardCompleteSchema.safeParse(body)
     
     if (!validationResult.success) {
@@ -303,12 +303,5 @@ export async function POST(request: Request) {
         notificationSent: true, // Attempted notification
       },
     })
-  } catch (error) {
-    console.error('Error completing onboarding:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+})
 
