@@ -10,19 +10,13 @@ import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
 const gmEmbed = {
-  version: '1',
-  name: 'Gmeowbased Adventure',
-  homeUrl: baseUrl,
-  iconUrl: `${baseUrl}/icon.png`,
+  version: 'next',
   imageUrl: `${baseUrl}/og-image.png`,
-  webhookUrl: `${baseUrl}/api/neynar/webhook`,
-  subtitle: 'Daily GM Quest Hub',
-  description: 'Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
   button: {
     title: '✨ Enter Gmeow',
     action: {
       type: 'launch_frame',
-      name: 'GMeow',
+      name: 'Gmeowbased Adventure',
       url: baseUrl,
       splashImageUrl: `${baseUrl}/splash.png`,
       splashBackgroundColor: '#0B0A16',
@@ -31,7 +25,7 @@ const gmEmbed = {
 }
 
 const gmFrame = {
-  version: '1',
+  version: 'next',
   imageUrl: `${baseUrl}/og-image.png`,
   button: {
     title: '🎮 Launch Game',
