@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { deleteBadgeTemplate, getBadgeTemplateById, invalidateBadgeCaches, updateBadgeTemplate } from '@/lib/badges'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
@@ -73,6 +74,16 @@ async function resolveId(context: RouteContext): Promise<string> {
 }
 
 export async function GET(req: NextRequest, context: RouteContext) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
@@ -92,6 +103,16 @@ export async function GET(req: NextRequest, context: RouteContext) {
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
@@ -112,6 +133,16 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(req: NextRequest, context: RouteContext) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })

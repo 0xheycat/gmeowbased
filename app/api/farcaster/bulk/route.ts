@@ -1,9 +1,20 @@
 import { NextRequest } from 'next/server'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { fetchUsersByAddresses } from '@/lib/neynar'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { 
+      status: 429, 
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
   try {
     const { addresses } = (await req.json()) as { addresses?: string[] }
     if (!Array.isArray(addresses) || addresses.length === 0) {

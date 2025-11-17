@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { AdminBadgeCreateSchema } from '@/lib/validation/api-schemas'
 import { createBadgeTemplate, invalidateBadgeCaches, listBadgeTemplates } from '@/lib/badges'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import type { BadgeTemplateInput } from '@/lib/badges'
@@ -59,6 +61,16 @@ function parseTemplateInput(body: any): BadgeTemplateInput {
 }
 
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
@@ -76,6 +88,16 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })

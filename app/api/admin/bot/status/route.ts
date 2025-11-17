@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Signer } from '@neynar/nodejs-sdk/build/api/models/signer'
 
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import {
   previewSecret,
@@ -28,6 +29,16 @@ function normalizeSigner(signer: Signer | null | undefined) {
 }
 
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })

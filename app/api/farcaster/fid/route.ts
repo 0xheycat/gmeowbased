@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { Address } from 'viem'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { AddressSchema } from '@/lib/validation/api-schemas'
 import { fetchFidByAddress } from '@/lib/neynar'
 
 function isAddress(a?: string): a is Address {
@@ -9,6 +11,16 @@ function isAddress(a?: string): a is Address {
 export const runtime = 'nodejs'
 
 export async function GET(req: Request) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { searchParams } = new URL(req.url)
     const address = searchParams.get('address') || ''
