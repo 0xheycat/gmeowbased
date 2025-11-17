@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { loadBotStatsConfig, saveBotStatsConfig, sanitiseBotStatsConfigInput } from '@/lib/bot-config'
 import { DEFAULT_BOT_STATS_CONFIG, type BotStatsConfig } from '@/lib/bot-config-types'
@@ -18,6 +19,16 @@ function toErrorMessage(error: unknown, fallback: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return unauthorizedResponse(auth.reason ?? 'unknown')
@@ -33,6 +44,16 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const ip = getClientIp(req)
+  const { success } = await rateLimit(ip, strictLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return unauthorizedResponse(auth.reason ?? 'unknown')
