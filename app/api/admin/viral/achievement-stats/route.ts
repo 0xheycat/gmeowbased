@@ -60,15 +60,15 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // 3. Get achievement distribution (counts by type)
-    const { data: achievements, error: achievementError } = await supabase
+    // 3. Get achievement timeline (last 7 days)
+    const { data: timelineData, error: timelineError } = await supabase
       .from('viral_milestone_achievements')
-      .select('achievement_type, unlocked_at')
+      .select('achievement_type, achieved_at')
 
-    if (achievementError) {
-      console.error('[achievement-stats] Query error:', achievementError)
+    if (timelineError) {
+      console.error('[achievement-stats] Query error:', timelineError)
       return NextResponse.json(
-        { ok: false, error: 'database_error', message: achievementError.message },
+        { ok: false, error: 'database_error', message: timelineError.message },
         { status: 500 }
       )
     }
@@ -85,13 +85,13 @@ export async function GET(req: NextRequest) {
       }
     >()
 
-    for (const achievement of achievements ?? []) {
+    for (const achievement of timelineData ?? []) {
       // Count by type
       const currentCount = achievementCounts.get(achievement.achievement_type) ?? 0
       achievementCounts.set(achievement.achievement_type, currentCount + 1)
 
       // Weekly timeline (ISO week start - Monday)
-      const date = new Date(achievement.unlocked_at)
+      const date = new Date(achievement.achieved_at)
       const weekStart = getWeekStart(date)
       const weekKey = weekStart.toISOString().split('T')[0]
 
