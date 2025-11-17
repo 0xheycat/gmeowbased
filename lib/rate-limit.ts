@@ -1,67 +1,107 @@
 /**
- * Rate Limiting Utility
+ * Rate Limiting with Upstash Redis
  * 
- * Source: Upstash Rate Limit - https://upstash.com/docs/oss/sdks/ts/ratelimit/overview
+ * Source: Upstash Ratelimit - https://upstash.com/docs/oss/sdks/ts/ratelimit/overview
  * MCP Verified: 2025-11-17
  * Approved by: @heycat
  * 
- * Quality Gates Applied: GI-8 (Rate Limiting)
+ * Quality Gates Applied: GI-8 (Security)
  */
 
-// TODO: Uncomment when Upstash is configured
-// import { Ratelimit } from '@upstash/ratelimit'
-// import { Redis } from '@upstash/redis'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
-// const redis = new Redis({
-//   url: process.env.UPSTASH_REDIS_REST_URL!,
-//   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-// })
+// Initialize Redis client with environment variables
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null
 
-// Standard API rate limiter: 60 requests per minute
-export const apiLimiter = null // TODO: Uncomment
-// export const apiLimiter = new Ratelimit({
-//   redis,
-//   limiter: Ratelimit.slidingWindow(60, '1 m'),
-//   analytics: true,
-//   prefix: 'ratelimit:api',
-// })
+// API routes: 60 requests per minute per IP
+export const apiLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(60, '1 m'),
+      analytics: true,
+      prefix: 'api',
+    })
+  : null
 
-// Strict API rate limiter: 10 requests per minute (admin/sensitive routes)
-export const strictLimiter = null // TODO: Uncomment
-// export const strictLimiter = new Ratelimit({
-//   redis,
-//   limiter: Ratelimit.slidingWindow(10, '1 m'),
-//   analytics: true,
-//   prefix: 'ratelimit:strict',
-// })
+// Strict routes (admin, auth): 10 requests per minute per IP
+export const strictLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, '1 m'),
+      analytics: true,
+      prefix: 'strict',
+    })
+  : null
 
-// Webhook rate limiter: 500 requests per 5 minutes
-export const webhookLimiter = null // TODO: Uncomment
-// export const webhookLimiter = new Ratelimit({
-//   redis,
-//   limiter: Ratelimit.slidingWindow(500, '5 m'),
-//   analytics: true,
-//   prefix: 'ratelimit:webhook',
-// })
+// Webhook routes: 500 requests per 5 minutes per webhook
+export const webhookLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(500, '5 m'),
+      analytics: true,
+      prefix: 'webhook',
+    })
+  : null
 
 /**
- * Apply rate limiting to a route
- * @param identifier - Unique identifier (FID, IP address, etc.)
- * @param limiter - Rate limiter instance
- * @returns Success status and remaining requests
+ * Rate limit helper function
+ * 
+ * @param identifier - IP address or user identifier
+ * @param limiter - Rate limiter to use (apiLimiter, strictLimiter, webhookLimiter)
+ * @returns Object with success status and rate limit info
  */
 export async function rateLimit(
   identifier: string,
-  limiter: typeof apiLimiter
-): Promise<{ success: boolean; limit?: number; remaining?: number; reset?: number }> {
-  // TODO: Remove when Upstash is configured
+  limiter: Ratelimit | null = apiLimiter
+): Promise<{
+  success: boolean
+  limit?: number
+  remaining?: number
+  reset?: number
+  pending?: Promise<unknown>
+}> {
   if (!limiter) {
-    console.warn('[Rate Limit] Upstash not configured, skipping rate limit check')
+    console.warn('[Rate Limit] Upstash not configured, rate limiting disabled')
     return { success: true }
   }
 
-  // const { success, limit, remaining, reset } = await limiter.limit(identifier)
-  // return { success, limit, remaining, reset }
-  return { success: true }
+  try {
+    const result = await limiter.limit(identifier)
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+      pending: result.pending,
+    }
+  } catch (error) {
+    console.error('[Rate Limit] Error:', error)
+    // Fail open - allow request if rate limiting fails
+    return { success: true }
+  }
 }
 
+/**
+ * Get client IP address from request headers
+ */
+export function getClientIp(request: Request): string {
+  // Check common headers for client IP
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+
+  const real = request.headers.get('x-real-ip')
+  if (real) {
+    return real
+  }
+
+  // Fallback to 'unknown' if no IP found
+  return 'unknown'
+}
