@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { TelemetryRankSchema } from '@/lib/validation/api-schemas'
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
 import { recordRankEvent, type RankTelemetryEventInput, type RankTelemetryEventKind } from '@/lib/telemetry'
 
@@ -81,6 +83,16 @@ function sanitizePayload(input: unknown): RankTelemetryEventInput | null {
 // @edit-end
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   try {
     const body = await request.json()
     const payload = sanitizePayload(body)
