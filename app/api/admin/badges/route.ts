@@ -105,6 +105,20 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
+    
+    // Zod validation
+    const validation = AdminBadgeCreateSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: 'Invalid badge data',
+          details: validation.error.flatten()
+        },
+        { status: 400 }
+      )
+    }
+    
     const input = parseTemplateInput(body)
     const template = await createBadgeTemplate(input)
     await invalidateBadgeCaches()
