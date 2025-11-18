@@ -10,31 +10,25 @@ import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
 const gmEmbed = {
-  version: 'next',
+  version: '1',
   imageUrl: `${baseUrl}/og-image.png`,
   button: {
     title: '✨ Enter Gmeow',
     action: {
-      type: 'launch_frame',
-      name: 'Gmeowbased Adventure',
+      type: 'link',
       url: baseUrl,
-      splashImageUrl: `${baseUrl}/splash.png`,
-      splashBackgroundColor: '#0B0A16',
     },
   },
 }
 
 const gmFrame = {
-  version: 'next',
+  version: '1',
   imageUrl: `${baseUrl}/og-image.png`,
   button: {
     title: '🎮 Launch Game',
     action: {
-      type: 'launch_frame',
-      name: 'Gmeowbased Adventure',
+      type: 'link',
       url: baseUrl,
-      splashImageUrl: `${baseUrl}/splash.png`,
-      splashBackgroundColor: '#0B0A16',
     },
   },
 }
