@@ -139,3 +139,32 @@ export const OnboardCompleteSchema = z.object({
   walletAddress: AddressSchema.optional(),
   verifiedAddresses: z.array(AddressSchema).optional(),
 })
+
+// Bot config endpoints
+export const BotConfigUpdateSchema = z.object({
+  enabled: z.boolean().optional(),
+  autoReplyEnabled: z.boolean().optional(),
+  statsEnabled: z.boolean().optional(),
+  minEngagementThreshold: z.number().int().min(0).optional(),
+  dailyPostLimit: z.number().int().min(0).max(100).optional(),
+  responseTemplates: z.array(z.string()).optional(),
+  blacklistedFids: z.array(FIDSchema).optional(),
+  whitelistedFids: z.array(FIDSchema).optional(),
+})
+
+// Admin query schemas
+export const AdminQuerySchema = z.object({
+  limit: z.number().int().min(1).max(100).optional(),
+  offset: z.number().int().min(0).optional(),
+  timeframe: z.enum(['hour', 'day', 'week', 'month', 'all']).optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+})
+
+// Badge upload schema
+export const BadgeUploadSchema = z.object({
+  badgeType: z.string().min(1, 'Badge type is required'),
+  tier: z.enum(['mythic', 'legendary', 'epic', 'rare', 'common']),
+  imageFile: z.string().min(1, 'Image file is required'),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+})

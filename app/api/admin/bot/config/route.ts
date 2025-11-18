@@ -6,6 +6,7 @@ import { validateAdminRequest } from '@/lib/admin-auth'
 import { loadBotStatsConfig, saveBotStatsConfig, sanitiseBotStatsConfigInput } from '@/lib/bot-config'
 import { DEFAULT_BOT_STATS_CONFIG, type BotStatsConfig } from '@/lib/bot-config-types'
 import { withErrorHandler } from '@/lib/error-handler'
+import { BotConfigUpdateSchema } from '@/lib/validation/api-schemas'
 
 export const runtime = 'nodejs'
 
@@ -67,7 +68,16 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: false, error: 'invalid_json', message: 'Request body must be valid JSON.' }, { status: 400 })
   }
 
-  const config = sanitiseBotStatsConfigInput(payload) as BotStatsConfig
+  // Validate input with Zod
+  const validation = BotConfigUpdateSchema.safeParse(payload)
+  if (!validation.success) {
+    return NextResponse.json(
+      { ok: false, error: 'validation_error', issues: validation.error.issues },
+      { status: 400 }
+    )
+  }
+
+  const config = sanitiseBotStatsConfigInput(validation.data) as BotStatsConfig
 
   try {
     await saveBotStatsConfig(config)

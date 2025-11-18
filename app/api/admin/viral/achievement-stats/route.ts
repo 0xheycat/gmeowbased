@@ -15,6 +15,7 @@ import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { withErrorHandler } from '@/lib/error-handler'
+import { AdminQuerySchema } from '@/lib/validation/api-schemas'
 
 type AchievementStat = {
   type: string
