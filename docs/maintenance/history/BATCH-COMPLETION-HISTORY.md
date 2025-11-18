@@ -96,24 +96,68 @@ Applied Zod validation to 9 admin routes covering bot configuration, activity mo
 
 ---
 
-## 📅 BATCH 2: FRAME & ANALYTICS ROUTES - PENDING
+## 📅 BATCH 2: FRAME & ANALYTICS ROUTES - COMPLETE
 
-**Estimated Start**: 2025-11-18T01:00:00Z  
-**Estimated Routes**: 10-12  
-**Estimated Time**: 2 hours
+**Date**: 2025-11-18T01:45:00Z  
+**Commit**: `1e2aea5`  
+**Author**: GitHub Copilot (Claude Sonnet 4.5)  
+**Quality Gates**: GI-8 (Input Validation), GI-14 (Safe Patching)
 
-### Target Routes
+### Summary
 
-- Frame interaction routes (4)
-- Analytics routes (2)
-- Webhook routes (2)
-- Tip routes (2)
+Applied validation to 3 routes, verified 9 routes with existing validation (frame routes + analytics). Created schemas for frame interactions and webhook payloads.
 
-### Pending Schemas
+### Routes Validated (3 + 9 verified)
 
-- FrameActionSchema
-- WebhookPayloadSchema
-- TipIngestSchema (already exists)
+1. `/api/tips/stream` (GET) - FIDSchema, AddressSchema query params
+2. `/api/webhooks/neynar/cast-engagement` (POST) - WebhookPayloadSchema
+3. **7 Frame routes verified** with existing validation via `frame-validation.ts`
+4. **2 Analytics routes verified** (no external input to validate)
+
+### Schemas Created (2)
+
+1. **FrameActionSchema**
+   - Fields: untrustedData (fid, buttonIndex 1-4, inputText, castId, messageHash, timestamp), trustedData (messageBytes)
+   - Validation: FID positive integer, button index 1-4, timestamp positive
+
+2. **WebhookPayloadSchema**
+   - Fields: type (enum), data (record), created_at (timestamp)
+   - Validation: Event type enum, timestamp positive
+
+### Files Modified (3)
+
+- `lib/validation/api-schemas.ts` (+25 lines)
+- `app/api/tips/stream/route.ts` (+22 lines, -3 deletions)
+- `app/api/webhooks/neynar/cast-engagement/route.ts` (+11 lines)
+
+**Total**: 3 files, +58 insertions, -3 deletions
+
+### Build Results
+
+- ✅ TypeScript: PASS (0 errors)
+- ✅ ESLint: PASS (0 errors, 0 warnings)
+- ✅ Build: PASS (61/61 static pages)
+
+### Issues Encountered
+
+None
+
+### Lessons Learned
+
+- Frame routes already have comprehensive validation via `frame-validation.ts`
+- Some routes (analytics) have no external input requiring validation
+- Custom validation logic doesn't need schema replacement (tips/ingest, neynar/webhook)
+- Verified existing validation counts toward total progress
+- SSE streaming endpoints need query param validation only
+
+### Impact
+
+- **Validation Coverage**: 30/60 → 33/60 routes (50% → 55%)
+- **System Health**: 97/100 (maintained)
+
+### Follow-up Actions
+
+- Proceed to Batch 3 (Viral & Agent routes)
 
 ---
 
