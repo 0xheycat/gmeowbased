@@ -1,6 +1,17 @@
 /**
  * Unified Cache Storage Utility
  * 
+ * ⚠️ **CLIENT-SIDE CACHING ONLY** ⚠️
+ * 
+ * This module is for client components and hooks ONLY.
+ * DO NOT import in API routes or server components (use lib/cache.ts for server-side caching).
+ * 
+ * Purpose:
+ * - Cache user preferences and UI state
+ * - Persist data across browser sessions (localStorage)
+ * - Reduce unnecessary API calls from client
+ * - Improve perceived performance
+ * 
  * Provides a consistent caching layer with support for:
  * - localStorage (persistent across sessions)
  * - sessionStorage (cleared on tab close)
@@ -12,6 +23,9 @@
  * - Type-safe with generics
  * - SSR-safe (checks for window availability)
  * - Graceful degradation if storage unavailable
+ * 
+ * For server-side caching (database queries, API responses):
+ * @see lib/cache.ts
  */
 
 type StorageType = 'localStorage' | 'sessionStorage' | 'memory'

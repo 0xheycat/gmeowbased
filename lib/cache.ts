@@ -1,28 +1,43 @@
 /**
  * Phase 4: Performance Optimization - Cache Helper
  * 
- * Provides multi-layer caching for API responses and database queries.
- * Supports in-memory caching (dev) and external cache providers (Redis/Vercel KV).
+ * ⚠️ **SERVER-SIDE CACHING ONLY** ⚠️
+ * 
+ * This module is for API routes and server components ONLY.
+ * DO NOT import in client components (use lib/cache-storage.ts for client-side caching).
+ * 
+ * Purpose:
+ * - Cache expensive database queries
+ * - Cache API responses
+ * - Reduce server load and response times
  * 
  * Cache Strategy:
- * - L1: In-memory cache (fast, limited capacity, process-local)
- * - L2: External cache (Redis/Vercel KV) (shared, persistent)
+ * - L1: In-memory cache (Node.js process, fast, limited capacity)
+ * - L2: External cache (Redis/Vercel KV, shared across serverless instances)
  * 
  * Usage:
  * ```typescript
+ * // In API route (server-side)
  * import { getCached, invalidateCache } from '@/lib/cache'
  * 
- * // Fetch with cache
- * const badges = await getCached(
- *   'user-badges',
- *   `user:${fid}:badges`,
- *   () => getUserBadgesFromDB(fid),
- *   { ttl: 120 } // 2 minutes
- * )
+ * export const GET = async (request: Request) => {
+ *   // Fetch with cache
+ *   const badges = await getCached(
+ *     'user-badges',
+ *     `user:${fid}:badges`,
+ *     () => getUserBadgesFromDB(fid),
+ *     { ttl: 120 } // 2 minutes
+ *   )
+ *   
+ *   return NextResponse.json({ badges })
+ * }
  * 
  * // Invalidate on update
  * await invalidateCache('user-badges', `user:${fid}:badges`)
  * ```
+ * 
+ * For client-side caching (localStorage, sessionStorage):
+ * @see lib/cache-storage.ts
  */
 
 import { kv } from '@vercel/kv'
