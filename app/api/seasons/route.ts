@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
 import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey } from '@/lib/gm-utils'
 import { getRpcUrl } from '@/lib/rpc'
+import { SeasonQuerySchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
 
 const CACHE_TTL = 30_000
@@ -12,7 +13,20 @@ const HAS_SEASON_ABI = gmContractHasFunction('getAllSeasons') && gmContractHasFu
 
 export const GET = withErrorHandler(async (req: Request) => {
   const url = new URL(req.url)
-  const chain = (url.searchParams.get('chain') || 'base') as ChainKey
+  
+  // Validate query parameters with Zod
+  const queryValidation = SeasonQuerySchema.safeParse({
+    chain: url.searchParams.get('chain') || undefined,
+  })
+  
+  if (!queryValidation.success) {
+    return NextResponse.json(
+      { error: 'validation_error', issues: queryValidation.error.issues },
+      { status: 400 }
+    )
+  }
+  
+  const chain = (queryValidation.data.chain || 'base') as ChainKey
   
   // Validate chain parameter
   const contractAddr = CONTRACT_ADDRESSES[chain]
