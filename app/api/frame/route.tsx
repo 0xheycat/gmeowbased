@@ -1146,6 +1146,8 @@ function buildFrameHtml(params: {
   
   // Build Frame metadata (Farcaster vNext format)
   // Reference: https://miniapps.farcaster.xyz/docs/specification
+  // CRITICAL: Use 'link' action for opening miniapp from feed (external context)
+  // 'launch_frame' is ONLY for embedded miniapps opening other miniapps
   const primaryButton = validatedButtons[0]
   const frameEmbedMeta = primaryButton && frameOrigin && imageEsc ? {
     version: '1',
