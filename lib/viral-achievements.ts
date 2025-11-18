@@ -24,6 +24,7 @@
  * @module lib/viral-achievements
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseServerClient } from './supabase-server'
 import { dispatchViralNotification, type AchievementNotification } from './viral-notifications'
 
@@ -36,6 +37,12 @@ export type AchievementType =
   | '10_viral_casts'
   | '100_shares'
   | 'mega_viral_master'
+
+// Dependencies interface for testing
+export type AchievementDependencies = {
+  supabase?: SupabaseClient
+  dispatchNotification?: typeof dispatchViralNotification
+}
 
 export type AchievementConfig = {
   type: AchievementType
@@ -106,16 +113,20 @@ export const ACHIEVEMENTS: Record<AchievementType, AchievementConfig> = {
  * - GI-10: Efficient single query
  * 
  * @param fid - User's Farcaster ID
+ * @param deps - Optional dependencies for testing
  * @returns Array of achievement types user has
  */
-export async function getUserAchievements(fid: number): Promise<AchievementType[]> {
+export async function getUserAchievements(
+  fid: number,
+  deps?: AchievementDependencies
+): Promise<AchievementType[]> {
   try {
     // GI-11: FID validation
     if (!fid || fid <= 0) {
       return []
     }
 
-    const supabase = getSupabaseServerClient()
+    const supabase = deps?.supabase || getSupabaseServerClient()
     if (!supabase) {
       throw new Error('Supabase client not configured')
     }
@@ -147,11 +158,13 @@ export async function getUserAchievements(fid: number): Promise<AchievementType[
  * 
  * @param fid - User's Farcaster ID
  * @param castHash - Optional cast hash that triggered the check
+ * @param deps - Optional dependencies for testing
  * @returns List of newly unlocked achievements
  */
 export async function checkAchievements(
   fid: number,
-  castHash?: string
+  castHash?: string,
+  deps?: AchievementDependencies
 ): Promise<AchievementCheckResult> {
   const result: AchievementCheckResult = {
     unlocked: [],
@@ -164,13 +177,13 @@ export async function checkAchievements(
       return result
     }
 
-    const supabase = getSupabaseServerClient()
+    const supabase = deps?.supabase || getSupabaseServerClient()
     if (!supabase) {
       throw new Error('Supabase client not configured')
     }
 
     // Get existing achievements
-    const existingAchievements = await getUserAchievements(fid)
+    const existingAchievements = await getUserAchievements(fid, deps)
     result.alreadyHas = existingAchievements
 
     // GI-10: Run all achievement checks in parallel
@@ -255,12 +268,14 @@ export async function checkAchievements(
  * @param fid - User's Farcaster ID
  * @param achievementType - Achievement to award
  * @param castHash - Optional cast hash that triggered achievement
+ * @param deps - Optional dependencies for testing
  * @returns Success status
  */
 export async function awardAchievement(
   fid: number,
   achievementType: AchievementType,
-  castHash?: string
+  castHash?: string,
+  deps?: AchievementDependencies
 ): Promise<boolean> {
   try {
     // GI-11: Input validation
@@ -272,7 +287,9 @@ export async function awardAchievement(
       throw new Error(`Unknown achievement type: ${achievementType}`)
     }
 
-    const supabase = getSupabaseServerClient()
+    const supabase = deps?.supabase || getSupabaseServerClient()
+    const notificationFn = deps?.dispatchNotification || dispatchViralNotification
+    
     if (!supabase) {
       throw new Error('Supabase client not configured')
     }
@@ -337,7 +354,7 @@ export async function awardAchievement(
     }
 
     // Fire and forget - don't block on notification
-    dispatchViralNotification(notification).catch((error) => {
+    notificationFn(notification).catch((error) => {
       console.error('[Achievements] Notification dispatch failed:', error)
     })
 
@@ -360,14 +377,16 @@ export async function awardAchievement(
  * 
  * @param fid - User's Farcaster ID
  * @param castHash - Optional cast hash that triggered check
+ * @param deps - Optional dependencies for testing
  * @returns Number of achievements awarded
  */
 export async function checkAndAwardAchievements(
   fid: number,
-  castHash?: string
+  castHash?: string,
+  deps?: AchievementDependencies
 ): Promise<number> {
   try {
-    const checkResult = await checkAchievements(fid, castHash)
+    const checkResult = await checkAchievements(fid, castHash, deps)
 
     if (checkResult.unlocked.length === 0) {
       return 0
@@ -376,7 +395,7 @@ export async function checkAndAwardAchievements(
     // GI-10: Award all unlocked achievements in parallel
     const awardResults = await Promise.allSettled(
       checkResult.unlocked.map((achievementType) =>
-        awardAchievement(fid, achievementType, castHash)
+        awardAchievement(fid, achievementType, castHash, deps)
       )
     )
 
@@ -399,13 +418,15 @@ export async function checkAndAwardAchievements(
  * Get full achievement details for display
  * 
  * @param fid - User's Farcaster ID
+ * @param deps - Optional dependencies for testing
  * @returns Array of achievements with full config data
  */
 export async function getUserAchievementDetails(
-  fid: number
+  fid: number,
+  deps?: AchievementDependencies
 ): Promise<Array<UserAchievement & AchievementConfig>> {
   try {
-    const supabase = getSupabaseServerClient()
+    const supabase = deps?.supabase || getSupabaseServerClient()
     if (!supabase) {
       throw new Error('Supabase client not configured')
     }

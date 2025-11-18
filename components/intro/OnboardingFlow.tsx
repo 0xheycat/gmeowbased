@@ -7,6 +7,7 @@ import { useAccount } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import ShareButton from '@/components/share/ShareButton'
 import { getMiniappContext } from '@/lib/miniappEnv'
+import { fetchFidByAddress } from '@/lib/neynar'
 // GI-10: Confetti loaded dynamically for performance
 import { getBadgeArtworkBackground } from '@/lib/badge-artwork'
 import '@/app/styles/quest-card-yugioh.css'
@@ -397,6 +398,11 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
   const [assignedBadge, setAssignedBadge] = useState<UserBadge | null>(null)
   const { address, isConnected } = useAccount()
 
+  // Manual FID input state
+  const [userFid, setUserFid] = useState<number | null>(null)
+  const [fidInputValue, setFidInputValue] = useState('')
+  const [showFidInput, setShowFidInput] = useState(false)
+
   // Phase 4.7: Typewriter animation state
   const [revealStage, setRevealStage] = useState<'hidden' | 'tier' | 'rewards' | 'complete'>('hidden')
 
@@ -431,42 +437,70 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         setErrorMessage(null)
         setErrorType(null)
         
-        // AUTO-DETECT FID: Try miniapp context first (highest priority)
-        let fid: number | null = null
+        // AUTO-DETECT FID: Try multiple sources with improved timing
+        let fid: number | null = userFid // Use manual input if provided
         let fidSource: string = 'unknown'
         
-        try {
-          const miniappContext = await getMiniappContext()
-          if (miniappContext?.user?.fid) {
-            fid = miniappContext.user.fid
-            fidSource = 'miniapp-context'
-            console.log('[OnboardingFlow] ✅ FID from miniapp context:', fid)
+        // Priority 1: Check connected wallet address
+        if (!fid && isConnected && address) {
+          try {
+            console.log('[OnboardingFlow] Checking wallet address for FID:', address)
+            const walletFid = await fetchFidByAddress(address)
+            if (walletFid) {
+              fid = walletFid
+              fidSource = 'wallet-address'
+              console.log('[OnboardingFlow] ✅ FID from wallet address:', fid)
+            } else {
+              console.log('[OnboardingFlow] ⚠️ No FID linked to wallet:', address)
+            }
+          } catch (walletError) {
+            console.warn('[OnboardingFlow] Wallet FID lookup failed:', walletError)
           }
-        } catch (miniappError) {
-          console.log('[OnboardingFlow] ⚠️ Not in miniapp context:', miniappError)
         }
         
-        // If no FID from miniapp, try URL parameter (for desktop/frame users)
+        // Priority 2: Try URL parameter (fastest for shared links)
         if (!fid) {
           const urlParams = new URLSearchParams(window.location.search)
           const fidParam = urlParams.get('fid')
           if (fidParam) {
-            fid = parseInt(fidParam, 10)
-            if (!isNaN(fid) && fid > 0) {
+            const parsedFid = parseInt(fidParam, 10)
+            if (!isNaN(parsedFid) && parsedFid > 0) {
+              fid = parsedFid
               fidSource = 'url-parameter'
               console.log('[OnboardingFlow] ✅ FID from URL param:', fid)
-            } else {
-              fid = null
             }
           }
         }
         
-        // If no FID found anywhere, show error with instructions
+        // Priority 3: Try miniapp context with extended timeout
+        if (!fid) {
+          try {
+            console.log('[OnboardingFlow] Attempting miniapp context...')
+            const miniappContext = await Promise.race([
+              getMiniappContext(),
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
+            ])
+            
+            if (miniappContext?.user?.fid) {
+              fid = miniappContext.user.fid
+              fidSource = 'miniapp-context'
+              console.log('[OnboardingFlow] ✅ FID from miniapp context:', fid)
+            } else {
+              console.log('[OnboardingFlow] ⚠️ No FID in miniapp context:', miniappContext)
+            }
+          } catch (miniappError) {
+            console.log('[OnboardingFlow] ⚠️ Miniapp context error:', miniappError)
+          }
+        }
+        
+        // If no FID found anywhere, show manual input option
         if (!fid) {
           console.log('[OnboardingFlow] ❌ No FID detected from any source')
+          setShowFidInput(true)
           setErrorMessage(
-            'Unable to detect your Farcaster account. ' +
-            'Please open this app from Warpcast or add ?fid=YOUR_FID to the URL.'
+            isConnected 
+              ? 'No Farcaster account linked to your wallet. Please enter your FID below or link your wallet to Farcaster first.'
+              : 'Connect your wallet or enter your FID manually to continue.'
           )
           setErrorType('auth')
           setIsLoading(false)
@@ -474,6 +508,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         }
         
         console.log(`[OnboardingFlow] 🔍 Using FID ${fid} (source: ${fidSource})`)
+        setUserFid(fid) // Store for later use
         
         // Check if user already completed onboarding
         const statusRes = await fetch(`/api/onboard/status?fid=${fid}`)
@@ -586,7 +621,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
     }
 
     loadFarcasterProfile()
-  }, [getTierFromScore])
+  }, [getTierFromScore, userFid, isConnected, address]) // Re-run when wallet or FID changes
 
   // Phase 4.7: Typewriter animation effect for Stage 5 reveal (simplified)
   useEffect(() => {
@@ -1148,6 +1183,79 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               <p className="quest-card-yugioh__description-text">
                 {displayedStage.description}
               </p>
+              
+              {/* Manual FID Input - Show when auto-detection fails */}
+              {showFidInput && !isLoading && (
+                <div className="mt-4 space-y-3">
+                  {/* Wallet Connection Option - Shown if not connected */}
+                  {!isConnected && (
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-blue-900/20 via-purple-800/15 to-blue-900/20 border-2 border-blue-500/30">
+                      <p className="text-sm text-blue-200 mb-3 font-semibold">
+                        ✨ Easiest Way: Connect Your Wallet
+                      </p>
+                      <p className="text-xs text-white/60 mb-3">
+                        If your wallet is linked to Farcaster, we&apos;ll automatically detect your FID.
+                      </p>
+                      <ConnectWallet />
+                    </div>
+                  )}
+                  
+                  {/* Manual FID Input */}
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-purple-900/20 via-blue-800/15 to-purple-900/20 border-2 border-purple-500/30">
+                    <div className="mb-3">
+                      <label htmlFor="fid-input" className="block text-sm font-bold text-purple-300 mb-2">
+                        {isConnected ? 'Or Enter Your FID Manually' : 'Enter Your Farcaster ID (FID)'}
+                      </label>
+                    <input
+                      id="fid-input"
+                      type="number"
+                      value={fidInputValue}
+                      onChange={(e) => setFidInputValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && fidInputValue) {
+                          const fid = parseInt(fidInputValue, 10)
+                          if (!isNaN(fid) && fid > 0) {
+                            setUserFid(fid)
+                            setShowFidInput(false)
+                            setErrorMessage(null)
+                            setErrorType(null)
+                            // Trigger reload of profile
+                            window.location.search = `?fid=${fid}`
+                          }
+                        }
+                      }}
+                      placeholder="Enter FID (e.g., 18139)"
+                      className="w-full px-4 py-3 bg-black/40 border border-purple-400/30 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
+                      aria-label="Farcaster ID input"
+                      aria-describedby="fid-help-text"
+                    />
+                    <p id="fid-help-text" className="text-xs text-white/60 mt-2">
+                      Find your FID at <a href="https://warpcast.com/~/settings" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">warpcast.com/~/settings</a>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const fid = parseInt(fidInputValue, 10)
+                      if (!isNaN(fid) && fid > 0) {
+                        setUserFid(fid)
+                        setShowFidInput(false)
+                        setErrorMessage(null)
+                        setErrorType(null)
+                        // Trigger reload of profile
+                        window.location.search = `?fid=${fid}`
+                      } else {
+                        setErrorMessage('Please enter a valid FID (positive number)')
+                        setErrorType('validation')
+                      }
+                    }}
+                    disabled={!fidInputValue || parseInt(fidInputValue, 10) <= 0}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:transform-none"
+                  >
+                    Continue with FID
+                  </button>
+                  </div>
+                </div>
+              )}
               
               {/* Phase 5.4: Badge unlock with pop animation */}
               {isFetchingBadge && (

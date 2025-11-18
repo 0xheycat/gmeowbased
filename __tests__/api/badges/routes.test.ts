@@ -22,6 +22,13 @@ vi.mock('@/lib/badges', () => ({
   updateBadgeMintStatus: vi.fn(),
 }))
 
+vi.mock('@/lib/cache', () => ({
+  getCached: vi.fn((namespace, key, fetchFn) => fetchFn()),
+  buildUserBadgesKey: vi.fn((fid) => `user:${fid}:badges`),
+  invalidateCache: vi.fn(),
+  invalidateCachePattern: vi.fn(),
+}))
+
 vi.mock('@/lib/supabase-server', () => ({
   getSupabaseServerClient: vi.fn(),
 }))
@@ -36,6 +43,18 @@ import { getUserBadges, assignBadgeToUser, getBadgeFromRegistry, updateBadgeMint
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
+// Shared Supabase mock
+const mockSupabase = {
+  from: vi.fn().mockReturnThis(),
+  select: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  in: vi.fn().mockReturnThis(),
+  single: vi.fn(),
+  maybeSingle: vi.fn(),
+}
+
 describe('/api/badges/list', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -49,7 +68,7 @@ describe('/api/badges/list', () => {
         { id: 'badge-1', badgeType: 'gm-streak', tier: 'epic' },
         { id: 'badge-2', badgeType: 'early-adopter', tier: 'legendary' },
       ]
-      vi.mocked(getUserBadges).mockResolvedValue(mockBadges)
+      vi.mocked(getUserBadges).mockResolvedValueOnce(mockBadges as any)
 
       const request = new Request('http://localhost:3000/api/badges/list?fid=12345')
       const response = await GET(request)
@@ -66,7 +85,7 @@ describe('/api/badges/list', () => {
     })
 
     it('should return empty badges array when user has no badges', async () => {
-      vi.mocked(getUserBadges).mockResolvedValue([])
+      vi.mocked(getUserBadges).mockResolvedValueOnce([])
 
       const request = new Request('http://localhost:3000/api/badges/list?fid=12345')
       const response = await GET(request)
@@ -167,16 +186,10 @@ describe('/api/badges/list', () => {
 })
 
 describe('/api/badges/assign', () => {
-  const mockSupabase = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn(),
-  }
-
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(getClientIp).mockReturnValue('127.0.0.1')
+    vi.mocked(rateLimit).mockResolvedValue({ success: true })
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabase as any)
     mockSupabase.single.mockResolvedValue({ data: null, error: null })
   })
@@ -392,18 +405,12 @@ describe('/api/badges/assign', () => {
 })
 
 describe('/api/badges/mint', () => {
-  const mockSupabase = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn(),
-  }
-
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(getClientIp).mockReturnValue('127.0.0.1')
+    vi.mocked(rateLimit).mockResolvedValue({ success: true })
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabase as any)
+    mockSupabase.single.mockResolvedValue({ data: null, error: null })
     mockSupabase.maybeSingle.mockResolvedValue({ data: null, error: null })
     mockSupabase.in.mockResolvedValue({ data: null, error: null })
   })

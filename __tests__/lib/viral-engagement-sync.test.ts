@@ -2,7 +2,8 @@
  * @vitest-environment node
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
+import * as viralEngagementSync from '@/lib/viral-engagement-sync'
 import {
   syncCastEngagement,
   fetchCastEngagement,
@@ -35,10 +36,9 @@ describe('viral-engagement-sync', () => {
         }),
       }
 
-      const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
-
-      const metrics = await fetchCastEngagement('0xtest123')
+      const metrics = await fetchCastEngagement('0xtest123', {
+        neynarClient: mockClient,
+      })
 
       expect(metrics).toEqual({
         likes: 10,
@@ -60,16 +60,15 @@ describe('viral-engagement-sync', () => {
           .mockRejectedValueOnce(new Error('Network error'))
           .mockResolvedValue({
             cast: {
-              reactions: { likes_count: 5 },
+              reactions: { likes_count: 5, recasts_count: 0 },
               replies: { count: 2 },
             },
           }),
       }
 
-      const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
-
-      const metrics = await fetchCastEngagement('0xtest456')
+      const metrics = await fetchCastEngagement('0xtest456', {
+        neynarClient: mockClient,
+      })
 
       expect(metrics.likes).toBe(5)
       expect(mockClient.lookupCastByHashOrUrl).toHaveBeenCalledTimes(3)
@@ -92,10 +91,9 @@ describe('viral-engagement-sync', () => {
         }),
       }
 
-      const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
-
-      const metrics = await fetchCastEngagement('0xtest')
+      const metrics = await fetchCastEngagement('0xtest', {
+        neynarClient: mockClient,
+      })
 
       // GI-11: Should enforce non-negative
       expect(metrics.likes).toBe(0)
@@ -105,40 +103,72 @@ describe('viral-engagement-sync', () => {
 
   describe('syncCastEngagement', () => {
     it('should sync engagement and detect tier upgrade', async () => {
+      let fromCallCount = 0
       const mockSupabase = {
-        from: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: {
-            cast_hash: '0xtest',
-            fid: 12345,
-            likes_count: 5,
-            recasts_count: 2,
-            replies_count: 1,
-            viral_score: 25,
-            viral_tier: 'engaging',
-            viral_bonus_xp: 50,
-          },
-          error: null,
+        from: vi.fn((table: string) => {
+          fromCallCount++
+          // First call - select existing cast from badge_casts
+          if (fromCallCount === 1 && table === 'badge_casts') {
+            return {
+              select: vi.fn().mockReturnThis(),
+              eq: vi.fn().mockReturnThis(),
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  cast_hash: '0xtest',
+                  fid: 12345,
+                  likes_count: 5,
+                  recasts_count: 2,
+                  replies_count: 1,
+                  viral_score: 25,
+                  viral_tier: 'engaging',
+                  viral_bonus_xp: 50,
+                },
+                error: null,
+              }),
+            }
+          }
+          // Second call - update badge_casts
+          if (fromCallCount === 2 && table === 'badge_casts') {
+            return {
+              update: vi.fn().mockReturnThis(),
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            }
+          }
+          // Third call - insert into gmeow_rank_events
+          if (table === 'gmeow_rank_events') {
+            return {
+              insert: vi.fn().mockResolvedValue({ error: null }),
+            }
+          }
+          // Fallback
+          return {
+            select: vi.fn().mockReturnThis(),
+            update: vi.fn().mockReturnThis(),
+            insert: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }
         }),
-        update: vi.fn().mockReturnThis(),
         rpc: vi.fn().mockResolvedValue({ error: null }),
-        insert: vi.fn().mockResolvedValue({ error: null }),
+      } as any
+
+      const mockNeynarClient = {
+        lookupCastByHashOrUrl: vi.fn().mockResolvedValue({
+          cast: {
+            reactions: {
+              likes_count: 10,
+              recasts_count: 5,
+            },
+            replies: {
+              count: 3,
+            },
+          },
+        }),
       }
 
-      const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
-
-      // Mock fetchCastEngagement to return higher metrics
-      const mockFetch = vi.fn().mockResolvedValue({
-        likes: 10,
-        recasts: 5,
-        replies: 3,
+      const result = await syncCastEngagement('0xtest', {
+        supabase: mockSupabase,
+        neynarClient: mockNeynarClient,
       })
-      vi.spyOn(require('@/lib/viral-engagement-sync'), 'fetchCastEngagement').mockImplementation(mockFetch)
-
-      const result = await syncCastEngagement('0xtest')
 
       expect(result.updated).toBe(true)
       expect(result.tierUpgrade).toBe(true)
@@ -161,19 +191,26 @@ describe('viral-engagement-sync', () => {
           },
           error: null,
         }),
+      } as any
+
+      const mockNeynarClient = {
+        lookupCastByHashOrUrl: vi.fn().mockResolvedValue({
+          cast: {
+            reactions: {
+              likes_count: 10,
+              recasts_count: 5,
+            },
+            replies: {
+              count: 3,
+            },
+          },
+        }),
       }
 
-      const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
-
-      const mockFetch = vi.fn().mockResolvedValue({
-        likes: 10,
-        recasts: 5,
-        replies: 3,
+      const result = await syncCastEngagement('0xtest', {
+        supabase: mockSupabase,
+        neynarClient: mockNeynarClient,
       })
-      vi.spyOn(require('@/lib/viral-engagement-sync'), 'fetchCastEngagement').mockImplementation(mockFetch)
-
-      const result = await syncCastEngagement('0xtest')
 
       expect(result.updated).toBe(false)
     })
@@ -183,34 +220,121 @@ describe('viral-engagement-sync', () => {
     it('should process multiple casts in parallel batches', async () => {
       const castHashes = Array.from({ length: 25 }, (_, i) => `0xtest${i}`)
 
-      const mockSync = vi.fn().mockResolvedValue({
-        updated: true,
-        tierUpgrade: false,
-        oldTier: 'active',
-        newTier: 'engaging',
-        additionalXp: 25,
+      const mockSupabase = {
+        from: vi.fn((table: string) => {
+          if (table === 'badge_casts') {
+            // Alternate between select and update for badge_casts
+            return {
+              select: vi.fn().mockReturnThis(),
+              eq: vi.fn().mockReturnThis(),
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  cast_hash: '0xtest1',
+                  fid: 12345,
+                  likes_count: 5,
+                  recasts_count: 2,
+                  replies_count: 1,
+                  viral_score: 25,
+                  viral_tier: 'engaging',
+                  viral_bonus_xp: 50,
+                },
+                error: null,
+              }),
+              update: vi.fn().mockReturnThis(),
+            }
+          }
+          // gmeow_rank_events
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          }
+        }),
+        rpc: vi.fn().mockResolvedValue({ error: null }),
+      } as any
+
+      const mockNeynarClient = {
+        lookupCastByHashOrUrl: vi.fn().mockResolvedValue({
+          cast: {
+            reactions: {
+              likes_count: 10,
+              recasts_count: 5,
+            },
+            replies: {
+              count: 3,
+            },
+          },
+        }),
+      }
+
+      const results = await batchSyncCastEngagement(castHashes, {
+        supabase: mockSupabase,
+        neynarClient: mockNeynarClient,
       })
 
-      vi.spyOn(require('@/lib/viral-engagement-sync'), 'syncCastEngagement').mockImplementation(mockSync)
-
-      const results = await batchSyncCastEngagement(castHashes)
-
       expect(results).toHaveLength(25)
-      expect(mockSync).toHaveBeenCalledTimes(25)
     })
 
     it('should handle individual failures gracefully', async () => {
       const castHashes = ['0xtest1', '0xtest2', '0xtest3']
 
-      const mockSync = vi
-        .fn()
-        .mockResolvedValueOnce({ updated: true, tierUpgrade: false, oldTier: 'active', newTier: 'engaging', additionalXp: 25 })
-        .mockRejectedValueOnce(new Error('Sync failed'))
-        .mockResolvedValueOnce({ updated: true, tierUpgrade: false, oldTier: 'active', newTier: 'engaging', additionalXp: 25 })
+      let selectCallNum = 0
+      const mockSupabase = {
+        from: vi.fn((table: string) => {
+          if (table === 'badge_casts') {
+            return {
+              select: vi.fn().mockReturnThis(),
+              eq: vi.fn().mockReturnThis(),
+              single: vi.fn().mockImplementation(() => {
+                selectCallNum++
+                // Second cast fails
+                if (selectCallNum === 2) {
+                  return Promise.resolve({
+                    data: null,
+                    error: new Error('Cast not found'),
+                  })
+                }
+                return Promise.resolve({
+                  data: {
+                    cast_hash: `0xtest${selectCallNum}`,
+                    fid: 12345,
+                    likes_count: 5,
+                    recasts_count: 2,
+                    replies_count: 1,
+                    viral_score: 25,
+                    viral_tier: 'engaging',
+                    viral_bonus_xp: 50,
+                  },
+                  error: null,
+                })
+              }),
+              update: vi.fn().mockReturnThis(),
+            }
+          }
+          // gmeow_rank_events
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          }
+        }),
+        rpc: vi.fn().mockResolvedValue({ error: null }),
+      } as any
 
-      vi.spyOn(require('@/lib/viral-engagement-sync'), 'syncCastEngagement').mockImplementation(mockSync)
+      const mockNeynarClient = {
+        lookupCastByHashOrUrl: vi.fn().mockResolvedValue({
+          cast: {
+            reactions: {
+              likes_count: 10,
+              recasts_count: 5,
+            },
+            replies: {
+              count: 3,
+            },
+          },
+        }),
+      }
 
-      const results = await batchSyncCastEngagement(castHashes)
+      const results = await batchSyncCastEngagement(castHashes, {
+        supabase: mockSupabase,
+        neynarClient: mockNeynarClient,
+      })
 
       expect(results).toHaveLength(3)
       expect(results[0].updated).toBe(true)
@@ -237,7 +361,7 @@ describe('viral-engagement-sync', () => {
       }
 
       const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
+      ;(getSupabaseServerClient as Mock).mockReturnValue(mockSupabase)
 
       const casts = await getCastsNeedingSync()
 

@@ -18,6 +18,7 @@
  * @module lib/viral-engagement-sync
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { getNeynarServerClient } from './neynar-server'
 import { getSupabaseServerClient } from './supabase-server'
 import {
@@ -31,6 +32,12 @@ import {
 // ============================================================================
 // Type Definitions
 // ============================================================================
+
+// Dependencies interface for testing
+export type EngagementSyncDependencies = {
+  supabase?: SupabaseClient
+  neynarClient?: any
+}
 
 export type CastEngagementData = {
   hash: string
@@ -91,11 +98,13 @@ class EngagementSyncError extends Error {
  * - GI-11: Response validation, type checking
  * 
  * @param castHash - Cast hash to fetch engagement for
+ * @param deps - Optional dependencies for testing
  * @returns Engagement metrics (likes, recasts, replies)
  * @throws {EngagementSyncError} If API call fails after retries
  */
 export async function fetchCastEngagement(
-  castHash: string
+  castHash: string,
+  deps?: EngagementSyncDependencies
 ): Promise<EngagementMetrics> {
   // GI-11: Input validation
   if (!castHash || typeof castHash !== 'string') {
@@ -106,7 +115,7 @@ export async function fetchCastEngagement(
     )
   }
 
-  const client = getNeynarServerClient()
+  const client = deps?.neynarClient || getNeynarServerClient()
   if (!client) {
     throw new EngagementSyncError(
       'Neynar client not configured',
@@ -193,7 +202,8 @@ export async function fetchCastEngagement(
  * @returns Sync result with tier upgrade status and XP awarded
  */
 export async function syncCastEngagement(
-  castHash: string
+  castHash: string,
+  deps?: EngagementSyncDependencies
 ): Promise<EngagementSyncResult> {
   try {
     // GI-11: Input validation
@@ -208,7 +218,7 @@ export async function syncCastEngagement(
       }
     }
 
-    const supabase = getSupabaseServerClient()
+    const supabase = deps?.supabase || getSupabaseServerClient()
     if (!supabase) {
       throw new EngagementSyncError(
         'Supabase client not configured',
@@ -232,7 +242,7 @@ export async function syncCastEngagement(
     }
 
     // 2. Fetch current engagement from Neynar
-    const newMetrics = await fetchCastEngagement(castHash)
+    const newMetrics = await fetchCastEngagement(castHash, deps)
 
     // 3. Compare with stored metrics
     const oldMetrics: EngagementMetrics = {
@@ -242,7 +252,7 @@ export async function syncCastEngagement(
     }
 
     // Check if metrics actually increased
-    if (!hasMetricsIncreased(oldMetrics, newMetrics)) {
+    if (!hasMetricsIncreased(newMetrics, oldMetrics)) {
       return {
         updated: false,
         tierUpgrade: false,
@@ -257,8 +267,8 @@ export async function syncCastEngagement(
     const newTier = getViralTier(newScore)
     const oldTier = getViralTier(existingCast.viral_score || 0)
 
-    // 5. Calculate incremental XP bonus
-    const additionalXp = calculateIncrementalBonus(oldMetrics, newMetrics)
+    // 5. Calculate incremental XP bonus (current, previous)
+    const additionalXp = calculateIncrementalBonus(newMetrics, oldMetrics)
 
     // 6. Update badge_casts table (GI-10: Single batch update)
     const { error: updateError } = await supabase
@@ -344,7 +354,8 @@ export async function syncCastEngagement(
  * @returns Array of sync results
  */
 export async function batchSyncCastEngagement(
-  castHashes: string[]
+  castHashes: string[],
+  deps?: EngagementSyncDependencies
 ): Promise<EngagementSyncResult[]> {
   // GI-10: Process in parallel with max concurrency
   const BATCH_SIZE = 10
@@ -353,7 +364,7 @@ export async function batchSyncCastEngagement(
   for (let i = 0; i < castHashes.length; i += BATCH_SIZE) {
     const batch = castHashes.slice(i, i + BATCH_SIZE)
     const batchResults = await Promise.allSettled(
-      batch.map((hash) => syncCastEngagement(hash))
+      batch.map((hash) => syncCastEngagement(hash, deps))
     )
 
     results.push(

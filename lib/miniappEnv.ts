@@ -44,9 +44,27 @@ export async function probeMiniappReady(timeoutMs = 800): Promise<boolean> {
 
 export async function getMiniappContext(): Promise<any | null> {
   try {
+    // Check if we're embedded and allowed first
+    if (!isEmbedded() || !isAllowedReferrer()) {
+      console.log('[getMiniappContext] Not in miniapp environment')
+      return null
+    }
+
+    console.log('[getMiniappContext] Loading SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
-    return await sdk.context
-  } catch {
+    
+    // Wait for context with timeout
+    const context = await Promise.race([
+      sdk.context,
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('SDK context timeout')), 5000)
+      )
+    ])
+    
+    console.log('[getMiniappContext] ✅ Got context:', context)
+    return context
+  } catch (error) {
+    console.warn('[getMiniappContext] Failed to get context:', error)
     return null
   }
 }

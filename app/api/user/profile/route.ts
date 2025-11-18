@@ -6,8 +6,6 @@ import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached, buildUserProfileKey } from '@/lib/cache'
 
-const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
-
 export const dynamic = 'force-dynamic'
 
 /**
@@ -111,6 +109,7 @@ export const GET = withTiming(withErrorHandler(async (req: Request) => {
     }
 
     // Fetch user from Neynar with cache
+    const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
     if (!NEYNAR_API_KEY) {
       return NextResponse.json(
         { error: 'Neynar API not configured' },
@@ -125,14 +124,12 @@ export const GET = withTiming(withErrorHandler(async (req: Request) => {
         const neynar = new NeynarAPIClient({ apiKey: NEYNAR_API_KEY })
         const user = await neynar.fetchBulkUsers({ fids: [parseInt(fid)] })
 
-    if (!user?.users?.[0]) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
+        if (!user?.users?.[0]) {
+          // Return null to indicate user not found
+          return null
+        }
 
-    const fcUser = user.users[0]
+        const fcUser = user.users[0]
 
         return {
           fid: fcUser.fid,
@@ -149,6 +146,14 @@ export const GET = withTiming(withErrorHandler(async (req: Request) => {
       },
       { ttl: 300 }
     )
+
+    // Check if user was found
+    if (!profileData) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
 
     const response = NextResponse.json(profileData)
     response.headers.set('Cache-Control', 's-maxage=180, stale-while-revalidate=300')

@@ -151,7 +151,23 @@ describe('OnboardingFlow', () => {
 
   describe('Error Handling', () => {
     it('should handle network errors gracefully', async () => {
-      ;(global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      // Mock URL with FID parameter
+      Object.defineProperty(window, 'location', {
+        value: {
+          ...window.location,
+          search: '?fid=12345',
+        },
+        configurable: true,
+      })
+
+      // Mock onboarding status check to succeed
+      ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ onboarded: false }),
+      })
+
+      // Mock all subsequent profile fetches to fail with network error
+      ;(global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
         new TypeError('Failed to fetch')
       )
       
@@ -159,10 +175,20 @@ describe('OnboardingFlow', () => {
       
       await waitFor(() => {
         expect(screen.getByText(/Network connection failed/i)).toBeInTheDocument()
-      })
+      }, { timeout: 5000 })
     })
 
     it('should handle API errors with proper categorization', async () => {
+      // Mock URL with FID parameter
+      Object.defineProperty(window, 'location', {
+        value: {
+          ...window.location,
+          search: '?fid=12345',
+        },
+        configurable: true,
+      })
+
+      // Mock fetch to return 500 error
       ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 500,

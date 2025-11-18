@@ -1144,11 +1144,11 @@ function buildFrameHtml(params: {
     console.warn(`[buildFrameHtml] Button limit exceeded: ${originalCount} buttons provided, truncated to 4`)
   }
   
-  // Build Frame metadata (Neynar format)
-  // Reference: https://github.com/neynarxyz/create-farcaster-mini-app
+  // Build Frame metadata (Farcaster vNext format)
+  // Reference: https://miniapps.farcaster.xyz/docs/specification
   const primaryButton = validatedButtons[0]
   const frameEmbedMeta = primaryButton && frameOrigin && imageEsc ? {
-    version: 'next',
+    version: '1',
     imageUrl: resolvedImage,
     button: {
       title: primaryButton.label,
