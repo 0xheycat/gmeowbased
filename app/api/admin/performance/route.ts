@@ -80,7 +80,7 @@ export const GET = withErrorHandler(async (request: Request) => {
   if (format === 'html') {
     // Return HTML dashboard
     const html = generateHtmlDashboard(report)
-    return new Response(html, {
+    return new NextResponse(html, {
       headers: { 'Content-Type': 'text/html' },
     })
   }

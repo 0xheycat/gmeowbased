@@ -15,15 +15,16 @@
  * ```
  */
 
-import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 // ========================================
 // TYPES
 // ========================================
 
-export type ApiHandler = (request: Request) => Promise<Response>
 
-export type TimingMetrics = {
+type ApiHandler = (request: Request | NextRequest) => Promise<Response>
+
+type TimingMetrics = {
   route: string
   method: string
   duration: number
@@ -32,7 +33,7 @@ export type TimingMetrics = {
   slow: boolean
 }
 
-export type PerformanceStats = {
+type PerformanceStats = {
   totalRequests: number
   slowRequests: number
   averageDuration: number
@@ -75,8 +76,8 @@ function recordMetric(metric: TimingMetrics): void {
  * @param handler - API route handler function
  * @returns Wrapped handler with timing
  */
-export function withTiming(handler: ApiHandler): ApiHandler {
-  return async (request: Request) => {
+function withTiming(handler: ApiHandler): ApiHandler {
+  return async (request: Request | NextRequest) => {
     const startTime = performance.now()
     const startTimestamp = Date.now()
     
@@ -207,7 +208,7 @@ async function logSlowRequest(
 /**
  * Calculate performance statistics from recorded metrics
  */
-export function getPerformanceStats(): PerformanceStats {
+function getPerformanceStats(): PerformanceStats {
   if (metrics.length === 0) {
     return {
       totalRequests: 0,
@@ -242,21 +243,21 @@ export function getPerformanceStats(): PerformanceStats {
 /**
  * Get metrics for specific route
  */
-export function getRouteMetrics(route: string): TimingMetrics[] {
+function getRouteMetrics(route: string): TimingMetrics[] {
   return metrics.filter(m => m.route === route)
 }
 
 /**
  * Get slow requests (above threshold)
  */
-export function getSlowRequests(): TimingMetrics[] {
+function getSlowRequests(): TimingMetrics[] {
   return metrics.filter(m => m.slow)
 }
 
 /**
- * Clear all recorded metrics
+ * Clear all metrics
  */
-export function clearMetrics(): void {
+function clearMetrics(): void {
   metrics.length = 0
 }
 
@@ -265,9 +266,9 @@ export function clearMetrics(): void {
 // ========================================
 
 /**
- * Generate performance report for monitoring dashboard
+ * Generate human-readable performance report
  */
-export function generatePerformanceReport(): {
+function generatePerformanceReport(): {
   stats: PerformanceStats
   slowRequests: TimingMetrics[]
   routeStats: Record<string, { count: number; avgDuration: number }>

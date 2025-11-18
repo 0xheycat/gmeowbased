@@ -4,19 +4,42 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import clsx from 'clsx'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import QuestLoadingDeck from '@/components/Quest/QuestLoadingDeck'
 import { clearStorageCache, readStorageCache, writeStorageCache } from '@/lib/utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
-import OpsSnapshot from '@/components/dashboard/OpsSnapshot'
 import { useDashboardTelemetry } from '@/lib/dashboard-hooks'
-import BotManagerPanel from '@/components/admin/BotManagerPanel'
-import AdminHero from '@/components/admin/AdminHero'
-import TipScoringPanel from '@/components/admin/TipScoringPanel'
-import BadgeManagerPanel from '@/components/admin/BadgeManagerPanel'
-import EventMatrixPanel from '@/components/admin/EventMatrixPanel'
-import PartnerSnapshotPanel from '@/components/admin/PartnerSnapshotPanel'
 import { useTelemetryAlertNotifications } from '@/hooks/useTelemetryAlerts'
-import BotStatsConfigPanel from '@/components/admin/BotStatsConfigPanel'
+import AdminHero from '@/components/admin/AdminHero'
+
+// Heavy admin panels - dynamically loaded to reduce initial bundle
+const OpsSnapshot = dynamic(() => import('@/components/dashboard/OpsSnapshot'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-64" />,
+})
+
+const BotManagerPanel = dynamic(() => import('@/components/admin/BotManagerPanel'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const TipScoringPanel = dynamic(() => import('@/components/admin/TipScoringPanel'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const BadgeManagerPanel = dynamic(() => import('@/components/admin/BadgeManagerPanel'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const EventMatrixPanel = dynamic(() => import('@/components/admin/EventMatrixPanel'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const PartnerSnapshotPanel = dynamic(() => import('@/components/admin/PartnerSnapshotPanel'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const BotStatsConfigPanel = dynamic(() => import('@/components/admin/BotStatsConfigPanel'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
 
 const CACHE_KEY = 'gmeowAdminAnalytics_v1'
 const CACHE_TTL_MS = 60_000

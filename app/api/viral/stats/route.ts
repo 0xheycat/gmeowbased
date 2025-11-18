@@ -4,6 +4,8 @@ import { getViralTier, calculateEngagementScore, type EngagementMetrics } from '
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { withErrorHandler } from '@/lib/error-handler'
+import { withTiming } from '@/lib/middleware/timing'
+import { getCached } from '@/lib/cache'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -42,8 +44,8 @@ type TierBreakdown = {
   active: number
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
-  const ip = getClientIp(request)
+export const GET = withTiming(withErrorHandler(async (request: Request) => {
+  const ip = getClientIp(request as NextRequest)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
@@ -75,7 +77,12 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       )
     }
     
-    const supabase = getSupabaseServerClient()
+    // Fetch with cache (2 minute TTL)
+    const result = await getCached(
+      'viral-stats',
+      `fid:${fid}`,
+      async () => {
+        const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -176,12 +183,19 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       else if (tier.name === 'Active') tierBreakdown.active++
     })
     
-    return NextResponse.json({
+    return {
       fid,
       totalViralXp,
       totalCasts: casts.length,
       topCasts,
       tierBreakdown,
       averageXpPerCast: casts.length > 0 ? Math.round(totalViralXp / casts.length) : 0,
-    })
-})
+    }
+      },
+      { ttl: 120 }
+    )
+
+    const response = NextResponse.json(result)
+    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
+    return response
+}))

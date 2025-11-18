@@ -4,6 +4,7 @@
 // wizardState methods are memoized with useCallback, safe to use in dependencies
 
 import { useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
 import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
@@ -34,9 +35,20 @@ import {
 import { useNotifications } from '@/components/ui/live-notifications'
 import { Stepper } from '@/components/quest-wizard/components/Stepper'
 import { StepPanel } from '@/components/quest-wizard/components/StepPanel'
-import { PreviewCard } from '@/components/quest-wizard/components/PreviewCard'
-import { DebugPanel } from '@/components/quest-wizard/components/DebugPanel'
-import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
+import type { XpEventPayload } from '@/components/XPEventOverlay'
+
+// Heavy components - dynamically loaded
+const PreviewCard = dynamic(() => import('@/components/quest-wizard/components/PreviewCard').then(mod => ({ default: mod.PreviewCard })), {
+	loading: () => <div className="animate-pulse bg-white/5 rounded-lg h-96" />,
+})
+
+const DebugPanel = dynamic(() => import('@/components/quest-wizard/components/DebugPanel').then(mod => ({ default: mod.DebugPanel })), {
+	ssr: false,
+})
+
+const XPEventOverlay = dynamic(() => import('@/components/XPEventOverlay').then(mod => ({ default: mod.XPEventOverlay })), {
+	ssr: false,
+})
 
 export default function QuestWizard() {
 	const { context, isFrameReady, setFrameReady } = useMiniKit()

@@ -3,10 +3,12 @@ import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { listBadgeTemplates } from '@/lib/badges'
 import { withErrorHandler } from '@/lib/error-handler'
+import { withTiming } from '@/lib/middleware/timing'
+import { getCached, buildBadgeTemplatesKey } from '@/lib/cache'
 
 export const runtime = 'nodejs'
 
-export const GET = withErrorHandler(async (request: Request) => {
+export const GET = withTiming(withErrorHandler(async (request: Request) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -17,8 +19,14 @@ export const GET = withErrorHandler(async (request: Request) => {
     )
   }
 
-  const templates = await listBadgeTemplates({ includeInactive: false })
+  const templates = await getCached(
+    'badge-templates',
+    buildBadgeTemplatesKey(false),
+    () => listBadgeTemplates({ includeInactive: false }),
+    { ttl: 300 }
+  )
+  
   return NextResponse.json({ ok: true, templates }, {
-    headers: { 'cache-control': 's-maxage=60, stale-while-revalidate=120' },
+    headers: { 'cache-control': 's-maxage=180, stale-while-revalidate=300' },
   })
-})
+}))

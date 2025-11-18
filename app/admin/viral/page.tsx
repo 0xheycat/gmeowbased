@@ -16,13 +16,28 @@ import { validateAdminRequest } from '@/lib/admin-auth'
 import { headers } from 'next/headers'
 import { NextRequest } from 'next/server'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 
-// Client components
-import TierUpgradeFeed from '@/components/admin/viral/TierUpgradeFeed'
-import NotificationAnalytics from '@/components/admin/viral/NotificationAnalytics'
-import AchievementDistribution from '@/components/admin/viral/AchievementDistribution'
-import TopViralCasts from '@/components/admin/viral/TopViralCasts'
-import WebhookHealthMonitor from '@/components/admin/viral/WebhookHealthMonitor'
+// Client components - dynamically loaded to reduce initial bundle
+const TierUpgradeFeed = dynamic(() => import('@/components/admin/viral/TierUpgradeFeed'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const NotificationAnalytics = dynamic(() => import('@/components/admin/viral/NotificationAnalytics'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const AchievementDistribution = dynamic(() => import('@/components/admin/viral/AchievementDistribution'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const TopViralCasts = dynamic(() => import('@/components/admin/viral/TopViralCasts'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
+
+const WebhookHealthMonitor = dynamic(() => import('@/components/admin/viral/WebhookHealthMonitor'), {
+  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+})
 
 export default async function ViralAdminPage() {
   // Admin auth check

@@ -3,6 +3,8 @@ import { NeynarAPIClient } from '@neynar/nodejs-sdk'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
+import { withTiming } from '@/lib/middleware/timing'
+import { getCached, buildUserProfileKey } from '@/lib/cache'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
@@ -18,8 +20,8 @@ export const dynamic = 'force-dynamic'
  * 3. FID from MiniKit context
  * 4. Default to demo FID for testing (18139 - @heycat)
  */
-export const GET = withErrorHandler(async (req: NextRequest) => {
-  const ip = getClientIp(req)
+export const GET = withTiming(withErrorHandler(async (req: Request) => {
+  const ip = getClientIp(req as NextRequest)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
@@ -108,7 +110,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
       )
     }
 
-    // Fetch user from Neynar
+    // Fetch user from Neynar with cache
     if (!NEYNAR_API_KEY) {
       return NextResponse.json(
         { error: 'Neynar API not configured' },
@@ -116,8 +118,12 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
       )
     }
 
-    const neynar = new NeynarAPIClient({ apiKey: NEYNAR_API_KEY })
-    const user = await neynar.fetchBulkUsers({ fids: [parseInt(fid)] })
+    const profileData = await getCached(
+      'user-profile',
+      buildUserProfileKey(fidNumber),
+      async () => {
+        const neynar = new NeynarAPIClient({ apiKey: NEYNAR_API_KEY })
+        const user = await neynar.fetchBulkUsers({ fids: [parseInt(fid)] })
 
     if (!user?.users?.[0]) {
       return NextResponse.json(
@@ -128,16 +134,23 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
     const fcUser = user.users[0]
 
-    return NextResponse.json({
-      fid: fcUser.fid,
-      username: fcUser.username,
-      displayName: fcUser.display_name || fcUser.username,
-      pfpUrl: fcUser.pfp_url,
-      bio: fcUser.profile?.bio?.text || '',
-      followerCount: fcUser.follower_count || 0,
-      followingCount: fcUser.following_count || 0,
-      powerBadge: fcUser.power_badge || false,
-      verifiedAddresses: fcUser.verified_addresses || [],
-      custodyAddress: fcUser.custody_address,
-    })
-})
+        return {
+          fid: fcUser.fid,
+          username: fcUser.username,
+          displayName: fcUser.display_name || fcUser.username,
+          pfpUrl: fcUser.pfp_url,
+          bio: fcUser.profile?.bio?.text || '',
+          followerCount: fcUser.follower_count || 0,
+          followingCount: fcUser.following_count || 0,
+          powerBadge: fcUser.power_badge || false,
+          verifiedAddresses: fcUser.verified_addresses || [],
+          custodyAddress: fcUser.custody_address,
+        }
+      },
+      { ttl: 300 }
+    )
+
+    const response = NextResponse.json(profileData)
+    response.headers.set('Cache-Control', 's-maxage=180, stale-while-revalidate=300')
+    return response
+}))

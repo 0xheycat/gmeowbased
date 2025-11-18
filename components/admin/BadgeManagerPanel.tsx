@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
+import Image from 'next/image'
 
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
@@ -809,10 +810,9 @@ export default function BadgeManagerPanel() {
           {templates.map((template) => (
             <div key={template.id} className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="flex items-start gap-3">
-                <div className="h-16 w-16 overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-white/10 bg-black/40">
                   {template.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={template.imageUrl} alt={template.name} className="h-full w-full object-cover" />
+                    <Image src={template.imageUrl} alt={template.name} fill sizes="64px" className="object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-[11px] text-[var(--px-sub)]">
                       No art
@@ -1083,9 +1083,8 @@ export default function BadgeManagerPanel() {
                       <div key={badge.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                         <div className="flex items-start gap-3">
                           {badge.imageUrl && (
-                            <div className="h-12 w-12 overflow-hidden rounded-xl border border-white/10">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={badge.imageUrl} alt={badge.name} className="h-full w-full object-cover" />
+                            <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/10">
+                              <Image src={badge.imageUrl} alt={badge.name} fill sizes="48px" className="object-cover" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
@@ -1491,9 +1490,8 @@ export default function BadgeManagerPanel() {
                       </label>
                     </div>
                     {formState.imageUrl ? (
-                      <div className="mt-3 overflow-hidden rounded-xl border border-white/10">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={formState.imageUrl} alt="Badge preview" className="h-48 w-full object-cover" />
+                      <div className="relative mt-3 h-48 overflow-hidden rounded-xl border border-white/10">
+                        <Image src={formState.imageUrl} alt="Badge preview" fill sizes="400px" className="object-cover" />
                       </div>
                     ) : null}
                   </div>
