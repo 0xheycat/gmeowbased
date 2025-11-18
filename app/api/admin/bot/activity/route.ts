@@ -8,6 +8,7 @@ import { extractHttpErrorMessage } from '@/lib/http-error'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { withErrorHandler } from '@/lib/error-handler'
+import { AdminQuerySchema } from '@/lib/validation/api-schemas'
 
 export const runtime = 'nodejs'
 
@@ -575,6 +576,21 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   
   if (!success) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+  }
+
+  // Validate query parameters
+  const { searchParams } = new URL(req.url)
+  const queryValidation = AdminQuerySchema.safeParse({
+    limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+    offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
+    timeframe: searchParams.get('timeframe') || undefined,
+  })
+  
+  if (!queryValidation.success) {
+    return NextResponse.json(
+      { error: 'validation_error', issues: queryValidation.error.issues },
+      { status: 400 }
+    )
   }
 
   const auth = await validateAdminRequest(req)

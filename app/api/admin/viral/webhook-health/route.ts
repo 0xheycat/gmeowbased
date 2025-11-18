@@ -15,6 +15,7 @@ import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { withErrorHandler } from '@/lib/error-handler'
+import { AdminQuerySchema } from '@/lib/validation/api-schemas'
 
 type WebhookHealth = {
   last_webhook_at: string | null
@@ -36,6 +37,20 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
       { status: 429 }
+    )
+  }
+
+  // Validate query parameters
+  const { searchParams } = new URL(req.url)
+  const queryValidation = AdminQuerySchema.safeParse({
+    timeframe: searchParams.get('timeframe') || undefined,
+    limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+  })
+  
+  if (!queryValidation.success) {
+    return NextResponse.json(
+      { error: 'validation_error', issues: queryValidation.error.issues },
+      { status: 400 }
     )
   }
 

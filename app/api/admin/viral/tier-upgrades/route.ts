@@ -21,6 +21,7 @@ import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { NeynarAPIClient } from '@neynar/nodejs-sdk'
 import { withErrorHandler } from '@/lib/error-handler'
+import { AdminQuerySchema } from '@/lib/validation/api-schemas'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
