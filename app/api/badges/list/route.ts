@@ -3,14 +3,20 @@ import { getUserBadges } from '@/lib/badges'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
+import { withTiming } from '@/lib/middleware/timing'
+import { getCached, buildUserBadgesKey } from '@/lib/cache'
 
 export const dynamic = 'force-dynamic'
 
 /**
  * GET /api/badges/list?fid=123
  * Get all badges assigned to a user
+ * 
+ * Performance optimizations:
+ * - Cache results for 2 minutes
+ * - Request timing tracking
  */
-export const GET = withErrorHandler(async (request: Request) => {
+export const GET = withTiming(withErrorHandler(async (request: Request) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -40,12 +46,23 @@ export const GET = withErrorHandler(async (request: Request) => {
       )
     }
 
-    const badges = await getUserBadges(fidNumber)
+    // Fetch with cache (2 minute TTL)
+    const badges = await getCached(
+      'user-badges',
+      buildUserBadgesKey(fidNumber),
+      () => getUserBadges(fidNumber),
+      { ttl: 120 }
+    )
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       fid: fidNumber,
       badges,
       count: badges.length,
     })
-})
+
+    // Add cache headers for CDN/browser caching
+    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
+
+    return response
+}))
