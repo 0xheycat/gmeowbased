@@ -1,25 +1,25 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { withErrorHandler } from '@/lib/error-handler'
 
-const COOKIE_NAME = 'm_auth'
-const TOKEN = process.env.MAINTENANCE_TOKEN || 'Gmeow'
-const PASSWORD = process.env.MAINTENANCE_PASSWORD || '%^UpgR@deM3ow!$#'
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  const body = await req.json()
+  const { password } = body
 
-export async function POST(req: Request) {
-  try {
-    const { password } = (await req.json().catch(() => ({}))) as { password?: string }
-    if (!password || password !== PASSWORD) {
-      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
-    }
-    const res = NextResponse.json({ ok: true })
-    res.cookies.set(COOKIE_NAME, TOKEN, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24, // 24h
-    })
-    return res
-  } catch {
-    return NextResponse.json({ ok: false, error: 'Bad request' }, { status: 400 })
+  if (password !== process.env.MAINTENANCE_PASSWORD) {
+    return NextResponse.json(
+      { error: 'Invalid password' },
+      { status: 401 }
+    )
   }
-}
+
+  const cookieStore = await cookies()
+  cookieStore.set('maintenance_auth', 'true', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24, // 24 hours
+  })
+
+  return NextResponse.json({ success: true })
+})

@@ -11,6 +11,7 @@ function formatEvent(event: string, data: unknown) {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
 }
 
+// Note: Streaming SSE response doesn't use withErrorHandler due to Response type
 export async function GET(req: NextRequest) {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
@@ -69,9 +70,9 @@ export async function GET(req: NextRequest) {
 
   return new Response(stream, {
     headers: {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
     },
   })
 }

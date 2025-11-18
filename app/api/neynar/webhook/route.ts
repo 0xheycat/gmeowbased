@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
 
 import { parseWebhookEvent, verifyAppKeyWithNeynar } from '@farcaster/miniapp-node'
 import { rateLimit, getClientIp, webhookLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 import { loadBotStatsConfig } from '@/lib/bot-config'
 import { buildAgentAutoReply } from '@/lib/agent-auto-reply'
@@ -455,7 +456,7 @@ async function handleViralEngagementSync(
 }
 // ============================================================================
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, webhookLimiter)
   
@@ -683,4 +684,4 @@ export async function POST(req: NextRequest) {
       { status: isDuplicate ? 200 : 502 }
     )
   }
-}
+})

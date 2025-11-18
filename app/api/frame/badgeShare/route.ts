@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import {
@@ -21,15 +22,13 @@ function getBaseUrl(request: NextRequest): string {
  * Shareable frame for a specific badge with OG image preview.
  * Route: /api/frame/badgeShare?fid=xxx&badgeId=yyy
  */
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return new NextResponse('Rate limit exceeded', { status: 429 })
   }
-
-  try {
     const { searchParams } = new URL(request.url)
     const fidParam = searchParams.get('fid')
     const badgeIdParam = searchParams.get('badgeId')
@@ -197,8 +196,4 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'public, max-age=300, s-maxage=300',
       },
     })
-  } catch (error) {
-    console.error('[Frame BadgeShare] Error:', error)
-    return new NextResponse('Internal server error', { status: 500 })
-  }
-}
+})
