@@ -49,6 +49,19 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     )
   }
 
+  // Validate query parameters
+  const { searchParams } = new URL(req.url)
+  const queryValidation = AdminQuerySchema.safeParse({
+    timeframe: searchParams.get('timeframe') || undefined,
+  })
+  
+  if (!queryValidation.success) {
+    return NextResponse.json(
+      { error: 'validation_error', issues: queryValidation.error.issues },
+      { status: 400 }
+    )
+  }
+
   // 1. Admin auth check
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
@@ -59,7 +72,6 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   }
 
     // 2. Parse query params
-    const { searchParams } = new URL(req.url)
     const timeframe = searchParams.get('timeframe') ?? '7d'
 
     const supabase = getSupabaseServerClient()
