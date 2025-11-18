@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { withErrorHandler } from '@/lib/error-handler'
+import { LeaderboardQuerySchema } from '@/lib/validation/api-schemas'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -43,11 +44,23 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const { searchParams } = new URL(request.url)
     
-    // GI-11: Input validation with defaults
-    const limitParam = searchParams.get('limit') || '50'
-    const limit = Math.min(Math.max(1, parseInt(limitParam, 10) || 50), 100) // Max 100
-    
-    const chain = searchParams.get('chain') || 'all'
+    // GI-8: Validate query parameters
+    const queryValidation = LeaderboardQuerySchema.safeParse({
+      chain: searchParams.get('chain') || undefined,
+      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+      offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
+    })
+
+    if (!queryValidation.success) {
+      return NextResponse.json(
+        { error: 'validation_error', issues: queryValidation.error.issues },
+        { status: 400 }
+      )
+    }
+
+    const validated = queryValidation.data
+    const limit = validated.limit ?? 50
+    const chain = validated.chain || 'all'
     const season = searchParams.get('season') || 'current'
     
     const supabase = getSupabaseServerClient()
