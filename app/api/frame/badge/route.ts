@@ -37,16 +37,23 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const badgeRegistry = loadBadgeRegistry()
 
     if (badges.length === 0) {
-      // No badges frame
+      // No badges frame - use JSON format per Farcaster spec
+      const noBadgesEmbed = {
+        version: '1',
+        imageUrl: `${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&state=none`,
+        button: {
+          title: 'View Profile',
+          action: {
+            type: 'link',
+            url: `${getBaseUrl(request)}/profile/${fid}`
+          }
+        }
+      }
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
   <head>
-    <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&state=none" />
-    <meta property="fc:frame:button:1" content="View Profile" />
-    <meta property="fc:frame:button:1:action" content="link" />
-    <meta property="fc:frame:button:1:target" content="${getBaseUrl(request)}/profile/${fid}" />
+    <meta name="fc:frame" content='${JSON.stringify(noBadgesEmbed).replace(/'/g, "&#39;")}' />
     <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&state=none" />
     <meta property="og:title" content="No Badges Yet" />
     <meta property="og:description" content="This user hasn't earned any badges yet." />
@@ -80,20 +87,22 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       accent: '#FFFFFF',
     }
 
-    // Build frame HTML
+    // Build frame HTML - JSON format per Farcaster spec
+    const badgeEmbed = {
+      version: '1',
+      imageUrl: `${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${latestBadge.badgeId}`,
+      button: {
+        title: 'View Badge Inventory',
+        action: {
+          type: 'link',
+          url: `${getBaseUrl(request)}/profile/${fid}/badges`
+        }
+      }
+    }
     const frameHtml = `<!DOCTYPE html>
 <html>
   <head>
-    <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${latestBadge.badgeId}" />
-    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
-    <meta property="fc:frame:button:1" content="View Badge Inventory" />
-    <meta property="fc:frame:button:1:action" content="link" />
-    <meta property="fc:frame:button:1:target" content="${getBaseUrl(request)}/profile/${fid}/badges" />
-    <meta property="fc:frame:button:2" content="${latestBadge.minted ? 'View on Explorer' : 'Mint Badge'}" />
-    <meta property="fc:frame:button:2:action" content="link" />
-    <meta property="fc:frame:button:2:target" content="${latestBadge.minted && latestBadge.txHash ? `https://basescan.org/tx/${latestBadge.txHash}` : `${getBaseUrl(request)}/profile/${fid}/badges`}" />
-    
+    <meta name="fc:frame" content='${JSON.stringify(badgeEmbed).replace(/'/g, "&#39;")}' />
     <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${latestBadge.badgeId}" />
     <meta property="og:title" content="${(latestBadge.metadata as { name?: string })?.name || latestBadge.badgeType} Badge" />
     <meta property="og:description" content="${(latestBadge.metadata as { description?: string })?.description || `${tierConfig.name} tier badge`}" />
