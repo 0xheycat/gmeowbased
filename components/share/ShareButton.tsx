@@ -87,10 +87,16 @@ export default function ShareButton({
 
   const handleDeeplinkShare = () => {
     const text = generateShareText()
-    const encodedText = encodeURIComponent(text)
     
-    // Warpcast deep link format
-    const warpcastUrl = `https://warpcast.com/~/compose?text=${encodedText}`
+    // Build badge frame URL for embedding
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const badgeFrameUrl = `${baseUrl}/api/frame/badgeShare?fid=${fid}&badgeId=${badgeId}`
+    
+    // Build Warpcast compose URL with text and frame embed
+    const params = new URLSearchParams()
+    params.set('text', text)
+    params.append('embeds[]', badgeFrameUrl)
+    const warpcastUrl = `https://warpcast.com/~/compose?${params.toString()}`
     
     // Track share button click
     trackEvent('badge_shared', {
@@ -101,7 +107,7 @@ export default function ShareButton({
       timestamp: new Date().toISOString()
     })
     
-    // Open Warpcast compose with pre-filled text
+    // Open Warpcast compose with pre-filled text and frame
     window.open(warpcastUrl, '_blank', 'noopener,noreferrer')
     
     // Show success state

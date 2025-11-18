@@ -74,14 +74,21 @@ export default function ProfilePage() {
   }, [])
 
     // Floating action button handlers
-  const handleQuickShare = useCallback(() => {
+  const handleQuickShare = useCallback(async () => {
     if (!profileData?.frameUrl) {
       pushNotification({ tone: 'warning', title: 'No frame URL', description: 'Profile frame is not available yet.' })
       return
     }
     const shareUrl = profileData.frameUrl
-    window.open(`https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(shareUrl)}`, '_blank')
-    pushNotification({ tone: 'success', title: 'Opening share', description: 'Redirecting to Warpcast composer...' })
+    const shareText = `Check out my GMEOW profile!`
+    try {
+      const { openWarpcastComposer } = await import('@/lib/share')
+      await openWarpcastComposer(shareText, shareUrl)
+      pushNotification({ tone: 'success', title: 'Opening share', description: 'Redirecting to Warpcast composer...' })
+    } catch (err) {
+      console.error('Share failed:', err)
+      pushNotification({ tone: 'error', title: 'Share failed', description: 'Could not open composer.' })
+    }
   }, [profileData?.frameUrl, pushNotification])
 
   const handleQuickCopy = useCallback(() => {
