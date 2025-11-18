@@ -4,10 +4,11 @@ import type { NextRequest } from 'next/server'
 import { resetNeynarClientCache } from '@/lib/neynar-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -22,4 +23,4 @@ export async function POST(req: NextRequest) {
 
   resetNeynarClientCache()
   return NextResponse.json({ ok: true, resetAt: new Date().toISOString() })
-}
+})

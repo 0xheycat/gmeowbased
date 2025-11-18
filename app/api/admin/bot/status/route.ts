@@ -13,6 +13,7 @@ import {
 } from '@/lib/neynar-bot'
 import { extractHttpErrorMessage } from '@/lib/http-error'
 import { validateAdminRequest } from '@/lib/admin-auth'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
@@ -28,7 +29,7 @@ function normalizeSigner(signer: Signer | null | undefined) {
   }
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -109,4 +110,4 @@ export async function GET(req: NextRequest) {
     warnings,
     signerError,
   })
-}
+})

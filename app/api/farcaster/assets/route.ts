@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { withErrorHandler } from '@/lib/error-handler'
 
 const ONCHAINKIT_API_KEY = process.env.ONCHAINKIT_API_KEY ?? process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ?? ''
 const ONCHAINKIT_RPC_BASE_URL = 'https://api.developer.coinbase.com/rpc/v1'
@@ -92,7 +93,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -112,44 +113,32 @@ export async function GET(request: NextRequest) {
   const nftQuery = ((params.get('nftQuery') ?? '').trim() || 'cats').slice(0, 140)
 
   if (section === 'tokens') {
-    try {
-      const { tokens, warnings } = await fetchTokenCatalog({ chains, tokenTerm, limit, includePrice })
-      return NextResponse.json({ ok: true, tokens, tokenWarnings: warnings }, { status: 200 })
-    } catch (error) {
-      return NextResponse.json({ ok: false, error: formatError(error) }, { status: 500 })
-    }
+    const { tokens, warnings } = await fetchTokenCatalog({ chains, tokenTerm, limit, includePrice })
+    return NextResponse.json({ ok: true, tokens, tokenWarnings: warnings }, { status: 200 })
   }
 
   if (section === 'nfts') {
-    try {
-      const { nfts, warnings } = await fetchAlchemyCatalog({ chains, query: nftQuery, limit })
-      return NextResponse.json({ ok: true, nfts, nftWarnings: warnings }, { status: 200 })
-    } catch (error) {
-      return NextResponse.json({ ok: false, error: formatError(error) }, { status: 500 })
-    }
+    const { nfts, warnings } = await fetchAlchemyCatalog({ chains, query: nftQuery, limit })
+    return NextResponse.json({ ok: true, nfts, nftWarnings: warnings }, { status: 200 })
   }
 
-  try {
-    const [tokenResult, nftResult] = await Promise.allSettled([
-      fetchTokenCatalog({ chains, tokenTerm, limit, includePrice }),
-      fetchAlchemyCatalog({ chains, query: nftQuery, limit }),
-    ])
+  const [tokenResult, nftResult] = await Promise.allSettled([
+    fetchTokenCatalog({ chains, tokenTerm, limit, includePrice }),
+    fetchAlchemyCatalog({ chains, query: nftQuery, limit }),
+  ])
 
-    const tokens: TokenCatalogEntry[] = tokenResult.status === 'fulfilled' ? tokenResult.value.tokens : []
-    const tokenWarnings: string[] =
-      tokenResult.status === 'fulfilled' ? tokenResult.value.warnings : [`tokens: ${formatError(tokenResult.reason)}`]
+  const tokens: TokenCatalogEntry[] = tokenResult.status === 'fulfilled' ? tokenResult.value.tokens : []
+  const tokenWarnings: string[] =
+    tokenResult.status === 'fulfilled' ? tokenResult.value.warnings : [`tokens: ${formatError(tokenResult.reason)}`]
 
-    const nfts: NftCatalogEntry[] = nftResult.status === 'fulfilled' ? nftResult.value.nfts : []
-    const nftWarnings: string[] =
-      nftResult.status === 'fulfilled' ? nftResult.value.warnings : [`nfts: ${formatError(nftResult.reason)}`]
+  const nfts: NftCatalogEntry[] = nftResult.status === 'fulfilled' ? nftResult.value.nfts : []
+  const nftWarnings: string[] =
+    nftResult.status === 'fulfilled' ? nftResult.value.warnings : [`nfts: ${formatError(nftResult.reason)}`]
 
-    const ok = tokenResult.status === 'fulfilled' || nftResult.status === 'fulfilled'
+  const ok = tokenResult.status === 'fulfilled' || nftResult.status === 'fulfilled'
 
-    return NextResponse.json({ ok, tokens, nfts, tokenWarnings, nftWarnings }, { status: ok ? 200 : 500 })
-  } catch (error) {
-    return NextResponse.json({ ok: false, error: formatError(error) }, { status: 500 })
-  }
-}
+  return NextResponse.json({ ok, tokens, nfts, tokenWarnings, nftWarnings }, { status: ok ? 200 : 500 })
+})
 
 type TokenCatalogOptions = {
   chains: ChainKey[]

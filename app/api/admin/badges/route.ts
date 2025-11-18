@@ -6,6 +6,7 @@ import { createBadgeTemplate, invalidateBadgeCaches, listBadgeTemplates } from '
 import { validateAdminRequest } from '@/lib/admin-auth'
 import type { BadgeTemplateInput } from '@/lib/badges'
 import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
@@ -60,7 +61,7 @@ function parseTemplateInput(body: any): BadgeTemplateInput {
   } as BadgeTemplateInput
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -76,18 +77,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
   }
 
-  try {
-    const force = req.nextUrl.searchParams.get('refresh') === '1'
-    const templates = await listBadgeTemplates({ includeInactive: true, force, throwOnMissingTable: true })
-    return NextResponse.json({ ok: true, templates })
-  } catch (error) {
-    const message = (error as Error)?.message || 'Failed to load badge templates'
-    const missingTable = typeof message === 'string' && message.includes('Supabase table')
-    return NextResponse.json({ ok: false, error: message, missingTable }, { status: 500 })
-  }
-}
+  const force = req.nextUrl.searchParams.get('refresh') === '1'
+  const templates = await listBadgeTemplates({ includeInactive: true, force, throwOnMissingTable: true })
+  return NextResponse.json({ ok: true, templates })
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -103,29 +98,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
   }
 
-  try {
-    const body = await req.json()
-    
-    // Zod validation
-    const validation = AdminBadgeCreateSchema.safeParse(body)
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          ok: false, 
-          error: 'Invalid badge data',
-          details: validation.error.flatten()
-        },
-        { status: 400 }
-      )
-    }
-    
-    const input = parseTemplateInput(body)
-    const template = await createBadgeTemplate(input)
-    await invalidateBadgeCaches()
-    return NextResponse.json({ ok: true, template }, { status: 201 })
-  } catch (error) {
-    const message = (error as Error)?.message || 'Failed to create badge template'
-    const status = /required|invalid|exists/i.test(message) ? 400 : 500
-    return NextResponse.json({ ok: false, error: message }, { status })
+  const body = await req.json()
+  
+  // Zod validation
+  const validation = AdminBadgeCreateSchema.safeParse(body)
+  if (!validation.success) {
+    return NextResponse.json(
+      { 
+        ok: false, 
+        error: 'Invalid badge data',
+        details: validation.error.flatten()
+      },
+      { status: 400 }
+    )
   }
-}
+  
+  const input = parseTemplateInput(body)
+  const template = await createBadgeTemplate(input)
+  await invalidateBadgeCaches()
+  return NextResponse.json({ ok: true, template }, { status: 201 })
+})

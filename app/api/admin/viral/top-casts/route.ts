@@ -19,6 +19,7 @@ import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { NeynarAPIClient } from '@neynar/nodejs-sdk'
+import { withErrorHandler } from '@/lib/error-handler'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
@@ -36,7 +37,7 @@ type ViralCast = {
   avatar_url?: string
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -47,15 +48,14 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  try {
-    // 1. Admin auth check
-    const auth = await validateAdminRequest(req)
-    if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-      return NextResponse.json(
-        { ok: false, error: 'admin_auth_required', reason: auth.reason },
-        { status: 401 }
-      )
-    }
+  // 1. Admin auth check
+  const auth = await validateAdminRequest(req)
+  if (!auth.ok && auth.reason !== 'admin_security_disabled') {
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401 }
+    )
+  }
 
     // 2. Parse query params
     const { searchParams } = new URL(req.url)
@@ -156,22 +156,11 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 5. Return leaderboard
-    return NextResponse.json({
-      ok: true,
-      casts: enrichedCasts,
-      timeframe,
-      limit,
-    })
-  } catch (error) {
-    console.error('[top-casts] Unexpected error:', error)
-    return NextResponse.json(
-      {
-        ok: false,
-        error: 'internal_error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
-  }
-}
+  // 5. Return leaderboard
+  return NextResponse.json({
+    ok: true,
+    casts: enrichedCasts,
+    timeframe,
+    limit,
+  })
+})

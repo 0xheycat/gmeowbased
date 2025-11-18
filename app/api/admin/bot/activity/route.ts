@@ -7,6 +7,7 @@ import { fetchFidByUsername, fetchUserByFid, type FarcasterUser } from '@/lib/ne
 import { extractHttpErrorMessage } from '@/lib/http-error'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
@@ -568,7 +569,7 @@ function buildCastDigest(raw: any): CastDigest | null {
   }
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -709,4 +710,4 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json(payload, { status: 200 })
-}
+})

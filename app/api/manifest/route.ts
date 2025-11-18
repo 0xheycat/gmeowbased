@@ -1,5 +1,6 @@
 import { domainManifestSchema } from '@farcaster/miniapp-core'
 import { NextResponse } from 'next/server'
+import { withErrorHandler } from '@/lib/error-handler'
 
 const DEFAULT_BASE_URL = 'https://gmeowhq.art'
 const PLACEHOLDER_PATTERN = /^(?:REPLACE|PLACEHOLDER|TODO|FILL_ME)/i
@@ -65,60 +66,52 @@ const buildBaseUrl = () => {
 const toAbsoluteUrl = (pathname: string, baseUrl: URL) =>
   new URL(pathname, baseUrl).toString()
 
-export async function GET() {
-  try {
-    const baseUrl = buildBaseUrl()
-    const accountAssociation = resolveAccountAssociation()
-    const baseBuilder = resolveBaseBuilder()
+export const GET = withErrorHandler(async () => {
+  const baseUrl = buildBaseUrl()
+  const accountAssociation = resolveAccountAssociation()
+  const baseBuilder = resolveBaseBuilder()
 
-    const manifestCore = domainManifestSchema.parse({
-      accountAssociation,
-      miniapp: {
-        version: '1.1',
-        name: 'Gmeowbased Adventure',
-        iconUrl: toAbsoluteUrl('/favicon.ico', baseUrl),
-        homeUrl: toAbsoluteUrl('/', baseUrl),
-        splashImageUrl: toAbsoluteUrl('/splash.png', baseUrl),
-        splashBackgroundColor: '#0B0A16',
-        webhookUrl: toAbsoluteUrl('/api/neynar/webhook', baseUrl),
-        subtitle: 'Daily GM Quest Hub',
-        description:
-          'Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
-        primaryCategory: 'social',
-        tags: ['gm', 'streak', 'base', 'social', 'daily'],
-        heroImageUrl: toAbsoluteUrl('/hero.png', baseUrl),
-        tagline: 'Keep your GM streak alive',
-        ogTitle: 'Gmeowbased Quest Game',
-        ogDescription:
-          'Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.',
-        ogImageUrl: toAbsoluteUrl('/og-image.png', baseUrl),
-        noindex: false,
-        canonicalDomain: baseUrl.hostname,
-        requiredChains: ['eip155:8453', 'eip155:10', 'eip155:42220'],
-        requiredCapabilities: [
-          'actions.ready',
-          'actions.composeCast',
-          'wallet.getEthereumProvider',
-        ],
-      },
-    })
+  const manifestCore = domainManifestSchema.parse({
+    accountAssociation,
+    miniapp: {
+      version: '1.1',
+      name: 'Gmeowbased Adventure',
+      iconUrl: toAbsoluteUrl('/favicon.ico', baseUrl),
+      homeUrl: toAbsoluteUrl('/', baseUrl),
+      splashImageUrl: toAbsoluteUrl('/splash.png', baseUrl),
+      splashBackgroundColor: '#0B0A16',
+      webhookUrl: toAbsoluteUrl('/api/neynar/webhook', baseUrl),
+      subtitle: 'Daily GM Quest Hub',
+      description:
+        'Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
+      primaryCategory: 'social',
+      tags: ['gm', 'streak', 'base', 'social', 'daily'],
+      heroImageUrl: toAbsoluteUrl('/hero.png', baseUrl),
+      tagline: 'Keep your GM streak alive',
+      ogTitle: 'Gmeowbased Quest Game',
+      ogDescription:
+        'Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.',
+      ogImageUrl: toAbsoluteUrl('/og-image.png', baseUrl),
+      noindex: false,
+      canonicalDomain: baseUrl.hostname,
+      requiredChains: ['eip155:8453', 'eip155:10', 'eip155:42220'],
+      requiredCapabilities: [
+        'actions.ready',
+        'actions.composeCast',
+        'wallet.getEthereumProvider',
+      ],
+    },
+  })
 
-    const manifest = {
-      ...manifestCore,
-      baseBuilder,
-    }
-
-    return NextResponse.json(manifest, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600',
-      },
-    })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to build domain manifest'
-    return NextResponse.json(
-      { ok: false, error: 'manifest_generation_failed', message },
-      { status: 500 },
-    )
+  const manifest = {
+    ...manifestCore,
+    baseBuilder,
   }
-}
+
+  return NextResponse.json(manifest, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=3600',
+    },
+  })
+})

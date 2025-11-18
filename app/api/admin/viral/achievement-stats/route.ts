@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
+import { withErrorHandler } from '@/lib/error-handler'
 
 type AchievementStat = {
   type: string
@@ -29,7 +30,7 @@ type AchievementTimeline = {
   mega_viral_master: number
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -40,15 +41,14 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  try {
-    // 1. Admin auth check
-    const auth = await validateAdminRequest(req)
-    if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-      return NextResponse.json(
-        { ok: false, error: 'admin_auth_required', reason: auth.reason },
-        { status: 401 }
-      )
-    }
+  // 1. Admin auth check
+  const auth = await validateAdminRequest(req)
+  if (!auth.ok && auth.reason !== 'admin_security_disabled') {
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401 }
+    )
+  }
 
     const supabase = getSupabaseServerClient()
     if (!supabase) {
@@ -146,25 +146,14 @@ export async function GET(req: NextRequest) {
         ...stats,
       }))
 
-    // 7. Return statistics
-    return NextResponse.json({
-      ok: true,
-      achievements: achievementStats,
-      total_users_with_achievements: totalUsersWithAchievements ?? 0,
-      timeline,
-    })
-  } catch (error) {
-    console.error('[achievement-stats] Unexpected error:', error)
-    return NextResponse.json(
-      {
-        ok: false,
-        error: 'internal_error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
-  }
-}
+  // 7. Return statistics
+  return NextResponse.json({
+    ok: true,
+    achievements: achievementStats,
+    total_users_with_achievements: totalUsersWithAchievements ?? 0,
+    timeline,
+  })
+})
 
 /**
  * Get the Monday of the week for a given date
