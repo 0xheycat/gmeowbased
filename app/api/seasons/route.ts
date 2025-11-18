@@ -5,13 +5,33 @@ import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, 
 import { getRpcUrl } from '@/lib/rpc'
 import { SeasonQuerySchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
+import { withTiming } from '@/lib/middleware/timing'
+
+type SeasonTuple = readonly [bigint, bigint, bigint, boolean, string, boolean]
+type SeasonInfo = {
+  id: number
+  startTime: number
+  endTime: number
+  totalRewards: string
+  isActive: boolean
+  rewardToken: string
+  finalized: boolean
+  current: boolean
+}
+
+type SeasonsResponse = {
+  ok: true
+  chain: ChainKey
+  seasons: SeasonInfo[]
+  reason?: string
+}
 
 const CACHE_TTL = 30_000
 let cache: { key: string; at: number; data: SeasonsResponse } | null = null
 
 const HAS_SEASON_ABI = gmContractHasFunction('getAllSeasons') && gmContractHasFunction('getSeason')
 
-export const GET = withErrorHandler(async (req: Request) => {
+export const GET = withTiming(withErrorHandler(async (req: Request) => {
   const url = new URL(req.url)
   
   // Validate query parameters with Zod
@@ -104,23 +124,4 @@ export const GET = withErrorHandler(async (req: Request) => {
   const data: SeasonsResponse = { ok: true, chain, seasons: out.sort((a, b) => b.id - a.id) }
   cache = { key, at: Date.now(), data }
   return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
-})
-
-type SeasonTuple = readonly [bigint, bigint, bigint, boolean, string, boolean]
-type SeasonInfo = {
-  id: number
-  startTime: number
-  endTime: number
-  totalRewards: string
-  isActive: boolean
-  rewardToken: string
-  finalized: boolean
-  current: boolean
-}
-
-type SeasonsResponse = {
-  ok: true
-  chain: ChainKey
-  seasons: SeasonInfo[]
-  reason?: string
-}
+}))

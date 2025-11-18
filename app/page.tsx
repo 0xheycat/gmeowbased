@@ -2,18 +2,38 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
+import dynamic from 'next/dynamic'
 import { MiniappReady } from '@/components/MiniappReady'
 import { OnboardingFlow } from '@/components/intro/OnboardingFlow'
 import { HeroSection } from '@/components/home/HeroSection'
 import { OnchainHub } from '@/components/home/OnchainHub'
-import { HowItWorks } from '@/components/home/HowItWorks'
-import { LiveQuests } from '@/components/home/LiveQuests'
-import { GuildsShowcase } from '@/components/home/GuildsShowcase'
-import { LeaderboardSection } from '@/components/home/LeaderboardSection'
-import { FAQSection } from '@/components/home/FAQSection'
-import { ConnectWalletSection } from '@/components/home/ConnectWalletSection'
 import type { FAQItem, GuildPreview, HeroUser, LeaderboardEntry, QuestPreview } from '@/components/home/types'
 import { fetchUserByAddress, type FarcasterUser } from '@/lib/neynar'
+
+// Below-fold sections - dynamically loaded to improve initial page load
+const HowItWorks = dynamic(() => import('@/components/home/HowItWorks').then(mod => ({ default: mod.HowItWorks })), {
+  loading: () => <div className="animate-pulse bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+})
+
+const LiveQuests = dynamic(() => import('@/components/home/LiveQuests').then(mod => ({ default: mod.LiveQuests })), {
+  loading: () => <div className="animate-pulse bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+})
+
+const GuildsShowcase = dynamic(() => import('@/components/home/GuildsShowcase').then(mod => ({ default: mod.GuildsShowcase })), {
+  loading: () => <div className="animate-pulse bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+})
+
+const LeaderboardSection = dynamic(() => import('@/components/home/LeaderboardSection').then(mod => ({ default: mod.LeaderboardSection })), {
+  loading: () => <div className="animate-pulse bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+})
+
+const FAQSection = dynamic(() => import('@/components/home/FAQSection').then(mod => ({ default: mod.FAQSection })), {
+  loading: () => <div className="animate-pulse bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+})
+
+const ConnectWalletSection = dynamic(() => import('@/components/home/ConnectWalletSection').then(mod => ({ default: mod.ConnectWalletSection })), {
+  loading: () => <div className="animate-pulse bg-white/5 rounded-lg h-64 mx-auto max-w-6xl my-16" />,
+})
 
 const QUEST_PREVIEWS: QuestPreview[] = [
   {

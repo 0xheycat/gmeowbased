@@ -168,7 +168,11 @@ const memoryCache = new MemoryCache(1000)
 // EXTERNAL CACHE (L2) - Vercel KV / Redis
 // ========================================
 
-const USE_EXTERNAL_CACHE = !!process.env.KV_REST_API_URL || !!process.env.REDIS_URL
+// @vercel/kv automatically uses KV_REST_API_URL or UPSTASH_REDIS_REST_URL
+const USE_EXTERNAL_CACHE = 
+  !!process.env.KV_REST_API_URL || 
+  !!process.env.UPSTASH_REDIS_REST_URL || 
+  !!process.env.REDIS_URL
 
 let externalHits = 0
 let externalMisses = 0
@@ -252,7 +256,7 @@ async function deletePatternFromExternal(namespace: string, pattern: string): Pr
  * @param options - Cache options (ttl, staleWhileRevalidate, etc.)
  * @returns Cached or freshly fetched data
  */
-export async function getCached<T>(
+async function getCached<T>(
   namespace: string,
   key: string,
   fetcher: () => Promise<T>,
@@ -260,8 +264,8 @@ export async function getCached<T>(
 ): Promise<T> {
   const {
     ttl = 60,
-    staleWhileRevalidate = false,
-    staleWindow = ttl * 2,
+    // staleWhileRevalidate = false, // TODO: Implement stale-while-revalidate
+    // staleWindow = ttl * 2,
     skipMemory = false,
     skipExternal = false,
     force = false,
@@ -311,7 +315,7 @@ export async function getCached<T>(
  * @param namespace - Cache namespace
  * @param key - Cache key to invalidate
  */
-export async function invalidateCache(namespace: string, key: string): Promise<void> {
+async function invalidateCache(namespace: string, key: string): Promise<void> {
   const cacheKey = `${namespace}:${key}`
   memoryCache.delete(cacheKey)
   await deleteFromExternal(namespace, key)
@@ -324,7 +328,7 @@ export async function invalidateCache(namespace: string, key: string): Promise<v
  * @param pattern - Glob pattern (supports * wildcard)
  * @returns Number of entries deleted
  */
-export async function invalidateCachePattern(namespace: string, pattern: string): Promise<number> {
+async function invalidateCachePattern(namespace: string, pattern: string): Promise<number> {
   const memDeleted = memoryCache.deletePattern(`${namespace}:${pattern}`)
   const extDeleted = await deletePatternFromExternal(namespace, pattern)
   return memDeleted + extDeleted
@@ -335,14 +339,14 @@ export async function invalidateCachePattern(namespace: string, pattern: string)
  * 
  * @param namespace - Cache namespace to clear
  */
-export async function clearCacheNamespace(namespace: string): Promise<void> {
+async function clearCacheNamespace(namespace: string): Promise<void> {
   await invalidateCachePattern(namespace, '*')
 }
 
 /**
  * Clear entire cache (all namespaces)
  */
-export function clearAllCache(): void {
+function clearAllCache(): void {
   memoryCache.clear()
   // Note: Cannot clear all external cache keys without scanning
   console.warn('[Cache] Cleared in-memory cache. External cache may still contain entries.')
@@ -351,7 +355,7 @@ export function clearAllCache(): void {
 /**
  * Get cache statistics
  */
-export function getCacheStats(): CacheStats {
+function getCacheStats(): CacheStats {
   const memStats = memoryCache.stats()
   const extTotal = externalHits + externalMisses
   
@@ -367,7 +371,7 @@ export function getCacheStats(): CacheStats {
 /**
  * Reset cache statistics
  */
-export function resetCacheStats(): void {
+function resetCacheStats(): void {
   externalHits = 0
   externalMisses = 0
   memoryCache.clear()
@@ -380,35 +384,35 @@ export function resetCacheStats(): void {
 /**
  * Build cache key for user badges
  */
-export function buildUserBadgesKey(fid: number): string {
+function buildUserBadgesKey(fid: number): string {
   return `user:${fid}:badges`
 }
 
 /**
  * Build cache key for user profile
  */
-export function buildUserProfileKey(fid: number): string {
+function buildUserProfileKey(fid: number): string {
   return `user:${fid}:profile`
 }
 
 /**
  * Build cache key for leaderboard
  */
-export function buildLeaderboardKey(season: string, page: number): string {
+function buildLeaderboardKey(season: string, page: number): string {
   return `leaderboard:${season}:page:${page}`
 }
 
 /**
  * Build cache key for quest status
  */
-export function buildQuestStatusKey(questId: string, fid: number): string {
+function buildQuestStatusKey(questId: string, fid: number): string {
   return `quest:${questId}:fid:${fid}`
 }
 
 /**
  * Build cache key for badge templates
  */
-export function buildBadgeTemplatesKey(includeInactive: boolean): string {
+function buildBadgeTemplatesKey(includeInactive: boolean): string {
   return `templates:${includeInactive ? 'all' : 'active'}`
 }
 
@@ -420,7 +424,7 @@ export function buildBadgeTemplatesKey(includeInactive: boolean): string {
  * Pre-warm cache with frequently accessed data
  * Call this on server startup or after cache clear
  */
-export async function warmCache(): Promise<void> {
+async function warmCache(): Promise<void> {
   console.log('[Cache] Cache warming started...')
   
   // Pre-load badge templates (most accessed)
