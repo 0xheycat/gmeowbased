@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { WebhookPayloadSchema } from '@/lib/validation/api-schemas'
 import {
   calculateViralBonus,
   hasMetricsIncreased,
@@ -248,6 +249,16 @@ export async function POST(request: NextRequest) {
     }
     
     const payload = JSON.parse(rawBody)
+    
+    // GI-8: Validate webhook payload structure
+    const validation = WebhookPayloadSchema.safeParse(payload)
+    if (!validation.success) {
+      console.error('[Webhook] Invalid payload structure:', validation.error.issues)
+      return NextResponse.json(
+        { error: 'Bad Request', message: 'Invalid payload structure', issues: validation.error.issues },
+        { status: 400 }
+      )
+    }
     
     // GI-7: Validate webhook event type
     if (payload.type !== 'cast.engagement.updated') {

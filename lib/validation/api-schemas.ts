@@ -168,3 +168,28 @@ export const BadgeUploadSchema = z.object({
   imageFile: z.string().min(1, 'Image file is required'),
   metadata: z.record(z.string(), z.unknown()).optional(),
 })
+
+// Frame action schema
+export const FrameActionSchema = z.object({
+  untrustedData: z.object({
+    fid: FIDSchema,
+    buttonIndex: z.number().int().min(1).max(4),
+    inputText: z.string().optional(),
+    castId: z.object({
+      fid: FIDSchema,
+      hash: z.string(),
+    }).optional(),
+    messageHash: z.string(),
+    timestamp: z.number().int().positive(),
+  }),
+  trustedData: z.object({
+    messageBytes: z.string(),
+  }),
+})
+
+// Webhook payload schema (Neynar webhooks)
+export const WebhookPayloadSchema = z.object({
+  type: z.enum(['cast.created', 'user.updated', 'reaction.created', 'follow.created']),
+  data: z.record(z.string(), z.unknown()),
+  created_at: z.number().int().positive(),
+})
