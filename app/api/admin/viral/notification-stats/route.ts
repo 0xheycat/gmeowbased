@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
+import { withErrorHandler } from '@/lib/error-handler'
 
 type NotificationStats = {
   total_sent: number
@@ -36,7 +37,7 @@ type NotificationStats = {
   avg_delivery_time_ms: number | null
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -47,15 +48,14 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  try {
-    // 1. Admin auth check
-    const auth = await validateAdminRequest(req)
-    if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-      return NextResponse.json(
-        { ok: false, error: 'admin_auth_required', reason: auth.reason },
-        { status: 401 }
-      )
-    }
+  // 1. Admin auth check
+  const auth = await validateAdminRequest(req)
+  if (!auth.ok && auth.reason !== 'admin_security_disabled') {
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401 }
+    )
+  }
 
     // 2. Parse query params
     const { searchParams } = new URL(req.url)
@@ -188,21 +188,10 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([date, { sent, failed }]) => ({ date, sent, failed }))
 
-    // 8. Return statistics
-    return NextResponse.json({
-      ok: true,
-      stats,
-      timeframe,
-    })
-  } catch (error) {
-    console.error('[notification-stats] Unexpected error:', error)
-    return NextResponse.json(
-      {
-        ok: false,
-        error: 'internal_error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
-  }
-}
+  // 8. Return statistics
+  return NextResponse.json({
+    ok: true,
+    stats,
+    timeframe,
+  })
+})

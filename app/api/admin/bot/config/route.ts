@@ -5,6 +5,7 @@ import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { loadBotStatsConfig, saveBotStatsConfig, sanitiseBotStatsConfigInput } from '@/lib/bot-config'
 import { DEFAULT_BOT_STATS_CONFIG, type BotStatsConfig } from '@/lib/bot-config-types'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
@@ -18,7 +19,7 @@ function toErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -41,9 +42,9 @@ export async function GET(req: NextRequest) {
     console.warn('[bot-config] Failed to load config for admin panel:', (error as Error)?.message || error)
     return NextResponse.json({ ok: true, config: { ...DEFAULT_BOT_STATS_CONFIG }, warning: toErrorMessage(error, 'Falling back to defaults.') })
   }
-}
+})
 
-export async function PUT(req: NextRequest) {
+export const PUT = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -75,4 +76,4 @@ export async function PUT(req: NextRequest) {
     const message = toErrorMessage(error, 'Unable to persist bot stats configuration.')
     return NextResponse.json({ ok: false, error: 'save_failed', message }, { status: 500 })
   }
-}
+})

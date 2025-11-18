@@ -4,10 +4,11 @@ import { BADGE_BUCKET_NAME, invalidateBadgeCaches, uploadBadgeArt } from '@/lib/
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -24,25 +25,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Supabase not configured' }, { status: 500 })
   }
 
-  try {
-    const form = await req.formData()
-    const file = form.get('file')
-    if (!(file instanceof File)) {
-      return NextResponse.json({ ok: false, error: 'file field is required' }, { status: 400 })
-    }
-
-    const { url, path } = await uploadBadgeArt(file)
-    const removePath = form.get('removePath')
-    if (removePath && typeof removePath === 'string' && removePath.trim().length > 0) {
-      const supabase = getSupabaseServerClient()
-      if (supabase) {
-        await supabase.storage.from(BADGE_BUCKET_NAME).remove([removePath])
-      }
-    }
-    await invalidateBadgeCaches()
-    return NextResponse.json({ ok: true, url, path })
-  } catch (error) {
-    const message = (error as Error)?.message || 'Failed to upload badge art'
-    return NextResponse.json({ ok: false, error: message }, { status: 500 })
+  const form = await req.formData()
+  const file = form.get('file')
+  if (!(file instanceof File)) {
+    return NextResponse.json({ ok: false, error: 'file field is required' }, { status: 400 })
   }
-}
+
+  const { url, path } = await uploadBadgeArt(file)
+  const removePath = form.get('removePath')
+  if (removePath && typeof removePath === 'string' && removePath.trim().length > 0) {
+    const supabase = getSupabaseServerClient()
+    if (supabase) {
+      await supabase.storage.from(BADGE_BUCKET_NAME).remove([removePath])
+    }
+  }
+  await invalidateBadgeCaches()
+  return NextResponse.json({ ok: true, url, path })
+})

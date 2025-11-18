@@ -13,8 +13,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotSignerUuid } from '@/lib/neynar-bot'
 import { getUserBadges } from '@/lib/badges'
-import { extractHttpErrorMessage } from '@/lib/http-error'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
@@ -54,7 +54,7 @@ function generateCastText(params: { fid: string; tier: TierType; badgeName?: str
   return text
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   let body: BadgeShareRequest
   try {
     body = (await req.json()) as BadgeShareRequest
@@ -91,80 +91,63 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  try {
-    // Validate badge ownership
-    const userBadges = await getUserBadges(fidNumber)
-    const ownsBadge = userBadges.some(b => b.badgeId === badgeId)
-    
-    if (!ownsBadge) {
-      return NextResponse.json(
-        { ok: false, error: 'User does not own this badge' },
-        { status: 403 }
-      )
-    }
-
-    // Generate cast text
-    const text = generateCastText({ fid, tier, badgeName })
-
-    // Build OG image embed URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                    'http://localhost:3000'
-    const ogImageUrl = `${baseUrl}/api/og/tier-card?fid=${fid}&badgeId=${badgeId}`
-
-    // Publish cast via Neynar API
-    const client = getNeynarServerClient()
-    const response = await client.publishCast({
-      signerUuid,
-      text,
-      embeds: [{ url: ogImageUrl }],
-    })
-
-    const castHash = response.cast?.hash
-    const castUrl = castHash ? `https://warpcast.com/~/conversations/${castHash}` : null
-
-    // Log cast to database for viral metrics tracking (Phase 5.8)
-    try {
-      const supabase = getSupabaseServerClient()
-      if (supabase && castHash) {
-        await supabase.from('badge_casts').insert({
-          fid: fidNumber,
-          badge_id: badgeId,
-          cast_hash: castHash,
-          cast_url: castUrl,
-          tier,
-          created_at: new Date().toISOString(),
-        })
-      }
-    } catch (logError) {
-      // Non-critical: log but don't fail the request
-      console.error('[badge-share] Failed to log cast to database:', logError)
-    }
-
-    return NextResponse.json({
-      ok: true,
-      cast: {
-        hash: castHash,
-        url: castUrl,
-        text,
-        embedUrl: ogImageUrl,
-      },
-      publishedAt: new Date().toISOString(),
-    })
-  } catch (error) {
-    const message = extractHttpErrorMessage(error, 'Failed to publish badge share cast')
-    
-    // Check for rate limit errors (Neynar: 500 requests per 5 minutes)
-    const isRateLimit = message.toLowerCase().includes('rate limit') || 
-                        message.toLowerCase().includes('too many requests')
-    
+  // Validate badge ownership
+  const userBadges = await getUserBadges(fidNumber)
+  const ownsBadge = userBadges.some(b => b.badgeId === badgeId)
+  
+  if (!ownsBadge) {
     return NextResponse.json(
-      { 
-        ok: false, 
-        error: message,
-        retryable: isRateLimit,
-      },
-      { status: isRateLimit ? 429 : 502 }
+      { ok: false, error: 'User does not own this badge' },
+      { status: 403 }
     )
   }
-}
+
+  // Generate cast text
+  const text = generateCastText({ fid, tier, badgeName })
+
+  // Build OG image embed URL
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                  'http://localhost:3000'
+  const ogImageUrl = `${baseUrl}/api/og/tier-card?fid=${fid}&badgeId=${badgeId}`
+
+  // Publish cast via Neynar API
+  const client = getNeynarServerClient()
+  const response = await client.publishCast({
+    signerUuid,
+    text,
+    embeds: [{ url: ogImageUrl }],
+  })
+
+  const castHash = response.cast?.hash
+  const castUrl = castHash ? `https://warpcast.com/~/conversations/${castHash}` : null
+
+  // Log cast to database for viral metrics tracking (Phase 5.8)
+  try {
+    const supabase = getSupabaseServerClient()
+    if (supabase && castHash) {
+      await supabase.from('badge_casts').insert({
+        fid: fidNumber,
+        badge_id: badgeId,
+        cast_hash: castHash,
+        cast_url: castUrl,
+        tier,
+        created_at: new Date().toISOString(),
+      })
+    }
+  } catch (logError) {
+    // Non-critical: log but don't fail the request
+    console.error('[badge-share] Failed to log cast to database:', logError)
+  }
+
+  return NextResponse.json({
+    ok: true,
+    cast: {
+      hash: castHash,
+      url: castUrl,
+      text,
+      embedUrl: ogImageUrl,
+    },
+    publishedAt: new Date().toISOString(),
+  })
+})

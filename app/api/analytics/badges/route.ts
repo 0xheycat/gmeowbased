@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 
 /**
  * Badge Analytics Endpoint
  * GET /api/analytics/badges
  * Returns: new badges in last 24h, badge distribution by tier, top 20 users by tier
  */
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
   // Apply rate limiting
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
@@ -19,14 +20,13 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  try {
-    const supabase = getSupabaseServerClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database unavailable' },
-        { status: 503 }
-      )
-    }
+  const supabase = getSupabaseServerClient()
+  if (!supabase) {
+    return NextResponse.json(
+      { error: 'Database unavailable' },
+      { status: 503 }
+    )
+  }
 
     // Calculate 24 hours ago timestamp
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -223,14 +223,4 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-  } catch (error) {
-    console.error('[Badge Analytics] Error:', error)
-    return NextResponse.json(
-      {
-        error: 'Failed to generate badge analytics',
-        message: (error as Error).message,
-      },
-      { status: 500 }
-    )
-  }
-}
+})

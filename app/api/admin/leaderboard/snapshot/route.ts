@@ -5,11 +5,11 @@ import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { syncSupabaseLeaderboard } from '@/lib/leaderboard-sync'
-import { extractHttpErrorMessage } from '@/lib/http-error'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -40,11 +40,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  try {
-    const result = await syncSupabaseLeaderboard({ supabase, logger: console })
-    return NextResponse.json({ ok: true, result })
-  } catch (error) {
-    const message = extractHttpErrorMessage(error, 'Failed to sync leaderboard snapshot')
-    return NextResponse.json({ ok: false, error: 'sync_failed', message }, { status: 500 })
-  }
-}
+  const result = await syncSupabaseLeaderboard({ supabase, logger: console })
+  return NextResponse.json({ ok: true, result })
+})
