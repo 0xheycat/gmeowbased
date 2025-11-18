@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { withErrorHandler, handleValidationError, handleNotFoundError, handleExternalApiError } from '@/lib/error-handler'
+import { FIDSchema } from '@/lib/validation/api-schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,15 +36,18 @@ function getTierFromScore(score: number): TierType {
  */
 export const GET = withErrorHandler(async (request: Request) => {
   const { searchParams } = new URL(request.url)
-  const fid = searchParams.get('fid')
+  const fidParam = searchParams.get('fid')
 
-  if (!fid) {
+  if (!fidParam) {
     return handleValidationError(new Error('Missing fid parameter'))
   }
 
-  const fidNumber = parseInt(fid, 10)
-  if (isNaN(fidNumber) || fidNumber <= 0) {
-    return handleValidationError(new Error(`Invalid fid parameter: ${fid}`))
+  const fidNumber = parseInt(fidParam, 10)
+  
+  // GI-8: Validate FID with Zod
+  const fidValidation = FIDSchema.safeParse(fidNumber)
+  if (!fidValidation.success) {
+    return handleValidationError(new Error(`Invalid fid parameter: must be a positive integer`))
   }
 
   const neynarClient = getNeynarServerClient()

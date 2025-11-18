@@ -2,14 +2,23 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
+import { FIDSchema } from '@/lib/validation/api-schemas'
 
 export const GET = withErrorHandler(async (req: Request) => {
   const { searchParams } = new URL(req.url)
-  const fid = searchParams.get('fid')
+  const fidParam = searchParams.get('fid')
   const networks = (searchParams.get('networks') || 'base').trim()
 
-  if (!fid) {
+  if (!fidParam) {
     return handleValidationError(new Error('Missing fid parameter'))
+  }
+
+  const fid = parseInt(fidParam, 10)
+  
+  // GI-8: Validate FID with Zod
+  const fidValidation = FIDSchema.safeParse(fid)
+  if (!fidValidation.success) {
+    return handleValidationError(new Error('Invalid fid parameter: must be a positive integer'))
   }
 
   const key = process.env.NEYNAR_API_KEY || process.env.NEXT_PUBLIC_NEYNAR_API_KEY
@@ -18,7 +27,7 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   const url = new URL('https://api.neynar.com/v2/farcaster/user/balance/')
-  url.searchParams.set('fid', fid)
+  url.searchParams.set('fid', String(fid))
   url.searchParams.set('networks', networks)
 
   const res = await fetch(url.toString(), { 

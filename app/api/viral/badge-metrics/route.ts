@@ -19,6 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { withErrorHandler } from '@/lib/error-handler'
+import { FIDSchema } from '@/lib/validation/api-schemas'
 
 type BadgeMetric = {
   badgeId: string
@@ -55,9 +56,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     
     const fid = parseInt(fidParam, 10)
     
-    if (isNaN(fid) || fid <= 0) {
+    // GI-8: Validate FID with Zod
+    const fidValidation = FIDSchema.safeParse(fid)
+    if (!fidValidation.success) {
       return NextResponse.json(
-        { error: 'Bad Request', message: 'Invalid fid parameter (must be positive integer)' },
+        { error: 'Bad Request', message: 'Invalid fid parameter', issues: fidValidation.error.issues },
         { status: 400 }
       )
     }
