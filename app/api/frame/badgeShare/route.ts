@@ -192,6 +192,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       ${targetBadge.minted ? '<div class="minted">✓ Minted On-Chain</div>' : ''}
       <p>${badgeDescription}</p>
       <p><a href="${getBaseUrl(request)}/profile/${fid}/badges" style="color: ${framePalette.accent}">View Full Collection →</a></p>
+      ${explorerUrl ? `<p><a href="${explorerUrl}" style="color: ${framePalette.primary}" target="_blank">View on Explorer →</a></p>` : ''}
     </div>
   </body>
 </html>`
