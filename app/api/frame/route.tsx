@@ -1146,21 +1146,21 @@ function buildFrameHtml(params: {
   
   // Build Frame metadata (Farcaster vNext format)
   // Reference: https://miniapps.farcaster.xyz/docs/specification
-  const primaryButton = validatedButtons[0]
-  const frameEmbedMeta = primaryButton && frameOrigin && imageEsc ? {
-    version: '1',
-    imageUrl: resolvedImage,
-    button: {
-      title: primaryButton.label,
-      action: {
-        type: 'launch_frame',
-        name: title,
-        url: frameOrigin,
-        splashImageUrl: `${frameOrigin}/splash.png`,
-        splashBackgroundColor: '#0B0A16'
+  const primaryButton = validatedButtons[0];
+const frameEmbedMeta =
+  primaryButton && frameOrigin && resolvedImage
+    ? {
+        version: '1',
+        imageUrl: resolvedImage, // or imageEsc if that's what you want
+        button: {
+          title: primaryButton.label,
+          action: {
+            type: 'link',
+            url: primaryButton.target || frameOrigin,
+          },
+        },
       }
-    }
-  } : null
+    : null;
   
   const linkButtons = validatedButtons.filter((btn) => (btn.action ?? 'link') === 'link' && !!btn.target)
   const primaryLink = linkButtons[0]
