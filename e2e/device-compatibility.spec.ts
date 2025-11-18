@@ -133,10 +133,10 @@ test.describe('Mobile Orientation Changes', () => {
     await page.setViewportSize({ width: 844, height: 390 }) // Landscape
     await page.goto('/')
 
-    const textSizeAdjust = await page.evaluate(() => 
-      window.getComputedStyle(document.documentElement).textSizeAdjust ||
-      window.getComputedStyle(document.documentElement).webkitTextSizeAdjust
-    )
+    const textSizeAdjust = await page.evaluate(() => {
+      const style = window.getComputedStyle(document.documentElement) as any
+      return style.textSizeAdjust || style.webkitTextSizeAdjust
+    })
 
     // Should be 100% to prevent iOS text scaling
     expect(textSizeAdjust).toMatch(/100%|none/)

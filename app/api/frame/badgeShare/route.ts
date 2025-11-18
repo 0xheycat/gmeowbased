@@ -63,19 +63,27 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const targetBadge = badges.find((b) => b.badgeId === badgeIdParam)
 
     if (!targetBadge) {
-      // Badge not found frame
+      // Badge not found frame (vNext JSON format)
+      const notFoundImageUrl = `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound`
+      const notFoundEmbed = {
+        version: '1',
+        imageUrl: notFoundImageUrl,
+        button: {
+          title: 'View All Badges',
+          action: {
+            type: 'link',
+            url: `${getBaseUrl(request)}/profile/${fid}/badges`,
+          },
+        },
+      }
+      
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
   <head>
-    <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound" />
-    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
-    <meta property="fc:frame:button:1" content="View All Badges" />
-    <meta property="fc:frame:button:1:action" content="link" />
-    <meta property="fc:frame:button:1:target" content="${getBaseUrl(request)}/profile/${fid}/badges" />
+    <meta name="fc:frame" content='${JSON.stringify(notFoundEmbed).replace(/'/g, "&#39;")}' />
     
-    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound" />
+    <meta property="og:image" content="${notFoundImageUrl}" />
     <meta property="og:title" content="Badge Not Found" />
     <meta property="og:description" content="This badge could not be found in the user's collection." />
   </head>
@@ -113,27 +121,26 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     // Build OG image URL
     const ogImageUrl = buildBadgeShareImageUrl(fid, badgeIdParam, getBaseUrl(request))
 
+    // Build Farcaster vNext JSON embed format
+    // Reference: https://miniapps.farcaster.xyz/docs/specification
+    // vNext requires JSON format in fc:frame meta tag (not legacy property-based tags)
+    const frameEmbed = {
+      version: '1',
+      imageUrl: ogImageUrl,
+      button: {
+        title: 'View Collection',
+        action: {
+          type: 'link',
+          url: `${getBaseUrl(request)}/profile/${fid}/badges`,
+        },
+      },
+    }
+
     // Build frame HTML
     const frameHtml = `<!DOCTYPE html>
 <html>
   <head>
-    <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="${ogImageUrl}" />
-    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
-    <meta property="fc:frame:button:1" content="View Full Collection" />
-    <meta property="fc:frame:button:1:action" content="link" />
-    <meta property="fc:frame:button:1:target" content="${getBaseUrl(request)}/profile/${fid}/badges" />
-    ${
-      explorerUrl
-        ? `<meta property="fc:frame:button:2" content="View on Explorer" />
-    <meta property="fc:frame:button:2:action" content="link" />
-    <meta property="fc:frame:button:2:target" content="${explorerUrl}" />`
-        : targetBadge.minted
-        ? ''
-        : `<meta property="fc:frame:button:2" content="Mint Badge" />
-    <meta property="fc:frame:button:2:action" content="link" />
-    <meta property="fc:frame:button:2:target" content="${getBaseUrl(request)}/profile/${fid}/badges" />`
-    }
+    <meta name="fc:frame" content='${JSON.stringify(frameEmbed).replace(/'/g, "&#39;")}' />
     
     <meta property="og:image" content="${ogImageUrl}" />
     <meta property="og:title" content="${badgeName} Badge" />

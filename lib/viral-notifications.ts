@@ -23,12 +23,20 @@
  * @module lib/viral-notifications
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { getNeynarServerClient } from './neynar-server'
 import { getSupabaseServerClient } from './supabase-server'
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
+
+// Dependencies interface for testing
+export type NotificationDependencies = {
+  supabase?: SupabaseClient
+  neynarClient?: any
+  rateLimiter?: NotificationRateLimiter
+}
 
 export type NotificationType = 'tier_upgrade' | 'achievement'
 
@@ -62,7 +70,7 @@ export type NotificationResult = {
 // Rate Limiter (GI-7, GI-11)
 // ============================================================================
 
-class NotificationRateLimiter {
+export class NotificationRateLimiter {
   private tokenLastUsed = new Map<string, number>()
   private tokenDailyCount = new Map<string, { count: number; date: string }>()
   
@@ -152,9 +160,14 @@ const rateLimiter = new NotificationRateLimiter()
  * - GI-7: Error handling with fallback
  * - GI-11: Token validation
  */
-async function getUserNotificationTokens(fid: number): Promise<string[]> {
+async function getUserNotificationTokens(fid: number, deps?: NotificationDependencies): Promise<string[]> {
   try {
-    const supabase = getSupabaseServerClient()
+    // GI-11: FID validation
+    if (!fid || fid <= 0) {
+      return []
+    }
+
+    const supabase = deps?.supabase || getSupabaseServerClient()
     if (!supabase) {
       throw new Error('Supabase client not configured')
     }
@@ -287,75 +300,84 @@ async function sendNeynarNotification(
   fid: number,
   title: string,
   body: string,
-  targetUrl: string
+  targetUrl?: string,
+  deps?: NotificationDependencies
 ): Promise<NotificationResult> {
-  const client = getNeynarServerClient()
-  if (!client) {
+  try {
+    const client = deps?.neynarClient || getNeynarServerClient()
+    if (!client) {
+      return {
+        success: false,
+        error: 'Neynar client not configured',
+      }
+    }
+
+    // GI-7: Retry logic
+    let lastError: Error | null = null
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        // GI-10: Timeout handling (5 seconds)
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 5000)
+
+        const response = await Promise.race([
+          client.publishFrameNotifications({
+            notification: {
+              title,
+              body,
+              target_url: targetUrl,
+              uuid: crypto.randomUUID(),
+            },
+            targetFids: [fid],
+          }),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), 5000)
+          ),
+        ])
+
+        clearTimeout(timeout)
+
+        // GI-11: Response validation
+        const result = response as any
+        if (result?.result?.successfulFids?.includes(fid) || result?.success) {
+          return {
+            success: true,
+            notificationId: result?.result?.notificationId || crypto.randomUUID(),
+          }
+        }
+
+        // Check for rate limit errors
+        if (result?.result?.rateLimitedFids?.includes(fid)) {
+          return {
+            success: false,
+            error: 'Rate limited',
+            rateLimited: true,
+          }
+        }
+
+        throw new Error('Notification failed without clear error')
+      } catch (error) {
+        lastError = error as Error
+        console.error(`[ViralNotifications] Attempt ${attempt} failed:`, error)
+
+        // GI-7: Exponential backoff
+        if (attempt < 3) {
+          const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
+          await new Promise((resolve) => setTimeout(resolve, backoffMs))
+        }
+      }
+    }
+
     return {
       success: false,
-      error: 'Neynar client not configured',
+      error: lastError?.message || 'Unknown error',
     }
-  }
-
-  // GI-7: Retry logic
-  let lastError: Error | null = null
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      // GI-10: Timeout handling (5 seconds)
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 5000)
-
-      const response = await Promise.race([
-        client.publishFrameNotifications({
-          notification: {
-            title,
-            body,
-            target_url: targetUrl,
-            uuid: crypto.randomUUID(),
-          },
-          targetFids: [fid],
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
-        ),
-      ])
-
-      clearTimeout(timeout)
-
-      // GI-11: Response validation
-      const result = response as any
-      if (result?.result?.successfulFids?.includes(fid) || result?.success) {
-        return {
-          success: true,
-          notificationId: result?.result?.notificationId || crypto.randomUUID(),
-        }
-      }
-
-      // Check for rate limit errors
-      if (result?.result?.rateLimitedFids?.includes(fid)) {
-        return {
-          success: false,
-          error: 'Rate limited',
-          rateLimited: true,
-        }
-      }
-
-      throw new Error('Notification failed without clear error')
-    } catch (error) {
-      lastError = error as Error
-      console.error(`[ViralNotifications] Attempt ${attempt} failed:`, error)
-
-      // GI-7: Exponential backoff
-      if (attempt < 3) {
-        const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
-        await new Promise((resolve) => setTimeout(resolve, backoffMs))
-      }
+  } catch (error) {
+    console.error('[ViralNotifications] Error in sendNeynarNotification:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     }
-  }
-
-  return {
-    success: false,
-    error: lastError?.message || 'Unknown error',
   }
 }
 
@@ -371,7 +393,8 @@ async function sendNeynarNotification(
  * @returns Result with success status and error details
  */
 export async function dispatchViralNotification(
-  notification: ViralNotification
+  notification: ViralNotification,
+  deps?: NotificationDependencies
 ): Promise<NotificationResult> {
   try {
     // GI-11: FID validation
@@ -383,15 +406,16 @@ export async function dispatchViralNotification(
     }
 
     // Get user's notification tokens
-    const tokens = await getUserNotificationTokens(notification.fid)
+    const tokens = await getUserNotificationTokens(notification.fid, deps)
     if (tokens.length === 0) {
       console.warn(`[ViralNotifications] No tokens for FID ${notification.fid}, attempting direct send`)
     }
 
     // Check rate limits (using FID instead of token)
     const fidKey = `fid:${notification.fid}`
-    if (!rateLimiter.canSendNotification(fidKey)) {
-      const timeUntilAvailable = rateLimiter.getTimeUntilAvailable(fidKey)
+    const limiter = deps?.rateLimiter || rateLimiter
+    if (!limiter.canSendNotification(fidKey)) {
+      const timeUntilAvailable = limiter.getTimeUntilAvailable(fidKey)
       return {
         success: false,
         error: `Rate limited. Retry in ${Math.ceil(timeUntilAvailable / 1000)}s`,
@@ -410,13 +434,14 @@ export async function dispatchViralNotification(
       notification.fid,
       payload.title,
       payload.body,
-      payload.targetUrl
+      payload.targetUrl,
+      deps
     )
 
     // Record rate limit and mark as sent if successful
     if (result.success) {
-      rateLimiter.recordNotificationSent(fidKey)
-      await markNotificationSent(notification)
+      limiter.recordNotificationSent(fidKey)
+      await markNotificationSent(notification, deps)
     }
 
     return result
@@ -436,9 +461,9 @@ export async function dispatchViralNotification(
  * - GI-11: Safe database updates
  * - GI-7: Error logging without throwing
  */
-async function markNotificationSent(notification: ViralNotification): Promise<void> {
+async function markNotificationSent(notification: ViralNotification, deps?: NotificationDependencies): Promise<void> {
   try {
-    const supabase = getSupabaseServerClient()
+    const supabase = deps?.supabase || getSupabaseServerClient()
     if (!supabase) return
 
     // Call the helper function from migration
@@ -465,9 +490,9 @@ async function markNotificationSent(notification: ViralNotification): Promise<vo
  * 
  * @returns Number of notifications sent successfully
  */
-export async function processPendingNotifications(): Promise<number> {
+export async function processPendingNotifications(deps?: NotificationDependencies): Promise<number> {
   try {
-    const supabase = getSupabaseServerClient()
+    const supabase = deps?.supabase || getSupabaseServerClient()
     if (!supabase) {
       throw new Error('Supabase client not configured')
     }
@@ -505,7 +530,7 @@ export async function processPendingNotifications(): Promise<number> {
               xpBonus: item.xp_bonus || 0,
             }
 
-      const result = await dispatchViralNotification(notification)
+      const result = await dispatchViralNotification(notification, deps)
       
       if (result.success) {
         successCount++

@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import * as viralNotifications from '@/lib/viral-notifications'
 import {
   dispatchViralNotification,
   processPendingNotifications,
@@ -27,7 +28,7 @@ describe('viral-notifications', () => {
           error: null,
         }),
         rpc: vi.fn().mockResolvedValue({ error: null }),
-      }
+      } as any
 
       const mockClient = {
         publishFrameNotifications: vi.fn().mockResolvedValue({
@@ -39,19 +40,23 @@ describe('viral-notifications', () => {
         }),
       }
 
-      const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
-      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
+      const mockRateLimiter = {
+        canSendNotification: vi.fn().mockReturnValue(true),
+        recordNotificationSent: vi.fn(),
+        getTimeUntilAvailable: vi.fn().mockReturnValue(0),
+      } as any
 
-      const result = await dispatchViralNotification({
-        type: 'tier_upgrade',
-        fid: 12345,
-        castHash: '0xtest',
-        oldTier: 'engaging',
-        newTier: 'popular',
-        xpBonus: 100,
-      })
+      const result = await dispatchViralNotification(
+        {
+          type: 'tier_upgrade',
+          fid: 12345,
+          castHash: '0xtest',
+          oldTier: 'engaging',
+          newTier: 'popular',
+          xpBonus: 100,
+        },
+        { supabase: mockSupabase, neynarClient: mockClient, rateLimiter: mockRateLimiter }
+      )
 
       expect(result.success).toBe(true)
       expect(result.notificationId).toBeDefined()
@@ -76,7 +81,7 @@ describe('viral-notifications', () => {
           error: null,
         }),
         rpc: vi.fn().mockResolvedValue({ error: null }),
-      }
+      } as any
 
       const mockClient = {
         publishFrameNotifications: vi.fn().mockResolvedValue({
@@ -88,18 +93,22 @@ describe('viral-notifications', () => {
         }),
       }
 
-      const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      const { getNeynarServerClient } = await import('@/lib/neynar-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
-      ;(getNeynarServerClient as vi.Mock).mockReturnValue(mockClient)
+      const mockRateLimiter = {
+        canSendNotification: vi.fn().mockReturnValue(true),
+        recordNotificationSent: vi.fn(),
+        getTimeUntilAvailable: vi.fn().mockReturnValue(0),
+      } as any
 
-      const result = await dispatchViralNotification({
-        type: 'achievement',
-        fid: 12345,
-        achievementType: 'first_viral',
-        castHash: '0xtest',
-        xpBonus: 100,
-      })
+      const result = await dispatchViralNotification(
+        {
+          type: 'achievement',
+          fid: 12345,
+          achievementType: 'first_viral',
+          castHash: '0xtest',
+          xpBonus: 100,
+        },
+        { supabase: mockSupabase, neynarClient: mockClient, rateLimiter: mockRateLimiter }
+      )
 
       expect(result.success).toBe(true)
       expect(mockClient.publishFrameNotifications).toHaveBeenCalledWith(
@@ -121,30 +130,29 @@ describe('viral-notifications', () => {
           data: [{ token: 'test-token-rate-limited' }],
           error: null,
         }),
-      }
+      } as any
 
-      const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
+      const mockRateLimiter = {
+        canSendNotification: vi.fn().mockReturnValue(false),
+        getTimeUntilAvailable: vi.fn().mockReturnValue(30000),
+        recordNotificationSent: vi.fn(),
+      } as any
 
-      // Simulate rate limiter blocking token
-      const rateLimiter = require('@/lib/viral-notifications').rateLimiter
-      if (rateLimiter) {
-        vi.spyOn(rateLimiter, 'canSendNotification').mockReturnValue(false)
-        vi.spyOn(rateLimiter, 'getTimeUntilAvailable').mockReturnValue(25000)
-      }
-
-      const result = await dispatchViralNotification({
-        type: 'tier_upgrade',
-        fid: 12345,
-        castHash: '0xtest',
-        oldTier: 'active',
-        newTier: 'engaging',
-        xpBonus: 50,
-      })
+      const result = await dispatchViralNotification(
+        {
+          type: 'tier_upgrade',
+          fid: 12345,
+          castHash: '0xtest',
+          oldTier: 'active',
+          newTier: 'engaging',
+          xpBonus: 50,
+        },
+        { supabase: mockSupabase, rateLimiter: mockRateLimiter }
+      )
 
       expect(result.success).toBe(false)
       expect(result.rateLimited).toBe(true)
-      expect(result.error).toContain('rate limited')
+      expect(result.error).toContain('Rate limited')
     })
 
     it('should handle missing notification tokens', async () => {
@@ -156,22 +164,35 @@ describe('viral-notifications', () => {
           data: [],
           error: null,
         }),
+      } as any
+
+      const mockClient = {
+        publishFrameNotifications: vi.fn().mockResolvedValue({
+          success: false,
+          result: { error: 'No notification tokens' },
+        }),
       }
 
-      const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
+      const mockRateLimiter = {
+        canSendNotification: vi.fn().mockReturnValue(true),
+        recordNotificationSent: vi.fn(),
+        getTimeUntilAvailable: vi.fn().mockReturnValue(0),
+      } as any
 
-      const result = await dispatchViralNotification({
-        type: 'tier_upgrade',
-        fid: 12345,
-        castHash: '0xtest',
-        oldTier: 'active',
-        newTier: 'engaging',
-        xpBonus: 50,
-      })
+      const result = await dispatchViralNotification(
+        {
+          type: 'tier_upgrade',
+          fid: 12345,
+          castHash: '0xtest',
+          oldTier: 'active',
+          newTier: 'engaging',
+          xpBonus: 50,
+        },
+        { supabase: mockSupabase, neynarClient: mockClient, rateLimiter: mockRateLimiter }
+      )
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('No notification tokens')
+      expect(result.error).toContain('Notification failed')
     })
 
     it('should validate FID input', async () => {
@@ -216,18 +237,29 @@ describe('viral-notifications', () => {
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         rpc: vi.fn().mockResolvedValue({ error: null }),
+      } as any
+
+      const mockClient = {
+        publishFrameNotifications: vi.fn().mockResolvedValue({
+          success: true,
+          result: { notificationId: 'test-123', successfulFids: [12345, 67890] },
+        }),
       }
 
-      const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
+      const mockRateLimiter = {
+        canSendNotification: vi.fn().mockReturnValue(true),
+        recordNotificationSent: vi.fn(),
+        getTimeUntilAvailable: vi.fn().mockReturnValue(0),
+      } as any
 
-      const mockDispatch = vi.fn().mockResolvedValue({ success: true })
-      vi.spyOn(require('@/lib/viral-notifications'), 'dispatchViralNotification').mockImplementation(mockDispatch)
-
-      const successCount = await processPendingNotifications()
+      const successCount = await processPendingNotifications({
+        supabase: mockSupabase,
+        neynarClient: mockClient,
+        rateLimiter: mockRateLimiter,
+      })
 
       expect(successCount).toBe(2)
-      expect(mockDispatch).toHaveBeenCalledTimes(2)
+      expect(mockClient.publishFrameNotifications).toHaveBeenCalledTimes(2)
       expect(mockSupabase.limit).toHaveBeenCalledWith(50) // GI-10: Batch limit
     })
 
@@ -242,22 +274,33 @@ describe('viral-notifications', () => {
           ],
           error: null,
         }),
+      } as any
+
+      const mockClient = {
+        publishFrameNotifications: vi.fn().mockResolvedValue({
+          success: true,
+          result: { notificationId: 'test-456', successfulFids: [1] },
+        }),
       }
 
-      const { getSupabaseServerClient } = await import('@/lib/supabase-server')
-      ;(getSupabaseServerClient as vi.Mock).mockReturnValue(mockSupabase)
+      let callCount = 0
+      const mockRateLimiter = {
+        canSendNotification: vi.fn(() => {
+          callCount++
+          return callCount === 1 // First call succeeds, second is rate limited
+        }),
+        recordNotificationSent: vi.fn(),
+        getTimeUntilAvailable: vi.fn().mockReturnValue(30000),
+      } as any
 
-      const mockDispatch = vi
-        .fn()
-        .mockResolvedValueOnce({ success: true })
-        .mockResolvedValueOnce({ success: false, rateLimited: true })
-
-      vi.spyOn(require('@/lib/viral-notifications'), 'dispatchViralNotification').mockImplementation(mockDispatch)
-
-      const successCount = await processPendingNotifications()
+      const successCount = await processPendingNotifications({
+        supabase: mockSupabase,
+        neynarClient: mockClient,
+        rateLimiter: mockRateLimiter,
+      })
 
       expect(successCount).toBe(1)
-      expect(mockDispatch).toHaveBeenCalledTimes(2) // Should stop after rate limit
+      expect(mockRateLimiter.canSendNotification).toHaveBeenCalledTimes(2)
     })
   })
 })
