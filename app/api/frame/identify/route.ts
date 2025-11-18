@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { FIDSchema } from '@/lib/validation/api-schemas'
+import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
 export const revalidate = 0
@@ -28,7 +29,7 @@ type IdentifyResponse = {
  * 2. Farcaster headers (x-farcaster-fid, etc)
  * 3. Session cookies
  */
-export async function GET(req: NextRequest): Promise<NextResponse<IdentifyResponse>> {
+export const GET = withErrorHandler(async (req: NextRequest): Promise<NextResponse<IdentifyResponse>> => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -39,9 +40,8 @@ export async function GET(req: NextRequest): Promise<NextResponse<IdentifyRespon
     )
   }
 
-  try {
-    // Check for Farcaster context headers (sent by miniapp iframe)
-    const farcasterFid = req.headers.get('x-farcaster-fid')
+  // Check for Farcaster context headers (sent by miniapp iframe)
+  const farcasterFid = req.headers.get('x-farcaster-fid')
     const farcasterUser = req.headers.get('x-farcaster-username')
     
     // Check URL params (fallback)
@@ -142,20 +142,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<IdentifyRespon
         'cache-control': 'no-store',
       },
     })
-  } catch (error) {
-    console.error('[identify] Error:', error)
-    return NextResponse.json({
-      ok: false,
-      error: 'Failed to resolve identity',
-    }, {
-      status: 500,
-      headers: {
-        'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'GET, OPTIONS',
-      },
-    })
-  }
-}
+})
 
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, {

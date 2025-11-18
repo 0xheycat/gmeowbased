@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { extractHttpErrorMessage } from '@/lib/http-error'
+import { withErrorHandler } from '@/lib/error-handler'
 import {
   buildRequirement,
   runPartnerSnapshot,
@@ -52,7 +53,7 @@ type SnapshotPayload = {
   snapshotId?: string
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandler(async (req: NextRequest) => {
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
@@ -127,9 +128,9 @@ export async function POST(req: NextRequest) {
     const message = extractHttpErrorMessage(error, 'Failed to generate partner snapshot')
     return NextResponse.json({ ok: false, error: 'snapshot_failed', message }, { status: 500 })
   }
-}
+})
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
@@ -282,4 +283,4 @@ export async function GET(req: NextRequest) {
   })
 
   return NextResponse.json({ ok: true, history })
-}
+})

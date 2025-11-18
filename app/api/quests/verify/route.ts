@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { withErrorHandler } from '@/lib/error-handler'
 import {
   createPublicClient,
   http,
@@ -1037,7 +1038,7 @@ function prepareRequirementContext(params: {
 /*                                 MAIN POST                                   */
 /* -------------------------------------------------------------------------- */
 
-export async function POST(req: Request) {
+export const POST = withErrorHandler(async (req: Request) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -1049,9 +1050,8 @@ export async function POST(req: Request) {
   }
 
   const started = Date.now()
-  try {
-    const body = await req.json().catch(() => null)
-    if (!body) return H('Invalid JSON body', 400)
+  const body = await req.json().catch(() => null)
+  if (!body) return H('Invalid JSON body', 400)
 
     const {
       chain,
@@ -1652,17 +1652,13 @@ export async function POST(req: Request) {
       traces,
       durationMs: Date.now() - started,
     })
-  } catch (e: any) {
-    console.error('verify error', e)
-    return NextResponse.json({ ok: false, reason: String(e?.message || e), traces: e?.traces || [] }, { status: 500 })
-  }
-}
+})
 
 /* -------------------------------------------------------------------------- */
 /*                                 DEBUG GET                                   */
 /* -------------------------------------------------------------------------- */
 
-export async function GET(req: Request) {
+export const GET = withErrorHandler(async (req: Request) => {
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
@@ -1836,7 +1832,7 @@ export async function GET(req: Request) {
   } catch (e: any) {
     return H(String(e?.message || e), 500)
   }
-}
+})
 
 // add minimal on-chain status reader (quests -> getQuest fallback)
 type QuestStatusResult =
