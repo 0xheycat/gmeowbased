@@ -90,7 +90,6 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     console.log(`[Profile API] ✅ FID detected: ${fid} (source: ${source})`)
 
     // Validate FID format BEFORE parsing
-    // Check if it's a valid numeric string
     if (!/^\d+$/.test(fid)) {
       return NextResponse.json(
         { error: 'Invalid FID format', details: 'FID must be a positive integer' },
@@ -100,7 +99,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
     const fidNumber = parseInt(fid, 10)
     
-    // Validate FID value (positive integer within range)
+    // Validate FID value with Zod
     const validation = FIDSchema.safeParse(fidNumber)
     if (!validation.success) {
       return NextResponse.json(

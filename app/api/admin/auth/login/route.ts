@@ -9,6 +9,7 @@ import {
   validateTotp,
 } from '@/lib/admin-auth'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { AdminLoginSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
@@ -28,26 +29,33 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     )
   }
 
-  let body: { passcode?: string; totp?: string; remember?: boolean }
+  let body: unknown
   try {
-    body = (await req.json()) as typeof body
+    body = await req.json()
   } catch {
     return NextResponse.json({ ok: false, error: 'Invalid JSON payload' }, { status: 400 })
   }
 
-  const passcode = typeof body.passcode === 'string' ? body.passcode : ''
+  // Validate input with Zod
+  const validation = AdminLoginSchema.safeParse(body)
+  if (!validation.success) {
+    return NextResponse.json(
+      { ok: false, error: 'Invalid input', details: validation.error.issues },
+      { status: 400 }
+    )
+  }
+
+  const { passcode, totp, remember } = validation.data
+
   if (!validateAccessCode(passcode)) {
     return NextResponse.json({ ok: false, error: 'Invalid credentials' }, { status: 401 })
   }
 
   if (isTotpRequired()) {
-    const totp = typeof body.totp === 'string' ? body.totp : ''
-    if (!validateTotp(totp)) {
+    if (!totp || !validateTotp(totp)) {
       return NextResponse.json({ ok: false, error: 'Invalid one-time code' }, { status: 401 })
     }
   }
-
-  const remember = Boolean(body.remember)
   const session = await issueAdminSession({ remember })
   const { name, value, options } = buildAdminSessionCookie(session)
 

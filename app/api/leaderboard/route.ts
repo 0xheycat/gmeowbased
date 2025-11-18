@@ -5,6 +5,7 @@ import { CONTRACT_ADDRESSES, gmContractHasFunction, type ChainKey } from '@/lib/
 import { computeLeaderboardSlice, PROFILE_SUPPORTED } from '@/lib/leaderboard-aggregator'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { fetchUsersByAddresses } from '@/lib/neynar'
+import { LeaderboardQuerySchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
 
 const CACHE_TTL = 25_000
@@ -14,11 +15,6 @@ let cache: { key: string; at: number; data: LeaderboardResponse } | null = null
 const SEASONS_SUPPORTED = gmContractHasFunction('getAllSeasons') && gmContractHasFunction('getSeason')
 const SUPABASE_TIMEOUT_MS = Number(process.env.SUPABASE_TIMEOUT_MS ?? 5_000)
 const SUPABASE_MAX_RETRIES = Number(process.env.SUPABASE_MAX_RETRIES ?? 2)
-
-function fromQueryInt(q: string | null, d = 0) {
-  const n = Number(q)
-  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : d
-}
 
 function isChainKey(value: string): value is ChainKey {
   return Object.prototype.hasOwnProperty.call(CONTRACT_ADDRESSES, value)
@@ -298,9 +294,24 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   const url = new URL(req.url)
-    const chainParam = url.searchParams.get('chain') || 'base'
-    const limit = Math.min(fromQueryInt(url.searchParams.get('limit'), 50), 500)
-    const offset = fromQueryInt(url.searchParams.get('offset'), 0)
+    
+    // Validate query parameters with Zod
+    const queryValidation = LeaderboardQuerySchema.safeParse({
+      chain: url.searchParams.get('chain') || undefined,
+      limit: url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!) : undefined,
+      offset: url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!) : undefined,
+    })
+    
+    if (!queryValidation.success) {
+      return NextResponse.json(
+        { error: 'validation_error', issues: queryValidation.error.issues },
+        { status: 400 }
+      )
+    }
+    
+    const chainParam = queryValidation.data.chain || 'base'
+    const limit = Math.min(queryValidation.data.limit ?? 50, 500)
+    const offset = queryValidation.data.offset ?? 0
     const seasonParam = url.searchParams.get('season')
     const global = url.searchParams.get('global') === '1' || url.searchParams.get('global') === 'true'
 

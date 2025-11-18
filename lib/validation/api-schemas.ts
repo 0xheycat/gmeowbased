@@ -193,3 +193,26 @@ export const WebhookPayloadSchema = z.object({
   data: z.record(z.string(), z.unknown()),
   created_at: z.number().int().positive(),
 })
+
+// Admin auth schemas
+export const AdminLoginSchema = z.object({
+  passcode: z.string().min(1, 'Passcode is required'),
+  totp: z.string().optional(),
+  remember: z.boolean().optional(),
+})
+
+// Maintenance auth schema
+export const MaintenanceAuthSchema = z.object({
+  password: z.string().min(1, 'Password is required'),
+})
+
+// Season query schema
+export const SeasonQuerySchema = z.object({
+  chain: ChainSchema.optional(),
+})
+
+// Leaderboard sync schema
+export const LeaderboardSyncSchema = z.object({
+  chain: ChainSchema.optional(),
+  force: z.boolean().optional(),
+})
