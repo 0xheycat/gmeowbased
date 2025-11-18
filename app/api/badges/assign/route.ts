@@ -3,6 +3,8 @@ import { assignBadgeToUser, getBadgeFromRegistry } from '@/lib/badges'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { BadgeAssignSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
+import { withTiming } from '@/lib/middleware/timing'
+import { invalidateCache, buildUserBadgesKey } from '@/lib/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,8 +20,12 @@ type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
  *   badgeId: string  // from registry
  *   metadata?: Record<string, unknown>
  * }
+ * 
+ * Performance optimizations:
+ * - Request timing tracking
+ * - Cache invalidation on assignment
  */
-export const POST = withErrorHandler(async (request: Request) => {
+export const POST = withTiming(withErrorHandler(async (request: Request) => {
   const body = await request.json()
   
   // Validate input with Zod
@@ -85,8 +91,11 @@ export const POST = withErrorHandler(async (request: Request) => {
       })
     }
 
+    // Invalidate user badges cache
+    await invalidateCache('user-badges', buildUserBadgesKey(fid))
+
     return NextResponse.json({
       success: true,
       badge,
     })
-})
+}))
