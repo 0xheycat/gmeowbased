@@ -68,8 +68,9 @@ export async function GET(req: Request) {
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
             <div style={{ fontSize: 96, fontWeight: 900, letterSpacing: '-2px' }}>GM!</div>
-            <div style={{ fontSize: 32, opacity: 0.85 }}>
-              {user ? shortenAddress(user) : 'Anonymous'} {fid ? `• FID ${fid}` : ''}
+            <div style={{ display: 'flex', fontSize: 32, opacity: 0.85, gap: 8 }}>
+              <div>{user ? shortenAddress(user) : 'Anonymous'}</div>
+              {fid && <div>• FID {fid}</div>}
             </div>
             <div style={{ display: 'flex', gap: 48, marginTop: 32 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -90,12 +91,15 @@ export async function GET(req: Request) {
             style={{
               position: 'absolute',
               bottom: 48,
+              display: 'flex',
+              gap: 8,
               fontSize: 24,
               opacity: 0.6,
               letterSpacing: '2px',
             }}
           >
-            Powered by Gmeowbased • {chain}
+            <div>Powered by Gmeowbased •</div>
+            <div>{chain}</div>
           </div>
         </div>
       ),
@@ -263,9 +267,9 @@ export async function GET(req: Request) {
               <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 16 }}>
                 View Top {limit} Players
               </div>
-              <div style={{ fontSize: 28, opacity: 0.75, lineHeight: 1.5 }}>
-                GM streaks • Quest completions<br />
-                XP leaders • Badge collectors
+              <div style={{ display: 'flex', flexDirection: 'column', fontSize: 28, opacity: 0.75, gap: 8 }}>
+                <div>GM streaks • Quest completions</div>
+                <div>XP leaders • Badge collectors</div>
               </div>
             </div>
           </div>
@@ -329,7 +333,7 @@ export async function GET(req: Request) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <span style={{ fontSize: 24, letterSpacing: 8, textTransform: 'uppercase', opacity: 0.7 }}>Onchain dossier</span>
             <span style={{ fontSize: 54, fontWeight: 700 }}>Command Deck Metrics</span>
-            <div style={{ fontSize: 28, opacity: 0.82 }}>
+            <div style={{ display: 'flex', fontSize: 28, opacity: 0.82 }}>
               {user ? `Address :: ${shortenAddress(user)}` : 'Gmeowbased multichain cadence'}
             </div>
           </div>
