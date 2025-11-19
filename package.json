@@ -49,6 +49,7 @@
     "tips:worker": "tsx ./scripts/tipHubWorker.ts",
     "automation:run": "tsx ./scripts/automation/run-queue.ts",
     "notifications:gm-reminders": "tsx ./scripts/automation/send-gm-reminders.ts",
+    "test:badge-minting": "tsx ./scripts/test-badge-minting.ts",
     "docs:extract": "tsx ./scripts/docs/extract-jsdoc.ts",
     "docs:api": "tsx ./scripts/docs/generate-api-docs.ts",
     "docs:validate": "tsx ./scripts/docs/validate-links.ts",
