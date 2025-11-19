@@ -12,13 +12,22 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
 // Initialize Redis client with environment variables
-// Use .trim() to remove any whitespace or newline characters
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+// Use .trim() and .replace() to remove any whitespace or newline characters
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim().replace(/[\r\n]/g, '')
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim().replace(/[\r\n]/g, '')
+
+const redis = redisUrl && redisToken
   ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL.trim(),
-      token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
+      url: redisUrl,
+      token: redisToken,
     })
   : null
+
+// Log configuration (without sensitive data) for debugging
+if (redis) {
+  console.log('[Rate Limit] Redis initialized with URL:', redisUrl?.substring(0, 30) + '...')
+} else {
+  console.warn('[Rate Limit] Redis not initialized - rate limiting disabled')
 
 // API routes: 60 requests per minute per IP
 export const apiLimiter = redis
