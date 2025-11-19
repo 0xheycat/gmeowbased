@@ -240,10 +240,44 @@ export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride
   if (input.type === 'referral' && input.referral) {
     params.set('ref', input.referral)
   }
+  if (input.type === 'onchainstats' && input.extra) {
+    // Pass all onchainstats metrics to image generator
+    const onchainMetrics = ['statsChain', 'chainName', 'explorer', 'txs', 'contracts', 'volume', 'balance', 'age', 'builder', 'neynar', 'power', 'firstTx', 'lastTx']
+    for (const key of onchainMetrics) {
+      const value = input.extra[key]
+      if (value !== undefined && value !== null) {
+        params.set(key, String(value))
+      }
+    }
+  }
+  if (input.type === 'gm' && input.extra) {
+    // Pass GM stats to image generator
+    const gmMetrics = ['gmCount', 'streak', 'rank']
+    for (const key of gmMetrics) {
+      const value = input.extra[key]
+      if (value !== undefined && value !== null) {
+        params.set(key, String(value))
+      }
+    }
+  }
+  if (input.type === 'quest' && input.extra) {
+    // Pass quest details to image generator
+    const questMetrics = ['questName', 'reward', 'expires', 'progress']
+    for (const key of questMetrics) {
+      const value = input.extra[key]
+      if (value !== undefined && value !== null) {
+        params.set(key, String(value))
+      }
+    }
+  }
   if (input.extra) {
+    // Pass any remaining extra parameters
     for (const [key, value] of Object.entries(input.extra)) {
       if (value === undefined || value === null) continue
       if (['limit', 'season', 'global'].includes(key) && input.type === 'leaderboard') continue
+      // Skip already-handled type-specific parameters
+      const handledKeys = ['statsChain', 'chainName', 'explorer', 'txs', 'contracts', 'volume', 'balance', 'age', 'builder', 'neynar', 'power', 'firstTx', 'lastTx', 'gmCount', 'streak', 'rank', 'questName', 'reward', 'expires', 'progress']
+      if (handledKeys.includes(key)) continue
       params.set(key, String(value))
     }
   }
