@@ -1,5 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable react/no-unknown-property */
+/* eslint-disable react/style-prop-object */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/forbid-dom-props */
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
@@ -7,19 +10,6 @@ export const revalidate = 60
 
 const WIDTH = 1200
 const HEIGHT = 630
-
-const READABLE_KEYS: Array<{ key: string; label: string }> = [
-  { key: 'txs', label: 'Total Transactions' },
-  { key: 'contracts', label: 'Contracts Touched' },
-  { key: 'volume', label: 'Onchain Volume' },
-  { key: 'balance', label: 'Current Balance' },
-  { key: 'builder', label: 'Builder Score' },
-  { key: 'neynar', label: 'Neynar Score' },
-  { key: 'power', label: 'Power Badge' },
-  { key: 'age', label: 'Account Age' },
-  { key: 'firstTx', label: 'First Transaction' },
-  { key: 'lastTx', label: 'Last Transaction' },
-]
 
 function readParam(url: URL, name: string, fallback = '') {
   const value = url.searchParams.get(name)
@@ -207,8 +197,11 @@ export async function GET(req: Request) {
     )
   }
 
-  // Leaderboards frame type - MINIMAL TEST
+  // Leaderboards frame type
   if (type === 'leaderboards') {
+    const season = readParam(url, 'season', 'Current Season')
+    const limit = readParam(url, 'limit', '10')
+
     return new ImageResponse(
       (
         <div
@@ -216,20 +209,96 @@ export async function GET(req: Request) {
             width: '100%',
             height: '100%',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#1e2d4a',
-            color: '#fff',
+            flexDirection: 'column',
+            padding: '64px 80px',
+            background: 'radial-gradient(circle at 50% 20%, #1e2d4a, #0b0d18)',
+            color: '#f5f7ff',
+            position: 'relative',
           }}
         >
-          <div style={{ fontSize: 64 }}>LEADERBOARD TEST</div>
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.14), rgba(255, 210, 90, 0.08))',
+            }}
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ fontSize: 32, letterSpacing: '6px', textTransform: 'uppercase', opacity: 0.7 }}>Leaderboard</div>
+                <div style={{ fontSize: 64, fontWeight: 800 }}>Top Performers</div>
+              </div>
+              <div
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: 999,
+                  border: '1px solid rgba(124, 92, 255, 0.4)',
+                  background: 'rgba(124, 92, 255, 0.15)',
+                  color: '#7c5cff',
+                  fontSize: 28,
+                  fontWeight: 700,
+                }}
+              >
+                {season}
+              </div>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                marginTop: 32,
+                padding: '32px',
+                borderRadius: 20,
+                background: 'rgba(4, 8, 20, 0.65)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+              }}
+            >
+              <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 16 }}>
+                View Top {limit} Players
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', fontSize: 28, opacity: 0.75, gap: 8 }}>
+                <div>GM streaks • Quest completions</div>
+                <div>XP leaders • Badge collectors</div>
+              </div>
+            </div>
+          </div>
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 48,
+              left: 80,
+              right: 80,
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: 22,
+              opacity: 0.6,
+              letterSpacing: '2px',
+            }}
+          >
+            <span>Powered by Gmeowbased</span>
+            <span>{chain} • Multichain Rankings</span>
+          </div>
         </div>
       ),
       { width: WIDTH, height: HEIGHT }
     )
   }
 
-  // Default: onchainstats - MINIMAL TEST
+  // Default: onchainstats
+  const fid = readParam(url, 'fid')
+  const user = readParam(url, 'user')
+  const txs = readParam(url, 'txs', '—')
+  const volume = readParam(url, 'volume', '—')
+  const balance = readParam(url, 'balance', '—')
+  const builder = readParam(url, 'builder', '—')
+  const age = readParam(url, 'age', '—')
+  const firstTx = readParam(url, 'firstTx', '—')
+
   return new ImageResponse(
     (
       <div
@@ -237,13 +306,113 @@ export async function GET(req: Request) {
           width: '100%',
           height: '100%',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#1d2a50',
-          color: '#fff',
+          flexDirection: 'column',
+          padding: '72px 96px',
+          background: 'radial-gradient(circle at 20% 20%, #1d2a50, #070b18)',
+          color: '#f5f7ff',
+          position: 'relative',
         }}
       >
-        <div style={{ fontSize: 64 }}>ONCHAINSTATS TEST</div>
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            background: 'linear-gradient(135deg, rgba(95, 179, 255, 0.08), rgba(255, 210, 90, 0.06))',
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <span style={{ fontSize: 24, letterSpacing: 8, textTransform: 'uppercase', opacity: 0.7 }}>Onchain dossier</span>
+            <span style={{ fontSize: 54, fontWeight: 700 }}>Command Deck Metrics</span>
+            <div style={{ display: 'flex', fontSize: 28, opacity: 0.82 }}>
+              <span>{user ? shortenAddress(user) : `FID: ${fid}`}</span>
+            </div>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '14px 28px',
+              borderRadius: 999,
+              border: '1px solid rgba(255, 210, 90, 0.4)',
+              background: 'rgba(255, 210, 90, 0.12)',
+              color: '#ffd25a',
+              fontSize: 28,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+            }}
+          >
+            {chain}
+          </div>
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 28,
+            marginTop: 40,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 24,
+              padding: '32px',
+              borderRadius: 20,
+              background: 'rgba(4, 8, 20, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ fontSize: 20, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.7 }}>Total Transactions</span>
+              <span style={{ fontSize: 34, fontWeight: 700 }}>{txs}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ fontSize: 20, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.7 }}>Onchain Volume</span>
+              <span style={{ fontSize: 34, fontWeight: 700 }}>{volume}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ fontSize: 20, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.7 }}>Current Balance</span>
+              <span style={{ fontSize: 34, fontWeight: 700 }}>{balance}</span>
+            </div>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 16,
+              flexWrap: 'wrap',
+              fontSize: 22,
+              opacity: 0.8,
+            }}
+          >
+            <span>Builder: {builder}</span>
+            <span>•</span>
+            <span>Age: {age}</span>
+            <span>•</span>
+            <span>First TX: {firstTx}</span>
+          </div>
+        </div>
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 48,
+            left: 96,
+            right: 96,
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: 22,
+            opacity: 0.6,
+            letterSpacing: '2px',
+          }}
+        >
+          <span>Powered by Gmeowbased</span>
+          <span>{chain} • Onchain Stats</span>
+        </div>
       </div>
     ),
     { width: WIDTH, height: HEIGHT }
