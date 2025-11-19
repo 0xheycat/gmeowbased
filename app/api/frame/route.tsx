@@ -24,7 +24,7 @@ import gm, {
 } from '@/lib/gm-utils'
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
-import { buildFrameShareUrl } from '@/lib/share'
+import { buildFrameShareUrl, buildDynamicFrameImageUrl } from '@/lib/share'
 import {
   sanitizeFID,
   sanitizeQuestId,
@@ -1928,7 +1928,7 @@ export async function GET(req: Request) {
     const debugPayload = debugMode ? traces : undefined
     const origin = resolveRequestOrigin(req, url)
     // Use frame-image.png (3:2 ratio) for Farcaster frames, not og-image.png (1.91:1)
-    const defaultFrameImage = `${origin}/frame-image.png`
+    const dynamicImageUrl = buildDynamicFrameImageUrl({ type: type as any, chain: params.chain as any, questId: params.questId, badgeId: params.badgeId, user: params.user, fid: params.fid, id: params.id, referral: params.ref, extra: { limit: params.limit, season: params.season, global: params.global } }, origin); const defaultFrameImage = dynamicImageUrl || `${origin}/frame-image.png`
 
     const handler = FRAME_HANDLERS[type]
     if (handler) {
