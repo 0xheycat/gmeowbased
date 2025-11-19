@@ -392,7 +392,6 @@ export async function GET(req: Request) {
           ) : (
             <div
               style={{
-                gridColumn: 'span 3',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -402,6 +401,7 @@ export async function GET(req: Request) {
                 border: '1px solid rgba(255, 255, 255, 0.05)',
                 fontSize: 30,
                 opacity: 0.85,
+                width: '100%',
               }}
             >
               Sync stats to render your onchain narrative.
