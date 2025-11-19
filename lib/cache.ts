@@ -169,10 +169,11 @@ const memoryCache = new MemoryCache(1000)
 // ========================================
 
 // @vercel/kv automatically uses KV_REST_API_URL or UPSTASH_REDIS_REST_URL
+// Trim environment variables to remove whitespace/newlines
 const USE_EXTERNAL_CACHE = 
-  !!process.env.KV_REST_API_URL || 
-  !!process.env.UPSTASH_REDIS_REST_URL || 
-  !!process.env.REDIS_URL
+  !!process.env.KV_REST_API_URL?.trim() || 
+  !!process.env.UPSTASH_REDIS_REST_URL?.trim() || 
+  !!process.env.REDIS_URL?.trim()
 
 let externalHits = 0
 let externalMisses = 0

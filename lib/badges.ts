@@ -1,10 +1,9 @@
 import { randomUUID } from 'crypto'
-import { readFileSync } from 'fs'
-import { join } from 'path'
 import { createPublicClient, http, parseAbiItem, type AbiEvent } from 'viem'
 import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gm-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { BADGE_REGISTRY } from '@/lib/badge-registry-data'
 
 const BADGE_TABLE = process.env.SUPABASE_BADGE_TEMPLATE_TABLE || 'badge_templates'
 const USER_BADGES_TABLE = 'user_badges'
@@ -552,16 +551,16 @@ export async function invalidateBadgeCaches() {
 }
 
 /**
- * Load badge registry from JSON file with caching
+ * Load badge registry from embedded data with caching
+ * Uses embedded BADGE_REGISTRY to avoid filesystem reads in production
  */
 export function loadBadgeRegistry(): BadgeRegistry {
   const cached = badgeRegistryCache.get('registry')
   if (cached) return cached
   
   try {
-    const registryPath = join(process.cwd(), 'planning', 'badge', 'badge-registry.json')
-    const content = readFileSync(registryPath, 'utf-8')
-    const registry = JSON.parse(content) as BadgeRegistry
+    // Use embedded registry data instead of filesystem read
+    const registry = BADGE_REGISTRY
     badgeRegistryCache.set('registry', registry)
     return registry
   } catch (error) {
