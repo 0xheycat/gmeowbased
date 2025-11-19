@@ -382,7 +382,7 @@ Recommendation: Remove tests or fix endpoint
 | 3G Network Loading | <5s | 2.8s | ✅ **Good** |
 
 ---
-
+---
 ## Failure Analysis & Remediation
 
 ### Category 1: Invalid Frame Types (32 tests - 60% of failures)
