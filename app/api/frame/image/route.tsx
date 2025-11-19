@@ -44,8 +44,6 @@ export async function GET(req: Request) {
   const user = readParam(url, 'user')
   const fid = readParam(url, 'fid')
 
-  console.log('[FRAME IMAGE] type:', type, 'chain:', chain, 'fid:', fid)
-
   // GM frame type
   if (type === 'gm') {
     const gmCount = readParam(url, 'gmCount', '0')
@@ -209,14 +207,8 @@ export async function GET(req: Request) {
     )
   }
 
-  // Leaderboard frame type - DEBUGGING: using Quest template
+  // Leaderboard frame type - MINIMAL TEST
   if (type === 'leaderboard') {
-    const questId = readParam(url, 'questId', '1')
-    const questName = readParam(url, 'questName', 'LEADERBOARD TEST')
-    const reward = readParam(url, 'reward', 'Top 10')
-    const expires = readParam(url, 'expires', 'Season 1')
-    const progress = '0'
-
     return new ImageResponse(
       (
         <div
@@ -224,88 +216,20 @@ export async function GET(req: Request) {
             width: '100%',
             height: '100%',
             display: 'flex',
-            flexDirection: 'column',
-            padding: '64px 80px',
-            background: 'radial-gradient(circle at 20% 80%, #1a2f4e, #0d0f1c)',
-            color: '#f5f7ff',
-            position: 'relative',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#1e2d4a',
+            color: '#fff',
           }}
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              left: 0,
-              background: 'linear-gradient(135deg, rgba(95, 179, 255, 0.12), rgba(255, 210, 90, 0.06))',
-            }}
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ fontSize: 32, letterSpacing: '6px', textTransform: 'uppercase', opacity: 0.7 }}>Quest</div>
-            <div style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1 }}>{questName}</div>
-            <div style={{ display: 'flex', gap: 48, marginTop: 32 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12,
-                  padding: '24px 32px',
-                  borderRadius: 16,
-                  background: 'rgba(4, 8, 20, 0.7)',
-                  border: '1px solid rgba(255, 210, 90, 0.3)',
-                }}
-              >
-                <div style={{ fontSize: 24, textTransform: 'uppercase', letterSpacing: '4px', opacity: 0.7 }}>Reward</div>
-                <div style={{ fontSize: 42, fontWeight: 700, color: '#ffd25a' }}>{reward}</div>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12,
-                  padding: '24px 32px',
-                  borderRadius: 16,
-                  background: 'rgba(4, 8, 20, 0.7)',
-                  border: '1px solid rgba(95, 179, 255, 0.3)',
-                }}
-              >
-                <div style={{ fontSize: 24, textTransform: 'uppercase', letterSpacing: '4px', opacity: 0.7 }}>Expires</div>
-                <div style={{ fontSize: 42, fontWeight: 700, color: '#5fb3ff' }}>{expires}</div>
-              </div>
-            </div>
-          </div>
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 48,
-              left: 80,
-              right: 80,
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: 22,
-              opacity: 0.6,
-              letterSpacing: '2px',
-            }}
-          >
-            <span>{chain} • Quest #{questId}</span>
-          </div>
+          <div style={{ fontSize: 64 }}>LEADERBOARD TEST</div>
         </div>
       ),
       { width: WIDTH, height: HEIGHT }
     )
   }
 
-  // Default: onchainstats (original logic)
-  const metrics = READABLE_KEYS.map(({ key, label }) => ({
-    key,
-    label,
-    value: readParam(url, key),
-  })).filter((item) => item.value && item.value !== '—')
-
-  const shownMetrics = metrics.slice(0, 6)
-  const remainingMetrics = metrics.slice(6)
-
+  // Default: onchainstats - MINIMAL TEST
   return new ImageResponse(
     (
       <div
@@ -313,139 +237,15 @@ export async function GET(req: Request) {
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
-          padding: '72px 96px',
+          alignItems: 'center',
+          justifyContent: 'center',
           background: '#1d2a50',
-          color: '#f5f7ff',
-          position: 'relative',
+          color: '#fff',
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.16), rgba(95, 179, 255, 0.08))',
-          }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <span style={{ fontSize: 24, letterSpacing: 8, textTransform: 'uppercase', opacity: 0.7 }}>Onchain dossier</span>
-            <span style={{ fontSize: 54, fontWeight: 700 }}>Command Deck Metrics</span>
-            <div style={{ display: 'flex', fontSize: 28, opacity: 0.82 }}>
-              {user ? `Address :: ${shortenAddress(user)}` : 'Gmeowbased multichain cadence'}
-            </div>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '14px 28px',
-              borderRadius: 999,
-              border: '1px solid rgba(255, 210, 90, 0.4)',
-              background: 'rgba(255, 210, 90, 0.12)',
-              color: '#ffd25a',
-              fontSize: 28,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-            }}
-          >
-            {chain}
-          </div>
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: 24,
-            marginTop: 48,
-            
-          }}
-        >
-          {shownMetrics.length > 0 ? (
-            shownMetrics.map((item) => (
-              <div
-                key={item.key}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12,
-                  padding: '24px 28px',
-                  borderRadius: 18,
-                  background: 'rgba(4, 8, 20, 0.65)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  boxShadow: '0 18px 38px rgba(2, 6, 23, 0.45)',
-                }}
-              >
-                <span style={{ fontSize: 20, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.7 }}>{item.label}</span>
-                <span style={{ fontSize: 34, fontWeight: 700 }}>{item.value}</span>
-              </div>
-            ))
-          ) : (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '32px 48px',
-                borderRadius: 20,
-                background: 'rgba(4, 8, 20, 0.7)',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                fontSize: 30,
-                opacity: 0.85,
-                width: '100%',
-              }}
-            >
-              Sync stats to render your onchain narrative.
-            </div>
-          )}
-        </div>
-        {remainingMetrics.length > 0 ? (
-          <div
-            style={{
-              marginTop: 32,
-              display: 'flex',
-              gap: 18,
-              flexWrap: 'wrap',
-              maxWidth: '100%',
-              
-              fontSize: 22,
-              opacity: 0.8,
-            }}
-          >
-            {remainingMetrics.map((item) => (
-              <span key={item.key} style={{ display: 'flex', gap: 12 }}>
-                <span style={{ opacity: 0.6, textTransform: 'uppercase', letterSpacing: 4 }}>{item.label}:</span>
-                <span>{item.value}</span>
-              </span>
-            ))}
-          </div>
-        ) : null}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 48,
-            left: 96,
-            right: 96,
-            display: 'flex',
-            justifyContent: 'space-between',
-            fontSize: 22,
-            opacity: 0.66,
-            letterSpacing: 2,
-          }}
-        >
-          <span>Powered by Gmeowbased</span>
-          <span>Multichain readiness • Frame friendly</span>
-        </div>
+        <div style={{ fontSize: 64 }}>ONCHAINSTATS TEST</div>
       </div>
     ),
-    {
-      width: WIDTH,
-      height: HEIGHT,
-    },
+    { width: WIDTH, height: HEIGHT }
   )
 }
