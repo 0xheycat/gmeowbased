@@ -44,6 +44,8 @@ export async function GET(req: Request) {
   const user = readParam(url, 'user')
   const fid = readParam(url, 'fid')
 
+  console.log('[FRAME IMAGE] type:', type, 'chain:', chain, 'fid:', fid)
+
   // GM frame type
   if (type === 'gm') {
     const gmCount = readParam(url, 'gmCount', '0')
