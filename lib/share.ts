@@ -204,3 +204,49 @@ export async function copyToClipboardSafe(value: string): Promise<boolean> {
     return false
   }
 }
+
+/**
+ * Build dynamic frame image URL with query parameters
+ * Generates personalized image URLs for /api/frame/image endpoint
+ * 
+ * @param input - Frame share input with type and parameters
+ * @param originOverride - Optional origin override
+ * @returns Dynamic image URL with query parameters, or fallback static image
+ */
+export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride?: string | null): string {
+  const origin = resolveOrigin(originOverride)
+  if (!origin) return `${origin || ''}/frame-image.png`
+  
+  const params = new URLSearchParams()
+  params.set('type', input.type)
+  if (input.chain) params.set('chain', String(input.chain))
+  if (input.user) params.set('user', input.user)
+  if (input.fid != null) params.set('fid', String(input.fid))
+  
+  if (input.type === 'quest' && input.questId != null) {
+    params.set('questId', String(input.questId))
+  }
+  if (input.type === 'badge' && input.badgeId) {
+    params.set('badgeId', input.badgeId)
+  }
+  if (input.type === 'leaderboard' && input.extra) {
+    if (input.extra.limit) params.set('limit', String(input.extra.limit))
+    if (input.extra.season) params.set('season', String(input.extra.season))
+    if (input.extra.global) params.set('global', String(input.extra.global))
+  }
+  if (input.type === 'guild' && input.id != null) {
+    params.set('guildId', String(input.id))
+  }
+  if (input.type === 'referral' && input.referral) {
+    params.set('ref', input.referral)
+  }
+  if (input.extra) {
+    for (const [key, value] of Object.entries(input.extra)) {
+      if (value === undefined || value === null) continue
+      if (['limit', 'season', 'global'].includes(key) && input.type === 'leaderboard') continue
+      params.set(key, String(value))
+    }
+  }
+  
+  return `${origin}/api/frame/image?${params.toString()}`
+}
