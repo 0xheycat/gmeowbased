@@ -1904,12 +1904,18 @@ export async function GET(req: Request) {
     }
     
     if (params.chain) {
-      const validChain = validateChainKey(params.chain)
-      if (!validChain) {
-        tracePush(traces, 'validation-failed', { field: 'chain', value: params.chain })
-        return new NextResponse(`Invalid chain parameter. Must be one of: ${CHAIN_KEYS.join(', ')}`, { status: 400 })
+      // Special handling for 'all' chain parameter in leaderboards
+      const chainStr = String(params.chain).toLowerCase().trim()
+      if (chainStr === 'all' || chainStr === 'global' || chainStr === 'combined') {
+        params.chain = 'all'
+      } else {
+        const validChain = validateChainKey(params.chain)
+        if (!validChain) {
+          tracePush(traces, 'validation-failed', { field: 'chain', value: params.chain })
+          return new NextResponse(`Invalid chain parameter. Must be one of: ${CHAIN_KEYS.join(', ')}`, { status: 400 })
+        }
+        params.chain = validChain
       }
-      params.chain = validChain
     }
     
     if (params.type) {
