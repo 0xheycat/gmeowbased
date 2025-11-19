@@ -76,7 +76,7 @@ export async function GET(req: Request) {
               background: 'linear-gradient(135deg, rgba(255, 210, 90, 0.1), rgba(124, 92, 255, 0.08))',
             }}
           />
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32, zIndex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
             <div style={{ fontSize: 96, fontWeight: 900, letterSpacing: '-2px' }}>GM!</div>
             <div style={{ fontSize: 32, opacity: 0.85 }}>
               {user ? shortenAddress(user) : 'Anonymous'} {fid ? `• FID ${fid}` : ''}
@@ -145,7 +145,7 @@ export async function GET(req: Request) {
               background: 'linear-gradient(135deg, rgba(95, 179, 255, 0.12), rgba(255, 210, 90, 0.06))',
             }}
           />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, zIndex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ fontSize: 32, letterSpacing: '6px', textTransform: 'uppercase', opacity: 0.7 }}>Quest</div>
             <div style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1 }}>{questName}</div>
             <div style={{ display: 'flex', gap: 48, marginTop: 32 }}>
@@ -238,7 +238,7 @@ export async function GET(req: Request) {
               background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.14), rgba(255, 210, 90, 0.08))',
             }}
           />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 32, zIndex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div style={{ fontSize: 32, letterSpacing: '6px', textTransform: 'uppercase', opacity: 0.7 }}>Leaderboard</div>
@@ -335,7 +335,7 @@ export async function GET(req: Request) {
             background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.16), rgba(95, 179, 255, 0.08))',
           }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <span style={{ fontSize: 24, letterSpacing: 8, textTransform: 'uppercase', opacity: 0.7 }}>Onchain dossier</span>
             <span style={{ fontSize: 54, fontWeight: 700 }}>Command Deck Metrics</span>
@@ -367,7 +367,7 @@ export async function GET(req: Request) {
             gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
             gap: 24,
             marginTop: 48,
-            zIndex: 1,
+            
           }}
         >
           {shownMetrics.length > 0 ? (
@@ -416,7 +416,7 @@ export async function GET(req: Request) {
               gap: 18,
               flexWrap: 'wrap',
               maxWidth: '100%',
-              zIndex: 1,
+              
               fontSize: 22,
               opacity: 0.8,
             }}

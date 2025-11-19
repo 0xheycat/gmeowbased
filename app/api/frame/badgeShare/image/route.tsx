@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
               {/* Tier pill */}
               <div
                 style={{
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
                   padding: '8px 24px',
                   borderRadius: 999,
