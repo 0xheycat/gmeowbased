@@ -224,16 +224,15 @@ export default function UserBadgesPage() {
             </p>
             <button
               type="button"
-              onClick={async () => {
-                const { openWarpcastComposer } = await import('@/lib/share')
-                const { buildBadgeShareFrameUrl, buildBadgeShareText } = await import('@/lib/frame-badge')
-                
+              onClick={() => {
                 // Share most recent badge
                 const latestBadge = badges[0]
-                const shareUrl = buildBadgeShareFrameUrl(fid, latestBadge.badgeId)
-                const shareText = buildBadgeShareText(latestBadge)
+                const shareUrl = `https://gmeowhq.art/api/frame/badge?fid=${fid}&badgeId=${latestBadge.badgeId}`
+                const shareText = `Just earned the ${latestBadge.metadata?.name || latestBadge.badgeType} badge! 🎮✨`
                 
-                await openWarpcastComposer(shareText, shareUrl)
+                // Open Warpcast composer
+                const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`
+                window.open(warpcastUrl, '_blank', 'noopener,noreferrer')
               }}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold transition-all"
             >
