@@ -93,7 +93,7 @@ export async function GET(req: Request) {
               letterSpacing: '2px',
             }}
           >
-            <span>Powered by Gmeowbased • {chain}</span>
+            <span>Powered by Gmeowbased {chain}</span>
           </div>
         </div>
       ),
@@ -290,8 +290,7 @@ export async function GET(req: Request) {
   }
 
   // Default: onchainstats
-  const fid = readParam(url, 'fid')
-  const user = readParam(url, 'user')
+  // Note: fid and user already declared at top (lines 34-35)
   const txs = readParam(url, 'txs', '—')
   const volume = readParam(url, 'volume', '—')
   const balance = readParam(url, 'balance', '—')
