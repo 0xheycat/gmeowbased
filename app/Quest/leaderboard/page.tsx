@@ -173,7 +173,7 @@ export default function QuestLeaderboardPage() {
                       onClick={() => {
                         const shareChain = (global ? 'all' : chainStr) as FrameShareInput['chain']
                         const frameUrl = buildFrameShareUrl({
-                          type: 'leaderboard',
+                          type: 'leaderboards',
                           chain: shareChain,
                           id: idStr,
                           extra: { rank: r.rank, quest: idStr },
