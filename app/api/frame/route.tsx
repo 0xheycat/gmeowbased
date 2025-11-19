@@ -2470,8 +2470,8 @@ export async function GET(req: Request) {
         imageParams.set('badgeIcon', '⚡')
       }
       
-      // Use static frame image (1200x800, 3:2 ratio) - /api/frame/og endpoint doesn't exist
-      const image = `${origin}/frame-image.png`
+      // Use dynamic frame image with personalized stats (1200x800, 3:2 ratio)
+      const image = defaultFrameImage
       const identityForJson = resolvedProfile || userParam
         ? {
             username: resolvedProfile?.username || null,
