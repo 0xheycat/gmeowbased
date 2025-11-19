@@ -1928,7 +1928,37 @@ export async function GET(req: Request) {
     const debugPayload = debugMode ? traces : undefined
     const origin = resolveRequestOrigin(req, url)
     // Use frame-image.png (3:2 ratio) for Farcaster frames, not og-image.png (1.91:1)
-    const dynamicImageUrl = buildDynamicFrameImageUrl({ type: type as any, chain: params.chain as any, questId: params.questId, badgeId: params.badgeId, user: params.user, fid: params.fid, id: params.id, referral: params.ref, extra: { limit: params.limit, season: params.season, global: params.global } }, origin); const defaultFrameImage = dynamicImageUrl || `${origin}/frame-image.png`
+    // Build extra parameters object with all relevant data for dynamic image generation
+    const extraParams: Record<string, any> = {
+      limit: params.limit,
+      season: params.season,
+      global: params.global,
+      // Onchainstats parameters
+      statsChain: params.statsChain,
+      chainName: params.chainName,
+      explorer: params.explorer,
+      txs: params.txs,
+      contracts: params.contracts,
+      volume: params.volume,
+      balance: params.balance,
+      age: params.age,
+      builder: params.builder,
+      neynar: params.neynar,
+      power: params.power,
+      firstTx: params.firstTx,
+      lastTx: params.lastTx,
+      // Quest parameters
+      questName: params.questName,
+      reward: params.reward,
+      expires: params.expires,
+      progress: params.progress,
+      // GM parameters
+      gmCount: params.gmCount,
+      streak: params.streak,
+      rank: params.rank,
+    }
+    const dynamicImageUrl = buildDynamicFrameImageUrl({ type: type as any, chain: params.chain as any, questId: params.questId, badgeId: params.badgeId, user: params.user, fid: params.fid, id: params.id, referral: params.ref, extra: extraParams }, origin)
+    const defaultFrameImage = dynamicImageUrl || `${origin}/frame-image.png`
 
     const handler = FRAME_HANDLERS[type]
     if (handler) {
