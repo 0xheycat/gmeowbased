@@ -221,7 +221,7 @@ export async function GET(req: Request) {
             display: 'flex',
             flexDirection: 'column',
             padding: '64px 80px',
-            background: 'radial-gradient(circle at 50% 20%, #1e2d4a, #0b0d18)',
+            background: '#1e2d4a',
             color: '#f5f7ff',
             position: 'relative',
           }}
@@ -318,7 +318,7 @@ export async function GET(req: Request) {
           display: 'flex',
           flexDirection: 'column',
           padding: '72px 96px',
-          background: 'radial-gradient(circle at 20% 20%, #1d2a50, #070b18)',
+          background: '#1d2a50',
           color: '#f5f7ff',
           position: 'relative',
         }}
@@ -343,7 +343,7 @@ export async function GET(req: Request) {
           </div>
           <div
             style={{
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               padding: '14px 28px',
@@ -421,7 +421,7 @@ export async function GET(req: Request) {
             }}
           >
             {remainingMetrics.map((item) => (
-              <span key={item.key} style={{ display: 'inline-flex', gap: 12 }}>
+              <span key={item.key} style={{ display: 'flex', gap: 12 }}>
                 <span style={{ opacity: 0.6, textTransform: 'uppercase', letterSpacing: 4 }}>{item.label}:</span>
                 <span>{item.value}</span>
               </span>
