@@ -70,7 +70,12 @@ export async function GET(req: Request) {
             <div style={{ fontSize: 96, fontWeight: 900, letterSpacing: '-2px' }}>GM!</div>
             <div style={{ display: 'flex', fontSize: 32, opacity: 0.85, gap: 8 }}>
               <div>{user ? shortenAddress(user) : 'Anonymous'}</div>
-              {fid && <div>• FID {fid}</div>}
+              {fid && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <span>•</span>
+                  <span>FID {fid}</span>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 48, marginTop: 32 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
