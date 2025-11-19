@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unknown-property */
 import { ImageResponse } from 'next/og'
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 export const revalidate = 60
 
 const WIDTH = 1200
