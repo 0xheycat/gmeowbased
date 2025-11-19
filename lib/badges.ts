@@ -13,7 +13,7 @@ const MINT_CACHE_TTL_MS = Number(process.env.BADGE_MINT_CACHE_TTL_MS ?? 30_000)
 const BADGE_MINT_LOOKBACK_BLOCKS = BigInt(process.env.BADGE_MINT_LOOKBACK_BLOCKS ?? 400_000)
 
 // ========================================
-// SERVER-SIDE CACHE
+// SERVER-SIDE CACHE done
 // ========================================
 
 type CacheEntry<T> = {

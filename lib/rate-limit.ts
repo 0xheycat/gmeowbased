@@ -28,6 +28,7 @@ if (redis) {
   console.log('[Rate Limit] Redis initialized with URL:', redisUrl?.substring(0, 30) + '...')
 } else {
   console.warn('[Rate Limit] Redis not initialized - rate limiting disabled')
+}
 
 // API routes: 60 requests per minute per IP
 export const apiLimiter = redis
