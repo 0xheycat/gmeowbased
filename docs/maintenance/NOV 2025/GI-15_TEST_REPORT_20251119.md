@@ -365,7 +365,7 @@ https://gmeowhq.art/api/frame?type=onchainstats&fid=848516&chain=base
 
 **Badge Endpoint (500 Error):**
 ```
-❌ https://gmeowhq.art/api/frame/badge?fid=848516
+❌ https://gmeowhq.art/api/frame/badge?fid=18139
 Status: 500 Internal Server Error
 Impact: 6 tests failing
 Recommendation: Remove tests or fix endpoint
