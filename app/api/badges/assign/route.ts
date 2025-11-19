@@ -95,15 +95,17 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
     // Queue badge mint asynchronously (non-blocking) if user has wallet
     if (profile?.wallet_address) {
       // Fire and forget - don't wait for mint queue insertion
-      supabase.from('mint_queue').insert({
-        fid,
-        wallet_address: profile.wallet_address,
-        badge_type: badgeDef.badgeType,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      }).then(() => {
+      void Promise.resolve(
+        supabase.from('mint_queue').insert({
+          fid,
+          wallet_address: profile.wallet_address,
+          badge_type: badgeDef.badgeType,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+        })
+      ).then(() => {
         console.log(`[Badge Assign] Mint queued for FID ${fid}, badge ${badgeDef.badgeType}`)
-      }).catch((error) => {
+      }).catch((error: unknown) => {
         console.error(`[Badge Assign] Failed to queue mint:`, error)
       })
     }
@@ -112,7 +114,7 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
     Promise.all([
       invalidateCache('user-badges', buildUserBadgesKey(fid)),
       invalidateCache('user-profiles', buildUserProfileKey(fid)),
-    ]).catch((error) => {
+    ]).catch((error: unknown) => {
       console.error('[Badge Assign] Cache invalidation error:', error)
     })
 
