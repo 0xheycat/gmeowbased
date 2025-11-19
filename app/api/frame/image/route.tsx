@@ -229,13 +229,13 @@ export async function GET(req: Request) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ fontSize: 32, letterSpacing: '6px', textTransform: 'uppercase', opacity: 0.7 }}>Leaderboard</div>
-                <div style={{ fontSize: 64, fontWeight: 800 }}>Top Performers</div>
+                <span style={{ fontSize: 32, letterSpacing: 6, textTransform: 'uppercase', opacity: 0.7 }}>Leaderboard</span>
+                <span style={{ fontSize: 64, fontWeight: 800 }}>Top Performers</span>
               </div>
               <div
                 style={{
                   padding: '16px 32px',
-                  borderRadius: 999,
+                  borderRadius: 24,
                   border: '1px solid rgba(124, 92, 255, 0.4)',
                   background: 'rgba(124, 92, 255, 0.15)',
                   color: '#7c5cff',
@@ -252,18 +252,18 @@ export async function GET(req: Request) {
                 flexDirection: 'column',
                 gap: 16,
                 marginTop: 32,
-                padding: '32px',
-                borderRadius: 20,
+                padding: 32,
+                borderRadius: 16,
                 background: 'rgba(4, 8, 20, 0.65)',
                 border: '1px solid rgba(255, 255, 255, 0.06)',
               }}
             >
-              <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 16 }}>
+              <span style={{ fontSize: 36, fontWeight: 700 }}>
                 View Top {limit} Players
-              </div>
+              </span>
               <div style={{ display: 'flex', flexDirection: 'column', fontSize: 28, opacity: 0.75, gap: 8 }}>
-                <div>GM streaks • Quest completions</div>
-                <div>XP leaders • Badge collectors</div>
+                <span>GM streaks • Quest completions</span>
+                <span>XP leaders • Badge collectors</span>
               </div>
             </div>
           </div>
@@ -277,7 +277,7 @@ export async function GET(req: Request) {
               justifyContent: 'space-between',
               fontSize: 22,
               opacity: 0.6,
-              letterSpacing: '2px',
+              letterSpacing: 2,
             }}
           >
             <span>Powered by Gmeowbased</span>
