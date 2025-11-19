@@ -207,8 +207,8 @@ export async function GET(req: Request) {
     )
   }
 
-  // Leaderboard frame type - MINIMAL TEST
-  if (type === 'leaderboard') {
+  // Leaderboard frame type - MINIMAL TEST (renamed to leaderboards for routing test)
+  if (type === 'leaderboards' || type === 'leaderboard') {
     return new ImageResponse(
       (
         <div
