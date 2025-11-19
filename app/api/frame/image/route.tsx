@@ -242,7 +242,7 @@ export async function GET(req: Request) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div style={{ fontSize: 32, letterSpacing: '6px', textTransform: 'uppercase', opacity: 0.7 }}>Leaderboard</div>
-                <div style={{ fontSize: 64, fontWeight: 800 }}>🏆 Top Performers</div>
+                <div style={{ fontSize: 64, fontWeight: 800 }}>Top Performers</div>
               </div>
               <div
                 style={{
@@ -274,8 +274,8 @@ export async function GET(req: Request) {
                 View Top {limit} Players
               </div>
               <div style={{ fontSize: 28, opacity: 0.75, lineHeight: 1.5 }}>
-                🥇 GM streaks • 🎯 Quest completions<br />
-                ⚡ XP leaders • 🌟 Badge collectors
+                GM streaks • Quest completions<br />
+                XP leaders • 🌟 Badge collectors
               </div>
             </div>
           </div>
