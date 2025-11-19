@@ -614,6 +614,11 @@ export function getBadgeByTier(tier: TierType): BadgeRegistry['badges'][number] 
 
 /**
  * Assign badge to user in database
+ * 
+ * Performance optimizations:
+ * - Uses upsert (ON CONFLICT) to avoid separate check + insert
+ * - Single database round-trip instead of two
+ * - Returns existing badge if already assigned
  */
 export async function assignBadgeToUser(params: {
   fid: number
@@ -629,34 +634,8 @@ export async function assignBadgeToUser(params: {
   const badge = getBadgeFromRegistry(params.badgeId)
   if (!badge) throw new Error(`Badge ${params.badgeId} not found in registry`)
 
-  // Check if user already has this badge
-  const { data: existing } = await supabase
-    .from(USER_BADGES_TABLE)
-    .select('*')
-    .eq('fid', params.fid)
-    .eq('badge_type', params.badgeType)
-    .maybeSingle()
-
-  if (existing) {
-    // Badge already assigned
-    return {
-      id: existing.id,
-      fid: existing.fid,
-      badgeId: existing.badge_id,
-      badgeType: existing.badge_type,
-      tier: existing.tier as TierType,
-      assignedAt: existing.assigned_at,
-      minted: existing.minted,
-      mintedAt: existing.minted_at,
-      txHash: existing.tx_hash,
-      chain: existing.chain,
-      contractAddress: existing.contract_address,
-      tokenId: existing.token_id,
-      metadata: existing.metadata || {},
-    }
-  }
-
-  // Create new badge assignment
+  // Use upsert with ON CONFLICT to handle existing badges efficiently
+  // This eliminates the need for a separate SELECT query
   const payload = {
     fid: params.fid,
     badge_id: params.badgeId,
@@ -668,13 +647,45 @@ export async function assignBadgeToUser(params: {
     metadata: params.metadata || {},
   }
 
+  // Use upsert: insert if not exists, return existing if already assigned
+  // onConflict specifies the unique constraint (fid + badge_type)
   const { data, error } = await supabase
     .from(USER_BADGES_TABLE)
-    .insert(payload)
+    .upsert(payload, {
+      onConflict: 'fid,badge_type',
+      ignoreDuplicates: true, // Don't update if exists, just return it
+    })
     .select()
     .single()
 
   if (error) {
+    // If upsert fails, fall back to checking if badge already exists
+    const { data: existing } = await supabase
+      .from(USER_BADGES_TABLE)
+      .select('*')
+      .eq('fid', params.fid)
+      .eq('badge_type', params.badgeType)
+      .maybeSingle()
+
+    if (existing) {
+      // Badge exists, return it
+      return {
+        id: existing.id,
+        fid: existing.fid,
+        badgeId: existing.badge_id,
+        badgeType: existing.badge_type,
+        tier: existing.tier as TierType,
+        assignedAt: existing.assigned_at,
+        minted: existing.minted,
+        mintedAt: existing.minted_at,
+        txHash: existing.tx_hash,
+        chain: existing.chain,
+        contractAddress: existing.contract_address,
+        tokenId: existing.token_id,
+        metadata: existing.metadata || {},
+      }
+    }
+
     throw new Error(`Failed to assign badge: ${error.message}`)
   }
 

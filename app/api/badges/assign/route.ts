@@ -4,7 +4,7 @@ import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { BadgeAssignSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
-import { invalidateCache, buildUserBadgesKey } from '@/lib/cache'
+import { invalidateCache, buildUserBadgesKey, getCached, buildUserProfileKey } from '@/lib/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +52,7 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
       )
     }
 
-    // Get badge definition from registry
+    // Get badge definition from registry (fast - embedded data)
     const badgeDef = getBadgeFromRegistry(badgeId)
     
     if (!badgeDef) {
@@ -62,37 +62,59 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
       )
     }
 
-    // Assign badge to user
-    const badge = await assignBadgeToUser({
-      fid,
-      badgeId: badgeDef.id,
-      badgeType: badgeDef.badgeType,
-      tier: badgeDef.tier as TierType,
-      metadata: metadata || {
-        assignedBy: 'manual',
-        assignedAt: new Date().toISOString(),
+    // Get user profile with caching (includes wallet address check)
+    const profilePromise = getCached(
+      'user-profiles',
+      buildUserProfileKey(fid),
+      async () => {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('wallet_address, fid')
+          .eq('fid', fid)
+          .single()
+        return data
       },
-    })
+      { ttl: 300 } // 5 minutes cache
+    )
 
-    // Queue badge mint if user has wallet
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('wallet_address')
-      .eq('fid', fid)
-      .single()
+    // Assign badge and get profile in parallel
+    const [badge, profile] = await Promise.all([
+      assignBadgeToUser({
+        fid,
+        badgeId: badgeDef.id,
+        badgeType: badgeDef.badgeType,
+        tier: badgeDef.tier as TierType,
+        metadata: metadata || {
+          assignedBy: 'manual',
+          assignedAt: new Date().toISOString(),
+        },
+      }),
+      profilePromise,
+    ])
 
+    // Queue badge mint asynchronously (non-blocking) if user has wallet
     if (profile?.wallet_address) {
-      await supabase.from('mint_queue').insert({
+      // Fire and forget - don't wait for mint queue insertion
+      supabase.from('mint_queue').insert({
         fid,
         wallet_address: profile.wallet_address,
         badge_type: badgeDef.badgeType,
         status: 'pending',
         created_at: new Date().toISOString(),
+      }).then(() => {
+        console.log(`[Badge Assign] Mint queued for FID ${fid}, badge ${badgeDef.badgeType}`)
+      }).catch((error) => {
+        console.error(`[Badge Assign] Failed to queue mint:`, error)
       })
     }
 
-    // Invalidate user badges cache
-    await invalidateCache('user-badges', buildUserBadgesKey(fid))
+    // Invalidate caches in parallel (non-blocking)
+    Promise.all([
+      invalidateCache('user-badges', buildUserBadgesKey(fid)),
+      invalidateCache('user-profiles', buildUserProfileKey(fid)),
+    ]).catch((error) => {
+      console.error('[Badge Assign] Cache invalidation error:', error)
+    })
 
     return NextResponse.json({
       success: true,
