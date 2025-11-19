@@ -34,6 +34,53 @@ let isProcessing = false
 let shutdownRequested = false
 
 /**
+ * Send webhook notification for successful mint
+ */
+async function sendMintWebhook(mint: MintQueueEntry, txHash: string, tokenId: number) {
+  const webhookUrl = process.env.BADGE_MINT_WEBHOOK_URL
+  const webhookSecret = process.env.WEBHOOK_SECRET
+  
+  if (!webhookUrl) {
+    console.log('[Worker] No webhook URL configured, skipping notification')
+    return
+  }
+  
+  try {
+    const payload = {
+      fid: mint.fid,
+      badgeId: mint.badgeType.replace(/_/g, '-'),
+      badgeType: mint.badgeType,
+      tier: mint.tier || 'common',
+      txHash,
+      tokenId,
+      chain: mint.chain || 'base',
+      contractAddress: mint.contractAddress || '',
+      mintedAt: new Date().toISOString(),
+    }
+    
+    console.log('[Worker] Sending webhook notification:', webhookUrl)
+    
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': webhookSecret ? `Bearer ${webhookSecret}` : '',
+      },
+      body: JSON.stringify(payload),
+    })
+    
+    if (!response.ok) {
+      console.error(`[Worker] Webhook failed: ${response.status} ${response.statusText}`)
+    } else {
+      console.log('[Worker] Webhook notification sent successfully')
+    }
+  } catch (error) {
+    console.error('[Worker] Error sending webhook:', error)
+    // Don't fail the mint if webhook fails
+  }
+}
+
+/**
  * Process a single mint from the queue
  */
 async function processMint(mint: MintQueueEntry): Promise<{
@@ -64,8 +111,10 @@ async function processMint(mint: MintQueueEntry): Promise<{
     // Update mint_queue status to 'minted'
     await updateMintQueueStatus(mint.id, 'minted')
 
-    // Update the mint_queue row with tx_hash and minted_at
-    // This is handled by the updateMintQueueStatus or could be added as a parameter
+    // Send webhook notification (non-blocking)
+    sendMintWebhook(mint, txHash, tokenId).catch(error => {
+      console.error('[Worker] Webhook notification failed:', error)
+    })
     
     return {
       success: true,
@@ -88,16 +137,22 @@ async function processMint(mint: MintQueueEntry): Promise<{
 
 /**
  * Process a batch of pending mints
+ * Returns result summary for monitoring
  */
-async function processBatch() {
+async function processBatch(): Promise<{
+  success: number
+  failed: number
+  processed: number
+  skipped: number
+}> {
   if (isProcessing) {
     console.log('[Worker] Batch already in progress, skipping')
-    return
+    return { success: 0, failed: 0, processed: 0, skipped: 1 }
   }
 
   if (shutdownRequested) {
     console.log('[Worker] Shutdown requested, stopping batch processing')
-    return
+    return { success: 0, failed: 0, processed: 0, skipped: 1 }
   }
 
   isProcessing = true
@@ -107,7 +162,7 @@ async function processBatch() {
     
     if (pending.length === 0) {
       console.log('[Worker] No pending mints')
-      return
+      return { success: 0, failed: 0, processed: 0, skipped: 0 }
     }
 
     console.log(`[Worker] Processing ${pending.length} pending mints`)
@@ -115,16 +170,20 @@ async function processBatch() {
     const results = {
       success: 0,
       failed: 0,
+      processed: 0,
+      skipped: 0,
     }
 
     // Process sequentially to avoid rate limits
     for (const mint of pending) {
       if (shutdownRequested) {
         console.log('[Worker] Shutdown requested, stopping batch')
+        results.skipped = pending.length - results.processed
         break
       }
 
       const result = await processMint(mint)
+      results.processed++
       
       if (result.success) {
         results.success++
@@ -136,9 +195,11 @@ async function processBatch() {
       await new Promise(resolve => setTimeout(resolve, 2000))
     }
 
-    console.log(`[Worker] Batch complete: ${results.success} success, ${results.failed} failed`)
+    console.log(`[Worker] Batch complete: ${results.success} success, ${results.failed} failed, ${results.processed} processed`)
+    return results
   } catch (error) {
     console.error('[Worker] Batch processing error:', error)
+    return { success: 0, failed: 0, processed: 0, skipped: 0 }
   } finally {
     isProcessing = false
   }
