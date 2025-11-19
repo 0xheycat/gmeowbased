@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 2025-11-19 20:00 UTC - Frame Maintenance Phase
+**Commit:** [30d9e64](https://github.com/0xheycat/gmeowbased/commit/30d9e64) - Allow chain=all in /api/frame for leaderboards  
+**Phase:** Frame maintenance — docs updated, progress 40% toward 90%+ cleanliness  
+**Scope:** Audit & fix all frame-related functionality (9 frame types operational)
+
+#### Completed
+- ✅ All 9 frame types validated (gm, quest, leaderboards, onchainstats, guild, referral, points, verify, generic)
+- ✅ Fixed Leaderboards Satori CSS violations (borderRadius, letterSpacing, div→span)
+- ✅ Added chain=all support across frame routes and API handlers
+- ✅ Button configuration audit complete (all frames use launch_frame action)
+- ✅ Comprehensive audit report generated: `docs/maintenance/reports/FRAME-MAINTENANCE-AUDIT-2025-11-19.md`
+
+#### In Progress
+- 🔄 Mobile UI audit (safe areas, touch targets, ARIA labels, contrast)
+- 🔄 MCP asset compliance verification (splash images, icons)
+- 🔄 Warpcast integration testing (desktop, iOS, Android)
+
+#### Technical Fixes (Commits: 3fad109 → 30d9e64)
+1. Build error fix: Removed redefined variables in onchainstats section
+2. Chain validation: Accept 'all'/'global'/'combined' aliases in frame routes
+3. Type consistency: Renamed 'leaderboard'→'leaderboards' across 8 files
+4. Satori CSS compliance: Fixed borderRadius (999→24), letterSpacing ('6px'→6)
+5. Route path fix: share.ts line 123 (/frame/leaderboards→/frame/leaderboard)
+6. API validation: Added chain=all support to main frame handler
+
+---
+
 ### Phase 4 (v2.3.0-alpha) - 2025-11-16
 
 **Badge System Enhancement - NFT Minting, Notifications, Viral Sharing**
