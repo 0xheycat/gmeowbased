@@ -6,7 +6,7 @@ export const runtime = 'edge'
 export const revalidate = 60
 
 const WIDTH = 1200
-const HEIGHT = 800
+const HEIGHT = 630
 
 const READABLE_KEYS: Array<{ key: string; label: string }> = [
   { key: 'txs', label: 'Total Transactions' },
