@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   
   // Redirect to main frame handler with validated parameters
   const frameUrl = new URL('/api/frame', origin)
-  frameUrl.searchParams.set('type', 'leaderboard')
+  frameUrl.searchParams.set('type', 'leaderboards')
   if (chain) {
     frameUrl.searchParams.set('chain', chain)
   }

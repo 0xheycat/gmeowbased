@@ -63,7 +63,7 @@ export type FrameType =
   | 'guild' 
   | 'points' 
   | 'referral' 
-  | 'leaderboard' 
+  | 'leaderboards' 
   | 'gm' 
   | 'verify' 
   | 'onchainstats' 
@@ -74,7 +74,7 @@ const VALID_FRAME_TYPES: FrameType[] = [
   'guild',
   'points',
   'referral',
-  'leaderboard',
+  'leaderboards',
   'gm',
   'verify',
   'onchainstats',
