@@ -60,22 +60,12 @@ export async function GET(req: Request) {
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            background: 'radial-gradient(circle at 30% 30%, #2d1b4e, #0a0e1a)',
+            background: '#2d1b4e',
             color: '#f5f7ff',
             position: 'relative',
             padding: '64px',
           }}
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              left: 0,
-              background: 'linear-gradient(135deg, rgba(255, 210, 90, 0.1), rgba(124, 92, 255, 0.08))',
-            }}
-          />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
             <div style={{ fontSize: 96, fontWeight: 900, letterSpacing: '-2px' }}>GM!</div>
             <div style={{ fontSize: 32, opacity: 0.85 }}>
