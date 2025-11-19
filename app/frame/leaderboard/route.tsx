@@ -15,13 +15,23 @@ export async function GET(req: Request) {
   const origin = `${url.protocol}//${url.host}`
   
   // Validate optional chain parameter
+  // Special values for global leaderboard: 'all', 'global', 'combined'
   let chain = url.searchParams.get('chain')
   if (chain) {
-    const validChain = sanitizeChainKey(chain)
-    if (!validChain) {
-      return new NextResponse('Invalid chain parameter', { status: 400 })
+    const chainLower = chain.toLowerCase().trim()
+    const isGlobalAlias = ['all', 'global', 'combined'].includes(chainLower)
+    
+    if (isGlobalAlias) {
+      // Pass through global aliases without validation
+      chain = chainLower
+    } else {
+      // Validate actual chain keys
+      const validChain = sanitizeChainKey(chain)
+      if (!validChain) {
+        return new NextResponse('Invalid chain parameter', { status: 400 })
+      }
+      chain = validChain
     }
-    chain = validChain
   }
   
   // Redirect to main frame handler with validated parameters
