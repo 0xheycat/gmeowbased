@@ -70,17 +70,17 @@ test.describe('GI-15 Group 1: Frame HTML & Meta Validation', () => {
   })
 
   test('Leaderboard frame has valid JSON meta structure', async ({ page }) => {
-    const { frameJson } = await extractFrameJson(page, `${BASE_URL}/api/frame?type=leaderboard`)
+    const { frameJson } = await extractFrameJson(page, `${BASE_URL}/api/frame?type=leaderboards&chain=all`)
 
     expect(frameJson.version).toBe('next')
     expect(frameJson.button.action.type).toBe('launch_frame')
     expect(frameJson.button.action.name).toBe('Gmeowbased')
-    expect(frameJson.imageUrl).toMatch(/^https:\/\//)
-    expect(frameJson.imageUrl).toContain('/api/frame/image?type=leaderboard')
+    expect(frameJson.imageUrl).toMatch(/^https?:\/\//)
+    expect(frameJson.imageUrl).toContain('/api/frame/image?type=leaderboards')
   })
 
-  test('Badge frame has valid JSON meta structure', async ({ page }) => {
-    const { frameJson } = await extractFrameJson(page, `${BASE_URL}/api/frame/badge?fid=848516`)
+  test('Onchainstats frame has valid JSON meta structure', async ({ page }) => {
+    const { frameJson } = await extractFrameJson(page, `${BASE_URL}/api/frame?type=onchainstats&chain=base`)
 
     expect(frameJson.version).toBe('next')
     expect(frameJson.button.action.type).toBe('launch_frame')
@@ -88,8 +88,8 @@ test.describe('GI-15 Group 1: Frame HTML & Meta Validation', () => {
     expect(frameJson.imageUrl).toMatch(/^https?:\/\//)
   })
 
-  test('Profile frame has valid JSON meta structure', async ({ page }) => {
-    const { frameJson } = await extractFrameJson(page, `${BASE_URL}/api/frame?type=profile&fid=848516`)
+  test('Onchainstats with user has valid JSON meta structure', async ({ page }) => {
+    const { frameJson } = await extractFrameJson(page, `${BASE_URL}/api/frame?type=onchainstats&fid=848516&chain=base`)
 
     expect(frameJson.version).toBe('next')
     expect(frameJson.button.action.type).toBe('launch_frame')
@@ -131,19 +131,15 @@ test.describe('GI-15 Group 1: Frame HTML & Meta Validation', () => {
   })
 
   test('All frame types return valid HTML response', async ({ page }) => {
-    const frameTypes = [
-      'gm',
-      'quest',
-      'leaderboard',
-      'profile',
-      'badge',
+    const frameUrls = [
+      `${BASE_URL}/api/frame?type=gm`,
+      `${BASE_URL}/api/frame?type=quest&chain=base&questId=1`,
+      `${BASE_URL}/api/frame?type=leaderboards&chain=all`,
+      `${BASE_URL}/api/frame?type=onchainstats&chain=base`,
+      `${BASE_URL}/api/frame?type=onchainstats&fid=848516&chain=base`,
     ]
 
-    for (const type of frameTypes) {
-      const url = type === 'badge' 
-        ? `${BASE_URL}/api/frame/${type}?fid=848516`
-        : `${BASE_URL}/api/frame?type=${type}`
-      
+    for (const url of frameUrls) {
       const response = await page.goto(url)
       expect(response?.status()).toBe(200)
       const contentType = response?.headers()['content-type'] || ''

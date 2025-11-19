@@ -84,10 +84,14 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  // webServer only needed for local testing
+  // For production testing, set NEXT_PUBLIC_BASE_URL environment variable
+  ...(process.env.NEXT_PUBLIC_BASE_URL ? {} : {
+    webServer: {
+      command: 'pnpm dev',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+  }),
 })

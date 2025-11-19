@@ -1,0 +1,79 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - button "Switch to desktop layout preview" [pressed] [ref=e8] [cursor=pointer]:
+          - img [ref=e9]
+          - generic [ref=e11]: "Current layout: mobile"
+        - button "Toggle theme" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+      - link [ref=e17] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e18]
+    - main [ref=e20]:
+      - generic [ref=e23]:
+        - heading "404" [level=1] [ref=e24]
+        - heading "This page could not be found." [level=2] [ref=e26]
+    - contentinfo [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]: 😺
+            - generic [ref=e32]:
+              - generic [ref=e33]: Gmeowbased
+              - generic [ref=e34]: Adventure Daily GM
+          - paragraph [ref=e35]: Automate rituals, unlock quests, and rally your guild across Base, Optimism, Unichain, Ink, and more. The lounge is always open for pilots chasing prestige.
+          - generic [ref=e36]:
+            - link "Daily GM Ritual Drop a GM, climb the XP ladder, and keep your streak alive. Go" [ref=e37] [cursor=pointer]:
+              - /url: /Quest
+              - generic [ref=e38]:
+                - img [ref=e40]
+                - generic [ref=e42]:
+                  - generic [ref=e43]: Daily GM Ritual
+                  - generic [ref=e44]: Drop a GM, climb the XP ladder, and keep your streak alive.
+              - generic [ref=e45]: Go
+            - link "Guild HQ Coordinate squads, manage teams, and unlock shared rewards. Go" [ref=e46] [cursor=pointer]:
+              - /url: /Guild
+              - generic [ref=e47]:
+                - img [ref=e49]
+                - generic [ref=e51]:
+                  - generic [ref=e52]: Guild HQ
+                  - generic [ref=e53]: Coordinate squads, manage teams, and unlock shared rewards.
+              - generic [ref=e54]: Go
+        - generic [ref=e56]: © 2025 Gmeowbased. All rights reserved.
+    - navigation [ref=e57]:
+      - list [ref=e59]:
+        - listitem [ref=e60]:
+          - link "Home" [ref=e61] [cursor=pointer]:
+            - /url: /
+            - img [ref=e63]
+            - generic [ref=e65]: Home
+        - listitem [ref=e66]:
+          - link "Dash" [ref=e67] [cursor=pointer]:
+            - /url: /Dashboard
+            - img [ref=e69]
+            - generic [ref=e71]: Dash
+        - listitem [ref=e72]:
+          - link "Quests" [ref=e73] [cursor=pointer]:
+            - /url: /Quest
+            - img [ref=e75]
+            - generic [ref=e77]: Quests
+        - listitem [ref=e78]:
+          - link "Ranks" [ref=e79] [cursor=pointer]:
+            - /url: /leaderboard
+            - img [ref=e81]
+            - generic [ref=e83]: Ranks
+        - listitem [ref=e84]:
+          - link "Guild" [ref=e85] [cursor=pointer]:
+            - /url: /Guild
+            - img [ref=e87]
+            - generic [ref=e89]: Guild
+  - generic:
+    - status:
+      - generic: ℹ️
+    - generic: Live
+  - alert [ref=e90]
+```
