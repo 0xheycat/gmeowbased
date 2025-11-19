@@ -28,7 +28,7 @@ export type AgentIntentType =
   | 'streak'
   | 'quests'
   | 'quest-recommendations'
-  | 'leaderboard'
+  | 'leaderboards'
   | 'gm'
   | 'help'
   | 'rate-limited'
@@ -274,7 +274,7 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
       replyText = `${t.greeting} ${handle}! ${formatQuestRecommendations(recommendations)}`
       break
     }
-    case 'leaderboard': {
+    case 'leaderboards': {
       const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
       const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['gm', 'quest-verify', 'tip', 'stake', 'unstake'], since: timeframe.since })
       summaryMeta.events = summary
@@ -378,7 +378,7 @@ function detectIntent(text: string): IntentDetection {
     /\bstanding\b/.test(lower) ||
     /where\s+(am\s+i|do\s+i\s+stand)/.test(lower)
   ) {
-    return { type: 'leaderboard', timeframe }
+    return { type: 'leaderboards', timeframe }
   }
 
   // Stats/XP patterns - most specific stats keywords

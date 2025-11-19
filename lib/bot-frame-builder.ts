@@ -5,7 +5,7 @@ import type { ChainKey } from '@/lib/gm-utils'
 export type BotFrameType = 
   | 'stats-summary'
   | 'quest-board'
-  | 'leaderboard'
+  | 'leaderboards'
   | 'guild-invite'
   | 'profile-card'
   | 'daily-streak'
@@ -78,9 +78,9 @@ export function buildBotFrameEmbed(options: BotFrameOptions): BotFrameEmbed | nu
       }
     }
 
-    case 'leaderboard': {
+    case 'leaderboards': {
       const frameInput: FrameShareInput = {
-        type: 'leaderboard',
+        type: 'leaderboards',
         chain: chain || 'all',
         fid: fid || undefined,
         extra: {
@@ -94,7 +94,7 @@ export function buildBotFrameEmbed(options: BotFrameOptions): BotFrameEmbed | nu
 
       return {
         url,
-        type: 'leaderboard',
+        type: 'leaderboards',
         description: 'Top pilots ranked by XP, streaks, and achievements across all chains'
       }
     }
@@ -210,7 +210,7 @@ export function selectFrameForIntent(
     case 'leaderboard':
     case 'rank':
       return buildBotFrameEmbed({
-        type: 'leaderboard',
+        type: 'leaderboards',
         fid,
         chain: chain as ChainKey | 'all' | undefined
       })

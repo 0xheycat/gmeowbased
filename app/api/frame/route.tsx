@@ -413,7 +413,7 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
 
   const jsonPayload = {
     ok: Boolean(leaderboardPayload?.ok),
-    type: 'leaderboard' as const,
+    type: 'leaderboards' as const,
     chain: isGlobal ? 'all' : chainKey,
     chainName: chainDisplay,
     global: isGlobal,

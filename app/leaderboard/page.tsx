@@ -350,7 +350,7 @@ export default function MegaLeaderboard() {
                       className="roster-chip text-xs sm:text-sm"
                       onClick={() => {
                         const frameUrl = buildFrameShareUrl({
-                          type: 'leaderboard',
+                          type: 'leaderboards',
                           chain: shareChain,
                           extra: { rank: row.rank },
                         })

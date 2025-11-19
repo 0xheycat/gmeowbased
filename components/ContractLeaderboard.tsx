@@ -211,7 +211,7 @@ export function ContractLeaderboard() {
                   type="button"
                   className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold"
                   onClick={() => {
-                    const frameUrl = buildFrameShareUrl({ type: 'leaderboard', chain: 'base', extra: { rank: u.rank } })
+                    const frameUrl = buildFrameShareUrl({ type: 'leaderboards', chain: 'base', extra: { rank: u.rank } })
                     if (!frameUrl) return
                     const text = `Flexing as #${u.rank} on the GMEOW leaderboard with ${u.points} XP.`
                     void openWarpcastComposer(text, frameUrl)
