@@ -207,10 +207,13 @@ export async function GET(req: Request) {
     )
   }
 
-  // Leaderboard frame type
+  // Leaderboard frame type - DEBUGGING: using Quest template
   if (type === 'leaderboard') {
-    const season = readParam(url, 'season', 'Current Season')
-    const limit = readParam(url, 'limit', '10')
+    const questId = readParam(url, 'questId', '1')
+    const questName = readParam(url, 'questName', 'LEADERBOARD TEST')
+    const reward = readParam(url, 'reward', 'Top 10')
+    const expires = readParam(url, 'expires', 'Season 1')
+    const progress = '0'
 
     return new ImageResponse(
       (
@@ -221,7 +224,7 @@ export async function GET(req: Request) {
             display: 'flex',
             flexDirection: 'column',
             padding: '64px 80px',
-            background: '#1e2d4a',
+            background: 'radial-gradient(circle at 20% 80%, #1a2f4e, #0d0f1c)',
             color: '#f5f7ff',
             position: 'relative',
           }}
@@ -233,47 +236,40 @@ export async function GET(req: Request) {
               right: 0,
               bottom: 0,
               left: 0,
-              background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.14), rgba(255, 210, 90, 0.08))',
+              background: 'linear-gradient(135deg, rgba(95, 179, 255, 0.12), rgba(255, 210, 90, 0.06))',
             }}
           />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ fontSize: 32, letterSpacing: '6px', textTransform: 'uppercase', opacity: 0.7 }}>Leaderboard</div>
-                <div style={{ fontSize: 64, fontWeight: 800 }}>Top Performers</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ fontSize: 32, letterSpacing: '6px', textTransform: 'uppercase', opacity: 0.7 }}>Quest</div>
+            <div style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1 }}>{questName}</div>
+            <div style={{ display: 'flex', gap: 48, marginTop: 32 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  padding: '24px 32px',
+                  borderRadius: 16,
+                  background: 'rgba(4, 8, 20, 0.7)',
+                  border: '1px solid rgba(255, 210, 90, 0.3)',
+                }}
+              >
+                <div style={{ fontSize: 24, textTransform: 'uppercase', letterSpacing: '4px', opacity: 0.7 }}>Reward</div>
+                <div style={{ fontSize: 42, fontWeight: 700, color: '#ffd25a' }}>{reward}</div>
               </div>
               <div
                 style={{
-                  padding: '16px 32px',
-                  borderRadius: 999,
-                  border: '1px solid rgba(124, 92, 255, 0.4)',
-                  background: 'rgba(124, 92, 255, 0.15)',
-                  color: '#7c5cff',
-                  fontSize: 28,
-                  fontWeight: 700,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  padding: '24px 32px',
+                  borderRadius: 16,
+                  background: 'rgba(4, 8, 20, 0.7)',
+                  border: '1px solid rgba(95, 179, 255, 0.3)',
                 }}
               >
-                {season}
-              </div>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 16,
-                marginTop: 32,
-                padding: '32px',
-                borderRadius: 20,
-                background: 'rgba(4, 8, 20, 0.65)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-              }}
-            >
-              <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 16 }}>
-                View Top {limit} Players
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', fontSize: 28, opacity: 0.75, gap: 8 }}>
-                <div>GM streaks • Quest completions</div>
-                <div>XP leaders • Badge collectors</div>
+                <div style={{ fontSize: 24, textTransform: 'uppercase', letterSpacing: '4px', opacity: 0.7 }}>Expires</div>
+                <div style={{ fontSize: 42, fontWeight: 700, color: '#5fb3ff' }}>{expires}</div>
               </div>
             </div>
           </div>
@@ -290,8 +286,7 @@ export async function GET(req: Request) {
               letterSpacing: '2px',
             }}
           >
-            <span>Powered by Gmeowbased</span>
-            <span>{chain} • Multichain Rankings</span>
+            <span>{chain} • Quest #{questId}</span>
           </div>
         </div>
       ),
