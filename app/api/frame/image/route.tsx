@@ -103,8 +103,7 @@ export async function GET(req: Request) {
               letterSpacing: '2px',
             }}
           >
-            <div>Powered by Gmeowbased •</div>
-            <div>{chain}</div>
+            <span>Powered by Gmeowbased • {chain}</span>
           </div>
         </div>
       ),
@@ -291,13 +290,8 @@ export async function GET(req: Request) {
               letterSpacing: '2px',
             }}
           >
-            <div style={{ display: 'flex', gap: 8 }}>
-              <span>Powered by Gmeowbased</span>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <span>{chain}</span>
-              <span>• Multichain Rankings</span>
-            </div>
+            <span>Powered by Gmeowbased</span>
+            <span>{chain} • Multichain Rankings</span>
           </div>
         </div>
       ),
@@ -447,13 +441,8 @@ export async function GET(req: Request) {
             letterSpacing: 2,
           }}
         >
-          <div style={{ display: 'flex', gap: 8 }}>
-            <span>Powered by Gmeowbased</span>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <span>Multichain readiness</span>
-            <span>• Frame friendly</span>
-          </div>
+          <span>Powered by Gmeowbased</span>
+          <span>Multichain readiness • Frame friendly</span>
         </div>
       </div>
     ),
