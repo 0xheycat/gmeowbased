@@ -1,0 +1,139 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - heading "Navigation" [level=2] [ref=e5]
+        - button "Hide sidebar" [ref=e6] [cursor=pointer]:
+          - img [ref=e7]
+      - navigation [ref=e9]:
+        - link "Home Mission control" [ref=e10] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e11]:
+            - img [ref=e13]
+            - generic [ref=e15]:
+              - generic [ref=e16]: Home
+              - generic [ref=e17]: Mission control
+        - link "Dashboard Daily GM pulse" [ref=e18] [cursor=pointer]:
+          - /url: /Dashboard
+          - generic [ref=e19]:
+            - img [ref=e21]
+            - generic [ref=e23]:
+              - generic [ref=e24]: Dashboard
+              - generic [ref=e25]: Daily GM pulse
+        - link "Quests Active sorties" [ref=e26] [cursor=pointer]:
+          - /url: /Quest
+          - generic [ref=e27]:
+            - img [ref=e29]
+            - generic [ref=e31]:
+              - generic [ref=e32]: Quests
+              - generic [ref=e33]: Active sorties
+        - link "Leaderboard Top pilots" [ref=e34] [cursor=pointer]:
+          - /url: /leaderboard
+          - generic [ref=e35]:
+            - img [ref=e37]
+            - generic [ref=e39]:
+              - generic [ref=e40]: Leaderboard
+              - generic [ref=e41]: Top pilots
+        - link "Guild Rally your crew" [ref=e42] [cursor=pointer]:
+          - /url: /Guild
+          - generic [ref=e43]:
+            - img [ref=e45]
+            - generic [ref=e47]:
+              - generic [ref=e48]: Guild
+              - generic [ref=e49]: Rally your crew
+        - link "Profile Your dossier" [ref=e50] [cursor=pointer]:
+          - /url: /profile
+          - generic [ref=e51]:
+            - img [ref=e53]
+            - generic [ref=e55]:
+              - generic [ref=e56]: Profile
+              - generic [ref=e57]: Your dossier
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - img [ref=e60]
+          - generic [ref=e62]: Need the automation queue?
+        - paragraph [ref=e63]: Jump into dev tooling, lint routines, and planning docs to keep the Gmeow cockpit production-ready.
+        - link "Open Dashboard" [ref=e64] [cursor=pointer]:
+          - /url: /Dashboard
+    - generic [ref=e65]:
+      - banner [ref=e66]:
+        - link "Switch to mobile layout preview Gmeowbased Flight Deck" [ref=e68] [cursor=pointer]:
+          - /url: /
+          - button "Switch to mobile layout preview" [ref=e70]:
+            - img [ref=e71]
+            - generic [ref=e73]: "Current layout: desktop"
+          - generic [ref=e74]:
+            - generic [ref=e75]: Gmeowbased
+            - generic [ref=e76]: Flight Deck
+        - navigation "Primary navigation" [ref=e77]:
+          - link "Home" [ref=e78] [cursor=pointer]:
+            - /url: /
+            - img [ref=e79]
+          - link "Dashboard" [ref=e81] [cursor=pointer]:
+            - /url: /Dashboard
+            - img [ref=e82]
+          - link "Quests" [ref=e84] [cursor=pointer]:
+            - /url: /Quest
+            - img [ref=e85]
+          - link "Leaderboard" [ref=e87] [cursor=pointer]:
+            - /url: /leaderboard
+            - img [ref=e88]
+          - link "Guild" [ref=e90] [cursor=pointer]:
+            - /url: /Guild
+            - img [ref=e91]
+          - link "Agent" [ref=e93] [cursor=pointer]:
+            - /url: /Agent
+            - img [ref=e94]
+          - link "Profile" [ref=e96] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e97]
+          - link "Maintenance" [ref=e99] [cursor=pointer]:
+            - /url: /maintenance
+            - img [ref=e100]
+        - generic [ref=e102]:
+          - link "Connect" [ref=e103] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e104]
+            - generic [ref=e106]: Connect
+          - button "Toggle theme" [ref=e108] [cursor=pointer]:
+            - img [ref=e109]
+      - main [ref=e111]:
+        - generic [ref=e114]:
+          - heading "404" [level=1] [ref=e115]
+          - heading "This page could not be found." [level=2] [ref=e117]
+      - contentinfo [ref=e118]:
+        - generic [ref=e119]:
+          - generic [ref=e120]:
+            - generic [ref=e121]:
+              - generic [ref=e122]: 😺
+              - generic [ref=e123]:
+                - generic [ref=e124]: Gmeowbased
+                - generic [ref=e125]: Adventure Daily GM
+            - paragraph [ref=e126]: Automate rituals, unlock quests, and rally your guild across Base, Optimism, Unichain, Ink, and more. The lounge is always open for pilots chasing prestige.
+            - generic [ref=e127]:
+              - link "Daily GM Ritual Drop a GM, climb the XP ladder, and keep your streak alive. Go" [ref=e128] [cursor=pointer]:
+                - /url: /Quest
+                - generic [ref=e129]:
+                  - img [ref=e131]
+                  - generic [ref=e133]:
+                    - generic [ref=e134]: Daily GM Ritual
+                    - generic [ref=e135]: Drop a GM, climb the XP ladder, and keep your streak alive.
+                - generic [ref=e136]: Go
+              - link "Guild HQ Coordinate squads, manage teams, and unlock shared rewards. Go" [ref=e137] [cursor=pointer]:
+                - /url: /Guild
+                - generic [ref=e138]:
+                  - img [ref=e140]
+                  - generic [ref=e142]:
+                    - generic [ref=e143]: Guild HQ
+                    - generic [ref=e144]: Coordinate squads, manage teams, and unlock shared rewards.
+                - generic [ref=e145]: Go
+          - generic [ref=e147]: © 2025 Gmeowbased. All rights reserved.
+  - generic:
+    - status:
+      - generic: ℹ️
+    - generic: Live
+  - alert [ref=e148]
+```
