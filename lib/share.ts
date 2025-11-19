@@ -120,7 +120,7 @@ export function buildFrameShareUrl(input: FrameShareInput, originOverride?: stri
       }
     }
     const query = params.toString()
-    return `${origin}/frame/leaderboard${query ? `?${query}` : ''}`
+    return `${origin}/frame/leaderboards${query ? `?${query}` : ''}`
   }
   
   // Fallback for other types (referral, guild, points, gm, verify)

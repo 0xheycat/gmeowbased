@@ -1018,7 +1018,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
         {/* Progress bar - GI-9: ARIA labels */}
         <div className="mb-6" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label={`Onboarding progress: ${Math.round(progress)}% complete`}>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-https://dequeuniversity.com/rules/axe/4.11/aria-valid-attr-value?application%3DaxeAPI2">
             <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]" id="onboarding-title">
               Card {stage + 1} of {ONBOARDING_STAGES.length}
             </span>
