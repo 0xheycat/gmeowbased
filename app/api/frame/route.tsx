@@ -2088,8 +2088,8 @@ export async function GET(req: Request) {
       questImageParams.set('badgeLabel', questTypeLabel)
       questImageParams.set('badgeTone', 'violet')
       
-      // Use static frame image (1200x800, 3:2 ratio) - /api/frame/og endpoint doesn't exist
-      const image = `${origin}/frame-image.png`
+      // Use dynamic frame image with personalized quest data (1200x800, 3:2 ratio)
+      const image = defaultFrameImage
       const frameBtnUrl = `${origin}/Quest/${encodeURIComponent(chainKey)}/${encodeURIComponent(String(questIdNum))}`
       const primaryLabel = questMeta && typeof questMeta === 'object' && typeof questMeta.cta === 'string' && questMeta.cta.trim()
         ? questMeta.cta.trim()
