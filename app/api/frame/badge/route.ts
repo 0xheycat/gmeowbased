@@ -39,13 +39,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     if (badges.length === 0) {
       // No badges frame - use JSON format per Farcaster spec
       const noBadgesEmbed = {
-        version: '1',
+        version: 'next',
         imageUrl: `${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&state=none`,
         button: {
           title: 'View Profile',
           action: {
-            type: 'link',
-            url: `${getBaseUrl(request)}/profile/${fid}`
+            type: 'launch_frame',
+            name: 'Gmeowbased',
+            url: `${getBaseUrl(request)}/profile/${fid}`,
+            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+            splashBackgroundColor: '#000000'
           }
         }
       }
@@ -89,13 +92,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     // Build frame HTML - JSON format per Farcaster spec
     const badgeEmbed = {
-      version: '1',
+      version: 'next',
       imageUrl: `${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${latestBadge.badgeId}`,
       button: {
         title: 'View Badge Inventory',
         action: {
-          type: 'link',
-          url: `${getBaseUrl(request)}/profile/${fid}/badges`
+          type: 'launch_frame',
+          name: 'Gmeowbased',
+          url: `${getBaseUrl(request)}/profile/${fid}/badges`,
+          splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+          splashBackgroundColor: '#000000'
         }
       }
     }

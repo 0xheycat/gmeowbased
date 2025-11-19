@@ -32,6 +32,7 @@ import {
   sanitizeFrameType,
   sanitizeButtons,
 } from '@/lib/frame-validation'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 export const runtime = 'nodejs'
 export const revalidate = 500
 // If you maintain a neynar helper module, use it; otherwise this file contains
@@ -1033,9 +1034,9 @@ function buildFrameHtml(params: {
   const rawDescription = description || ''
   const desc = escapeHtml(rawDescription)
   const urlEsc = escapeHtml(url || '')
-  // CRITICAL: Farcaster requires fc:frame:image tag - fallback to gmeow.gif if no image provided
-  // This preserves dynamic OG images but ensures frames always have an image
-  const resolvedImage = image || (frameOrigin ? `${frameOrigin}/og-image.png` : '')
+  // CRITICAL: Farcaster requires fc:frame:image tag with 3:2 aspect ratio
+  // Use frame-image.png (1200x800) for correct frame spec, not og-image.png (1200x630)
+  const resolvedImage = image || (frameOrigin ? `${frameOrigin}/frame-image.png` : '')
   const imageEsc = resolvedImage ? escapeHtml(resolvedImage) : ''
   const overlayHidden = Boolean(hideOverlay)
   const descriptionSegments = rawDescription
@@ -1139,24 +1140,31 @@ function buildFrameHtml(params: {
   const accessibleDescriptionHtml = `<p>${desc || pageTitle}</p>`
   
   // Enforce 4-button limit per Farcaster vNext spec
-  const { buttons: validatedButtons, truncated, originalCount } = sanitizeButtons(buttons)
+  const { buttons: validatedButtons, truncated, originalCount, invalidTitles } = sanitizeButtons(buttons)
   if (truncated) {
     console.warn(`[buildFrameHtml] Button limit exceeded: ${originalCount} buttons provided, truncated to 4`)
+  }
+  if (invalidTitles && invalidTitles.length > 0) {
+    console.warn(`[buildFrameHtml] Button title length violations:`, invalidTitles)
   }
   
   // Build Frame metadata (Farcaster vNext format)
   // Reference: https://miniapps.farcaster.xyz/docs/specification
-  // CRITICAL: Use 'link' action for opening miniapp from feed (external context)
-  // 'launch_frame' is ONLY for embedded miniapps opening other miniapps
+  // VERIFIED: Based on working Farville implementation (https://farville.farm)
+  // Use 'launch_frame' to launch mini app within Warpcast (not external browser)
+  // Use version: 'next' (Farville production-verified, November 19, 2025)
   const primaryButton = validatedButtons[0]
   const frameEmbedMeta = primaryButton && frameOrigin && imageEsc ? {
-    version: '1',
+    version: 'next',
     imageUrl: resolvedImage,
     button: {
       title: primaryButton.label,
       action: {
-        type: 'link',
-        url: primaryButton.target || frameOrigin
+        type: 'launch_frame',
+        name: 'Gmeowbased',
+        url: primaryButton.target || frameOrigin,
+        splashImageUrl: frameOrigin ? `${frameOrigin}/logo.png` : undefined,
+        splashBackgroundColor: '#000000'
       }
     }
   } : null
@@ -1856,6 +1864,20 @@ function buildFrameHtml(params: {
  * - questId / id / user / fid / chain / debug / json
  */
 export async function GET(req: Request) {
+  // Rate limiting (GI-8 security requirement)
+  const clientIp = getClientIp(req)
+  const { success } = await rateLimit(clientIp, apiLimiter)
+  if (!success) {
+    return new NextResponse('Rate limit exceeded', { 
+      status: 429,
+      headers: {
+        'retry-after': '60',
+        'x-ratelimit-limit': '60',
+        'x-ratelimit-remaining': '0',
+      }
+    })
+  }
+
   const url = new URL(req.url)
   const traces: Trace = []
   try {
@@ -1905,7 +1927,8 @@ export async function GET(req: Request) {
     const debugMode = toBooleanFlag(params.debug)
     const debugPayload = debugMode ? traces : undefined
     const origin = resolveRequestOrigin(req, url)
-    const defaultFrameImage = `${origin}/og-image.png`
+    // Use frame-image.png (3:2 ratio) for Farcaster frames, not og-image.png (1.91:1)
+    const defaultFrameImage = `${origin}/frame-image.png`
 
     const handler = FRAME_HANDLERS[type]
     if (handler) {
@@ -2035,7 +2058,8 @@ export async function GET(req: Request) {
       questImageParams.set('badgeLabel', questTypeLabel)
       questImageParams.set('badgeTone', 'violet')
       
-      const image = `${origin}/api/frame/og?${questImageParams.toString()}`
+      // Use static frame image (1200x800, 3:2 ratio) - /api/frame/og endpoint doesn't exist
+      const image = `${origin}/frame-image.png`
       const frameBtnUrl = `${origin}/Quest/${encodeURIComponent(chainKey)}/${encodeURIComponent(String(questIdNum))}`
       const primaryLabel = questMeta && typeof questMeta === 'object' && typeof questMeta.cta === 'string' && questMeta.cta.trim()
         ? questMeta.cta.trim()
@@ -2416,7 +2440,8 @@ export async function GET(req: Request) {
         imageParams.set('badgeIcon', '⚡')
       }
       
-      const image = `${origin}/api/frame/og?${imageParams.toString()}`
+      // Use static frame image (1200x800, 3:2 ratio) - /api/frame/og endpoint doesn't exist
+      const image = `${origin}/frame-image.png`
       const identityForJson = resolvedProfile || userParam
         ? {
             username: resolvedProfile?.username || null,
@@ -2682,6 +2707,20 @@ export async function GET(req: Request) {
  * signed messages, and return JSON. It does not mutate chain state (no tx sent).
  */
 export async function POST(req: Request) {
+  // Rate limiting (GI-8 security requirement)
+  const clientIp = getClientIp(req)
+  const { success } = await rateLimit(clientIp, apiLimiter)
+  if (!success) {
+    return new NextResponse('Rate limit exceeded', { 
+      status: 429,
+      headers: {
+        'retry-after': '60',
+        'x-ratelimit-limit': '60',
+        'x-ratelimit-remaining': '0',
+      }
+    })
+  }
+
   const traces: Trace = []
   const started = nowTs()
   try {

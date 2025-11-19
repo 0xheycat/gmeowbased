@@ -66,13 +66,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       // Badge not found frame (vNext JSON format)
       const notFoundImageUrl = `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound`
       const notFoundEmbed = {
-        version: '1',
+        version: 'next',
         imageUrl: notFoundImageUrl,
         button: {
           title: 'View All Badges',
           action: {
-            type: 'link',
+            type: 'launch_frame',
+            name: 'Gmeowbased',
             url: `${getBaseUrl(request)}/profile/${fid}/badges`,
+            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+            splashBackgroundColor: '#000000'
           },
         },
       }
@@ -125,13 +128,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     // Reference: https://miniapps.farcaster.xyz/docs/specification
     // vNext requires JSON format in fc:frame meta tag (not legacy property-based tags)
     const frameEmbed = {
-      version: '1',
+      version: 'next',
       imageUrl: ogImageUrl,
       button: {
         title: 'View Collection',
         action: {
-          type: 'link',
+          type: 'launch_frame',
+          name: 'Gmeowbased',
           url: `${getBaseUrl(request)}/profile/${fid}/badges`,
+          splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+          splashBackgroundColor: '#000000'
         },
       },
     }

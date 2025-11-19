@@ -10,7 +10,7 @@
 
 ✅ **GI-12 (Frame Button Validation):** 83/100 - PASSED  
 ✅ **GI-13 (UI/UX Audit):** 75/100 - PASSED  
-📌 **Production URL:** https://gmeowhq.art (NOT gmeowbased.com)
+📌 **Production URL:** https://gmeowhq.art (NOT gmeowhq.art)
 
 ### Critical Finding
 
@@ -259,7 +259,7 @@ Before deploying `fix/frame-vnext-input-validation` branch:
 - [ ] Monitor logs for warnings
 - [ ] Deploy to production
 - [ ] Verify production frame format
-- [ ] Update documentation URLs (gmeowbased.com → gmeowhq.art)
+- [ ] Update documentation URLs (gmeowhq.art → gmeowhq.art)
 
 ### Expected Production Behavior (After Deployment)
 
@@ -334,7 +334,7 @@ curl -I "https://gmeowhq.art/frame/quest/1?chain=solana"
 ## Recommendations
 
 ### Immediate (Before Production Deploy)
-1. ✅ Fix documentation URLs (gmeowbased.com → gmeowhq.art)
+1. ✅ Fix documentation URLs (gmeowhq.art → gmeowhq.art)
 2. ⏳ Write unit tests for validation functions
 3. ⏳ Write integration tests for frame routes
 4. ⏳ Run manual testing in Warpcast dev tools
@@ -360,7 +360,7 @@ curl -I "https://gmeowhq.art/frame/quest/1?chain=solana"
 ### Files to Update
 
 **1. docs/GI-7-14-AUDIT-FIXES.md**
-- ✅ Fixed all gmeowbased.com → gmeowhq.art URLs
+- ✅ Fixed all gmeowhq.art → gmeowhq.art URLs
 
 **2. docs/share-frame.md** (if exists)
 - ⏳ Update frame share URLs
