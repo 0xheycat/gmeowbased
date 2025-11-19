@@ -443,7 +443,7 @@ export async function GET(req: Request) {
             letterSpacing: 2,
           }}
         >
-          <span>Powered by GMEOW</span>
+          <span>Powered by Gmeowbased</span>
           <span>Multichain readiness • Frame friendly</span>
         </div>
       </div>
