@@ -247,12 +247,4 @@ async function main() {
   console.log('[Worker] Worker running, press Ctrl+C to stop')
 }
 
-// Run if called directly
-if (require.main === module) {
-  main().catch(error => {
-    console.error('[Worker] Fatal error:', error)
-    process.exit(1)
-  })
-}
-
 export { processBatch, processMint }
