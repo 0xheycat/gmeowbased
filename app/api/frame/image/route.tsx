@@ -105,7 +105,7 @@ export async function GET(req: Request) {
               letterSpacing: '2px',
             }}
           >
-            Powered by GMEOW • {chain}
+            Powered by Gmeowbased • {chain}
           </div>
         </div>
       ),
@@ -200,7 +200,7 @@ export async function GET(req: Request) {
               letterSpacing: '2px',
             }}
           >
-            <span>Powered by GMEOW</span>
+            <span>Powered by Gmeowbased</span>
             <span>{chain} • Quest #{questId}</span>
           </div>
         </div>
@@ -275,7 +275,7 @@ export async function GET(req: Request) {
               </div>
               <div style={{ fontSize: 28, opacity: 0.75, lineHeight: 1.5 }}>
                 GM streaks • Quest completions<br />
-                XP leaders • 🌟 Badge collectors
+                XP leaders • Badge collectors
               </div>
             </div>
           </div>
@@ -292,7 +292,7 @@ export async function GET(req: Request) {
               letterSpacing: '2px',
             }}
           >
-            <span>Powered by GMEOW</span>
+            <span>Powered by Gmeowbased</span>
             <span>{chain} • Multichain Rankings</span>
           </div>
         </div>
@@ -340,7 +340,7 @@ export async function GET(req: Request) {
             <span style={{ fontSize: 24, letterSpacing: 8, textTransform: 'uppercase', opacity: 0.7 }}>Onchain dossier</span>
             <span style={{ fontSize: 54, fontWeight: 700 }}>Command Deck Metrics</span>
             <div style={{ fontSize: 28, opacity: 0.82 }}>
-              {user ? `Address :: ${shortenAddress(user)}` : 'GMEOW multichain cadence'}
+              {user ? `Address :: ${shortenAddress(user)}` : 'Gmeowbased multichain cadence'}
             </div>
           </div>
           <div
@@ -363,8 +363,9 @@ export async function GET(req: Request) {
         </div>
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
             gap: 24,
             marginTop: 48,
             
