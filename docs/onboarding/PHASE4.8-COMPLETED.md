@@ -731,7 +731,7 @@ Testing:
 - Verified loading states (skeleton, spinner)
 - Verified animations (confetti, typewriter, holographic)
 
-Signed-off-by: 0xheycat <heycat@gmeowbased.com>"
+Signed-off-by: 0xheycat <heycat@gmeowhq.art>"
 ```
 
 ### Testing Commands

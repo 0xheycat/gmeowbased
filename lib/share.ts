@@ -62,6 +62,70 @@ export function resolveOrigin(custom?: string | null): string {
 export function buildFrameShareUrl(input: FrameShareInput, originOverride?: string | null): string {
   const origin = resolveOrigin(originOverride)
   if (!origin) return ''
+  
+  // Use user-facing /frame/* routes (GI-11/FM-3 compliant)
+  // NEVER expose /api/frame directly to users
+  
+  if (input.type === 'quest' && input.questId != null) {
+    // Route: /frame/quest/[questId]?chain=...
+    const params = new URLSearchParams()
+    if (input.chain) params.set('chain', String(input.chain))
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/quest/${input.questId}${query ? `?${query}` : ''}`
+  }
+  
+  if (input.type === 'badge' && input.fid != null) {
+    // Route: /frame/badge/[fid]?badgeId=...
+    const params = new URLSearchParams()
+    if (input.badgeId) params.set('badgeId', input.badgeId)
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/badge/${input.fid}${query ? `?${query}` : ''}`
+  }
+  
+  if (input.type === 'onchainstats' && input.fid != null) {
+    // Route: /frame/stats/[fid]?chain=...
+    const params = new URLSearchParams()
+    if (input.chain) params.set('chain', String(input.chain))
+    if (input.user) params.set('user', input.user)
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/stats/${input.fid}${query ? `?${query}` : ''}`
+  }
+  
+  if (input.type === 'leaderboard') {
+    // Route: /frame/leaderboard?chain=...
+    const params = new URLSearchParams()
+    if (input.chain) params.set('chain', String(input.chain))
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/leaderboard${query ? `?${query}` : ''}`
+  }
+  
+  // Fallback for other types (referral, guild, points, gm, verify)
+  // These still use /api/frame until specific routes are created
+  // TODO: Create dedicated routes for remaining frame types
   const params = new URLSearchParams()
   params.set('type', input.type)
   if (input.chain) params.set('chain', String(input.chain))
