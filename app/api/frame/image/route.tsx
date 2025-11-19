@@ -69,9 +69,11 @@ export async function GET(req: Request) {
           <div
             style={{
               position: 'absolute',
-              inset: 0,
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
               background: 'linear-gradient(135deg, rgba(255, 210, 90, 0.1), rgba(124, 92, 255, 0.08))',
-              mixBlendMode: 'screen',
             }}
           />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32, zIndex: 1 }}>
@@ -138,9 +140,11 @@ export async function GET(req: Request) {
           <div
             style={{
               position: 'absolute',
-              inset: 0,
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
               background: 'linear-gradient(135deg, rgba(95, 179, 255, 0.12), rgba(255, 210, 90, 0.06))',
-              mixBlendMode: 'screen',
             }}
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, zIndex: 1 }}>
@@ -229,9 +233,11 @@ export async function GET(req: Request) {
           <div
             style={{
               position: 'absolute',
-              inset: 0,
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
               background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.14), rgba(255, 210, 90, 0.08))',
-              mixBlendMode: 'screen',
             }}
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32, zIndex: 1 }}>
@@ -324,10 +330,11 @@ export async function GET(req: Request) {
         <div
           style={{
             position: 'absolute',
-            inset: '0',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
             background: 'linear-gradient(135deg, rgba(124, 92, 255, 0.16), rgba(95, 179, 255, 0.08))',
-            mixBlendMode: 'screen',
-            pointerEvents: 'none',
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
