@@ -80,7 +80,7 @@ const DEFAULT_HTML_HEADERS: Record<string, string> = {
 }
 
 // -------------------- Types --------------------
-type FrameType = 'quest' | 'guild' | 'points' | 'referral' | 'leaderboard' | 'gm' | 'verify' | 'onchainstats' | 'generic'
+type FrameType = 'quest' | 'guild' | 'points' | 'referral' | 'leaderboards' | 'gm' | 'verify' | 'onchainstats' | 'generic'
 
 type TraceItem = { ts: number; step: string; info?: any }
 type Trace = TraceItem[]
@@ -126,7 +126,7 @@ type FrameHandlerContext = {
 type FrameHandler = (ctx: FrameHandlerContext) => Promise<Response>
 
 const FRAME_HANDLERS: Partial<Record<FrameType, FrameHandler>> = {
-  leaderboard: handleLeaderboardFrame,
+  leaderboards: handleLeaderboardFrame,
 }
 
 async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Response> {
@@ -448,7 +448,7 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const mintUrl = toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=leaderboard&chain=${isGlobal ? 'all' : chainKey}&season=${rawSeason || 'current'}`
 
   const leaderboardButtons = buildContextualButtons({
-    type: 'leaderboard',
+    type: 'leaderboards',
     fallback: [{ label: 'Open Leaderboard', target: href }],
     leaderboard: {
       openUrl,
@@ -972,7 +972,7 @@ function buildContextualButtons(plan: ContextualButtonPlan): FrameButton[] {
     push(mergeUrl ? { label: mergeLabel || 'Merge Points', target: mergeUrl } : null)
     push(openUrl ? { label: openLabel || 'Open Points HQ', target: openUrl } : null)
     push(leaderboardUrl ? { label: leaderboardLabel || 'View Leaderboard', target: leaderboardUrl } : null)
-  } else if (type === 'leaderboard' && plan.leaderboard) {
+  } else if (type === 'leaderboards' && plan.leaderboard) {
     const { openUrl, openLabel, referralUrl, referralLabel, challengeUrl, challengeLabel, mintUrl, mintLabel } = plan.leaderboard
     push(mintUrl ? { label: mintLabel || '🎴 Mint Rank Card', target: mintUrl } : null)
     push(openUrl ? { label: openLabel || 'Open Leaderboard', target: openUrl } : null)

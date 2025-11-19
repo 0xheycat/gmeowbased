@@ -3,7 +3,7 @@ import type { ChainKey } from '@/lib/gm-utils'
 type Primitive = string | number | boolean
 
 export type FrameShareInput = {
-  type: 'guild' | 'quest' | 'leaderboard' | 'referral' | 'points' | 'gm' | 'verify' | 'onchainstats' | 'badge'
+  type: 'guild' | 'quest' | 'leaderboards' | 'referral' | 'points' | 'gm' | 'verify' | 'onchainstats' | 'badge'
   chain?: ChainKey | 'all'
   id?: number | string
   questId?: number | string
@@ -109,7 +109,7 @@ export function buildFrameShareUrl(input: FrameShareInput, originOverride?: stri
     return `${origin}/frame/stats/${input.fid}${query ? `?${query}` : ''}`
   }
   
-  if (input.type === 'leaderboard') {
+  if (input.type === 'leaderboards') {
     // Route: /frame/leaderboard?chain=...
     const params = new URLSearchParams()
     if (input.chain) params.set('chain', String(input.chain))
@@ -229,7 +229,7 @@ export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride
   if (input.type === 'badge' && input.badgeId) {
     params.set('badgeId', input.badgeId)
   }
-  if (input.type === 'leaderboard' && input.extra) {
+  if (input.type === 'leaderboards' && input.extra) {
     if (input.extra.limit) params.set('limit', String(input.extra.limit))
     if (input.extra.season) params.set('season', String(input.extra.season))
     if (input.extra.global) params.set('global', String(input.extra.global))
@@ -274,7 +274,7 @@ export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride
     // Pass any remaining extra parameters
     for (const [key, value] of Object.entries(input.extra)) {
       if (value === undefined || value === null) continue
-      if (['limit', 'season', 'global'].includes(key) && input.type === 'leaderboard') continue
+      if (['limit', 'season', 'global'].includes(key) && input.type === 'leaderboards') continue
       // Skip already-handled type-specific parameters
       const handledKeys = ['statsChain', 'chainName', 'explorer', 'txs', 'contracts', 'volume', 'balance', 'age', 'builder', 'neynar', 'power', 'firstTx', 'lastTx', 'gmCount', 'streak', 'rank', 'questName', 'reward', 'expires', 'progress']
       if (handledKeys.includes(key)) continue
