@@ -77,12 +77,10 @@ export async function GET(req: Request) {
             }}
           />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32, zIndex: 1 }}>
-            <div style={{ fontSize: 96, fontWeight: 900, letterSpacing: '-2px' }}>GM! 🌅</div>
-            {user && (
-              <div style={{ fontSize: 32, opacity: 0.85 }}>
-                {shortenAddress(user)} {fid && `• FID ${fid}`}
-              </div>
-            )}
+            <div style={{ fontSize: 96, fontWeight: 900, letterSpacing: '-2px' }}>GM!</div>
+            <div style={{ fontSize: 32, opacity: 0.85 }}>
+              {user ? shortenAddress(user) : 'Anonymous'} {fid ? `• FID ${fid}` : ''}
+            </div>
             <div style={{ display: 'flex', gap: 48, marginTop: 32 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                 <div style={{ fontSize: 72, fontWeight: 800, color: '#ffd25a' }}>{gmCount}</div>
