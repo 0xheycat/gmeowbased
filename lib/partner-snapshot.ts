@@ -171,12 +171,23 @@ async function mapWithConcurrency<T, U>(items: T[], limit: number, iteratee: (it
 async function resolvePointsBalance(chain: ChainKey, address: Address, minimum: bigint): Promise<BalanceResult> {
   try {
     const client = getClient(chain)
-    const [available] = (await client.readContract({
-      address: CONTRACT_ADDRESSES[chain],
-      abi: GM_CONTRACT_ABI,
-      functionName: 'getUserStats',
-      args: [address],
-    })) as readonly [bigint, bigint, bigint]
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
+    const result = await rpcTimeout(
+      client.readContract({
+        address: CONTRACT_ADDRESSES[chain],
+        abi: GM_CONTRACT_ABI,
+        functionName: 'getUserStats',
+        args: [address],
+      }),
+      null
+    )
+    if (!result) return { balance: 0n, eligible: false, reason: 'points_call_timeout' }
+    const [available] = result as readonly [bigint, bigint, bigint]
     const eligible = available >= minimum
     return { balance: available, eligible, reason: eligible ? null : 'insufficient_points' }
   } catch (error) {
@@ -187,12 +198,21 @@ async function resolvePointsBalance(chain: ChainKey, address: Address, minimum: 
 async function resolveErc20Balance(chain: ChainKey, token: Address, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
     const client = getClient(chain)
-    const balance = (await client.readContract({
-      address: token,
-      abi: erc20Abi,
-      functionName: 'balanceOf',
-      args: [user],
-    })) as bigint
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
+    const balance = await rpcTimeout(
+      client.readContract({
+        address: token,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [user],
+      }) as Promise<bigint>,
+      0n
+    )
     const eligible = balance >= minimum
     return { balance, eligible, reason: eligible ? null : 'insufficient_balance' }
   } catch (error) {
@@ -203,12 +223,21 @@ async function resolveErc20Balance(chain: ChainKey, token: Address, user: Addres
 async function resolveErc721Balance(chain: ChainKey, token: Address, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
     const client = getClient(chain)
-    const balance = (await client.readContract({
-      address: token,
-      abi: erc721Abi,
-      functionName: 'balanceOf',
-      args: [user],
-    })) as bigint
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
+    const balance = await rpcTimeout(
+      client.readContract({
+        address: token,
+        abi: erc721Abi,
+        functionName: 'balanceOf',
+        args: [user],
+      }) as Promise<bigint>,
+      0n
+    )
     const eligible = balance >= minimum
     return { balance, eligible, reason: eligible ? null : 'insufficient_balance' }
   } catch (error) {
@@ -219,12 +248,21 @@ async function resolveErc721Balance(chain: ChainKey, token: Address, user: Addre
 async function resolveErc1155Balance(chain: ChainKey, token: Address, tokenId: bigint, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
     const client = getClient(chain)
-    const balance = (await client.readContract({
-      address: token,
-      abi: erc1155Abi,
-      functionName: 'balanceOf',
-      args: [user, tokenId],
-    })) as bigint
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
+    const balance = await rpcTimeout(
+      client.readContract({
+        address: token,
+        abi: erc1155Abi,
+        functionName: 'balanceOf',
+        args: [user, tokenId],
+      }) as Promise<bigint>,
+      0n
+    )
     const eligible = balance >= minimum
     return { balance, eligible, reason: eligible ? null : 'insufficient_balance' }
   } catch (error) {

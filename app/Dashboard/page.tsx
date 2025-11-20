@@ -471,9 +471,9 @@ export default function DashboardPage() {
         }
 
         const gm = await rpcTimeout(
-          client.readContract({ address: contractAddress, abi: ABI, functionName: 'gmhistory', args: [address] }).catch(() => null as any),
+          client.readContract({ address: contractAddress, abi: ABI, functionName: 'gmhistory', args: [address] }),
           null as any
-        )
+        ).catch(() => null as any)
 
         if (mountedRef.current) {
           if (gm) {

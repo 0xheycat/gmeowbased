@@ -443,11 +443,17 @@ export async function checkTokenAllowanceAndBalance(
     transport: http(rpcUrl || (process.env.NEXT_PUBLIC_RPC_BASE as string) || ''),
   })
 
+  const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+    Promise.race([
+      promise,
+      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+    ])
+
   const [balance, allowance, decimals, symbol] = await Promise.all([
-    client.readContract({ address: token, abi: erc20Abi, functionName: 'balanceOf', args: [owner] }).catch(() => 0n),
-    client.readContract({ address: token, abi: erc20Abi, functionName: 'allowance', args: [owner, spender] }).catch(() => 0n),
-    client.readContract({ address: token, abi: erc20Abi, functionName: 'decimals' }).catch(() => 18),
-    client.readContract({ address: token, abi: erc20Abi, functionName: 'symbol' }).catch(() => ''),
+    rpcTimeout(client.readContract({ address: token, abi: erc20Abi, functionName: 'balanceOf', args: [owner] }).catch(() => 0n), 0n),
+    rpcTimeout(client.readContract({ address: token, abi: erc20Abi, functionName: 'allowance', args: [owner, spender] }).catch(() => 0n), 0n),
+    rpcTimeout(client.readContract({ address: token, abi: erc20Abi, functionName: 'decimals' }).catch(() => 18), 18),
+    rpcTimeout(client.readContract({ address: token, abi: erc20Abi, functionName: 'symbol' }).catch(() => ''), ''),
   ])
 
   return { balance, allowance, decimals: Number(decimals), symbol }
