@@ -135,6 +135,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       )[0]
     }
 
+    // Safety check: ensure targetBadge exists after logic above
+    if (!targetBadge) {
+      return new NextResponse('Badge not found', { status: 404 })
+    }
+
     const badgeDefinition = badgeRegistry.badges.find(
       (b) => b.badgeType === targetBadge.badgeType
     )
