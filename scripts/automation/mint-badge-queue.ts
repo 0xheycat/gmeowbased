@@ -25,6 +25,8 @@ import {
   type MintQueueEntry,
 } from '@/lib/badges'
 import { mintBadgeOnChain } from '@/lib/contract-mint'
+import { getBadgeFromRegistry } from '@/lib/badges'
+import type { ChainKey } from '@/lib/gm-utils'
 
 const BATCH_SIZE = Number(process.env.MINT_BATCH_SIZE || 5)
 // INTERVAL_MS and MAX_RETRIES removed - only used by commented main() function
@@ -45,15 +47,30 @@ async function sendMintWebhook(mint: MintQueueEntry, txHash: string, tokenId: nu
   }
   
   try {
+    // Get badge metadata from registry
+    const badgeDefinition = getBadgeFromRegistry(mint.badgeType)
+    const chain = (badgeDefinition?.chain as ChainKey) || 'base'
+    const tier = badgeDefinition?.tier || 'common'
+    
+    // Get contract address for chain
+    const contractAddresses: Record<ChainKey, string> = {
+      base: process.env.BADGE_CONTRACT_BASE || '',
+      unichain: process.env.BADGE_CONTRACT_UNICHAIN || '',
+      celo: process.env.BADGE_CONTRACT_CELO || '',
+      ink: process.env.BADGE_CONTRACT_INK || '',
+      op: process.env.BADGE_CONTRACT_OP || '',
+    }
+    const contractAddress = contractAddresses[chain] || ''
+    
     const payload = {
       fid: mint.fid,
       badgeId: mint.badgeType.replace(/_/g, '-'),
       badgeType: mint.badgeType,
-      tier: mint.tier || 'common',
+      tier,
       txHash,
       tokenId,
-      chain: mint.chain || 'base',
-      contractAddress: mint.contractAddress || '',
+      chain,
+      contractAddress,
       mintedAt: new Date().toISOString(),
     }
     
