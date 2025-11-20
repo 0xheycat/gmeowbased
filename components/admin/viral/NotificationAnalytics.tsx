@@ -117,6 +117,7 @@ export default function NotificationAnalytics() {
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
             className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
+            aria-label="Select timeframe for notification analytics"
           >
             {TIMEFRAME_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>

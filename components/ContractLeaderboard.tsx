@@ -96,6 +96,7 @@ export function ContractLeaderboard() {
             value={season}
             onChange={(e) => setSeason(e.target.value)}
             className="pixel-input px-2 py-1"
+            aria-label="Season"
           >
             <option value="">All time</option>
             <option value="current">Current season</option>

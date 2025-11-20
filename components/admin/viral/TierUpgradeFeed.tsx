@@ -129,6 +129,7 @@ export default function TierUpgradeFeed({
             value={tierFilter}
             onChange={(e) => setTierFilter(e.target.value)}
             className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
+            aria-label="Filter tier upgrades by tier"
           >
             <option value="all">All Tiers</option>
             <option value="viral">Viral</option>
