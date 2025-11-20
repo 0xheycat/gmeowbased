@@ -292,9 +292,7 @@ export async function GET(request: NextRequest) {
                       fontWeight: 800,
                       margin: 0,
                       lineHeight: 1.1,
-                      background: `linear-gradient(135deg, #ffffff, ${tierGradient.start})`,
-                      backgroundClip: 'text',
-                      color: 'transparent',
+                      color: '#ffffff',
                       textShadow: `0 2px 20px ${tierGradient.start}80`,
                     }}
                   >
