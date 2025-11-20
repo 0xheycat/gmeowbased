@@ -698,21 +698,19 @@ export default function QuestHubPage() {
             <span className="theme-shell-label text-[10px] uppercase tracking-[0.3em]" id="type-filter-label">
               Mission type
             </span>
-            <div className="flex flex-wrap gap-2" role="tablist" aria-labelledby="type-filter-label">
+            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="type-filter-label">
               {TYPE_FILTERS.map(({ key, label }) => (
                 <Button
                   key={key}
                   type="button"
-                  role="tab"
                   size="small"
                   variant={typeFilter === key ? 'solid' : 'ghost'}
                   color={typeFilter === key ? 'primary' : 'gray'}
                   className="px-5 min-h-[44px]"
                   onClick={() => setTypeFilter(key)}
                   onKeyDown={(e) => handleFilterKeyDown(e, 'type', key)}
-                  aria-selected={typeFilter === key}
+                  aria-pressed={typeFilter === key}
                   data-filter-type="type"
-                  tabIndex={typeFilter === key ? 0 : -1}
                 >
                   {label}
                 </Button>
@@ -724,21 +722,19 @@ export default function QuestHubPage() {
           <span className="theme-shell-label text-[10px] uppercase tracking-[0.3em]" id="reward-filter-label">
             Reward
           </span>
-          <div className="flex flex-wrap gap-2" role="tablist" aria-labelledby="reward-filter-label">
+          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="reward-filter-label">
             {REWARD_FILTERS.map(({ key, label }) => (
               <Button
                 key={key}
                 type="button"
-                role="tab"
                 size="small"
                 variant={rewardFilter === key ? 'solid' : 'ghost'}
                 color={rewardFilter === key ? (key === 'token' ? 'warning' : 'primary') : 'gray'}
                 className="px-5 min-h-[44px]"
                 onClick={() => setRewardFilter(key)}
                 onKeyDown={(e) => handleFilterKeyDown(e, 'reward', key)}
-                aria-selected={rewardFilter === key}
+                aria-pressed={rewardFilter === key}
                 data-filter-type="reward"
-                tabIndex={rewardFilter === key ? 0 : -1}
               >
                 {label}
               </Button>
@@ -1271,20 +1267,24 @@ function VirtualArchiveList({ results }: { results: QuestArchiveEntry[] }) {
   
   if (!shouldVirtualize) {
     // Regular list for small archives
-    return (
-      <div className="quest-archive__list" role="list">
-        {results.length ? (
-          results.map((entry) => (
-            <ArchiveItem key={`${entry.chain}-${entry.id}`} entry={entry} />
-          ))
-        ) : (
+    if (!results.length) {
+      return (
+        <div className="quest-archive__list">
           <div className="quest-archive__empty">
             <span className="quest-tag quest-tag--info">Archive empty</span>
             <p className="quest-archive__empty-copy">
               Once missions retire they will appear here with their final stats. Launch a quest to seed the archive.
             </p>
           </div>
-        )}
+        </div>
+      )
+    }
+    
+    return (
+      <div className="quest-archive__list">
+        {results.map((entry) => (
+          <ArchiveItem key={`${entry.chain}-${entry.id}`} entry={entry} />
+        ))}
       </div>
     )
   }
@@ -1293,7 +1293,7 @@ function VirtualArchiveList({ results }: { results: QuestArchiveEntry[] }) {
   const items = virtualizer.getVirtualItems()
   
   return (
-    <div ref={parentRef} className="quest-archive__list" role="list" style={{ height: '500px', overflow: 'auto' }}>
+    <div ref={parentRef} className="quest-archive__list" style={{ height: '500px', overflow: 'auto' }}>
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
@@ -1338,7 +1338,7 @@ function ArchiveItem({ entry }: { entry: QuestArchiveEntry }) {
   const detailHref = `/Quest/${entry.chain}/${entry.id}`
   
   return (
-    <article className="quest-archive__item" role="listitem">
+    <article className="quest-archive__item">
       <div className="quest-archive__item-head">
         <span className="quest-tag quest-tag--info">{entry.chainLabel}</span>
         <span className={cn('quest-tag', statusTagClass)}>{statusLabel}</span>

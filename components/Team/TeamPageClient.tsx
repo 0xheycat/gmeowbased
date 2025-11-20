@@ -208,7 +208,7 @@ export default function TeamPageClient({ chain, teamId, initialSummary }: Props)
               <button className="btn-secondary" disabled={!newBio.trim() || op.busy === 'setTeamBio'} onClick={() => runFounder('setTeamBio', [BigInt(teamId), newBio.trim()], 'Bio updated')}>{op.busy === 'setTeamBio' ? 'Saving…' : 'Save'}</button>
             </div>
             <div className="flex gap-2">
-              <input className="pixel-input w-28 text-right" type="number" min={0} max={1000} value={newBonus} onChange={(e) => setNewBonus(Math.max(0, Math.min(1000, parseInt(e.target.value || '0', 10))))} />
+              <input className="pixel-input w-28 text-right" type="number" min={0} max={1000} value={newBonus} onChange={(e) => setNewBonus(Math.max(0, Math.min(1000, parseInt(e.target.value || '0', 10))))} aria-label="Founder bonus" />
               <button className="btn-secondary" disabled={op.busy === 'setFounderBonus'} onClick={() => runFounder('setFounderBonus', [BigInt(teamId), BigInt(newBonus)], 'Bonus updated')}>{op.busy === 'setFounderBonus' ? 'Saving…' : 'Save'}</button>
             </div>
           </div>
