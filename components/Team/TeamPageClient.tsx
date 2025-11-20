@@ -41,16 +41,27 @@ export default function TeamPageClient({ chain, teamId, initialSummary }: Props)
       if (address) {
         const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[chain] })
         if (client) {
-          const stats = await client.readContract({
-            address: getContractAddress(chain),
-            abi: GM_CONTRACT_ABI,
-            functionName: 'getUserStats',
-            args: [address],
-          })
-          const tid = Number((stats as any)[5] || 0n)
-          const reg = Boolean((stats as any)[8])
-          const isFounder = s?.founder && address ? s.founder.toLowerCase() === address.toLowerCase() : false
-          setMyStatus({ registered: reg, teamId: tid, isFounder })
+          const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+            Promise.race([
+              promise,
+              new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+            ])
+
+          const stats = await rpcTimeout(
+            client.readContract({
+              address: getContractAddress(chain),
+              abi: GM_CONTRACT_ABI,
+              functionName: 'getUserStats',
+              args: [address],
+            }),
+            null
+          )
+          if (stats) {
+            const tid = Number((stats as any)[5] || 0n)
+            const reg = Boolean((stats as any)[8])
+            const isFounder = s?.founder && address ? s.founder.toLowerCase() === address.toLowerCase() : false
+            setMyStatus({ registered: reg, teamId: tid, isFounder })
+          }
         }
       }
     } finally { setLoading(false) }
