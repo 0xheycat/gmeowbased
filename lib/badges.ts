@@ -730,7 +730,11 @@ export async function assignBadgeToUser(params: {
  * Get all badges assigned to a user with caching
  */
 export async function getUserBadges(fid: number): Promise<UserBadge[]> {
-  assertSupabase()
+  // Check if Supabase is configured first
+  if (!isSupabaseConfigured()) {
+    console.warn('[getUserBadges] Supabase not configured, returning empty badges')
+    return []
+  }
   
   const cacheKey = `user:${fid}`
   const cached = userBadgesCache.get(cacheKey)
@@ -739,35 +743,57 @@ export async function getUserBadges(fid: number): Promise<UserBadge[]> {
   const supabase = getSupabaseServerClient()
   if (!supabase) return []
 
-  const { data, error } = await supabase
-    .from(USER_BADGES_TABLE)
-    .select('*')
-    .eq('fid', fid)
-    .order('assigned_at', { ascending: false })
+  try {
+    // Add timeout wrapper to prevent hanging (5 second timeout)
+    const fetchPromise = supabase
+      .from(USER_BADGES_TABLE)
+      .select('*')
+      .eq('fid', fid)
+      .order('assigned_at', { ascending: false })
+    
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Supabase query timeout after 5s')), 5000)
+    )
+    
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise])
 
-  if (error) {
-    console.error('Failed to fetch user badges:', error)
+    if (error) {
+      console.error('Failed to fetch user badges:', {
+        message: error.message || 'Unknown error',
+        details: error.toString?.() || String(error),
+        hint: (error as any).hint || '',
+        code: (error as any).code || ''
+      })
+      return []
+    }
+
+    const badges = (data || []).map(row => ({
+      id: row.id,
+      fid: row.fid,
+      badgeId: row.badge_id,
+      badgeType: row.badge_type,
+      tier: row.tier as TierType,
+      assignedAt: row.assigned_at,
+      minted: row.minted,
+      mintedAt: row.minted_at,
+      txHash: row.tx_hash,
+      chain: row.chain,
+      contractAddress: row.contract_address,
+      tokenId: row.token_id,
+      metadata: row.metadata || {},
+    }))
+    
+    userBadgesCache.set(cacheKey, badges)
+    return badges
+  } catch (error) {
+    console.error('Failed to fetch user badges:', {
+      message: error instanceof Error ? error.message : 'TypeError: fetch failed',
+      details: error instanceof Error ? error.stack || error.toString() : String(error),
+      hint: '',
+      code: ''
+    })
     return []
   }
-
-  const badges = (data || []).map(row => ({
-    id: row.id,
-    fid: row.fid,
-    badgeId: row.badge_id,
-    badgeType: row.badge_type,
-    tier: row.tier as TierType,
-    assignedAt: row.assigned_at,
-    minted: row.minted,
-    mintedAt: row.minted_at,
-    txHash: row.tx_hash,
-    chain: row.chain,
-    contractAddress: row.contract_address,
-    tokenId: row.token_id,
-    metadata: row.metadata || {},
-  }))
-  
-  userBadgesCache.set(cacheKey, badges)
-  return badges
 }
 
 /**
