@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Invalid request',
-          details: error.errors,
+          details: error.issues,
           duration,
           timestamp: new Date().toISOString(),
         },
