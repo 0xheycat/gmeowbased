@@ -263,7 +263,9 @@ export async function GET(request: NextRequest) {
         width: WIDTH,
         height: HEIGHT,
         headers: {
-          'Cache-Control': 'public, max-age=300, s-maxage=300',
+          'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+          'CDN-Cache-Control': 'public, max-age=31536000',
+          'Vercel-CDN-Cache-Control': 'public, max-age=31536000',
         },
       }
     )

@@ -227,8 +227,9 @@ export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride
     params.set('questId', String(input.questId))
   }
   if (input.type === 'badge' && input.badgeId) {
-    // Badge images served as static PNGs for instant delivery (<100ms)
-    return `${origin}/badges/${input.badgeId}.png`
+    params.set('badgeId', input.badgeId)
+    // Badge images: dynamic generation with aggressive CDN caching for speed
+    return `${origin}/api/frame/badgeShare/image?${params.toString()}`
   }
   if (input.type === 'leaderboards' && input.extra) {
     if (input.extra.limit) params.set('limit', String(input.extra.limit))
