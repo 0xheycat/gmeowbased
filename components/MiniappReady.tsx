@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { fireMiniappReady } from '@/lib/miniappEnv'
 
 export function MiniappReady() {
-  const [attempts, setAttempts] = useState(0)
+  const attemptsRef = useRef(0)
+  const retryTimeoutRef = useRef<NodeJS.Timeout>()
 
   useEffect(() => {
     let mounted = true
-    let retryTimeout: NodeJS.Timeout
 
     const attemptReady = async () => {
       if (!mounted) return
@@ -27,12 +27,13 @@ export function MiniappReady() {
               console.warn('[MiniappReady] Error firing ready:', error)
               
               // Retry up to 3 times with exponential backoff
-              if (mounted && attempts < 3) {
-                const delay = Math.min(1000 * Math.pow(2, attempts), 4000)
-                console.log(`[MiniappReady] Retrying in ${delay}ms... (attempt ${attempts + 1}/3)`)
+              if (mounted && attemptsRef.current < 3) {
+                const delay = Math.min(1000 * Math.pow(2, attemptsRef.current), 4000)
+                console.log(`[MiniappReady] Retrying in ${delay}ms... (attempt ${attemptsRef.current + 1}/3)`)
                 
-                retryTimeout = setTimeout(() => {
-                  setAttempts(prev => prev + 1)
+                retryTimeoutRef.current = setTimeout(() => {
+                  attemptsRef.current += 1
+                  attemptReady()
                 }, delay)
               }
             })
@@ -56,6 +57,7 @@ export function MiniappReady() {
     const onVis = () => {
       if (document.visibilityState === 'visible' && mounted) {
         console.log('[MiniappReady] Visibility changed, re-firing ready')
+        attemptsRef.current = 0 // Reset attempts on visibility change
         attemptReady()
       }
     }
@@ -63,6 +65,7 @@ export function MiniappReady() {
     const onFocus = () => {
       if (mounted) {
         console.log('[MiniappReady] Window focused, re-firing ready')
+        attemptsRef.current = 0 // Reset attempts on focus
         attemptReady()
       }
     }
@@ -72,11 +75,13 @@ export function MiniappReady() {
 
     return () => {
       mounted = false
-      clearTimeout(retryTimeout)
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current)
+      }
       document.removeEventListener('visibilitychange', onVis)
       window.removeEventListener('focus', onFocus)
     }
-  }, [attempts])
+  }, []) // Empty deps - only run once on mount
 
   // Don't render anything visible
   return null
