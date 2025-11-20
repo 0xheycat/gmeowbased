@@ -469,13 +469,23 @@ export function LiveEventBridge() {
               else if (typeof rawQuestId === 'string') questIdBigInt = BigInt(rawQuestId)
               else continue
 
+              const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+                Promise.race([
+                  promise,
+                  new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+                ])
+
               try {
-                const questRaw = await client.readContract({
-                  address: getContractAddress(chain),
-                  abi: GM_CONTRACT_ABI,
-                  functionName: 'getQuest',
-                  args: [questIdBigInt],
-                })
+                const questRaw = await rpcTimeout(
+                  client.readContract({
+                    address: getContractAddress(chain),
+                    abi: GM_CONTRACT_ABI,
+                    functionName: 'getQuest',
+                    args: [questIdBigInt],
+                  }),
+                  null
+                )
+                if (!questRaw) continue
                 const quest = normalizeQuestStruct(questRaw)
                 if (quest?.creator && typeof quest.creator === 'string' && quest.creator.toLowerCase() === address.toLowerCase()) {
                   push({
