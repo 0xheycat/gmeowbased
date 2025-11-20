@@ -53,8 +53,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Fetch user badges and registry
-    const badges = await getUserBadges(fid)
+    // Fetch user badges and registry with error handling
+    let badges: Awaited<ReturnType<typeof getUserBadges>> = []
+    try {
+      badges = await getUserBadges(fid)
+    } catch (error) {
+      console.error('Failed to fetch user badges:', error)
+      // Return not found state if we can't fetch badges
+      return new ImageResponse(
+        <NotFoundImage badgeId={badgeIdParam} />,
+        { width: WIDTH, height: HEIGHT }
+      )
+    }
+
     const badgeRegistry = loadBadgeRegistry()
 
     // Find specific badge
@@ -220,45 +231,26 @@ export async function GET(request: NextRequest) {
                   gap: 16,
                 }}
               >
-                {/* No external images - always use letter */ 
-                  <div
-                    style={{
-                      width: 360,
-                      height: 360,
-                      borderRadius: 20,
-                      background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
-                      border: `3px solid ${tierGradient.start}`,
-                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 160,
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {/* Badge symbol based on tier */}
-                    <div style={{ position: 'relative', fontWeight: 700 }}>
-                      {targetBadge.tier === 'legendary' ? 'L' :
-                       targetBadge.tier === 'epic' ? 'E' :
-                       targetBadge.tier === 'rare' ? 'R' : 'C'}
-                    </div>
-                    {/* Holographic overlay */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: `linear-gradient(135deg, 
-                                    transparent 0%, 
-                                    ${tierGradient.start}20 50%, 
-                                    transparent 100%)`,
-                      }}
-                    />
-                  </div>
-                }
+                <div
+                  style={{
+                    width: 360,
+                    height: 360,
+                    borderRadius: 20,
+                    background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
+                    border: `3px solid ${tierGradient.start}`,
+                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 160,
+                    fontWeight: 900,
+                    color: '#ffffff',
+                  }}
+                >
+                  {targetBadge.tier === 'legendary' ? 'L' :
+                   targetBadge.tier === 'epic' ? 'E' :
+                   targetBadge.tier === 'rare' ? 'R' : 'C'}
+                </div>
               </div>
 
               {/* Right: Badge details (like Yu-Gi-Oh! card text) */}
@@ -337,7 +329,7 @@ export async function GET(request: NextRequest) {
                         gap: 8,
                       }}
                     >
-                      <span style={{ opacity: 0.7 }}>📅</span>
+                      <span style={{ opacity: 0.7 }}>Earned:</span>
                       <span style={{ fontWeight: 600 }}>{assignedDate}</span>
                     </div>
                   </div>
