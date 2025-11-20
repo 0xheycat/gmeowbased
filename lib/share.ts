@@ -227,9 +227,8 @@ export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride
     params.set('questId', String(input.questId))
   }
   if (input.type === 'badge' && input.badgeId) {
-    params.set('badgeId', input.badgeId)
-    // Badge images use specialized route due to Supabase requirements
-    return `${origin}/api/frame/badgeShare/image?${params.toString()}`
+    // Badge images served as static PNGs for instant delivery (<100ms)
+    return `${origin}/badges/${input.badgeId}.png`
   }
   if (input.type === 'leaderboards' && input.extra) {
     if (input.extra.limit) params.set('limit', String(input.extra.limit))
