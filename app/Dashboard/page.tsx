@@ -2081,22 +2081,24 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <div className="flex items-center justify-between text-[11px] mb-1">
-              <span>Stake % of total</span>
-              <span className="font-bold">{stakePercent}%</span>
-            </div>
-            <input
-              type="range"
-              min={10}
-              max={100}
-              step={5}
-              value={stakePercent}
-              onChange={(e) => setStakePercent(Number(e.target.value))}
-              className="w-full"
-            />
-            <label className="mt-1 flex items-center gap-2 text-[11px]">
-              <input
+  <div>
+    <div className="flex items-center justify-between text-[11px] mb-1">
+      <label htmlFor="stake-percent-range">Stake % of total</label>
+      <span className="font-bold">{stakePercent}%</span>
+    </div>
+    <input
+      id="stake-percent-range"
+      type="range"
+      min={10}
+      max={100}
+      step={5}
+      value={stakePercent}
+      onChange={(e) => setStakePercent(Number(e.target.value))}
+      className="w-full"
+      aria-label={`Stake percentage: ${stakePercent}%`}
+    />
+    <label className="mt-1 flex items-center gap-2 text-[11px]">
+      <input
                 type="checkbox"
                 checked={linkToPercent}
                 onChange={(e) => setLinkToPercent(e.target.checked)}
