@@ -95,9 +95,7 @@ export async function GET(request: NextRequest) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `radial-gradient(circle at 20% 30%, ${tierGradient.start}25, #050505), 
-                         radial-gradient(circle at 80% 70%, ${tierGradient.end}15, transparent),
-                         linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)`,
+            background: `linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)`,
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -212,7 +210,9 @@ export async function GET(request: NextRequest) {
                 >
                   MINTED
                 </div>
-              ) : null}
+              ) : (
+                <div style={{ display: 'none' }} />
+              )}
             </div>
 
             {/* Main content area (horizontal layout like Yu-Gi-Oh!) */}
@@ -272,7 +272,7 @@ export async function GET(request: NextRequest) {
                     gap: 20,
                   }}
                 >
-                  <h1
+                  <div
                     style={{
                       fontSize: 52,
                       fontWeight: 800,
@@ -283,7 +283,7 @@ export async function GET(request: NextRequest) {
                     }}
                   >
                     {badgeName}
-                  </h1>
+                  </div>
 
                   {/* Description box (like Yu-Gi-Oh! effect text) */}
                   <div
@@ -298,16 +298,16 @@ export async function GET(request: NextRequest) {
                       gap: 12,
                     }}
                   >
-                    <p
+                    <div
                       style={{
-                        fontSize: 22,
-                        lineHeight: 1.5,
+                        fontSize: 18,
+                        lineHeight: 1.6,
                         margin: 0,
-                        color: 'rgba(255, 255, 255, 0.9)',
+                        color: 'rgba(255, 255, 255, 0.85)',
                       }}
                     >
                       {badgeDescription}
-                    </p>
+                    </div>
                   </div>
 
                   {/* Stats bar (like Yu-Gi-Oh! ATK/DEF) */}
@@ -329,8 +329,8 @@ export async function GET(request: NextRequest) {
                         gap: 8,
                       }}
                     >
-                      <span style={{ opacity: 0.7 }}>Earned:</span>
-                      <span style={{ fontWeight: 600 }}>{assignedDate}</span>
+                      <div style={{ opacity: 0.7 }}>Earned:</div>
+                      <div style={{ fontWeight: 600 }}>{assignedDate}</div>
                     </div>
                   </div>
                 </div>

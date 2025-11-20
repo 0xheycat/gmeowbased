@@ -21,6 +21,16 @@ export function getSupabaseServerClient(): SupabaseClient | null {
             headers: {
                 'X-Client-Info': 'gmeow-leaderboard/1.0.0',
             },
+            fetch: (url, options = {}) => {
+                // Add 10s timeout to all fetch requests to prevent hanging
+                const controller = new AbortController()
+                const timeoutId = setTimeout(() => controller.abort(), 10000)
+                
+                return fetch(url, {
+                    ...options,
+                    signal: controller.signal,
+                }).finally(() => clearTimeout(timeoutId))
+            },
         },
     })
 
