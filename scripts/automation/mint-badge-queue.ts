@@ -27,11 +27,10 @@ import {
 import { mintBadgeOnChain } from '@/lib/contract-mint'
 
 const BATCH_SIZE = Number(process.env.MINT_BATCH_SIZE || 5)
-const INTERVAL_MS = Number(process.env.MINT_INTERVAL_MS || 30_000)
-const MAX_RETRIES = Number(process.env.MINT_MAX_RETRIES || 3)
+// INTERVAL_MS and MAX_RETRIES removed - only used by commented main() function
 
 let isProcessing = false
-let shutdownRequested = false
+// shutdownRequested removed - only used by commented main() function
 
 /**
  * Send webhook notification for successful mint
@@ -150,10 +149,7 @@ async function processBatch(): Promise<{
     return { success: 0, failed: 0, processed: 0, skipped: 1 }
   }
 
-  if (shutdownRequested) {
-    console.log('[Worker] Shutdown requested, stopping batch processing')
-    return { success: 0, failed: 0, processed: 0, skipped: 1 }
-  }
+  // Note: shutdownRequested check removed - function now called via API endpoints
 
   isProcessing = true
 
@@ -176,11 +172,7 @@ async function processBatch(): Promise<{
 
     // Process sequentially to avoid rate limits
     for (const mint of pending) {
-      if (shutdownRequested) {
-        console.log('[Worker] Shutdown requested, stopping batch')
-        results.skipped = pending.length - results.processed
-        break
-      }
+      // Note: shutdownRequested check removed - function now called via API endpoints
 
       const result = await processMint(mint)
       results.processed++
@@ -206,45 +198,47 @@ async function processBatch(): Promise<{
 }
 
 /**
- * Main worker loop
+ * Main worker loop (unused - kept for reference)
+ * Note: Worker is now invoked via Vercel Cron (/api/cron/mint-badges)
+ * or manual trigger (/api/badges/mint-manual)
  */
-async function main() {
-  console.log('[Worker] Badge Mint Queue Worker started')
-  console.log(`[Worker] Batch size: ${BATCH_SIZE}`)
-  console.log(`[Worker] Interval: ${INTERVAL_MS}ms`)
-  console.log(`[Worker] Max retries: ${MAX_RETRIES}`)
+// async function main() {
+//   console.log('[Worker] Badge Mint Queue Worker started')
+//   console.log(`[Worker] Batch size: ${BATCH_SIZE}`)
+//   console.log(`[Worker] Interval: ${INTERVAL_MS}ms`)
+//   console.log(`[Worker] Max retries: ${MAX_RETRIES}`)
 
-  // Validate configuration
-  if (!process.env.ORACLE_PRIVATE_KEY) {
-    console.error('[Worker] ERROR: ORACLE_PRIVATE_KEY not configured')
-    process.exit(1)
-  }
+//   // Validate configuration
+//   if (!process.env.ORACLE_PRIVATE_KEY) {
+//     console.error('[Worker] ERROR: ORACLE_PRIVATE_KEY not configured')
+//     process.exit(1)
+//   }
 
-  // Handle graceful shutdown
-  process.on('SIGINT', () => {
-    console.log('[Worker] SIGINT received, shutting down gracefully...')
-    shutdownRequested = true
-  })
+//   // Handle graceful shutdown
+//   process.on('SIGINT', () => {
+//     console.log('[Worker] SIGINT received, shutting down gracefully...')
+//     shutdownRequested = true
+//   })
 
-  process.on('SIGTERM', () => {
-    console.log('[Worker] SIGTERM received, shutting down gracefully...')
-    shutdownRequested = true
-  })
+//   process.on('SIGTERM', () => {
+//     console.log('[Worker] SIGTERM received, shutting down gracefully...')
+//     shutdownRequested = true
+//   })
 
-  // Initial batch
-  await processBatch()
+//   // Initial batch
+//   await processBatch()
 
-  // Set up interval
-  const intervalId = setInterval(async () => {
-    if (shutdownRequested) {
-      clearInterval(intervalId)
-      console.log('[Worker] Worker stopped')
-      process.exit(0)
-    }
-    await processBatch()
-  }, INTERVAL_MS)
+//   // Set up interval
+//   const intervalId = setInterval(async () => {
+//     if (shutdownRequested) {
+//       clearInterval(intervalId)
+//       console.log('[Worker] Worker stopped')
+//       process.exit(0)
+//     }
+//     await processBatch()
+//   }, INTERVAL_MS)
 
-  console.log('[Worker] Worker running, press Ctrl+C to stop')
-}
+//   console.log('[Worker] Worker running, press Ctrl+C to stop')
+// }
 
 export { processBatch, processMint }

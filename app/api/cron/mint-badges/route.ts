@@ -2,10 +2,10 @@
  * Vercel Cron Job - Badge Minting Worker
  * 
  * Processes pending badge mints from the mint_queue table.
- * Scheduled to run every 5 minutes via vercel.json cron configuration.
+ * Scheduled to run daily via vercel.json cron configuration.
  * 
  * Endpoint: POST /api/cron/mint-badges
- * Schedule: */5 * * * * (every 5 minutes)
+ * Schedule: 0 0 * * * (daily at midnight UTC)
  * 
  * Security:
  * - Verifies CRON_SECRET to prevent unauthorized execution
