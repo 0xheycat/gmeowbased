@@ -23,7 +23,7 @@ import { processBatch } from './automation/mint-badge-queue'
 
 type TestConfig = {
   fid: number
-  badgeType: string
+  badgeId: string
   skipAssign: boolean
   webhookUrl?: string
 }
@@ -34,7 +34,7 @@ type TestConfig = {
 function parseArgs(argv: string[]): TestConfig {
   const config: TestConfig = {
     fid: 0,
-    badgeType: 'neon_initiate',
+    badgeId: 'neon-initiate',
     skipAssign: false,
   }
 
@@ -44,8 +44,9 @@ function parseArgs(argv: string[]): TestConfig {
       case '--fid':
         config.fid = Number(argv[++i])
         break
+      case '--badge-id':
       case '--badge-type':
-        config.badgeType = argv[++i] ?? config.badgeType
+        config.badgeId = argv[++i] ?? config.badgeId
         break
       case '--skip-assign':
         config.skipAssign = true
@@ -83,7 +84,8 @@ Usage: pnpm tsx scripts/test-badge-minting.ts --fid <fid> [options]
 
 Options:
   --fid <number>           FID to test with (required)
-  --badge-type <string>    Badge type to test (default: neon_initiate)
+  --badge-id <string>      Badge ID to test (default: neon-initiate)
+  --badge-type <string>    Alias for --badge-id
   --skip-assign            Skip badge assignment (test existing queue entry)
   --webhook-url <url>      Test webhook URL (overrides env)
   --help, -h               Show this help message
@@ -92,8 +94,8 @@ Examples:
   # Test with FID 18139 (default badge)
   pnpm tsx scripts/test-badge-minting.ts --fid 18139
 
-  # Test specific badge type
-  pnpm tsx scripts/test-badge-minting.ts --fid 18139 --badge-type pulse_runner
+  # Test specific badge (use kebab-case)
+  pnpm tsx scripts/test-badge-minting.ts --fid 18139 --badge-id pulse-runner
 
   # Test mint queue processing only (skip assignment)
   pnpm tsx scripts/test-badge-minting.ts --fid 18139 --skip-assign
@@ -109,7 +111,7 @@ Examples:
 async function assignTestBadge(config: TestConfig) {
   console.log('\n=== Step 1: Assigning Badge ===')
   console.log(`FID: ${config.fid}`)
-  console.log(`Badge Type: ${config.badgeType}`)
+  console.log(`Badge ID: ${config.badgeId}`)
 
   try {
     const apiUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'
@@ -120,8 +122,7 @@ async function assignTestBadge(config: TestConfig) {
       },
       body: JSON.stringify({
         fid: config.fid,
-        badgeType: config.badgeType,
-        chain: 'base',
+        badgeId: config.badgeId,
       }),
     })
 
@@ -145,13 +146,13 @@ async function assignTestBadge(config: TestConfig) {
 /**
  * Step 2: Check mint queue
  */
-async function checkMintQueue(fid: number, badgeType: string) {
+async function checkMintQueue(fid: number, badgeId: string) {
   console.log('\n=== Step 2: Checking Mint Queue ===')
   
   try {
     // Note: This would require direct database access or a queue status API
     // For now, we'll just log that we're checking
-    console.log(`Checking for pending mint: FID ${fid}, badge ${badgeType}`)
+    console.log(`Checking for pending mint: FID ${fid}, badge ${badgeId}`)
     console.log('✅ Queue check complete (entry should exist)')
   } catch (error) {
     console.error('❌ Queue check failed:', error)
@@ -186,7 +187,7 @@ async function runMintWorker() {
 /**
  * Step 4: Verify badge minted
  */
-async function verifyBadgeMinted(fid: number, badgeType: string) {
+async function verifyBadgeMinted(fid: number, badgeId: string) {
   console.log('\n=== Step 4: Verifying Badge Minted ===')
   
   try {
@@ -198,7 +199,7 @@ async function verifyBadgeMinted(fid: number, badgeType: string) {
     }
 
     const result = await response.json()
-    const badge = result.badges?.find((b: any) => b.badgeType === badgeType)
+    const badge = result.badges?.find((b: any) => b.badgeId === badgeId)
     
     if (!badge) {
       console.log('❌ Badge not found in user badges')
@@ -262,7 +263,7 @@ async function main() {
     }
     
     // Step 2: Check mint queue
-    await checkMintQueue(config.fid, config.badgeType)
+    await checkMintQueue(config.fid, config.badgeId)
     
     // Step 3: Run mint worker
     const mintResult = await runMintWorker()
@@ -274,7 +275,7 @@ async function main() {
     }
     
     // Step 4: Verify badge minted
-    const isMinted = await verifyBadgeMinted(config.fid, config.badgeType)
+    const isMinted = await verifyBadgeMinted(config.fid, config.badgeId)
     
     // Step 5: Test webhook
     await testWebhook(config)
