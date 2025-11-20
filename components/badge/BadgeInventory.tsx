@@ -362,7 +362,7 @@ export function BadgeInventory({
         </div>
       )}
 
-      {/* Holographic Animation Keyframes */}
+      {/* Holographic Animation Keyframes nice */}
       <style jsx>{`
         @keyframes holographic-shift {
           0%, 100% {

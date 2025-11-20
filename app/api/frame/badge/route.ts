@@ -135,7 +135,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       accent: '#FFFFFF',
     }
 
-    // Build frame HTML - JSON format per Farcaster spec
+    // Build frame HTML - JSON format per Farcaster spec fix 
     const badgeEmbed = {
       version: 'next',
       imageUrl: `${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${targetBadge.badgeId}`,
