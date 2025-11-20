@@ -6,8 +6,11 @@ import { withErrorHandler } from '@/lib/error-handler'
 
 /**
  * Farcaster Frame: Badge Showcase
- * Displays user's latest badge with tier styling
- * Route: /api/frame/badge?fid=xxx
+ * Displays user's badge with tier styling
+ * 
+ * Route: /api/frame/badge?fid=xxx&badgeId=yyy
+ * - If badgeId provided: Shows specific badge
+ * - If badgeId omitted: Shows latest badge
  */
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const ip = getClientIp(request)
@@ -19,6 +22,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const { searchParams } = new URL(request.url)
   const fidParam = searchParams.get('fid')
+  const badgeIdParam = searchParams.get('badgeId')
 
     if (!fidParam) {
       return new NextResponse('Missing fid parameter', { status: 400 })
@@ -72,16 +76,57 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       )
     }
 
-    // Get latest badge (most recently assigned)
-    const latestBadge = badges.sort(
-      (a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime()
-    )[0]
+    // Get target badge: specific badgeId if provided, otherwise latest
+    let targetBadge
+    if (badgeIdParam) {
+      // Find specific badge by badgeId
+      targetBadge = badges.find((b) => b.badgeId === badgeIdParam)
+      if (!targetBadge) {
+        // Badge not found - return error frame
+        return new NextResponse(
+          `<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="fc:frame" content='${JSON.stringify({
+      version: 'next',
+      imageUrl: `${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&state=notfound`,
+      button: {
+        title: 'View All Badges',
+        action: {
+          type: 'launch_frame',
+          name: 'Gmeowbased',
+          url: `${getBaseUrl(request)}/profile/${fid}/badges`,
+          splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+          splashBackgroundColor: '#000000'
+        }
+      }
+    }).replace(/'/g, "&#39;")}' />
+    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&state=notfound" />
+    <meta property="og:title" content="Badge Not Found" />
+    <meta property="og:description" content="This badge could not be found in the user's collection." />
+  </head>
+  <body>
+    <p>Badge not found in collection.</p>
+  </body>
+</html>`,
+          {
+            status: 404,
+            headers: { 'Content-Type': 'text/html' },
+          }
+        )
+      }
+    } else {
+      // Get latest badge (most recently assigned)
+      targetBadge = badges.sort(
+        (a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime()
+      )[0]
+    }
 
     const badgeDefinition = badgeRegistry.badges.find(
-      (b) => b.badgeType === latestBadge.badgeType
+      (b) => b.badgeType === targetBadge.badgeType
     )
 
-    const tierConfig = badgeRegistry.tiers[latestBadge.tier]
+    const tierConfig = badgeRegistry.tiers[targetBadge.tier]
     const badgeMetadata = badgeDefinition?.metadata as { frame?: { palette?: Record<string, string> } } | undefined
     const framePalette = badgeMetadata?.frame?.palette || {
       primary: tierConfig.color,
@@ -93,7 +138,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     // Build frame HTML - JSON format per Farcaster spec
     const badgeEmbed = {
       version: 'next',
-      imageUrl: `${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${latestBadge.badgeId}`,
+      imageUrl: `${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${targetBadge.badgeId}`,
       button: {
         title: 'View Badge Inventory',
         action: {
@@ -109,9 +154,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 <html>
   <head>
     <meta name="fc:frame" content='${JSON.stringify(badgeEmbed).replace(/'/g, "&#39;")}' />
-    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${latestBadge.badgeId}" />
-    <meta property="og:title" content="${(latestBadge.metadata as { name?: string })?.name || latestBadge.badgeType} Badge" />
-    <meta property="og:description" content="${(latestBadge.metadata as { description?: string })?.description || `${tierConfig.name} tier badge`}" />
+    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badge/image?fid=${fid}&badgeId=${targetBadge.badgeId}" />
+    <meta property="og:title" content="${(targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType} Badge" />
+    <meta property="og:description" content="${(targetBadge.metadata as { description?: string })?.description || `${tierConfig.name} tier badge`}" />
     
     <style>
       body {
@@ -154,10 +199,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   </head>
   <body>
     <div class="container">
-      <h1>${(latestBadge.metadata as { name?: string })?.name || latestBadge.badgeType}</h1>
+      <h1>${(targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType}</h1>
       <span class="tier">${tierConfig.name}</span>
-      ${latestBadge.minted ? '<div class="minted">✓ Minted On-Chain</div>' : ''}
-      <p>${(latestBadge.metadata as { description?: string })?.description || ''}</p>
+      ${targetBadge.minted ? '<div class="minted">✓ Minted On-Chain</div>' : ''}
+      <p>${(targetBadge.metadata as { description?: string })?.description || ''}</p>
       <p><a href="${getBaseUrl(request)}/profile/${fid}/badges" style="color: ${framePalette.accent}">View Full Collection →</a></p>
     </div>
   </body>
