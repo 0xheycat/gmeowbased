@@ -3,7 +3,7 @@ import { base } from 'viem/chains'
 import { CONTRACT_ADDRESSES } from '../lib/gm-utils'
 
 const ORACLE_WALLET = '0x8870C155666809609176260F2B65a626C000D773'
-const GM_ADDRESS = CONTRACT_ADDRESSES.BASE as `0x${string}`
+const GM_ADDRESS = CONTRACT_ADDRESSES.base as `0x${string}`
 
 async function checkRecentMints() {
   const publicClient = createPublicClient({

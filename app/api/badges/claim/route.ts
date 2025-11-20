@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
-import { getBadgeFromRegistry } from '@/lib/badges'
+import { getBadgeFromRegistry, updateBadgeMintStatus } from '@/lib/badges'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
+import { mintBadgeOnChain } from '@/lib/contract-mint'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 const ClaimBadgeSchema = z.object({
   fid: z.number().int().positive(),
@@ -15,14 +17,14 @@ const ClaimBadgeSchema = z.object({
 
 /**
  * POST /api/badges/claim
- * User-initiated badge claim/mint
+ * User-initiated badge claim/mint (INSTANT MINTING)
  * 
  * Flow:
  * 1. User clicks "Claim Badge" on profile
  * 2. Checks user owns the badge (assigned but not minted)
- * 3. Adds to mint_queue for processing
- * 4. Oracle mints using its points (free for user)
- * 5. User pays only gas fees
+ * 3. Mints INSTANTLY on blockchain (oracle pays points)
+ * 4. Updates user_badges with tx_hash
+ * 5. Returns success with transaction details
  * 
  * Body:
  * {
@@ -89,60 +91,53 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
     )
   }
 
-  // Check if already in mint queue
-  const { data: existingMint } = await supabase
-    .from('mint_queue')
-    .select('id, status')
-    .eq('fid', fid)
-    .eq('badge_type', badgeDef.badgeType)
-    .in('status', ['pending', 'minting'])
-    .single()
+  console.log(`[Badge Claim] Starting instant mint for FID ${fid}, badge ${badgeDef.badgeType}`)
 
-  if (existingMint) {
+  try {
+    // Mint on blockchain INSTANTLY (oracle pays points)
+    const mintResult = await mintBadgeOnChain({
+      id: userBadge.id.toString(),
+      fid,
+      walletAddress,
+      badgeType: badgeDef.badgeType,
+      status: 'minting',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+
+    console.log(`[Badge Claim] Mint successful! TX: ${mintResult.txHash}, Token ID: ${mintResult.tokenId}`)
+
+    // Update user_badges table with mint details
+    await updateBadgeMintStatus({
+      fid,
+      badgeType: badgeDef.badgeType,
+      txHash: mintResult.txHash,
+      tokenId: mintResult.tokenId,
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Badge minted successfully!',
+      txHash: mintResult.txHash,
+      tokenId: mintResult.tokenId,
+      badge: {
+        id: badgeDef.id,
+        name: badgeDef.name,
+        tier: badgeDef.tier,
+        chain: badgeDef.chain,
+      }
+    })
+  } catch (error: any) {
+    console.error('[Badge Claim] Mint failed:', error)
+    
+    // Return detailed error message
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Badge mint already in progress',
-        queueId: existingMint.id,
-        status: existingMint.status
+        error: error.message || 'Failed to mint badge',
+        details: error.toString()
       },
-      { status: 400 }
-    )
-  }
-
-  // Add to mint queue - oracle will process and pay points, user pays gas
-  const { data: mintEntry, error: mintError } = await supabase
-    .from('mint_queue')
-    .insert({
-      fid,
-      wallet_address: walletAddress,
-      badge_type: badgeDef.badgeType,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .select()
-    .single()
-
-  if (mintError) {
-    console.error('[Badge Claim] Failed to queue mint:', mintError)
-    return NextResponse.json(
-      { success: false, error: 'Failed to queue badge mint' },
       { status: 500 }
     )
   }
-
-  console.log(`[Badge Claim] Queued mint for FID ${fid}, badge ${badgeDef.badgeType}`)
-
-  return NextResponse.json({
-    success: true,
-    message: 'Badge queued for minting',
-    queueId: mintEntry.id,
-    badge: {
-      id: badgeDef.id,
-      name: badgeDef.name,
-      tier: badgeDef.tier,
-      chain: badgeDef.chain,
-    }
-  })
 }))
