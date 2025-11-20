@@ -108,11 +108,7 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: `
-                radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%),
-                radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%),
-                radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)
-              `,
+              background: `radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%), radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%), radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)`,
               opacity: 0.6,
             }}
           />
@@ -125,10 +121,7 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundImage: `
-                linear-gradient(${tierGradient.start}10 1px, transparent 1px),
-                linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)
-              `,
+              backgroundImage: `linear-gradient(${tierGradient.start}10 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)`,
               backgroundSize: '40px 40px',
               opacity: 0.15,
             }}
@@ -141,9 +134,7 @@ export async function GET(request: NextRequest) {
               height: 560,
               display: 'flex',
               flexDirection: 'column',
-              background: `linear-gradient(145deg, 
-                          rgba(26, 26, 28, 0.95) 0%, 
-                          rgba(18, 18, 20, 0.98) 100%)`,
+              background: `linear-gradient(145deg, rgba(26, 26, 28, 0.95) 0%, rgba(18, 18, 20, 0.98) 100%)`,
               border: `3px solid ${tierGradient.start}`,
               borderRadius: 32,
               boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px ${tierGradient.start}40`,
@@ -160,9 +151,7 @@ export async function GET(request: NextRequest) {
                 left: 0,
                 right: 0,
                 height: '50%',
-                background: `linear-gradient(180deg, 
-                            ${tierGradient.start}08 0%, 
-                            transparent 100%)`,
+                background: `linear-gradient(180deg, ${tierGradient.start}08 0%, transparent 100%)`,
               }}
             />
 
@@ -373,12 +362,7 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               height: 4,
-              background: `linear-gradient(90deg, 
-                          transparent 0%, 
-                          ${tierGradient.start} 20%, 
-                          ${tierGradient.end} 50%, 
-                          ${tierGradient.start} 80%, 
-                          transparent 100%)`,
+              background: `linear-gradient(90deg, transparent 0%, ${tierGradient.start} 20%, ${tierGradient.end} 50%, ${tierGradient.start} 80%, transparent 100%)`,
               boxShadow: `0 0 20px ${tierGradient.start}80`,
             }}
           />
