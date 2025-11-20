@@ -9,6 +9,7 @@ import { base, optimism, celo } from 'viem/chains'
 import type { ChainKey } from '@/lib/gm-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { getBadgeFromRegistry, type MintQueueEntry } from '@/lib/badges'
+import { ensureOracleBalance } from '@/lib/auto-deposit-oracle'
 
 // Chain configurations
 const CHAIN_CONFIG = {
@@ -132,6 +133,14 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
   console.log(`[Mint] Points required: ${pointsRequired}`)
 
   try {
+    // Auto-deposit if oracle balance is too low (requires OWNER_PRIVATE_KEY)
+    try {
+      await ensureOracleBalance(chain, BigInt(pointsRequired))
+    } catch (error: any) {
+      console.warn(`[Mint] Auto-deposit skipped: ${error.message}`)
+      // Continue - will fail with clear error if balance insufficient
+    }
+
     // Check oracle's point balance first
     const oraclePoints = await publicClient.readContract({
       address: gmContractAddress,
