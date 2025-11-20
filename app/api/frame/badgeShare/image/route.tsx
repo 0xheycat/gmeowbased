@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: 3,
-                  boxShadow: `0 0 30px ${tierGradient.start}60, inset 0 1px 1px rgba(255, 255, 255, 0.2)`,
+                  boxShadow: `0 0 30px ${tierGradient.start}60`,
                 }}
               >
                 ⭐ {tierConfig.name}
@@ -366,7 +366,7 @@ export async function GET(request: NextRequest) {
                       background: 'rgba(30, 30, 32, 0.6)',
                       border: `1px solid ${tierGradient.start}40`,
                       borderRadius: 16,
-                      boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.3)',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
                       gap: 12,
                     }}
                   >
