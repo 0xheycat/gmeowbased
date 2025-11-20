@@ -183,13 +183,20 @@ async function fetchChainSnapshotWithoutCache(chain: ChainKey, userAddress: `0x$
     const client = createPublicClient({ transport: http(rpc) })
     const contract = getContractAddress(chain)
 
+    // Add 10s timeout to prevent hanging
+    const rpcTimeout = <T>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
     const [statsRaw, gmRaw, fidRaw, guildRaw, rewardRaw, referrerRaw] = await Promise.all([
-      client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'getUserStats', args: [userAddress] }).catch(() => null),
-      client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'gmhistory', args: [userAddress] }).catch(() => null),
-      client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'farcasterFidOf', args: [userAddress] }).catch(() => 0n),
-      client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildOf', args: [userAddress] }).catch(() => 0n),
-      client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'gmPointReward' }).catch(() => null),
-      client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referrerOf', args: [userAddress] }).catch(() => null),
+      rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'getUserStats', args: [userAddress] }).catch(() => null), null),
+      rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'gmhistory', args: [userAddress] }).catch(() => null), null),
+      rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'farcasterFidOf', args: [userAddress] }).catch(() => 0n), 0n),
+      rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildOf', args: [userAddress] }).catch(() => 0n), 0n),
+      rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'gmPointReward' }).catch(() => null), null),
+      rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referrerOf', args: [userAddress] }).catch(() => null), null),
     ])
 
     const availablePoints = Number((statsRaw as any)?.[0] ?? 0n)
@@ -207,16 +214,21 @@ async function fetchChainSnapshotWithoutCache(chain: ChainKey, userAddress: `0x$
     let team: TeamOverview | null = null
     if (Number.isFinite(guildId) && guildId > 0) {
       try {
-        const guildRawData = await client.readContract({
-          address: contract,
-          abi: GM_CONTRACT_ABI,
-          functionName: 'guilds',
-          args: [BigInt(guildId)],
-        })
-        const name = String((guildRawData as any)?.[0] || `Guild #${guildId}`)
-        const founder = normalizeAddress((guildRawData as any)?.[1]) || ZERO_ADDRESS
-        const memberCount = Number((guildRawData as any)?.[3] ?? 0n)
-        team = { chain, teamId: guildId, name, founder, memberCount }
+        const guildRawData = await rpcTimeout(
+          client.readContract({
+            address: contract,
+            abi: GM_CONTRACT_ABI,
+            functionName: 'guilds',
+            args: [BigInt(guildId)],
+          }),
+          null
+        )
+        if (guildRawData) {
+          const name = String((guildRawData as any)?.[0] || `Guild #${guildId}`)
+          const founder = normalizeAddress((guildRawData as any)?.[1]) || ZERO_ADDRESS
+          const memberCount = Number((guildRawData as any)?.[3] ?? 0n)
+          team = { chain, teamId: guildId, name, founder, memberCount }
+        }
       } catch {}
     }
 

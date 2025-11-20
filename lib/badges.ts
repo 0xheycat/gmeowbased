@@ -474,20 +474,33 @@ const EVT_BADGE_MINTED = parseAbiItem(
 async function fetchMintLogsForChain(chain: ChainKey, address: `0x${string}`): Promise<MintedBadge[]> {
   const rpc = getRpcUrl(chain)
   const client = createPublicClient({ transport: http(rpc) })
-  const latest = await client.getBlockNumber()
+  
+  // Add 10s timeout to prevent hanging
+  const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+    Promise.race([
+      promise,
+      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+    ])
+  
+  const latest = await rpcTimeout(client.getBlockNumber(), 0n)
+  if (latest === 0n) return []
+  
   let fromBlock = latest > BADGE_MINT_LOOKBACK_BLOCKS ? latest - BADGE_MINT_LOOKBACK_BLOCKS : 0n
   const chainStart = getStartBlock(chain)
   if (chainStart > fromBlock) fromBlock = chainStart
   if (fromBlock > latest) return []
 
   const contract = CONTRACT_ADDRESSES[chain]
-  const logs = await client.getLogs({
-    address: contract,
-    event: EVT_BADGE_MINTED,
-    args: { to: address },
-    fromBlock,
-    toBlock: latest,
-  })
+  const logs = await rpcTimeout(
+    client.getLogs({
+      address: contract,
+      event: EVT_BADGE_MINTED,
+      args: { to: address },
+      fromBlock,
+      toBlock: latest,
+    }),
+    []
+  )
 
   const results: MintedBadge[] = []
   const blockTimestampCache = new Map<bigint, number>()
@@ -502,9 +515,14 @@ async function fetchMintLogsForChain(chain: ChainKey, address: `0x${string}`): P
       if (cached) {
         mintedAt = cached
       } else {
-        const block = await client.getBlock({ blockNumber: log.blockNumber })
-        mintedAt = Number(block.timestamp) * 1000
-        blockTimestampCache.set(log.blockNumber, mintedAt)
+        const block = await rpcTimeout(
+          client.getBlock({ blockNumber: log.blockNumber }),
+          null
+        )
+        if (block) {
+          mintedAt = Number(block.timestamp) * 1000
+          blockTimestampCache.set(log.blockNumber, mintedAt)
+        }
       }
     }
     results.push({ chain, badgeId, badgeType, mintedAt })
