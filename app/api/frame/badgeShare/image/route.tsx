@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     const badgeName = (targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType
     const badgeDescription = (targetBadge.metadata as { description?: string })?.description || tierConfig.name
     
-    // Convert relative image URL to absolute URL (required by ImageResponse)
+    // Get badge image URL - use square PNG files for Satori compatibility
     let badgeImageUrl = (targetBadge.metadata as { imageUrl?: string })?.imageUrl || badgeDefinition?.imageUrl
     if (badgeImageUrl && badgeImageUrl.startsWith('/')) {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art'
