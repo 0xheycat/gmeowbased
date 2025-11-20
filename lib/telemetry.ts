@@ -36,6 +36,7 @@ export type TelemetrySummary = {
 
 const TELEMETRY_CACHE_TTL_MS = Number(process.env.TELEMETRY_CACHE_TTL_MS ?? 60_000)
 const DASHBOARD_CACHE_TTL_MS = Number(process.env.DASHBOARD_TELEMETRY_TTL_MS ?? 60_000)
+const RPC_TIMEOUT_MS = 8000 // 8 second timeout per RPC call
 
 const DAY_MS = 86_400_000
 const DAY_SECONDS = 86_400
@@ -501,7 +502,13 @@ async function fetchDashboardTelemetryPayload(): Promise<DashboardTelemetryPaylo
 
     try {
       const client = getTelemetryClient(chain)
-      const latestBlock = await client.getBlockNumber().catch(() => 0n)
+      const latestBlock = await Promise.race([
+        client.getBlockNumber(),
+        new Promise<0n>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), RPC_TIMEOUT_MS)
+        )
+      ]).catch(() => 0n)
+      
       if (latestBlock === 0n) {
         notes.push(`[${chain}] latest block unavailable`)
       } else {
@@ -515,15 +522,21 @@ async function fetchDashboardTelemetryPayload(): Promise<DashboardTelemetryPaylo
 
         const fetchLogs = async (event: AbiEvent, label: string) => {
           try {
-            const logs = await client.getLogs({
-              address: CONTRACT_ADDRESSES[chain],
-              event,
-              fromBlock,
-              toBlock: latestBlock,
-            })
+            const logs = await Promise.race([
+              client.getLogs({
+                address: CONTRACT_ADDRESSES[chain],
+                event,
+                fromBlock,
+                toBlock: latestBlock,
+              }),
+              new Promise<never>((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), RPC_TIMEOUT_MS)
+              )
+            ])
             return logs as Log[]
           } catch (error) {
-            notes.push(`[${chain}] ${label} logs failed: ${(error as Error)?.message || error}`)
+            const msg = error instanceof Error ? error.message : String(error)
+            notes.push(`[${chain}] ${label} logs failed: ${msg}`)
             return [] as Log[]
           }
         }
@@ -546,14 +559,22 @@ async function fetchDashboardTelemetryPayload(): Promise<DashboardTelemetryPaylo
         }
 
         const timestampMap = new Map<bigint, number>()
+        // Limit concurrent block fetches to prevent RPC overload
+        const blockArray = Array.from(blockNumbers).slice(0, 50) // Max 50 blocks
         await Promise.all(
-          Array.from(blockNumbers).map(async blockNumber => {
+          blockArray.map(async blockNumber => {
             if (timestampMap.has(blockNumber)) return
             try {
-              const block = await client.getBlock({ blockNumber })
+              const block = await Promise.race([
+                client.getBlock({ blockNumber }),
+                new Promise<never>((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), RPC_TIMEOUT_MS)
+                )
+              ])
               timestampMap.set(blockNumber, Number(block.timestamp) * 1000)
             } catch (error) {
-              notes.push(`[${chain}] block ${blockNumber.toString()} fetch failed: ${(error as Error)?.message || error}`)
+              const msg = error instanceof Error ? error.message : String(error)
+              notes.push(`[${chain}] block ${blockNumber.toString()} fetch failed: ${msg}`)
             }
           }),
         )
