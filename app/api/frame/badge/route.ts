@@ -1,3 +1,13 @@
+/**
+ * Badge Frame Route
+ * 
+ * Displays individual badge showcase frames
+ * Route: /api/frame/badge?fid=xxx&badgeId=yyy
+ * 
+ * CRITICAL: Uses /api/frame/badgeShare/image for OG images (NOT /api/frame/badge/image)
+ * Last updated: 2025-11-20 - Fixed all 6 image path references
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
