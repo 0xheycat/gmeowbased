@@ -236,13 +236,19 @@ export async function fetchFidByAddress(address: string): Promise<number | null>
   if (!addr || !addr.startsWith('0x')) return null
 
   try {
-    const data = await neynarFetch<Record<string, NeynarUser[]>>(
-      '/v2/farcaster/user/bulk-by-address',
-      {
-        addresses: addr,
-        address_types: ['custody_address', 'verified_address'],
-      },
-    )
+    // Try bulk-by-address first (faster, checks custody + verified addresses)
+    const data = await Promise.race([
+      neynarFetch<Record<string, NeynarUser[]>>(
+        '/v2/farcaster/user/bulk-by-address',
+        {
+          addresses: addr,
+          address_types: ['custody_address', 'verified_address'],
+        },
+      ),
+      new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      )
+    ])
 
     const record = data?.[addr]
     if (Array.isArray(record) && record.length) {
@@ -250,10 +256,17 @@ export async function fetchFidByAddress(address: string): Promise<number | null>
       if (Number.isFinite(fid) && fid > 0) return fid
     }
 
-    const fallback = await neynarFetch<{ result?: { users?: NeynarUser[] }; user?: NeynarUser }>(
-      '/v2/farcaster/user/by-verification',
-      { address: addr },
-    )
+    // Fallback to by-verification (slower)
+    const fallback = await Promise.race([
+      neynarFetch<{ result?: { users?: NeynarUser[] }; user?: NeynarUser }>(
+        '/v2/farcaster/user/by-verification',
+        { address: addr },
+      ),
+      new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      )
+    ])
+    
     const fallbackFid = Number(
       fallback?.result?.users?.[0]?.fid ??
       fallback?.user?.fid ??
@@ -261,7 +274,8 @@ export async function fetchFidByAddress(address: string): Promise<number | null>
       0,
     )
     return Number.isFinite(fallbackFid) && fallbackFid > 0 ? fallbackFid : null
-  } catch {
+  } catch (err) {
+    console.warn('[fetchFidByAddress] Error or timeout:', err instanceof Error ? err.message : err)
     return null
   }
 }
