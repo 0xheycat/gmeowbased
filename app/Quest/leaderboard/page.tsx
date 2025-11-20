@@ -114,7 +114,7 @@ export default function QuestLeaderboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <select className="pixel-pill" value={selectedSeason || ''} onChange={(e) => setSelectedSeason(e.target.value || null)}>
+            <select className="pixel-pill" value={selectedSeason || ''} onChange={(e) => setSelectedSeason(e.target.value || null)} aria-label="Select season">
               <option value="">All seasons</option>
               {seasons.map(s => (
                 <option key={s.id} value={s.id}>{`Season ${s.id} ${s.current ? '(current)' : ''}`}</option>

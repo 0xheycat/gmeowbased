@@ -203,6 +203,7 @@ export default function MegaLeaderboard() {
               className="roster-chip roster-select text-sm text-gray-200"
               value={season}
               onChange={event => setSeason(event.target.value)}
+              aria-label="Select season"
             >
               <option value="">All seasons</option>
               {currentSeason && <option value="current">Current season</option>}
@@ -219,6 +220,7 @@ export default function MegaLeaderboard() {
             value={selectedChain}
             onChange={event => setSelectedChain(event.target.value as ChainKey)}
             disabled={global}
+            aria-label="Select blockchain network"
           >
             {CHAIN_KEYS.map(chainKey => (
               <option key={chainKey} value={chainKey}>

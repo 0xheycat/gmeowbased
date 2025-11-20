@@ -77,8 +77,8 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
       { ttl: 300 } // 5 minutes cache
     )
 
-    // Assign badge and get profile in parallel
-    const [badge, profile] = await Promise.all([
+    // Assign badge and prefetch profile in parallel (profile cached for future use)
+    const [badge] = await Promise.all([
       assignBadgeToUser({
         fid,
         badgeId: badgeDef.id,
