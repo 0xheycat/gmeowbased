@@ -189,7 +189,7 @@ CRON_SECRET=your-secret-here          # Generate: openssl rand -base64 32
 
 ```bash
 # Webhook Notifications
-BADGE_MINT_WEBHOOK_URL=https://gmeowhq.art/api/webhooks/badge-minted
+BADGE_MINT_WEBHOOK_URL=https://gmeowhq.art/api/webhooks/badge-minted # Webhook endpoint
 WEBHOOK_SECRET=your-webhook-secret    # Generate: openssl rand -base64 32
 
 # Worker Configuration
