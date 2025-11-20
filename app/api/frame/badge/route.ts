@@ -57,7 +57,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       const noBadgesEmbed = {
         version: 'next',
         imageUrl: noBadgesImageUrl,
-        buttons: [{
+        button: {
           title: 'View Profile',
           action: {
             type: 'launch_frame',
@@ -66,7 +66,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
             splashImageUrl: `${getBaseUrl(request)}/logo.png`,
             splashBackgroundColor: '#000000'
           }
-        }]
+        }
       }
       return new NextResponse(
         `<!DOCTYPE html>
@@ -103,7 +103,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     <meta name="fc:frame" content='${JSON.stringify({
       version: 'next',
       imageUrl: notFoundImageUrl,
-      buttons: [{
+      button: {
         title: 'View All Badges',
         action: {
           type: 'launch_frame',
@@ -112,7 +112,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           splashImageUrl: `${getBaseUrl(request)}/logo.png`,
           splashBackgroundColor: '#000000'
         }
-      }]
+      }
     }).replace(/'/g, "&#39;")}' />
     <meta property="og:image" content="${notFoundImageUrl}" />
     <meta property="og:title" content="Badge Not Found" />
@@ -153,64 +153,23 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       accent: '#FFFFFF',
     }
 
-    // Build frame HTML - vNext format with multiple buttons
+    // Build frame HTML - vNext format with single button
     // Using buildDynamicFrameImageUrl (trusted source pattern like working frames)
     const badgeImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: targetBadge.badgeId, fid }, getBaseUrl(request))
-    
-    // Get user's badge collection for navigation
-    const userBadges = await getUserBadges(fid)
-    const currentIndex = userBadges.findIndex(b => b.badgeId === targetBadge.badgeId)
-    const hasNext = currentIndex < userBadges.length - 1
-    const hasPrev = currentIndex > 0
     
     const badgeEmbed = {
       version: 'next',
       imageUrl: badgeImageUrl,
-      buttons: [
-        // Navigation buttons
-        ...(hasPrev ? [{
-          title: '← Previous',
-          action: {
-            type: 'launch_frame',
-            name: 'Gmeowbased',
-            url: `${getBaseUrl(request)}/api/frame/badge?fid=${fid}&badgeId=${userBadges[currentIndex - 1].badgeId}`,
-            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
-            splashBackgroundColor: '#000000'
-          }
-        }] : []),
-        ...(hasNext ? [{
-          title: 'Next →',
-          action: {
-            type: 'launch_frame',
-            name: 'Gmeowbased',
-            url: `${getBaseUrl(request)}/api/frame/badge?fid=${fid}&badgeId=${userBadges[currentIndex + 1].badgeId}`,
-            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
-            splashBackgroundColor: '#000000'
-          }
-        }] : []),
-        // Mint button if eligible
-        ...(!targetBadge.minted ? [{
-          title: '⚡ Mint Badge',
-          action: {
-            type: 'launch_frame',
-            name: 'Gmeowbased',
-            url: `${getBaseUrl(request)}/profile/${fid}/badges/mint/${targetBadge.badgeId}`,
-            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
-            splashBackgroundColor: '#000000'
-          }
-        }] : []),
-        // View all badges button
-        {
-          title: '📋 View All Badges',
-          action: {
-            type: 'launch_frame',
-            name: 'Gmeowbased',
-            url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
-            splashBackgroundColor: '#000000'
-          }
+      button: {
+        title: 'View Badge Collection',
+        action: {
+          type: 'launch_frame',
+          name: 'Gmeowbased',
+          url: `${getBaseUrl(request)}/profile/${fid}/badges`,
+          splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+          splashBackgroundColor: '#000000'
         }
-      ]
+      }
     }
     const frameHtml = `<!DOCTYPE html>
 <html>
