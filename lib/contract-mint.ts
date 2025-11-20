@@ -35,18 +35,19 @@ const CHAIN_CONFIG = {
   },
 } as const
 
-// Badge contract addresses per chain
-const BADGE_CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
-  base: (process.env.BADGE_CONTRACT_BASE as `0x${string}`) || '0x0000000000000000000000000000000000000000',
-  unichain: (process.env.BADGE_CONTRACT_UNICHAIN as `0x${string}`) || '0x0000000000000000000000000000000000000000',
-  celo: (process.env.BADGE_CONTRACT_CELO as `0x${string}`) || '0x0000000000000000000000000000000000000000',
-  ink: (process.env.BADGE_CONTRACT_INK as `0x${string}`) || '0x0000000000000000000000000000000000000000',
-  op: (process.env.BADGE_CONTRACT_OP as `0x${string}`) || '0x0000000000000000000000000000000000000000',
+// GmeowMultichain contract addresses per chain (these own the badge contracts)
+const GM_CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
+  base: (process.env.NEXT_PUBLIC_GM_BASE_ADDRESS as `0x${string}`) || '0x3ad420B8C2Be19ff8EBAdB484Ed839Ae9254bf2F',
+  unichain: (process.env.NEXT_PUBLIC_GM_UNICHAIN_ADDRESS as `0x${string}`) || '0xD8b4190c87d86E28f6B583984cf0C89FCf9C2a0f',
+  celo: (process.env.NEXT_PUBLIC_GM_CELO_ADDRESS as `0x${string}`) || '0xa68BfB4BB6F7D612182A3274E7C555B7b0b27a52',
+  ink: (process.env.NEXT_PUBLIC_GM_INK_ADDRESS as `0x${string}`) || '0x6081a70c2F33329E49cD2aC673bF1ae838617d26',
+  op: (process.env.NEXT_PUBLIC_GM_OP_ADDRESS as `0x${string}`) || '0xF670d5387DF68f258C4D5aEBE67924D85e3C6db6',
 }
 
-// SoulboundBadge ABI - minimal for minting
-const BADGE_ABI = parseAbi([
-  'function mint(address to, string calldata kind) external returns (uint256)',
+// GmeowMultichain ABI - for badge minting via mintBadgeFromPoints
+const GM_CONTRACT_ABI = parseAbi([
+  'function mintBadgeFromPoints(uint256 pointsToBurn, string calldata badgeType) external returns (uint256)',
+  'function pointsBalance(address) view returns (uint256)',
   'event BadgeMinted(address indexed to, uint256 indexed tokenId, string badgeType)',
 ])
 
@@ -75,18 +76,28 @@ function getChainConfig(chain: ChainKey) {
 }
 
 /**
- * Get badge contract address for chain
+ * Get GmeowMultichain contract address for chain
  */
-function getBadgeContractAddress(chain: ChainKey): `0x${string}` {
-  const address = BADGE_CONTRACT_ADDRESSES[chain]
+function getGMContractAddress(chain: ChainKey): `0x${string}` {
+  const address = GM_CONTRACT_ADDRESSES[chain]
   if (!address || address === '0x0000000000000000000000000000000000000000') {
-    throw new Error(`Badge contract not configured for chain: ${chain}`)
+    throw new Error(`GM contract not configured for chain: ${chain}`)
   }
   return address
 }
 
 /**
- * Mint badge on-chain
+ * Mint badge on-chain via GmeowMultichain.mintBadgeFromPoints()
+ * 
+ * Architecture:
+ * 1. GmeowMultichain contract owns SoulboundBadge contract
+ * 2. Only GmeowMultichain can mint badges (it's the owner)
+ * 3. mintBadgeFromPoints() burns points from caller and mints badge
+ * 4. Oracle wallet must have points in the contract to mint
+ * 
+ * Setup required:
+ * - Owner calls: GmeowMultichain.depositTo(oracleWallet, pointsAmount)
+ * - This gives oracle points to burn when minting badges
  */
 export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
   txHash: string
@@ -94,11 +105,14 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
 }> {
   // Determine chain from badge registry
   const badgeDefinition = getBadgeFromRegistry(mint.badgeType)
-  const chain: ChainKey = (badgeDefinition?.chain as ChainKey) || 'base' // Fallback to base if not found
+  const chain: ChainKey = (badgeDefinition?.chain as ChainKey) || 'base'
+  
+  // Points required to mint (configurable per badge type in future)
+  const pointsRequired = badgeDefinition?.pointsCost || 100
   
   const account = getOracleAccount()
   const chainConfig = getChainConfig(chain)
-  const contractAddress = getBadgeContractAddress(chain)
+  const gmContractAddress = getGMContractAddress(chain)
   const rpcUrl = getRpcUrl(chain)
 
   // Create clients
@@ -113,23 +127,35 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
     transport: http(rpcUrl),
   })
 
-  // Validate wallet address
-  const to = mint.walletAddress as `0x${string}`
-  if (!to || !to.startsWith('0x')) {
-    throw new Error(`Invalid wallet address: ${mint.walletAddress}`)
-  }
-
   console.log(`[Mint] Starting mint for FID ${mint.fid}, badge ${mint.badgeType} on ${chain}`)
-  console.log(`[Mint] To: ${to}`)
-  console.log(`[Mint] Contract: ${contractAddress}`)
+  console.log(`[Mint] GmeowMultichain contract: ${gmContractAddress}`)
+  console.log(`[Mint] Points required: ${pointsRequired}`)
 
   try {
+    // Check oracle's point balance first
+    const oraclePoints = await publicClient.readContract({
+      address: gmContractAddress,
+      abi: GM_CONTRACT_ABI,
+      functionName: 'pointsBalance',
+      args: [account.address],
+    }) as bigint
+
+    console.log(`[Mint] Oracle points balance: ${oraclePoints}`)
+    
+    if (oraclePoints < BigInt(pointsRequired)) {
+      throw new Error(
+        `Insufficient points in oracle wallet. ` +
+        `Have: ${oraclePoints}, Need: ${pointsRequired}. ` +
+        `Owner must call: GmeowMultichain.depositTo("${account.address}", ${pointsRequired})`
+      )
+    }
+
     // Simulate the transaction first
     const { request } = await publicClient.simulateContract({
-      address: contractAddress,
-      abi: BADGE_ABI,
-      functionName: 'mint',
-      args: [to, mint.badgeType],
+      address: gmContractAddress,
+      abi: GM_CONTRACT_ABI,
+      functionName: 'mintBadgeFromPoints',
+      args: [BigInt(pointsRequired), mint.badgeType],
       account,
     })
 
@@ -149,12 +175,12 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
 
     console.log(`[Mint] Transaction confirmed in block ${receipt.blockNumber}`)
 
-    // Extract tokenId from logs
+    // Extract tokenId from BadgeMinted event logs
     let tokenId = 0
     for (const log of receipt.logs) {
       try {
         const decoded = decodeEventLog({
-          abi: BADGE_ABI,
+          abi: GM_CONTRACT_ABI,
           data: log.data,
           topics: log.topics,
         }) as { eventName: string; args: { tokenId?: bigint; to?: `0x${string}`; badgeType?: string } }
