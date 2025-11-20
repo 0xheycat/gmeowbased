@@ -71,9 +71,6 @@ export async function GET(request: NextRequest) {
     const tierConfig = badgeRegistry.tiers[targetBadge.tier]
     const badgeName = (targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType
     const badgeDescription = (targetBadge.metadata as { description?: string })?.description || tierConfig.name
-    
-    // Get badge image URL from metadata
-    const badgeImageUrl = (targetBadge.metadata as { imageUrl?: string })?.imageUrl
 
     const tierGradient = getTierGradient(targetBadge.tier)
     const assignedDate = formatBadgeDate(targetBadge.assignedAt)
