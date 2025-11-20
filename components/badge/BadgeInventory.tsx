@@ -3,6 +3,9 @@
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { Crown, Sparkle, Lock } from '@phosphor-icons/react'
+import { useAccount } from 'wagmi'
+import { useNotifications } from '@/components/ui/live-notifications'
+
 export type UserBadge = {
   id: string
   fid: number
@@ -71,6 +74,11 @@ export function BadgeInventory({
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
   const [claimingBadge, setClaimingBadge] = useState<string | null>(null)
   const { address } = useAccount()
+  const { push } = useNotifications()
+
+  // Debug: log wallet connection status
+  console.log('[BadgeInventory] Wallet address:', address)
+  console.log('[BadgeInventory] Badges with unminted status:', badges.filter(b => !b.minted).length)
 
   const displayBadges = useMemo(() => {
     if (maxDisplay) return badges.slice(0, maxDisplay)
@@ -85,12 +93,22 @@ export function BadgeInventory({
     e.stopPropagation() // Don't trigger badge click
 
     if (!address) {
-      alert('Please connect your wallet first')
+      push({
+        tone: 'warning',
+        title: 'Wallet Not Connected',
+        description: 'Please connect your wallet to claim badges',
+        category: 'badge',
+      })
       return
     }
 
     if (badge.minted) {
-      alert('Badge already minted!')
+      push({
+        tone: 'info',
+        title: 'Badge Already Minted',
+        description: 'This badge has already been minted on-chain',
+        category: 'badge',
+      })
       return
     }
 
@@ -107,19 +125,36 @@ export function BadgeInventory({
         }),
       })
 
-      const result = await response.json()
-
-      if (!response.ok || !result.success) {
+      if (!response.ok) {
+        const result = await response.json()
         throw new Error(result.error || 'Failed to claim badge')
       }
 
-      alert(`✅ Badge claimed! Processing mint on ${result.badge.chain}. You'll pay gas, oracle provides points.`)
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to claim badge')
+      }
+
+      push({
+        tone: 'success',
+        title: 'Badge Claimed!',
+        description: `Processing mint on ${result.badge.chain}. You'll pay gas, oracle provides points.`,
+        category: 'badge',
+        duration: 5000,
+      })
       
       // Refresh page to show updated status
-      window.location.reload()
+      setTimeout(() => window.location.reload(), 2000)
     } catch (error: any) {
       console.error('Claim failed:', error)
-      alert(`❌ Failed to claim: ${error.message}`)
+      push({
+        tone: 'error',
+        title: 'Claim Failed',
+        description: error.message || 'Failed to claim badge',
+        category: 'badge',
+        duration: 5000,
+      })
     } finally {
       setClaimingBadge(null)
     }
@@ -148,7 +183,7 @@ export function BadgeInventory({
           const hasHolographicFoil = tier === 'mythic' || tier === 'legendary'
 
           return (
-            <button
+            <div
               key={badge.id}
               onClick={() => handleBadgeClick(badge)}
               onMouseEnter={() => setHoveredBadge(badge.id)}
@@ -313,7 +348,7 @@ export function BadgeInventory({
                   </div>
                 </div>
               )}
-            </button>
+            </div>
           )
         })}
       </div>
