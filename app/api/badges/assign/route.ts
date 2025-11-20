@@ -92,23 +92,10 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
       profilePromise,
     ])
 
-    // Queue badge mint asynchronously (non-blocking) if user has wallet
-    if (profile?.wallet_address) {
-      // Fire and forget - don't wait for mint queue insertion
-      void Promise.resolve(
-        supabase.from('mint_queue').insert({
-          fid,
-          wallet_address: profile.wallet_address,
-          badge_type: badgeDef.badgeType,
-          status: 'pending',
-          created_at: new Date().toISOString(),
-        })
-      ).then(() => {
-        console.log(`[Badge Assign] Mint queued for FID ${fid}, badge ${badgeDef.badgeType}`)
-      }).catch((error: unknown) => {
-        console.error(`[Badge Assign] Failed to queue mint:`, error)
-      })
-    }
+    // NOTE: Badge is assigned but NOT auto-minted
+    // User must manually claim/mint from their profile page
+    // This allows user to pay gas while oracle provides the points
+    console.log(`[Badge Assign] Badge ${badgeDef.badgeType} assigned to FID ${fid}. User must claim to mint on-chain.`)
 
     // Invalidate caches in parallel (non-blocking)
     Promise.all([
