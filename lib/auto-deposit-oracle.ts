@@ -42,7 +42,6 @@ const GM_CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
 }
 
 const ORACLE_WALLET = '0x8870C155666809609176260F2B65a626C000D773'
-const MIN_BALANCE = BigInt(1000) // Minimum 1000 points
 const DEPOSIT_AMOUNT = BigInt(100000) // Deposit 100k when low
 
 /**
