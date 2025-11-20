@@ -379,7 +379,7 @@ Recommendation: Remove tests or fix endpoint
 | Image Generation | <1s | 0.5-0.9s | ✅ **Excellent** |
 | Cache Hit Response | <500ms | 0.2-0.3s | ✅ **Outstanding** |
 | Error Response | <200ms | 0.1s | ✅ **Outstanding** |
-| 3G Network Loading | <5s | 2.8s | ✅ **Good** |
+| 3G Network Loading | <5s | 2.8s | ✅ **Good and nice** |
 
 ---
 ---
