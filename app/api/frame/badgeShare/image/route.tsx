@@ -147,12 +147,7 @@ export async function GET(request: NextRequest) {
                           rgba(18, 18, 20, 0.98) 100%)`,
               border: `3px solid ${tierGradient.start}`,
               borderRadius: 32,
-              boxShadow: `
-                0 0 0 1px rgba(255, 255, 255, 0.1),
-                0 20px 60px rgba(0, 0, 0, 0.5),
-                0 0 100px ${tierGradient.start}40,
-                inset 0 1px 1px rgba(255, 255, 255, 0.1)
-              `,
+              boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px ${tierGradient.start}40`,
               padding: 32,
               position: 'relative',
               overflow: 'hidden',
@@ -243,10 +238,7 @@ export async function GET(request: NextRequest) {
                       borderRadius: 20,
                       overflow: 'hidden',
                       border: `3px solid ${tierGradient.start}`,
-                      boxShadow: `
-                        0 8px 32px rgba(0, 0, 0, 0.4),
-                        0 0 60px ${tierGradient.start}50
-                      `,
+                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
                       background: `linear-gradient(145deg, rgba(30, 30, 32, 0.6), rgba(20, 20, 22, 0.8))`,
                       display: 'flex',
                       position: 'relative',
@@ -282,10 +274,7 @@ export async function GET(request: NextRequest) {
                       borderRadius: 20,
                       background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
                       border: `3px solid ${tierGradient.start}`,
-                      boxShadow: `
-                        0 8px 32px rgba(0, 0, 0, 0.4),
-                        0 0 60px ${tierGradient.start}50
-                      `,
+                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
