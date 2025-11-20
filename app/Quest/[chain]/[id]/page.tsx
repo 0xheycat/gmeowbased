@@ -442,13 +442,26 @@ export default function VerifyQuestPage() {
     }
     try {
       setRankLoading(true)
+      const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+        Promise.race([
+          promise,
+          new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+        ])
+
       const client = createPublicClient({ transport: http(rpcUrl) })
-      const stats = await client.readContract({
-        address: CONTRACT_ADDRESSES[chainKey],
-        abi: GM_CONTRACT_ABI as Abi,
-        functionName: 'getUserStats',
-        args: [connectedAddress as `0x${string}`],
-      })
+      const stats = await rpcTimeout(
+        client.readContract({
+          address: CONTRACT_ADDRESSES[chainKey],
+          abi: GM_CONTRACT_ABI as Abi,
+          functionName: 'getUserStats',
+          args: [connectedAddress as `0x${string}`],
+        }),
+        null
+      )
+      if (!stats) {
+        setRankError('Could not fetch rank data (timeout)')
+        return null
+      }
       const available = Number((stats as any)?.[0] ?? 0n)
       const locked = Number((stats as any)?.[1] ?? 0n)
       const totalPoints = available + locked
@@ -580,29 +593,45 @@ export default function VerifyQuestPage() {
         ? (GM_CONTRACT_ABI as unknown as Abi)
         : MIN_GM_ABI)
 
+      const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+        Promise.race([
+          promise,
+          new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+        ])
+
       let mappingNormalized: ReturnType<typeof normalizeQuestStruct> | null = null
       let tupleNormalized: ReturnType<typeof normalizeQuestStruct> | null = null
 
       try {
-        const mappingResult = await client.readContract({
-          address,
-          abi: abiForQuest,
-          functionName: 'quests',
-          args: [questIdBigInt],
-        })
-        mappingNormalized = normalizeQuestStruct(mappingResult)
+        const mappingResult = await rpcTimeout(
+          client.readContract({
+            address,
+            abi: abiForQuest,
+            functionName: 'quests',
+            args: [questIdBigInt],
+          }),
+          null
+        )
+        if (mappingResult) {
+          mappingNormalized = normalizeQuestStruct(mappingResult)
+        }
       } catch (err) {
         console.warn('quests() view failed; falling back to getQuest()', err)
       }
 
       try {
-        const tupleResult = await client.readContract({
-          address,
-          abi: abiForQuest,
-          functionName: 'getQuest',
-          args: [questIdBigInt],
-        })
-        tupleNormalized = normalizeQuestStruct(tupleResult)
+        const tupleResult = await rpcTimeout(
+          client.readContract({
+            address,
+            abi: abiForQuest,
+            functionName: 'getQuest',
+            args: [questIdBigInt],
+          }),
+          null
+        )
+        if (tupleResult) {
+          tupleNormalized = normalizeQuestStruct(tupleResult)
+        }
       } catch (err) {
         if (!mappingNormalized) console.warn('getQuest() view failed', err)
       }

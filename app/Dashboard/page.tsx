@@ -877,32 +877,45 @@ export default function DashboardPage() {
     setExpiredError(null)
     setExpiredLoading(true)
     const rows: ExpiredQuestRow[] = []
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
     try {
       for (const c of SUPPORTED_CHAINS) {
         try {
           const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[c] })
           if (!client) continue
           // Find your quest IDs on this chain via events
-          const latest = await client.getBlockNumber()
+          const latest = await rpcTimeout(client.getBlockNumber(), 0n)
+          if (!latest) continue
           const span = 2_000_000n
           const fromBlock = latest > span ? latest - span : 0n
           const ids = new Set<number>()
-          const logs1 = await client.getLogs({
-            address: getContractAddress(c),
-            event: evtQuestAdded,
-            args: { creator: address as `0x${string}` },
-            fromBlock, toBlock: latest,
-          }).catch(() => [])
+          const logs1 = await rpcTimeout(
+            client.getLogs({
+              address: getContractAddress(c),
+              event: evtQuestAdded,
+              args: { creator: address as `0x${string}` },
+              fromBlock, toBlock: latest,
+            }).catch(() => []),
+            []
+          )
           for (const lg of logs1) {
             const id = Number((lg as any).args?.questId ?? 0n)
             if (id > 0) ids.add(id)
           }
-          const logs2 = await client.getLogs({
-            address: getContractAddress(c),
-            event: evtQuestAddedERC20,
-            args: { creator: address as `0x${string}` },
-            fromBlock, toBlock: latest,
-          }).catch(() => [])
+          const logs2 = await rpcTimeout(
+            client.getLogs({
+              address: getContractAddress(c),
+              event: evtQuestAddedERC20,
+              args: { creator: address as `0x${string}` },
+              fromBlock, toBlock: latest,
+            }).catch(() => []),
+            []
+          )
           for (const lg of logs2) {
             const id = Number((lg as any).args?.questId ?? 0n)
             if (id > 0) ids.add(id)
@@ -910,18 +923,21 @@ export default function DashboardPage() {
           if (ids.size === 0) continue
 
           // Chain time
-          const blk = await client.getBlock({ blockTag: 'latest' }).catch(() => null)
+          const blk = await rpcTimeout(client.getBlock({ blockTag: 'latest' }).catch(() => null), null)
           const chainNow = Number((blk as any)?.timestamp ?? Math.floor(Date.now() / 1000))
 
           // Read each quest and compute escrow/expiry
           for (const id of ids) {
             try {
-              const q: any = await client.readContract({
-                address: getContractAddress(c),
-                abi: ABI,
-                functionName: 'quests',
-                args: [BigInt(id)],
-              })
+              const q: any = await rpcTimeout(
+                client.readContract({
+                  address: getContractAddress(c),
+                  abi: ABI,
+                  functionName: 'quests',
+                  args: [BigInt(id)],
+                }),
+                null
+              )
               if (!q) continue
 
               const name = String(q?.[0] || '')
@@ -1133,6 +1149,12 @@ export default function DashboardPage() {
   // Badges showcase
   useEffect(() => {
     let disposed = false
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
     const httpFromIpfs = (uri?: string) => {
       if (!uri) return uri
       if (uri.startsWith('ipfs://')) return `https://ipfs.io/ipfs/${uri.slice('ipfs://'.length)}`
@@ -1153,16 +1175,20 @@ export default function DashboardPage() {
         try {
           const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[chain] })
           if (!client) continue
-          const latest = await client.getBlockNumber()
+          const latest = await rpcTimeout(client.getBlockNumber(), 0n)
+          if (!latest) continue
           const span = 400_000n
           const fromBlock = latest > span ? latest - span : 0n
-          const logs = await client.getLogs({
-            address: getContractAddress(chain),
-            event: evtBadgeMinted,
-            args: { to: address as `0x${string}` },
-            fromBlock,
-            toBlock: latest,
-          })
+          const logs = await rpcTimeout(
+            client.getLogs({
+              address: getContractAddress(chain),
+              event: evtBadgeMinted,
+              args: { to: address as `0x${string}` },
+              fromBlock,
+              toBlock: latest,
+            }),
+            []
+          )
           for (const lg of logs) {
             const badgeId = Number((lg as any).args?.tokenId ?? 0n)
             if (badgeId > 0) raw.push({ chain, badgeId, blockNumber: lg.blockNumber })
@@ -1176,17 +1202,24 @@ export default function DashboardPage() {
         try {
           const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[item.chain] })
           if (!client) continue
-          const badgeAddr = await client.readContract({
-            address: getContractAddress(item.chain),
-            abi: ABI,                     // was: GM_CONTRACT_ABI
-            functionName: 'badgeContract',
-          }) as `0x${string}`
-          const tokenUri = await client.readContract({
-            address: badgeAddr,
-            abi: ERC721_METADATA_ABI,
-            functionName: 'tokenURI',
-            args: [BigInt(item.badgeId)],            // <-- ensure bigint tokenId
-          }) as string
+          const badgeAddr = await rpcTimeout(
+            client.readContract({
+              address: getContractAddress(item.chain),
+              abi: ABI,
+              functionName: 'badgeContract',
+            }) as Promise<`0x${string}`>,
+            '0x0' as `0x${string}`
+          )
+          if (!badgeAddr || badgeAddr === '0x0') continue
+          const tokenUri = await rpcTimeout(
+            client.readContract({
+              address: badgeAddr,
+              abi: ERC721_METADATA_ABI,
+              functionName: 'tokenURI',
+              args: [BigInt(item.badgeId)],
+            }) as Promise<string>,
+            ''
+          )
           let name: string | undefined
           let image: string | undefined
           const url = httpFromIpfs(tokenUri)
@@ -1222,17 +1255,26 @@ export default function DashboardPage() {
   // Load my referral code on the selected chain (ABI: referralCodeOf(address) -> string)
   useEffect(() => {
     let disposed = false
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
     const run = async () => {
       if (!address) { setMyRefCode(''); return }
       try {
         const client = getPublicClient(wagmiConfig, { chainId: targetChainId })
         if (!client) return
-        const codeStr = (await client.readContract({
-          address: contractAddress,
-          abi: ABI,
-          functionName: 'referralCodeOf',
-          args: [address],
-        })) as string
+        const codeStr = await rpcTimeout(
+          client.readContract({
+            address: contractAddress,
+            abi: ABI,
+            functionName: 'referralCodeOf',
+            args: [address],
+          }) as Promise<string>,
+          ''
+        )
         if (!disposed) setMyRefCode(codeStr || '')
       } catch { if (!disposed) setMyRefCode('') }
     }
@@ -1704,17 +1746,26 @@ export default function DashboardPage() {
   // Load my referral code on the selected chain
   useEffect(() => {
     let disposed = false
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
     const run = async () => {
       if (!address) { setMyRefCode(''); return }
       try {
         const client = getPublicClient(wagmiConfig, { chainId: targetChainId })
         if (!client) return
-        const codeStr = (await client.readContract({
-          address: contractAddress,
-          abi: ABI,
-          functionName: 'referralCodeOf',
-          args: [address],
-        })) as string
+        const codeStr = await rpcTimeout(
+          client.readContract({
+            address: contractAddress,
+            abi: ABI,
+            functionName: 'referralCodeOf',
+            args: [address],
+          }) as Promise<string>,
+          ''
+        )
         if (!disposed) setMyRefCode(codeStr || '')
       } catch { if (!disposed) setMyRefCode('') }
     }
