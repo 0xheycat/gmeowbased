@@ -662,6 +662,14 @@ export async function assignBadgeToUser(params: {
   }
 
   // Create new badge assignment
+  // Merge registry metadata (name, description, imageUrl) with custom metadata
+  const registryMetadata = {
+    name: badge.name,
+    description: badge.description,
+    imageUrl: badge.imageUrl,
+    tier: badge.tier,
+  }
+  
   const payload = {
     fid: params.fid,
     badge_id: params.badgeId,
@@ -670,7 +678,7 @@ export async function assignBadgeToUser(params: {
     assigned_at: new Date().toISOString(),
     minted: false,
     chain: badge.chain,
-    metadata: params.metadata || {},
+    metadata: { ...registryMetadata, ...(params.metadata || {}) },
   }
 
   const { data, error } = await supabase
