@@ -108,22 +108,32 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
       const evtGMSent = parseAbiItem('event GMSent(address indexed user, uint256 streak, uint256 pointsEarned)')
 
       // 1) Pull GMSent logs per chain (sequential with bounded windows)
+      const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+        Promise.race([
+          promise,
+          new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+        ])
+
       for (const chain of SUPPORTED_CHAINS) {
         try {
           const chainId = CHAIN_IDS[chain]
           const client = getPublicClient(wagmiConfig, { chainId })
           if (!client) continue
 
-          const latest = await client.getBlockNumber()
+          const latest = await rpcTimeout(client.getBlockNumber(), 0n)
+          if (!latest) continue
           const fromBlock = latest > SPAN_BLOCKS ? latest - SPAN_BLOCKS : 0n
 
-          const logs = await client.getLogs({
-            address: getContractAddress(chain),
-            event: evtGMSent,
-            args: { user: normalized },
-            fromBlock,
-            toBlock: latest,
-          })
+          const logs = await rpcTimeout(
+            client.getLogs({
+              address: getContractAddress(chain),
+              event: evtGMSent,
+              args: { user: normalized },
+              fromBlock,
+              toBlock: latest,
+            }),
+            []
+          )
 
           if (!logs.length) continue
 
@@ -133,8 +143,8 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
             uniqueBlocks.slice(0, 120).map(async (bnStr) => {
               try {
                 const bn = BigInt(bnStr)
-                const blk = await client.getBlock({ blockNumber: bn })
-                blockTimeMap.set(bnStr, Number(blk.timestamp) * 1000)
+                const blk = await rpcTimeout(client.getBlock({ blockNumber: bn }), null)
+                if (blk) blockTimeMap.set(bnStr, Number(blk.timestamp) * 1000)
               } catch {}
             })
           )
@@ -165,12 +175,16 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
             const client = getPublicClient(wagmiConfig, { chainId })
             if (!client) continue
 
-            const res = await client.readContract({
-              address: getContractAddress(chain),
-              abi: GM_CONTRACT_ABI,
-              functionName: 'getUserStats',
-              args: [normalized],
-            })
+            const res = await rpcTimeout(
+              client.readContract({
+                address: getContractAddress(chain),
+                abi: GM_CONTRACT_ABI,
+                functionName: 'getUserStats',
+                args: [normalized],
+              }),
+              null
+            )
+            if (!res) continue
             const stats = res as unknown as UserStatsTuple
             const lastGMTime = Number(stats[0] || 0n)
             const streak = Number(stats[1] || 0n)

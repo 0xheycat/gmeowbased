@@ -112,14 +112,36 @@ export default function GuildManagementPage({ chain, teamId, slug }: Props) {
     setLoading(true)
     setOpState((prev) => ({ ...prev, msg: undefined, err: undefined }))
 
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
     try {
       const contract = getContractAddress(chain)
-      const guildPromise = client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guilds', args: [BigInt(teamId)] })
-      const treasuryPromise = client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildTreasuryPoints', args: [BigInt(teamId)] })
-      const nextQuestPromise = client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'nextGuildQuestId', args: [] }).catch(() => 0n)
-      const logsPromise = client.getLogs({ address: contract, fromBlock: DEPLOY_BLOCKS[chain] ?? 0n, toBlock: 'latest' } as any)
+      const guildPromise = rpcTimeout(
+        client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guilds', args: [BigInt(teamId)] }),
+        null
+      )
+      const treasuryPromise = rpcTimeout(
+        client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildTreasuryPoints', args: [BigInt(teamId)] }),
+        0n
+      )
+      const nextQuestPromise = rpcTimeout(
+        client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'nextGuildQuestId', args: [] }).catch(() => 0n),
+        0n
+      )
+      const logsPromise = rpcTimeout(
+        client.getLogs({ address: contract, fromBlock: DEPLOY_BLOCKS[chain] ?? 0n, toBlock: 'latest' } as any),
+        []
+      )
 
       const [guildRaw, treasuryRaw, nextQuestId, rawLogs] = await Promise.all([guildPromise, treasuryPromise, nextQuestPromise, logsPromise])
+      if (!guildRaw) {
+        setOpState({ err: 'Could not load guild data (timeout)' })
+        return
+      }
 
       const guildArr = guildRaw as any[]
       const guildSummary: GuildSummary = {
@@ -224,9 +246,9 @@ export default function GuildManagementPage({ chain, teamId, slug }: Props) {
 
       if (address) {
         const [statsRes, referrer, gid] = await Promise.all([
-          client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'getUserStats', args: [address] }).catch(() => null),
-          client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referrerOf', args: [address] }).catch(() => null),
-          client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildOf', args: [address] }).catch(() => 0n),
+          rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'getUserStats', args: [address] }).catch(() => null), null),
+          rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referrerOf', args: [address] }).catch(() => null), null),
+          rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildOf', args: [address] }).catch(() => 0n), 0n),
         ])
         const available = statsRes ? ((statsRes as any)[0] as bigint) : 0n
         setUserPoints(available || 0n)

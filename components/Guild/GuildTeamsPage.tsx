@@ -332,6 +332,12 @@ export default function GuildTeamsPage() {
       const nextPoints: Partial<Record<ChainKey, bigint>> = {}
       let foundFounder = false
 
+      const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+        Promise.race([
+          promise,
+          new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+        ])
+
       for (const chain of SUPPORTED_CHAINS) {
         try {
           const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[chain] })
@@ -339,10 +345,10 @@ export default function GuildTeamsPage() {
           const contract = getContractAddress(chain)
 
           const [stats, gidRaw, referrerRaw, codeRaw] = await Promise.all([
-            client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'getUserStats', args: [address] }).catch(() => null),
-            client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildOf', args: [address] }).catch(() => 0n),
-            client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referrerOf', args: [address] }).catch(() => ZERO_ADDR),
-            client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referralCodeOf', args: [address] }).catch(() => ''),
+            rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'getUserStats', args: [address] }).catch(() => null), null),
+            rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildOf', args: [address] }).catch(() => 0n), 0n),
+            rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referrerOf', args: [address] }).catch(() => ZERO_ADDR), ZERO_ADDR),
+            rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referralCodeOf', args: [address] }).catch(() => ''), ''),
           ])
 
           if (stats) nextPoints[chain] = ((stats as any)[0] as bigint) || 0n
@@ -353,7 +359,11 @@ export default function GuildTeamsPage() {
           const teamId = Number(gidRaw || 0n)
           if (teamId > 0) {
             try {
-              const guild = await client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guilds', args: [BigInt(teamId)] })
+              const guild = await rpcTimeout(
+                client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guilds', args: [BigInt(teamId)] }),
+                null
+              )
+              if (!guild) continue
               const arr = guild as any[]
               const name = (arr?.[0] as string) || `Guild #${teamId}`
               const founder = (arr?.[1] as string) || ZERO_ADDR
@@ -430,26 +440,38 @@ export default function GuildTeamsPage() {
     setIsLoadingTeams(true)
     ;(async () => {
       try {
+        const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+          Promise.race([
+            promise,
+            new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+          ])
+
         const collected: TeamEntry[] = []
         for (const chain of SUPPORTED_CHAINS) {
           try {
             const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[chain] })
             if (!client) continue
             const address = getContractAddress(chain)
-            const maxId = await client.readContract({ address, abi: GM_CONTRACT_ABI, functionName: 'nextGuildId', args: [] }).catch(() => 0n)
+            const maxId = await rpcTimeout(
+              client.readContract({ address, abi: GM_CONTRACT_ABI, functionName: 'nextGuildId', args: [] }).catch(() => 0n),
+              0n
+            )
             if (!maxId || maxId === 0n) continue
             const ids = Array.from({ length: Math.min(Number(maxId), Math.min(scanLimit, MAX_DIRECTORY_SCAN)) }, (_, i) => BigInt(i + 1))
             const calls = ids.map((id) => ({ address, abi: GM_CONTRACT_ABI, functionName: 'guilds' as const, args: [id] }))
             let results: any[] = []
             try {
-              results = await client.multicall({ contracts: calls })
+              results = await rpcTimeout(client.multicall({ contracts: calls }), [])
             } catch {
               results = await Promise.all(
                 calls.map((call) =>
-                  client
-                    .readContract(call as any)
-                    .then((res) => ({ result: res }))
-                    .catch(() => ({ result: null })),
+                  rpcTimeout(
+                    client
+                      .readContract(call as any)
+                      .then((res) => ({ result: res }))
+                      .catch(() => ({ result: null })),
+                    { result: null }
+                  ),
                 ),
               )
             }

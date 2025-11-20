@@ -96,18 +96,28 @@ export function UserProfile({ user }: UserProfileProps) {
         let best: { prof: UserProfileTuple; chain: ChainKey } | null = null
         let fallback: { prof: UserProfileTuple; chain: ChainKey } | null = null
 
+        const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+          Promise.race([
+            promise,
+            new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+          ])
+
         for (const chain of SUPPORTED_CHAINS) {
           const chainId = CHAIN_IDS[chain]
           const client = getPublicClient(wagmiConfig, { chainId })
           if (!client) continue
 
           try {
-            const result = await client.readContract({
-              address: getContractAddress(chain),
-              abi: GM_CONTRACT_ABI,
-              functionName: 'getUserProfile',
-              args: [address],
-            })
+            const result = await rpcTimeout(
+              client.readContract({
+                address: getContractAddress(chain),
+                abi: GM_CONTRACT_ABI,
+                functionName: 'getUserProfile',
+                args: [address],
+              }),
+              null
+            )
+            if (!result) continue
             const tuple = result as readonly [string, string, string, string, bigint, boolean]
             const prof: UserProfileTuple = {
               name: tuple[0],
