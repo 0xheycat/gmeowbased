@@ -2394,11 +2394,28 @@ export default function DashboardPage() {
               ))}
             </div>
             <div className="mt-3 text-right">
-              <Link href="/profile" className="underline text-[11px]">View full badge shelf ↗</Link>
+              <Link 
+                href={linkedFid ? `/profile/${linkedFid}/badges` : '/profile'} 
+                className="underline text-[11px] hover:text-[var(--px-accent)] transition-colors"
+              >
+                View full badge collection ↗
+              </Link>
             </div>
           </>
         ) : (
-          <div className="text-[var(--px-sub)] text-sm">No badges yet</div>
+          <div className="text-[var(--px-sub)] text-sm">
+            No badges yet
+            {linkedFid && (
+              <div className="mt-2">
+                <Link 
+                  href={`/profile/${linkedFid}/badges`}
+                  className="text-[11px] text-[var(--px-accent)] hover:underline"
+                >
+                  View badges page →
+                </Link>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </>
