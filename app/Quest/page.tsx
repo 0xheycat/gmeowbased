@@ -232,12 +232,21 @@ export default function QuestHubPage() {
               return { chain, quests: chainQuests, failures: chainFailures }
             }
 
-            const ids = (await client.readContract({
-              address: getContractAddress(chain),
-              abi: GM_CONTRACT_ABI,
-              functionName: 'getActiveQuests',
-              args: [],
-            } as const)) as bigint[]
+            const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+              Promise.race([
+                promise,
+                new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+              ])
+
+            const ids = await rpcTimeout(
+              client.readContract({
+                address: getContractAddress(chain),
+                abi: GM_CONTRACT_ABI,
+                functionName: 'getActiveQuests',
+                args: [],
+              } as const) as Promise<bigint[]>,
+              []
+            )
 
             const trimmed = ids.slice(0, 200)
             await Promise.all(
@@ -245,12 +254,16 @@ export default function QuestHubPage() {
                 const questId = Number(rawId)
                 if (!Number.isFinite(questId) || questId <= 0) return
                 try {
-                  const questRaw = await client.readContract({
-                    address: getContractAddress(chain),
-                    abi: GM_CONTRACT_ABI,
-                    functionName: 'getQuest',
-                    args: [rawId],
-                  } as const)
+                  const questRaw = await rpcTimeout(
+                    client.readContract({
+                      address: getContractAddress(chain),
+                      abi: GM_CONTRACT_ABI,
+                      functionName: 'getQuest',
+                      args: [rawId],
+                    } as const),
+                    null
+                  )
+                  if (!questRaw) return
 
                   const normalized = normalizeQuestStruct(questRaw) as NormalizedQuest
                   if (!normalized?.isActive) return
