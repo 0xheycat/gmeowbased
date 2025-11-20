@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     
     // Find the specific badge
     const targetBadge = badges.find(b => b.badgeId === badgeIdParam)
-    const registryEntry = registry[badgeIdParam || '']
+    const registryEntry = badgeIdParam ? registry[badgeIdParam as keyof typeof registry] : undefined
     
     return NextResponse.json({
       success: true,
