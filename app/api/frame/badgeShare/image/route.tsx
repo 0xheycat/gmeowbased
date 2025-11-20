@@ -226,7 +226,7 @@ export async function GET(request: NextRequest) {
                 flex: 1,
               }}
             >
-              {/* Left: Badge artwork (like Yu-Gi-Oh! monster art) */}
+              {/* Left: Badge artwork (gradient fallback - no external images) */}
               <div
                 style={{
                   display: 'flex',
@@ -234,67 +234,45 @@ export async function GET(request: NextRequest) {
                   gap: 16,
                 }}
               >
-                {badgeImageUrl ? (
+                <div
+                  style={{
+                    width: 360,
+                    height: 360,
+                    borderRadius: 20,
+                    background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
+                    border: `3px solid ${tierGradient.start}`,
+                    boxShadow: `
+                      0 8px 32px rgba(0, 0, 0, 0.4),
+                      0 0 60px ${tierGradient.start}50,
+                      inset 0 1px 1px rgba(255, 255, 255, 0.1)
+                    `,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 160,
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Badge emoji based on tier */}
+                  <div style={{ position: 'relative', zIndex: 2 }}>
+                    {targetBadge.tier === 'legendary' ? '👑' :
+                     targetBadge.tier === 'epic' ? '⭐' :
+                     targetBadge.tier === 'rare' ? '💎' : '🎖️'}
+                  </div>
+                  {/* Holographic overlay */}
                   <div
                     style={{
-                      width: 360,
-                      height: 360,
-                      borderRadius: 20,
-                      overflow: 'hidden',
-                      border: `3px solid ${tierGradient.start}`,
-                      boxShadow: `
-                        0 8px 32px rgba(0, 0, 0, 0.4),
-                        0 0 60px ${tierGradient.start}50,
-                        inset 0 1px 1px rgba(255, 255, 255, 0.1)
-                      `,
-                      background: `linear-gradient(145deg, rgba(30, 30, 32, 0.6), rgba(20, 20, 22, 0.8))`,
-                      display: 'flex',
-                      position: 'relative',
+                      position: 'absolute',
+                      inset: 0,
+                      background: `linear-gradient(135deg, 
+                                  transparent 0%, 
+                                  ${tierGradient.start}20 50%, 
+                                  transparent 100%)`,
+                      pointerEvents: 'none',
                     }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={badgeImageUrl}
-                      alt={badgeName}
-                      width={360}
-                      height={360}
-                      style={{ 
-                        objectFit: 'cover',
-                        position: 'relative',
-                        zIndex: 1,
-                      }}
-                    />
-                    {/* Holographic overlay */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: `linear-gradient(135deg, 
-                                    transparent 0%, 
-                                    ${tierGradient.start}15 50%, 
-                                    transparent 100%)`,
-                        pointerEvents: 'none',
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      width: 360,
-                      height: 360,
-                      borderRadius: 20,
-                      background: `linear-gradient(135deg, ${tierGradient.start}40, ${tierGradient.end}40)`,
-                      border: `3px solid ${tierGradient.start}`,
-                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 120,
-                    }}
-                  >
-                    🎖️
-                  </div>
-                )}
+                  />
+                </div>
               </div>
 
               {/* Right: Badge details (like Yu-Gi-Oh! card text) */}
