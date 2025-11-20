@@ -69,6 +69,8 @@ export function BadgeInventory({
   onBadgeClick 
 }: BadgeInventoryProps) {
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
+  const [claimingBadge, setClaimingBadge] = useState<string | null>(null)
+  const { address } = useAccount()
 
   const displayBadges = useMemo(() => {
     if (maxDisplay) return badges.slice(0, maxDisplay)
@@ -77,6 +79,50 @@ export function BadgeInventory({
 
   const handleBadgeClick = (badge: UserBadge) => {
     onBadgeClick?.(badge)
+  }
+
+  const handleClaimBadge = async (badge: UserBadge, e: React.MouseEvent) => {
+    e.stopPropagation() // Don't trigger badge click
+
+    if (!address) {
+      alert('Please connect your wallet first')
+      return
+    }
+
+    if (badge.minted) {
+      alert('Badge already minted!')
+      return
+    }
+
+    setClaimingBadge(badge.badgeId)
+
+    try {
+      const response = await fetch('/api/badges/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fid: badge.fid,
+          badgeId: badge.badgeId,
+          walletAddress: address,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to claim badge')
+      }
+
+      alert(`✅ Badge claimed! Processing mint on ${result.badge.chain}. You'll pay gas, oracle provides points.`)
+      
+      // Refresh page to show updated status
+      window.location.reload()
+    } catch (error: any) {
+      console.error('Claim failed:', error)
+      alert(`❌ Failed to claim: ${error.message}`)
+    } finally {
+      setClaimingBadge(null)
+    }
   }
 
   if (badges.length === 0) {
@@ -181,6 +227,24 @@ export function BadgeInventory({
                     <Sparkle size={12} weight="fill" />
                     Minted
                   </div>
+                )}
+
+                {/* Claim Button for unminted badges */}
+                {!badge.minted && address && (
+                  <button
+                    onClick={(e) => handleClaimBadge(badge, e)}
+                    disabled={claimingBadge === badge.badgeId}
+                    className="absolute top-2 right-2 flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {claimingBadge === badge.badgeId ? (
+                      <>Claiming...</>
+                    ) : (
+                      <>
+                        <Sparkle size={12} weight="fill" />
+                        Claim
+                      </>
+                    )}
+                  </button>
                 )}
 
                 {/* Bottom Info Bar */}
