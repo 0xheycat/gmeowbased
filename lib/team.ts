@@ -56,13 +56,23 @@ export async function getTeamSummary(chain: ChainKey, teamId: number): Promise<T
   const client = getPublicClient(wagmiConfig, { chainId })
   const address = getContractAddress(chain)
 
+  const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+    Promise.race([
+      promise,
+      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+    ])
+
   // guilds(guildId) -> (name, leader, totalPoints, memberCount, active, level)
-  const g = await client.readContract({
-    address,
-    abi: GM_CONTRACT_ABI,
-    functionName: 'guilds',
-    args: [BigInt(teamId)],
-  })
+  const g = await rpcTimeout(
+    client.readContract({
+      address,
+      abi: GM_CONTRACT_ABI,
+      functionName: 'guilds',
+      args: [BigInt(teamId)],
+    }),
+    null
+  )
+  if (!g) throw new Error('Guild read timeout')
 
   const name = (g as any)[0] as string
   const leader = (g as any)[1] as string
@@ -96,8 +106,17 @@ export async function getTeamMembersClient(
   const address = getContractAddress(chain)
   const fromBlock = DEPLOY_BLOCKS[chain] ?? 0n
 
+  const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+    Promise.race([
+      promise,
+      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+    ])
+
   // Pull logs and reconstruct current members
-  const rawLogs = await client.getLogs({ address, fromBlock, toBlock: 'latest' } as any)
+  const rawLogs = await rpcTimeout(
+    client.getLogs({ address, fromBlock, toBlock: 'latest' } as any),
+    []
+  )
 
   type Evt = {
     name: string
@@ -143,8 +162,11 @@ export async function getTeamMembersClient(
   // Get guild total points
   let guildTotal = 0n
   try {
-    const g = await client.readContract({ address, abi: GM_CONTRACT_ABI, functionName: 'guilds', args: [BigInt(teamId)] })
-    guildTotal = ((g as any)?.[2] as bigint) ?? 0n
+    const g = await rpcTimeout(
+      client.readContract({ address, abi: GM_CONTRACT_ABI, functionName: 'guilds', args: [BigInt(teamId)] }),
+      null
+    )
+    guildTotal = g ? (((g as any)?.[2] as bigint) ?? 0n) : 0n
   } catch {
     guildTotal = 0n
   }
@@ -153,15 +175,18 @@ export async function getTeamMembersClient(
   const calls = addrs.map((a) => ({ address, abi: GM_CONTRACT_ABI, functionName: 'getUserStats' as const, args: [a as `0x${string}`] }))
   let res: any[] = []
   try {
-    res = await client.multicall({ contracts: calls })
+    res = await rpcTimeout(client.multicall({ contracts: calls }), [])
   } catch {
     // fallback if multicall not supported
     res = await Promise.all(
       calls.map((c) =>
-        client
-          .readContract(c as any)
-          .then((r) => ({ result: r }))
-          .catch(() => ({ result: null })),
+        rpcTimeout(
+          client
+            .readContract(c as any)
+            .then((r) => ({ result: r }))
+            .catch(() => ({ result: null })),
+          { result: null }
+        ),
       ),
     )
   }

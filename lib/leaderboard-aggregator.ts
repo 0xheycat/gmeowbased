@@ -124,10 +124,17 @@ async function fetchLogsInChunks(
     cursor = cappedUpper + 1n
   }
 
+  const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+    Promise.race([
+      promise,
+      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+    ])
+
   const logsByRange = await mapWithConcurrency(ranges, LOG_FETCH_CONCURRENCY, async range => {
-    const logs = await client
-      .getLogs({ address, event: EVT_QUEST_COMPLETED, fromBlock: range.from, toBlock: range.to })
-      .catch(error => {
+    const logs = await rpcTimeout(
+      client.getLogs({ address, event: EVT_QUEST_COMPLETED, fromBlock: range.from, toBlock: range.to }),
+      []
+    ).catch(error => {
         if (AGGREGATOR_DEBUG) {
           console.warn('[aggregator] log fetch failed chain range', address, range.from.toString(), range.to.toString(), error)
         }
@@ -156,9 +163,17 @@ async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState>
     throw error
   }
   const contractAddr = CONTRACT_ADDRESSES[chain]
-  const latestBlock = await client
-    .getBlockNumber()
-    .catch(() => (cached?.lastBlock ?? getStartBlock(chain)))
+
+  const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+    Promise.race([
+      promise,
+      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+    ])
+
+  const latestBlock = await rpcTimeout(
+    client.getBlockNumber(),
+    cached?.lastBlock ?? getStartBlock(chain)
+  )
   const baseStartBlock = getStartBlock(chain)
   const totals = cached?.totals ?? new Map<string, AggregateBucket>()
   const lastProcessed = cached?.lastBlock ?? (baseStartBlock > 0n ? baseStartBlock - 1n : -1n)
@@ -243,12 +258,22 @@ async function resolveProfile(entry: RawAggregate) {
 
   try {
     const client = getClient(entry.chain)
-    const profile = (await client.readContract({
-      address: CONTRACT_ADDRESSES[entry.chain],
-      abi: GM_CONTRACT_ABI,
-      functionName: 'getUserProfile',
-      args: [entry.address],
-    })) as unknown as UserProfileTuple
+    const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+      ])
+
+    const profile = await rpcTimeout(
+      client.readContract({
+        address: CONTRACT_ADDRESSES[entry.chain],
+        abi: GM_CONTRACT_ABI,
+        functionName: 'getUserProfile',
+        args: [entry.address],
+      }) as Promise<UserProfileTuple>,
+      null
+    )
+    if (!profile) throw new Error('Profile read timeout')
     const [name, , , pfpUrl, , , fidRaw] = profile
     const fidNumber = Number(fidRaw)
     const resolvedFid = Number.isFinite(fidNumber) && fidNumber > 0 ? fidNumber : entry.farcasterFid
