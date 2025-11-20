@@ -169,7 +169,6 @@ export async function GET(request: NextRequest) {
                 background: `linear-gradient(180deg, 
                             ${tierGradient.start}08 0%, 
                             transparent 100%)`,
-                pointerEvents: 'none',
               }}
             />
 
@@ -193,12 +192,10 @@ export async function GET(request: NextRequest) {
                   borderRadius: 999,
                   fontSize: 20,
                   fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: 3,
                   boxShadow: `0 0 30px ${tierGradient.start}60`,
                 }}
               >
-                ⭐ {tierConfig.name}
+                ⭐ {tierConfig.name.toUpperCase()}
               </div>
 
               {/* Minted status badge */}
@@ -261,10 +258,6 @@ export async function GET(request: NextRequest) {
                       alt={badgeName}
                       width={360}
                       height={360}
-                      style={{ 
-                        objectFit: 'cover',
-                        position: 'relative',
-                      }}
                     />
                     {/* Holographic overlay */}
                     <div
@@ -302,7 +295,7 @@ export async function GET(request: NextRequest) {
                     }}
                   >
                     {/* Badge emoji based on tier */}
-                    <div style={{ position: 'relative', zIndex: 2 }}>
+                    <div style={{ position: 'relative' }}>
                       {targetBadge.tier === 'legendary' ? '👑' :
                        targetBadge.tier === 'epic' ? '⭐' :
                        targetBadge.tier === 'rare' ? '💎' : '🎖️'}
