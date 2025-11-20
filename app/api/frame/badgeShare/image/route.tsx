@@ -67,20 +67,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get badge definition and tier config
-    const badgeDefinition = badgeRegistry.badges.find(
-      (b) => b.badgeType === targetBadge.badgeType
-    )
-
+    // Get tier config
     const tierConfig = badgeRegistry.tiers[targetBadge.tier]
     const badgeName = (targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType
     const badgeDescription = (targetBadge.metadata as { description?: string })?.description || tierConfig.name
-    
-    // Convert relative image URL to absolute URL (required by ImageResponse)
-    let badgeImageUrl = (targetBadge.metadata as { imageUrl?: string })?.imageUrl || badgeDefinition?.imageUrl
-    if (badgeImageUrl && badgeImageUrl.startsWith('/')) {
+
+    // Get badge image URL - use compressed PNG files (<200KB)
+    const badgeImageUrl = (targetBadge.metadata as { imageUrl?: string })?.imageUrl
+    let absoluteBadgeUrl: string | undefined
+    if (badgeImageUrl) {
+      // Convert /badges/xxx.webp to /badges/xxx.png (compressed versions)
+      const pngPath = badgeImageUrl.replace('.webp', '.png')
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art'
-      badgeImageUrl = `${baseUrl}${badgeImageUrl}`
+      absoluteBadgeUrl = `${baseUrl}${pngPath}`
     }
 
     const tierGradient = getTierGradient(targetBadge.tier)
@@ -102,17 +101,19 @@ export async function GET(request: NextRequest) {
             overflow: 'hidden',
           }}
         >
-          {/* Animated mesh gradient background (macOS style) */}
+          {/* Animated mesh gradient background (simplified for Satori) */}
           <div
             style={{
               position: 'absolute',
-              inset: 0,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               background: `
                 radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%),
                 radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%),
                 radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)
               `,
-              filter: 'blur(60px)',
               opacity: 0.6,
             }}
           />
@@ -121,7 +122,10 @@ export async function GET(request: NextRequest) {
           <div
             style={{
               position: 'absolute',
-              inset: 0,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               backgroundImage: `
                 linear-gradient(${tierGradient.start}10 1px, transparent 1px),
                 linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)
@@ -226,7 +230,7 @@ export async function GET(request: NextRequest) {
                 flex: 1,
               }}
             >
-              {/* Left: Badge artwork (like Yu-Gi-Oh! monster art) */}
+              {/* Left: Badge artwork (gradient fallback - no external images) */}
               <div
                 style={{
                   display: 'flex',
@@ -234,7 +238,7 @@ export async function GET(request: NextRequest) {
                   gap: 16,
                 }}
               >
-                {badgeImageUrl ? (
+                {absoluteBadgeUrl ? (
                   <div
                     style={{
                       width: 360,
@@ -244,8 +248,7 @@ export async function GET(request: NextRequest) {
                       border: `3px solid ${tierGradient.start}`,
                       boxShadow: `
                         0 8px 32px rgba(0, 0, 0, 0.4),
-                        0 0 60px ${tierGradient.start}50,
-                        inset 0 1px 1px rgba(255, 255, 255, 0.1)
+                        0 0 60px ${tierGradient.start}50
                       `,
                       background: `linear-gradient(145deg, rgba(30, 30, 32, 0.6), rgba(20, 20, 22, 0.8))`,
                       display: 'flex',
@@ -254,26 +257,27 @@ export async function GET(request: NextRequest) {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={badgeImageUrl}
+                      src={absoluteBadgeUrl}
                       alt={badgeName}
                       width={360}
                       height={360}
                       style={{ 
                         objectFit: 'cover',
                         position: 'relative',
-                        zIndex: 1,
                       }}
                     />
                     {/* Holographic overlay */}
                     <div
                       style={{
                         position: 'absolute',
-                        inset: 0,
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
                         background: `linear-gradient(135deg, 
                                     transparent 0%, 
                                     ${tierGradient.start}15 50%, 
                                     transparent 100%)`,
-                        pointerEvents: 'none',
                       }}
                     />
                   </div>
@@ -283,16 +287,40 @@ export async function GET(request: NextRequest) {
                       width: 360,
                       height: 360,
                       borderRadius: 20,
-                      background: `linear-gradient(135deg, ${tierGradient.start}40, ${tierGradient.end}40)`,
+                      background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
                       border: `3px solid ${tierGradient.start}`,
-                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
+                      boxShadow: `
+                        0 8px 32px rgba(0, 0, 0, 0.4),
+                        0 0 60px ${tierGradient.start}50
+                      `,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: 120,
+                      fontSize: 160,
+                      position: 'relative',
+                      overflow: 'hidden',
                     }}
                   >
-                    🎖️
+                    {/* Badge emoji based on tier */}
+                    <div style={{ position: 'relative', zIndex: 2 }}>
+                      {targetBadge.tier === 'legendary' ? '👑' :
+                       targetBadge.tier === 'epic' ? '⭐' :
+                       targetBadge.tier === 'rare' ? '💎' : '🎖️'}
+                    </div>
+                    {/* Holographic overlay */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: `linear-gradient(135deg, 
+                                    transparent 0%, 
+                                    ${tierGradient.start}20 50%, 
+                                    transparent 100%)`,
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -322,9 +350,7 @@ export async function GET(request: NextRequest) {
                       fontWeight: 800,
                       margin: 0,
                       lineHeight: 1.1,
-                      background: `linear-gradient(135deg, #ffffff, ${tierGradient.start})`,
-                      backgroundClip: 'text',
-                      color: 'transparent',
+                      color: '#ffffff',
                       textShadow: `0 2px 20px ${tierGradient.start}80`,
                     }}
                   >
