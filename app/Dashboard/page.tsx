@@ -419,13 +419,20 @@ export default function DashboardPage() {
         const client = getPublicClient(wagmiConfig, { chainId: targetChainId })
         if (!client) return null
 
+        // Add 10s timeout to prevent hanging
+        const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+          Promise.race([
+            promise,
+            new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+          ])
+
         const [statsRes, gmRewardRaw, gmCooldownRaw, bonus7Raw, bonus30Raw, bonus100Raw] = await Promise.all([
-          client.readContract({ address: contractAddress, abi: ABI, functionName: 'getUserStats', args: [address] }),
-          client.readContract({ address: contractAddress, abi: ABI, functionName: 'gmPointReward' }).catch(() => null),
-          client.readContract({ address: contractAddress, abi: ABI, functionName: 'gmCooldown' }).catch(() => null),
-          client.readContract({ address: contractAddress, abi: ABI, functionName: 'streak7BonusPct' }).catch(() => null),
-          client.readContract({ address: contractAddress, abi: ABI, functionName: 'streak30BonusPct' }).catch(() => null),
-          client.readContract({ address: contractAddress, abi: ABI, functionName: 'streak100BonusPct' }).catch(() => null),
+          rpcTimeout(client.readContract({ address: contractAddress, abi: ABI, functionName: 'getUserStats', args: [address] }), null as any),
+          rpcTimeout(client.readContract({ address: contractAddress, abi: ABI, functionName: 'gmPointReward' }).catch(() => null), null),
+          rpcTimeout(client.readContract({ address: contractAddress, abi: ABI, functionName: 'gmCooldown' }).catch(() => null), null),
+          rpcTimeout(client.readContract({ address: contractAddress, abi: ABI, functionName: 'streak7BonusPct' }).catch(() => null), null),
+          rpcTimeout(client.readContract({ address: contractAddress, abi: ABI, functionName: 'streak30BonusPct' }).catch(() => null), null),
+          rpcTimeout(client.readContract({ address: contractAddress, abi: ABI, functionName: 'streak100BonusPct' }).catch(() => null), null),
         ])
 
         if (!mountedRef.current) return null
@@ -463,9 +470,10 @@ export default function DashboardPage() {
           setGmBonusConfig({ bonus7: bonus7Val, bonus30: bonus30Val, bonus100: bonus100Val })
         }
 
-        const gm = await client
-          .readContract({ address: contractAddress, abi: ABI, functionName: 'gmhistory', args: [address] })
-          .catch(() => null as any)
+        const gm = await rpcTimeout(
+          client.readContract({ address: contractAddress, abi: ABI, functionName: 'gmhistory', args: [address] }).catch(() => null as any),
+          null as any
+        )
 
         if (mountedRef.current) {
           if (gm) {
