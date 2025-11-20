@@ -72,6 +72,16 @@ export async function GET(request: NextRequest) {
     const badgeName = (targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType
     const badgeDescription = (targetBadge.metadata as { description?: string })?.description || tierConfig.name
 
+    // Get badge image URL - use compressed PNG files (<200KB)
+    const badgeImageUrl = (targetBadge.metadata as { imageUrl?: string })?.imageUrl
+    let absoluteBadgeUrl: string | undefined
+    if (badgeImageUrl) {
+      // Convert /badges/xxx.webp to /badges/xxx.png (compressed versions)
+      const pngPath = badgeImageUrl.replace('.webp', '.png')
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art'
+      absoluteBadgeUrl = `${baseUrl}${pngPath}`
+    }
+
     const tierGradient = getTierGradient(targetBadge.tier)
     const assignedDate = formatBadgeDate(targetBadge.assignedAt)
 
@@ -220,7 +230,43 @@ export async function GET(request: NextRequest) {
                   gap: 16,
                 }}
               >
-                {/* No external images - always use letter */ 
+                {absoluteBadgeUrl ? (
+                  <div
+                    style={{
+                      width: 360,
+                      height: 360,
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      border: `3px solid ${tierGradient.start}`,
+                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
+                      background: `linear-gradient(145deg, rgba(30, 30, 32, 0.6), rgba(20, 20, 22, 0.8))`,
+                      display: 'flex',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={absoluteBadgeUrl}
+                      alt={badgeName}
+                      width={360}
+                      height={360}
+                    />
+                    {/* Holographic overlay */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: `linear-gradient(135deg, 
+                                    transparent 0%, 
+                                    ${tierGradient.start}15 50%, 
+                                    transparent 100%)`,
+                      }}
+                    />
+                  </div>
+                ) : (
                   <div
                     style={{
                       width: 360,
@@ -258,7 +304,7 @@ export async function GET(request: NextRequest) {
                       }}
                     />
                   </div>
-                }
+                )}
               </div>
 
               {/* Right: Badge details (like Yu-Gi-Oh! card text) */}
