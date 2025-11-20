@@ -1,7 +1,3 @@
-/**
- * Badge Share Frame - Dynamic OG Image Generator
- * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
- */
 import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
@@ -57,19 +53,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Fetch user badges and registry with error handling
-    let badges: Awaited<ReturnType<typeof getUserBadges>> = []
-    try {
-      badges = await getUserBadges(fid)
-    } catch (error) {
-      console.error('Failed to fetch user badges:', error)
-      // Return not found state if we can't fetch badges
-      return new ImageResponse(
-        <NotFoundImage badgeId={badgeIdParam} />,
-        { width: WIDTH, height: HEIGHT }
-      )
-    }
-
+    // Fetch user badges and registry
+    const badges = await getUserBadges(fid)
     const badgeRegistry = loadBadgeRegistry()
 
     // Find specific badge
@@ -87,6 +72,16 @@ export async function GET(request: NextRequest) {
     const badgeName = (targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType
     const badgeDescription = (targetBadge.metadata as { description?: string })?.description || tierConfig.name
 
+    // Get badge image URL - use compressed PNG files (<200KB)
+    const badgeImageUrl = (targetBadge.metadata as { imageUrl?: string })?.imageUrl
+    let absoluteBadgeUrl: string | undefined
+    if (badgeImageUrl) {
+      // Convert /badges/xxx.webp to /badges/xxx.png (compressed versions)
+      const pngPath = badgeImageUrl.replace('.webp', '.png')
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art'
+      absoluteBadgeUrl = `${baseUrl}${pngPath}`
+    }
+
     const tierGradient = getTierGradient(targetBadge.tier)
     const assignedDate = formatBadgeDate(targetBadge.assignedAt)
 
@@ -99,7 +94,9 @@ export async function GET(request: NextRequest) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)`,
+            background: `radial-gradient(circle at 20% 30%, ${tierGradient.start}25, #050505), 
+                         radial-gradient(circle at 80% 70%, ${tierGradient.end}15, transparent),
+                         linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)`,
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -112,7 +109,11 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: `radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%), radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%), radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)`,
+              background: `
+                radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%),
+                radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%),
+                radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)
+              `,
               opacity: 0.6,
             }}
           />
@@ -125,7 +126,10 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundImage: `linear-gradient(${tierGradient.start}10 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)`,
+              backgroundImage: `
+                linear-gradient(${tierGradient.start}10 1px, transparent 1px),
+                linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)
+              `,
               backgroundSize: '40px 40px',
               opacity: 0.15,
             }}
@@ -138,7 +142,9 @@ export async function GET(request: NextRequest) {
               height: 560,
               display: 'flex',
               flexDirection: 'column',
-              background: `linear-gradient(145deg, rgba(26, 26, 28, 0.95) 0%, rgba(18, 18, 20, 0.98) 100%)`,
+              background: `linear-gradient(145deg, 
+                          rgba(26, 26, 28, 0.95) 0%, 
+                          rgba(18, 18, 20, 0.98) 100%)`,
               border: `3px solid ${tierGradient.start}`,
               borderRadius: 32,
               boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px ${tierGradient.start}40`,
@@ -155,7 +161,9 @@ export async function GET(request: NextRequest) {
                 left: 0,
                 right: 0,
                 height: '50%',
-                background: `linear-gradient(180deg, ${tierGradient.start}08 0%, transparent 100%)`,
+                background: `linear-gradient(180deg, 
+                            ${tierGradient.start}08 0%, 
+                            transparent 100%)`,
               }}
             />
 
@@ -203,9 +211,7 @@ export async function GET(request: NextRequest) {
                 >
                   MINTED
                 </div>
-              ) : (
-                <div style={{ display: 'none' }} />
-              )}
+              ) : null}
             </div>
 
             {/* Main content area (horizontal layout like Yu-Gi-Oh!) */}
@@ -224,26 +230,81 @@ export async function GET(request: NextRequest) {
                   gap: 16,
                 }}
               >
-                <div
-                  style={{
-                    width: 360,
-                    height: 360,
-                    borderRadius: 20,
-                    background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
-                    border: `3px solid ${tierGradient.start}`,
-                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 160,
-                    fontWeight: 900,
-                    color: '#ffffff',
-                  }}
-                >
-                  {targetBadge.tier === 'legendary' ? 'L' :
-                   targetBadge.tier === 'epic' ? 'E' :
-                   targetBadge.tier === 'rare' ? 'R' : 'C'}
-                </div>
+                {absoluteBadgeUrl ? (
+                  <div
+                    style={{
+                      width: 360,
+                      height: 360,
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      border: `3px solid ${tierGradient.start}`,
+                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
+                      background: `linear-gradient(145deg, rgba(30, 30, 32, 0.6), rgba(20, 20, 22, 0.8))`,
+                      display: 'flex',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={absoluteBadgeUrl}
+                      alt={badgeName}
+                      width={360}
+                      height={360}
+                    />
+                    {/* Holographic overlay */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: `linear-gradient(135deg, 
+                                    transparent 0%, 
+                                    ${tierGradient.start}15 50%, 
+                                    transparent 100%)`,
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      width: 360,
+                      height: 360,
+                      borderRadius: 20,
+                      background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
+                      border: `3px solid ${tierGradient.start}`,
+                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 160,
+                      position: 'relative',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {/* Badge symbol based on tier */}
+                    <div style={{ position: 'relative', fontWeight: 700 }}>
+                      {targetBadge.tier === 'legendary' ? 'L' :
+                       targetBadge.tier === 'epic' ? 'E' :
+                       targetBadge.tier === 'rare' ? 'R' : 'C'}
+                    </div>
+                    {/* Holographic overlay */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: `linear-gradient(135deg, 
+                                    transparent 0%, 
+                                    ${tierGradient.start}20 50%, 
+                                    transparent 100%)`,
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Right: Badge details (like Yu-Gi-Oh! card text) */}
@@ -265,7 +326,7 @@ export async function GET(request: NextRequest) {
                     gap: 20,
                   }}
                 >
-                  <div
+                  <h1
                     style={{
                       fontSize: 52,
                       fontWeight: 800,
@@ -276,7 +337,7 @@ export async function GET(request: NextRequest) {
                     }}
                   >
                     {badgeName}
-                  </div>
+                  </h1>
 
                   {/* Description box (like Yu-Gi-Oh! effect text) */}
                   <div
@@ -291,16 +352,16 @@ export async function GET(request: NextRequest) {
                       gap: 12,
                     }}
                   >
-                    <div
+                    <p
                       style={{
-                        fontSize: 18,
-                        lineHeight: 1.6,
+                        fontSize: 22,
+                        lineHeight: 1.5,
                         margin: 0,
-                        color: 'rgba(255, 255, 255, 0.85)',
+                        color: 'rgba(255, 255, 255, 0.9)',
                       }}
                     >
                       {badgeDescription}
-                    </div>
+                    </p>
                   </div>
 
                   {/* Stats bar (like Yu-Gi-Oh! ATK/DEF) */}
@@ -322,8 +383,8 @@ export async function GET(request: NextRequest) {
                         gap: 8,
                       }}
                     >
-                      <div style={{ opacity: 0.7 }}>Earned:</div>
-                      <div style={{ fontWeight: 600 }}>{assignedDate}</div>
+                      <span style={{ opacity: 0.7 }}>📅</span>
+                      <span style={{ fontWeight: 600 }}>{assignedDate}</span>
                     </div>
                   </div>
                 </div>
@@ -366,7 +427,12 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               height: 4,
-              background: `linear-gradient(90deg, transparent 0%, ${tierGradient.start} 20%, ${tierGradient.end} 50%, ${tierGradient.start} 80%, transparent 100%)`,
+              background: `linear-gradient(90deg, 
+                          transparent 0%, 
+                          ${tierGradient.start} 20%, 
+                          ${tierGradient.end} 50%, 
+                          ${tierGradient.start} 80%, 
+                          transparent 100%)`,
               boxShadow: `0 0 20px ${tierGradient.start}80`,
             }}
           />

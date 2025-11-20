@@ -153,14 +153,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       accent: '#FFFFFF',
     }
 
-    // Build frame HTML - JSON format per Farcaster spec fix 
+    // Build frame HTML - vNext format with single button
     // Using buildDynamicFrameImageUrl (trusted source pattern like working frames)
     const badgeImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: targetBadge.badgeId, fid }, getBaseUrl(request))
+    
     const badgeEmbed = {
       version: 'next',
       imageUrl: badgeImageUrl,
       button: {
-        title: 'View Badge Inventory',
+        title: 'View Badge Collection',
         action: {
           type: 'launch_frame',
           name: 'Gmeowbased',
