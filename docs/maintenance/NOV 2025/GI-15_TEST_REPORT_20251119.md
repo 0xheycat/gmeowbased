@@ -58,7 +58,7 @@ https://gmeowhq.art/api/frame?type=gm
 https://gmeowhq.art/api/frame?type=quest&chain=base&questId=1
 https://gmeowhq.art/api/frame?type=leaderboards&chain=all
 https://gmeowhq.art/api/frame?type=onchainstats&chain=base
-https://gmeowhq.art/api/frame?type=onchainstats&fid=848516&chain=base
+https://gmeowhq.art/api/frame?type=onchainstats&fid=18139&chain=base
 ```
 
 ---
@@ -350,7 +350,7 @@ https://gmeowhq.art/api/frame?type=onchainstats&fid=848516&chain=base
 ✅ https://gmeowhq.art/api/frame?type=quest&chain=base&questId=1
 ✅ https://gmeowhq.art/api/frame?type=leaderboards&chain=all
 ✅ https://gmeowhq.art/api/frame?type=onchainstats&chain=base
-✅ https://gmeowhq.art/api/frame?type=onchainstats&fid=848516&chain=base
+✅ https://gmeowhq.art/api/frame?type=onchainstats&fid=18139&chain=base
 ```
 
 **Image Generation Routes (100% Operational):**
@@ -630,7 +630,7 @@ curl https://gmeowhq.art/api/frame?type=leaderboards&chain=all
 curl https://gmeowhq.art/api/frame?type=onchainstats&chain=base
 
 # Onchain Stats with User
-curl https://gmeowhq.art/api/frame?type=onchainstats&fid=848516&chain=base
+curl https://gmeowhq.art/api/frame?type=onchainstats&fid=18139&chain=base
 
 # GM Ritual Image
 curl https://gmeowhq.art/api/frame/image?type=gm
