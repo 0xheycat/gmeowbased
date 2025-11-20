@@ -54,7 +54,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       // No badges frame - use JSON format per Farcaster spec
       const noBadgesEmbed = {
         version: 'next',
-        imageUrl: `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=none&state=none`,
+        imageUrl: `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=none&state=none&v=2`,
         button: {
           title: 'View Profile',
           action: {
@@ -71,7 +71,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 <html>
   <head>
     <meta name="fc:frame" content='${JSON.stringify(noBadgesEmbed).replace(/'/g, "&#39;")}' />
-    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=none&state=none" />
+    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=none&state=none&v=2" />
     <meta property="og:title" content="No Badges Yet" />
     <meta property="og:description" content="This user hasn't earned any badges yet." />
   </head>
@@ -99,7 +99,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   <head>
     <meta name="fc:frame" content='${JSON.stringify({
       version: 'next',
-      imageUrl: `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound`,
+      imageUrl: `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound&v=2`,
       button: {
         title: 'View All Badges',
         action: {
@@ -111,7 +111,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         }
       }
     }).replace(/'/g, "&#39;")}' />
-    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound" />
+    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound&v=2" />
     <meta property="og:title" content="Badge Not Found" />
     <meta property="og:description" content="This badge could not be found in the user's collection." />
   </head>
@@ -146,9 +146,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     // Build frame HTML - JSON format per Farcaster spec fix 
+    // Cache-busting v=2 added to force Warpcast to re-fetch after path change
     const badgeEmbed = {
       version: 'next',
-      imageUrl: `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${targetBadge.badgeId}`,
+      imageUrl: `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${targetBadge.badgeId}&v=2`,
       button: {
         title: 'View Badge Inventory',
         action: {
@@ -164,7 +165,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 <html>
   <head>
     <meta name="fc:frame" content='${JSON.stringify(badgeEmbed).replace(/'/g, "&#39;")}' />
-    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${targetBadge.badgeId}" />
+    <meta property="og:image" content="${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${targetBadge.badgeId}&v=2" />
     <meta property="og:title" content="${(targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType} Badge" />
     <meta property="og:description" content="${(targetBadge.metadata as { description?: string })?.description || `${tierConfig.name} tier badge`}" />
     
