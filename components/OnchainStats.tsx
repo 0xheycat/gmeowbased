@@ -391,9 +391,15 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
         const walletAddress = normalizedAddress as Address
         const client = createPublicClient({ transport: http(chainCfg.rpc) })
 
+        const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
+          Promise.race([
+            promise,
+            new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
+          ])
+
         const [nonce, bal] = await Promise.all([
-          client.getTransactionCount({ address: walletAddress }),
-          client.getBalance({ address: walletAddress }),
+          rpcTimeout(client.getTransactionCount({ address: walletAddress }), 0),
+          rpcTimeout(client.getBalance({ address: walletAddress }), 0n),
         ])
 
         const ES_V2 = 'https://api.etherscan.io/v2/api'
