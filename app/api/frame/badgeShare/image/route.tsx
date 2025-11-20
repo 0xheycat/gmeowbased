@@ -93,170 +93,341 @@ export async function GET(request: NextRequest) {
             width: WIDTH,
             height: HEIGHT,
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `radial-gradient(circle at 30% 30%, ${tierGradient.start}40, #0a0a0a), linear-gradient(135deg, #1a1a1a, #000000)`,
-            color: '#ffffff',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            background: `radial-gradient(circle at 20% 30%, ${tierGradient.start}25, #050505), 
+                         radial-gradient(circle at 80% 70%, ${tierGradient.end}15, transparent),
+                         linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)`,
             position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          {/* Background glow effect */}
+          {/* Animated mesh gradient background (macOS style) */}
           <div
             style={{
               position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '600px',
-              height: '600px',
-              background: `radial-gradient(circle, ${tierGradient.start}30, transparent 70%)`,
-              filter: 'blur(80px)',
-              pointerEvents: 'none',
+              inset: 0,
+              background: `
+                radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%),
+                radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%),
+                radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)
+              `,
+              filter: 'blur(60px)',
+              opacity: 0.6,
             }}
           />
 
-          {/* Content container */}
+          {/* Grid pattern overlay */}
           <div
             style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `
+                linear-gradient(${tierGradient.start}10 1px, transparent 1px),
+                linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px',
+              opacity: 0.15,
+            }}
+          />
+
+          {/* Yu-Gi-Oh! Card Structure */}
+          <div
+            style={{
+              width: 1080,
+              height: 560,
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              zIndex: 1,
-              gap: 24,
+              background: `linear-gradient(145deg, 
+                          rgba(26, 26, 28, 0.95) 0%, 
+                          rgba(18, 18, 20, 0.98) 100%)`,
+              border: `3px solid ${tierGradient.start}`,
+              borderRadius: 32,
+              boxShadow: `
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 100px ${tierGradient.start}40,
+                inset 0 1px 1px rgba(255, 255, 255, 0.1)
+              `,
+              padding: 32,
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
-            {/* Badge image */}
-            {badgeImageUrl ? (
-              <div
-                style={{
-                  width: 280,
-                  height: 280,
-                  borderRadius: 24,
-                  overflow: 'hidden',
-                  border: `4px solid ${tierGradient.start}`,
-                  boxShadow: `0 0 60px ${tierGradient.start}60`,
-                  display: 'flex',
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={badgeImageUrl}
-                  alt={badgeName}
-                  width={280}
-                  height={280}
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-            ) : (
-              <div
-                style={{
-                  width: 280,
-                  height: 280,
-                  borderRadius: 24,
-                  background: `linear-gradient(135deg, ${tierGradient.start}40, ${tierGradient.end}40)`,
-                  border: `4px solid ${tierGradient.start}`,
-                  boxShadow: `0 0 60px ${tierGradient.start}60`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 80,
-                }}
-              >
-                🎖️
-              </div>
-            )}
+            {/* Card shine effect (Yu-Gi-Oh! holographic) */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '50%',
+                background: `linear-gradient(180deg, 
+                            ${tierGradient.start}08 0%, 
+                            transparent 100%)`,
+                pointerEvents: 'none',
+              }}
+            />
 
-            {/* Badge info */}
+            {/* Header with tier badge */}
             <div
               style={{
                 display: 'flex',
-                flexDirection: 'column',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: 12,
+                marginBottom: 24,
               }}
             >
-              <h1
-                style={{
-                  fontSize: 56,
-                  fontWeight: 700,
-                  margin: 0,
-                  textAlign: 'center',
-                  maxWidth: 900,
-                  lineHeight: 1.2,
-                }}
-              >
-                {badgeName}
-              </h1>
-
-              {/* Tier pill */}
+              {/* Tier badge (top-left like Yu-Gi-Oh! attribute) */}
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: '8px 24px',
-                  borderRadius: 999,
-                  background: `${tierGradient.start}30`,
+                  padding: '10px 24px',
+                  background: `linear-gradient(135deg, ${tierGradient.start}40, ${tierGradient.end}40)`,
                   border: `2px solid ${tierGradient.start}`,
-                  fontSize: 24,
-                  fontWeight: 600,
+                  borderRadius: 999,
+                  fontSize: 20,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
-                  letterSpacing: 2,
+                  letterSpacing: 3,
+                  boxShadow: `0 0 30px ${tierGradient.start}60, inset 0 1px 1px rgba(255, 255, 255, 0.2)`,
                 }}
               >
-                {tierConfig.name}
+                ⭐ {tierConfig.name}
               </div>
 
-              {/* Description */}
-              <p
-                style={{
-                  fontSize: 24,
-                  opacity: 0.8,
-                  margin: 0,
-                  textAlign: 'center',
-                  maxWidth: 800,
-                }}
-              >
-                {badgeDescription}
-              </p>
+              {/* Minted status badge */}
+              {targetBadge.minted && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '8px 20px',
+                    background: 'rgba(124, 255, 122, 0.15)',
+                    border: '2px solid #7CFF7A',
+                    borderRadius: 999,
+                    fontSize: 18,
+                    fontWeight: 600,
+                    color: '#7CFF7A',
+                    boxShadow: '0 0 20px rgba(124, 255, 122, 0.3)',
+                  }}
+                >
+                  ✓ MINTED
+                </div>
+              )}
+            </div>
 
-              {/* Earned date + minted status */}
+            {/* Main content area (horizontal layout like Yu-Gi-Oh!) */}
+            <div
+              style={{
+                display: 'flex',
+                gap: 32,
+                flex: 1,
+              }}
+            >
+              {/* Left: Badge artwork (like Yu-Gi-Oh! monster art) */}
               <div
                 style={{
                   display: 'flex',
-                  alignItems: 'center',
+                  flexDirection: 'column',
                   gap: 16,
-                  fontSize: 20,
-                  opacity: 0.7,
                 }}
               >
-                <span>Earned: {assignedDate}</span>
-                {targetBadge.minted && (
-                  <>
-                    <span>•</span>
-                    <span style={{ color: '#7CFF7A' }}>✓ Minted</span>
-                  </>
+                {badgeImageUrl ? (
+                  <div
+                    style={{
+                      width: 360,
+                      height: 360,
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      border: `3px solid ${tierGradient.start}`,
+                      boxShadow: `
+                        0 8px 32px rgba(0, 0, 0, 0.4),
+                        0 0 60px ${tierGradient.start}50,
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1)
+                      `,
+                      background: `linear-gradient(145deg, rgba(30, 30, 32, 0.6), rgba(20, 20, 22, 0.8))`,
+                      display: 'flex',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={badgeImageUrl}
+                      alt={badgeName}
+                      width={360}
+                      height={360}
+                      style={{ 
+                        objectFit: 'cover',
+                        position: 'relative',
+                        zIndex: 1,
+                      }}
+                    />
+                    {/* Holographic overlay */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `linear-gradient(135deg, 
+                                    transparent 0%, 
+                                    ${tierGradient.start}15 50%, 
+                                    transparent 100%)`,
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      width: 360,
+                      height: 360,
+                      borderRadius: 20,
+                      background: `linear-gradient(135deg, ${tierGradient.start}40, ${tierGradient.end}40)`,
+                      border: `3px solid ${tierGradient.start}`,
+                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 120,
+                    }}
+                  >
+                    🎖️
+                  </div>
                 )}
+              </div>
+
+              {/* Right: Badge details (like Yu-Gi-Oh! card text) */}
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
+                  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+                }}
+              >
+                {/* Badge name (like Yu-Gi-Oh! monster name) */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 20,
+                  }}
+                >
+                  <h1
+                    style={{
+                      fontSize: 52,
+                      fontWeight: 800,
+                      margin: 0,
+                      lineHeight: 1.1,
+                      background: `linear-gradient(135deg, #ffffff, ${tierGradient.start})`,
+                      backgroundClip: 'text',
+                      color: 'transparent',
+                      textShadow: `0 2px 20px ${tierGradient.start}80`,
+                    }}
+                  >
+                    {badgeName}
+                  </h1>
+
+                  {/* Description box (like Yu-Gi-Oh! effect text) */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      padding: 20,
+                      background: 'rgba(30, 30, 32, 0.6)',
+                      border: `1px solid ${tierGradient.start}40`,
+                      borderRadius: 16,
+                      boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.3)',
+                      gap: 12,
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: 22,
+                        lineHeight: 1.5,
+                        margin: 0,
+                        color: 'rgba(255, 255, 255, 0.9)',
+                      }}
+                    >
+                      {badgeDescription}
+                    </p>
+                  </div>
+
+                  {/* Stats bar (like Yu-Gi-Oh! ATK/DEF) */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 16,
+                      fontSize: 18,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '8px 16px',
+                        background: 'rgba(30, 30, 32, 0.8)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: 12,
+                        gap: 8,
+                      }}
+                    >
+                      <span style={{ opacity: 0.7 }}>📅</span>
+                      <span style={{ fontWeight: 600 }}>{assignedDate}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer: Branding (like Yu-Gi-Oh! set info) */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: 16,
+                    marginTop: 16,
+                    background: 'rgba(20, 20, 22, 0.6)',
+                    border: `1px solid ${tierGradient.start}30`,
+                    borderRadius: 12,
+                  }}
+                >
+                  <div style={{ fontSize: 18, opacity: 0.8, fontWeight: 600 }}>
+                    @gmeowbased
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      opacity: 0.6,
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    {targetBadge.badgeId.toUpperCase()}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Footer branding */}
+          {/* Bottom accent line (Yu-Gi-Oh! foil effect) */}
           <div
             style={{
               position: 'absolute',
-              bottom: 32,
-              right: 40,
-              fontSize: 18,
-              opacity: 0.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 4,
+              background: `linear-gradient(90deg, 
+                          transparent 0%, 
+                          ${tierGradient.start} 20%, 
+                          ${tierGradient.end} 50%, 
+                          ${tierGradient.start} 80%, 
+                          transparent 100%)`,
+              boxShadow: `0 0 20px ${tierGradient.start}80`,
             }}
-          >
-            <span>@gmeowbased</span>
-          </div>
+          />
         </div>
       ),
       {
