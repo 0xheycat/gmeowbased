@@ -139,7 +139,7 @@ export default function GuildManagementPage({ chain, teamId, slug }: Props) {
 
       const [guildRaw, treasuryRaw, nextQuestId, rawLogs] = await Promise.all([guildPromise, treasuryPromise, nextQuestPromise, logsPromise])
       if (!guildRaw) {
-        setOpState({ err: 'Could not load guild data (timeout)' })
+        setOpState({ busy: null, err: 'Could not load guild data (timeout)' })
         return
       }
 
