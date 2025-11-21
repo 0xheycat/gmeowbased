@@ -1,104 +1,78 @@
 /**
  * Badge Share Frame - Dynamic OG Image Generator
  * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
+ * 
+ * Phase 1: Edge runtime with inline badge data (no Supabase)
  */
 import { ImageResponse } from 'next/og'
-import { NextRequest } from 'next/server'
-import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
-import {
-  isValidBadgeId,
-  isValidFid,
-  formatBadgeDate,
-  getTierGradient,
-} from '@/lib/frame-badge'
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 const WIDTH = 1200
 const HEIGHT = 628
+
+// Tier configuration (inline, no external imports)
+const TIERS = {
+  legendary: { name: 'Legendary', color: '#FFD700', start: '#FFD700', end: '#FFA500' },
+  epic: { name: 'Epic', color: '#00FFFF', start: '#00FFFF', end: '#0099FF' },
+  rare: { name: 'Rare', color: '#FF00FF', start: '#FF00FF', end: '#CC00FF' },
+  common: { name: 'Common', color: '#808080', start: '#808080', end: '#606060' }
+}
+
+// Badge registry (inline, matches database structure)
+const BADGES: Record<string, { name: string; tier: keyof typeof TIERS; description: string }> = {
+  'signal-luminary': {
+    name: 'Signal Luminary',
+    tier: 'epic',
+    description: 'Reserved for broadcast specialists who illuminate the network with exceptional content'
+  },
+  'neon-initiate': {
+    name: 'Neon Initiate',
+    tier: 'common',
+    description: 'Your journey into the Gmeowbased universe begins here'
+  },
+  'pulse-runner': {
+    name: 'Pulse Runner',
+    tier: 'rare',
+    description: 'For those who keep pace with the rhythm of the community'
+  },
+  'warp-navigator': {
+    name: 'Warp Navigator',
+    tier: 'rare',
+    description: 'Master travelers of the digital frontier'
+  },
+  'gmeow-vanguard': {
+    name: 'Gmeow Vanguard',
+    tier: 'legendary',
+    description: 'Elite guardians of the Gmeowbased mission'
+  }
+}
 
 /**
  * OG Image Generator: Badge Share
  * 
  * Generates a 1200x628 OG image for badge share frames.
- * Route: /api/frame/badgeShare/image?fid=xxx&badgeId=yyy
+ * Route: /api/frame/badgeShare/image?badgeId=xxx
  */
-export async function GET(request: NextRequest) {
-  // TEMPORARY TEST: Skip all logic and return simple image
-  return new ImageResponse(
-    (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: '#0ff', fontSize: 60 }}>
-        Badge Route Test
-      </div>
-    ),
-    { width: WIDTH, height: HEIGHT }
-  )
-  
+export async function GET(req: Request) {
   try {
-    const { searchParams } = request.nextUrl
-    const fidParam = searchParams.get('fid')
-    const badgeIdParam = searchParams.get('badgeId')
-    const stateParam = searchParams.get('state')
-
-    // Validate FID
-    if (!fidParam || !isValidFid(fidParam)) {
-      return new ImageResponse(
-        <ErrorImage message="Invalid FID" />,
-        { width: WIDTH, height: HEIGHT }
-      )
-    }
-
-    const fid = parseInt(fidParam, 10)
+    const { searchParams } = new URL(req.url)
+    const badgeId = searchParams.get('badgeId')
 
     // Validate badge ID
-    if (!badgeIdParam || !isValidBadgeId(badgeIdParam)) {
+    if (!badgeId || !BADGES[badgeId]) {
       return new ImageResponse(
-        <ErrorImage message="Invalid Badge ID" />,
+        <NotFoundImage badgeId={badgeId || 'unknown'} />,
         { width: WIDTH, height: HEIGHT }
       )
     }
 
-    // Handle "not found" state
-    if (stateParam === 'notfound') {
-      return new ImageResponse(
-        <NotFoundImage badgeId={badgeIdParam} />,
-        { width: WIDTH, height: HEIGHT }
-      )
-    }
+    const badge = BADGES[badgeId]
+    const tier = TIERS[badge.tier]
+    const tierGradient = tier
 
-    // Fetch user badges and registry with error handling
-    let badges: Awaited<ReturnType<typeof getUserBadges>> = []
-    try {
-      badges = await getUserBadges(fid)
-    } catch (error) {
-      console.error('Failed to fetch user badges:', error)
-      // Return not found state if we can't fetch badges
-      return new ImageResponse(
-        <NotFoundImage badgeId={badgeIdParam} />,
-        { width: WIDTH, height: HEIGHT }
-      )
-    }
-
-    const badgeRegistry = loadBadgeRegistry()
-
-    // Find specific badge
-    const targetBadge = badges.find((b) => b.badgeId === badgeIdParam)
-
-    if (!targetBadge) {
-      return new ImageResponse(
-        <NotFoundImage badgeId={badgeIdParam} />,
-        { width: WIDTH, height: HEIGHT }
-      )
-    }
-
-    // Get tier config
-    const tierConfig = badgeRegistry.tiers[targetBadge.tier]
-    const badgeName = (targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType
-    const badgeDescription = (targetBadge.metadata as { description?: string })?.description || tierConfig.name
-
-    const tierGradient = getTierGradient(targetBadge.tier)
-    const assignedDate = formatBadgeDate(targetBadge.assignedAt)
+    // Format date (hardcoded for now since no database)
+    const assignedDate = 'Nov 2025'
 
     return new ImageResponse(
       (
@@ -114,7 +88,7 @@ export async function GET(request: NextRequest) {
             overflow: 'hidden',
           }}
         >
-          {/* Animated mesh gradient background (simplified for Satori) */}
+          {/* Animated mesh gradient background */}
           <div
             style={{
               position: 'absolute',
@@ -157,7 +131,7 @@ export async function GET(request: NextRequest) {
               overflow: 'hidden',
             }}
           >
-            {/* Card shine effect (Yu-Gi-Oh! holographic) */}
+            {/* Card shine effect */}
             <div
               style={{
                 position: 'absolute',
@@ -178,7 +152,7 @@ export async function GET(request: NextRequest) {
                 marginBottom: 24,
               }}
             >
-              {/* Tier badge (top-left like Yu-Gi-Oh! attribute) */}
+              {/* Tier badge */}
               <div
                 style={{
                   display: 'flex',
@@ -192,40 +166,18 @@ export async function GET(request: NextRequest) {
                   boxShadow: `0 0 30px ${tierGradient.start}60`,
                 }}
               >
-                {tierConfig.name.toUpperCase()}
+                {tier.name.toUpperCase()}
               </div>
-
-              {/* Minted status badge */}
-              {targetBadge.minted ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '8px 20px',
-                    background: 'rgba(124, 255, 122, 0.15)',
-                    border: '2px solid #7CFF7A',
-                    borderRadius: 999,
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: '#7CFF7A',
-                    boxShadow: '0 0 20px rgba(124, 255, 122, 0.3)',
-                  }}
-                >
-                  MINTED
-                </div>
-              ) : (
-                <div style={{ display: 'none' }} />
-              )}
             </div>
 
-            {/* Main content area (horizontal layout like Yu-Gi-Oh!) */}
+            {/* Main content area */}
             <div
               style={{
                 display: 'flex',
                 flex: 1,
               }}
             >
-              {/* Left: Badge artwork (gradient fallback - no external images) */}
+              {/* Left: Badge artwork (gradient fallback) */}
               <div
                 style={{
                   display: 'flex',
@@ -248,13 +200,13 @@ export async function GET(request: NextRequest) {
                     color: '#ffffff',
                   }}
                 >
-                  {targetBadge.tier === 'legendary' ? 'L' :
-                   targetBadge.tier === 'epic' ? 'E' :
-                   targetBadge.tier === 'rare' ? 'R' : 'C'}
+                  {badge.tier === 'legendary' ? 'L' :
+                   badge.tier === 'epic' ? 'E' :
+                   badge.tier === 'rare' ? 'R' : 'C'}
                 </div>
               </div>
 
-              {/* Right: Badge details (like Yu-Gi-Oh! card text) */}
+              {/* Right: Badge details */}
               <div
                 style={{
                   flex: 1,
@@ -266,7 +218,7 @@ export async function GET(request: NextRequest) {
                   fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
                 }}
               >
-                {/* Badge name (like Yu-Gi-Oh! monster name) */}
+                {/* Badge name */}
                 <div
                   style={{
                     display: 'flex',
@@ -283,10 +235,10 @@ export async function GET(request: NextRequest) {
                       textShadow: `0 2px 20px ${tierGradient.start}80`,
                     }}
                   >
-                    {badgeName}
+                    {badge.name}
                   </div>
 
-                  {/* Description box (like Yu-Gi-Oh! effect text) */}
+                  {/* Description box */}
                   <div
                     style={{
                       marginTop: 20,
@@ -307,11 +259,11 @@ export async function GET(request: NextRequest) {
                         color: 'rgba(255, 255, 255, 0.85)',
                       }}
                     >
-                      {badgeDescription}
+                      {badge.description}
                     </div>
                   </div>
 
-                  {/* Stats bar (like Yu-Gi-Oh! ATK/DEF) */}
+                  {/* Stats bar */}
                   <div
                     style={{
                       marginTop: 20,
@@ -335,7 +287,7 @@ export async function GET(request: NextRequest) {
                   </div>
                 </div>
 
-                {/* Footer: Branding (like Yu-Gi-Oh! set info) */}
+                {/* Footer: Branding */}
                 <div
                   style={{
                     display: 'flex',
@@ -358,14 +310,14 @@ export async function GET(request: NextRequest) {
                       fontFamily: 'monospace',
                     }}
                   >
-                    {targetBadge.badgeId.toUpperCase()}
+                    {badgeId.toUpperCase()}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom accent line (Yu-Gi-Oh! foil effect) */}
+          {/* Bottom accent line */}
           <div
             style={{
               position: 'absolute',
@@ -389,19 +341,11 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-  } catch (error) {
-    console.error('[Frame BadgeShare Image] Error:', error)
-    // Return JSON error for debugging
-    return new Response(
-      JSON.stringify({ 
-        error: 'Image generation failed', 
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      }), 
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+  } catch (err: unknown) {
+    console.error('[Frame BadgeShare Image] Error:', err)
+    return new ImageResponse(
+      <ErrorImage message={err instanceof Error ? err.message : 'Unknown error'} />,
+      { width: WIDTH, height: HEIGHT }
     )
   }
 }
@@ -485,7 +429,7 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
           margin: 0,
         }}
       >
-        Badge Not Found
+        404
       </div>
       <div
         style={{
@@ -495,17 +439,18 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
           marginTop: 12,
         }}
       >
-        {badgeId} could not be found
+        Badge not found
       </div>
       <div
         style={{
-          fontSize: 20,
+          fontSize: 18,
           opacity: 0.5,
           margin: 0,
-          marginTop: 24,
+          marginTop: 8,
+          fontFamily: 'monospace',
         }}
       >
-        This badge may have been removed or never existed
+        {badgeId}
       </div>
     </div>
   )
