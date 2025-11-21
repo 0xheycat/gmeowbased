@@ -258,15 +258,18 @@ export async function GET(req: Request) {
               style={{
                 display: 'flex',
                 flex: 1,
+                gap: 16,
               }}
             >
-              {/* Left: Badge artwork (gradient fallback) */}
+              {/* Left: Badge artwork + User Info */}
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
+                  gap: 10,
                 }}
               >
+                {/* Badge Image */}
                 <div
                   style={{
                   width: 180,
@@ -296,6 +299,7 @@ export async function GET(req: Request) {
                     />
                   ) : (
                     <div style={{
+                      display: 'flex',
                       fontSize: 80,
                       fontWeight: 900,
                       color: '#ffffff',
@@ -306,30 +310,16 @@ export async function GET(req: Request) {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Right: Badge details */}
-              <div
-                style={{
-                  flex: 1,
-                  marginLeft: 16,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  color: '#ffffff',
-                  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-                }}
-              >
-                {/* User info: Username + Neynar Score */}
+                {/* User info: Username + Neynar Score - Under Badge */}
                 {(userData.username || userData.score) && (
                   <div
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: 12,
-                      padding: '8px 14px',
-                      background: `linear-gradient(135deg, ${tierGradient.start}25, ${tierGradient.end}20)`,
+                      flexDirection: 'column',
+                      gap: 6,
+                      padding: '10px 12px',
+                      background: `linear-gradient(135deg, ${tierGradient.start}30, ${tierGradient.end}25)`,
                       borderRadius: 8,
                       border: `2px solid ${tierGradient.start}`,
                       boxShadow: `0 2px 8px rgba(0, 0, 0, 0.3)`,
@@ -338,12 +328,12 @@ export async function GET(req: Request) {
                     {userData.username && (
                       <div style={{
                         display: 'flex',
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: 800,
                         color: '#ffffff',
                         textShadow: `0 1px 3px rgba(0, 0, 0, 0.8)`,
                       }}>
-                        @{userData.username}
+                        👤 @{userData.username}
                       </div>
                     )}
                     {userData.score && (
@@ -354,28 +344,40 @@ export async function GET(req: Request) {
                         color: tierGradient.start,
                         textShadow: `0 1px 2px rgba(0, 0, 0, 0.8)`,
                       }}>
-                        ⭐ {Math.round(userData.score)}
+                        ⭐ Neynar Score: {Math.round(userData.score)}
                       </div>
                     )}
                   </div>
                 )}
+              </div>
 
-                {/* Badge name */}
+              {/* Right: Badge details */}
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
+                  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+                }}
+              >
+                {/* Badge name - More prominent */}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
+                    gap: 12,
                   }}
                 >
                   <div
                     style={{
                       display: 'flex',
-                      fontSize: 26,
-                      fontWeight: 800,
-                      margin: 0,
+                      fontSize: 28,
+                      fontWeight: 900,
                       lineHeight: 1.1,
                       color: '#ffffff',
-                      textShadow: `0 2px 20px ${tierGradient.start}80`,
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${tierGradient.start}60`,
                     }}
                   >
                     {badge.name}
