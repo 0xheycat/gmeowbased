@@ -113,10 +113,6 @@ export async function GET(req: Request) {
   const badgeId = searchParams.get('badgeId')
   const fid = searchParams.get('fid')
 
-  // Get base URL for loading images
-  const url = new URL(req.url)
-  const baseUrl = `${url.protocol}//${url.host}`
-
   try {
     // Validate badge ID
     if (!badgeId || !BADGES[badgeId]) {
@@ -178,6 +174,7 @@ export async function GET(req: Request) {
         >
           {/* Background: og-image.png or gradient fallback */}
           {ogImageData ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={ogImageData}
               alt="background"
@@ -353,8 +350,8 @@ export async function GET(req: Request) {
                     position: 'relative',
                   }}
                 >
-                  
                   {badgeImageData ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img 
                       src={badgeImageData}
                       alt={badge.name}
@@ -405,8 +402,8 @@ export async function GET(req: Request) {
                       border: `1px solid ${tierGradient.start}30`,
                     }}
                   >
-                   
                     {userData.pfpUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={userData.pfpUrl}
                         alt="Profile"
