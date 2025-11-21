@@ -55,7 +55,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       // No badges frame - multi-format for miniapp compatibility
       const noBadgesImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: 'none', fid, extra: { state: 'none' } }, getBaseUrl(request))
       const launchUrl = `${getBaseUrl(request)}/profile/${fid}`
-      const splashUrl = `${getBaseUrl(request)}/logo.png`
+      const splashUrl = `${getBaseUrl(request)}/splash.png`
       
       return new NextResponse(
         `<!DOCTYPE html>
@@ -102,7 +102,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         // Badge not found - multi-format for miniapp compatibility
         const notFoundImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: badgeIdParam, fid, extra: { state: 'notfound' } }, getBaseUrl(request))
         const launchUrl = `${getBaseUrl(request)}/profile/${fid}/badges`
-        const splashUrl = `${getBaseUrl(request)}/logo.png`
+        const splashUrl = `${getBaseUrl(request)}/splash.png`
         
         return new NextResponse(
           `<!DOCTYPE html>
@@ -168,7 +168,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     // Using buildDynamicFrameImageUrl (trusted source pattern like working frames)
     const badgeImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: targetBadge.badgeId, fid }, getBaseUrl(request))
     const launchUrl = `${getBaseUrl(request)}/profile/${fid}/badges`
-    const splashImageUrl = `${getBaseUrl(request)}/logo.png`
+    const splashImageUrl = `${getBaseUrl(request)}/splash.png`
     
     const frameHtml = `<!DOCTYPE html>
 <html>

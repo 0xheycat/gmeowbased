@@ -66,7 +66,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       // Badge not found frame - multi-format for miniapp compatibility
       const notFoundImageUrl = `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound`
       const launchUrl = `${getBaseUrl(request)}/profile/${fid}/badges`
-      const splashUrl = `${getBaseUrl(request)}/logo.png`
+      const splashUrl = `${getBaseUrl(request)}/splash.png`
       
       return new NextResponse(
         `<!DOCTYPE html>
@@ -127,7 +127,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     // Build OG image URL
     const ogImageUrl = buildBadgeShareImageUrl(fid, badgeIdParam, getBaseUrl(request))
     const launchUrl = `${getBaseUrl(request)}/profile/${fid}/badges`
-    const splashUrl = `${getBaseUrl(request)}/og-image.png`
+    const splashUrl = `${getBaseUrl(request)}/splash.png`
 
     // Build frame HTML with multi-format tags for miniapp compatibility
     const frameHtml = `<!DOCTYPE html>
