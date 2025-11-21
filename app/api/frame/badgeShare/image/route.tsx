@@ -142,27 +142,14 @@ export async function GET(req: Request) {
     const tier = TIERS[badge.tier]
     const tierGradient = tier
 
-    // Fetch real-time badge data with lightweight REST API approach
+    // TEMPORARY: Static data only (database fetch disabled to debug Vercel 500 errors)
     let assignedDate = 'Nov 2024'
     let isMinted = true
     let mintedDate = 'Nov 15, 2024'
 
+    // Log FID for debugging (but don't fetch from database)
     if (fid) {
-      try {
-        const fidNumber = parseInt(fid, 10)
-        const badgeData = await fetchBadgeDataLight(fidNumber, badgeId)
-        
-        if (badgeData) {
-          assignedDate = badgeData.assignedDate
-          isMinted = badgeData.isMinted
-          mintedDate = badgeData.mintedDate
-          console.log(`✅ Real data loaded for FID ${fidNumber}: ${badgeId} assigned ${assignedDate}, minted: ${isMinted}`)
-        } else {
-          console.log(`⚠️ Badge ${badgeId} not found for FID ${fidNumber}, using fallback`)
-        }
-      } catch (fetchError) {
-        console.error('[GET] Badge data fetch failed, using fallback:', fetchError)
-      }
+      console.log(`[BadgeShare Image] FID ${fid} requested badge ${badgeId} (using static data)`)
     }
 
     return new ImageResponse(
