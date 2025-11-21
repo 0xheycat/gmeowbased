@@ -3,8 +3,10 @@
  * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
  * 
  * Uses nodejs runtime for Vercel production compatibility
+ * Fetches real badge data from database for accurate display
  */
 import { ImageResponse } from 'next/og'
+import { getUserBadges } from '@/lib/badges'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -53,12 +55,15 @@ const BADGES: Record<string, { name: string; tier: keyof typeof TIERS; descripti
  * OG Image Generator: Badge Share
  * 
  * Generates a 1200x628 OG image for badge share frames.
- * Route: /api/frame/badgeShare/image?badgeId=xxx
+ * Route: /api/frame/badgeShare/image?fid=xxx&badgeId=xxx
+ * 
+ * Fetches real badge data from database to show accurate assigned dates and minted status.
  */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const badgeId = searchParams.get('badgeId')
+    const fidParam = searchParams.get('fid')
 
     // Validate badge ID
     if (!badgeId || !BADGES[badgeId]) {
@@ -72,8 +77,42 @@ export async function GET(req: Request) {
     const tier = TIERS[badge.tier]
     const tierGradient = tier
 
-    // Format date (hardcoded for now since no database)
-    const assignedDate = 'Nov 2025'
+    // Fetch real user badge data if FID provided
+    let assignedDate = 'Not Assigned'
+    let isMinted = false
+    let mintedDate = null
+
+    if (fidParam) {
+      const fid = parseInt(fidParam, 10)
+      if (!isNaN(fid) && fid > 0) {
+        try {
+          const userBadges = await getUserBadges(fid)
+          const userBadge = userBadges.find(b => b.badgeId === badgeId)
+          
+          if (userBadge) {
+            // Format assigned date
+            const assigned = new Date(userBadge.assignedAt)
+            assignedDate = assigned.toLocaleDateString('en-US', { 
+              month: 'short', 
+              year: 'numeric' 
+            })
+            
+            isMinted = userBadge.minted
+            if (userBadge.mintedAt) {
+              const minted = new Date(userBadge.mintedAt)
+              mintedDate = minted.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric' 
+              })
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch user badge data:', error)
+          // Continue with default values
+        }
+      }
+    }
 
     return new ImageResponse(
       (
@@ -269,6 +308,7 @@ export async function GET(req: Request) {
                     style={{
                       marginTop: 20,
                       display: 'flex',
+                      gap: 12,
                       fontSize: 18,
                     }}
                   >
@@ -285,6 +325,22 @@ export async function GET(req: Request) {
                       <div style={{ opacity: 0.7 }}>Earned:</div>
                       <div style={{ fontWeight: 600, marginLeft: 8 }}>{assignedDate}</div>
                     </div>
+                    
+                    {isMinted && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '8px 16px',
+                          background: `linear-gradient(135deg, ${tierGradient.start}20, ${tierGradient.end}20)`,
+                          border: `1px solid ${tierGradient.start}`,
+                          borderRadius: 12,
+                        }}
+                      >
+                        <div style={{ opacity: 0.9 }}>✓ Minted</div>
+                        {mintedDate && <div style={{ fontWeight: 600, marginLeft: 8, opacity: 0.7 }}>{mintedDate}</div>}
+                      </div>
+                    )}
                   </div>
                 </div>
 
