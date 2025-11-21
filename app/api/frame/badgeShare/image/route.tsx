@@ -420,6 +420,7 @@ export async function GET(req: Request) {
                     )}
                     {userData.score && (
                       <div style={{
+                        display: 'flex',
                         fontSize: 10,
                         fontWeight: 600,
                         color: tierGradient.start,
@@ -440,6 +441,7 @@ export async function GET(req: Request) {
                 >
                   <div
                     style={{
+                      display: 'flex',
                       fontSize: 26,
                       fontWeight: 800,
                       margin: 0,
@@ -467,6 +469,7 @@ export async function GET(req: Request) {
                   >
                     <div
                       style={{
+                        display: 'flex',
                         fontSize: 9,
                         lineHeight: 1.6,
                         margin: 0,
@@ -496,8 +499,8 @@ export async function GET(req: Request) {
                         borderRadius: 6,
                       }}
                     >
-                      <div style={{ opacity: 0.7 }}>Earned:</div>
-                      <div style={{ fontWeight: 600, marginLeft: 4 }}>{assignedDate}</div>
+                      <div style={{ display: 'flex', opacity: 0.7 }}>Earned:</div>
+                      <div style={{ display: 'flex', fontWeight: 600, marginLeft: 4 }}>{assignedDate}</div>
                     </div>
                     
                     {isMinted && (
@@ -511,8 +514,8 @@ export async function GET(req: Request) {
                           borderRadius: 6,
                         }}
                       >
-                        <div style={{ opacity: 0.9 }}>MINTED</div>
-                        {mintedDate && <div style={{ fontWeight: 600, marginLeft: 4, opacity: 0.7 }}>{mintedDate}</div>}
+                        <div style={{ display: 'flex', opacity: 0.9 }}>MINTED</div>
+                        {mintedDate && <div style={{ display: 'flex', fontWeight: 600, marginLeft: 4, opacity: 0.7 }}>{mintedDate}</div>}
                       </div>
                     )}
                   </div>
@@ -532,11 +535,12 @@ export async function GET(req: Request) {
                   opacity: 0.7,
                   }}
                 >
-                  <div style={{ fontSize: 9, opacity: 0.8, fontWeight: 600 }}>
+                  <div style={{ display: 'flex', fontSize: 9, opacity: 0.8, fontWeight: 600 }}>
                     @gmeowbased
                   </div>
                   <div
                     style={{
+                      display: 'flex',
                       fontSize: 8,
                       opacity: 0.6,
                       fontFamily: 'monospace',
@@ -552,6 +556,7 @@ export async function GET(req: Request) {
           {/* Bottom accent line */}
           <div
             style={{
+              display: 'flex',
               position: 'absolute',
               bottom: 0,
               left: 0,
