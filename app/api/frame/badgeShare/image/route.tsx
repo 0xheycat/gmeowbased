@@ -3,9 +3,10 @@
  * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
  * 
  * Uses nodejs runtime for Vercel production compatibility
- * Uses static badge data for stability (database integration disabled)
+ * Fetches real-time badge data from Supabase with aggressive caching
  */
 import { ImageResponse } from 'next/og'
+import { getUserBadges } from '@/lib/badges'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -62,6 +63,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const badgeId = searchParams.get('badgeId')
+    const fid = searchParams.get('fid')
 
     // Validate badge ID
     if (!badgeId || !BADGES[badgeId]) {
@@ -75,11 +77,47 @@ export async function GET(req: Request) {
     const tier = TIERS[badge.tier]
     const tierGradient = tier
 
-    // Use static fallback data for now
-    // TODO: Re-enable database integration once Satori timeout issues are resolved
-    const assignedDate = 'Nov 2024'
-    const isMinted = true
-    const mintedDate = 'Nov 15, 2024'
+    // Fetch real-time badge data with aggressive timeout for OG generation
+    let assignedDate = 'Nov 2024'
+    let isMinted = true
+    let mintedDate = 'Nov 15, 2024'
+
+    if (fid) {
+      try {
+        const fidNumber = parseInt(fid, 10)
+        
+        // 1-second timeout - optimized for OG image generation
+        const userBadgesPromise = getUserBadges(fidNumber)
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('OG image data timeout')), 1000)
+        )
+        
+        const userBadges = await Promise.race([userBadgesPromise, timeoutPromise])
+        const userBadge = userBadges.find(b => b.badgeId === badgeId)
+
+        if (userBadge) {
+          // Use real data from database
+          assignedDate = new Date(userBadge.assignedAt).toLocaleDateString('en-US', { 
+            month: 'short', 
+            year: 'numeric' 
+          })
+          isMinted = userBadge.minted
+          mintedDate = userBadge.mintedAt 
+            ? new Date(userBadge.mintedAt).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              })
+            : 'Not minted yet'
+          console.log(`✅ Real data loaded for FID ${fidNumber}: ${badgeId} assigned ${assignedDate}, minted: ${isMinted}`)
+        } else {
+          console.log(`⚠️ Badge ${badgeId} not found for FID ${fidNumber}, using fallback`)
+        }
+      } catch (error) {
+        // Fall back to static data on timeout or error
+        console.error('Badge data fetch failed, using fallback:', error)
+      }
+    }
 
     return new ImageResponse(
       (
