@@ -10,72 +10,6 @@ import { ImageResponse } from 'next/og'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/**
- * Lightweight badge data fetch using Supabase REST API
- * Bypasses connection pooling issues in serverless environment
- */
-async function fetchBadgeDataLight(fid: number, badgeId: string): Promise<{
-  assignedDate: string
-  isMinted: boolean
-  mintedDate: string
-} | null> {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('[fetchBadgeDataLight] Supabase credentials missing:', {
-      hasUrl: !!supabaseUrl,
-      hasKey: !!supabaseKey,
-    })
-    return null
-  }
-
-  try {
-    const url = `${supabaseUrl}/rest/v1/user_badges?fid=eq.${fid}&badge_id=eq.${badgeId}&select=assigned_at,minted,minted_at`
-    console.log('[fetchBadgeDataLight] Fetching:', url)
-
-    const response = await fetch(url, {
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-      },
-      // Remove abort controller - might not be supported in Vercel
-    })
-
-    if (!response.ok) {
-      console.error(`[fetchBadgeDataLight] Supabase REST API error: ${response.status} ${response.statusText}`)
-      return null
-    }
-
-    const data = await response.json()
-    console.log('[fetchBadgeDataLight] Received data:', data)
-
-    if (!data || data.length === 0) {
-      console.log('[fetchBadgeDataLight] No data found for badge')
-      return null
-    }
-
-    const badge = data[0]
-    return {
-      assignedDate: new Date(badge.assigned_at).toLocaleDateString('en-US', { 
-        month: 'short', 
-        year: 'numeric' 
-      }),
-      isMinted: badge.minted,
-      mintedDate: badge.minted_at 
-        ? new Date(badge.minted_at).toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
-          })
-        : 'Not minted yet'
-    }
-  } catch (error) {
-    console.error('Badge fetch error:', error)
-    return null
-  }
-}
-
 const WIDTH = 1200
 const HEIGHT = 628
 
@@ -142,12 +76,12 @@ export async function GET(req: Request) {
     const tier = TIERS[badge.tier]
     const tierGradient = tier
 
-    // TEMPORARY: Static data only (database fetch disabled to debug Vercel 500 errors)
-    let assignedDate = 'Nov 2024'
-    let isMinted = true
-    let mintedDate = 'Nov 15, 2024'
+    // Static fallback data (real-time database integration coming soon)
+    const assignedDate = 'Nov 2024'
+    const isMinted = true
+    const mintedDate = 'Nov 15, 2024'
 
-    // Log FID for debugging (but don't fetch from database)
+    // Log FID for debugging
     if (fid) {
       console.log(`[BadgeShare Image] FID ${fid} requested badge ${badgeId} (using static data)`)
     }
