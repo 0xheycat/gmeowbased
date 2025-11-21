@@ -62,7 +62,6 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const badgeId = searchParams.get('badgeId')
-    const fidParam = searchParams.get('fid')
 
     // Validate badge ID
     if (!badgeId || !BADGES[badgeId]) {
