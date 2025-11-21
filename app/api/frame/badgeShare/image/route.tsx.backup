@@ -10,8 +10,8 @@ import { ImageResponse } from 'next/og'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const WIDTH = 1200
-const HEIGHT = 800 // 3:2 aspect ratio per Farcaster spec
+const WIDTH = 600
+const HEIGHT = 400 // 3:2 aspect ratio per Farcaster spec (matches Farville)
 
 // Tier configuration (inline, no external imports)
 const TIERS = {
@@ -130,15 +130,15 @@ export async function GET(req: Request) {
           {/* Yu-Gi-Oh! Card Structure */}
           <div
             style={{
-              width: 1080,
-              height: 720, // Adjusted for 800px canvas height
+              width: 540,
+              height: 360, // Scaled to 50% for 600x400 canvas
               display: 'flex',
               flexDirection: 'column',
               background: `linear-gradient(145deg, rgba(26, 26, 28, 0.95) 0%, rgba(18, 18, 20, 0.98) 100%)`,
               border: `3px solid ${tierGradient.start}`,
-              borderRadius: 32,
-              boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5)`,
-              padding: 32,
+              borderRadius: 16,
+              boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0, 0, 0, 0.5)`,
+              padding: 16,
               position: 'relative',
               overflow: 'hidden',
             }}
@@ -161,7 +161,7 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: 24,
+                marginBottom: 12,
               }}
             >
               {/* Tier badge */}
@@ -169,11 +169,11 @@ export async function GET(req: Request) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: '10px 24px',
+                  padding: '5px 12px',
                   background: `linear-gradient(135deg, ${tierGradient.start}, ${tierGradient.end})`,
                   border: `2px solid ${tierGradient.start}`,
                   borderRadius: 999,
-                  fontSize: 20,
+                  fontSize: 10,
                   fontWeight: 700,
                 }}
               >
@@ -197,16 +197,16 @@ export async function GET(req: Request) {
               >
                 <div
                   style={{
-                  width: 360,
-                  height: 360,
-                  borderRadius: 20,
+                  width: 180,
+                  height: 180,
+                  borderRadius: 10,
                   background: `linear-gradient(135deg, ${tierGradient.start}, ${tierGradient.end})`,
                   border: `3px solid ${tierGradient.start}`,
-                  boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4)`,
+                  boxShadow: `0 4px 16px rgba(0, 0, 0, 0.4)`,
                   display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 160,
+                    fontSize: 80,
                     fontWeight: 900,
                     color: '#ffffff',
                   }}
@@ -221,7 +221,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   flex: 1,
-                  marginLeft: 32,
+                  marginLeft: 16,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -238,7 +238,7 @@ export async function GET(req: Request) {
                 >
                   <div
                     style={{
-                      fontSize: 52,
+                      fontSize: 26,
                       fontWeight: 800,
                       margin: 0,
                       lineHeight: 1.1,
@@ -252,20 +252,20 @@ export async function GET(req: Request) {
                   {/* Description box */}
                   <div
                     style={{
-                    marginTop: 20,
+                    marginTop: 10,
                     display: 'flex',
                     flexDirection: 'column',
-                    padding: 20,
+                    padding: 10,
                     background: 'rgba(30, 30, 32, 0.6)',
                     border: `1px solid ${tierGradient.start}`,
-                    borderRadius: 16,
+                    borderRadius: 8,
                     opacity: 0.8,
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                     }}
                   >
                     <div
                       style={{
-                        fontSize: 18,
+                        fontSize: 9,
                         lineHeight: 1.6,
                         margin: 0,
                         color: 'rgba(255, 255, 255, 0.85)',
@@ -278,24 +278,24 @@ export async function GET(req: Request) {
                   {/* Stats bar */}
                   <div
                     style={{
-                      marginTop: 20,
+                      marginTop: 10,
                       display: 'flex',
-                      gap: 12,
-                      fontSize: 18,
+                      gap: 6,
+                      fontSize: 9,
                     }}
                   >
                     <div
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        padding: '8px 16px',
+                        padding: '4px 8px',
                         background: 'rgba(30, 30, 32, 0.8)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: 12,
+                        borderRadius: 6,
                       }}
                     >
                       <div style={{ opacity: 0.7 }}>Earned:</div>
-                      <div style={{ fontWeight: 600, marginLeft: 8 }}>{assignedDate}</div>
+                      <div style={{ fontWeight: 600, marginLeft: 4 }}>{assignedDate}</div>
                     </div>
                     
                     {isMinted && (
@@ -303,14 +303,14 @@ export async function GET(req: Request) {
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          padding: '8px 16px',
+                          padding: '4px 8px',
                           background: `linear-gradient(135deg, ${tierGradient.start}20, ${tierGradient.end}20)`,
                           border: `1px solid ${tierGradient.start}`,
-                          borderRadius: 12,
+                          borderRadius: 6,
                         }}
                       >
                         <div style={{ opacity: 0.9 }}>MINTED</div>
-                        {mintedDate && <div style={{ fontWeight: 600, marginLeft: 8, opacity: 0.7 }}>{mintedDate}</div>}
+                        {mintedDate && <div style={{ fontWeight: 600, marginLeft: 4, opacity: 0.7 }}>{mintedDate}</div>}
                       </div>
                     )}
                   </div>
@@ -322,20 +322,20 @@ export async function GET(req: Request) {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                  padding: 16,
-                  marginTop: 16,
+                  padding: 8,
+                  marginTop: 8,
                   background: 'rgba(20, 20, 22, 0.6)',
                   border: `1px solid ${tierGradient.start}`,
-                  borderRadius: 12,
+                  borderRadius: 6,
                   opacity: 0.7,
                   }}
                 >
-                  <div style={{ fontSize: 18, opacity: 0.8, fontWeight: 600 }}>
+                  <div style={{ fontSize: 9, opacity: 0.8, fontWeight: 600 }}>
                     @gmeowbased
                   </div>
                   <div
                     style={{
-                      fontSize: 16,
+                      fontSize: 8,
                       opacity: 0.6,
                       fontFamily: 'monospace',
                     }}
