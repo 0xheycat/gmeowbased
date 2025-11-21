@@ -18,7 +18,7 @@ export async function GET() {
           fontWeight: 'bold',
         }}
       >
-        Test Image
+        Test Image Updated Nov 21
       </div>
     ),
     {
