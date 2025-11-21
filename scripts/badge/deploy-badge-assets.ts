@@ -131,9 +131,15 @@ function generateNFTMetadata(badge: BadgeRegistry['badges'][number], chain: Chai
 
 async function uploadImage(imagePath: string, storagePath: string): Promise<string> {
   const imageBuffer = readFileSync(imagePath)
-  const contentType = imagePath.endsWith('.webp') ? 'image/webp' : 
-                      imagePath.endsWith('.png') ? 'image/png' : 
-                      'image/jpeg'
+  
+  // CRITICAL: Only PNG format is supported for badge images
+  // WebP is NOT compatible with Farcaster frames and some OG image parsers
+  // All badge artwork MUST be uploaded as .png
+  if (!imagePath.endsWith('.png')) {
+    throw new Error(`Invalid image format: ${imagePath}. Only PNG images are supported for badges.`)
+  }
+  
+  const contentType = 'image/png'
   
   const { error } = await supabase.storage
     .from(BADGE_BUCKET)
@@ -185,7 +191,9 @@ async function ensureBucket() {
     const { error } = await supabase.storage.createBucket(BADGE_BUCKET, {
       public: true,
       fileSizeLimit: 10485760, // 10MB
-      allowedMimeTypes: ['image/webp', 'image/png', 'image/jpeg', 'application/json'],
+      // CRITICAL: Only allow PNG images for badges (no WebP, no JPEG)
+      // PNG is the only format fully compatible with Farcaster frames
+      allowedMimeTypes: ['image/png', 'application/json'],
     })
     
     if (error) {
