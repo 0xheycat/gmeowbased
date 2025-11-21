@@ -11,6 +11,7 @@ export async function GET() {
             width: 600,
             height: 400,
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -19,7 +20,8 @@ export async function GET() {
             color: 'white',
           }}
         >
-          Satori Test - OK ✓
+          <div>Satori Test</div>
+          <div style={{ fontSize: 24, marginTop: 10 }}>With flexDirection</div>
         </div>
       ),
       {
