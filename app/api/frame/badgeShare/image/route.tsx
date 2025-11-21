@@ -2,11 +2,12 @@
  * Badge Share Frame - Dynamic OG Image Generator
  * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
  * 
- * Phase 1: Edge runtime with inline badge data (no Supabase)
+ * Uses nodejs runtime for Vercel production compatibility
  */
 import { ImageResponse } from 'next/og'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const WIDTH = 1200
 const HEIGHT = 628
