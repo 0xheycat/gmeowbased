@@ -183,7 +183,7 @@ export async function GET(req: Request) {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                opacity: 0.6,
+                opacity: 1.0,
               }}
             />
           ) : (
