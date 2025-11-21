@@ -63,28 +63,31 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const targetBadge = badges.find((b) => b.badgeId === badgeIdParam)
 
     if (!targetBadge) {
-      // Badge not found frame (vNext JSON format)
+      // Badge not found frame - multi-format for miniapp compatibility
       const notFoundImageUrl = `${getBaseUrl(request)}/api/frame/badgeShare/image?fid=${fid}&badgeId=${badgeIdParam}&state=notfound`
-      const notFoundEmbed = {
-        version: 'next',
-        imageUrl: notFoundImageUrl,
-        button: {
-          title: 'View All Badges',
-          action: {
-            type: 'launch_frame',
-            name: 'Gmeowbased',
-            url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
-            splashBackgroundColor: '#000000'
-          },
-        },
-      }
+      const launchUrl = `${getBaseUrl(request)}/profile/${fid}/badges`
+      const splashUrl = `${getBaseUrl(request)}/logo.png`
       
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
   <head>
-    <meta name="fc:frame" content="${JSON.stringify(notFoundEmbed).replace(/"/g, '&quot;')}" />
+    <!-- Legacy Farcaster frame tags (v1 compatibility) -->
+    <meta property="fc:frame" content="vNext" />
+    <meta property="fc:frame:image" content="${notFoundImageUrl}" />
+    <meta property="fc:frame:button:1" content="View All Badges" />
+    <meta property="fc:frame:button:1:action" content="launch_frame" />
+    <meta property="fc:frame:button:1:target" content="${launchUrl}" />
+    
+    <!-- Farcaster miniapp frame tags (v2) -->
+    <meta property="fc:miniapp:frame" content="vNext" />
+    <meta property="fc:miniapp:frame:image" content="${notFoundImageUrl}" />
+    <meta property="fc:miniapp:frame:button:1" content="View All Badges" />
+    <meta property="fc:miniapp:frame:button:1:action" content="launch_frame" />
+    <meta property="fc:miniapp:frame:button:1:target" content="${launchUrl}" />
+    
+    <!-- Miniapp launch configuration -->
+    <meta name="fc:frame:launch_frame" content='{"name":"Gmeowbased","url":"${launchUrl}","splashImageUrl":"${splashUrl}","splashBackgroundColor":"#000000"}' />
     
     <meta property="og:image" content="${notFoundImageUrl}" />
     <meta property="og:title" content="Badge Not Found" />
@@ -123,30 +126,29 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     // Build OG image URL
     const ogImageUrl = buildBadgeShareImageUrl(fid, badgeIdParam, getBaseUrl(request))
+    const launchUrl = `${getBaseUrl(request)}/profile/${fid}/badges`
+    const splashUrl = `${getBaseUrl(request)}/og-image.png`
 
-    // Build Farcaster vNext JSON embed format
-    // Reference: https://miniapps.farcaster.xyz/docs/specification
-    // vNext requires JSON format in fc:frame meta tag (not legacy property-based tags)
-    const frameEmbed = {
-      version: 'next',
-      imageUrl: ogImageUrl,
-      button: {
-        title: 'View Collection',
-        action: {
-          type: 'launch_frame',
-          name: 'Gmeowbased',
-          url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-          splashImageUrl: `${getBaseUrl(request)}/og-image.png`,
-          splashBackgroundColor: '#000000'
-        },
-      },
-    }
-
-    // Build frame HTML
+    // Build frame HTML with multi-format tags for miniapp compatibility
     const frameHtml = `<!DOCTYPE html>
 <html>
   <head>
-    <meta name="fc:frame" content="${JSON.stringify(frameEmbed).replace(/"/g, '&quot;')}" />
+    <!-- Legacy Farcaster frame tags (v1 compatibility) -->
+    <meta property="fc:frame" content="vNext" />
+    <meta property="fc:frame:image" content="${ogImageUrl}" />
+    <meta property="fc:frame:button:1" content="View Collection" />
+    <meta property="fc:frame:button:1:action" content="launch_frame" />
+    <meta property="fc:frame:button:1:target" content="${launchUrl}" />
+    
+    <!-- Farcaster miniapp frame tags (v2) -->
+    <meta property="fc:miniapp:frame" content="vNext" />
+    <meta property="fc:miniapp:frame:image" content="${ogImageUrl}" />
+    <meta property="fc:miniapp:frame:button:1" content="View Collection" />
+    <meta property="fc:miniapp:frame:button:1:action" content="launch_frame" />
+    <meta property="fc:miniapp:frame:button:1:target" content="${launchUrl}" />
+    
+    <!-- Miniapp launch configuration -->
+    <meta name="fc:frame:launch_frame" content='{"name":"Gmeowbased","url":"${launchUrl}","splashImageUrl":"${splashUrl}","splashBackgroundColor":"#000000"}' />
     
     <meta property="og:image" content="${ogImageUrl}" />
     <meta property="og:title" content="${badgeName} Badge" />
