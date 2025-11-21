@@ -9,6 +9,30 @@ import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
 
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
+const gmEmbed = {
+  version: '1',
+  imageUrl: `${baseUrl}/og-image.png`,
+  button: {
+    title: '✨ Enter Gmeow',
+    action: {
+      type: 'link',
+      url: baseUrl,
+    },
+  },
+}
+
+const gmFrame = {
+  version: '1',
+  imageUrl: `${baseUrl}/og-image.png`,
+  button: {
+    title: '🎮 Launch Game',
+    action: {
+      type: 'link',
+      url: baseUrl,
+    },
+  },
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: 'Gmeowbased — Multi-Chain Quest Game',
@@ -32,6 +56,8 @@ export const metadata: Metadata = {
     'farcaster:site': '@0xheycat',
     'farcaster:creator': '@0xheycat',
     'farcaster:image': `${baseUrl}/logo.png`,
+    'fc:miniapp': JSON.stringify(gmEmbed),
+    'fc:miniapp:frame': JSON.stringify(gmFrame),
   },
 }
 
@@ -39,19 +65,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Legacy Farcaster frame tags (v1 compatibility) */}
-        <meta property="fc:frame" content="vNext" />
-        <meta property="fc:frame:image" content={`${baseUrl}/og-image.png`} />
-        <meta property="fc:frame:button:1" content="🎮 Launch Game" />
-        <meta property="fc:frame:button:1:action" content="launch_frame" />
-        <meta property="fc:frame:button:1:target" content={baseUrl} />
-        
-        {/* Farcaster miniapp frame tags (v2) */}
-        <meta property="fc:miniapp:frame" content="vNext" />
-        <meta property="fc:miniapp:frame:image" content={`${baseUrl}/og-image.png`} />
-        <meta property="fc:miniapp:frame:button:1" content="🎮 Launch Game" />
-        <meta property="fc:miniapp:frame:button:1:action" content="launch_frame" />
-        <meta property="fc:miniapp:frame:button:1:target" content={baseUrl} />
+        <meta name="fc:frame" content={JSON.stringify(gmFrame)} />
       </head>
       <body className="min-h-screen pixel-page" style={{ color: 'var(--text-color)' }}>
         <MiniAppProvider>
