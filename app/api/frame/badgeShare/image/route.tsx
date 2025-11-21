@@ -1,7 +1,7 @@
 /**
  * Badge Share Frame - Dynamic OG Image Generator
  * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
- * 
+ * backup file commit e046399 fix: Match Farville dimensions 600x400 to prevent oversized display
  * Uses nodejs runtime for Vercel production compatibility
  * Fetches real-time badge data via Supabase REST API (lightweight, no connection pooling)
  */
@@ -53,7 +53,7 @@ const BADGES: Record<string, { name: string; tier: keyof typeof TIERS; descripti
 /**
  * OG Image Generator: Badge Share
  * 
- * Generates a 1200x628 OG image for badge share frames.
+ * Generates a 600x400 OG image for badge share frames (3:2 ratio per Farcaster spec).
  * Route: /api/frame/badgeShare/image?fid=xxx&badgeId=xxx
  * 
  * Fetches real badge data from database to show accurate assigned dates and minted status.
@@ -62,6 +62,10 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const badgeId = searchParams.get('badgeId')
   const fid = searchParams.get('fid')
+
+  // Get base URL for loading images
+  const url = new URL(req.url)
+  const baseUrl = `${url.protocol}//${url.host}`
 
   try {
     // Validate badge ID
@@ -86,6 +90,9 @@ export async function GET(req: Request) {
       console.log(`[BadgeShare Image] FID ${fid} requested badge ${badgeId} (using static data)`)
     }
 
+    // Build image URLs (Satori will fetch these)
+    const badgeImageUrl = `${baseUrl}/badges/${badgeId}.png`
+
     return new ImageResponse(
       (
         <div
@@ -100,6 +107,17 @@ export async function GET(req: Request) {
             overflow: 'hidden',
           }}
         >
+          {/* Dark overlay for better contrast */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+            }}
+          />
           {/* Animated mesh gradient background */}
           <div
             style={{
@@ -206,14 +224,21 @@ export async function GET(req: Request) {
                   display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 80,
-                    fontWeight: 900,
-                    color: '#ffffff',
+                    overflow: 'hidden',
+                    position: 'relative',
                   }}
                 >
-                  {badge.tier === 'legendary' ? 'L' :
-                   badge.tier === 'epic' ? 'E' :
-                   badge.tier === 'rare' ? 'R' : 'C'}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src={badgeImageUrl}
+                    alt={badge.name}
+                    width="180"
+                    height="180"
+                    style={{
+                      objectFit: 'cover',
+                      borderRadius: 10,
+                    }}
+                  />
                 </div>
               </div>
 
