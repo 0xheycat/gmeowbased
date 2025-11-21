@@ -1151,9 +1151,9 @@ function buildFrameHtml(params: {
   
   // Generate vNext JSON frame meta tag (single tag format for validator compatibility)
   // Reference: https://docs.farcaster.xyz/reference/frames/spec
-  // CRITICAL: Use unescaped values in JSON (resolvedImage not imageEsc) - JSON.stringify handles escaping
+  // CRITICAL: Match Farville format - use double quotes with &quot; encoding, not single quotes
   const frameMetaTags = primaryButton && frameOrigin && resolvedImage ? `
-    <meta name="fc:frame" content='${JSON.stringify({
+    <meta name="fc:frame" content="${JSON.stringify({
       version: 'next',
       imageUrl: resolvedImage,
       button: {
@@ -1166,7 +1166,7 @@ function buildFrameHtml(params: {
           splashBackgroundColor: '#000000'
         }
       }
-    }).replace(/'/g, "&#39;")}' />` : ''
+    }).replace(/"/g, '&quot;')}" />` : ''
   
   // Badge-style minimal template (November 21, 2025)
   // Simplified HTML structure matching working badge frames
