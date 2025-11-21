@@ -240,7 +240,7 @@ async function deployBadgeAssets() {
     
     // Upload image once (shared across all chains)
     console.log(`  📤 Uploading image: ${imageName}`)
-    const imageStoragePath = `images/${badge.slug}.webp`
+    const imageStoragePath = `images/${badge.slug}.png`
     try {
       const imageUrl = await uploadImage(imagePath, imageStoragePath)
       console.log(`  ✅ Image uploaded: ${imageUrl}`)
