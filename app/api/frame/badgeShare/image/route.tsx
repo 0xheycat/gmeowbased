@@ -96,8 +96,8 @@ export async function GET(req: Request) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: `radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%), radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%), radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)`,
-              opacity: 0.6,
+              background: `radial-gradient(circle at 10% 20%, ${tierGradient.start}, transparent 40%), radial-gradient(circle at 90% 80%, ${tierGradient.end}, transparent 40%), radial-gradient(circle at 50% 50%, ${tierGradient.start}, transparent 60%)`,
+              opacity: 0.2,
             }}
           />
 
@@ -109,9 +109,9 @@ export async function GET(req: Request) {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundImage: `linear-gradient(${tierGradient.start}10 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)`,
+              backgroundImage: `linear-gradient(${tierGradient.start} 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start} 1px, transparent 1px)`,
               backgroundSize: '40px 40px',
-              opacity: 0.15,
+              opacity: 0.08,
             }}
           />
 
