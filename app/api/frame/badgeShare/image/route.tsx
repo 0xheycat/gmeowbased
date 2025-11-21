@@ -11,7 +11,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const WIDTH = 1200
-const HEIGHT = 628
+const HEIGHT = 800 // 3:2 aspect ratio per Farcaster spec
 
 // Tier configuration (inline, no external imports)
 const TIERS = {
@@ -131,7 +131,7 @@ export async function GET(req: Request) {
           <div
             style={{
               width: 1080,
-              height: 560,
+              height: 720, // Adjusted for 800px canvas height
               display: 'flex',
               flexDirection: 'column',
               background: `linear-gradient(145deg, rgba(26, 26, 28, 0.95) 0%, rgba(18, 18, 20, 0.98) 100%)`,
