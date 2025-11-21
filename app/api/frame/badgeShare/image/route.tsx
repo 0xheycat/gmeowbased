@@ -352,7 +352,7 @@ export async function GET(req: Request) {
                           borderRadius: 12,
                         }}
                       >
-                        <div style={{ opacity: 0.9 }}>✓ Minted</div>
+                        <div style={{ opacity: 0.9 }}>MINTED</div>
                         {mintedDate && <div style={{ fontWeight: 600, marginLeft: 8, opacity: 0.7 }}>{mintedDate}</div>}
                       </div>
                     )}
