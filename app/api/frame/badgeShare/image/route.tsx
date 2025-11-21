@@ -187,7 +187,7 @@ export async function GET(req: Request) {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundImage: `linear-gradient(${tierGradient.start} 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start} 1px, transparent 1px)`,
+              backgroundImage: `linear-gradient(0deg, ${tierGradient.start} 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start} 1px, transparent 1px)`,
               backgroundSize: '40px 40px',
               opacity: 0.08,
             }}
