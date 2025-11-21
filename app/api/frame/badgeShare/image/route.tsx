@@ -78,6 +78,8 @@ export async function GET(req: Request) {
     const tierGradient = tier
 
     // Fetch real user badge data if FID provided
+    // CRITICAL: Must complete fast for Satori/ImageResponse
+    // Use aggressive timeout to prevent blocking image generation
     let assignedDate = 'Not Assigned'
     let isMinted = false
     let mintedDate = null
@@ -86,7 +88,20 @@ export async function GET(req: Request) {
       const fid = parseInt(fidParam, 10)
       if (!isNaN(fid) && fid > 0) {
         try {
-          const userBadges = await getUserBadges(fid)
+          // Race database call against 2-second timeout
+          // Satori cannot handle long async operations
+          const timeoutPromise = new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Database timeout')), 2000)
+          )
+          
+          const userBadges = await Promise.race([
+            getUserBadges(fid),
+            timeoutPromise
+          ]).catch((err) => {
+            console.warn('[BadgeShare Image] DB timeout, using fallback:', err.message)
+            return [] // Return empty array on timeout
+          })
+          
           const userBadge = userBadges.find(b => b.badgeId === badgeId)
           
           if (userBadge) {
@@ -108,8 +123,8 @@ export async function GET(req: Request) {
             }
           }
         } catch (error) {
-          console.error('Failed to fetch user badge data:', error)
-          // Continue with default values
+          console.error('[BadgeShare Image] Failed to fetch badge data:', error)
+          // Continue with default values - image must generate regardless
         }
       }
     }
