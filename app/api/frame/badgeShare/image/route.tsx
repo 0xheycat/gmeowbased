@@ -198,91 +198,23 @@ export async function GET(req: Request) {
             />
           )}
 
-          {/* Glass transparency overlay */}
-          <div
-            style={{
-              display: 'flex',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.2)',
-            }}
-          />
-
-          {/* Vibrant mesh gradient background */}
-          <div
-            style={{
-              display: 'flex',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: `
-                radial-gradient(circle at 15% 25%, ${tierGradient.start}40, transparent 35%), 
-                radial-gradient(circle at 85% 75%, ${tierGradient.end}40, transparent 35%), 
-                radial-gradient(circle at 50% 10%, ${tierGradient.start}30, transparent 40%),
-                radial-gradient(circle at 30% 80%, ${tierGradient.end}25, transparent 35%)
-              `,
-            }}
-          />
-
-          {/* Animated particles effect */}
-          <div
-            style={{
-              display: 'flex',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundImage: `
-                radial-gradient(2px 2px at 20% 30%, ${tierGradient.start}, transparent),
-                radial-gradient(2px 2px at 60% 70%, ${tierGradient.end}, transparent),
-                radial-gradient(1px 1px at 50% 50%, ${tierGradient.start}, transparent),
-                radial-gradient(1px 1px at 80% 10%, ${tierGradient.end}, transparent),
-                radial-gradient(2px 2px at 40% 90%, ${tierGradient.start}, transparent)
-              `,
-              backgroundSize: '100px 100px, 120px 120px, 80px 80px, 90px 90px, 110px 110px',
-              backgroundPosition: '0 0, 40px 60px, 130px 270px, 70px 100px, 200px 150px',
-              opacity: 0.3,
-            }}
-          />
-
-          {/* Subtle grid pattern overlay */}
-          <div
-            style={{
-              display: 'flex',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundImage: `linear-gradient(0deg, ${tierGradient.start}30 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start}30 1px, transparent 1px)`,
-              backgroundSize: '30px 30px',
-              opacity: 0.15,
-            }}
-          />
-
           {/* Yu-Gi-Oh! Card Structure */}
           <div
             style={{
               width: 540,
-              height: 360, // Scaled to 50% for 600x400 canvas
+              height: 360,
               display: 'flex',
               flexDirection: 'column',
-              background: `linear-gradient(145deg, rgba(26, 26, 28, 0.95) 0%, rgba(18, 18, 20, 0.98) 100%)`,
-              border: `3px solid ${tierGradient.start}`,
-              borderRadius: 16,
-              boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0, 0, 0, 0.5)`,
-              padding: 16,
+              background: `linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)`,
+              border: `4px solid ${tierGradient.start}`,
+              borderRadius: 12,
+              boxShadow: `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${tierGradient.start}90, 0 10px 50px rgba(0, 0, 0, 0.8)`,
+              padding: 14,
               position: 'relative',
               overflow: 'hidden',
             }}
           >
-            {/* Card shine effect */}
+            {/* Holographic top shine */}
             <div
               style={{
                 display: 'flex',
@@ -290,8 +222,8 @@ export async function GET(req: Request) {
                 top: 0,
                 left: 0,
                 right: 0,
-                height: '50%',
-                background: `linear-gradient(180deg, rgba(0, 255, 255, 0.03), transparent 100%)`,
+                height: '30%',
+                background: `linear-gradient(180deg, ${tierGradient.start}15, transparent 100%)`,
               }}
             />
 
@@ -394,20 +326,22 @@ export async function GET(req: Request) {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 8,
-                      marginBottom: 10,
-                      padding: '6px 12px',
-                      background: 'rgba(0, 0, 0, 0.5)',
-                      borderRadius: 999,
-                      border: `1px solid ${tierGradient.start}30`,
+                      justifyContent: 'space-between',
+                      marginBottom: 12,
+                      padding: '8px 14px',
+                      background: `linear-gradient(135deg, ${tierGradient.start}25, ${tierGradient.end}20)`,
+                      borderRadius: 8,
+                      border: `2px solid ${tierGradient.start}`,
+                      boxShadow: `0 2px 8px rgba(0, 0, 0, 0.3)`,
                     }}
                   >
                     {userData.username && (
                       <div style={{
                         display: 'flex',
-                        fontSize: 11,
-                        fontWeight: 700,
+                        fontSize: 14,
+                        fontWeight: 800,
                         color: '#ffffff',
+                        textShadow: `0 1px 3px rgba(0, 0, 0, 0.8)`,
                       }}>
                         @{userData.username}
                       </div>
@@ -415,11 +349,12 @@ export async function GET(req: Request) {
                     {userData.score && (
                       <div style={{
                         display: 'flex',
-                        fontSize: 10,
-                        fontWeight: 600,
+                        fontSize: 12,
+                        fontWeight: 700,
                         color: tierGradient.start,
+                        textShadow: `0 1px 2px rgba(0, 0, 0, 0.8)`,
                       }}>
-                        • Score: {Math.round(userData.score)}
+                        ⭐ {Math.round(userData.score)}
                       </div>
                     )}
                   </div>
