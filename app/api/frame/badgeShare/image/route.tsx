@@ -388,32 +388,29 @@ export async function GET(req: Request) {
                   fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
                 }}
               >
-                {/* User info: PFP + Neynar Score */}
-                {(userData.pfpUrl || userData.score) && (
+                {/* User info: Username + Neynar Score */}
+                {(userData.username || userData.score) && (
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: 8,
                       marginBottom: 10,
-                      padding: 6,
+                      padding: '6px 12px',
                       background: 'rgba(0, 0, 0, 0.5)',
                       borderRadius: 999,
                       border: `1px solid ${tierGradient.start}30`,
                     }}
                   >
-                    {userData.pfpUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={userData.pfpUrl}
-                        alt="Profile"
-                        width="24"
-                        height="24"
-                        style={{
-                          borderRadius: 999,
-                          border: `1px solid ${tierGradient.start}`,
-                        }}
-                      />
+                    {userData.username && (
+                      <div style={{
+                        display: 'flex',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: '#ffffff',
+                      }}>
+                        @{userData.username}
+                      </div>
                     )}
                     {userData.score && (
                       <div style={{
@@ -421,9 +418,8 @@ export async function GET(req: Request) {
                         fontSize: 10,
                         fontWeight: 600,
                         color: tierGradient.start,
-                        paddingRight: 6,
                       }}>
-                        Neynar Score: {Math.round(userData.score)}
+                        • Score: {Math.round(userData.score)}
                       </div>
                     )}
                   </div>
