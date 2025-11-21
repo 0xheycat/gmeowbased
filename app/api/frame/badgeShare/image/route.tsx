@@ -126,8 +126,7 @@ export async function GET(req: Request) {
               background: `linear-gradient(145deg, rgba(26, 26, 28, 0.95) 0%, rgba(18, 18, 20, 0.98) 100%)`,
               border: `3px solid ${tierGradient.start}`,
               borderRadius: 32,
-              boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px ${tierGradient.start}`,
-              opacity: 0.95,
+              boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5)`,
               padding: 32,
               position: 'relative',
               overflow: 'hidden',
@@ -141,8 +140,7 @@ export async function GET(req: Request) {
                 left: 0,
                 right: 0,
                 height: '50%',
-                background: `linear-gradient(180deg, ${tierGradient.start}, transparent 100%)`,
-                opacity: 0.03,
+                background: `linear-gradient(180deg, rgba(0, 255, 255, 0.03), transparent 100%)`,
               }}
             />
 
@@ -166,8 +164,6 @@ export async function GET(req: Request) {
                   borderRadius: 999,
                   fontSize: 20,
                   fontWeight: 700,
-                  boxShadow: `0 0 30px ${tierGradient.start}`,
-                  opacity: 0.85,
                 }}
               >
                 {tier.name.toUpperCase()}
@@ -190,13 +186,13 @@ export async function GET(req: Request) {
               >
                 <div
                   style={{
-                    width: 360,
-                    height: 360,
-                    borderRadius: 20,
-                    background: `linear-gradient(135deg, ${tierGradient.start}, ${tierGradient.end})`,
-                    border: `3px solid ${tierGradient.start}`,
-                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}`,
-                    display: 'flex',
+                  width: 360,
+                  height: 360,
+                  borderRadius: 20,
+                  background: `linear-gradient(135deg, ${tierGradient.start}, ${tierGradient.end})`,
+                  border: `3px solid ${tierGradient.start}`,
+                  boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4)`,
+                  display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 160,
