@@ -25,6 +25,16 @@ const HEIGHT = 628
  * Route: /api/frame/badgeShare/image?fid=xxx&badgeId=yyy
  */
 export async function GET(request: NextRequest) {
+  // TEMPORARY TEST: Skip all logic and return simple image
+  return new ImageResponse(
+    (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: '#0ff', fontSize: 60 }}>
+        Badge Route Test
+      </div>
+    ),
+    { width: WIDTH, height: HEIGHT }
+  )
+  
   try {
     const { searchParams } = request.nextUrl
     const fidParam = searchParams.get('fid')
