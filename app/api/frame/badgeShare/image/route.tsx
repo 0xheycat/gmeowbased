@@ -126,7 +126,8 @@ export async function GET(req: Request) {
               background: `linear-gradient(145deg, rgba(26, 26, 28, 0.95) 0%, rgba(18, 18, 20, 0.98) 100%)`,
               border: `3px solid ${tierGradient.start}`,
               borderRadius: 32,
-              boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px ${tierGradient.start}40`,
+              boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px ${tierGradient.start}`,
+              opacity: 0.95,
               padding: 32,
               position: 'relative',
               overflow: 'hidden',
@@ -140,7 +141,8 @@ export async function GET(req: Request) {
                 left: 0,
                 right: 0,
                 height: '50%',
-                background: `linear-gradient(180deg, ${tierGradient.start}08 0%, transparent 100%)`,
+                background: `linear-gradient(180deg, ${tierGradient.start}, transparent 100%)`,
+                opacity: 0.03,
               }}
             />
 
@@ -159,12 +161,13 @@ export async function GET(req: Request) {
                   display: 'flex',
                   alignItems: 'center',
                   padding: '10px 24px',
-                  background: `linear-gradient(135deg, ${tierGradient.start}40, ${tierGradient.end}40)`,
+                  background: `linear-gradient(135deg, ${tierGradient.start}, ${tierGradient.end})`,
                   border: `2px solid ${tierGradient.start}`,
                   borderRadius: 999,
                   fontSize: 20,
                   fontWeight: 700,
-                  boxShadow: `0 0 30px ${tierGradient.start}60`,
+                  boxShadow: `0 0 30px ${tierGradient.start}`,
+                  opacity: 0.85,
                 }}
               >
                 {tier.name.toUpperCase()}
@@ -190,9 +193,9 @@ export async function GET(req: Request) {
                     width: 360,
                     height: 360,
                     borderRadius: 20,
-                    background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
+                    background: `linear-gradient(135deg, ${tierGradient.start}, ${tierGradient.end})`,
                     border: `3px solid ${tierGradient.start}`,
-                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
+                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -242,13 +245,14 @@ export async function GET(req: Request) {
                   {/* Description box */}
                   <div
                     style={{
-                      marginTop: 20,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      padding: 20,
-                      background: 'rgba(30, 30, 32, 0.6)',
-                      border: `1px solid ${tierGradient.start}40`,
-                      borderRadius: 16,
+                    marginTop: 20,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: 20,
+                    background: 'rgba(30, 30, 32, 0.6)',
+                    border: `1px solid ${tierGradient.start}`,
+                    borderRadius: 16,
+                    opacity: 0.8,
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
                     }}
                   >
@@ -294,11 +298,12 @@ export async function GET(req: Request) {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: 16,
-                    marginTop: 16,
-                    background: 'rgba(20, 20, 22, 0.6)',
-                    border: `1px solid ${tierGradient.start}30`,
-                    borderRadius: 12,
+                  padding: 16,
+                  marginTop: 16,
+                  background: 'rgba(20, 20, 22, 0.6)',
+                  border: `1px solid ${tierGradient.start}`,
+                  borderRadius: 12,
+                  opacity: 0.7,
                   }}
                 >
                   <div style={{ fontSize: 18, opacity: 0.8, fontWeight: 600 }}>
@@ -327,7 +332,7 @@ export async function GET(req: Request) {
               right: 0,
               height: 4,
               background: `linear-gradient(90deg, transparent 0%, ${tierGradient.start} 20%, ${tierGradient.end} 50%, ${tierGradient.start} 80%, transparent 100%)`,
-              boxShadow: `0 0 20px ${tierGradient.start}80`,
+              boxShadow: `0 0 20px ${tierGradient.start}`,
             }}
           />
         </div>
