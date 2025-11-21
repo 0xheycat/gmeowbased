@@ -381,9 +381,17 @@ export async function GET(request: NextRequest) {
     )
   } catch (error) {
     console.error('[Frame BadgeShare Image] Error:', error)
-    return new ImageResponse(
-      <ErrorImage message="Failed to generate image" />,
-      { width: WIDTH, height: HEIGHT }
+    // Return JSON error for debugging
+    return new Response(
+      JSON.stringify({ 
+        error: 'Image generation failed', 
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      }), 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 }
