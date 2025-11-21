@@ -84,7 +84,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         `<!DOCTYPE html>
 <html>
   <head>
-    <meta name="fc:frame" content="${JSON.stringify(JSON.stringify(notFoundEmbed))}" />
+    <meta name="fc:frame" content="${JSON.stringify(notFoundEmbed).replace(/"/g, '&quot;')}" />
     
     <meta property="og:image" content="${notFoundImageUrl}" />
     <meta property="og:title" content="Badge Not Found" />
@@ -146,7 +146,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const frameHtml = `<!DOCTYPE html>
 <html>
   <head>
-    <meta name="fc:frame" content="${JSON.stringify(JSON.stringify(frameEmbed))}" />
+    <meta name="fc:frame" content="${JSON.stringify(frameEmbed).replace(/"/g, '&quot;')}" />
     
     <meta property="og:image" content="${ogImageUrl}" />
     <meta property="og:title" content="${badgeName} Badge" />
