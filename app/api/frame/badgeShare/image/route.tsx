@@ -344,7 +344,7 @@ export async function GET(req: Request) {
                         color: tierGradient.start,
                         textShadow: `0 1px 2px rgba(0, 0, 0, 0.8)`,
                       }}>
-                        ⭐ Neynar Score: {Math.round(userData.score)}
+                        ⭐ Neynar: {userData.score > 1 ? Math.round(userData.score) : (userData.score * 100).toFixed(0)}
                       </div>
                     )}
                   </div>
