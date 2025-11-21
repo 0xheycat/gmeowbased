@@ -212,7 +212,6 @@ export async function GET(request: NextRequest) {
             <div
               style={{
                 display: 'flex',
-                gap: 32,
                 flex: 1,
               }}
             >
@@ -221,7 +220,6 @@ export async function GET(request: NextRequest) {
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 16,
                 }}
               >
                 <div
@@ -250,6 +248,7 @@ export async function GET(request: NextRequest) {
               <div
                 style={{
                   flex: 1,
+                  marginLeft: 32,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -262,7 +261,6 @@ export async function GET(request: NextRequest) {
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 20,
                   }}
                 >
                   <div
@@ -281,6 +279,7 @@ export async function GET(request: NextRequest) {
                   {/* Description box (like Yu-Gi-Oh! effect text) */}
                   <div
                     style={{
+                      marginTop: 20,
                       display: 'flex',
                       flexDirection: 'column',
                       padding: 20,
@@ -288,7 +287,6 @@ export async function GET(request: NextRequest) {
                       border: `1px solid ${tierGradient.start}40`,
                       borderRadius: 16,
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-                      gap: 12,
                     }}
                   >
                     <div
@@ -306,8 +304,8 @@ export async function GET(request: NextRequest) {
                   {/* Stats bar (like Yu-Gi-Oh! ATK/DEF) */}
                   <div
                     style={{
+                      marginTop: 20,
                       display: 'flex',
-                      gap: 16,
                       fontSize: 18,
                     }}
                   >
@@ -319,11 +317,10 @@ export async function GET(request: NextRequest) {
                         background: 'rgba(30, 30, 32, 0.8)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: 12,
-                        gap: 8,
                       }}
                     >
                       <div style={{ opacity: 0.7 }}>Earned:</div>
-                      <div style={{ fontWeight: 600 }}>{assignedDate}</div>
+                      <div style={{ fontWeight: 600, marginLeft: 8 }}>{assignedDate}</div>
                     </div>
                   </div>
                 </div>
