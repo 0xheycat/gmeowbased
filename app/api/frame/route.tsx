@@ -1163,7 +1163,7 @@ function buildFrameHtml(params: {
         type: 'launch_frame',
         name: 'Gmeowbased',
         url: primaryButton.target || frameOrigin,
-        splashImageUrl: frameOrigin ? `${frameOrigin}/logo.png` : undefined,
+        splashImageUrl: frameOrigin ? `${frameOrigin}/splash.png` : undefined,
         splashBackgroundColor: '#000000'
       }
     }
