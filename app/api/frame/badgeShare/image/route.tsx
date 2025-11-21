@@ -23,29 +23,41 @@ async function fetchBadgeDataLight(fid: number, badgeId: string): Promise<{
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error('Supabase credentials missing')
+    console.error('[fetchBadgeDataLight] Supabase credentials missing:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseKey,
+    })
     return null
   }
 
   try {
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/user_badges?fid=eq.${fid}&badge_id=eq.${badgeId}&select=assigned_at,minted,minted_at`,
-      {
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-        signal: AbortSignal.timeout(800), // 800ms timeout for REST call
-      }
-    )
+    // Create manual abort controller for better compatibility
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 800)
+
+    const url = `${supabaseUrl}/rest/v1/user_badges?fid=eq.${fid}&badge_id=eq.${badgeId}&select=assigned_at,minted,minted_at`
+    console.log('[fetchBadgeDataLight] Fetching:', url)
+
+    const response = await fetch(url, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
-      console.error(`Supabase REST API error: ${response.status}`)
+      console.error(`[fetchBadgeDataLight] Supabase REST API error: ${response.status} ${response.statusText}`)
       return null
     }
 
     const data = await response.json()
+    console.log('[fetchBadgeDataLight] Received data:', data)
+
     if (!data || data.length === 0) {
+      console.log('[fetchBadgeDataLight] No data found for badge')
       return null
     }
 
