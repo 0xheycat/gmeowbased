@@ -102,12 +102,12 @@ export async function GET(req: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)`,
+            background: `linear-gradient(135deg, #0a0a0a 0%, #1a1a2a 30%, #0f0f1f 60%, #0a0a0a 100%)`,
             position: 'relative',
             overflow: 'hidden',
           }}
         >
-          {/* Dark overlay for better contrast */}
+          {/* Vibrant mesh gradient background */}
           <div
             style={{
               position: 'absolute',
@@ -115,23 +115,16 @@ export async function GET(req: Request) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-            }}
-          />
-          {/* Animated mesh gradient background */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: `radial-gradient(circle at 10% 20%, ${tierGradient.start}, transparent 40%), radial-gradient(circle at 90% 80%, ${tierGradient.end}, transparent 40%), radial-gradient(circle at 50% 50%, ${tierGradient.start}, transparent 60%)`,
-              opacity: 0.2,
+              background: `
+                radial-gradient(circle at 15% 25%, ${tierGradient.start}40, transparent 35%), 
+                radial-gradient(circle at 85% 75%, ${tierGradient.end}40, transparent 35%), 
+                radial-gradient(circle at 50% 10%, ${tierGradient.start}30, transparent 40%),
+                radial-gradient(circle at 30% 80%, ${tierGradient.end}25, transparent 35%)
+              `,
             }}
           />
 
-          {/* Grid pattern overlay */}
+          {/* Animated particles effect */}
           <div
             style={{
               position: 'absolute',
@@ -139,9 +132,30 @@ export async function GET(req: Request) {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundImage: `linear-gradient(0deg, ${tierGradient.start} 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start} 1px, transparent 1px)`,
-              backgroundSize: '40px 40px',
-              opacity: 0.08,
+              backgroundImage: `
+                radial-gradient(2px 2px at 20% 30%, ${tierGradient.start}, transparent),
+                radial-gradient(2px 2px at 60% 70%, ${tierGradient.end}, transparent),
+                radial-gradient(1px 1px at 50% 50%, ${tierGradient.start}, transparent),
+                radial-gradient(1px 1px at 80% 10%, ${tierGradient.end}, transparent),
+                radial-gradient(2px 2px at 40% 90%, ${tierGradient.start}, transparent)
+              `,
+              backgroundSize: '100px 100px, 120px 120px, 80px 80px, 90px 90px, 110px 110px',
+              backgroundPosition: '0 0, 40px 60px, 130px 270px, 70px 100px, 200px 150px',
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Subtle grid pattern overlay */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundImage: `linear-gradient(0deg, ${tierGradient.start}30 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start}30 1px, transparent 1px)`,
+              backgroundSize: '30px 30px',
+              opacity: 0.15,
             }}
           />
 
