@@ -353,7 +353,7 @@ export async function GET(req: Request) {
                     position: 'relative',
                   }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  
                   {badgeImageData ? (
                     <img 
                       src={badgeImageData}
@@ -405,7 +405,7 @@ export async function GET(req: Request) {
                       border: `1px solid ${tierGradient.start}30`,
                     }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                   
                     {userData.pfpUrl && (
                       <img
                         src={userData.pfpUrl}
@@ -426,7 +426,7 @@ export async function GET(req: Request) {
                         color: tierGradient.start,
                         paddingRight: 6,
                       }}>
-                        Score: {Math.round(userData.score)}
+                        Neynar Score: {Math.round(userData.score)}
                       </div>
                     )}
                   </div>
