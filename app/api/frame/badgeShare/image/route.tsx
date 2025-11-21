@@ -1,11 +1,19 @@
 /**
  * Badge Share Frame - Dynamic OG Image Generator
- * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
- * backup file commit e046399 fix: Match Farville dimensions 600x400 to prevent oversized display
- * Uses nodejs runtime for Vercel production compatibility
- * Fetches real-time badge data via Supabase REST API (lightweight, no connection pooling)
+ * Generates 600x400 PNG images with rich styling (3:2 Farcaster spec)
+ * 
+ * Features:
+ * - og-image.png background via filesystem (Satori-compatible)
+ * - User PFP from Neynar API
+ * - Neynar score display
+ * - Real badge images from /public/badges/
+ * 
+ * Backups: route.tsx.backup-pre-enhancements
  */
 import { ImageResponse } from 'next/og'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
+import { fetchUserByFid } from '@/lib/neynar'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -51,6 +59,48 @@ const BADGES: Record<string, { name: string; tier: keyof typeof TIERS; descripti
 }
 
 /**
+ * Load image from filesystem and convert to base64 data URL
+ * This works in nodejs runtime (not edge)
+ */
+async function loadImageAsDataUrl(relativePath: string): Promise<string | null> {
+  try {
+    const absolutePath = join(process.cwd(), 'public', relativePath)
+    const buffer = await readFile(absolutePath)
+    const base64 = buffer.toString('base64')
+    const ext = relativePath.split('.').pop()
+    const mimeType = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp'
+    return `data:${mimeType};base64,${base64}`
+  } catch (err) {
+    console.error(`[BadgeShare] Failed to load ${relativePath}:`, err)
+    return null
+  }
+}
+
+/**
+ * Fetch user data from Neynar API (using existing lib)
+ */
+async function fetchNeynarUserData(fid: number) {
+  try {
+    const user = await Promise.race([
+      fetchUserByFid(fid),
+      new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error('Neynar timeout')), 2000)
+      )
+    ])
+    
+    return {
+      pfpUrl: user?.pfpUrl || null,
+      username: user?.username || null,
+      displayName: user?.displayName || null,
+      score: user?.neynarScore || null
+    }
+  } catch (err) {
+    console.warn('[BadgeShare] Neynar fetch failed:', err)
+    return { pfpUrl: null, username: null, displayName: null, score: null }
+  }
+}
+
+/**
  * OG Image Generator: Badge Share
  * 
  * Generates a 600x400 OG image for badge share frames (3:2 ratio per Farcaster spec).
@@ -87,11 +137,31 @@ export async function GET(req: Request) {
 
     // Log FID for debugging
     if (fid) {
-      console.log(`[BadgeShare Image] FID ${fid} requested badge ${badgeId} (using static data)`)
+      console.log(`[BadgeShare Image] FID ${fid} requested badge ${badgeId}`)
     }
 
-    // Build image URLs (Satori will fetch these)
-    const badgeImageUrl = `${baseUrl}/badges/${badgeId}.png`
+    // Load images from filesystem (works in nodejs runtime)
+    const [ogImageData, badgeImageData] = await Promise.all([
+      loadImageAsDataUrl('og-image.png'),
+      loadImageAsDataUrl(`badges/${badgeId}.png`),
+    ])
+
+    // Fetch Neynar data using lib
+    let userData = { pfpUrl: null as string | null, username: null as string | null, displayName: null as string | null, score: null as number | null }
+    if (fid) {
+      try {
+        userData = await fetchNeynarUserData(parseInt(fid))
+      } catch (err) {
+        console.warn('[BadgeShare] Neynar fetch skipped:', err)
+      }
+    }
+
+    console.log('[BadgeShare] Assets loaded:', {
+      ogImage: ogImageData ? 'OK' : 'FAILED',
+      badgeImage: badgeImageData ? 'OK' : 'FAILED',
+      username: userData.username || 'N/A',
+      score: userData.score ?? 'N/A'
+    })
 
     return new ImageResponse(
       (
@@ -102,11 +172,46 @@ export async function GET(req: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `linear-gradient(135deg, #0a0a0a 0%, #1a1a2a 30%, #0f0f1f 60%, #0a0a0a 100%)`,
             position: 'relative',
             overflow: 'hidden',
           }}
         >
+          {/* Background: og-image.png or gradient fallback */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 0.6,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: `linear-gradient(135deg, #0a0a0a 0%, #1a1a2a 30%, #0f0f1f 60%, #0a0a0a 100%)`,
+              }}
+            />
+          )}
+
+          {/* Glass transparency overlay */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.2)',
+            }}
+          />
+
           {/* Vibrant mesh gradient background */}
           <div
             style={{
@@ -243,16 +348,28 @@ export async function GET(req: Request) {
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={badgeImageUrl}
-                    alt={badge.name}
-                    width="180"
-                    height="180"
-                    style={{
-                      objectFit: 'cover',
-                      borderRadius: 10,
-                    }}
-                  />
+                  {badgeImageData ? (
+                    <img 
+                      src={badgeImageData}
+                      alt={badge.name}
+                      width="180"
+                      height="180"
+                      style={{
+                        objectFit: 'cover',
+                        borderRadius: 10,
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      fontSize: 80,
+                      fontWeight: 900,
+                      color: '#ffffff',
+                    }}>
+                      {badge.tier === 'legendary' ? 'L' :
+                       badge.tier === 'epic' ? 'E' :
+                       badge.tier === 'rare' ? 'R' : 'C'}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -268,6 +385,46 @@ export async function GET(req: Request) {
                   fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
                 }}
               >
+                {/* User info: PFP + Neynar Score */}
+                {(userData.pfpUrl || userData.score) && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginBottom: 10,
+                      padding: 6,
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      borderRadius: 999,
+                      border: `1px solid ${tierGradient.start}30`,
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {userData.pfpUrl && (
+                      <img
+                        src={userData.pfpUrl}
+                        alt="Profile"
+                        width="24"
+                        height="24"
+                        style={{
+                          borderRadius: 999,
+                          border: `1px solid ${tierGradient.start}`,
+                        }}
+                      />
+                    )}
+                    {userData.score && (
+                      <div style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        color: tierGradient.start,
+                        paddingRight: 6,
+                      }}>
+                        Score: {Math.round(userData.score)}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Badge name */}
                 <div
                   style={{
