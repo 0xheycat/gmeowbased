@@ -1,3 +1,7 @@
+/**
+ * Badge Share Frame - Dynamic OG Image Generator
+ * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
+ */
 import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
@@ -21,66 +25,102 @@ const HEIGHT = 628
  * Route: /api/frame/badgeShare/image?fid=xxx&badgeId=yyy
  */
 export async function GET(request: NextRequest) {
+  // TEMPORARY TEST: Skip all logic and return simple image
+  return new ImageResponse(
+    (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: '#0ff', fontSize: 60 }}>
+        Badge Route Test
+      </div>
+    ),
+    { width: WIDTH, height: HEIGHT }
+  )
+  
   try {
     const { searchParams } = request.nextUrl
     const fidParam = searchParams.get('fid')
     const badgeIdParam = searchParams.get('badgeId')
     const stateParam = searchParams.get('state')
 
-    // Validate FID
-    if (!fidParam || !isValidFid(fidParam)) {
+    // Validate FID - check for null first
+    if (!fidParam) {
+      return new ImageResponse(
+        <ErrorImage message="Missing FID" />,
+        { width: WIDTH, height: HEIGHT }
+      )
+    }
+
+    // Parse FID after null check (use ! to assert non-null after guard)
+    const fid = parseInt(fidParam!, 10)
+    
+    // Validate parsed FID
+    if (!isValidFid(fid)) {
       return new ImageResponse(
         <ErrorImage message="Invalid FID" />,
         { width: WIDTH, height: HEIGHT }
       )
     }
 
-    const fid = parseInt(fidParam, 10)
+    // Validate badge ID - check for null first
+    if (!badgeIdParam) {
+      return new ImageResponse(
+        <ErrorImage message="Missing Badge ID" />,
+        { width: WIDTH, height: HEIGHT }
+      )
+    }
 
-    // Validate badge ID
-    if (!badgeIdParam || !isValidBadgeId(badgeIdParam)) {
+    // After null check, use ! to assert non-null
+    // Validate format
+    if (!isValidBadgeId(badgeIdParam!)) {
       return new ImageResponse(
         <ErrorImage message="Invalid Badge ID" />,
         { width: WIDTH, height: HEIGHT }
       )
     }
 
+    // Safe to use badgeIdParam as string now (with assertion)
+    const badgeId = badgeIdParam!
+
     // Handle "not found" state
     if (stateParam === 'notfound') {
       return new ImageResponse(
-        <NotFoundImage badgeId={badgeIdParam} />,
+        <NotFoundImage badgeId={badgeId} />,
         { width: WIDTH, height: HEIGHT }
       )
     }
 
-    // Fetch user badges and registry
-    const badges = await getUserBadges(fid)
+    // Fetch user badges and registry with error handling
+    let badges: Awaited<ReturnType<typeof getUserBadges>> = []
+    try {
+      badges = await getUserBadges(fid)
+    } catch (error) {
+      console.error('Failed to fetch user badges:', error)
+      // Return not found state if we can't fetch badges
+      return new ImageResponse(
+        <NotFoundImage badgeId={badgeId} />,
+        { width: WIDTH, height: HEIGHT }
+      )
+    }
+
     const badgeRegistry = loadBadgeRegistry()
 
     // Find specific badge
-    const targetBadge = badges.find((b) => b.badgeId === badgeIdParam)
+    const targetBadgeResult = badges.find((b) => b.badgeId === badgeId)
 
-    if (!targetBadge) {
+    // Must check if targetBadge exists before accessing properties
+    if (!targetBadgeResult) {
       return new ImageResponse(
-        <NotFoundImage badgeId={badgeIdParam} />,
+        <NotFoundImage badgeId={badgeId} />,
         { width: WIDTH, height: HEIGHT }
       )
     }
 
-    // Get tier config
-    const tierConfig = badgeRegistry.tiers[targetBadge.tier]
+    // After null check, use non-null assertion to tell TypeScript this is definitely defined
+    const targetBadge = targetBadgeResult!
+
+    // Get tier config (use type assertion since we know tier is a valid TierType from database)
+    const tierConfig = badgeRegistry.tiers[targetBadge.tier as keyof typeof badgeRegistry.tiers]
     const badgeName = (targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType
     const badgeDescription = (targetBadge.metadata as { description?: string })?.description || tierConfig.name
-
-    // Get badge image URL - use compressed PNG files (<200KB)
-    const badgeImageUrl = (targetBadge.metadata as { imageUrl?: string })?.imageUrl
-    let absoluteBadgeUrl: string | undefined
-    if (badgeImageUrl) {
-      // Convert /badges/xxx.webp to /badges/xxx.png (compressed versions)
-      const pngPath = badgeImageUrl.replace('.webp', '.png')
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art'
-      absoluteBadgeUrl = `${baseUrl}${pngPath}`
-    }
 
     const tierGradient = getTierGradient(targetBadge.tier)
     const assignedDate = formatBadgeDate(targetBadge.assignedAt)
@@ -89,14 +129,12 @@ export async function GET(request: NextRequest) {
       (
         <div
           style={{
-            width: WIDTH,
-            height: HEIGHT,
+            width: '100%',
+            height: '100%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `radial-gradient(circle at 20% 30%, ${tierGradient.start}25, #050505), 
-                         radial-gradient(circle at 80% 70%, ${tierGradient.end}15, transparent),
-                         linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)`,
+            background: `linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%)`,
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -109,11 +147,7 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: `
-                radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%),
-                radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%),
-                radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)
-              `,
+              background: `radial-gradient(circle at 10% 20%, ${tierGradient.start}20, transparent 40%), radial-gradient(circle at 90% 80%, ${tierGradient.end}20, transparent 40%), radial-gradient(circle at 50% 50%, ${tierGradient.start}10, transparent 60%)`,
               opacity: 0.6,
             }}
           />
@@ -126,10 +160,7 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundImage: `
-                linear-gradient(${tierGradient.start}10 1px, transparent 1px),
-                linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)
-              `,
+              backgroundImage: `linear-gradient(${tierGradient.start}10 1px, transparent 1px), linear-gradient(90deg, ${tierGradient.start}10 1px, transparent 1px)`,
               backgroundSize: '40px 40px',
               opacity: 0.15,
             }}
@@ -142,9 +173,7 @@ export async function GET(request: NextRequest) {
               height: 560,
               display: 'flex',
               flexDirection: 'column',
-              background: `linear-gradient(145deg, 
-                          rgba(26, 26, 28, 0.95) 0%, 
-                          rgba(18, 18, 20, 0.98) 100%)`,
+              background: `linear-gradient(145deg, rgba(26, 26, 28, 0.95) 0%, rgba(18, 18, 20, 0.98) 100%)`,
               border: `3px solid ${tierGradient.start}`,
               borderRadius: 32,
               boxShadow: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px ${tierGradient.start}40`,
@@ -161,9 +190,7 @@ export async function GET(request: NextRequest) {
                 left: 0,
                 right: 0,
                 height: '50%',
-                background: `linear-gradient(180deg, 
-                            ${tierGradient.start}08 0%, 
-                            transparent 100%)`,
+                background: `linear-gradient(180deg, ${tierGradient.start}08 0%, transparent 100%)`,
               }}
             />
 
@@ -211,14 +238,15 @@ export async function GET(request: NextRequest) {
                 >
                   MINTED
                 </div>
-              ) : null}
+              ) : (
+                <div style={{ display: 'none' }} />
+              )}
             </div>
 
             {/* Main content area (horizontal layout like Yu-Gi-Oh!) */}
             <div
               style={{
                 display: 'flex',
-                gap: 32,
                 flex: 1,
               }}
             >
@@ -227,90 +255,35 @@ export async function GET(request: NextRequest) {
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 16,
                 }}
               >
-                {absoluteBadgeUrl ? (
-                  <div
-                    style={{
-                      width: 360,
-                      height: 360,
-                      borderRadius: 20,
-                      overflow: 'hidden',
-                      border: `3px solid ${tierGradient.start}`,
-                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
-                      background: `linear-gradient(145deg, rgba(30, 30, 32, 0.6), rgba(20, 20, 22, 0.8))`,
-                      display: 'flex',
-                      position: 'relative',
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={absoluteBadgeUrl}
-                      alt={badgeName}
-                      width={360}
-                      height={360}
-                    />
-                    {/* Holographic overlay */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: `linear-gradient(135deg, 
-                                    transparent 0%, 
-                                    ${tierGradient.start}15 50%, 
-                                    transparent 100%)`,
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      width: 360,
-                      height: 360,
-                      borderRadius: 20,
-                      background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
-                      border: `3px solid ${tierGradient.start}`,
-                      boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 160,
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {/* Badge symbol based on tier */}
-                    <div style={{ position: 'relative', fontWeight: 700 }}>
-                      {targetBadge.tier === 'legendary' ? 'L' :
-                       targetBadge.tier === 'epic' ? 'E' :
-                       targetBadge.tier === 'rare' ? 'R' : 'C'}
-                    </div>
-                    {/* Holographic overlay */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: `linear-gradient(135deg, 
-                                    transparent 0%, 
-                                    ${tierGradient.start}20 50%, 
-                                    transparent 100%)`,
-                      }}
-                    />
-                  </div>
-                )}
+                <div
+                  style={{
+                    width: 360,
+                    height: 360,
+                    borderRadius: 20,
+                    background: `linear-gradient(135deg, ${tierGradient.start}60, ${tierGradient.end}60)`,
+                    border: `3px solid ${tierGradient.start}`,
+                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px ${tierGradient.start}50`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 160,
+                    fontWeight: 900,
+                    color: '#ffffff',
+                  }}
+                >
+                  {targetBadge.tier === 'legendary' ? 'L' :
+                   targetBadge.tier === 'epic' ? 'E' :
+                   targetBadge.tier === 'rare' ? 'R' : 'C'}
+                </div>
               </div>
 
               {/* Right: Badge details (like Yu-Gi-Oh! card text) */}
               <div
                 style={{
                   flex: 1,
+                  marginLeft: 32,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -323,10 +296,9 @@ export async function GET(request: NextRequest) {
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 20,
                   }}
                 >
-                  <h1
+                  <div
                     style={{
                       fontSize: 52,
                       fontWeight: 800,
@@ -337,11 +309,12 @@ export async function GET(request: NextRequest) {
                     }}
                   >
                     {badgeName}
-                  </h1>
+                  </div>
 
                   {/* Description box (like Yu-Gi-Oh! effect text) */}
                   <div
                     style={{
+                      marginTop: 20,
                       display: 'flex',
                       flexDirection: 'column',
                       padding: 20,
@@ -349,26 +322,25 @@ export async function GET(request: NextRequest) {
                       border: `1px solid ${tierGradient.start}40`,
                       borderRadius: 16,
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-                      gap: 12,
                     }}
                   >
-                    <p
+                    <div
                       style={{
-                        fontSize: 22,
-                        lineHeight: 1.5,
+                        fontSize: 18,
+                        lineHeight: 1.6,
                         margin: 0,
-                        color: 'rgba(255, 255, 255, 0.9)',
+                        color: 'rgba(255, 255, 255, 0.85)',
                       }}
                     >
                       {badgeDescription}
-                    </p>
+                    </div>
                   </div>
 
                   {/* Stats bar (like Yu-Gi-Oh! ATK/DEF) */}
                   <div
                     style={{
+                      marginTop: 20,
                       display: 'flex',
-                      gap: 16,
                       fontSize: 18,
                     }}
                   >
@@ -380,11 +352,10 @@ export async function GET(request: NextRequest) {
                         background: 'rgba(30, 30, 32, 0.8)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: 12,
-                        gap: 8,
                       }}
                     >
-                      <span style={{ opacity: 0.7 }}>📅</span>
-                      <span style={{ fontWeight: 600 }}>{assignedDate}</span>
+                      <div style={{ opacity: 0.7 }}>Earned:</div>
+                      <div style={{ fontWeight: 600, marginLeft: 8 }}>{assignedDate}</div>
                     </div>
                   </div>
                 </div>
@@ -427,12 +398,7 @@ export async function GET(request: NextRequest) {
               left: 0,
               right: 0,
               height: 4,
-              background: `linear-gradient(90deg, 
-                          transparent 0%, 
-                          ${tierGradient.start} 20%, 
-                          ${tierGradient.end} 50%, 
-                          ${tierGradient.start} 80%, 
-                          transparent 100%)`,
+              background: `linear-gradient(90deg, transparent 0%, ${tierGradient.start} 20%, ${tierGradient.end} 50%, ${tierGradient.start} 80%, transparent 100%)`,
               boxShadow: `0 0 20px ${tierGradient.start}80`,
             }}
           />
@@ -448,11 +414,31 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-  } catch (error) {
-    console.error('[Frame BadgeShare Image] Error:', error)
-    return new ImageResponse(
-      <ErrorImage message="Failed to generate image" />,
-      { width: WIDTH, height: HEIGHT }
+  } catch (err: unknown) {
+    console.error('[Frame BadgeShare Image] Error:', err)
+    // Return JSON error for debugging
+    // Safely extract error message and stack
+    let errorMessage = 'Unknown error'
+    let errorStack: string | undefined
+    
+    if (err instanceof Error) {
+      const error = err as Error
+      errorMessage = error.message
+      errorStack = error.stack
+    } else {
+      errorMessage = String(err)
+    }
+    
+    return new Response(
+      JSON.stringify({ 
+        error: 'Image generation failed', 
+        message: errorMessage,
+        stack: errorStack
+      }), 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 }
@@ -482,7 +468,7 @@ function ErrorImage({ message }: { message: string }) {
       >
         !
       </div>
-      <h1
+      <div
         style={{
           fontSize: 48,
           fontWeight: 700,
@@ -490,8 +476,8 @@ function ErrorImage({ message }: { message: string }) {
         }}
       >
         Error
-      </h1>
-      <p
+      </div>
+      <div
         style={{
           fontSize: 24,
           opacity: 0.7,
@@ -500,7 +486,7 @@ function ErrorImage({ message }: { message: string }) {
         }}
       >
         {message}
-      </p>
+      </div>
     </div>
   )
 }
@@ -527,9 +513,9 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
           marginBottom: 24,
         }}
       >
-        🔍
+        X
       </div>
-      <h1
+      <div
         style={{
           fontSize: 48,
           fontWeight: 700,
@@ -537,8 +523,8 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
         }}
       >
         Badge Not Found
-      </h1>
-      <p
+      </div>
+      <div
         style={{
           fontSize: 24,
           opacity: 0.7,
@@ -547,8 +533,8 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
         }}
       >
         {badgeId} could not be found
-      </p>
-      <p
+      </div>
+      <div
         style={{
           fontSize: 20,
           opacity: 0.5,
@@ -557,7 +543,7 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
         }}
       >
         This badge may have been removed or never existed
-      </p>
+      </div>
     </div>
   )
 }

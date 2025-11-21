@@ -136,7 +136,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           type: 'launch_frame',
           name: 'Gmeowbased',
           url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-          splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+          splashImageUrl: `${getBaseUrl(request)}/og-image.png`,
           splashBackgroundColor: '#000000'
         },
       },
