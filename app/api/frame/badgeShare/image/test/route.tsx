@@ -4,7 +4,7 @@
 import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 const WIDTH = 1200
 const HEIGHT = 628
