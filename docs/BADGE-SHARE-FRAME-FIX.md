@@ -11,7 +11,7 @@ Badge share frame was not working - showing blank/broken displays when shared. U
 **Our Frame:**
 - https://gmeowhq.art/api/frame/badgeShare?fid=18139&badgeId=gmeow-vanguard
 - Returns: HTML with Farcaster vNext metadata + embedded image URL
-
+https://gmeowhq.art/api/frame/badgeShare/image?badgeId=neon-initiate&fid=18139
 ## 🔍 Root Causes Discovered
 
 ### 1. JSON Encoding Bug (CRITICAL)

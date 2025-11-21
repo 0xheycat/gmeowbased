@@ -3,13 +3,72 @@
  * Generates 1200x628 PNG images with Yu-Gi-Oh! card design
  * 
  * Uses nodejs runtime for Vercel production compatibility
- * Fetches real-time badge data from Supabase with aggressive caching
+ * Fetches real-time badge data via Supabase REST API (lightweight, no connection pooling)
  */
 import { ImageResponse } from 'next/og'
-import { getUserBadges } from '@/lib/badges'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+/**
+ * Lightweight badge data fetch using Supabase REST API
+ * Bypasses connection pooling issues in serverless environment
+ */
+async function fetchBadgeDataLight(fid: number, badgeId: string): Promise<{
+  assignedDate: string
+  isMinted: boolean
+  mintedDate: string
+} | null> {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Supabase credentials missing')
+    return null
+  }
+
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/user_badges?fid=eq.${fid}&badge_id=eq.${badgeId}&select=assigned_at,minted,minted_at`,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        signal: AbortSignal.timeout(800), // 800ms timeout for REST call
+      }
+    )
+
+    if (!response.ok) {
+      console.error(`Supabase REST API error: ${response.status}`)
+      return null
+    }
+
+    const data = await response.json()
+    if (!data || data.length === 0) {
+      return null
+    }
+
+    const badge = data[0]
+    return {
+      assignedDate: new Date(badge.assigned_at).toLocaleDateString('en-US', { 
+        month: 'short', 
+        year: 'numeric' 
+      }),
+      isMinted: badge.minted,
+      mintedDate: badge.minted_at 
+        ? new Date(badge.minted_at).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          })
+        : 'Not minted yet'
+    }
+  } catch (error) {
+    console.error('Badge fetch error:', error)
+    return null
+  }
+}
 
 const WIDTH = 1200
 const HEIGHT = 628
@@ -77,7 +136,7 @@ export async function GET(req: Request) {
     const tier = TIERS[badge.tier]
     const tierGradient = tier
 
-    // Fetch real-time badge data with aggressive timeout for OG generation
+    // Fetch real-time badge data with lightweight REST API approach
     let assignedDate = 'Nov 2024'
     let isMinted = true
     let mintedDate = 'Nov 15, 2024'
@@ -85,36 +144,17 @@ export async function GET(req: Request) {
     if (fid) {
       try {
         const fidNumber = parseInt(fid, 10)
+        const badgeData = await fetchBadgeDataLight(fidNumber, badgeId)
         
-        // 1-second timeout - optimized for OG image generation
-        const userBadgesPromise = getUserBadges(fidNumber)
-        const timeoutPromise = new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('OG image data timeout')), 1000)
-        )
-        
-        const userBadges = await Promise.race([userBadgesPromise, timeoutPromise])
-        const userBadge = userBadges.find(b => b.badgeId === badgeId)
-
-        if (userBadge) {
-          // Use real data from database
-          assignedDate = new Date(userBadge.assignedAt).toLocaleDateString('en-US', { 
-            month: 'short', 
-            year: 'numeric' 
-          })
-          isMinted = userBadge.minted
-          mintedDate = userBadge.mintedAt 
-            ? new Date(userBadge.mintedAt).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })
-            : 'Not minted yet'
+        if (badgeData) {
+          assignedDate = badgeData.assignedDate
+          isMinted = badgeData.isMinted
+          mintedDate = badgeData.mintedDate
           console.log(`✅ Real data loaded for FID ${fidNumber}: ${badgeId} assigned ${assignedDate}, minted: ${isMinted}`)
         } else {
           console.log(`⚠️ Badge ${badgeId} not found for FID ${fidNumber}, using fallback`)
         }
       } catch (error) {
-        // Fall back to static data on timeout or error
         console.error('Badge data fetch failed, using fallback:', error)
       }
     }
