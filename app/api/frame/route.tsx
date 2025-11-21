@@ -1151,10 +1151,11 @@ function buildFrameHtml(params: {
   
   // Generate vNext JSON frame meta tag (single tag format for validator compatibility)
   // Reference: https://docs.farcaster.xyz/reference/frames/spec
-  const frameMetaTags = primaryButton && frameOrigin && imageEsc ? `
+  // CRITICAL: Use unescaped values in JSON (resolvedImage not imageEsc) - JSON.stringify handles escaping
+  const frameMetaTags = primaryButton && frameOrigin && resolvedImage ? `
     <meta name="fc:frame" content='${JSON.stringify({
       version: 'next',
-      imageUrl: imageEsc,
+      imageUrl: resolvedImage,
       button: {
         title: primaryButton.label,
         action: {
