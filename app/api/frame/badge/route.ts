@@ -153,28 +153,38 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       accent: '#FFFFFF',
     }
 
-    // Build frame HTML - vNext format with single button
+    // Build frame HTML - Multi-format compatibility
     // Using buildDynamicFrameImageUrl (trusted source pattern like working frames)
     const badgeImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: targetBadge.badgeId, fid }, getBaseUrl(request))
+    const launchUrl = `${getBaseUrl(request)}/profile/${fid}/badges`
+    const splashImageUrl = `${getBaseUrl(request)}/logo.png`
     
-    const badgeEmbed = {
-      version: 'next',
-      imageUrl: badgeImageUrl,
-      button: {
-        title: 'View Badge Collection',
-        action: {
-          type: 'launch_frame',
-          name: 'Gmeowbased',
-          url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-          splashImageUrl: `${getBaseUrl(request)}/logo.png`,
-          splashBackgroundColor: '#000000'
-        }
-      }
-    }
     const frameHtml = `<!DOCTYPE html>
 <html>
   <head>
-    <meta name="fc:frame" content='${JSON.stringify(badgeEmbed).replace(/'/g, "&#39;")}' />
+    <!-- Legacy Farcaster frame tags (v1 compatibility) -->
+    <meta property="fc:frame" content="vNext" />
+    <meta property="fc:frame:image" content="${badgeImageUrl}" />
+    <meta property="fc:frame:button:1" content="View Badge Collection" />
+    <meta property="fc:frame:button:1:action" content="launch_frame" />
+    <meta property="fc:frame:button:1:target" content="${launchUrl}" />
+    
+    <!-- Farcaster miniapp frame tags (v2) -->
+    <meta property="fc:miniapp:frame" content="vNext" />
+    <meta property="fc:miniapp:frame:image" content="${badgeImageUrl}" />
+    <meta property="fc:miniapp:frame:button:1" content="View Badge Collection" />
+    <meta property="fc:miniapp:frame:button:1:action" content="launch_frame" />
+    <meta property="fc:miniapp:frame:button:1:target" content="${launchUrl}" />
+    
+    <!-- Miniapp launch configuration (vNext JSON for compatible clients) -->
+    <meta name="fc:frame:launch_frame" content='${JSON.stringify({
+      name: 'Gmeowbased',
+      url: launchUrl,
+      splashImageUrl: splashImageUrl,
+      splashBackgroundColor: '#000000'
+    }).replace(/'/g, "&#39;")}' />
+    
+    <!-- OpenGraph metadata -->
     <meta property="og:image" content="${badgeImageUrl}" />
     <meta property="og:title" content="${(targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType} Badge" />
     <meta property="og:description" content="${(targetBadge.metadata as { description?: string })?.description || `${tierConfig.name} tier badge`}" />
