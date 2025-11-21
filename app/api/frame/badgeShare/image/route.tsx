@@ -31,10 +31,6 @@ async function fetchBadgeDataLight(fid: number, badgeId: string): Promise<{
   }
 
   try {
-    // Create manual abort controller for better compatibility
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 800)
-
     const url = `${supabaseUrl}/rest/v1/user_badges?fid=eq.${fid}&badge_id=eq.${badgeId}&select=assigned_at,minted,minted_at`
     console.log('[fetchBadgeDataLight] Fetching:', url)
 
@@ -43,10 +39,8 @@ async function fetchBadgeDataLight(fid: number, badgeId: string): Promise<{
         'apikey': supabaseKey,
         'Authorization': `Bearer ${supabaseKey}`,
       },
-      signal: controller.signal,
+      // Remove abort controller - might not be supported in Vercel
     })
-
-    clearTimeout(timeoutId)
 
     if (!response.ok) {
       console.error(`[fetchBadgeDataLight] Supabase REST API error: ${response.status} ${response.statusText}`)
@@ -131,11 +125,11 @@ const BADGES: Record<string, { name: string; tier: keyof typeof TIERS; descripti
  * Fetches real badge data from database to show accurate assigned dates and minted status.
  */
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url)
-    const badgeId = searchParams.get('badgeId')
-    const fid = searchParams.get('fid')
+  const { searchParams } = new URL(req.url)
+  const badgeId = searchParams.get('badgeId')
+  const fid = searchParams.get('fid')
 
+  try {
     // Validate badge ID
     if (!badgeId || !BADGES[badgeId]) {
       return new ImageResponse(
@@ -166,8 +160,8 @@ export async function GET(req: Request) {
         } else {
           console.log(`⚠️ Badge ${badgeId} not found for FID ${fidNumber}, using fallback`)
         }
-      } catch (error) {
-        console.error('Badge data fetch failed, using fallback:', error)
+      } catch (fetchError) {
+        console.error('[GET] Badge data fetch failed, using fallback:', fetchError)
       }
     }
 
