@@ -421,7 +421,7 @@ function ErrorImage({ message }: { message: string }) {
       >
         !
       </div>
-      <h1
+      <div
         style={{
           fontSize: 48,
           fontWeight: 700,
@@ -429,8 +429,8 @@ function ErrorImage({ message }: { message: string }) {
         }}
       >
         Error
-      </h1>
-      <p
+      </div>
+      <div
         style={{
           fontSize: 24,
           opacity: 0.7,
@@ -439,7 +439,7 @@ function ErrorImage({ message }: { message: string }) {
         }}
       >
         {message}
-      </p>
+      </div>
     </div>
   )
 }
@@ -466,9 +466,9 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
           marginBottom: 24,
         }}
       >
-        🔍
+        X
       </div>
-      <h1
+      <div
         style={{
           fontSize: 48,
           fontWeight: 700,
@@ -476,8 +476,8 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
         }}
       >
         Badge Not Found
-      </h1>
-      <p
+      </div>
+      <div
         style={{
           fontSize: 24,
           opacity: 0.7,
@@ -486,8 +486,8 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
         }}
       >
         {badgeId} could not be found
-      </p>
-      <p
+      </div>
+      <div
         style={{
           fontSize: 20,
           opacity: 0.5,
@@ -496,7 +496,7 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
         }}
       >
         This badge may have been removed or never existed
-      </p>
+      </div>
     </div>
   )
 }
