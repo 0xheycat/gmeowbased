@@ -94,8 +94,8 @@ export async function GET(request: NextRequest) {
       (
         <div
           style={{
-            width: WIDTH,
-            height: HEIGHT,
+            width: '100%',
+            height: '100%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
