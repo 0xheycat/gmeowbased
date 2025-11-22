@@ -1,0 +1,77 @@
+name: Warmup Frame Functions
+
+# Free alternative to Vercel Cron (requires paid plan)
+# Runs every 10 minutes to keep serverless functions warm
+# Prevents cold starts and maintains cache
+
+on:
+  schedule:
+    # Every 10 minutes during active hours (UTC)
+    # 6am-10pm UTC = high traffic period
+    - cron: '*/10 6-22 * * *'
+    
+    # Every 30 minutes during off-hours (UTC)
+    # 10pm-6am UTC = low traffic period
+    - cron: '*/30 22-23,0-5 * * *'
+  
+  # Manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Warmup Frame Endpoints
+        run: |
+          echo "🔥 Warming up frame functions..."
+          
+          BASE_URL="https://gmeowhq.art"
+          
+          # Array of frame endpoints to warm up
+          declare -a endpoints=(
+            "/api/frame?type=gm&fid=1"
+            "/api/frame?type=quest&questId=1"
+            "/api/frame?type=onchainstats&fid=18139"
+            "/api/frame?type=badge&fid=1"
+            "/api/frame?type=leaderboards"
+            "/api/frame/image?type=gm&fid=1"
+            "/api/frame/image?type=quest&fid=1"
+            "/api/frame/image?type=onchainstats&fid=18139"
+            "/api/frame/image?type=badge&fid=1"
+          )
+          
+          # Request each endpoint
+          for endpoint in "${endpoints[@]}"; do
+            url="${BASE_URL}${endpoint}"
+            echo "  → ${endpoint}"
+            
+            response=$(curl -s -o /dev/null -w "%{http_code},%{time_total}" "$url")
+            status_code=$(echo $response | cut -d',' -f1)
+            time_total=$(echo $response | cut -d',' -f2)
+            
+            if [ "$status_code" = "200" ]; then
+              echo "    ✅ ${status_code} (${time_total}s)"
+            else
+              echo "    ⚠️  ${status_code} (${time_total}s)"
+            fi
+            
+            # Small delay between requests
+            sleep 0.5
+          done
+          
+          echo "✅ Warmup complete"
+      
+      - name: Warmup Summary
+        if: always()
+        run: |
+          echo ""
+          echo "📊 Warmup Summary"
+          echo "  Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  Target: https://gmeowhq.art"
+          echo "  Endpoints: 9 frame endpoints"
+          echo ""
+          echo "Purpose:"
+          echo "  - Keep serverless functions warm (reduce cold starts)"
+          echo "  - Maintain Redis cache for common frames"
+          echo "  - Improve user experience (faster responses)"

@@ -8,6 +8,7 @@ import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { fetchUserByFid } from '@/lib/neynar'
 import { calculateTier, formatTierLabel, type TierInfo } from '@/lib/rarity-tiers'
+import { getCachedFrame, setCachedFrame, type FrameCacheKey } from '@/lib/frame-cache'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -49,28 +50,97 @@ function shortenAddress(addr: string) {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`
 }
 
+/**
+ * Helper function to store ImageResponse in cache
+ * Phase 1A: Automatically caches all generated frames
+ */
+async function cacheImageResponse(
+  imageResponse: Response,
+  cacheKey: FrameCacheKey,
+  startTime: number
+): Promise<Response> {
+  try {
+    // Clone the response so we can read the body
+    const clonedResponse = imageResponse.clone()
+    const arrayBuffer = await clonedResponse.arrayBuffer()
+    const imageBuffer = Buffer.from(arrayBuffer)
+
+    // Store in cache (async, don't block response)
+    setCachedFrame(cacheKey, imageBuffer, 300).catch((err) => {
+      console.error('[Frame Image] Failed to cache frame:', err)
+    })
+
+    const renderTime = Date.now() - startTime
+    console.log(`[Frame Image] Generated ${cacheKey.type} frame (${renderTime}ms) - FID:${cacheKey.fid} - Tier:${cacheKey.tier}`)
+
+    // Return original response with cache headers
+    return new Response(imageBuffer, {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=300, s-maxage=300',
+        'X-Cache-Status': 'MISS',
+        'X-Render-Time': `${renderTime}ms`,
+      },
+    })
+  } catch (err) {
+    console.error('[Frame Image] Failed to cache:', err)
+    return imageResponse
+  }
+}
+
 export async function GET(req: Request) {
+  const startTime = Date.now()
   const url = new URL(req.url)
   const type = readParam(url, 'type', 'onchainstats')
   const chain = readParam(url, 'chainName', readParam(url, 'chain', 'Base'))
   const user = readParam(url, 'user')
   const fid = readParam(url, 'fid')
 
+  // Build cache key from query parameters
+  const cacheParams: Record<string, string> = {}
+  for (const [key, value] of url.searchParams.entries()) {
+    cacheParams[key] = value
+  }
+
+  const fidNum = fid ? parseInt(fid, 10) : null
+  const validFid = fidNum && Number.isFinite(fidNum) && fidNum > 0 ? fidNum : null
+
   // Fetch Neynar score and calculate tier for rarity system (Phase 0)
   let tierInfo: TierInfo | null = null
-  if (fid) {
+  if (validFid) {
     try {
-      const fidNum = parseInt(fid, 10)
-      if (Number.isFinite(fidNum) && fidNum > 0) {
-        const userData = await fetchUserByFid(fidNum)
-        tierInfo = calculateTier(userData?.neynarScore)
-        console.log(`[Frame Image] FID ${fidNum} → Score ${userData?.neynarScore} → Tier ${tierInfo.tier}`)
-      }
+      const userData = await fetchUserByFid(validFid)
+      tierInfo = calculateTier(userData?.neynarScore)
+      console.log(`[Frame Image] FID ${validFid} → Score ${userData?.neynarScore} → Tier ${tierInfo.tier}`)
     } catch (err) {
       console.warn('[Frame Image] Failed to fetch Neynar score:', err)
       // Continue without tier styling if fetch fails
     }
   }
+
+  // Phase 1A: Check cache before generating image
+  const cacheKey: FrameCacheKey = {
+    type,
+    fid: validFid,
+    tier: tierInfo?.tier || null,
+    params: cacheParams,
+  }
+
+  const cachedImage = await getCachedFrame(cacheKey)
+  if (cachedImage) {
+    const renderTime = Date.now() - startTime
+    console.log(`[Frame Image] Cache HIT (${renderTime}ms) - ${type} - FID:${validFid} - Tier:${tierInfo?.tier || 'none'}`)
+    return new Response(new Uint8Array(cachedImage), {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=300, s-maxage=300', // 5 minutes
+        'X-Cache-Status': 'HIT',
+        'X-Render-Time': `${renderTime}ms`,
+      },
+    })
+  }
+
+  console.log(`[Frame Image] Cache MISS - Generating ${type} frame...`)
 
   // Load og-image.png background (matches badge frame implementation)
   const ogImageData = await loadImageAsDataUrl('og-image.png')
@@ -94,7 +164,7 @@ export async function GET(req: Request) {
     const glowColor = tierInfo?.colors.glow || `${gmPalette.start}90`
     const borderWidth = tierInfo?.borderStyle.width || 4
 
-    return new ImageResponse(
+    const gmResponse = new ImageResponse(
       (
         <div
           style={{
@@ -353,6 +423,7 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
+    return cacheImageResponse(gmResponse, cacheKey, startTime)
   }
 
   // Guild frame type - Yu-Gi-Oh! Card Structure
@@ -368,7 +439,7 @@ export async function GET(req: Request) {
       end: '#7dbaff'
     }
 
-    return new ImageResponse(
+    const guildResponse = new ImageResponse(
       (
         <div
           style={{
@@ -605,6 +676,7 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
+    return cacheImageResponse(guildResponse, cacheKey, startTime)
   }
 
   // Verify frame type - Yu-Gi-Oh! Card Structure
@@ -618,7 +690,7 @@ export async function GET(req: Request) {
       end: '#a0ffa0'
     }
 
-    return new ImageResponse(
+    const verifyResponse = new ImageResponse(
       (
         <div
           style={{
@@ -854,6 +926,7 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
+    return cacheImageResponse(verifyResponse, cacheKey, startTime)
   }
 
   // Quest frame type - Yu-Gi-Oh! Card Structure (matches badge frames)
@@ -870,7 +943,7 @@ export async function GET(req: Request) {
       end: '#a78bff'
     }
 
-    return new ImageResponse(
+    const questResponse = new ImageResponse(
       (
         <div
           style={{
@@ -1109,6 +1182,7 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
+    return cacheImageResponse(questResponse, cacheKey, startTime)
   }
 
   // OnchainStats frame type - Yu-Gi-Oh! Card Structure
@@ -1123,7 +1197,7 @@ export async function GET(req: Request) {
       end: '#4de4ff'
     }
 
-    return new ImageResponse(
+    const onchainstatsResponse = new ImageResponse(
       (
         <div
           style={{
@@ -1360,6 +1434,7 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
+    return cacheImageResponse(onchainstatsResponse, cacheKey, startTime)
   }
 
   // Leaderboards frame type - Yu-Gi-Oh! Card Structure
@@ -1372,7 +1447,7 @@ export async function GET(req: Request) {
       end: '#a78bff'
     }
 
-    return new ImageResponse(
+    const leaderboardsResponse = new ImageResponse(
       (
         <div
           style={{
@@ -1588,6 +1663,7 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
+    return cacheImageResponse(leaderboardsResponse, cacheKey, startTime)
   }
 
   // Default: onchainstats fallback - Yu-Gi-Oh! Card Structure
@@ -1606,7 +1682,7 @@ export async function GET(req: Request) {
     end: '#4de4ff'
   }
 
-  return new ImageResponse(
+  const defaultResponse = new ImageResponse(
     (
       <div
         style={{
@@ -1849,4 +1925,5 @@ export async function GET(req: Request) {
     ),
     { width: WIDTH, height: HEIGHT }
   )
+  return cacheImageResponse(defaultResponse, cacheKey, startTime)
 }
