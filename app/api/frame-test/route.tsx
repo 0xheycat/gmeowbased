@@ -33,7 +33,8 @@ export async function GET(req: NextRequest) {
   const postUrl = `${origin}/api/frame`
   
   // CRITICAL: vNext single button tag (makes it a valid embed like main route)
-  const vNextTag = `<meta name="fc:frame" content="${escapeHtml(JSON.stringify({
+  // Must use .replace(/"/g, '&quot;') like main route does
+  const vNextTag = `<meta name="fc:frame" content="${JSON.stringify({
     version: 'next',
     imageUrl: frameImage,
     button: {
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
         splashBackgroundColor: '#000000'
       }
     }
-  }))}" />`
+  }).replace(/"/g, '&quot;')}" />`
   
   const html = `<!DOCTYPE html>
 <html>
