@@ -6,9 +6,6 @@
 import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
-import { fetchUserByFid } from '@/lib/neynar'
-import { calculateTier, formatTierLabel, type TierInfo } from '@/lib/rarity-tiers'
-import { getCachedFrame, setCachedFrame, type FrameCacheKey } from '@/lib/frame-cache'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -50,97 +47,12 @@ function shortenAddress(addr: string) {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`
 }
 
-/**
- * Helper function to store ImageResponse in cache
- * Phase 1A: Automatically caches all generated frames
- */
-async function cacheImageResponse(
-  imageResponse: Response,
-  cacheKey: FrameCacheKey,
-  startTime: number
-): Promise<Response> {
-  try {
-    // Clone the response so we can read the body
-    const clonedResponse = imageResponse.clone()
-    const arrayBuffer = await clonedResponse.arrayBuffer()
-    const imageBuffer = Buffer.from(arrayBuffer)
-
-    // Store in cache (async, don't block response)
-    setCachedFrame(cacheKey, imageBuffer, 300).catch((err) => {
-      console.error('[Frame Image] Failed to cache frame:', err)
-    })
-
-    const renderTime = Date.now() - startTime
-    console.log(`[Frame Image] Generated ${cacheKey.type} frame (${renderTime}ms) - FID:${cacheKey.fid} - Tier:${cacheKey.tier}`)
-
-    // Return original response with cache headers
-    return new Response(imageBuffer, {
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=300, s-maxage=300',
-        'X-Cache-Status': 'MISS',
-        'X-Render-Time': `${renderTime}ms`,
-      },
-    })
-  } catch (err) {
-    console.error('[Frame Image] Failed to cache:', err)
-    return imageResponse
-  }
-}
-
 export async function GET(req: Request) {
-  const startTime = Date.now()
   const url = new URL(req.url)
   const type = readParam(url, 'type', 'onchainstats')
   const chain = readParam(url, 'chainName', readParam(url, 'chain', 'Base'))
   const user = readParam(url, 'user')
   const fid = readParam(url, 'fid')
-
-  // Build cache key from query parameters
-  const cacheParams: Record<string, string> = {}
-  for (const [key, value] of url.searchParams.entries()) {
-    cacheParams[key] = value
-  }
-
-  const fidNum = fid ? parseInt(fid, 10) : null
-  const validFid = fidNum && Number.isFinite(fidNum) && fidNum > 0 ? fidNum : null
-
-  // Fetch Neynar score and calculate tier for rarity system (Phase 0)
-  let tierInfo: TierInfo | null = null
-  if (validFid) {
-    try {
-      const userData = await fetchUserByFid(validFid)
-      tierInfo = calculateTier(userData?.neynarScore)
-      console.log(`[Frame Image] FID ${validFid} → Score ${userData?.neynarScore} → Tier ${tierInfo.tier}`)
-    } catch (err) {
-      console.warn('[Frame Image] Failed to fetch Neynar score:', err)
-      // Continue without tier styling if fetch fails
-    }
-  }
-
-  // Phase 1A: Check cache before generating image
-  const cacheKey: FrameCacheKey = {
-    type,
-    fid: validFid,
-    tier: tierInfo?.tier || null,
-    params: cacheParams,
-  }
-
-  const cachedImage = await getCachedFrame(cacheKey)
-  if (cachedImage) {
-    const renderTime = Date.now() - startTime
-    console.log(`[Frame Image] Cache HIT (${renderTime}ms) - ${type} - FID:${validFid} - Tier:${tierInfo?.tier || 'none'}`)
-    return new Response(new Uint8Array(cachedImage), {
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=300, s-maxage=300', // 5 minutes
-        'X-Cache-Status': 'HIT',
-        'X-Render-Time': `${renderTime}ms`,
-      },
-    })
-  }
-
-  console.log(`[Frame Image] Cache MISS - Generating ${type} frame...`)
 
   // Load og-image.png background (matches badge frame implementation)
   const ogImageData = await loadImageAsDataUrl('og-image.png')
@@ -151,20 +63,12 @@ export async function GET(req: Request) {
     const streak = readParam(url, 'streak', '0')
     const rank = readParam(url, 'rank', '—')
 
-    // Use tier colors if available, otherwise default GM colors
-    const gmPalette = tierInfo ? {
-      start: tierInfo.colors.gradient.start,
-      end: tierInfo.colors.gradient.end
-    } : {
+    const gmPalette = {
       start: '#ff9500',
       end: '#ffb84d'
     }
 
-    const borderColor = tierInfo?.colors.primary || gmPalette.start
-    const glowColor = tierInfo?.colors.glow || `${gmPalette.start}90`
-    const borderWidth = tierInfo?.borderStyle.width || 4
-
-    const gmResponse = new ImageResponse(
+    return new ImageResponse(
       (
         <div
           style={{
@@ -210,9 +114,9 @@ export async function GET(req: Request) {
               display: 'flex',
               flexDirection: 'column',
               background: 'linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)',
-              border: `${borderWidth}px solid ${borderColor}`,
+              border: `4px solid ${gmPalette.start}`,
               borderRadius: 12,
-              boxShadow: `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${glowColor}, 0 10px 50px rgba(0, 0, 0, 0.8)`,
+              boxShadow: `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${gmPalette.start}90, 0 10px 50px rgba(0, 0, 0, 0.8)`,
               padding: 14,
               position: 'relative',
               overflow: 'hidden',
@@ -230,28 +134,6 @@ export async function GET(req: Request) {
                 background: `linear-gradient(180deg, ${gmPalette.start}15, transparent 100%)`,
               }}
             />
-
-            {/* Tier label (top-right badge) */}
-            {tierInfo && (
-              <div
-                style={{
-                  display: 'flex',
-                  position: 'absolute',
-                  top: 14,
-                  right: 14,
-                  padding: '4px 10px',
-                  background: `linear-gradient(135deg, ${tierInfo.colors.gradient.start}, ${tierInfo.colors.gradient.end})`,
-                  border: `2px solid ${tierInfo.colors.primary}`,
-                  borderRadius: 999,
-                  fontSize: 9,
-                  fontWeight: 800,
-                  boxShadow: `0 0 12px ${tierInfo.colors.glow}`,
-                  textTransform: 'uppercase',
-                }}
-              >
-                {formatTierLabel(tierInfo)}
-              </div>
-            )}
 
             {/* Header with GM badge */}
             <div
@@ -423,7 +305,6 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
-    return cacheImageResponse(gmResponse, cacheKey, startTime)
   }
 
   // Guild frame type - Yu-Gi-Oh! Card Structure
@@ -439,7 +320,7 @@ export async function GET(req: Request) {
       end: '#7dbaff'
     }
 
-    const guildResponse = new ImageResponse(
+    return new ImageResponse(
       (
         <div
           style={{
@@ -676,7 +557,6 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
-    return cacheImageResponse(guildResponse, cacheKey, startTime)
   }
 
   // Verify frame type - Yu-Gi-Oh! Card Structure
@@ -690,7 +570,7 @@ export async function GET(req: Request) {
       end: '#a0ffa0'
     }
 
-    const verifyResponse = new ImageResponse(
+    return new ImageResponse(
       (
         <div
           style={{
@@ -926,7 +806,6 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
-    return cacheImageResponse(verifyResponse, cacheKey, startTime)
   }
 
   // Quest frame type - Yu-Gi-Oh! Card Structure (matches badge frames)
@@ -943,7 +822,7 @@ export async function GET(req: Request) {
       end: '#a78bff'
     }
 
-    const questResponse = new ImageResponse(
+    return new ImageResponse(
       (
         <div
           style={{
@@ -1182,7 +1061,6 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
-    return cacheImageResponse(questResponse, cacheKey, startTime)
   }
 
   // OnchainStats frame type - Yu-Gi-Oh! Card Structure
@@ -1197,7 +1075,7 @@ export async function GET(req: Request) {
       end: '#4de4ff'
     }
 
-    const onchainstatsResponse = new ImageResponse(
+    return new ImageResponse(
       (
         <div
           style={{
@@ -1434,7 +1312,6 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
-    return cacheImageResponse(onchainstatsResponse, cacheKey, startTime)
   }
 
   // Leaderboards frame type - Yu-Gi-Oh! Card Structure
@@ -1447,7 +1324,7 @@ export async function GET(req: Request) {
       end: '#a78bff'
     }
 
-    const leaderboardsResponse = new ImageResponse(
+    return new ImageResponse(
       (
         <div
           style={{
@@ -1663,7 +1540,6 @@ export async function GET(req: Request) {
       ),
       { width: WIDTH, height: HEIGHT }
     )
-    return cacheImageResponse(leaderboardsResponse, cacheKey, startTime)
   }
 
   // Default: onchainstats fallback - Yu-Gi-Oh! Card Structure
@@ -1682,7 +1558,7 @@ export async function GET(req: Request) {
     end: '#4de4ff'
   }
 
-  const defaultResponse = new ImageResponse(
+  return new ImageResponse(
     (
       <div
         style={{
@@ -1925,5 +1801,4 @@ export async function GET(req: Request) {
     ),
     { width: WIDTH, height: HEIGHT }
   )
-  return cacheImageResponse(defaultResponse, cacheKey, startTime)
 }
