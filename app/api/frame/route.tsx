@@ -2594,6 +2594,101 @@ export async function POST(req: Request) {
       })
     }
 
+    // Phase 1B.1: viewBalance - Retrieve user's points balance
+    if (action === 'viewBalance') {
+      const fid = payload.fid || payload.untrustedData?.fid
+      const userAddr = payload.user || payload.addr || payload.address
+      const chainKey = payload.chain || 'base'
+      
+      if (!fid && !userAddr) {
+        return respondJson({ ok: false, reason: 'missing fid or user address', traces }, { status: 400 })
+      }
+      
+      tracePush(traces, 'viewBalance-start', { fid, userAddr, chainKey })
+      
+      try {
+        // If we have userAddr, fetch from contract
+        const address = userAddr
+        
+        // If only FID provided, try to resolve to address (for now, return error)
+        if (!address && fid) {
+          tracePush(traces, 'viewBalance-fid-only', { fid })
+          return respondJson({
+            ok: false,
+            reason: 'address required for balance lookup',
+            message: 'Please provide your wallet address to view balance.',
+            traces,
+            durationMs: nowTs() - started
+          }, { status: 400 })
+        }
+        
+        // Fetch on-chain stats
+        const statsResult = await fetchUserStatsOnChain(String(address), String(chainKey), traces)
+        
+        if (!statsResult.ok) {
+          tracePush(traces, 'viewBalance-fetch-error', { error: statsResult.error })
+          return respondJson({
+            ok: false,
+            reason: 'failed to fetch balance',
+            error: statsResult.error,
+            traces,
+            durationMs: nowTs() - started
+          }, { status: 500 })
+        }
+        
+        const stats = statsResult.stats
+        
+        // Format balance data
+        const available = Number(stats.available)
+        const locked = Number(stats.locked)
+        const total = Number(stats.total)
+        
+        const chainDisplay = getChainDisplayName(String(chainKey))
+        
+        // Calculate rank progress from total points
+        const progress = calculateRankProgress(total)
+        
+        const message = `💰 Points Balance on ${chainDisplay}:\n\n` +
+                       `Available: ${formatInteger(available)} points\n` +
+                       `Locked: ${formatInteger(locked)} points\n` +
+                       `Total: ${formatInteger(total)} points\n\n` +
+                       `Level ${progress.level} • ${progress.currentTier.name}\n` +
+                       `${progress.xpIntoLevel}/${progress.xpForLevel} XP\n\n` +
+                       `Keep earning! 🚀`
+        
+        tracePush(traces, 'viewBalance-success', { address, chainKey, available, locked, total })
+        
+        return respondJson({
+          ok: true,
+          user: address,
+          chain: chainKey,
+          balance: {
+            available: String(stats.available),
+            locked: String(stats.locked),
+            total: String(stats.total),
+          },
+          rank: {
+            level: progress.level,
+            tier: progress.currentTier.name,
+            xpIntoLevel: progress.xpIntoLevel,
+            xpForLevel: progress.xpForLevel,
+            xpToNextLevel: progress.xpToNextLevel,
+          },
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'viewBalance-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to fetch balance', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
     // fallback: echo
     tracePush(traces, 'post-unknown-action', { action, payload })
     return respondJson({ ok: true, message: 'unknown action; no-op', action, payload, traces })
