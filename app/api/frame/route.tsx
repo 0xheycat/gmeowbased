@@ -2469,7 +2469,7 @@ export async function POST(req: Request) {
       }
       
       // Load existing session or create new
-      let currentSession = sessionId ? await loadFrameState(sessionId) : null
+      const currentSession = sessionId ? await loadFrameState(sessionId) : null
       const newSessionId = currentSession?.session_id || generateSessionId()
       
       // Get current step from session or start at 1

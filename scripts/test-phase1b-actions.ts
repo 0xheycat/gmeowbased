@@ -66,7 +66,7 @@ async function testFrameState() {
   console.log('\n🧪 Testing frame state persistence...')
   
   // Import state utilities
-  const { loadFrameState, getUserSessions, cleanupExpiredSessions } = await import('../lib/frame-state')
+  const { getUserSessions, cleanupExpiredSessions } = await import('../lib/frame-state')
   
   // Test getUserSessions
   const sessions = await getUserSessions(12345)
@@ -91,7 +91,7 @@ async function main() {
   
   try {
     // Test recordGM
-    const gmSessionId = await testRecordGM()
+    await testRecordGM()
     
     // Wait a bit
     await new Promise(resolve => setTimeout(resolve, 1000))
