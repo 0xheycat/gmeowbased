@@ -2455,6 +2455,85 @@ export async function POST(req: Request) {
       })
     }
 
+    // Phase 1B.1: getGMStats - Retrieve user's GM statistics
+    if (action === 'getGMStats') {
+      const fid = payload.fid || payload.untrustedData?.fid
+      if (!fid) return respondJson({ ok: false, reason: 'missing fid', traces }, { status: 400 })
+      
+      tracePush(traces, 'getGMStats-start', { fid })
+      
+      // Query Supabase for latest GM session for this user
+      try {
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        
+        const { data: sessions, error } = await supabase
+          .from('frame_sessions')
+          .select('session_id, fid, state, created_at, updated_at')
+          .eq('fid', Number(fid))
+          .contains('state', { lastAction: 'recordGM' })
+          .order('updated_at', { ascending: false })
+          .limit(1)
+        
+        if (error) {
+          tracePush(traces, 'getGMStats-db-error', { error: error.message })
+          return respondJson({ ok: false, reason: 'database error', error: error.message, traces }, { status: 500 })
+        }
+        
+        if (!sessions || sessions.length === 0) {
+          tracePush(traces, 'getGMStats-no-data', { fid })
+          return respondJson({ 
+            ok: true, 
+            fid: Number(fid),
+            gmCount: 0,
+            streak: 0,
+            lastGM: null,
+            message: 'No GM activity recorded yet. Send your first GM!',
+            traces,
+            durationMs: nowTs() - started
+          })
+        }
+        
+        const latestSession = sessions[0]
+        const state = latestSession.state || {}
+        const gmCount = Number(state.gmCount || 0)
+        const streak = Number(state.streak || 0)
+        const lastGMTimestamp = state.metadata?.timestamp || null
+        const lastGM = lastGMTimestamp ? new Date(lastGMTimestamp).toISOString() : null
+        
+        tracePush(traces, 'getGMStats-success', { fid, gmCount, streak, lastGM })
+        
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gmeowhq.art'
+        const message = `🌅 GM Stats for FID ${fid}:\n\n` +
+                       `Total GMs: ${gmCount}\n` +
+                       `Current Streak: ${streak} ${streak === 1 ? 'day' : 'days'}\n` +
+                       `Last GM: ${lastGM ? new Date(lastGM).toLocaleDateString() : 'Never'}\n\n` +
+                       `Keep the streak alive! 🚀`
+        
+        return respondJson({
+          ok: true,
+          fid: Number(fid),
+          gmCount,
+          streak,
+          lastGM,
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'getGMStats-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to fetch GM stats', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
     // Phase 1B: questProgress - Track multi-step quest progress
     if (action === 'questProgress') {
       const { generateSessionId, saveFrameState, loadFrameState } = await import('@/lib/frame-state')
