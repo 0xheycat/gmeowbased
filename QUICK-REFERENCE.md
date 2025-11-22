@@ -14,8 +14,9 @@
 
 ### Working on Phase 1B.1?
 1. **System Audit**: [SYSTEM-AUDIT.md](./Docs/Maintenance/frame/Phase-1/Phase-1B1/SYSTEM-AUDIT.md) (500+ lines)
-2. **Implementation Plan**: Coming soon
-3. **Testing Guide**: Coming soon
+2. **Frame Restructure Plan**: [FRAME-RESTRUCTURE-PLAN.md](./Docs/Maintenance/frame/Phase-1/Phase-1B1/FRAME-RESTRUCTURE-PLAN.md) - Clean URLs & migration strategy
+3. **Implementation Plan**: Coming soon
+4. **Testing Guide**: Coming soon
 
 ---
 
