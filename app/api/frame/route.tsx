@@ -2506,7 +2506,6 @@ export async function POST(req: Request) {
         
         tracePush(traces, 'getGMStats-success', { fid, gmCount, streak, lastGM })
         
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gmeowhq.art'
         const message = `🌅 GM Stats for FID ${fid}:\n\n` +
                        `Total GMs: ${gmCount}\n` +
                        `Current Streak: ${streak} ${streak === 1 ? 'day' : 'days'}\n` +
