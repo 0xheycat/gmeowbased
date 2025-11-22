@@ -480,6 +480,7 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
     chainKey: isGlobal ? 'all' : chainKey,
     frameOrigin: origin,
     frameVersion: FRAME_VERSION,
+    frameType: 'leaderboards',
   })
   return createHtmlResponse(html)
 }
@@ -1009,6 +1010,7 @@ function buildFrameHtml(params: {
   heroStats?: Array<{ label: string; value: string; accent?: boolean }>
   heroList?: Array<{ primary: string; secondary?: string; icon?: string }>
   defaultFrameImage?: string | null
+  frameType?: string // Yu-Gi-Oh! frame type (quest, guild, leaderboards, etc.)
 }) {
   const {
     title,
@@ -1028,6 +1030,7 @@ function buildFrameHtml(params: {
     heroBadge,
     heroStats = [],
     heroList = [],
+    frameType, // Yu-Gi-Oh! frame type
   } = params
   const pageTitle = escapeHtml(title)
   const rawDescription = description || ''
@@ -1144,10 +1147,26 @@ function buildFrameHtml(params: {
   // VERIFIED: Based on working Farville implementation (https://farville.farm)
   // Use 'launch_frame' to launch mini app within Warpcast (not external browser)
   // Use version: 'next' (Farville production-verified, November 19, 2025)
-  // UPDATED: Multi-format tags for mobile + desktop compatibility (November 21, 2025)
   const primaryButton = validatedButtons[0]
   const launchUrl = primaryButton?.target || frameOrigin
   const splashUrl = frameOrigin ? `${frameOrigin}/splash.png` : undefined
+  
+  // Yu-Gi-Oh! Rich Frame Palette (dynamic colors based on frame type)
+  const getFramePalette = (type?: string) => {
+    const palettes: Record<string, { primary: string; secondary: string; background: string; accent: string; label: string }> = {
+      quest: { primary: '#8e7cff', secondary: '#a78bff', background: '#0a0520', accent: '#5ad2ff', label: 'QUEST' },
+      guild: { primary: '#4da3ff', secondary: '#6bb5ff', background: '#050a20', accent: '#7CFF7A', label: 'GUILD' },
+      leaderboards: { primary: '#ffd700', secondary: '#ffed4e', background: '#201a05', accent: '#ff6b6b', label: 'LEADERBOARD' },
+      verify: { primary: '#7CFF7A', secondary: '#9bffaa', background: '#052010', accent: '#5ad2ff', label: 'VERIFY' },
+      referral: { primary: '#ff6b9d', secondary: '#ff8db4', background: '#200510', accent: '#ffd700', label: 'REFERRAL' },
+      onchainstats: { primary: '#00d4ff', secondary: '#5ae4ff', background: '#051520', accent: '#ffd700', label: 'ONCHAIN' },
+      points: { primary: '#ffb700', secondary: '#ffc840', background: '#201405', accent: '#8e7cff', label: 'POINTS' },
+      gm: { primary: '#ff9500', secondary: '#ffab40', background: '#201005', accent: '#7CFF7A', label: 'GM' },
+    }
+    return palettes[type || ''] || { primary: '#8e7cff', secondary: '#a78bff', background: '#0a0e22', accent: '#5ad2ff', label: 'FRAME' }
+  }
+  
+  const framePalette = getFramePalette(frameType)
   
   // Generate vNext JSON frame meta tag (single tag format for validator compatibility)
   // Reference: https://docs.farcaster.xyz/reference/frames/spec
@@ -1168,8 +1187,8 @@ function buildFrameHtml(params: {
       }
     }).replace(/"/g, '&quot;')}" />` : ''
   
-  // Badge-style minimal template (November 21, 2025)
-  // Simplified HTML structure matching working badge frames
+  // Yu-Gi-Oh! Rich Template (November 21, 2025)
+  // Enhanced card-style structure with dynamic palette, type badges, and rich visual effects
   return `<!DOCTYPE html>
 <html>
   <head>
@@ -1187,9 +1206,10 @@ function buildFrameHtml(params: {
       body {
         margin: 0;
         padding: 20px;
-        background: linear-gradient(135deg, #0a0e22, #1a1e3a);
+        background: linear-gradient(135deg, ${framePalette.background}, ${framePalette.secondary}20);
         font-family: system-ui, -apple-system, sans-serif;
         color: white;
+        min-height: 100vh;
       }
       .container {
         max-width: 600px;
@@ -1197,32 +1217,101 @@ function buildFrameHtml(params: {
         padding: 30px;
         background: rgba(0, 0, 0, 0.6);
         border-radius: 20px;
-        border: 2px solid #8e7cff;
-        box-shadow: 0 0 40px rgba(142, 124, 255, 0.25);
+        border: 2px solid ${framePalette.primary};
+        box-shadow: 0 0 40px ${framePalette.primary}40;
+        position: relative;
+        overflow: hidden;
+      }
+      .container::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, ${framePalette.primary}20, ${framePalette.secondary}10);
+        border-radius: 20px;
+        z-index: -1;
+      }
+      .frame-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        background: ${framePalette.primary}40;
+        border: 1px solid ${framePalette.primary};
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: ${framePalette.primary};
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
       }
       h1 {
-        color: #8e7cff;
-        margin-bottom: 10px;
+        color: ${framePalette.primary};
+        margin: 0 0 16px 0;
         font-size: 24px;
+        font-weight: 700;
+        text-shadow: 0 2px 8px ${framePalette.primary}40;
       }
       p {
-        line-height: 1.6;
+        line-height: 1.7;
         color: #e2e7ff;
-        margin: 15px 0;
+        margin: 12px 0;
+        font-size: 15px;
+      }
+      .meta-info {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 16px 0;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+        border: 1px solid ${framePalette.primary}20;
+      }
+      .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .meta-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: ${framePalette.secondary};
+        letter-spacing: 0.5px;
+        font-weight: 600;
+      }
+      .meta-value {
+        font-size: 16px;
+        color: ${framePalette.accent};
+        font-weight: 700;
       }
       a {
-        color: #5ad2ff;
+        color: ${framePalette.accent};
         text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
       }
       a:hover {
         text-decoration: underline;
+        text-shadow: 0 0 8px ${framePalette.accent}60;
+      }
+      .powered-by {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid ${framePalette.primary}20;
+        font-size: 12px;
+        color: ${framePalette.secondary}80;
+        text-align: center;
       }
     </style>
   </head>
   <body>
     <div class="container">
+      <span class="frame-badge">${framePalette.label}</span>
       <h1>${pageTitle}</h1>
       <p>${desc}</p>
+      <div class="powered-by">Powered by @gmeowbased</div>
     </div>
   </body>
 </html>`
@@ -1541,6 +1630,7 @@ export async function GET(req: Request) {
         chainKey,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -1568,6 +1658,7 @@ export async function GET(req: Request) {
         debug: debugPayload,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -1623,6 +1714,7 @@ export async function GET(req: Request) {
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         chainKey: (params.chain as string) || null,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -1669,6 +1761,7 @@ export async function GET(req: Request) {
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         chainKey: (params.chain as string) || null,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -1885,6 +1978,7 @@ export async function GET(req: Request) {
         chainKey,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2044,6 +2138,7 @@ export async function GET(req: Request) {
         chainKey,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2064,6 +2159,7 @@ export async function GET(req: Request) {
         debug: debugPayload,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2084,6 +2180,7 @@ export async function GET(req: Request) {
       debug: debugPayload,
       frameOrigin: origin,
       frameVersion: FRAME_VERSION,
+      frameType: 'generic',
     })
     return createHtmlResponse(html)
   } catch (err: any) {
@@ -2105,6 +2202,7 @@ export async function GET(req: Request) {
       debug: debugMode ? traces : undefined,
       frameOrigin: fallbackOrigin,
       frameVersion: FRAME_VERSION,
+      frameType: 'generic',
     })
     return createHtmlResponse(html, { status: 500 })
   }
