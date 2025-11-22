@@ -1,0 +1,111 @@
+
+> @0xheycat/gmeow-adventure@0.1.1 test:cache
+> tsx ./scripts/test-frame-cache.ts
+
+🚀 Frame Cache Test Suite
+Base URL: http://localhost:3002
+Test FID: 18139
+
+🧪 Test 1: Redis Connection
+[FRAME_CACHE] Redis client initialized
+✅ Redis connected (1971ms)
+
+🧪 Test 2: Cache Statistics
+✅ Cache stats retrieved (279ms)
+   Total keys: 0
+
+🧪 Test 3.gm: Frame Image Cache MISS (gm)
+✅ Frame generated (4124ms)
+   Cache: MISS
+   Type: image/png
+   Render: 3218ms
+
+🧪 Test 4.gm: Frame Image Cache HIT (gm)
+✅ Frame retrieved (2298ms)
+   Cache: MISS
+   Render: 2032ms
+
+🧪 Test 6.gm: Performance Comparison (gm)
+[FRAME_CACHE] Cleared 1 cached frames
+✅ Performance comparison:
+   Cold (MISS): 2243ms
+   Warm (HIT):  1808ms
+   Improvement: 19.4% faster (1.2x speedup)
+
+🧪 Test 3.quest: Frame Image Cache MISS (quest)
+✅ Frame generated (1663ms)
+   Cache: MISS
+   Type: image/png
+   Render: 1601ms
+
+🧪 Test 4.quest: Frame Image Cache HIT (quest)
+✅ Frame retrieved (1638ms)
+   Cache: MISS
+   Render: 1567ms
+
+🧪 Test 6.quest: Performance Comparison (quest)
+[FRAME_CACHE] Cleared 2 cached frames
+✅ Performance comparison:
+   Cold (MISS): 1585ms
+   Warm (HIT):  1606ms
+   Improvement: -1.3% faster (1.0x speedup)
+
+🧪 Test 3.onchainstats: Frame Image Cache MISS (onchainstats)
+✅ Frame generated (1633ms)
+   Cache: MISS
+   Type: image/png
+   Render: 1550ms
+
+🧪 Test 4.onchainstats: Frame Image Cache HIT (onchainstats)
+✅ Frame retrieved (1666ms)
+   Cache: MISS
+   Render: 1595ms
+
+🧪 Test 6.onchainstats: Performance Comparison (onchainstats)
+[FRAME_CACHE] Cleared 2 cached frames
+✅ Performance comparison:
+   Cold (MISS): 1618ms
+   Warm (HIT):  1623ms
+   Improvement: -0.3% faster (1.0x speedup)
+
+🧪 Test 3.badge: Frame Image Cache MISS (badge)
+✅ Frame generated (1572ms)
+   Cache: MISS
+   Type: image/png
+   Render: 1528ms
+
+🧪 Test 4.badge: Frame Image Cache HIT (badge)
+✅ Frame retrieved (1557ms)
+   Cache: MISS
+   Render: 1510ms
+
+🧪 Test 6.badge: Performance Comparison (badge)
+[FRAME_CACHE] Cleared 2 cached frames
+✅ Performance comparison:
+   Cold (MISS): 1577ms
+   Warm (HIT):  1565ms
+   Improvement: 0.8% faster (1.0x speedup)
+
+🧪 Test 5: Cache Invalidation
+[FRAME_CACHE] Cleared 1 cached frames
+✅ Cache cleared (570ms)
+   Removed: 1 keys
+
+============================================================
+📊 TEST SUMMARY
+============================================================
+
+Total: 15 tests
+✅ Passed: 9
+❌ Failed: 6
+Success Rate: 60.0%
+
+❌ Failed Tests:
+   - gm Cache HIT: Expected HIT, got MISS
+   - quest Cache HIT: Expected HIT, got MISS
+   - quest Performance: Unknown error
+   - onchainstats Cache HIT: Expected HIT, got MISS
+   - onchainstats Performance: Unknown error
+   - badge Cache HIT: Expected HIT, got MISS
+
+============================================================
