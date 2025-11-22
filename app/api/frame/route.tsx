@@ -2779,6 +2779,307 @@ export async function POST(req: Request) {
       }
     }
 
+    // Phase 1B.1: checkBadges - Check user's badge eligibility
+    if (action === 'checkBadges') {
+      const fid = payload.fid || payload.untrustedData?.fid
+      
+      if (!fid) {
+        return respondJson({ ok: false, reason: 'missing fid', traces }, { status: 400 })
+      }
+      
+      tracePush(traces, 'checkBadges-start', { fid })
+      
+      try {
+        // Mock badge data (in production, query from database or contract)
+        const earnedBadges = [
+          { id: 1, name: 'Early Adopter', earned: true, timestamp: '2025-11-01' },
+          { id: 2, name: 'GM Streak Master', earned: true, timestamp: '2025-11-15' },
+        ]
+        
+        const eligibleBadges = [
+          { id: 3, name: 'Quest Completionist', requirement: 'Complete 10 quests', progress: '7/10' },
+          { id: 4, name: 'Points Whale', requirement: 'Earn 10,000 points', progress: '6,543/10,000' },
+        ]
+        
+        const message = `🏅 Badge Status for FID ${fid}:\n\n` +
+                       `Earned: ${earnedBadges.length} badges\n` +
+                       `${earnedBadges.map(b => `• ${b.name}`).join('\n')}\n\n` +
+                       `Eligible: ${eligibleBadges.length} badges\n` +
+                       `${eligibleBadges.map(b => `• ${b.name} (${b.progress})`).join('\n')}\n\n` +
+                       `Keep earning! 🎯`
+        
+        tracePush(traces, 'checkBadges-success', { fid, earned: earnedBadges.length, eligible: eligibleBadges.length })
+        
+        return respondJson({
+          ok: true,
+          fid: Number(fid),
+          badges: {
+            earned: earnedBadges,
+            eligible: eligibleBadges,
+            total: earnedBadges.length,
+          },
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'checkBadges-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to check badges', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
+    // Phase 1B.1: mintBadge - Mint a badge NFT
+    if (action === 'mintBadge') {
+      const fid = payload.fid || payload.untrustedData?.fid
+      const badgeId = payload.badgeId || payload.badge_id
+      
+      if (!fid) {
+        return respondJson({ ok: false, reason: 'missing fid', traces }, { status: 400 })
+      }
+      
+      if (!badgeId) {
+        return respondJson({ ok: false, reason: 'missing badgeId', traces }, { status: 400 })
+      }
+      
+      tracePush(traces, 'mintBadge-start', { fid, badgeId })
+      
+      try {
+        // Mock mint (in production, create transaction call object)
+        const message = `🎴 Badge Mint Initiated!\n\n` +
+                       `Badge ID: ${badgeId}\n` +
+                       `FID: ${fid}\n\n` +
+                       `Check your wallet to complete the mint transaction.\n\n` +
+                       `Congrats! 🎉`
+        
+        tracePush(traces, 'mintBadge-success', { fid, badgeId })
+        
+        return respondJson({
+          ok: true,
+          fid: Number(fid),
+          badgeId: Number(badgeId),
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'mintBadge-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to mint badge', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
+    // Phase 1B.1: refreshStats - Refresh onchain statistics
+    if (action === 'refreshStats') {
+      const userAddr = payload.user || payload.addr || payload.address
+      const chainKey = payload.chain || 'base'
+      
+      if (!userAddr) {
+        return respondJson({ ok: false, reason: 'missing user address', traces }, { status: 400 })
+      }
+      
+      tracePush(traces, 'refreshStats-start', { userAddr, chainKey })
+      
+      try {
+        const chainDisplay = getChainDisplayName(String(chainKey))
+        
+        // Mock stats refresh (in production, query Neynar/Explorer APIs)
+        const stats = {
+          transactions: 1247,
+          contracts: 23,
+          volume: '2.45 ETH',
+          age: '542 days',
+          lastActivity: '2 hours ago',
+        }
+        
+        const message = `📊 Stats Refreshed on ${chainDisplay}:\n\n` +
+                       `Transactions: ${stats.transactions}\n` +
+                       `Contracts: ${stats.contracts}\n` +
+                       `Volume: ${stats.volume}\n` +
+                       `Age: ${stats.age}\n` +
+                       `Last Activity: ${stats.lastActivity}\n\n` +
+                       `Data updated! ✨`
+        
+        tracePush(traces, 'refreshStats-success', { userAddr, chainKey, stats })
+        
+        return respondJson({
+          ok: true,
+          user: userAddr,
+          chain: chainKey,
+          stats,
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'refreshStats-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to refresh stats', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
+    // Phase 1B.1: viewGuild - View guild details
+    if (action === 'viewGuild') {
+      const guildId = payload.guildId || payload.guild_id || payload.teamname
+      const chainKey = payload.chain || 'base'
+      
+      if (!guildId) {
+        return respondJson({ ok: false, reason: 'missing guildId', traces }, { status: 400 })
+      }
+      
+      tracePush(traces, 'viewGuild-start', { guildId, chainKey })
+      
+      try {
+        const chainDisplay = getChainDisplayName(String(chainKey))
+        
+        // Mock guild data (in production, query from database or contract)
+        const guild = {
+          id: guildId,
+          name: `Guild ${guildId}`,
+          members: 42,
+          totalPoints: 125000,
+          rank: 7,
+          chain: chainDisplay,
+        }
+        
+        const message = `⚔️ Guild Info:\n\n` +
+                       `Name: ${guild.name}\n` +
+                       `Members: ${guild.members}\n` +
+                       `Total Points: ${formatInteger(guild.totalPoints)}\n` +
+                       `Rank: #${guild.rank}\n` +
+                       `Chain: ${guild.chain}\n\n` +
+                       `Join the crew! 🛡️`
+        
+        tracePush(traces, 'viewGuild-success', { guildId, chainKey, guild })
+        
+        return respondJson({
+          ok: true,
+          guild,
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'viewGuild-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to view guild', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
+    // Phase 1B.1: viewReferrals - View referral statistics
+    if (action === 'viewReferrals') {
+      const fid = payload.fid || payload.untrustedData?.fid
+      const userAddr = payload.user || payload.addr || payload.address
+      
+      if (!fid && !userAddr) {
+        return respondJson({ ok: false, reason: 'missing fid or user address', traces }, { status: 400 })
+      }
+      
+      tracePush(traces, 'viewReferrals-start', { fid, userAddr })
+      
+      try {
+        // Mock referral data (in production, query from database)
+        const referralCode = 'MEOW42'
+        const stats = {
+          code: referralCode,
+          referrals: 15,
+          activeReferrals: 12,
+          totalPoints: 3750,
+          rank: 23,
+        }
+        
+        const message = `🎁 Your Referral Stats:\n\n` +
+                       `Code: ${stats.code}\n` +
+                       `Total Referrals: ${stats.referrals}\n` +
+                       `Active: ${stats.activeReferrals}\n` +
+                       `Points Earned: ${formatInteger(stats.totalPoints)}\n` +
+                       `Referrer Rank: #${stats.rank}\n\n` +
+                       `Share your code! 🚀`
+        
+        tracePush(traces, 'viewReferrals-success', { fid, userAddr, stats })
+        
+        return respondJson({
+          ok: true,
+          fid: fid ? Number(fid) : null,
+          user: userAddr,
+          referrals: stats,
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'viewReferrals-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to view referrals', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
+    // Phase 1B.1: tipUser - Tip points to another user
+    if (action === 'tipUser') {
+      const fromFid = payload.fid || payload.untrustedData?.fid || payload.fromFid
+      const toFid = payload.toFid || payload.to_fid || payload.recipient
+      const amount = payload.amount || payload.points || 10
+      
+      if (!fromFid) {
+        return respondJson({ ok: false, reason: 'missing sender fid', traces }, { status: 400 })
+      }
+      
+      if (!toFid) {
+        return respondJson({ ok: false, reason: 'missing recipient fid', traces }, { status: 400 })
+      }
+      
+      tracePush(traces, 'tipUser-start', { fromFid, toFid, amount })
+      
+      try {
+        // Mock tip (in production, update database and create transaction)
+        const message = `💸 Tip Sent!\n\n` +
+                       `From: FID ${fromFid}\n` +
+                       `To: FID ${toFid}\n` +
+                       `Amount: ${amount} points\n\n` +
+                       `Generosity is the way! 🤝`
+        
+        tracePush(traces, 'tipUser-success', { fromFid, toFid, amount })
+        
+        return respondJson({
+          ok: true,
+          from: Number(fromFid),
+          to: Number(toFid),
+          amount: Number(amount),
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'tipUser-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to tip user', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
     // fallback: echo
     tracePush(traces, 'post-unknown-action', { action, payload })
     return respondJson({ ok: true, message: 'unknown action; no-op', action, payload, traces })
