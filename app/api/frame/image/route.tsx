@@ -4,12 +4,32 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react/forbid-dom-props */
 import { ImageResponse } from 'next/og'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 
-export const runtime = 'edge'
-export const revalidate = 60
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const WIDTH = 600
 const HEIGHT = 400 // 3:2 aspect ratio per Farcaster spec (matches badge frames)
+
+/**
+ * Load image from filesystem and convert to base64 data URL
+ * This works in nodejs runtime (matches badge frame implementation)
+ */
+async function loadImageAsDataUrl(relativePath: string): Promise<string | null> {
+  try {
+    const absolutePath = join(process.cwd(), 'public', relativePath)
+    const buffer = await readFile(absolutePath)
+    const base64 = buffer.toString('base64')
+    const ext = relativePath.split('.').pop()
+    const mimeType = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp'
+    return `data:${mimeType};base64,${base64}`
+  } catch (err) {
+    console.error(`[Frame Image] Failed to load ${relativePath}:`, err)
+    return null
+  }
+}
 
 function readParam(url: URL, name: string, fallback = '') {
   const value = url.searchParams.get(name)
@@ -34,6 +54,9 @@ export async function GET(req: Request) {
   const user = readParam(url, 'user')
   const fid = readParam(url, 'fid')
 
+  // Load og-image.png background (matches badge frame implementation)
+  const ogImageData = await loadImageAsDataUrl('og-image.png')
+
   // GM frame type - Yu-Gi-Oh! Card Structure
   if (type === 'gm') {
     const gmCount = readParam(url, 'gmCount', '0')
@@ -54,9 +77,35 @@ export async function GET(req: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #2a1a0a 30%, #1f0f0a 60%, #0a0a0a 100%)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Background: og-image.png or gradient fallback */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 1.0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #2a1a0a 30%, #1f0f0a 60%, #0a0a0a 100%)',
+              }}
+            />
+          )}
+
           {/* Yu-Gi-Oh! Card Container */}
           <div
             style={{
@@ -121,7 +170,7 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* Main content */}
+            {/* Main content area */}
             <div
               style={{
                 display: 'flex',
@@ -129,101 +178,111 @@ export async function GET(req: Request) {
                 gap: 16,
               }}
             >
-              {/* Left: GM emoji/icon */}
+              {/* Left: GM icon + User Info */}
               <div
                 style={{
-                  width: 160,
-                  height: 160,
-                  borderRadius: 10,
-                  background: `linear-gradient(135deg, ${gmPalette.start}, ${gmPalette.end})`,
-                  border: `3px solid ${gmPalette.start}`,
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 80,
+                  flexDirection: 'column',
+                  gap: 10,
                 }}
               >
-                ☀️
+                {/* GM Icon */}
+                <div
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${gmPalette.start}, ${gmPalette.end})`,
+                    border: `3px solid ${gmPalette.start}`,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 100,
+                  }}
+                >
+                  ☀️
+                </div>
+
+                {/* User info below icon */}
+                {(user || fid) && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      padding: '10px 12px',
+                      background: `linear-gradient(135deg, ${gmPalette.start}30, ${gmPalette.end}25)`,
+                      borderRadius: 8,
+                      border: `2px solid ${gmPalette.start}`,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                      👤 {user ? shortenAddress(user) : `FID ${fid}`}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right: GM stats */}
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  flex: 1,
-                  gap: 10,
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
                 }}
               >
-                {/* User identifier */}
-                <div
-                  style={{
-                    display: 'flex',
-                    fontSize: 18,
-                    fontWeight: 800,
-                    color: '#ffffff',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {user ? shortenAddress(user) : fid ? `FID ${fid}` : 'GM!'}
-                </div>
-
-                {/* Stats grid */}
+                {/* Title - More prominent */}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 8,
-                    marginTop: 8,
+                    gap: 12,
                   }}
                 >
-                  {/* Total GMs */}
                   <div
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${gmPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${gmPalette.start}40`,
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${gmPalette.start}60`,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>TOTAL</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: gmPalette.start }}>{gmCount} GMs</div>
+                    Good Morning!
                   </div>
 
-                  {/* Streak */}
+                  {/* Stats box */}
                   <div
                     style={{
+                      marginTop: 10,
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${gmPalette.start}20`,
+                      flexDirection: 'column',
+                      padding: 10,
+                      background: 'rgba(30, 30, 32, 0.6)',
+                      border: `1px solid ${gmPalette.start}`,
                       borderRadius: 8,
-                      border: `2px solid ${gmPalette.start}40`,
+                      opacity: 0.8,
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>STREAK</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: gmPalette.start }}>🔥 {streak}</div>
-                  </div>
-
-                  {/* Rank */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${gmPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${gmPalette.start}40`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>RANK</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>#{rank}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>TOTAL GMs:</span>
+                      <span style={{ color: gmPalette.start }}>{gmCount}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>STREAK:</span>
+                      <span style={{ color: gmPalette.start }}>🔥 {streak}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                      <span style={{ opacity: 0.6 }}>Rank:</span>
+                      <span style={{ opacity: 0.9 }}>#{rank}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -270,9 +329,35 @@ export async function GET(req: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a2a 30%, #0a1f2f 60%, #0a0a0a 100%)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Background: og-image.png or gradient fallback */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 1.0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a2a 30%, #0a1f2f 60%, #0a0a0a 100%)',
+              }}
+            />
+          )}
+
           {/* Yu-Gi-Oh! Card Container */}
           <div
             style={{
@@ -337,7 +422,7 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* Main content */}
+            {/* Main content area */}
             <div
               style={{
                 display: 'flex',
@@ -345,101 +430,111 @@ export async function GET(req: Request) {
                 gap: 16,
               }}
             >
-              {/* Left: Guild icon */}
+              {/* Left: Guild icon + User Info */}
               <div
                 style={{
-                  width: 160,
-                  height: 160,
-                  borderRadius: 10,
-                  background: `linear-gradient(135deg, ${guildPalette.start}, ${guildPalette.end})`,
-                  border: `3px solid ${guildPalette.start}`,
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 80,
+                  flexDirection: 'column',
+                  gap: 10,
                 }}
               >
-                🛡️
+                {/* Guild Icon */}
+                <div
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${guildPalette.start}, ${guildPalette.end})`,
+                    border: `3px solid ${guildPalette.start}`,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 100,
+                  }}
+                >
+                  🛡️
+                </div>
+
+                {/* User info below icon */}
+                {(user || fid) && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      padding: '10px 12px',
+                      background: `linear-gradient(135deg, ${guildPalette.start}30, ${guildPalette.end}25)`,
+                      borderRadius: 8,
+                      border: `2px solid ${guildPalette.start}`,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                      👤 {user ? shortenAddress(user) : `FID ${fid}`}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right: Guild details */}
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  flex: 1,
-                  gap: 10,
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
                 }}
               >
-                {/* Guild name */}
-                <div
-                  style={{
-                    display: 'flex',
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: '#ffffff',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {guildName}
-                </div>
-
-                {/* Stats grid */}
+                {/* Guild name - More prominent */}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 8,
-                    marginTop: 8,
+                    gap: 12,
                   }}
                 >
-                  {/* Members */}
                   <div
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${guildPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${guildPalette.start}40`,
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${guildPalette.start}60`,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>MEMBERS</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: guildPalette.start }}>{members} 👥</div>
+                    {guildName}
                   </div>
 
-                  {/* Active Quests */}
+                  {/* Stats box */}
                   <div
                     style={{
+                      marginTop: 10,
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${guildPalette.start}20`,
+                      flexDirection: 'column',
+                      padding: 10,
+                      background: 'rgba(30, 30, 32, 0.6)',
+                      border: `1px solid ${guildPalette.start}`,
                       borderRadius: 8,
-                      border: `2px solid ${guildPalette.start}40`,
+                      opacity: 0.8,
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>QUESTS</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: guildPalette.start }}>{quests} active</div>
-                  </div>
-
-                  {/* Level */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${guildPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${guildPalette.start}40`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>LEVEL</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>{level}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>MEMBERS:</span>
+                      <span style={{ color: guildPalette.start }}>{members} 👥</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>QUESTS:</span>
+                      <span style={{ color: guildPalette.start }}>{quests} active</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                      <span style={{ opacity: 0.6 }}>Level:</span>
+                      <span style={{ opacity: 0.9 }}>{level}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -484,9 +579,35 @@ export async function GET(req: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #0a2a0a 30%, #0a1f0a 60%, #0a0a0a 100%)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Background: og-image.png or gradient fallback */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 1.0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #0a2a0a 30%, #0a1f0a 60%, #0a0a0a 100%)',
+              }}
+            />
+          )}
+
           {/* Yu-Gi-Oh! Card Container */}
           <div
             style={{
@@ -552,7 +673,7 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* Main content */}
+            {/* Main content area */}
             <div
               style={{
                 display: 'flex',
@@ -560,108 +681,110 @@ export async function GET(req: Request) {
                 gap: 16,
               }}
             >
-              {/* Left: Verify icon */}
+              {/* Left: Verify icon + User Info */}
               <div
                 style={{
-                  width: 160,
-                  height: 160,
-                  borderRadius: 10,
-                  background: `linear-gradient(135deg, ${verifyPalette.start}, ${verifyPalette.end})`,
-                  border: `3px solid ${verifyPalette.start}`,
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 80,
+                  flexDirection: 'column',
+                  gap: 10,
                 }}
               >
-                ✅
+                {/* Verify Icon */}
+                <div
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${verifyPalette.start}, ${verifyPalette.end})`,
+                    border: `3px solid ${verifyPalette.start}`,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 100,
+                  }}
+                >
+                  ✅
+                </div>
+
+                {/* User info below icon */}
+                {(user || fid) && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      padding: '10px 12px',
+                      background: `linear-gradient(135deg, ${verifyPalette.start}30, ${verifyPalette.end}25)`,
+                      borderRadius: 8,
+                      border: `2px solid ${verifyPalette.start}`,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#000000', textShadow: '0 1px 3px rgba(255, 255, 255, 0.8)' }}>
+                      👤 {user ? shortenAddress(user) : `FID ${fid}`}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right: Verification details */}
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  flex: 1,
-                  gap: 10,
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
                 }}
               >
-                {/* Title */}
-                <div
-                  style={{
-                    display: 'flex',
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: '#ffffff',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {questName}
-                </div>
-
-                {/* Verification info */}
+                {/* Title - More prominent */}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 8,
-                    marginTop: 8,
+                    gap: 12,
                   }}
                 >
-                  {/* Status */}
                   <div
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${verifyPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${verifyPalette.start}40`,
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${verifyPalette.start}60`,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>STATUS</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: verifyPalette.start }}>{status}</div>
+                    {questName}
                   </div>
 
-                  {/* Quest ID */}
-                  {questId && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '8px 12px',
-                        background: `${verifyPalette.start}20`,
-                        borderRadius: 8,
-                        border: `2px solid ${verifyPalette.start}40`,
-                      }}
-                    >
-                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>QUEST</div>
-                      <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>#{questId}</div>
+                  {/* Verification info box */}
+                  <div
+                    style={{
+                      marginTop: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      padding: 10,
+                      background: 'rgba(30, 30, 32, 0.6)',
+                      border: `1px solid ${verifyPalette.start}`,
+                      borderRadius: 8,
+                      opacity: 0.8,
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>STATUS:</span>
+                      <span style={{ color: verifyPalette.start }}>{status}</span>
                     </div>
-                  )}
-
-                  {/* User info */}
-                  {(user || fid) && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '8px 12px',
-                        background: `${verifyPalette.start}20`,
-                        borderRadius: 8,
-                        border: `2px solid ${verifyPalette.start}40`,
-                      }}
-                    >
-                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>USER</div>
-                      <div style={{ display: 'flex', fontSize: 14, fontWeight: 700, color: '#ffffff', opacity: 0.9 }}>
-                        {user ? shortenAddress(user) : `FID ${fid}`}
+                    {questId && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                        <span style={{ opacity: 0.6 }}>Quest:</span>
+                        <span style={{ opacity: 0.9 }}>#{questId}</span>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -708,9 +831,35 @@ export async function GET(req: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2a 30%, #0f0f1f 60%, #0a0a0a 100%)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Background: og-image.png or gradient fallback */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 1.0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2a 30%, #0f0f1f 60%, #0a0a0a 100%)',
+              }}
+            />
+          )}
+
           {/* Yu-Gi-Oh! Card Container */}
           <div
             style={{
@@ -775,7 +924,7 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* Main content */}
+            {/* Main content area */}
             <div
               style={{
                 display: 'flex',
@@ -783,103 +932,113 @@ export async function GET(req: Request) {
                 gap: 16,
               }}
             >
-              {/* Left: Quest icon placeholder */}
+              {/* Left: Quest icon + User Info */}
               <div
                 style={{
-                  width: 160,
-                  height: 160,
-                  borderRadius: 10,
-                  background: `linear-gradient(135deg, ${questPalette.start}, ${questPalette.end})`,
-                  border: `3px solid ${questPalette.start}`,
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 64,
+                  flexDirection: 'column',
+                  gap: 10,
                 }}
               >
-                🎯
+                {/* Quest Icon */}
+                <div
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${questPalette.start}, ${questPalette.end})`,
+                    border: `3px solid ${questPalette.start}`,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 80,
+                  }}
+                >
+                  🎯
+                </div>
+
+                {/* User info below icon */}
+                {(user || fid) && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      padding: '10px 12px',
+                      background: `linear-gradient(135deg, ${questPalette.start}30, ${questPalette.end}25)`,
+                      borderRadius: 8,
+                      border: `2px solid ${questPalette.start}`,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                      👤 {user ? shortenAddress(user) : `FID ${fid}`}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right: Quest details */}
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  flex: 1,
-                  gap: 10,
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
                 }}
               >
-                {/* Quest name */}
-                <div
-                  style={{
-                    display: 'flex',
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: '#ffffff',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {questName}
-                </div>
-
-                {/* Stats grid */}
+                {/* Quest name - More prominent */}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 8,
-                    marginTop: 8,
+                    gap: 12,
                   }}
                 >
-                  {/* Reward */}
                   <div
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${questPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${questPalette.start}40`,
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${questPalette.start}60`,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>REWARD</div>
-                    <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: questPalette.start }}>+{reward} 🐾</div>
+                    {questName}
                   </div>
 
-                  {/* Slots Left */}
-                  {slotsLeft !== '—' && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '8px 12px',
-                        background: `${questPalette.start}20`,
-                        borderRadius: 8,
-                        border: `2px solid ${questPalette.start}40`,
-                      }}
-                    >
-                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>SLOTS</div>
-                      <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: questPalette.start }}>{slotsLeft} left</div>
-                    </div>
-                  )}
-
-                  {/* Expires */}
+                  {/* Description box with stats */}
                   <div
                     style={{
+                      marginTop: 10,
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${questPalette.start}20`,
+                      flexDirection: 'column',
+                      padding: 10,
+                      background: 'rgba(30, 30, 32, 0.6)',
+                      border: `1px solid ${questPalette.start}`,
                       borderRadius: 8,
-                      border: `2px solid ${questPalette.start}40`,
+                      opacity: 0.8,
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>ENDS</div>
-                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 700, color: '#ffffff', opacity: 0.9 }}>{expires}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>REWARD:</span>
+                      <span style={{ color: questPalette.start }}>+{reward} 🐾</span>
+                    </div>
+                    {slotsLeft !== '—' && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                        <span style={{ opacity: 0.7 }}>SLOTS:</span>
+                        <span style={{ color: questPalette.start }}>{slotsLeft} left</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                      <span style={{ opacity: 0.6 }}>Expires:</span>
+                      <span style={{ opacity: 0.9 }}>{expires}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -925,9 +1084,35 @@ export async function GET(req: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a2a 30%, #0a1f1f 60%, #0a0a0a 100%)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Background: og-image.png or gradient fallback */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 1.0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a2a 30%, #0a1f1f 60%, #0a0a0a 100%)',
+              }}
+            />
+          )}
+
           {/* Yu-Gi-Oh! Card Container */}
           <div
             style={{
@@ -992,7 +1177,7 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* Main content */}
+            {/* Main content area */}
             <div
               style={{
                 display: 'flex',
@@ -1000,101 +1185,111 @@ export async function GET(req: Request) {
                 gap: 16,
               }}
             >
-              {/* Left: Stats icon */}
+              {/* Left: Stats icon + User Info */}
               <div
                 style={{
-                  width: 160,
-                  height: 160,
-                  borderRadius: 10,
-                  background: `linear-gradient(135deg, ${statsPalette.start}, ${statsPalette.end})`,
-                  border: `3px solid ${statsPalette.start}`,
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 80,
+                  flexDirection: 'column',
+                  gap: 10,
                 }}
               >
-                📊
+                {/* Stats Icon */}
+                <div
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${statsPalette.start}, ${statsPalette.end})`,
+                    border: `3px solid ${statsPalette.start}`,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 100,
+                  }}
+                >
+                  📊
+                </div>
+
+                {/* User info below icon */}
+                {(address || fid) && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      padding: '10px 12px',
+                      background: `linear-gradient(135deg, ${statsPalette.start}30, ${statsPalette.end}25)`,
+                      borderRadius: 8,
+                      border: `2px solid ${statsPalette.start}`,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                      👤 {address ? shortenAddress(address) : `FID ${fid}`}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right: Stats data */}
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  flex: 1,
-                  gap: 10,
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
                 }}
               >
-                {/* User address */}
-                <div
-                  style={{
-                    display: 'flex',
-                    fontSize: 16,
-                    fontWeight: 800,
-                    color: '#ffffff',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {address ? shortenAddress(address) : fid ? `FID ${fid}` : 'Onchain Stats'}
-                </div>
-
-                {/* Stats grid */}
+                {/* Title - More prominent */}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 8,
-                    marginTop: 8,
+                    gap: 12,
                   }}
                 >
-                  {/* Transactions */}
                   <div
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${statsPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${statsPalette.start}40`,
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${statsPalette.start}60`,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>TXS</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: statsPalette.start }}>{totalTxs}</div>
+                    Onchain Stats
                   </div>
 
-                  {/* Balance */}
+                  {/* Stats box */}
                   <div
                     style={{
+                      marginTop: 10,
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${statsPalette.start}20`,
+                      flexDirection: 'column',
+                      padding: 10,
+                      background: 'rgba(30, 30, 32, 0.6)',
+                      border: `1px solid ${statsPalette.start}`,
                       borderRadius: 8,
-                      border: `2px solid ${statsPalette.start}40`,
+                      opacity: 0.8,
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>BALANCE</div>
-                    <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: statsPalette.start }}>{balance} ETH</div>
-                  </div>
-
-                  {/* Score */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${statsPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${statsPalette.start}40`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>SCORE</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>{score}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>TXS:</span>
+                      <span style={{ color: statsPalette.start }}>{totalTxs}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>BALANCE:</span>
+                      <span style={{ color: statsPalette.start }}>{balance} ETH</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                      <span style={{ opacity: 0.6 }}>Score:</span>
+                      <span style={{ opacity: 0.9 }}>{score}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1138,9 +1333,35 @@ export async function GET(req: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a2a 30%, #1f0f2f 60%, #0a0a0a 100%)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Background: og-image.png or gradient fallback */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 1.0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a2a 30%, #1f0f2f 60%, #0a0a0a 100%)',
+              }}
+            />
+          )}
+
           {/* Yu-Gi-Oh! Card Container */}
           <div
             style={{
@@ -1205,7 +1426,7 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* Main content */}
+            {/* Main content area */}
             <div
               style={{
                 display: 'flex',
@@ -1213,101 +1434,88 @@ export async function GET(req: Request) {
                 gap: 16,
               }}
             >
-              {/* Left: Trophy icon */}
+              {/* Left: Trophy icon (no user info for leaderboards) */}
               <div
                 style={{
-                  width: 160,
-                  height: 160,
-                  borderRadius: 10,
-                  background: `linear-gradient(135deg, ${leaderboardPalette.start}, ${leaderboardPalette.end})`,
-                  border: `3px solid ${leaderboardPalette.start}`,
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 80,
+                  flexDirection: 'column',
+                  gap: 10,
                 }}
               >
-                🏆
+                {/* Trophy Icon */}
+                <div
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${leaderboardPalette.start}, ${leaderboardPalette.end})`,
+                    border: `3px solid ${leaderboardPalette.start}`,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 100,
+                  }}
+                >
+                  🏆
+                </div>
               </div>
 
               {/* Right: Leaderboard info */}
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  flex: 1,
-                  gap: 10,
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
                 }}
               >
-                {/* Title */}
-                <div
-                  style={{
-                    display: 'flex',
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: '#ffffff',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  Top Performers
-                </div>
-
-                {/* Stats info */}
+                {/* Title - More prominent */}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 8,
-                    marginTop: 8,
+                    gap: 12,
                   }}
                 >
-                  {/* Season */}
                   <div
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${leaderboardPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${leaderboardPalette.start}40`,
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${leaderboardPalette.start}60`,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>SEASON</div>
-                    <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: leaderboardPalette.start }}>{season}</div>
+                    Top Performers
                   </div>
 
-                  {/* Top limit */}
+                  {/* Info box */}
                   <div
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${leaderboardPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${leaderboardPalette.start}40`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>SHOWING</div>
-                    <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: leaderboardPalette.start }}>Top {limit}</div>
-                  </div>
-
-                  {/* Categories */}
-                  <div
-                    style={{
+                      marginTop: 10,
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 4,
-                      padding: '8px 12px',
-                      background: `${leaderboardPalette.start}20`,
+                      padding: 10,
+                      background: 'rgba(30, 30, 32, 0.6)',
+                      border: `1px solid ${leaderboardPalette.start}`,
                       borderRadius: 8,
-                      border: `2px solid ${leaderboardPalette.start}40`,
+                      opacity: 0.8,
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>TRACKING</div>
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: '#ffffff', opacity: 0.8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>SEASON:</span>
+                      <span style={{ color: leaderboardPalette.start }}>{season}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>SHOWING:</span>
+                      <span style={{ color: leaderboardPalette.start }}>Top {limit}</span>
+                    </div>
+                    <div style={{ display: 'flex', fontSize: 10, fontWeight: 600, opacity: 0.7, marginTop: 4 }}>
                       GM Streaks • Quests • XP • Badges
                     </div>
                   </div>
@@ -1359,9 +1567,35 @@ export async function GET(req: Request) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a2a 30%, #0a1f1f 60%, #0a0a0a 100%)',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* Background: og-image.png or gradient fallback */}
+        {ogImageData ? (
+          <img
+            src={ogImageData}
+            alt="background"
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 1.0,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              display: 'flex',
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a2a 30%, #0a1f1f 60%, #0a0a0a 100%)',
+            }}
+          />
+        )}
+
         {/* Yu-Gi-Oh! Card Container */}
         <div
           style={{
@@ -1426,7 +1660,7 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          {/* Main content */}
+          {/* Main content area */}
           <div
             style={{
               display: 'flex',
@@ -1434,130 +1668,118 @@ export async function GET(req: Request) {
               gap: 16,
             }}
           >
-            {/* Left: Stats icon */}
+            {/* Left: Stats icon + User Info */}
             <div
               style={{
-                width: 160,
-                height: 160,
-                borderRadius: 10,
-                background: `linear-gradient(135deg, ${defaultPalette.start}, ${defaultPalette.end})`,
-                border: `3px solid ${defaultPalette.start}`,
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 80,
+                flexDirection: 'column',
+                gap: 10,
               }}
             >
-              📊
+              {/* Stats Icon */}
+              <div
+                style={{
+                  width: 180,
+                  height: 180,
+                  borderRadius: 10,
+                  background: `linear-gradient(135deg, ${defaultPalette.start}, ${defaultPalette.end})`,
+                  border: `3px solid ${defaultPalette.start}`,
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 100,
+                }}
+              >
+                📊
+              </div>
+
+              {/* User info below icon */}
+              {(address || fid) && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                    padding: '10px 12px',
+                    background: `linear-gradient(135deg, ${defaultPalette.start}30, ${defaultPalette.end}25)`,
+                    borderRadius: 8,
+                    border: `2px solid ${defaultPalette.start}`,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                  }}
+                >
+                  <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                    👤 {address ? shortenAddress(address) : `FID ${fid}`}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right: Stats data */}
             <div
               style={{
+                flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                flex: 1,
-                gap: 10,
+                justifyContent: 'space-between',
+                color: '#ffffff',
               }}
             >
-              {/* User identifier */}
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 16,
-                  fontWeight: 800,
-                  color: '#ffffff',
-                  lineHeight: 1.2,
-                }}
-              >
-                {address ? shortenAddress(address) : fid ? `FID ${fid}` : 'Onchain Stats'}
-              </div>
-
-              {/* Stats grid */}
+              {/* Title - More prominent */}
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 8,
-                  marginTop: 8,
+                  gap: 12,
                 }}
               >
-                {/* Transactions */}
-                {totalTxs !== '—' && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${defaultPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${defaultPalette.start}40`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>TXS</div>
-                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: defaultPalette.start }}>{totalTxs}</div>
-                  </div>
-                )}
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: 28,
+                    fontWeight: 900,
+                    lineHeight: 1.1,
+                    color: '#ffffff',
+                    textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${defaultPalette.start}60`,
+                  }}
+                >
+                  Onchain Stats
+                </div>
 
-                {/* Volume */}
-                {volume !== '—' && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${defaultPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${defaultPalette.start}40`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>VOLUME</div>
-                    <div style={{ display: 'flex', fontSize: 14, fontWeight: 800, color: defaultPalette.start }}>{volume}</div>
-                  </div>
-                )}
-
-                {/* Balance or Age */}
-                {(balance_val !== '—' || age !== '—') && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${defaultPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${defaultPalette.start}40`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>
-                      {balance_val !== '—' ? 'BALANCE' : 'AGE'}
-                    </div>
-                    <div style={{ display: 'flex', fontSize: 14, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>
-                      {balance_val !== '—' ? balance_val : age}
-                    </div>
-                  </div>
-                )}
-
-                {/* Score/Builder */}
-                {score_val !== '—' && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      background: `${defaultPalette.start}20`,
-                      borderRadius: 8,
-                      border: `2px solid ${defaultPalette.start}40`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>SCORE</div>
-                    <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>{score_val}</div>
-                  </div>
-                )}
+                {/* Stats box */}
+                <div
+                  style={{
+                    marginTop: 10,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: 10,
+                    background: 'rgba(30, 30, 32, 0.6)',
+                    border: `1px solid ${defaultPalette.start}`,
+                    borderRadius: 8,
+                    opacity: 0.8,
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                    gap: 8,
+                  }}
+                >
+                    {totalTxs !== '—' && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                        <span style={{ opacity: 0.7 }}>TXS:</span>
+                        <span style={{ color: defaultPalette.start }}>{totalTxs}</span>
+                      </div>
+                    )}
+                    {volume !== '—' && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                        <span style={{ opacity: 0.6 }}>Volume:</span>
+                        <span style={{ opacity: 0.9 }}>{volume}</span>
+                      </div>
+                    )}
+                    {(balance_val !== '—' || age !== '—') && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                        <span style={{ opacity: 0.6 }}>{balance_val !== '—' ? 'Balance:' : 'Age:'}</span>
+                        <span style={{ opacity: 0.9 }}>{balance_val !== '—' ? balance_val : age}</span>
+                      </div>
+                    )}
+                </div>
               </div>
             </div>
           </div>
