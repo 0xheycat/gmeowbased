@@ -412,5 +412,292 @@ Before ANY code changes:
 
 ---
 
+## 🗄️ Cache Strategy & Migration
+
+### Current Cache Implementation
+
+**Three Cache Layers Identified**:
+
+1. **Redis/Upstash Cache** (`lib/frame-cache.ts` - Phase 1A)
+   - Purpose: Image caching only
+   - TTL: 5 minutes (300s)
+   - Key format: `frame:{type}:{fid}:{tier}:{params_hash}`
+   - **Not currently used in master route!**
+   
+2. **Next.js Route Cache** (line 38)
+   ```typescript
+   export const revalidate = 500  // Revalidate every 500 seconds
+   ```
+   - Automatic Next.js ISR (Incremental Static Regeneration)
+   - Caches entire route responses
+   - Works at route level
+   
+3. **HTTP Cache Headers** (line 79)
+   ```typescript
+   'cache-control': 'public, max-age=300, stale-while-revalidate=60'
+   ```
+   - Browser + CDN caching
+   - 5 minutes max-age, 1 minute stale-while-revalidate
+   
+4. **In-Memory Referral Cache** (line 114)
+   ```typescript
+   const referralCache = new Map<string, ReferralCacheEntry>()
+   const REFERRAL_CACHE_TTL = 5 * 60 * 1000  // 5 minutes
+   ```
+   - Process-level cache
+   - Key format: `{chain}:{address}`
+   - Survives during serverless function warmth
+
+### ✅ Good News: Minimal Cache Changes Needed!
+
+**Why?**
+
+1. **Next.js Route-Level Caching Works Automatically**
+   - Each new route (`/api/frame/quest/route.ts`) gets its own cache
+   - `export const revalidate = 500` moves with the route
+   - No cache key conflicts between routes
+
+2. **HTTP Headers Stay Consistent**
+   - Same `Cache-Control` headers on all frame routes
+   - CDN/browser behavior unchanged
+   - No user-facing cache issues
+
+3. **Redis Frame Cache Not Currently Active**
+   - `lib/frame-cache.ts` exists but not imported in master route
+   - Was built for image caching (Phase 1A)
+   - Can be adopted gradually per frame type
+
+4. **Referral Cache is Self-Contained**
+   - Uses address-based keys (not URL-based)
+   - Extract to `lib/referral-cache.ts` once
+   - Reuse across all routes
+
+### Cache Migration Strategy
+
+#### ✅ **Option 1: Keep Current Approach (RECOMMENDED)**
+
+**What to do:**
+- Copy cache configuration to each new route:
+  ```typescript
+  // app/api/frame/quest/route.ts
+  export const revalidate = 500
+  
+  const DEFAULT_HTML_HEADERS = {
+    'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+    // ... other headers
+  }
+  ```
+
+**Benefits:**
+- ✅ Zero behavioral changes
+- ✅ Each route controls its own cache strategy
+- ✅ Can tune per frame type later (e.g., leaderboards might want 60s instead of 300s)
+- ✅ No cache key conflicts
+
+**Drawbacks:**
+- ⚠️ Some duplication (mitigated by extracting to utilities)
+
+#### ⚠️ **Option 2: Activate Redis Cache (FUTURE)**
+
+**When to do this:**
+- After route restructure is complete (Phase 1C+)
+- If response times exceed targets
+- If Vercel function invocations become costly
+
+**How to implement:**
+```typescript
+// app/api/frame/quest/route.ts
+import { getCachedFrame, setCachedFrame } from '@/lib/frame-cache'
+
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams
+  const questId = searchParams.get('questId')
+  const chain = searchParams.get('chain') || 'base'
+  
+  // Try cache first
+  const cacheKey = {
+    type: 'quest',
+    fid: null,  // or extract from auth
+    tier: null,
+    params: { questId, chain }
+  }
+  
+  const cached = await getCachedFrame(cacheKey)
+  if (cached) {
+    return new NextResponse(cached, {
+      headers: { 'content-type': 'text/html', 'x-cache': 'HIT' }
+    })
+  }
+  
+  // Generate frame
+  const response = await handleQuestFrame({ questId, chain })
+  
+  // Cache for next time
+  const buffer = Buffer.from(await response.text())
+  await setCachedFrame(cacheKey, buffer, 300)
+  
+  return response
+}
+```
+
+**Cache Key Structure Remains Valid:**
+- `frame:quest:null:null:a3f8d912` (with params hash)
+- Works for both `/api/frame?type=quest&questId=1` and `/api/frame/quest?questId=1`
+- Params hash is deterministic regardless of URL structure
+
+### 📊 Cache Key Impact Analysis
+
+**Current Key Format**:
+```
+frame:{type}:{fid}:{tier}:{params_hash}
+```
+
+**Example Keys**:
+```
+OLD URL: /api/frame?type=quest&questId=1&chain=base
+Key:     frame:quest:null:null:d4e5f6a7
+
+NEW URL: /api/frame/quest?questId=1&chain=base
+Key:     frame:quest:null:null:d4e5f6a7  ← SAME KEY!
+```
+
+**Why Keys Don't Change:**
+1. Cache key is based on `params` (query string), not URL path
+2. Params hash is deterministic: `{ questId: 1, chain: 'base' }` → always same hash
+3. Type comes from frame logic, not URL
+
+**Conclusion**: ✅ No cache invalidation needed during migration!
+
+### Practical Cache Changes Per Route
+
+#### When Creating `/api/frame/quest/route.ts`:
+
+**1. Copy Route-Level Cache Config (Required)**
+```typescript
+export const revalidate = 500
+```
+
+**2. Copy HTTP Cache Headers (Required)**
+```typescript
+const DEFAULT_HTML_HEADERS = {
+  'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+  // ... other security headers
+}
+```
+
+**3. Extract Shared Cache Utilities (Optional, Week 1)**
+```typescript
+// lib/frame-config.ts
+export const FRAME_REVALIDATE = 500
+export const FRAME_CACHE_HEADERS = {
+  'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+  'x-frame-options': 'ALLOWALL',
+  // ...
+}
+
+// Then in routes:
+import { FRAME_REVALIDATE, FRAME_CACHE_HEADERS } from '@/lib/frame-config'
+export const revalidate = FRAME_REVALIDATE
+```
+
+**4. Redis Cache Integration (Optional, Phase 1C+)**
+- Only if performance metrics demand it
+- Add gradually per frame type
+- Test cache hit rates before full rollout
+
+### Cache Testing Checklist
+
+For each new route created:
+
+**Localhost Testing**:
+- [ ] First request generates frame (cache MISS)
+- [ ] Second request within 500s returns cached (cache HIT)
+- [ ] After 500s, frame regenerates
+- [ ] HTTP headers include `cache-control: public, max-age=300`
+
+**Production Testing**:
+- [ ] Vercel Edge Cache respects headers
+- [ ] CDN caching works (check response headers)
+- [ ] No cache key conflicts between old/new URLs
+- [ ] Cache invalidation works (`invalidateUserFrames()`)
+
+**Performance Validation**:
+- [ ] Response time <600ms (maintained from Phase 1B)
+- [ ] Cache hit rate >50% after warmup
+- [ ] No cache-related 500 errors
+- [ ] Vercel function invocations stay low
+
+### Cache Invalidation Strategy
+
+**Current Implementation** (line 2410):
+```typescript
+const { invalidateUserFrames } = await import('@/lib/frame-cache')
+await invalidateUserFrames(fid)
+```
+
+**After Migration**:
+- Invalidation still works (same Redis keys)
+- Each route can call `invalidateUserFrames(fid)` after state changes
+- Pattern: `frame:*:{fid}:*:*` catches all frame types for user
+
+**When to Invalidate**:
+1. After `recordGM` action (GM count changes)
+2. After `questProgress` action (quest state changes)
+3. After badge minting (badge list changes)
+4. After guild join/leave (guild membership changes)
+
+### Migration Phases & Cache Work
+
+**Week 1: Foundation**
+- [ ] Extract `FRAME_REVALIDATE` to `lib/frame-config.ts`
+- [ ] Extract `FRAME_CACHE_HEADERS` to `lib/frame-config.ts`
+- [ ] Extract referral cache to `lib/referral-cache.ts`
+- [ ] Test cache behavior with first new route
+
+**Week 2-3: Route Migration**
+- [ ] Copy cache config to each new route
+- [ ] Verify `revalidate` works per route
+- [ ] Test backward compatibility (old URLs cached separately)
+
+**Week 4: Optimization**
+- [ ] Measure cache hit rates per frame type
+- [ ] Tune TTLs if needed (e.g., leaderboards = 60s, quests = 300s)
+- [ ] Document cache strategy per frame type
+
+**Phase 1C+ (Future): Redis Activation**
+- [ ] Enable Redis cache for high-traffic routes first
+- [ ] Monitor cache hit rates
+- [ ] Gradually roll out to all frame types
+
+---
+
+## 🎯 Cache Migration Summary
+
+### ✅ What You DON'T Need to Change
+
+1. **Cache Key Structure**: Stays the same, based on params not URL path
+2. **Redis Infrastructure**: Already built, just not active
+3. **Cache Invalidation**: Works with existing pattern matching
+4. **HTTP Headers**: Copy to new routes, no logic changes
+
+### ✅ What You DO Need to Change
+
+1. **Route-Level Config**: Add `export const revalidate = 500` to each new route (1 line)
+2. **HTTP Headers**: Copy cache headers to each new route (or import from utility)
+3. **Referral Cache**: Extract to shared module (Week 1, one-time)
+
+### ✅ Risk Assessment
+
+**Cache-Related Risks**: **LOW** ⬇️
+
+- ✅ Next.js handles route-level caching automatically
+- ✅ Cache keys don't depend on URL structure
+- ✅ Backward compatibility maintained (separate cache buckets)
+- ✅ Can rollback without cache corruption
+
+**Recommendation**: **Proceed with current cache strategy, optimize later**
+
+---
+
 *Last Updated: November 22, 2025*  
 *Phase 1B.1 Documentation*
