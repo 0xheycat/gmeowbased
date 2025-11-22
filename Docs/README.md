@@ -15,12 +15,23 @@ Docs/
 └── Maintenance/
     └── frame/
         ├── 2024-12/ (Current month's work)
+        ├── archives/ (Historical docs: Phase 0-5, 58+ documents)
+        │   ├── README.md (Archive navigation guide)
+        │   ├── phase-0/ (Initial frame system)
+        │   ├── nov-2025/ (Phase 4 docs, 40+ files)
+        │   ├── stage-5/ (Phase 5 stage docs)
+        │   ├── onboarding/ (Onboarding implementation)
+        │   ├── frame-fixes/ (Frame debugging & fixes)
+        │   └── history/ (Historical tracking)
         ├── Phase-1/
         │   ├── Phase-1A/ (Cache optimization - COMPLETE)
         │   ├── Phase-1B/ (Session state - COMPLETE)
         │   └── Phase-1B1/ (Interactive buttons - IN PROGRESS)
         ├── Phase-2/ (Future: Advanced features)
         └── Phase-3/ (Future: Scaling)
+
+docs/maintenance/ (Original documentation location)
+└── FRAME-IMPROVEMENT-ANALYSIS-2025-11-22.md (Master planning doc, 3135 lines)
 ```
 
 ---
@@ -36,6 +47,19 @@ Docs/
 - [System Architecture Audit](./Maintenance/frame/Phase-1/Phase-1B1/SYSTEM-AUDIT.md) - Complete system analysis before implementation
 - [Implementation Plan](./Maintenance/frame/Phase-1/Phase-1B1/IMPLEMENTATION-PLAN.md) - Detailed button specifications (pending)
 - [Testing Guide](./Maintenance/frame/Phase-1/Phase-1B1/TESTING-GUIDE.md) - Local & production testing (pending)
+
+## 🚀 Getting Started
+
+### For Developers New to This Project
+1. **Start Here**: Read [MainGoal.md](./MainGoal.md) for the complete project vision and roadmap
+2. **Current Work**: Review [Phase 1B.1 System Audit](./Maintenance/frame/Phase-1/Phase-1B1/SYSTEM-AUDIT.md)
+3. **Master Plan**: Check [FRAME-IMPROVEMENT-ANALYSIS](../docs/maintenance/FRAME-IMPROVEMENT-ANALYSIS-2025-11-22.md) for comprehensive roadmap (3135 lines)
+4. **Historical Context**: Browse [archives/](./Maintenance/frame/archives/) for Phase 0-5 work (58+ documents)
+
+### Quick Links
+- **Current Phase**: Phase 1B.1 - Pre-implementation audit
+- **Status**: 🔄 System analysis complete, implementation planning next
+- **Priority**: Complete audit before expanding to all frame types
 
 ---
 

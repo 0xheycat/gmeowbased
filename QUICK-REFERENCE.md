@@ -30,6 +30,22 @@ gmeowbased/
 │   ├── CHANGELOG.md                 # 📝 Version history
 │   └── Maintenance/
 │       └── frame/
+│           ├── archives/            # 📦 Historical docs (Phase 0-5, 58+ files)
+│           │   ├── README.md        # Archive navigation guide
+│           │   ├── phase-0/         # Initial frame system
+│           │   ├── nov-2025/        # Phase 4 docs (40+ files)
+│           │   ├── stage-5/         # Phase 5 stage docs
+│           │   ├── onboarding/      # Onboarding implementation
+│           │   ├── frame-fixes/     # Frame debugging & fixes
+│           │   └── history/         # Historical tracking
+│           └── Phase-1/
+│               ├── Phase-1A/        # Cache optimization
+│               ├── Phase-1B/        # Session tracking
+│               └── Phase-1B1/       # System audit
+├── docs/
+│   └── maintenance/                 # 🗂️ Original documentation
+│       └── FRAME-IMPROVEMENT-ANALYSIS-2025-11-22.md  # Master plan (3135 lines)
+│       └── frame/
 │           ├── 2024-12/            # 📅 Monthly archives
 │           └── Phase-1/            # Foundation phase
 │               ├── Phase-1A/       # ✅ Cache optimization (COMPLETE)

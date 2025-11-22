@@ -9,7 +9,28 @@
 
 ### Phase 1B.1 - Interactive Frame Buttons (In Progress)
 
-#### 2024-12-03
+#### 2024-12-03 (Part 2)
+**Documentation Reorganization**:
+- ✅ Integrated historical documentation (58+ documents from Phase 0-5)
+  - Created `archives/` folder with 7 categories
+  - Moved 15 root-level FRAME/STAGE/PHASE documents
+  - Preserved original `docs/maintenance/` location
+  - Created comprehensive archive README with navigation guide
+  
+**Archive Structure**:
+- `phase-0/`: 2 docs (initial production testing)
+- `nov-2025/`: 40+ docs (Phase 4 quality gates, badge system)
+- `stage-5/`: 3 docs (Stage 5.18-5.19 completion)
+- `onboarding/`: 2 docs (Stage 5 onboarding)
+- `frame-fixes/`: 8 docs (frame validation, dynamic images)
+- `history/`: 3 docs (batch completion, GI gates, Phase 4 progress)
+
+**Updated Navigation**:
+- Added archives section to `Docs/README.md`
+- Updated `QUICK-REFERENCE.md` with complete folder structure
+- Documented master planning document location
+
+#### 2024-12-03 (Part 1)
 **Added**:
 - ✅ Comprehensive system architecture audit (500+ lines)
   - Documented 9 frame types with current button patterns
