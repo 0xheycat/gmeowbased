@@ -33,6 +33,7 @@ import {
   sanitizeButtons,
 } from '@/lib/frame-validation'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { checkAndAwardNewUserRewards } from '@/lib/user-rewards'
 export const runtime = 'nodejs'
 export const revalidate = 500
 // If you maintain a neynar helper module, use it; otherwise this file contains
@@ -1010,7 +1011,7 @@ function buildFrameHtml(params: {
   heroStats?: Array<{ label: string; value: string; accent?: boolean }>
   heroList?: Array<{ primary: string; secondary?: string; icon?: string }>
   defaultFrameImage?: string | null
-  frameType?: string // Yu-Gi-Oh! frame type (quest, guild, leaderboards, etc.)
+  frameType?: string // ! frame type (quest, guild, leaderboards, etc.)
 }) {
   const {
     title,
@@ -2168,6 +2169,27 @@ export async function GET(req: Request) {
           frameType: type,
         })
         return createHtmlResponse(html, { status: 400 })
+      }
+
+      // Phase 0: Check and award new user rewards
+      try {
+        const userData = await Ne.fetchUserByFid(fid)
+        const rewardResult = await checkAndAwardNewUserRewards(fid, userData?.neynarScore)
+        tracePush(traces, 'badge-rewards', {
+          awarded: rewardResult.awarded,
+          isFirstView: rewardResult.isFirstView,
+          isOG: rewardResult.isOG,
+          points: rewardResult.points,
+          xp: rewardResult.xp,
+          reason: rewardResult.reason,
+        })
+        if (rewardResult.awarded) {
+          console.log(`[Frame] Awarded rewards to FID ${fid}:`, rewardResult)
+        }
+      } catch (rewardErr) {
+        console.warn('[Frame] Reward system error:', rewardErr)
+        tracePush(traces, 'badge-rewards-error', { error: String(rewardErr) })
+        // Continue with frame generation even if rewards fail
       }
 
       const title = `Badge Collection • GMEOW`

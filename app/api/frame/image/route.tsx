@@ -6,6 +6,8 @@
 import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
+import { fetchUserByFid } from '@/lib/neynar'
+import { calculateTier, formatTierLabel, type TierInfo } from '@/lib/rarity-tiers'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -54,6 +56,22 @@ export async function GET(req: Request) {
   const user = readParam(url, 'user')
   const fid = readParam(url, 'fid')
 
+  // Fetch Neynar score and calculate tier for rarity system (Phase 0)
+  let tierInfo: TierInfo | null = null
+  if (fid) {
+    try {
+      const fidNum = parseInt(fid, 10)
+      if (Number.isFinite(fidNum) && fidNum > 0) {
+        const userData = await fetchUserByFid(fidNum)
+        tierInfo = calculateTier(userData?.neynarScore)
+        console.log(`[Frame Image] FID ${fidNum} → Score ${userData?.neynarScore} → Tier ${tierInfo.tier}`)
+      }
+    } catch (err) {
+      console.warn('[Frame Image] Failed to fetch Neynar score:', err)
+      // Continue without tier styling if fetch fails
+    }
+  }
+
   // Load og-image.png background (matches badge frame implementation)
   const ogImageData = await loadImageAsDataUrl('og-image.png')
 
@@ -63,10 +81,18 @@ export async function GET(req: Request) {
     const streak = readParam(url, 'streak', '0')
     const rank = readParam(url, 'rank', '—')
 
-    const gmPalette = {
+    // Use tier colors if available, otherwise default GM colors
+    const gmPalette = tierInfo ? {
+      start: tierInfo.colors.gradient.start,
+      end: tierInfo.colors.gradient.end
+    } : {
       start: '#ff9500',
       end: '#ffb84d'
     }
+
+    const borderColor = tierInfo?.colors.primary || gmPalette.start
+    const glowColor = tierInfo?.colors.glow || `${gmPalette.start}90`
+    const borderWidth = tierInfo?.borderStyle.width || 4
 
     return new ImageResponse(
       (
@@ -114,9 +140,9 @@ export async function GET(req: Request) {
               display: 'flex',
               flexDirection: 'column',
               background: 'linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)',
-              border: `4px solid ${gmPalette.start}`,
+              border: `${borderWidth}px solid ${borderColor}`,
               borderRadius: 12,
-              boxShadow: `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${gmPalette.start}90, 0 10px 50px rgba(0, 0, 0, 0.8)`,
+              boxShadow: `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${glowColor}, 0 10px 50px rgba(0, 0, 0, 0.8)`,
               padding: 14,
               position: 'relative',
               overflow: 'hidden',
@@ -134,6 +160,28 @@ export async function GET(req: Request) {
                 background: `linear-gradient(180deg, ${gmPalette.start}15, transparent 100%)`,
               }}
             />
+
+            {/* Tier label (top-right badge) */}
+            {tierInfo && (
+              <div
+                style={{
+                  display: 'flex',
+                  position: 'absolute',
+                  top: 14,
+                  right: 14,
+                  padding: '4px 10px',
+                  background: `linear-gradient(135deg, ${tierInfo.colors.gradient.start}, ${tierInfo.colors.gradient.end})`,
+                  border: `2px solid ${tierInfo.colors.primary}`,
+                  borderRadius: 999,
+                  fontSize: 9,
+                  fontWeight: 800,
+                  boxShadow: `0 0 12px ${tierInfo.colors.glow}`,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {formatTierLabel(tierInfo)}
+              </div>
+            )}
 
             {/* Header with GM badge */}
             <div
