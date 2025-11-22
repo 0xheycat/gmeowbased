@@ -57,22 +57,8 @@ export async function GET(req: NextRequest) {
     }
   }
   
-  // Generate vNext meta tag
+  // Generate vNext meta tag (Neynar format only - no Classic Frames v1)
   const vNextTag = `<meta name="fc:frame" content="${escapeHtml(JSON.stringify(vNextMultiButton))}" />`
-  
-  // Also include Classic Frames v1 for fallback
-  const classicTags = `
-    <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="${origin}/api/frame/image?type=${type}" />
-    <meta property="fc:frame:post_url" content="${origin}/api/frame" />
-    <meta property="fc:frame:state" content="${escapeHtml(JSON.stringify({ frameType: type }))}" />
-    <meta property="fc:frame:button:1" content="Open GM Ritual" />
-    <meta property="fc:frame:button:1:action" content="link" />
-    <meta property="fc:frame:button:1:target" content="${origin}/gm" />
-    <meta property="fc:frame:button:2" content="🎯 Record GM" />
-    <meta property="fc:frame:button:2:action" content="post" />
-    <meta property="fc:frame:button:3" content="📊 View Stats" />
-    <meta property="fc:frame:button:3:action" content="post" />`
   
   const html = `<!DOCTYPE html>
 <html>
@@ -81,11 +67,8 @@ export async function GET(req: NextRequest) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Test vNext Multi-Button Frame</title>
     
-    <!-- vNext Format with Multiple Buttons (Test) -->
+    <!-- vNext Format with Multiple Buttons (Neynar format only) -->
     ${vNextTag}
-    
-    <!-- Classic Frames v1 Fallback -->
-    ${classicTags}
     
     <meta property="og:title" content="Test vNext Multi-Button Frame" />
     <meta property="og:description" content="Testing vNext spec with multiple buttons" />
