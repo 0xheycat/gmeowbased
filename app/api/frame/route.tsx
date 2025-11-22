@@ -448,9 +448,13 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const mintUrlParam = toOptionalString(params.mintUrl)
   const mintUrl = toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=leaderboard&chain=${isGlobal ? 'all' : chainKey}&season=${rawSeason || 'current'}`
 
+  // Phase 1B.2: Add interactive POST action button
   const leaderboardButtons = buildContextualButtons({
     type: 'leaderboards',
-    fallback: [{ label: 'Open Leaderboard', target: href }],
+    fallback: [
+      { label: 'Open Leaderboard', target: href, action: 'link' },
+      { label: '🏆 Refresh Rank', action: 'post', target: `${origin}/api/frame` },
+    ],
     leaderboard: {
       openUrl,
       openLabel: openLabelParam,
@@ -1633,9 +1637,13 @@ export async function GET(req: Request) {
         ? (toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=quest&questId=${encodeURIComponent(String(questIdNum))}&chain=${encodeURIComponent(chainKey)}`)
         : null
       
+      // Phase 1B.2: Add interactive POST action button
       const questButtons = buildContextualButtons({
         type: 'quest',
-        fallback: [{ label: primaryLabel, target: frameBtnUrl }],
+        fallback: [
+          { label: primaryLabel, target: frameBtnUrl, action: 'link' },
+          { label: '📊 Quest Progress', action: 'post', target: `${origin}/api/frame` },
+        ],
         quest: {
           completed: questCompleted,
           verifyUrl: toAbsoluteUrl(verifyUrlParam, origin) ?? verifyUrlFallback,
@@ -1685,12 +1693,17 @@ export async function GET(req: Request) {
       }
       const frameBtnUrl = `${origin}/api/quests/verify?debug=1&fid=${fid}${cast ? `&cast=${encodeURIComponent(String(cast))}` : ''}`
       const fcMeta = { [frameKey('entity')]: 'verify' }
+      
+      // Phase 1B.2: Add interactive POST action button
       const html = buildFrameHtml({
         title,
         description,
         image: defaultFrameImage,
         url: frameBtnUrl,
-        buttons: [{ label: 'Run Verification', target: frameBtnUrl }],
+        buttons: [
+          { label: 'Run Verification', target: frameBtnUrl, action: 'link' },
+          { label: '✅ Verify Frame', action: 'post', target: `${origin}/api/frame` },
+        ],
         fcMeta,
         debug: debugPayload,
         frameOrigin: origin,
@@ -1722,9 +1735,13 @@ export async function GET(req: Request) {
         ? (toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=guild&guildId=${guildId}`)
         : null
       
+      // Phase 1B.2: Add interactive POST action button
       const guildButtons = buildContextualButtons({
         type: 'guild',
-        fallback: [{ label: 'Open Guild', target: guildUrl }],
+        fallback: [
+          { label: 'Open Guild', target: guildUrl, action: 'link' },
+          { label: '🏯 View Guild', action: 'post', target: `${origin}/api/frame` },
+        ],
         guild: {
           isMember,
           joinUrl,
@@ -1775,9 +1792,13 @@ export async function GET(req: Request) {
       const shareUrlOverride = toAbsoluteUrl(toOptionalString(params.shareUrl), origin) ?? shareUrl
       const copyUrlParam = toAbsoluteUrl(toOptionalString(params.copyUrl), origin)
       const hubUrlParam = toAbsoluteUrl(toOptionalString(params.hubUrl), origin) ?? shareUrl
+      // Phase 1B.2: Add interactive POST action button
       const referralButtons = buildContextualButtons({
         type: 'referral',
-        fallback: [{ label: code ? `Share ${String(code).toUpperCase()}` : 'Open Referral Hub', target: shareUrl }],
+        fallback: [
+          { label: code ? `Share ${String(code).toUpperCase()}` : 'Open Referral Hub', target: shareUrl, action: 'link' },
+          { label: '👥 View Referrals', action: 'post', target: `${origin}/api/frame` },
+        ],
         referral: {
           shareUrl: shareUrlOverride,
           shareLabel: toOptionalString(params.shareLabel),
@@ -1996,9 +2017,13 @@ export async function GET(req: Request) {
       if (asJson) {
         return respondJson({ ok: true, type: 'onchainstats', chain: chainKey, chainName: chainDisplay, chainIcon, metrics, url: hubUrl, image, description, identity: identityForJson, traces })
       }
-      const buttons: FrameButton[] = [{ label: 'Open Onchain Hub', target: hubUrl }]
+      // Phase 1B.2: Add interactive POST action buttons
+      const buttons: FrameButton[] = [
+        { label: 'Open Onchain Hub', target: hubUrl, action: 'link' }, // Button 1 - miniapp launch
+        { label: '🔄 Refresh Stats', action: 'post', target: `${origin}/api/frame` }, // Button 2 - POST
+      ]
       if (userParam && explorer && isAddress) {
-        buttons.push({ label: 'View Explorer', target: `${explorer}/address/${encodeURIComponent(userParam)}` })
+        buttons.push({ label: 'View Explorer', target: `${explorer}/address/${encodeURIComponent(userParam)}`, action: 'link' })
       }
       const html = buildFrameHtml({
         title: `Onchain Stats — ${chainDisplay}`,
@@ -2161,12 +2186,17 @@ export async function GET(req: Request) {
         traces,
       }
       if (asJson) return respondJson(jsonPayload)
+      // Phase 1B.2: Add interactive POST action buttons
       const html = buildFrameHtml({
         title,
         description,
         image: defaultFrameImage,
         url: urlOpen,
-        buttons: [{ label: 'Open Points HQ', target: urlOpen }],
+        buttons: [
+          { label: 'Open Points HQ', target: urlOpen, action: 'link' }, // Button 1 - miniapp launch
+          { label: '💰 View Balance', action: 'post', target: `${origin}/api/frame` }, // Button 2 - POST
+          { label: '🎁 Tip User', action: 'post', target: `${origin}/api/frame` }, // Button 3 - POST
+        ],
         fcMeta,
         debug: debugPayload,
         kicker: chainDisplay,
@@ -2234,12 +2264,17 @@ export async function GET(req: Request) {
       
       if (asJson) return respondJson({ ok: true, type: 'badge', fid, href, description: desc, imageUrl, traces })
       
+      // Phase 1B.2: Add interactive POST action buttons
       const html = buildFrameHtml({
         title,
         description: desc,
         image: imageUrl,
         url: href,
-        buttons: [{ label: 'View Badges', target: href }],
+        buttons: [
+          { label: 'View Badges', target: href, action: 'link' }, // Button 1 - miniapp launch
+          { label: '🏅 Check Badges', action: 'post', target: `${origin}/api/frame` }, // Button 2 - POST
+          { label: '⚡ Mint Badge', action: 'post', target: `${origin}/api/frame` }, // Button 3 - POST
+        ],
         fcMeta: { [frameKey('entity')]: 'badge', [frameKey('fid')]: String(fid) },
         debug: debugPayload,
         frameOrigin: origin,
