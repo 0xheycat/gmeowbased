@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * Phase 1B.2 Test Route - vNext Multi-Button Format
- * Testing vNext spec with multiple buttons based on Neynar reference
- * Reference: Paragraph frame with 4 buttons (Open, Read Inline, Subscribe, Mint)
+ * Phase 1B.2 Test Route 2 - Minimal Approach
+ * Testing minimal frame spec with just image + buttons
+ * No vNext tag, no fc:frame version tag
  * 
  * DO NOT USE IN PRODUCTION - Test route only
  */
@@ -26,8 +26,6 @@ export async function GET(req: NextRequest) {
   
   const type = url.searchParams.get('type') || 'gm'
   
-  // Classic Frames v1 spec - self-hosted format
-  // Reference: https://docs.farcaster.xyz/reference/frames/spec
   const frameImage = `${origin}/api/frame/image?type=${type}`
   const postUrl = `${origin}/api/frame`
   
@@ -36,10 +34,9 @@ export async function GET(req: NextRequest) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Test Route 1: Classic Frames v1 Only</title>
+    <title>Test Route 2: Minimal Frame</title>
     
-    <!-- Classic Frames v1 Spec (No vNext) -->
-    <meta property="fc:frame" content="vNext" />
+    <!-- Minimal Frame Spec - No fc:frame version tag -->
     <meta property="fc:frame:image" content="${frameImage}" />
     <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
     <meta property="fc:frame:post_url" content="${postUrl}" />
@@ -58,20 +55,20 @@ export async function GET(req: NextRequest) {
     <meta property="fc:frame:button:3" content="📊 View Stats" />
     <meta property="fc:frame:button:3:action" content="post" />
     
-    <meta property="og:title" content="Test vNext Multi-Button Frame" />
-    <meta property="og:description" content="Testing vNext spec with multiple buttons" />
-    <meta property="og:image" content="${origin}/api/frame/image?type=${type}" />
+    <meta property="og:title" content="Test Route 2: Minimal Frame" />
+    <meta property="og:description" content="Testing minimal frame spec" />
+    <meta property="og:image" content="${frameImage}" />
   </head>
   <body>
     <div style="font-family: monospace; padding: 20px; max-width: 800px; margin: 0 auto;">
-      <h1>🧪 Test Route 1: Classic v1 Only</h1>
-      <p><strong>Status:</strong> Pure Classic Frames v1 (no vNext tag)</p>
+      <h1>🧪 Test Route 2: Minimal Approach</h1>
+      <p><strong>Status:</strong> No fc:frame version tag, just image + buttons</p>
       
-      <h2>Classic Frames v1 Format (Self-Hosted)</h2>
+      <h2>Minimal Frame Format</h2>
       <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto;">
-fc:frame: vNext
-fc:frame:image: ${origin}/api/frame/image?type=${type}
-fc:frame:post_url: ${origin}/api/frame
+fc:frame:image: ${frameImage}
+fc:frame:image:aspect_ratio: 1.91:1
+fc:frame:post_url: ${postUrl}
 fc:frame:state: {"frameType":"${type}"}
 fc:frame:button:1: "Open GM Ritual" (link)
 fc:frame:button:2: "🎯 Record GM" (post)
@@ -80,29 +77,15 @@ fc:frame:button:3: "📊 View Stats" (post)
       
       <h2>Test URLs</h2>
       <ul>
-        <li><a href="/api/frame-test?type=gm">GM Frame Test</a></li>
-        <li><a href="/api/frame-test?type=points">Points Frame Test</a></li>
-        <li><a href="https://farcaster.xyz/~/compose?embeds[]=${encodeURIComponent(origin + '/api/frame-test?type=gm')}">Test in Farcaster Composer</a></li>
+        <li><a href="/api/frame-test2?type=gm">GM Frame Test</a></li>
+        <li><a href="/api/frame-test2?type=points">Points Frame Test</a></li>
       </ul>
       
-      <h2>Expected Behavior</h2>
-      <ul>
-        <li>✅ Button 1: "Open GM Ritual" (link action)</li>
-        <li>✅ Button 2: "🎯 Record GM" (post action)</li>
-        <li>✅ Button 3: "📊 View Stats" (post action)</li>
-      </ul>
-      
-      <h2>Classic Frames v1 Reference</h2>
-      <p>Using standard Farcaster Frames v1 spec for self-hosted frames:</p>
-      <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto;">
-https://docs.farcaster.xyz/reference/frames/spec
-- fc:frame property meta tags
-- Multiple buttons with individual action tags
-- POST actions for interactive buttons
-      </pre>
+      <h2>Approach</h2>
+      <p>This test removes the fc:frame property entirely to see if Farcaster reads just the button tags.</p>
       
       <p style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd;">
-        <strong>⚠️ Test Route Only</strong> - This endpoint tests Classic Frames v1 format before applying to production.
+        <strong>⚠️ Test Route 2</strong> - Minimal frame spec experiment
       </p>
     </div>
   </body>
