@@ -65,10 +65,14 @@ async function cacheImageResponse(
     const arrayBuffer = await clonedResponse.arrayBuffer()
     const imageBuffer = Buffer.from(arrayBuffer)
 
-    // Store in cache (async, don't block response)
-    setCachedFrame(cacheKey, imageBuffer, 300).catch((err) => {
+    // CRITICAL: Must await cache write in serverless environment
+    // Serverless functions can terminate before async operations complete
+    // This ensures cache SET completes before function exits
+    try {
+      await setCachedFrame(cacheKey, imageBuffer, 300)
+    } catch (err) {
       console.error('[Frame Image] Failed to cache frame:', err)
-    })
+    }
 
     const renderTime = Date.now() - startTime
     console.log(`[Frame Image] Generated ${cacheKey.type} frame (${renderTime}ms) - FID:${cacheKey.fid} - Tier:${cacheKey.tier}`)
