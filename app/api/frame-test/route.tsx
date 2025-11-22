@@ -26,22 +26,41 @@ export async function GET(req: NextRequest) {
   
   const type = url.searchParams.get('type') || 'gm'
   
-  // Classic Frames v1 spec - self-hosted format
-  // Reference: https://docs.farcaster.xyz/reference/frames/spec
+  // EXACT COPY of main route structure that creates valid embed
   const frameImage = `${origin}/api/frame/image?type=${type}`
+  const launchUrl = `${origin}/gm`
+  const splashUrl = `${origin}/splash.png`
   const postUrl = `${origin}/api/frame`
+  
+  // CRITICAL: vNext single button tag (makes it a valid embed like main route)
+  const vNextTag = `<meta name="fc:frame" content="${escapeHtml(JSON.stringify({
+    version: 'next',
+    imageUrl: frameImage,
+    button: {
+      title: 'Open GM Ritual',
+      action: {
+        type: 'launch_frame',
+        name: 'Gmeowbased',
+        url: launchUrl,
+        splashImageUrl: splashUrl,
+        splashBackgroundColor: '#000000'
+      }
+    }
+  }))}" />`
   
   const html = `<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Test Route 1: Classic Frames v1 Only</title>
+    <title>Test Route 3: Exact Main Clone</title>
     
-    <!-- Classic Frames v1 Spec (No vNext) -->
+    <!-- vNext single button (EXACT copy from main route) -->
+    ${vNextTag}
+    
+    <!-- Classic Frames v1 tags (same as main route) -->
     <meta property="fc:frame" content="vNext" />
     <meta property="fc:frame:image" content="${frameImage}" />
-    <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
     <meta property="fc:frame:post_url" content="${postUrl}" />
     <meta property="fc:frame:state" content="${escapeHtml(JSON.stringify({ frameType: type }))}" />
     
@@ -64,18 +83,16 @@ export async function GET(req: NextRequest) {
   </head>
   <body>
     <div style="font-family: monospace; padding: 20px; max-width: 800px; margin: 0 auto;">
-      <h1>🧪 Test Route 1: Classic v1 Only</h1>
-      <p><strong>Status:</strong> Pure Classic Frames v1 (no vNext tag)</p>
+      <h1>🧪 Test Route 3: Exact Main Clone</h1>
+      <p><strong>Status:</strong> EXACT copy of main route structure</p>
       
-      <h2>Classic Frames v1 Format (Self-Hosted)</h2>
+      <h2>Why This Should Work</h2>
       <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto;">
-fc:frame: vNext
-fc:frame:image: ${origin}/api/frame/image?type=${type}
-fc:frame:post_url: ${origin}/api/frame
-fc:frame:state: {"frameType":"${type}"}
-fc:frame:button:1: "Open GM Ritual" (link)
-fc:frame:button:2: "🎯 Record GM" (post)
-fc:frame:button:3: "📊 View Stats" (post)
+Main route has:
+1. vNext single button tag (name="fc:frame") ← MAKES IT VALID EMBED
+2. Classic Frames v1 tags (property="fc:frame:button:N")
+
+This test route copies EXACTLY the same structure.
       </pre>
       
       <h2>Test URLs</h2>
