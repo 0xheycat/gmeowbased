@@ -248,6 +248,443 @@ export async function GET(req: Request) {
     )
   }
 
+  // Guild frame type - Yu-Gi-Oh! Card Structure
+  if (type === 'guild') {
+    const guildId = readParam(url, 'guildId')
+    const guildName = readParam(url, 'guildName', `Guild #${guildId}`)
+    const members = readParam(url, 'members', '0')
+    const quests = readParam(url, 'quests', '0')
+    const level = readParam(url, 'level', '1')
+
+    const guildPalette = {
+      start: '#4da3ff',
+      end: '#7dbaff'
+    }
+
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a2a 30%, #0a1f2f 60%, #0a0a0a 100%)',
+          }}
+        >
+          {/* Yu-Gi-Oh! Card Container */}
+          <div
+            style={{
+              width: 540,
+              height: 360,
+              display: 'flex',
+              flexDirection: 'column',
+              background: 'linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)',
+              border: `4px solid ${guildPalette.start}`,
+              borderRadius: 12,
+              boxShadow: `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${guildPalette.start}90, 0 10px 50px rgba(0, 0, 0, 0.8)`,
+              padding: 14,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Holographic shine */}
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '30%',
+                background: `linear-gradient(180deg, ${guildPalette.start}15, transparent 100%)`,
+              }}
+            />
+
+            {/* Header with GUILD badge */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '5px 12px',
+                  background: `linear-gradient(135deg, ${guildPalette.start}, ${guildPalette.end})`,
+                  border: `2px solid ${guildPalette.start}`,
+                  borderRadius: 999,
+                  fontSize: 10,
+                  fontWeight: 700,
+                }}
+              >
+                GUILD
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  opacity: 0.8,
+                }}
+              >
+                {chain}
+              </div>
+            </div>
+
+            {/* Main content */}
+            <div
+              style={{
+                display: 'flex',
+                flex: 1,
+                gap: 16,
+              }}
+            >
+              {/* Left: Guild icon */}
+              <div
+                style={{
+                  width: 160,
+                  height: 160,
+                  borderRadius: 10,
+                  background: `linear-gradient(135deg, ${guildPalette.start}, ${guildPalette.end})`,
+                  border: `3px solid ${guildPalette.start}`,
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 80,
+                }}
+              >
+                🛡️
+              </div>
+
+              {/* Right: Guild details */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  gap: 10,
+                }}
+              >
+                {/* Guild name */}
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color: '#ffffff',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {guildName}
+                </div>
+
+                {/* Stats grid */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    marginTop: 8,
+                  }}
+                >
+                  {/* Members */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: `${guildPalette.start}20`,
+                      borderRadius: 8,
+                      border: `2px solid ${guildPalette.start}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>MEMBERS</div>
+                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: guildPalette.start }}>{members} 👥</div>
+                  </div>
+
+                  {/* Active Quests */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: `${guildPalette.start}20`,
+                      borderRadius: 8,
+                      border: `2px solid ${guildPalette.start}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>QUESTS</div>
+                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: guildPalette.start }}>{quests} active</div>
+                  </div>
+
+                  {/* Level */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: `${guildPalette.start}20`,
+                      borderRadius: 8,
+                      border: `2px solid ${guildPalette.start}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>LEVEL</div>
+                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>{level}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: 12,
+                fontSize: 9,
+                opacity: 0.6,
+              }}
+            >
+              @gmeowbased • Guild #{guildId}
+            </div>
+          </div>
+        </div>
+      ),
+      { width: WIDTH, height: HEIGHT }
+    )
+  }
+
+  // Verify frame type - Yu-Gi-Oh! Card Structure
+  if (type === 'verify') {
+    const questId = readParam(url, 'questId')
+    const questName = readParam(url, 'questName', 'Verification')
+    const status = readParam(url, 'status', 'Pending')
+
+    const verifyPalette = {
+      start: '#7CFF7A',
+      end: '#a0ffa0'
+    }
+
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #0a0a0a 0%, #0a2a0a 30%, #0a1f0a 60%, #0a0a0a 100%)',
+          }}
+        >
+          {/* Yu-Gi-Oh! Card Container */}
+          <div
+            style={{
+              width: 540,
+              height: 360,
+              display: 'flex',
+              flexDirection: 'column',
+              background: 'linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)',
+              border: `4px solid ${verifyPalette.start}`,
+              borderRadius: 12,
+              boxShadow: `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${verifyPalette.start}90, 0 10px 50px rgba(0, 0, 0, 0.8)`,
+              padding: 14,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Holographic shine */}
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '30%',
+                background: `linear-gradient(180deg, ${verifyPalette.start}15, transparent 100%)`,
+              }}
+            />
+
+            {/* Header with VERIFY badge */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '5px 12px',
+                  background: `linear-gradient(135deg, ${verifyPalette.start}, ${verifyPalette.end})`,
+                  border: `2px solid ${verifyPalette.start}`,
+                  borderRadius: 999,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: '#000000',
+                }}
+              >
+                VERIFY
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  opacity: 0.8,
+                }}
+              >
+                {chain}
+              </div>
+            </div>
+
+            {/* Main content */}
+            <div
+              style={{
+                display: 'flex',
+                flex: 1,
+                gap: 16,
+              }}
+            >
+              {/* Left: Verify icon */}
+              <div
+                style={{
+                  width: 160,
+                  height: 160,
+                  borderRadius: 10,
+                  background: `linear-gradient(135deg, ${verifyPalette.start}, ${verifyPalette.end})`,
+                  border: `3px solid ${verifyPalette.start}`,
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 80,
+                }}
+              >
+                ✅
+              </div>
+
+              {/* Right: Verification details */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  gap: 10,
+                }}
+              >
+                {/* Title */}
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color: '#ffffff',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {questName}
+                </div>
+
+                {/* Verification info */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    marginTop: 8,
+                  }}
+                >
+                  {/* Status */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: `${verifyPalette.start}20`,
+                      borderRadius: 8,
+                      border: `2px solid ${verifyPalette.start}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>STATUS</div>
+                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: verifyPalette.start }}>{status}</div>
+                  </div>
+
+                  {/* Quest ID */}
+                  {questId && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 12px',
+                        background: `${verifyPalette.start}20`,
+                        borderRadius: 8,
+                        border: `2px solid ${verifyPalette.start}40`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>QUEST</div>
+                      <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>#{questId}</div>
+                    </div>
+                  )}
+
+                  {/* User info */}
+                  {(user || fid) && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 12px',
+                        background: `${verifyPalette.start}20`,
+                        borderRadius: 8,
+                        border: `2px solid ${verifyPalette.start}40`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>USER</div>
+                      <div style={{ display: 'flex', fontSize: 14, fontWeight: 700, color: '#ffffff', opacity: 0.9 }}>
+                        {user ? shortenAddress(user) : `FID ${fid}`}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: 12,
+                fontSize: 9,
+                opacity: 0.6,
+              }}
+            >
+              @gmeowbased • Verification
+            </div>
+          </div>
+        </div>
+      ),
+      { width: WIDTH, height: HEIGHT }
+    )
+  }
+
   // Quest frame type - Yu-Gi-Oh! Card Structure (matches badge frames)
   if (type === 'quest') {
     const questId = readParam(url, 'questId')
@@ -897,14 +1334,21 @@ export async function GET(req: Request) {
     )
   }
 
-  // Default: onchainstats
+  // Default: onchainstats fallback - Yu-Gi-Oh! Card Structure
   // Note: fid and user already declared at top (lines 34-35)
-  const txs = readParam(url, 'txs', '—')
+  const totalTxs = readParam(url, 'totalTxs', readParam(url, 'txs', '—'))
   const volume = readParam(url, 'volume', '—')
-  const balance = readParam(url, 'balance', '—')
+  const balance_val = readParam(url, 'balance', '—')
   const builder = readParam(url, 'builder', '—')
   const age = readParam(url, 'age', '—')
   const firstTx = readParam(url, 'firstTx', '—')
+  const score_val = readParam(url, 'score', builder !== '—' ? builder : '—')
+  const address = readParam(url, 'address', user)
+
+  const defaultPalette = {
+    start: '#00d4ff',
+    end: '#4de4ff'
+  }
 
   return new ImageResponse(
     (
@@ -913,112 +1357,223 @@ export async function GET(req: Request) {
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
-          padding: '72px 96px',
-          background: 'radial-gradient(circle at 20% 20%, #1d2a50, #070b18)',
-          color: '#f5f7ff',
-          position: 'relative',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a2a 30%, #0a1f1f 60%, #0a0a0a 100%)',
         }}
       >
+        {/* Yu-Gi-Oh! Card Container */}
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            background: 'linear-gradient(135deg, rgba(95, 179, 255, 0.08), rgba(255, 210, 90, 0.06))',
-          }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <span style={{ fontSize: 24, letterSpacing: 8, textTransform: 'uppercase', opacity: 0.7 }}>Onchain dossier</span>
-            <span style={{ fontSize: 54, fontWeight: 700 }}>Command Deck Metrics</span>
-            <div style={{ display: 'flex', fontSize: 28, opacity: 0.82 }}>
-              <span>{user ? shortenAddress(user) : `FID: ${fid}`}</span>
-            </div>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '14px 28px',
-              borderRadius: 999,
-              border: '1px solid rgba(255, 210, 90, 0.4)',
-              background: 'rgba(255, 210, 90, 0.12)',
-              color: '#ffd25a',
-              fontSize: 28,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-            }}
-          >
-            {chain}
-          </div>
-        </div>
-        <div
-          style={{
+            width: 540,
+            height: 360,
             display: 'flex',
             flexDirection: 'column',
-            gap: 28,
-            marginTop: 40,
+            background: 'linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)',
+            border: `4px solid ${defaultPalette.start}`,
+            borderRadius: 12,
+            boxShadow: `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${defaultPalette.start}90, 0 10px 50px rgba(0, 0, 0, 0.8)`,
+            padding: 14,
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Holographic shine */}
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: 24,
-              padding: '32px',
-              borderRadius: 20,
-              background: 'rgba(4, 8, 20, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '30%',
+              background: `linear-gradient(180deg, ${defaultPalette.start}15, transparent 100%)`,
+            }}
+          />
+
+          {/* Header with DEFAULT badge */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 12,
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ fontSize: 20, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.7 }}>Total Transactions</span>
-              <span style={{ fontSize: 34, fontWeight: 700 }}>{txs}</span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '5px 12px',
+                background: `linear-gradient(135deg, ${defaultPalette.start}, ${defaultPalette.end})`,
+                border: `2px solid ${defaultPalette.start}`,
+                borderRadius: 999,
+                fontSize: 10,
+                fontWeight: 700,
+              }}
+            >
+              ONCHAIN
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ fontSize: 20, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.7 }}>Onchain Volume</span>
-              <span style={{ fontSize: 34, fontWeight: 700 }}>{volume}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ fontSize: 20, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.7 }}>Current Balance</span>
-              <span style={{ fontSize: 34, fontWeight: 700 }}>{balance}</span>
+            <div
+              style={{
+                display: 'flex',
+                fontSize: 11,
+                fontWeight: 600,
+                opacity: 0.8,
+              }}
+            >
+              {chain}
             </div>
           </div>
+
+          {/* Main content */}
           <div
             style={{
               display: 'flex',
+              flex: 1,
               gap: 16,
-              flexWrap: 'wrap',
-              fontSize: 22,
-              opacity: 0.8,
             }}
           >
-            <span>Builder: {builder}</span>
-            <span>•</span>
-            <span>Age: {age}</span>
-            <span>•</span>
-            <span>First TX: {firstTx}</span>
+            {/* Left: Stats icon */}
+            <div
+              style={{
+                width: 160,
+                height: 160,
+                borderRadius: 10,
+                background: `linear-gradient(135deg, ${defaultPalette.start}, ${defaultPalette.end})`,
+                border: `3px solid ${defaultPalette.start}`,
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 80,
+              }}
+            >
+              📊
+            </div>
+
+            {/* Right: Stats data */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                gap: 10,
+              }}
+            >
+              {/* User identifier */}
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  lineHeight: 1.2,
+                }}
+              >
+                {address ? shortenAddress(address) : fid ? `FID ${fid}` : 'Onchain Stats'}
+              </div>
+
+              {/* Stats grid */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  marginTop: 8,
+                }}
+              >
+                {/* Transactions */}
+                {totalTxs !== '—' && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: `${defaultPalette.start}20`,
+                      borderRadius: 8,
+                      border: `2px solid ${defaultPalette.start}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>TXS</div>
+                    <div style={{ display: 'flex', fontSize: 18, fontWeight: 800, color: defaultPalette.start }}>{totalTxs}</div>
+                  </div>
+                )}
+
+                {/* Volume */}
+                {volume !== '—' && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: `${defaultPalette.start}20`,
+                      borderRadius: 8,
+                      border: `2px solid ${defaultPalette.start}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>VOLUME</div>
+                    <div style={{ display: 'flex', fontSize: 14, fontWeight: 800, color: defaultPalette.start }}>{volume}</div>
+                  </div>
+                )}
+
+                {/* Balance or Age */}
+                {(balance_val !== '—' || age !== '—') && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: `${defaultPalette.start}20`,
+                      borderRadius: 8,
+                      border: `2px solid ${defaultPalette.start}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>
+                      {balance_val !== '—' ? 'BALANCE' : 'AGE'}
+                    </div>
+                    <div style={{ display: 'flex', fontSize: 14, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>
+                      {balance_val !== '—' ? balance_val : age}
+                    </div>
+                  </div>
+                )}
+
+                {/* Score/Builder */}
+                {score_val !== '—' && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: `${defaultPalette.start}20`,
+                      borderRadius: 8,
+                      border: `2px solid ${defaultPalette.start}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', fontSize: 11, fontWeight: 700, opacity: 0.7 }}>SCORE</div>
+                    <div style={{ display: 'flex', fontSize: 16, fontWeight: 800, color: '#ffffff', opacity: 0.9 }}>{score_val}</div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 48,
-            left: 96,
-            right: 96,
-            display: 'flex',
-            justifyContent: 'space-between',
-            fontSize: 22,
-            opacity: 0.6,
-            letterSpacing: '2px',
-          }}
-        >
-          <span>Powered by Gmeowbased</span>
-          <span>{chain} • Onchain Stats</span>
+
+          {/* Footer */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginTop: 12,
+              fontSize: 9,
+              opacity: 0.6,
+            }}
+          >
+            @gmeowbased • {chain}
+          </div>
         </div>
       </div>
     ),
