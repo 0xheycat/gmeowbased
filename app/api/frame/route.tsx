@@ -2689,6 +2689,96 @@ export async function POST(req: Request) {
       }
     }
 
+    // Phase 1B.1: refreshRank - Retrieve user's leaderboard rank and stats
+    if (action === 'refreshRank') {
+      const fid = payload.fid || payload.untrustedData?.fid
+      const userAddr = payload.user || payload.addr || payload.address
+      const chainKey = payload.chain || 'base'
+      
+      if (!fid && !userAddr) {
+        return respondJson({ ok: false, reason: 'missing fid or user address', traces }, { status: 400 })
+      }
+      
+      tracePush(traces, 'refreshRank-start', { fid, userAddr, chainKey })
+      
+      try {
+        const address = userAddr
+        
+        // If only FID provided, return error (for now)
+        if (!address && fid) {
+          tracePush(traces, 'refreshRank-fid-only', { fid })
+          return respondJson({
+            ok: false,
+            reason: 'address required for rank lookup',
+            message: 'Please provide your wallet address to check your rank.',
+            traces,
+            durationMs: nowTs() - started
+          }, { status: 400 })
+        }
+        
+        // Fetch on-chain stats to get total points
+        const statsResult = await fetchUserStatsOnChain(String(address), String(chainKey), traces)
+        
+        if (!statsResult.ok) {
+          tracePush(traces, 'refreshRank-fetch-error', { error: statsResult.error })
+          return respondJson({
+            ok: false,
+            reason: 'failed to fetch stats',
+            error: statsResult.error,
+            traces,
+            durationMs: nowTs() - started
+          }, { status: 500 })
+        }
+        
+        const stats = statsResult.stats
+        const total = Number(stats.total)
+        
+        // Calculate rank progress
+        const progress = calculateRankProgress(total)
+        const chainDisplay = getChainDisplayName(String(chainKey))
+        
+        // Mock rank position (in real implementation, query all users and calculate actual rank)
+        // For now, estimate based on points: higher points = better rank
+        const estimatedRank = total === 0 ? 9999 : Math.max(1, Math.floor(10000 / (1 + Math.log10(total + 1))))
+        
+        const message = `🏆 Leaderboard Rank on ${chainDisplay}:\n\n` +
+                       `Rank: #${formatInteger(estimatedRank)}\n` +
+                       `Total Points: ${formatInteger(total)}\n\n` +
+                       `Level ${progress.level} • ${progress.currentTier.name}\n` +
+                       `${progress.xpIntoLevel}/${progress.xpForLevel} XP (${Math.round(progress.percent * 100)}%)\n\n` +
+                       `${total === 0 ? 'Start earning to climb the ranks! 🚀' : 'Keep grinding! 💪'}`
+        
+        tracePush(traces, 'refreshRank-success', { address, chainKey, rank: estimatedRank, total })
+        
+        return respondJson({
+          ok: true,
+          user: address,
+          chain: chainKey,
+          rank: estimatedRank,
+          points: String(stats.total),
+          level: progress.level,
+          tier: progress.currentTier.name,
+          xp: {
+            current: progress.xpIntoLevel,
+            max: progress.xpForLevel,
+            toNext: progress.xpToNextLevel,
+            percent: Math.round(progress.percent * 100),
+          },
+          message,
+          traces,
+          durationMs: nowTs() - started
+        })
+      } catch (err: any) {
+        tracePush(traces, 'refreshRank-error', { error: String(err.message || err) })
+        return respondJson({ 
+          ok: false, 
+          reason: 'failed to refresh rank', 
+          error: String(err.message || err),
+          traces 
+        }, { status: 500 })
+      }
+    }
+
     // fallback: echo
     tracePush(traces, 'post-unknown-action', { action, payload })
     return respondJson({ ok: true, message: 'unknown action; no-op', action, payload, traces })
