@@ -74,7 +74,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
             type: 'launch_frame',
             name: 'Gmeowbased',
             url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-            splashImageUrl: `${getBaseUrl(request)}/splash.png`,
+            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
             splashBackgroundColor: '#000000'
           },
         },
@@ -84,7 +84,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         `<!DOCTYPE html>
 <html>
   <head>
-  <meta name="fc:frame" content="${JSON.stringify(notFoundEmbed).replace(/"/g, '&quot;')}" />
+    <meta name="fc:frame" content="${JSON.stringify(notFoundEmbed).replace(/"/g, '&quot;')}" />
+    
     <meta property="og:image" content="${notFoundImageUrl}" />
     <meta property="og:title" content="Badge Not Found" />
     <meta property="og:description" content="This badge could not be found in the user's collection." />
@@ -122,7 +123,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     // Build OG image URL
     const ogImageUrl = buildBadgeShareImageUrl(fid, badgeIdParam, getBaseUrl(request))
-    
+
     // Build Farcaster vNext JSON embed format
     // Reference: https://miniapps.farcaster.xyz/docs/specification
     // vNext requires JSON format in fc:frame meta tag (not legacy property-based tags)
@@ -135,7 +136,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           type: 'launch_frame',
           name: 'Gmeowbased',
           url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-          splashImageUrl: `${getBaseUrl(request)}/splash.png`,
+          splashImageUrl: `${getBaseUrl(request)}/og-image.png`,
           splashBackgroundColor: '#000000'
         },
       },
@@ -145,7 +146,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const frameHtml = `<!DOCTYPE html>
 <html>
   <head>
-  <meta name="fc:frame" content="${JSON.stringify(frameEmbed).replace(/"/g, '&quot;')}" />
+    <meta name="fc:frame" content="${JSON.stringify(frameEmbed).replace(/"/g, '&quot;')}" />
+    
     <meta property="og:image" content="${ogImageUrl}" />
     <meta property="og:title" content="${badgeName} Badge" />
     <meta property="og:description" content="${badgeDescription}" />

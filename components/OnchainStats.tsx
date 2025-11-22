@@ -771,8 +771,8 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
       ].filter((entry): entry is string => Boolean(entry))
       const summary = summaryParts.map((entry) => `• ${entry}`).join('\n')
       const text = summary
-        ? `Flexing my ${chainCfg.name} onchain stats via GMEOW.\n${summary}`
-        : `Flexing my ${chainCfg.name} onchain stats via GMEOW.`
+        ? `Flexing my ${chainCfg.name} onchain stats via GMEOW.\n${summary}\n\n— by @gmeowbased`
+        : `Flexing my ${chainCfg.name} onchain stats via GMEOW — by @gmeowbased`
       const mode = await openWarpcastComposer(text, url)
       if (mode === 'noop') {
         pushShareFeedback('Share unavailable in this environment.')
