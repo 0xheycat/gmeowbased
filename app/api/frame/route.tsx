@@ -2403,6 +2403,119 @@ export async function POST(req: Request) {
       return respondJson({ ok: true, user, perChain: results, aggregatedAvailable: String(aggAvailable), traces, durationMs: nowTs() - started })
     }
 
+    // Phase 1B: recordGM - Track GM button clicks in frames
+    if (action === 'recordGM') {
+      const { generateSessionId, saveFrameState } = await import('@/lib/frame-state')
+      const { buildGMSuccessMessage } = await import('@/lib/frame-messages')
+      const { invalidateUserFrames } = await import('@/lib/frame-cache')
+      
+      const fid = payload.fid || payload.untrustedData?.fid
+      if (!fid) return respondJson({ ok: false, reason: 'missing fid', traces }, { status: 400 })
+      
+      // Create session for state tracking
+      const sessionId = generateSessionId()
+      const now = Date.now()
+      
+      // Mock GM data for frame interactions (not blockchain)
+      const gmCount = Math.floor(Math.random() * 100) + 1
+      const streak = Math.floor(Math.random() * 30) + 1
+      
+      // Save state
+      const saved = await saveFrameState(sessionId, Number(fid), {
+        gmCount,
+        streak,
+        lastAction: 'recordGM',
+        metadata: { timestamp: now },
+      })
+      
+      if (!saved) {
+        return respondJson({ ok: false, reason: 'failed to save state', traces }, { status: 500 })
+      }
+      
+      // Invalidate all frame caches for this user
+      await invalidateUserFrames(Number(fid))
+      
+      // Build success message
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gmeowhq.art'
+      const message = buildGMSuccessMessage({ fid: Number(fid), streak, gmCount, baseUrl })
+      
+      // Return updated frame URL with session
+      const nextFrameUrl = `${baseUrl}/api/frame?type=gm&fid=${fid}&session=${sessionId}`
+      
+      tracePush(traces, 'recordGM', { fid, sessionId, gmCount, streak })
+      return respondJson({ 
+        ok: true, 
+        message, 
+        frameUrl: nextFrameUrl, 
+        sessionId,
+        gmCount,
+        streak,
+        traces, 
+        durationMs: nowTs() - started 
+      })
+    }
+
+    // Phase 1B: questProgress - Track multi-step quest progress
+    if (action === 'questProgress') {
+      const { generateSessionId, saveFrameState, loadFrameState } = await import('@/lib/frame-state')
+      const { buildQuestProgressMessage, buildQuestCompleteMessage } = await import('@/lib/frame-messages')
+      
+      const fid = payload.fid || payload.untrustedData?.fid
+      const questId = payload.questId || payload.quest_id
+      const sessionId = payload.session || payload.sessionId
+      
+      if (!fid || !questId) {
+        return respondJson({ ok: false, reason: 'missing fid or questId', traces }, { status: 400 })
+      }
+      
+      // Load existing session or create new
+      let currentSession = sessionId ? await loadFrameState(sessionId) : null
+      const newSessionId = currentSession?.session_id || generateSessionId()
+      
+      // Get current step from session or start at 1
+      const currentStep = (currentSession?.state.currentStep || 0) + 1
+      const totalSteps = 3 // Default quest steps
+      
+      // Update quest progress
+      const questProgress = currentSession?.state.questProgress || {}
+      questProgress[`step_${currentStep}`] = true
+      
+      const newState = {
+        currentStep,
+        questProgress,
+        lastAction: 'questProgress',
+        metadata: { questId, timestamp: Date.now() },
+      }
+      
+      const saved = await saveFrameState(newSessionId, Number(fid), newState)
+      
+      if (!saved) {
+        return respondJson({ ok: false, reason: 'failed to save state', traces }, { status: 500 })
+      }
+      
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gmeowhq.art'
+      
+      // Check if quest is complete
+      const isComplete = currentStep >= totalSteps
+      const message = isComplete
+        ? buildQuestCompleteMessage({ questTitle: `Quest ${questId}`, points: 100, baseUrl })
+        : buildQuestProgressMessage({ questTitle: `Quest ${questId}`, currentStep, totalSteps, baseUrl })
+      
+      const nextFrameUrl = `${baseUrl}/api/frame?type=quest&questId=${questId}&session=${newSessionId}`
+      
+      tracePush(traces, 'questProgress', { fid, questId, sessionId: newSessionId, currentStep, isComplete })
+      return respondJson({ 
+        ok: true, 
+        message, 
+        frameUrl: nextFrameUrl, 
+        sessionId: newSessionId,
+        currentStep,
+        isComplete,
+        traces, 
+        durationMs: nowTs() - started 
+      })
+    }
+
     // fallback: echo
     tracePush(traces, 'post-unknown-action', { action, payload })
     return respondJson({ ok: true, message: 'unknown action; no-op', action, payload, traces })
