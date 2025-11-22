@@ -8,9 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "dev:docs": "next dev",
     "build": "next build",
-    "build:docs": "next build",
     "start": "next start",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings=0",
     "test": "vitest",
@@ -53,11 +51,6 @@
     "test:cache": "tsx ./scripts/test-frame-cache.ts",
     "warmup": "./scripts/warmup-frames.sh",
     "warmup:local": "./scripts/warmup-frames.sh http://localhost:3002",
-    "docs:extract": "tsx ./scripts/docs/extract-jsdoc.ts",
-    "docs:api": "tsx ./scripts/docs/generate-api-docs.ts",
-    "docs:validate": "tsx ./scripts/docs/validate-links.ts",
-    "docs:outdated": "tsx ./scripts/docs/check-outdated.ts",
-    "docs:all": "npm run docs:extract && npm run docs:api && npm run docs:validate",
     "prebuild": "npm run clean && npm run lint",
     "clean": "rimraf .next"
   },

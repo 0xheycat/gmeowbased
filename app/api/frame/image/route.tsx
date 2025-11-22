@@ -74,10 +74,12 @@ async function cacheImageResponse(
     console.log(`[Frame Image] Generated ${cacheKey.type} frame (${renderTime}ms) - FID:${cacheKey.fid} - Tier:${cacheKey.tier}`)
 
     // Return original response with cache headers
+    // CRITICAL: Set Cache-Control to no-cache for MISS to prevent Vercel CDN from caching MISS responses
+    // This allows subsequent requests to hit our Redis cache instead of serving stale MISS headers
     return new Response(imageBuffer, {
       headers: {
         'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=300, s-maxage=300',
+        'Cache-Control': 'public, max-age=0, s-maxage=300, must-revalidate',
         'X-Cache-Status': 'MISS',
         'X-Render-Time': `${renderTime}ms`,
       },
