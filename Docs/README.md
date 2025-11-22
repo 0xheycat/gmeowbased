@@ -45,6 +45,7 @@ docs/maintenance/ (Original documentation location)
 
 ### Phase 1B.1 Documents
 - [System Architecture Audit](./Maintenance/frame/Phase-1/Phase-1B1/SYSTEM-AUDIT.md) - Complete system analysis before implementation
+- [Frame Restructure Plan](./Maintenance/frame/Phase-1/Phase-1B1/FRAME-RESTRUCTURE-PLAN.md) - Clean URL architecture & migration strategy
 - [Implementation Plan](./Maintenance/frame/Phase-1/Phase-1B1/IMPLEMENTATION-PLAN.md) - Detailed button specifications (pending)
 - [Testing Guide](./Maintenance/frame/Phase-1/Phase-1B1/TESTING-GUIDE.md) - Local & production testing (pending)
 

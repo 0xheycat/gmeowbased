@@ -9,6 +9,23 @@
 
 ### Phase 1B.1 - Interactive Frame Buttons (In Progress)
 
+#### 2024-12-03 (Part 3)
+**Frame Restructure Plan Created**:
+- ✅ Analyzed master route architecture (2540 lines, 10 frame types)
+- ✅ Designed clean URL structure: `/api/frame/quest`, `/api/frame/gm`, etc.
+- ✅ Zero downtime migration strategy (4-week plan)
+- ✅ Keep master route as orchestrator + backward compatibility layer
+- ✅ Extract shared utilities: buttons, HTML, debug, validation
+- ✅ Week-by-week implementation roadmap
+- ✅ GI-13 safe patching checklist integrated
+
+**Key Decisions**:
+- No hard reset required - gradual migration approach
+- Maintain backward compatibility with old `?type=quest` URLs
+- Master route redirects to new clean routes
+- Start with `/api/frame/quest/route.ts` as proof of concept
+- Add dynamic routing: `/api/frame/quest/[questId]/route.ts`
+
 #### 2024-12-03 (Part 2)
 **Documentation Reorganization**:
 - ✅ Integrated historical documentation (58+ documents from Phase 0-5)
