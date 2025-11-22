@@ -54,12 +54,11 @@ export async function GET(req: NextRequest) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Test Route 3: Exact Main Clone</title>
+    <title>Test Route 4: Classic v1 Only (No vNext Tag)</title>
     
-    <!-- vNext single button (EXACT copy from main route) -->
-    ${vNextTag}
+    <!-- NO vNext tag - testing if Classic v1 alone shows 3 buttons -->
     
-    <!-- Classic Frames v1 tags (same as main route) -->
+    <!-- Classic Frames v1 tags only -->
     <meta property="fc:frame" content="vNext" />
     <meta property="fc:frame:image" content="${frameImage}" />
     <meta property="fc:frame:post_url" content="${postUrl}" />
