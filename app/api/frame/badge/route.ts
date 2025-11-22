@@ -52,27 +52,28 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const badgeRegistry = loadBadgeRegistry()
 
     if (badges.length === 0) {
-      // No badges frame - use JSON format per Farcaster spec
+      // No badges frame - use vNext JSON format matching main route
       const noBadgesImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: 'none', fid, extra: { state: 'none' } }, getBaseUrl(request))
-      const noBadgesEmbed = {
-        version: 'next',
-        imageUrl: noBadgesImageUrl,
-        button: {
-          title: 'View Profile',
-          action: {
-            type: 'launch_frame',
-            name: 'Gmeowbased',
-            url: `${getBaseUrl(request)}/profile/${fid}`,
-            splashImageUrl: `${getBaseUrl(request)}/logo.png`,
-            splashBackgroundColor: '#000000'
-          }
-        }
-      }
+      
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
   <head>
-    <meta name="fc:frame" content='${JSON.stringify(noBadgesEmbed).replace(/'/g, "&#39;")}' />
+    <meta name="fc:frame" content="${JSON.stringify({
+      version: 'next',
+      imageUrl: noBadgesImageUrl,
+      button: {
+        title: 'View Profile',
+        action: {
+          type: 'launch_frame',
+          name: 'Gmeowbased',
+          url: `${getBaseUrl(request)}/profile/${fid}`,
+          splashImageUrl: `${getBaseUrl(request)}/splash.png`,
+          splashBackgroundColor: '#000000'
+        }
+      }
+    }).replace(/"/g, '&quot;')}" />
+   
     <meta property="og:image" content="${noBadgesImageUrl}" />
     <meta property="og:title" content="No Badges Yet" />
     <meta property="og:description" content="This user hasn't earned any badges yet." />
@@ -94,26 +95,28 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       // Find specific badge by badgeId
       targetBadge = badges.find((b) => b.badgeId === badgeIdParam)
       if (badgeIdParam && !targetBadge) {
-        // Badge not found - return error frame
+        // Badge not found - multi-format for miniapp compatibility
         const notFoundImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: badgeIdParam, fid, extra: { state: 'notfound' } }, getBaseUrl(request))
+
+        
         return new NextResponse(
           `<!DOCTYPE html>
 <html>
   <head>
-    <meta name="fc:frame" content='${JSON.stringify({
-      version: 'next',
-      imageUrl: notFoundImageUrl,
-      button: {
-        title: 'View All Badges',
-        action: {
-          type: 'launch_frame',
-          name: 'Gmeowbased',
-          url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-          splashImageUrl: `${getBaseUrl(request)}/logo.png`,
-          splashBackgroundColor: '#000000'
-        }
+  <meta name="fc:frame" content='${JSON.stringify({
+    version: 'next',
+    imageUrl: notFoundImageUrl,
+    button: {
+      title: 'View All Badges',
+      action: {
+        type: 'launch_frame',
+        name: 'Gmeowbased',
+        url: `${getBaseUrl(request)}/profile/${fid}/badges`,
+        splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+        splashBackgroundColor: '#000000'
       }
-    }).replace(/'/g, "&#39;")}' />
+    }
+  }).replace(/'/g, "&#39;")}' />
     <meta property="og:image" content="${notFoundImageUrl}" />
     <meta property="og:title" content="Badge Not Found" />
     <meta property="og:description" content="This badge could not be found in the user's collection." />
@@ -153,11 +156,17 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       accent: '#FFFFFF',
     }
 
-    // Build frame HTML - vNext format with single button
+    // Build frame HTML - vNext JSON format matching main route
     // Using buildDynamicFrameImageUrl (trusted source pattern like working frames)
     const badgeImageUrl = buildDynamicFrameImageUrl({ type: 'badge' as any, badgeId: targetBadge.badgeId, fid }, getBaseUrl(request))
+    const launchUrl = `${getBaseUrl(request)}/profile/${fid}/badges`
+    const splashImageUrl = `${getBaseUrl(request)}/splash.png`
     
-    const badgeEmbed = {
+    const frameHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Farcaster vNext JSON format (matches Farville working implementation) -->
+    <meta name="fc:frame" content="${JSON.stringify({
       version: 'next',
       imageUrl: badgeImageUrl,
       button: {
@@ -165,16 +174,14 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         action: {
           type: 'launch_frame',
           name: 'Gmeowbased',
-          url: `${getBaseUrl(request)}/profile/${fid}/badges`,
-          splashImageUrl: `${getBaseUrl(request)}/logo.png`,
+          url: launchUrl,
+          splashImageUrl: splashImageUrl,
           splashBackgroundColor: '#000000'
         }
       }
-    }
-    const frameHtml = `<!DOCTYPE html>
-<html>
-  <head>
-    <meta name="fc:frame" content='${JSON.stringify(badgeEmbed).replace(/'/g, "&#39;")}' />
+    }).replace(/"/g, '&quot;')}" />
+    
+    <!-- OpenGraph metadata -->
     <meta property="og:image" content="${badgeImageUrl}" />
     <meta property="og:title" content="${(targetBadge.metadata as { name?: string })?.name || targetBadge.badgeType} Badge" />
     <meta property="og:description" content="${(targetBadge.metadata as { description?: string })?.description || `${tierConfig.name} tier badge`}" />

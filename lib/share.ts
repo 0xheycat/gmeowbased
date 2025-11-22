@@ -229,6 +229,8 @@ export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride
   if (input.type === 'badge' && input.badgeId) {
     params.set('badgeId', input.badgeId)
     // Badge images: dynamic generation with aggressive CDN caching for speed
+    // Cache buster: v=2 to invalidate old cached error responses (2025-11-20 multi-line CSS fix)
+    params.set('v', '2')
     return `${origin}/api/frame/badgeShare/image?${params.toString()}`
   }
   if (input.type === 'leaderboards' && input.extra) {

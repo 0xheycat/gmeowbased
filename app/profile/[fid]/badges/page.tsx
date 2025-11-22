@@ -228,7 +228,7 @@ export default function UserBadgesPage() {
                 // Share most recent badge
                 const latestBadge = badges[0]
                 const shareUrl = `https://gmeowhq.art/api/frame/badge?fid=${fid}&badgeId=${latestBadge.badgeId}`
-                const shareText = `Just earned the ${latestBadge.metadata?.name || latestBadge.badgeType} badge! 🎮✨`
+                const shareText = `Just earned the ${latestBadge.metadata?.name || latestBadge.badgeType} badge! 🎮✨\n\n— via @gmeowbased`
                 
                 // Open Warpcast composer
                 const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`

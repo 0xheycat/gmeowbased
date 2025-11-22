@@ -269,7 +269,7 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const seasonNarrative = seasonLabel ? `${seasonLabel}.` : ''
   const syncNarrative = updatedHuman ? `Synced ${updatedHuman}.` : ''
 
-  const descriptionSegments = [leaderNarrative, xpNarrative, squadNarrative, seasonNarrative, isGlobal ? 'All chains combined.' : `${chainDisplay} leaderboard.`, syncNarrative]
+  const descriptionSegments = [leaderNarrative, xpNarrative, squadNarrative, seasonNarrative, isGlobal ? 'All chains combined.' : `${chainDisplay} leaderboard.`, syncNarrative, '— @gmeowbased']
   const description = descriptionSegments
     .map(segment => segment?.trim())
     .filter(Boolean)
@@ -480,6 +480,7 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
     chainKey: isGlobal ? 'all' : chainKey,
     frameOrigin: origin,
     frameVersion: FRAME_VERSION,
+    frameType: 'leaderboards',
   })
   return createHtmlResponse(html)
 }
@@ -1009,6 +1010,7 @@ function buildFrameHtml(params: {
   heroStats?: Array<{ label: string; value: string; accent?: boolean }>
   heroList?: Array<{ primary: string; secondary?: string; icon?: string }>
   defaultFrameImage?: string | null
+  frameType?: string // Yu-Gi-Oh! frame type (quest, guild, leaderboards, etc.)
 }) {
   const {
     title,
@@ -1017,18 +1019,18 @@ function buildFrameHtml(params: {
     url,
     buttons = [],
     // fcMeta: _fcMeta, // No longer used with JSON frame format
-    debug,
+    debug, // eslint-disable-line @typescript-eslint/no-unused-vars
     profile,
     kicker,
     chainIcon,
     chainLabel,
-    chainKey,
     frameOrigin,
     // frameVersion: _frameVersion, // No longer used with JSON frame format
     hideOverlay,
     heroBadge,
     heroStats = [],
     heroList = [],
+    frameType, // Yu-Gi-Oh! frame type
   } = params
   const pageTitle = escapeHtml(title)
   const rawDescription = description || ''
@@ -1038,7 +1040,7 @@ function buildFrameHtml(params: {
   // Use frame-image.png (1200x800) for correct frame spec, not og-image.png (1200x630)
   const resolvedImage = image || (frameOrigin ? `${frameOrigin}/frame-image.png` : '')
   const imageEsc = resolvedImage ? escapeHtml(resolvedImage) : ''
-  const overlayHidden = Boolean(hideOverlay)
+  const overlayHidden = Boolean(hideOverlay) // eslint-disable-line @typescript-eslint/no-unused-vars
   const descriptionSegments = rawDescription
     .split(' • ')
     .map((segment) => segment.trim())
@@ -1124,20 +1126,12 @@ function buildFrameHtml(params: {
         .map(item => `<div class="overlay-hierarchy-item">${item.icon ? `<span class="overlay-hierarchy-icon">${escapeHtml(item.icon)}</span>` : ''}<div><div class="overlay-hierarchy-primary">${escapeHtml(item.primary)}</div>${item.secondary ? `<div class="overlay-hierarchy-secondary">${escapeHtml(item.secondary)}</div>` : ''}</div></div>`)
         .join('')}</div>`
     : ''
-  const overlayTopHtml = normalizedProfile
+  const overlayTopHtml = normalizedProfile // eslint-disable-line @typescript-eslint/no-unused-vars
     ? `<div class="overlay-top">${overlayProfileHtml}<div class="overlay-heading">${overlayHeadingInner}</div></div>`
     : `<div class="overlay-heading">${overlayHeadingInner}</div>`
   const overlayDetailsFallback = !primaryOverlaySegment ? `<div class="overlay-text">${desc}</div>` : ''
-  const overlayDetailsHtml = overlaySecondaryHtml || overlayDetailsFallback
-  const overlayFooterHtml = listHtml
-  const overlayHtml = overlayHidden
-    ? ''
-    : `
-    ${overlayTopHtml}
-    ${overlayDetailsHtml}
-    ${overlayFooterHtml}
-  `
-  const accessibleDescriptionHtml = `<p>${desc || pageTitle}</p>`
+  const overlayDetailsHtml = overlaySecondaryHtml || overlayDetailsFallback // eslint-disable-line @typescript-eslint/no-unused-vars
+  const overlayFooterHtml = listHtml // eslint-disable-line @typescript-eslint/no-unused-vars
   
   // Enforce 4-button limit per Farcaster vNext spec
   const { buttons: validatedButtons, truncated, originalCount, invalidTitles } = sanitizeButtons(buttons)
@@ -1154,705 +1148,173 @@ function buildFrameHtml(params: {
   // Use 'launch_frame' to launch mini app within Warpcast (not external browser)
   // Use version: 'next' (Farville production-verified, November 19, 2025)
   const primaryButton = validatedButtons[0]
-  const frameEmbedMeta = primaryButton && frameOrigin && imageEsc ? {
-    version: 'next',
-    imageUrl: resolvedImage,
-    button: {
-      title: primaryButton.label,
-      action: {
-        type: 'launch_frame',
-        name: 'Gmeowbased',
-        url: primaryButton.target || frameOrigin,
-        splashImageUrl: frameOrigin ? `${frameOrigin}/logo.png` : undefined,
-        splashBackgroundColor: '#000000'
-      }
-    }
-  } : null
+  const launchUrl = primaryButton?.target || frameOrigin
+  const splashUrl = frameOrigin ? `${frameOrigin}/splash.png` : undefined
   
-  const linkButtons = validatedButtons.filter((btn) => (btn.action ?? 'link') === 'link' && !!btn.target)
-  const primaryLink = linkButtons[0]
-  const primaryLinkHtml = primaryLink && primaryLink.target
-    ? `<a class="btn" href="${escapeHtml(primaryLink.target)}">${escapeHtml(primaryLink.label)}</a>`
-    : ''
-  const debugHtml = debug
-    ? `<details class="debug-panel" open><summary>Debug payload</summary><pre>${escapeHtml(JSON.stringify(debug, null, 2))}</pre></details>`
-    : ''
-  const chainDataAttr = chainKey ? ` data-chain="${escapeHtml(chainKey)}"` : ''
-  const frameJsonMetaTag = frameEmbedMeta 
-    ? `<meta name="fc:frame" content='${JSON.stringify(frameEmbedMeta).replace(/'/g, "&#39;")}' />`
-    : ''
-  return `<!doctype html>
-  <html lang="en"${chainDataAttr}>
+  // Yu-Gi-Oh! Rich Frame Palette (dynamic colors based on frame type)
+  const getFramePalette = (type?: string) => {
+    const palettes: Record<string, { primary: string; secondary: string; background: string; accent: string; label: string }> = {
+      quest: { primary: '#8e7cff', secondary: '#a78bff', background: '#0a0520', accent: '#5ad2ff', label: 'QUEST' },
+      guild: { primary: '#4da3ff', secondary: '#6bb5ff', background: '#050a20', accent: '#7CFF7A', label: 'GUILD' },
+      leaderboards: { primary: '#ffd700', secondary: '#ffed4e', background: '#201a05', accent: '#ff6b6b', label: 'LEADERBOARD' },
+      verify: { primary: '#7CFF7A', secondary: '#9bffaa', background: '#052010', accent: '#5ad2ff', label: 'VERIFY' },
+      referral: { primary: '#ff6b9d', secondary: '#ff8db4', background: '#200510', accent: '#ffd700', label: 'REFERRAL' },
+      onchainstats: { primary: '#00d4ff', secondary: '#5ae4ff', background: '#051520', accent: '#ffd700', label: 'ONCHAIN' },
+      points: { primary: '#ffb700', secondary: '#ffc840', background: '#201405', accent: '#8e7cff', label: 'POINTS' },
+      gm: { primary: '#ff9500', secondary: '#ffab40', background: '#201005', accent: '#7CFF7A', label: 'GM' },
+    }
+    return palettes[type || ''] || { primary: '#8e7cff', secondary: '#a78bff', background: '#0a0e22', accent: '#5ad2ff', label: 'FRAME' }
+  }
+  
+  const framePalette = getFramePalette(frameType)
+  
+  // Generate vNext JSON frame meta tag (single tag format for validator compatibility)
+  // Reference: https://docs.farcaster.xyz/reference/frames/spec
+  // CRITICAL: Match Farville format - use double quotes with &quot; encoding, not single quotes
+  const frameMetaTags = primaryButton && frameOrigin && resolvedImage ? `
+    <meta name="fc:frame" content="${JSON.stringify({
+      version: 'next',
+      imageUrl: resolvedImage,
+      button: {
+        title: primaryButton.label,
+        action: {
+          type: 'launch_frame',
+          name: 'Gmeowbased',
+          url: launchUrl,
+          splashImageUrl: splashUrl,
+          splashBackgroundColor: '#000000'
+        }
+      }
+    }).replace(/"/g, '&quot;')}" />` : ''
+  
+  // Yu-Gi-Oh! Rich Template (November 21, 2025)
+  // Enhanced card-style structure with dynamic palette, type badges, and rich visual effects
+  return `<!DOCTYPE html>
+<html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>${pageTitle}</title>
     <meta name="description" content="${desc}" />
-    ${frameJsonMetaTag}
+    ${frameMetaTags}
     <meta property="og:title" content="${pageTitle}" />
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
+    
     <style>
-      :root {
-        --bg:#040510;
-        --bg-gradient:radial-gradient(120% 160% at 20% 20%,rgba(124,92,255,0.35) 0%,rgba(66,179,255,0.18) 45%,rgba(4,5,16,0.95) 92%);
-        --card:rgba(10,14,34,0.78);
-        --card-border:rgba(126,141,255,0.35);
-        --card-shadow:0 18px 38px rgba(9,13,44,0.55);
-        --muted:rgba(226,231,255,0.82);
-        --muted-soft:rgba(165,178,216,0.7);
-        --accent:#8e7cff;
-        --accent-strong:#5ad2ff;
-        --accent-shadow:0 12px 30px rgba(90,210,255,0.32);
-        --grid-line:rgba(142,124,255,0.22);
-        --glass:rgba(12,16,42,0.86);
-        --glass-border:rgba(142,124,255,0.42);
-        --halo:linear-gradient(120deg,rgba(94,113,255,0.75),rgba(90,210,255,0.28),rgba(255,255,255,0));
-        --halo-bottom:radial-gradient(120% 80% at 50% 100%,rgba(90,210,255,0.25) 0%,rgba(8,18,58,0) 72%);
-        --list-marker:linear-gradient(135deg,#8e7cff 0%,#5ad2ff 100%);
-      }
-      :root[data-chain="base"] {
-        --accent:#0052ff;
-        --accent-strong:#4da3ff;
-        --accent-shadow:0 12px 30px rgba(77,163,255,0.32);
-        --bg-gradient:radial-gradient(120% 160% at 15% 20%,rgba(0,82,255,0.32) 0%,rgba(5,25,72,0.92) 65%,rgba(4,5,16,0.96) 100%);
-        --grid-line:rgba(77,163,255,0.22);
-        --glass-border:rgba(96,154,255,0.48);
-      }
-      :root[data-chain="op"] {
-        --accent:#ff0420;
-        --accent-strong:#ff5a5a;
-        --accent-shadow:0 12px 30px rgba(255,90,90,0.32);
-        --bg-gradient:radial-gradient(110% 150% at 20% 15%,rgba(255,25,45,0.35) 0%,rgba(56,4,8,0.92) 60%,rgba(4,5,16,0.96) 100%);
-        --grid-line:rgba(255,90,90,0.22);
-        --glass-border:rgba(255,96,130,0.5);
-      }
-      :root[data-chain="celo"] {
-        --accent:#35d07f;
-        --accent-strong:#54e0a0;
-        --accent-shadow:0 12px 30px rgba(84,224,160,0.32);
-        --bg-gradient:radial-gradient(110% 160% at 20% 20%,rgba(53,208,127,0.32) 0%,rgba(5,48,24,0.92) 62%,rgba(4,5,16,0.96) 100%);
-        --grid-line:rgba(84,224,160,0.24);
-        --glass-border:rgba(84,224,160,0.46);
-      }
-      :root[data-chain="unichain"] {
-        --accent:#ab78ff;
-        --accent-strong:#c99aff;
-        --accent-shadow:0 12px 30px rgba(201,154,255,0.34);
-        --bg-gradient:radial-gradient(120% 150% at 25% 22%,rgba(171,120,255,0.34) 0%,rgba(36,12,66,0.9) 62%,rgba(4,5,16,0.96) 100%);
-        --grid-line:rgba(171,120,255,0.24);
-        --glass-border:rgba(190,150,255,0.48);
-      }
-      :root[data-chain="ink"] {
-        --accent:#ffb700;
-        --accent-strong:#ffd866;
-        --accent-shadow:0 12px 30px rgba(255,216,102,0.32);
-        --bg-gradient:radial-gradient(120% 150% at 18% 18%,rgba(255,183,0,0.32) 0%,rgba(60,38,0,0.9) 60%,rgba(4,5,16,0.96) 100%);
-        --grid-line:rgba(255,214,102,0.24);
-        --glass-border:rgba(255,214,102,0.48);
-      }
-      @keyframes floatCard {
-        0%,100% { transform: translateY(0px) scale(1); }
-        50% { transform: translateY(-4px) scale(1.005); }
-      }
-      @keyframes shimmer {
-        0% { opacity: 0.65; }
-        50% { opacity: 1; }
-        100% { opacity: 0.65; }
-      }
-      @keyframes holoSweep {
-        0% { transform: translateX(-40%) skewX(-12deg); opacity: 0; }
-        45% { opacity: 0.35; }
-        100% { transform: translateX(140%) skewX(-12deg); opacity: 0; }
-      }
-      @keyframes cardPulse {
-        0%,100% { opacity: 0.15; }
-        50% { opacity: 0.32; }
-      }
-      html,body{
-        height:100%;
-        margin:0;
-        background:var(--bg);
-        font-family:"Inter",ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
-        color:#f6f7ff;
-      }
-      body::before {
-        content:"";
-        position:fixed;
-        inset:0;
-        background:var(--bg-gradient);
-        opacity:0.95;
-        animation:shimmer 12s ease-in-out infinite;
-        z-index:-2;
-      }
-      body::after {
-        content:"";
-        position:fixed;
-        inset:0;
-        background:radial-gradient(220% 220% at 80% 0%,rgba(94,113,255,0.22) 0%,rgba(4,5,16,0.25) 52%,rgba(4,5,16,0.92) 100%);
-        z-index:-1;
-      }
-      .wrap{
-        max-width:720px;
-        margin:18px auto 24px;
-        padding:0 16px;
-      }
-      .card{
-        background:var(--card);
-        border:1px solid var(--card-border);
-        border-radius:22px;
-        padding:20px;
-        backdrop-filter:blur(22px);
-        box-shadow:var(--card-shadow);
-        animation:floatCard 10s ease-in-out infinite;
-        position:relative;
-        display:flex;
-        flex-direction:column;
-        gap:20px;
-        transform-style:preserve-3d;
-      }
-      .card.card-3d{
-        border:2px solid rgba(255,215,0,0.6);
-        box-shadow:0 32px 60px rgba(9,14,44,0.68), 
-                   inset 0 1px 0 rgba(255,255,255,0.15),
-                   inset 0 0 60px rgba(255,215,0,0.1),
-                   0 0 20px rgba(255,215,0,0.3);
-        transform:perspective(1100px) rotateX(2deg) rotateY(-1.2deg);
-        transition:transform 0.5s ease, box-shadow 0.5s ease;
-        background:linear-gradient(135deg, rgba(10,14,34,0.95) 0%, rgba(20,24,44,0.92) 100%);
-      }
-      .card.card-3d:hover{
-        transform:perspective(1100px) rotateX(0.6deg) rotateY(-0.4deg) translateY(-4px);
-        box-shadow:0 36px 70px rgba(12,20,60,0.72), 
-                   inset 0 1px 0 rgba(255,255,255,0.2),
-                   inset 0 0 80px rgba(255,215,0,0.15),
-                   0 0 30px rgba(255,215,0,0.5);
-      }
-      .card.card-3d::before {
-        content:"";
-        position:absolute;
-        inset:-32% -58% auto;
-        height:160px;
-        background:linear-gradient(120deg,rgba(255,215,0,0.4),rgba(255,180,0,0.2),rgba(255,255,255,0));
-        transform:rotate(6deg);
-        opacity:0.4;
-        pointer-events:none;
-        filter:blur(1px);
-      }
-      .card.card-3d::after{
-        content:"";
-        position:absolute;
-        inset:auto -40% -48px -40%;
-        height:140px;
-        background:radial-gradient(120% 80% at 50% 100%,rgba(90,210,255,0.22) 0%,rgba(8,18,58,0) 72%);
-        pointer-events:none;
-        transform:translateZ(-30px);
-      }
-      .holo-card{
-        overflow:hidden;
-        isolation:isolate;
-      }
-      .card-chrome{
-        position:absolute;
-        inset:-32% -60% auto;
-        height:180px;
-        background:var(--halo);
-        opacity:0.25;
-        filter:blur(18px);
-        pointer-events:none;
-        transform:rotate(8deg);
-        mix-blend-mode:screen;
-      }
-      .card-chrome-bottom{
-        inset:auto -48% -60% -48%;
-        height:160px;
-        background:var(--halo-bottom);
-        opacity:0.4;
-        transform:none;
-      }
-      .card-grid{
-        position:absolute;
-        inset:0;
-        pointer-events:none;
-        border-radius:inherit;
-        background-image:linear-gradient(0deg,transparent 0%,transparent 88%,var(--grid-line) 92%),linear-gradient(90deg,transparent 0%,transparent 88%,var(--grid-line) 92%);
-        background-size:120px 120px;
-        opacity:0.18;
-        mix-blend-mode:screen;
-        animation:cardPulse 14s ease-in-out infinite;
-      }
-      .sr-only{
-        position:absolute;
-        width:1px;
-        height:1px;
-        padding:0;
-        margin:-1px;
-        overflow:hidden;
-        clip:rect(0,0,0,0);
-        white-space:nowrap;
-        border:0;
-      }
-      .hero{
-        position:relative;
-        border-radius:16px;
-        overflow:hidden;
-        box-shadow:0 14px 28px rgba(8,18,58,0.55);
-        min-height:200px;
-      }
-      .hero-holo .hero-img{
-        filter:saturate(1.05) contrast(1.05);
-      }
-      .hero-glow,
-      .hero-grid{
-        position:absolute;
-        inset:0;
-        pointer-events:none;
-      }
-      .hero-glow{
-        background:radial-gradient(140% 140% at 85% 20%,rgba(255,255,255,0.16) 0%,rgba(90,210,255,0.22) 32%,rgba(8,12,30,0.85) 72%);
-        mix-blend-mode:screen;
-        opacity:0.4;
-      }
-      .hero-grid{
-        background-image:linear-gradient(0deg,rgba(255,255,255,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.06) 1px,transparent 1px);
-        background-size:80px 80px;
-        opacity:0.18;
-        animation:cardPulse 12s ease-in-out infinite;
-      }
-      .hero-img{
-        display:block;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-      }
-      .hero-overlay{
-        position:absolute;
-        inset:0;
-        display:flex;
-        flex-direction:column;
-        justify-content:flex-start;
-        align-items:stretch;
-        padding:28px 30px;
-        background:linear-gradient(18deg,rgba(4,7,22,0.82) 0%,rgba(4,5,16,0.28) 62%,rgba(4,5,16,0) 100%);
-        gap:18px;
-      }
-      .overlay-top{
-        display:flex;
-        align-items:flex-start;
-        gap:18px;
-        flex-wrap:wrap;
-      }
-      .overlay-heading{
-        display:flex;
-        flex-direction:column;
-        gap:10px;
-        min-width:0;
-        flex:1 1 320px;
-      }
-      .overlay-title{
-        font-size:30px;
-        font-weight:800;
-        letter-spacing:0.02em;
-        color:#f8f9ff;
-      }
-      .overlay-kicker{
-        font-size:12px;
-        font-weight:700;
-        letter-spacing:0.26em;
-        text-transform:uppercase;
-        color:#ffd700;
-        padding:8px 14px;
-        border-radius:999px;
-        display:inline-flex;
-        align-items:center;
-        gap:8px;
-        background:linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,180,0,0.15));
-        border:1.5px solid rgba(255,215,0,0.5);
-        font-family:"GMeow", var(--site-font, system-ui, -apple-system, Segoe UI, sans-serif);
-        text-shadow:0 0 10px rgba(255,215,0,0.8), 0 1px 3px rgba(0,0,0,0.8);
-        box-shadow:0 4px 12px rgba(255,215,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
-      }
-      .overlay-kicker span{
-        display:inline-flex;
-        align-items:center;
-        line-height:1;
-        letter-spacing:inherit;
-      }
-      .overlay-kicker-chain{
-        padding-right:16px;
-      }
-      .overlay-chain-icon{
-        width:18px;
-        height:18px;
-        border-radius:6px;
-        object-fit:contain;
-        background:rgba(4,5,16,0.65);
-        box-shadow:0 0 14px rgba(90,210,255,0.32);
-      }
-      .overlay-text{
-        font-size:16px;
-        font-weight:600;
-        color:var(--muted);
-        line-height:1.55;
-        max-width:72%;
-        text-shadow:0 8px 18px rgba(8,18,58,0.42);
-        font-family:"GMeow", var(--site-font, system-ui, -apple-system, Segoe UI, sans-serif);
-      }
-      .overlay-list{
-        padding:0;
-        margin:0;
-        list-style:none;
-        display:flex;
-        flex-direction:column;
-        gap:9px;
-        min-width:0;
-        font-family:"GMeow", var(--site-font, system-ui, -apple-system, Segoe UI, sans-serif);
-      }
-      .overlay-list li{
-        position:relative;
-        padding-left:16px;
-        font-size:15px;
-        font-weight:600;
-        color:#f4f5ff;
-        line-height:1.6;
-        font-family:"GMeow", var(--site-font, system-ui, -apple-system, Segoe UI, sans-serif);
-      }
-      .overlay-list li::before{
-        content:"";
-        position:absolute;
-        left:0;
-        top:8px;
-        width:7px;
-        height:7px;
-        border-radius:999px;
-        background:var(--list-marker);
-        box-shadow:0 0 10px rgba(90,210,255,0.6);
-      }
-      .overlay-list-grid{
-        display:flex;
-        gap:20px;
-        flex-wrap:wrap;
-        width:100%;
-      }
-      .overlay-list-grid .overlay-list{
-        flex:1 1 240px;
-      }
-      .overlay-list-grid-card{
-        gap:18px;
-      }
-      .overlay-list-grid-card .overlay-list{
-        flex:1 1 200px;
-        padding:16px 18px;
-        border-radius:18px;
-        background:linear-gradient(135deg,var(--glass),rgba(18,28,72,0.6));
-        border:1px solid var(--glass-border);
-        box-shadow:0 20px 46px rgba(8,18,58,0.48), inset 0 1px 0 rgba(255,255,255,0.08);
-      }
-      .overlay-profile{
-        position:relative;
-        display:flex;
-        align-items:center;
-        gap:18px;
-        padding:16px 20px;
-        border-radius:20px;
-        background:linear-gradient(140deg,var(--glass),rgba(26,38,88,0.58));
-        border:1px solid var(--glass-border);
-        backdrop-filter:blur(18px);
-        box-shadow:0 26px 48px rgba(8,18,58,0.48), inset 0 1px 0 rgba(255,255,255,0.12);
-        overflow:hidden;
-        isolation:isolate;
-      }
-      .identity-card-glow{
-        position:absolute;
-        inset:-40% -60% auto;
-        height:160%;
-        background:linear-gradient(145deg,var(--accent) 0%,rgba(255,255,255,0.16) 45%,rgba(255,255,255,0));
-        opacity:0.38;
-        filter:blur(38px);
-        transform:rotate(8deg);
-        pointer-events:none;
-      }
-      .identity-card-body{
-        position:relative;
-        display:flex;
-        align-items:center;
-        gap:18px;
-        z-index:1;
-      }
-      .identity-avatar-shell{
-        position:relative;
-        width:68px;
-        height:68px;
-        border-radius:22px;
-        background:rgba(8,12,32,0.72);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        box-shadow:0 22px 42px rgba(8,18,58,0.55);
-      }
-      .identity-avatar{
-        width:64px;
-        height:64px;
-        border-radius:20px;
-        object-fit:cover;
-        border:2px solid rgba(255,255,255,0.85);
-        box-shadow:0 16px 30px rgba(8,18,58,0.55);
-      }
-      .identity-avatar-fallback{
-        width:64px;
-        height:64px;
-        border-radius:20px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:24px;
-        font-weight:700;
-        letter-spacing:0.02em;
-        color:#0a1028;
-        background:linear-gradient(135deg,rgba(255,255,255,0.96),rgba(200,215,255,0.88));
-        border:2px solid rgba(255,255,255,0.85);
-        box-shadow:0 16px 30px rgba(8,18,58,0.55);
-      }
-      .identity-avatar-ring{
-        position:absolute;
-        inset:-12px;
-        border-radius:28px;
-        border:1px solid rgba(255,255,255,0.24);
-        box-shadow:0 0 30px rgba(142,124,255,0.45);
-        opacity:0.7;
-      }
-      .overlay-profile-text{
-        position:relative;
-        display:flex;
-        flex-direction:column;
-        gap:6px;
-        z-index:1;
-      }
-      .identity-card-text{
-        gap:8px;
-      }
-      .identity-badge-wrap{
-        display:flex;
-        align-items:center;
-        gap:8px;
-      }
-      .overlay-handle{
-        font-size:17px;
-        font-weight:700;
-        color:#ffffff;
-        letter-spacing:0.01em;
-        font-family:"GMeow", var(--site-font, system-ui, -apple-system, Segoe UI, sans-serif);
-      }
-      .identity-handle{
-        font-size:19px;
-      }
-      .overlay-name{
-        font-size:14px;
-        color:var(--muted);
-        letter-spacing:0.015em;
-        font-family:"GMeow", var(--site-font, system-ui, -apple-system, Segoe UI, sans-serif);
-      }
-      .identity-name{
-        color:rgba(202,210,255,0.82);
-      }
-      .identity-card-kicker{
-        margin-top:6px;
-      }
-      .identity-card-kicker .overlay-kicker{
-        padding:6px 12px;
-        font-size:11px;
-        letter-spacing:0.22em;
-      }
-      .overlay-badge{
-        display:inline-flex;
-        align-items:center;
-        gap:8px;
-        align-self:flex-start;
-        padding:6px 12px;
-        border-radius:999px;
-        font-size:13px;
-        font-weight:600;
-        letter-spacing:0.02em;
-        background:rgba(126,243,199,0.18);
-        color:#7ef3c7;
-        border:1px solid rgba(126,243,199,0.38);
-        box-shadow:0 0 18px rgba(126,243,199,0.28);
-      }
-      .overlay-badge-violet{background:rgba(124,92,255,0.22);color:#d0b9ff;border-color:rgba(124,92,255,0.4);box-shadow:0 0 18px rgba(124,92,255,0.28);}
-      .overlay-badge-gold{background:rgba(255,214,102,0.2);color:#ffd766;border-color:rgba(255,214,102,0.42);box-shadow:0 0 22px rgba(255,214,102,0.3);}
-      .overlay-badge-blue{background:rgba(64,186,255,0.22);color:#85dcff;border-color:rgba(64,186,255,0.38);box-shadow:0 0 20px rgba(64,186,255,0.26);}
-      .overlay-badge-pink{background:rgba(255,143,200,0.22);color:#ffb2df;border-color:rgba(255,143,200,0.38);box-shadow:0 0 20px rgba(255,143,200,0.28);}
-      .overlay-badge-icon{
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        width:16px;
-        height:16px;
-        border-radius:999px;
-        background:rgba(255,255,255,0.16);
-        font-size:11px;
-      }
-      .overlay-metrics{
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-        gap:10px;
-        margin-top:8px;
-      }
-      .overlay-metric{
-        padding:10px 12px;
-        border-radius:14px;
-        background:rgba(12,15,28,0.62);
-        border:1px solid rgba(126,141,255,0.26);
-        display:flex;
-        flex-direction:column;
-        gap:4px;
-      }
-      .overlay-metric strong{
-        font-size:17px;
-        color:#f9fbff;
-        letter-spacing:0.01em;
-      }
-      .overlay-metric-label{
-        font-size:11px;
-        text-transform:uppercase;
-        color:rgba(187,196,255,0.72);
-        letter-spacing:0.14em;
-      }
-      .overlay-metric.overlay-metric-accent{
-        background:rgba(126,243,199,0.2);
-        border-color:rgba(126,243,199,0.45);
-      }
-      .overlay-metric.overlay-metric-accent strong{color:#7ef3c7;}
-      .overlay-hierarchy{
-        margin-top:12px;
-        display:flex;
-        flex-direction:column;
-        gap:10px;
-      }
-      .overlay-hierarchy-item{
-        display:flex;
-        align-items:flex-start;
-        gap:10px;
-        padding:10px 12px;
-        border-radius:12px;
-        background:rgba(9,13,36,0.72);
-        border:1px solid rgba(83,109,255,0.26);
-        box-shadow:0 10px 22px rgba(7,11,28,0.45);
-      }
-      .overlay-hierarchy-icon{font-size:16px;color:rgba(124,92,255,0.85);line-height:1;}
-      .overlay-hierarchy-primary{font-weight:700;font-size:14px;color:#f6f7ff;}
-      .overlay-hierarchy-secondary{font-size:12px;color:rgba(205,215,255,0.75);margin-top:2px;}
-      .btn{
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        gap:10px;
-        padding:12px 20px;
-        border-radius:12px;
-        font-weight:700;
-        font-size:15px;
-        letter-spacing:0.01em;
-        text-decoration:none;
-        color:#ffd700;
-        background:linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,180,0,0.2));
-        box-shadow:0 8px 20px rgba(255,215,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
-        border:2px solid rgba(255,215,0,0.6);
-        transition:transform 0.25s ease, box-shadow 0.25s ease;
-        text-shadow:0 0 8px rgba(255,215,0,0.6), 0 1px 3px rgba(0,0,0,0.8);
-      }
-      .btn:hover{
-        transform:translateY(-2px) scale(1.01);
-        box-shadow:0 12px 28px rgba(255,215,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
-        background:linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,180,0,0.3));
-        border-color:rgba(255,215,0,0.8);
-      }
-      .btn:active{
-        transform:translateY(1px) scale(0.99);
-      }
-      .button-group{
-        display:flex;
-        flex-wrap:wrap;
-        gap:12px;
-        margin:0 0 14px;
-      }
-      .meta-row{
-        display:flex;
-        flex-wrap:wrap;
-        gap:8px;
-        align-items:center;
-        margin-top:6px;
-        color:var(--muted-soft);
-        font-size:13px;
-      }
-      .debug{margin-top:18px}
-      .debug-panel{margin-top:18px;background:#02040a;border-radius:14px;padding:12px 0;border:1px solid rgba(126,141,255,0.3);box-shadow:0 12px 30px rgba(5,11,42,0.35);}
-      .debug-panel summary{padding:0 16px;font-weight:600;font-size:14px;color:#69ff94;cursor:pointer;}
-      .debug-panel pre{margin:12px 16px;background:transparent;color:#69ff94;max-height:360px;overflow:auto;font-size:12px;line-height:1.6;}
-      @media (max-width:640px){
-        .wrap{max-width:100%;margin:16px auto 22px;padding:0 14px;}
-        .card{padding:18px;gap:18px;}
-        .hero{min-height:180px;}
-        .hero-overlay{padding:18px 20px;gap:14px;}
-        .overlay-heading{gap:8px;}
-        .overlay-title{font-size:26px;}
-        .overlay-text{max-width:100%;font-size:15px;}
-        .overlay-list li{font-size:14px;}
-        .overlay-metrics{gap:8px;}
-        .overlay-metric strong{font-size:16px;}
-        .button-group{flex-direction:column;gap:10px;}
-      }
-      @media (max-width:480px){
-        .wrap{padding:0 10px;margin:14px auto 18px;}
-        .card{padding:16px;border-radius:18px;gap:16px;}
-        .card.card-3d{transform:none;box-shadow:0 20px 40px rgba(9,14,44,0.55);}
-        .hero{min-height:160px;}
-        .hero-overlay{padding:12px 14px;gap:10px;}
-        .overlay-top{flex-direction:row;align-items:flex-start;gap:10px;}
-        .overlay-heading{flex:1 1 100%;max-width:100%;gap:6px;}
-        .overlay-profile{padding:12px 14px;gap:10px;}
-        .identity-card-body{gap:10px;}
-        .identity-avatar-shell{width:54px;height:54px;}
-        .identity-avatar,
-        .identity-avatar-fallback{width:50px;height:50px;border-radius:16px;}
-        .identity-avatar-ring{inset:-9px;}
-        .overlay-handle{font-size:15px;}
-        .identity-handle{font-size:16px;}
-        .overlay-name{font-size:11px;}
-        .identity-card-kicker .overlay-kicker{font-size:10px;letter-spacing:0.2em;padding:6px 10px;justify-content:center;width:100%;}
-        .overlay-kicker{font-size:10px;letter-spacing:0.18em;padding:6px 10px;}
-        .overlay-kicker-chain{padding-right:10px;}
-        .overlay-chain-icon{width:16px;height:16px;}
-        .overlay-title{max-width:100%;font-size:20px;}
-        .overlay-text{max-width:100%;font-size:14px;line-height:1.55;}
-        .overlay-list{font-size:12px;}
-        .overlay-list li{padding-left:14px;}
-        .overlay-list-grid{flex-direction:column;gap:10px;}
-        .overlay-list-grid-card .overlay-list{padding:10px 12px;border-radius:14px;}
-        .overlay-metrics{grid-template-columns:repeat(2,minmax(120px,1fr));gap:6px;}
-        .overlay-hierarchy-item{flex-direction:column;gap:6px;}
-        .overlay-hierarchy-icon{font-size:17px;}
-        .button-group{gap:10px;}
-        .btn{width:100%;justify-content:center;padding:12px 16px;font-size:14px;}
+      body {
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, ${framePalette.background}, ${framePalette.secondary}20);
+        font-family: system-ui, -apple-system, sans-serif;
+        color: white;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 30px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 20px;
+        border: 2px solid ${framePalette.primary};
+        box-shadow: 0 0 40px ${framePalette.primary}40;
+        position: relative;
+        overflow: hidden;
+      }
+      .container::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, ${framePalette.primary}20, ${framePalette.secondary}10);
+        border-radius: 20px;
+        z-index: -1;
+      }
+      .frame-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        background: ${framePalette.primary}40;
+        border: 1px solid ${framePalette.primary};
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: ${framePalette.primary};
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+      }
+      h1 {
+        color: ${framePalette.primary};
+        margin: 0 0 16px 0;
+        font-size: 24px;
+        font-weight: 700;
+        text-shadow: 0 2px 8px ${framePalette.primary}40;
+      }
+      p {
+        line-height: 1.7;
+        color: #e2e7ff;
+        margin: 12px 0;
+        font-size: 15px;
+      }
+      .meta-info {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 16px 0;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+        border: 1px solid ${framePalette.primary}20;
+      }
+      .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .meta-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: ${framePalette.secondary};
+        letter-spacing: 0.5px;
+        font-weight: 600;
+      }
+      .meta-value {
+        font-size: 16px;
+        color: ${framePalette.accent};
+        font-weight: 700;
+      }
+      a {
+        color: ${framePalette.accent};
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+      a:hover {
+        text-decoration: underline;
+        text-shadow: 0 0 8px ${framePalette.accent}60;
+      }
+      .powered-by {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid ${framePalette.primary}20;
+        font-size: 12px;
+        color: ${framePalette.secondary}80;
+        text-align: center;
       }
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <div class="card card-3d holo-card">
-        <span aria-hidden="true" class="card-chrome card-chrome-top"></span>
-        <span aria-hidden="true" class="card-chrome card-chrome-bottom"></span>
-        <span aria-hidden="true" class="card-grid"></span>
-        <h1 class="sr-only">${pageTitle}</h1>
-        ${imageEsc ? `<div class="hero hero-holo"><span aria-hidden="true" class="hero-glow"></span><span aria-hidden="true" class="hero-grid"></span><img class="hero-img" src="${imageEsc}" alt="frame image" />${overlayHidden ? '' : `<div class="hero-overlay">${overlayHtml}</div>`}</div>` : ''}
-        <div class="sr-only">${accessibleDescriptionHtml}</div>
-        ${linkButtons.length ? `<div class="button-group">${linkButtons.map((btn) => `<a class="btn" href="${escapeHtml(btn.target!)}">⚡ ${escapeHtml(btn.label)}</a>`).join('')}</div>` : primaryLinkHtml}
-        <div class="meta-row" style="background:linear-gradient(90deg,rgba(255,215,0,0.15),rgba(255,180,0,0.1));border:1px solid rgba(255,215,0,0.3);border-radius:8px;padding:8px 12px;font-weight:600;letter-spacing:0.5px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">⚡ Powered by GMEOWBASED ADVENTURE ⚡</div>
-        ${debugHtml ? `<div class="debug">${debugHtml}</div>` : ''}
-      </div>
+    <div class="container">
+      <span class="frame-badge">${framePalette.label}</span>
+      <h1>${pageTitle}</h1>
+      <p>${desc}</p>
+      <div class="powered-by">Powered by @gmeowbased</div>
     </div>
   </body>
-  </html>`
+</html>`
 }
 
 /* -------------------- Main GET / POST handlers -------------------- */
@@ -2064,6 +1526,7 @@ export async function GET(req: Request) {
         descriptionPieces.push(`${formattedSpots} spots left`)
       }
       if (expiresText) descriptionPieces.push(`Ends ${expiresText}`)
+      descriptionPieces.push('— by @gmeowbased')
       const description = descriptionPieces.filter(Boolean).join(' • ')
 
       const title = `${questName} • ${questChainName}`
@@ -2167,6 +1630,7 @@ export async function GET(req: Request) {
         chainKey,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2178,7 +1642,7 @@ export async function GET(req: Request) {
       const questId = params.questId || params.id
       tracePush(traces, 'verify-start', { fid, cast, questId })
       const title = 'Verify Quest / Cast'
-      const description = fid ? `Viewer FID: ${fid}` : 'Provide your Farcaster FID to verify this quest/cast'
+      const description = fid ? `Viewer FID: ${fid} — @gmeowbased verification` : 'Provide your Farcaster FID to verify this quest/cast — @gmeowbased'
       if (asJson) {
         return respondJson({ ok: true, type: 'verify', fid, cast, questId, traces })
       }
@@ -2194,6 +1658,7 @@ export async function GET(req: Request) {
         debug: debugPayload,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2205,7 +1670,7 @@ export async function GET(req: Request) {
       // For brevity, we fetch guild info via contract getter if present (createGetGuildCall not implemented by default)
       // We'll fallback to simple frame with join button pointing to your site's guild page
       const title = guildId ? `Guild #${guildId}` : 'Guild'
-      const description = guildId ? `Open guild ${guildId} on GMEOW` : 'Guild preview'
+      const description = guildId ? `Open guild ${guildId} on @gmeowbased` : '@gmeowbased guild preview'
       const guildUrl = `${origin}/guild/${guildId}`
       if (asJson) return respondJson({ ok: true, type: 'guild', guildId, guildUrl, traces })
       const isMember = toBooleanFlag(params.member ?? params.isMember ?? params.joined)
@@ -2249,6 +1714,7 @@ export async function GET(req: Request) {
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         chainKey: (params.chain as string) || null,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2263,6 +1729,7 @@ export async function GET(req: Request) {
       if (code) descriptionPieces.push(`Share code ${String(code).toUpperCase()} to split Gmeow Points with frens.`)
       descriptionPieces.push('Each completed quest powers up the guild streaks.')
       if (user) descriptionPieces.push(`Tracked to ${shortenHex(String(user))}`)
+      descriptionPieces.push('— @gmeowbased')
       const description = descriptionPieces.join(' • ')
       const fcMeta: Record<string, string> = { [frameKey('entity')]: 'referral' }
       if (code) fcMeta[frameKey('referral_code')] = String(code)
@@ -2294,6 +1761,7 @@ export async function GET(req: Request) {
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         chainKey: (params.chain as string) || null,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2430,6 +1898,7 @@ export async function GET(req: Request) {
       } else {
         descriptionSegments.push(`Flex your onchain stats on ${chainDisplay}.`)
       }
+      descriptionSegments.push('— @gmeowbased')
       const description = descriptionSegments.join(' • ')
       const hubUrl = `${origin}/#onchain-hub`
       const explorer = explorerRaw.replace(/\/$/, '')
@@ -2509,6 +1978,7 @@ export async function GET(req: Request) {
         chainKey,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2603,6 +2073,7 @@ export async function GET(req: Request) {
         descriptionPieces.push('Connect your wallet or Farcaster profile to preview Gmeow Points balance.')
       }
       descriptionPieces.push(`Chain ${chainDisplay}`)
+      descriptionPieces.push('— @gmeowbased')
       const description = descriptionPieces.filter(Boolean).join(' • ')
       const urlOpen = `${origin}/points${user ? `?user=${encodeURIComponent(String(user))}` : ''}`
       const fcMeta: Record<string, string> = {
@@ -2667,6 +2138,7 @@ export async function GET(req: Request) {
         chainKey,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2674,7 +2146,7 @@ export async function GET(req: Request) {
     if (type === 'gm') {
       tracePush(traces, 'gm-start')
       const title = 'GM Ritual • GMEOW'
-      const desc = ['Log your GM streak', 'Unlock multipliers + hidden boosts'].join(' • ')
+      const desc = ['Log your GM streak', 'Unlock multipliers + hidden boosts', '— @gmeowbased'].join(' • ')
       const href = `${origin}/gm`
       if (asJson) return respondJson({ ok: true, type: 'gm', href, description: desc, traces })
       const html = buildFrameHtml({
@@ -2687,6 +2159,7 @@ export async function GET(req: Request) {
         debug: debugPayload,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
+        frameType: type,
       })
       return createHtmlResponse(html)
     }
@@ -2707,6 +2180,7 @@ export async function GET(req: Request) {
       debug: debugPayload,
       frameOrigin: origin,
       frameVersion: FRAME_VERSION,
+      frameType: 'generic',
     })
     return createHtmlResponse(html)
   } catch (err: any) {
@@ -2728,6 +2202,7 @@ export async function GET(req: Request) {
       debug: debugMode ? traces : undefined,
       frameOrigin: fallbackOrigin,
       frameVersion: FRAME_VERSION,
+      frameType: 'generic',
     })
     return createHtmlResponse(html, { status: 500 })
   }

@@ -22,13 +22,16 @@ const gmEmbed = {
 }
 
 const gmFrame = {
-  version: '1',
-  imageUrl: `${baseUrl}/og-image.png`,
+  version: 'next',
+  imageUrl: `${baseUrl}/frame-image.png`,
   button: {
     title: '🎮 Launch Game',
     action: {
-      type: 'link',
+      type: 'launch_frame',
+      name: 'Gmeowbased',
       url: baseUrl,
+      splashImageUrl: `${baseUrl}/splash.png`,
+      splashBackgroundColor: '#000000',
     },
   },
 }

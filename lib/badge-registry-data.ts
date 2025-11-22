@@ -75,7 +75,7 @@ export const BADGE_REGISTRY: BadgeRegistry = {
         "supplyCap": null,
         "lore": "Every cosmic journey starts with a single neon pawprint.",
         "externalUrl": "https://gmeowhq.art/badges/neon-initiate",
-        "image": "/badges/neon-initiate.webp",
+        "image": "/badges/neon-initiate.png",
         "frame": {
           "palette": {
             "primary": "#D3D7DC",
@@ -128,7 +128,7 @@ export const BADGE_REGISTRY: BadgeRegistry = {
         "supplyCap": 10000,
         "lore": "Pulse Runners sprint between decks to ensure every signal gets answered.",
         "externalUrl": "https://gmeowhq.art/badges/pulse-runner",
-        "image": "/badges/pulse-runner.webp",
+        "image": "/badges/pulse-runner.png",
         "frame": {
           "palette": {
             "primary": "#A18CFF",
@@ -184,7 +184,7 @@ export const BADGE_REGISTRY: BadgeRegistry = {
         "supplyCap": 5000,
         "lore": "Luminaries tune every frequency until the deck glows with synchronized optimism.",
         "externalUrl": "https://gmeowhq.art/badges/signal-luminary",
-        "image": "/badges/signal-luminary.webp",
+        "image": "/badges/signal-luminary.png",
         "frame": {
           "palette": {
             "primary": "#61DFFF",
@@ -239,7 +239,7 @@ export const BADGE_REGISTRY: BadgeRegistry = {
         "supplyCap": 2500,
         "lore": "When the deck needs to be everywhere at once, Navigators braid warp threads into a single pulse.",
         "externalUrl": "https://gmeowhq.art/badges/warp-navigator",
-        "image": "/badges/warp-navigator.webp",
+        "image": "/badges/warp-navigator.png",
         "frame": {
           "palette": {
             "primary": "#FFD966",
@@ -293,7 +293,7 @@ export const BADGE_REGISTRY: BadgeRegistry = {
         "supplyCap": 500,
         "lore": "Forged in neon stardust during the first GM transmissions across Base orbit.",
         "externalUrl": "https://gmeowhq.art/badges/gmeow-vanguard",
-        "image": "/badges/gmeow-vanguard.webp",
+        "image": "/badges/gmeow-vanguard.png",
         "frame": {
           "palette": {
             "primary": "#9C27FF",
