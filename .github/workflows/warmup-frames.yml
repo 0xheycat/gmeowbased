@@ -29,16 +29,33 @@ jobs:
           BASE_URL="https://gmeowhq.art"
           
           # Array of frame endpoints to warm up
+          # Hybrid strategy: All 5 tiers + FID-independent frames
           declare -a endpoints=(
+            # Tier coverage: Mythic (fid=1), Legendary (fid=18139), Epic (fid=5), Rare (fid=100), Common (fid=99999)
             "/api/frame?type=gm&fid=1"
-            "/api/frame?type=quest&questId=1"
-            "/api/frame?type=onchainstats&fid=18139"
-            "/api/frame?type=badge&fid=1"
-            "/api/frame?type=leaderboards"
+            "/api/frame?type=gm&fid=18139"
+            "/api/frame?type=gm&fid=5"
+            "/api/frame?type=gm&fid=100"
+            "/api/frame?type=gm&fid=99999"
             "/api/frame/image?type=gm&fid=1"
-            "/api/frame/image?type=quest&fid=1"
+            "/api/frame/image?type=gm&fid=18139"
+            "/api/frame/image?type=gm&fid=5"
+            "/api/frame/image?type=gm&fid=100"
+            "/api/frame/image?type=gm&fid=99999"
+            # Onchainstats: 3 key tiers (Mythic, Legendary, Common)
+            "/api/frame/image?type=onchainstats&fid=1"
             "/api/frame/image?type=onchainstats&fid=18139"
+            "/api/frame/image?type=onchainstats&fid=99999"
+            # Badge: 3 key tiers
             "/api/frame/image?type=badge&fid=1"
+            "/api/frame/image?type=badge&fid=18139"
+            "/api/frame/image?type=badge&fid=99999"
+            # Quest: Common quest IDs
+            "/api/frame?type=quest&questId=1"
+            "/api/frame/image?type=quest&fid=1"
+            # FID-independent frames (help all users)
+            "/api/frame?type=leaderboards"
+            "/api/frame/image?type=leaderboards"
           )
           
           # Request each endpoint
@@ -69,9 +86,11 @@ jobs:
           echo "📊 Warmup Summary"
           echo "  Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo "  Target: https://gmeowhq.art"
-          echo "  Endpoints: 9 frame endpoints"
+          echo "  Endpoints: 20 frame endpoints"
+          echo "  Coverage: All 5 tiers (Mythic, Legendary, Epic, Rare, Common)"
           echo ""
           echo "Purpose:"
           echo "  - Keep serverless functions warm (reduce cold starts)"
-          echo "  - Maintain Redis cache for common frames"
+          echo "  - Maintain Redis cache for all tier variations"
           echo "  - Improve user experience (faster responses)"
+          echo "  - ~80% cache hit rate expected"
