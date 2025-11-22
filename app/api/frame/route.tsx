@@ -1189,6 +1189,39 @@ function buildFrameHtml(params: {
       }
     }).replace(/"/g, '&quot;')}" />` : ''
   
+  // Phase 1B.2: Generate classic Frames v1 button meta tags for POST actions
+  // Reference: https://docs.farcaster.xyz/reference/frames/v1/spec
+  // Supports multiple interactive POST buttons alongside vNext launch_frame
+  // CRITICAL: Use post_url to point POST actions to this frame endpoint
+  const postUrl = frameOrigin ? `${frameOrigin}/api/frame` : ''
+  
+  // Add frame state to track frame type for POST handler button mapping (Phase 1B.2)
+  const frameStateTags = frameType ? `
+    <meta property="fc:frame:state" content="${escapeHtml(JSON.stringify({ frameType }))}" />
+    <meta property="fc:frame:post_url" content="${escapeHtml(postUrl)}" />` : ''
+  
+  const classicButtonTags = validatedButtons.length && postUrl ? validatedButtons.map((btn, idx) => {
+    const buttonNumber = idx + 1
+    const buttonAction = btn.action || 'link' // default to 'link' if action not specified
+    
+    // Only generate classic tags for POST action buttons (Phase 1B.2)
+    if (buttonAction === 'post' || buttonAction === 'post_redirect') {
+      return `
+    <meta property="fc:frame:button:${buttonNumber}" content="${escapeHtml(btn.label)}" />
+    <meta property="fc:frame:button:${buttonNumber}:action" content="${buttonAction}" />`
+    }
+    
+    // For link buttons, still generate classic tags for compatibility
+    if (buttonAction === 'link' && btn.target) {
+      return `
+    <meta property="fc:frame:button:${buttonNumber}" content="${escapeHtml(btn.label)}" />
+    <meta property="fc:frame:button:${buttonNumber}:action" content="link" />
+    <meta property="fc:frame:button:${buttonNumber}:target" content="${escapeHtml(btn.target)}" />`
+    }
+    
+    return '' // skip if no valid action
+  }).join('') : ''
+  
   // Yu-Gi-Oh! Rich Template (November 21, 2025)
   // Enhanced card-style structure with dynamic palette, type badges, and rich visual effects
   return `<!DOCTYPE html>
@@ -1198,7 +1231,7 @@ function buildFrameHtml(params: {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>${pageTitle}</title>
     <meta name="description" content="${desc}" />
-    ${frameMetaTags}
+    ${frameMetaTags}${frameStateTags}${classicButtonTags}
     <meta property="og:title" content="${pageTitle}" />
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
@@ -2222,12 +2255,18 @@ export async function GET(req: Request) {
       const desc = ['Log your GM streak', 'Unlock multipliers + hidden boosts', '— @gmeowbased'].join(' • ')
       const href = `${origin}/gm`
       if (asJson) return respondJson({ ok: true, type: 'gm', href, description: desc, traces })
+      
+      // Phase 1B.2: Add interactive POST action buttons
       const html = buildFrameHtml({
         title,
         description: desc,
         image: defaultFrameImage,
         url: href,
-        buttons: [{ label: 'Open GM Ritual', target: href }],
+        buttons: [
+          { label: 'Open GM Ritual', target: href, action: 'link' }, // Main miniapp launch button
+          { label: '🎯 Record GM', action: 'post', target: `${origin}/api/frame` }, // Phase 1B.1 POST action
+          { label: '📊 View Stats', action: 'post', target: `${origin}/api/frame` }, // Phase 1B.1 POST action
+        ],
         fcMeta: { [frameKey('entity')]: 'gm' },
         debug: debugPayload,
         frameOrigin: origin,
@@ -2318,9 +2357,38 @@ export async function POST(req: Request) {
     }
     tracePush(traces, 'post-received', { body })
 
-    const action = (body.action || body.type || '').toString()
+    // Phase 1B.2: Extract buttonIndex from Farcaster frame POST request
+    // Farcaster sends untrustedData.buttonIndex (1-indexed) when a frame button is clicked
+    const buttonIndex = body.untrustedData?.buttonIndex || body.buttonIndex
+    const fid = body.untrustedData?.fid || body.fid
+    const frameType = body.untrustedData?.state?.frameType || body.frameType || ''
     const payload = body.payload || {}
-    tracePush(traces, 'action-resolved', { action })
+    
+    // Map buttonIndex to action based on frame type (Phase 1B.2)
+    let action = (body.action || body.type || '').toString()
+    
+    if (buttonIndex && !action) {
+      // Define button mappings for each frame type
+      const buttonMappings: Record<string, Record<number, string>> = {
+        gm: { 1: '', 2: 'recordGM', 3: 'getGMStats' }, // Button 1 = miniapp launch (link), 2 = Record GM, 3 = View Stats
+        points: { 1: '', 2: 'viewBalance', 3: 'tipUser' },
+        leaderboards: { 1: '', 2: 'refreshRank' },
+        badge: { 1: '', 2: 'checkBadges', 3: 'mintBadge' },
+        onchainstats: { 1: '', 2: 'refreshStats' },
+        guild: { 1: '', 2: 'viewGuild' },
+        referral: { 1: '', 2: 'viewReferrals' },
+        quest: { 1: '', 2: 'questProgress' }, // Button 1 = miniapp, 2 = Progress check
+        verify: { 1: '', 2: 'verifyFrame' },
+      }
+      
+      const mapping = buttonMappings[frameType]
+      if (mapping && mapping[buttonIndex]) {
+        action = mapping[buttonIndex]
+        tracePush(traces, 'button-action-mapped', { buttonIndex, frameType, action })
+      }
+    }
+    
+    tracePush(traces, 'action-resolved', { action, buttonIndex, frameType, fid })
 
     // QUICK PROXY: forward verifyQuest to your /api/quests/verify route if that's still your canonical verify handler
     if (action === 'proxyVerify' || action === 'verifyQuest') {
