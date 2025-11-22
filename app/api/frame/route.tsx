@@ -80,7 +80,7 @@ const DEFAULT_HTML_HEADERS: Record<string, string> = {
 }
 
 // -------------------- Types --------------------
-type FrameType = 'quest' | 'guild' | 'points' | 'referral' | 'leaderboards' | 'gm' | 'verify' | 'onchainstats' | 'generic'
+type FrameType = 'quest' | 'guild' | 'points' | 'referral' | 'leaderboards' | 'gm' | 'verify' | 'onchainstats' | 'badge' | 'generic'
 
 type TraceItem = { ts: number; step: string; info?: any }
 type Trace = TraceItem[]
@@ -1162,6 +1162,7 @@ function buildFrameHtml(params: {
       onchainstats: { primary: '#00d4ff', secondary: '#5ae4ff', background: '#051520', accent: '#ffd700', label: 'ONCHAIN' },
       points: { primary: '#ffb700', secondary: '#ffc840', background: '#201405', accent: '#8e7cff', label: 'POINTS' },
       gm: { primary: '#ff9500', secondary: '#ffab40', background: '#201005', accent: '#7CFF7A', label: 'GM' },
+      badge: { primary: '#ff00ff', secondary: '#ff69ff', background: '#200520', accent: '#00d4ff', label: 'BADGE' },
     }
     return palettes[type || ''] || { primary: '#8e7cff', secondary: '#a78bff', background: '#0a0e22', accent: '#5ad2ff', label: 'FRAME' }
   }
@@ -1200,6 +1201,8 @@ function buildFrameHtml(params: {
     <meta property="og:title" content="${pageTitle}" />
     <meta property="og:description" content="${desc}" />
     ${imageEsc ? `<meta property="og:image" content="${imageEsc}" />` : ''}
+    ${imageEsc ? `<meta property="og:image:width" content="600" />` : ''}
+    ${imageEsc ? `<meta property="og:image:height" content="400" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
     
     <style>
@@ -2136,6 +2139,54 @@ export async function GET(req: Request) {
         chainIcon,
         chainLabel: chainDisplay,
         chainKey,
+        frameOrigin: origin,
+        frameVersion: FRAME_VERSION,
+        frameType: type,
+      })
+      return createHtmlResponse(html)
+    }
+
+    if (type === 'badge') {
+      tracePush(traces, 'badge-start')
+      const fidParam = params.fid || params.user
+      const fid = sanitizeFID(fidParam)
+      
+      if (!fid) {
+        const errorMsg = 'Badge frame requires valid FID parameter'
+        tracePush(traces, 'badge-error-no-fid')
+        if (asJson) return respondJson({ ok: false, reason: errorMsg, traces }, { status: 400 })
+        const html = buildFrameHtml({
+          title: 'Badge Error',
+          description: errorMsg,
+          image: defaultFrameImage,
+          url: origin,
+          buttons: [{ label: 'Open GMEOW', target: origin }],
+          fcMeta: { [frameKey('entity')]: 'error' },
+          debug: debugPayload,
+          frameOrigin: origin,
+          frameVersion: FRAME_VERSION,
+          frameType: type,
+        })
+        return createHtmlResponse(html, { status: 400 })
+      }
+
+      const title = `Badge Collection • GMEOW`
+      const desc = [`Farcaster user badges`, `FID ${fid}`, `— @gmeowbased`].join(' • ')
+      const href = `${origin}/profile/${fid}/badges`
+      const imageUrl = buildDynamicFrameImageUrl({ type: 'badge', fid }, origin)
+      
+      tracePush(traces, 'badge-generated', { fid, href })
+      
+      if (asJson) return respondJson({ ok: true, type: 'badge', fid, href, description: desc, imageUrl, traces })
+      
+      const html = buildFrameHtml({
+        title,
+        description: desc,
+        image: imageUrl,
+        url: href,
+        buttons: [{ label: 'View Badges', target: href }],
+        fcMeta: { [frameKey('entity')]: 'badge', [frameKey('fid')]: String(fid) },
+        debug: debugPayload,
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         frameType: type,

@@ -67,6 +67,7 @@ export type FrameType =
   | 'gm' 
   | 'verify' 
   | 'onchainstats' 
+  | 'badge'
   | 'generic'
 
 const VALID_FRAME_TYPES: FrameType[] = [
@@ -78,6 +79,7 @@ const VALID_FRAME_TYPES: FrameType[] = [
   'gm',
   'verify',
   'onchainstats',
+  'badge',
   'generic',
 ]
 
