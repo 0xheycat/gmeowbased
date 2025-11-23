@@ -1,19 +1,27 @@
 # Phase 1F: Comprehensive Frame Improvement Plan
 **Created:** November 23, 2025  
-**Status:** Planning  
-**Previous Phase:** Phase 1E (POST button removal + onchainstats image fix)
+**Updated:** November 23, 2025 (Layer 3 Audit)  
+**Status:** Planning - 100% Complete (3-Layer Audit)  
+**Previous Phase:** Phase 1E (POST button removal + onchainstats image fix)  
+**Document Size:** 1830 lines (661 → 1166 → 1830 lines)  
+**Commits:** `8665b72` (Layer 1), `9f061de`, `fc67af7` (Layer 2), TBD (Layer 3)
 
 ---
 
 ## Executive Summary
 
-Phase 1F focuses on **consistency, completeness, and cleanup** across all 9 frame types. After fixing onchainstats frame with username display and improved layout, we identified significant gaps in other frame types.
+Phase 1F focuses on **consistency, completeness, and cleanup** across all 9 frame types. After fixing onchainstats frame with username display and improved layout, we expanded the audit to **3 layers**:
+
+### Audit Scope:
+- **Layer 1 (Functional):** Username gaps, layout issues, missing handlers (5 frames, 7 tasks, 24.5h)
+- **Layer 2 (Infrastructure):** Design system, chain icons, XP integration, text composition (5 tasks, 20.5h)
+- **Layer 3 (System Documentation):** Share button architecture, frame spec gaps, legacy cleanup (2 tasks, 5h)
 
 ### Impact Categories:
-- 🔴 **CRITICAL**: Username display missing (social recognition)
-- 🟡 **HIGH**: Layout improvements (flex appeal + readability)
-- 🟢 **MEDIUM**: Code cleanup (technical debt)
-- 🔵 **LOW**: Minor enhancements (polish)
+- 🔴 **CRITICAL**: Username display missing (social recognition), share button undocumented
+- 🟡 **HIGH**: Layout improvements (flex appeal + readability), design system fragmentation
+- 🟢 **MEDIUM**: Infrastructure gaps (chain icons, XP integration), frame spec compliance
+- 🔵 **LOW**: Minor enhancements (polish, animations, text composition)
 
 ---
 
@@ -1498,17 +1506,313 @@ const identity = username
 
 ---
 
+## 🔗 Layer 3 Audit: Share Button Infrastructure & Missing Features
+
+### 13: Share Button Architecture Documentation (CRITICAL - 3 hours)
+
+**Purpose:** Document complete share button infrastructure for maintainability
+
+**13.1: Share Infrastructure Map (1.5 hours)**
+
+**Core Library: `lib/share.ts` (208 lines)**
+- `buildFrameShareUrl(input: FrameShareInput): string` - Generates frame URLs
+- `buildWarpcastComposerUrl(text: string, embed?: string): string` - Creates composer links
+- `openWarpcastComposer(text, embed): Promise<'miniapp'|'web'|'noop'>` - Handles SDK vs web
+
+**Miniapp Detection Logic:**
+```typescript
+// Checks for Farcaster iframe context
+const isFarcasterReferrer = document.referrer.includes('farcaster')
+const isInIframe = window.self !== window.top
+
+if (isInIframe && isFarcasterReferrer) {
+  // Use Miniapp SDK
+  await sdk.actions.openUrl(composerUrl)
+} else {
+  // Use web composer
+  window.open(composerUrl, '_blank')
+}
+```
+
+**Share URL Pattern:**
+```typescript
+// Standard pattern across all frame types:
+const shareUrl = buildFrameShareUrl({
+  type: 'badge' | 'quest' | 'leaderboard' | 'guild' | 'onchainstats',
+  fid?: number,
+  questId?: string,
+  chain?: string,
+  guildId?: string,
+  // ... type-specific params
+})
+// Example output: https://gmeowhq.art/frame/badge/18139
+```
+
+**13.2: Share Button Triggers Inventory (1 hour)**
+
+**10+ Integration Points Identified:**
+
+1. **Quest System:**
+   - `components/Quest/QuestCard.tsx` (line 405): Share quest frame after completion
+   - `app/Quest/[chain]/[id]/page.tsx` (line 414): Quest page share button
+   - `components/home/LiveQuests.tsx` (line 32): Home page quest share
+   - Pattern: `openWarpcastComposer(composeText, buildFrameShareUrl({ type: 'quest', questId, chain }))`
+
+2. **GM & Streaks:**
+   - `components/ContractGMButton.tsx` (line 215): Share GM streak milestone
+   - Pattern: Share after streak milestone (7, 30, 100, 365 days)
+
+3. **Stats & Analytics:**
+   - `components/OnchainStats.tsx` (line 849): Share chain-specific stats
+   - `components/ProfileStats.tsx` (line 308): Share profile frame
+   - Pattern: "Flexing my [stats type] via @gmeowbased"
+
+4. **Dashboard & Profile:**
+   - `app/Dashboard/page.tsx` (line 1299): Share points balance
+   - `app/profile/[fid]/badges/page.tsx` (line 231): Share badge collection
+   - Pattern: User-initiated sharing from profile pages
+
+5. **Guild & Community:**
+   - `components/Guild/GuildManagementPage.tsx` (line 396): Share guild frame
+   - Pattern: Guild admins share guild recruitment
+
+6. **Navigation & Sidebar:**
+   - `components/layout/gmeow/GmeowSidebarRight.tsx` (line 53): "Launch Frame" button
+   - Pattern: Quick access to frame sharing from sidebar
+
+**13.3: Component Variants (0.5 hours)**
+
+**Modern Component: `components/share/ShareButton.tsx` (320 lines)**
+- **Variant 'deeplink'** (Phase 5.5): Opens Warpcast composer manually
+  ```typescript
+  <ShareButton 
+    fid={fid} 
+    tier={tier} 
+    badgeId={badgeId}
+    variant="deeplink" // Opens composer URL
+  />
+  ```
+
+- **Variant 'cast-api'** (Phase 5.7): Auto-publishes via API
+  ```typescript
+  <ShareButton 
+    fid={fid} 
+    tier={tier} 
+    badgeId={badgeId}
+    variant="cast-api" // Calls /api/cast/badge-share
+  />
+  ```
+
+- **Styling:** Glass morphism, tier-based colors (mythic #9C27FF, legendary #FFD966)
+- **Usage:** OnboardingFlow after badge reveal (Stage 5 completion)
+
+**Legacy Component: `components/legacy/BadgeShareCard__archived.tsx` (~200 lines)**
+- Status: Archived but not deleted (dead code)
+- Task: Clean up in GI-14 safe deletion process
+
+**Success Criteria:**
+- ✅ Complete architecture diagram showing lib → components → pages → APIs
+- ✅ All 10+ trigger locations documented with purpose
+- ✅ Component variants explained with usage examples
+- ✅ Legacy cleanup identified
+
+---
+
+### 14: Missing Frame Improvements Documentation (CRITICAL - 2 hours)
+
+**Purpose:** Identify frame spec compliance gaps and missing features
+
+**14.1: Farcaster Frame Spec Compliance Audit (1 hour)**
+
+**Current Status: BASIC COMPLIANCE**
+- ✅ Frame metadata: `fc:frame:state`, buttons, actions working
+- ✅ Image generation: 1200x628 (1.91:1 aspect ratio) with ImageResponse
+- ✅ Button types: `link`, `post_redirect` supported (post actions deprecated)
+- ✅ vNext format: Using version "1" with JSON schema validation
+
+**MISSING SPEC FEATURES (Impact: Medium):**
+
+**1. Aspect Ratio Control** (fc:frame:image:aspect_ratio)
+- **Current:** All frames default to 1.91:1 (1200x628 OG standard)
+- **Missing:** Cannot use 1:1 square format (1200x1200)
+- **Spec:** Farcaster supports both 1.91:1 and 1:1
+- **Use Case:** Square badges, profile cards, NFT showcases look better 1:1
+- **Files:** `app/api/frame/route.tsx` (no aspect_ratio tag generation)
+- **Fix Effort:** 1 hour (add aspect_ratio metadata, update image generators)
+- **Priority:** LOW (current 1.91:1 works fine, 1:1 is enhancement)
+
+**2. Input Fields** (fc:frame:input)
+- **Current:** No text input support in frames
+- **Missing:** Cannot collect user text for interactive frames
+- **Spec:** Farcaster supports `fc:frame:input` for text entry
+- **Use Case:** Custom GM messages, quest submission text, guild join requests
+- **Files:** `app/api/frame/route.tsx` (no input generation), POST handler removed
+- **Blocker:** POST handler deleted in Phase 1E (1030 lines commented)
+- **Fix Effort:** 8 hours (restore POST handler, add input validation, update all frame types)
+- **Priority:** HIGH (enables interactive frames, user engagement)
+
+**3. Transaction Buttons** (tx action)
+- **Current:** Only `link` and `post_redirect` buttons
+- **Missing:** Cannot trigger onchain transactions from frames
+- **Spec:** Farcaster supports `tx` action for onchain interactions
+- **Use Case:** Mint badges, claim rewards, GM recording directly from frame
+- **Files:** `app/api/frame/route.tsx` (no tx action support)
+- **Blocker:** Requires transaction encoding (wagmi/viem integration)
+- **Fix Effort:** 12 hours (tx encoding, gas estimation, error handling, multi-chain support)
+- **Priority:** MEDIUM (nice-to-have, current link buttons work)
+
+**4. Mint Buttons** (mint action - DEPRECATED)
+- **Current:** Not supported
+- **Missing:** Direct NFT minting from frames
+- **Spec:** `mint` action deprecated by Farcaster (use `tx` instead)
+- **Use Case:** Badge minting, quest rewards
+- **Fix Effort:** N/A (deprecated, use `tx` action instead)
+- **Priority:** N/A (not recommended)
+
+**14.2: Cross-Frame Consistency Gaps (0.5 hours)**
+
+**1. Animation Support**
+- **Current:** Static PNG images only
+- **Missing:** Animated GIFs, videos, lottie animations
+- **Spec:** Farcaster supports GIF animations (max 10MB)
+- **Use Case:** Celebration animations (level up, streaks, achievements)
+- **Fix Effort:** 2 hours (GIF generation with sharp, video encoding)
+- **Priority:** LOW (static images sufficient, animations slow load time)
+
+**2. Dynamic Metadata Updates**
+- **Current:** Frames are static after generation
+- **Missing:** Real-time updates without page refresh
+- **Spec:** Not supported by Farcaster (frames are cached)
+- **Use Case:** Live leaderboard updates, countdown timers
+- **Workaround:** Short cache TTL (60 seconds) already implemented
+- **Fix Effort:** N/A (Farcaster limitation)
+- **Priority:** N/A (workaround sufficient)
+
+**3. Multi-Step Frame Flows**
+- **Current:** Single-page frames with link buttons
+- **Missing:** Multi-step interactive flows (wizard-style)
+- **Spec:** Requires POST handler for state transitions
+- **Blocker:** POST handler removed in Phase 1E
+- **Use Case:** Quest onboarding, badge selection, guild join wizard
+- **Fix Effort:** 15 hours (restore POST handler, state management, validation)
+- **Priority:** LOW (current link-to-miniapp flow works well)
+
+**14.3: Legacy Code Cleanup Inventory (0.5 hours)**
+
+**Files Identified for Safe Deletion (GI-14):**
+
+1. **POST Handler (app/api/frame/route.tsx lines 2590-3620)**
+   - Status: 1030 lines commented (Phase 1E)
+   - Reason: POST actions deprecated by Farcaster, all frames use link buttons
+   - Blocker: None (already commented, zero references)
+   - GI-14 Process: Can delete immediately (no 48h soft delete needed)
+   - Effort: 0.5 hours (delete commented code, verify build)
+
+2. **BadgeShareCard Archived Component**
+   - File: `components/legacy/BadgeShareCard__archived.tsx` (~200 lines)
+   - Status: Archived but not deleted
+   - Reason: Replaced by ShareButton.tsx (Phase 5.5)
+   - Blocker: Check for lingering imports
+   - GI-14 Process: Run full usage scan, 48h soft delete
+   - Effort: 1 hour (scan, soft delete, monitor, hard delete)
+
+3. **Unused Frame Utilities**
+   - File: Search for commented utilities in `lib/frame-*.ts`
+   - Status: To be discovered during GI-14 scan
+   - Effort: 1 hour (scan, validate, delete)
+
+**Success Criteria:**
+- ✅ Frame spec compliance gaps documented with priority
+- ✅ Missing features identified with fix effort estimates
+- ✅ Cross-frame consistency issues cataloged
+- ✅ Legacy cleanup inventory complete with GI-14 checklist
+
+---
+
+## 📊 Updated Task Breakdown & Effort Estimation
+
+### Layer 1 Tasks (Functional Fixes - 24.5 hours):
+1. ✅ GM Frame Username Support (4 hours) - Priority: CRITICAL
+2. ✅ Quest Frame Username Support (3 hours) - Priority: HIGH
+3. ✅ OnchainStats Frame 2-Column Layout (6 hours) - Priority: CRITICAL
+4. ✅ Points Frame Handler (4 hours) - Priority: CRITICAL
+5. ✅ Guild Frame Username Support (2.5 hours) - Priority: MEDIUM
+6. ✅ Leaderboard Frame Username Validation (2 hours) - Priority: MEDIUM
+7. ✅ Badge Frame Username Validation (3 hours) - Priority: MEDIUM
+
+### Layer 2 Tasks (Infrastructure Completeness - 20.5 hours):
+8. ✅ Design System Consolidation (8 hours) - Priority: HIGH
+9. ✅ Chain Icon Integration (4 hours) - Priority: MEDIUM
+10. ✅ XP System Integration (5 hours) - Priority: HIGH
+11. ✅ Text Composition Enhancement (2 hours) - Priority: LOW
+12. ✅ @gmeowbased Attribution (1.5 hours) - Priority: MEDIUM
+
+### Layer 3 Tasks (System Documentation & Cleanup - 5 hours):
+13. ✅ **Share Button Architecture Documentation (3 hours)** - Priority: CRITICAL
+    - 13.1: Share infrastructure map (1.5h)
+    - 13.2: Trigger inventory (1h)
+    - 13.3: Component variants (0.5h)
+
+14. ✅ **Missing Frame Improvements Documentation (2 hours)** - Priority: CRITICAL
+    - 14.1: Frame spec compliance audit (1h)
+    - 14.2: Cross-frame consistency gaps (0.5h)
+    - 14.3: Legacy cleanup inventory (0.5h)
+
+**Updated Total Effort: 50 hours** (was 45h)
+- Layer 1: 24.5 hours (functional fixes)
+- Layer 2: 20.5 hours (infrastructure completeness)
+- Layer 3: 5 hours (system documentation + cleanup)
+
+---
+
+## 🎯 Updated Success Metrics
+
+### Functional Completeness (Layer 1):
+- ✅ 100% frames display username or FID
+- ✅ Points frame has dedicated handler
+- ✅ 2-column Yu-Gi-Oh! layout standard adopted
+- ✅ Zero layout waste (GM frame 60% waste fixed)
+
+### Infrastructure Health (Layer 2):
+- ✅ Design system consolidated (fonts in 1 file, colors in 1 file)
+- ✅ Chain icons used consistently (images + HTML overlays)
+- ✅ XP system integrated in 4+ frame types
+- ✅ @gmeowbased attribution 100% coverage
+
+### System Maintainability (Layer 3):
+- ✅ **Share button architecture documented** (10+ trigger points mapped)
+- ✅ **Frame spec compliance gaps identified** (aspect ratio, input, tx buttons)
+- ✅ **Legacy code cleanup planned** (POST handler, BadgeShareCard)
+- ✅ **Missing features prioritized** (HIGH: input fields, MEDIUM: tx buttons, LOW: animations)
+
+### Quality Gates:
+- ✅ All edits pass GI-8 (File-Level API Sync)
+- ✅ Username resolution logic follows GI-7 (MCP Spec Sync)
+- ✅ Frame button compliance (GI-12)
+- ✅ Frame URL safety (GI-11)
+- ✅ Legacy deletion follows GI-14 (Safe-Delete Verification)
+
+---
+
 ## 📚 References
 
 ### Related Documents:
 - [PHASE-1E-AUDIT-REPORT.md](./PHASE-1E-AUDIT-REPORT.md) - Phase 1E findings
 - [PHASE-1E-COMPLETE.md](../../../PHASE-1E-COMPLETE.md) - Phase 1E summary
 - [CHANGELOG.md](../../../CHANGELOG.md) - Version history
+- [QUALITY-GATES.md](../../../reference/QUALITY-GATES.md) - GI-7 to GI-14 reference
+
+### MCP Spec References:
+- Farcaster Frame Spec: https://docs.farcaster.xyz/reference/frames/v1/spec
+- Farcaster Miniapp Spec: https://miniapps.farcaster.xyz/docs/specification
+- Neynar Frame API: https://docs.neynar.com/docs/frame-api
+- Neynar Score Fields: https://docs.neynar.com/docs/neynar-score
 
 ### Key Commits:
 - `9f061de` - Phase 1E: Fixed onchainstats image parameters
 - `7c5554d` - Phase 1E: MEGA onchainstats improvement (username + redesign)
 - `1addaa0` - Phase 1E: Removed unused imports and types
+- `fc67af7` - Phase 1F: Layer 2 audit expansion (design, chains, XP, text)
 
 ### Testing URLs:
 ```bash
