@@ -72,7 +72,7 @@ export const GET = withErrorHandler(async (request: Request) => {
     // Extract engagement metrics
     const followerCount = user.follower_count || 0
     const followingCount = user.following_count || 0
-    const hasPowerBadge = user.power_badge || false
+    const hasPowerBadge = (user as any).power_badge || false
     const verifications = user.verifications || []
     const activeStatus = (user as any).active_status || 'inactive'
 

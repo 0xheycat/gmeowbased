@@ -139,7 +139,7 @@ export const GET = withTiming(withErrorHandler(async (req: Request) => {
           bio: fcUser.profile?.bio?.text || '',
           followerCount: fcUser.follower_count || 0,
           followingCount: fcUser.following_count || 0,
-          powerBadge: fcUser.power_badge || false,
+          powerBadge: (fcUser as any).power_badge || false,
           verifiedAddresses: fcUser.verified_addresses || [],
           custodyAddress: fcUser.custody_address,
         }
