@@ -2015,6 +2015,8 @@ export async function GET(req: Request) {
         user: userParam || undefined,
         fid: resolvedFid || undefined,
         extra: {
+          username: resolvedProfile?.username || undefined,
+          displayName: resolvedProfile?.displayName || undefined,
           statsChain: chainKey,
           chainName: chainDisplay,
           explorer: explorerRaw,
