@@ -1193,10 +1193,18 @@ export async function GET(req: Request) {
 
   // OnchainStats frame type - Yu-Gi-Oh! Card Structure
   if (type === 'onchainstats') {
-    const totalTxs = readParam(url, 'totalTxs', '0')
-    const balance = readParam(url, 'balance', '0.00')
-    const score = readParam(url, 'score', '0')
-    const address = readParam(url, 'address', user)
+    // Read all onchain stats parameters passed from frame route
+    const txs = readParam(url, 'txs', '0')
+    const contracts = readParam(url, 'contracts', '0')
+    const volume = readParam(url, 'volume', '0.00 ETH')
+    const balance = readParam(url, 'balance', '0.00 ETH')
+    const age = readParam(url, 'age', '—')
+    const builder = readParam(url, 'builder', '—')
+    const neynar = readParam(url, 'neynar', '—')
+    const power = readParam(url, 'power', '—')
+    const firstTx = readParam(url, 'firstTx', '—')
+    const lastTx = readParam(url, 'lastTx', '—')
+    const address = readParam(url, 'user', user)
 
     const statsPalette = {
       start: '#00d4ff',
@@ -1403,21 +1411,39 @@ export async function GET(req: Request) {
                       borderRadius: 8,
                       opacity: 0.8,
                       boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-                      gap: 8,
+                      gap: 6,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>TXS:</span>
-                      <span style={{ color: statsPalette.start }}>{totalTxs}</span>
+                      <span style={{ color: statsPalette.start }}>{txs}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700 }}>
+                      <span style={{ opacity: 0.7 }}>VOLUME:</span>
+                      <span style={{ color: statsPalette.start }}>{volume}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>BALANCE:</span>
-                      <span style={{ color: statsPalette.start }}>{balance} ETH</span>
+                      <span style={{ color: statsPalette.start }}>{balance}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
-                      <span style={{ opacity: 0.6 }}>Score:</span>
-                      <span style={{ opacity: 0.9 }}>{score}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600 }}>
+                      <span style={{ opacity: 0.6 }}>AGE:</span>
+                      <span style={{ opacity: 0.9 }}>{age}</span>
                     </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600 }}>
+                      <span style={{ opacity: 0.6 }}>BUILDER:</span>
+                      <span style={{ opacity: 0.9 }}>{builder}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600 }}>
+                      <span style={{ opacity: 0.6 }}>NEYNAR:</span>
+                      <span style={{ opacity: 0.9 }}>{neynar}</span>
+                    </div>
+                    {power && power.toLowerCase() !== '—' && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600 }}>
+                        <span style={{ opacity: 0.6 }}>POWER:</span>
+                        <span style={{ opacity: 0.9 }}>⚡ {power}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
