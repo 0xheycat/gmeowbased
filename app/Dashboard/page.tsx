@@ -20,6 +20,9 @@ import {
   formatTimeUntilNextGM,
   createStakeForBadgeTx,
   createUnstakeForBadgeTx,
+  getTimeOfDay,
+  getTimeBasedGreeting,
+  getTimeBasedShareText,
 } from '@/lib/gm-utils'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import { calculateRankProgress } from '@/lib/rank'
@@ -1109,12 +1112,16 @@ export default function DashboardPage() {
     const t = setInterval(() => {
       if (lastGMTimestamp === 0) {
         setCanGM(true)
-        setGmMessage('First GM available!')
+        setGmMessage(getTimeBasedGreeting(true))
         return
       }
       const can = canGMBasedOnTimestamp(lastGMTimestamp)
       setCanGM(can)
-      setGmMessage(can ? 'You can GM now.' : `Next GM in ${formatTimeUntilNextGM(lastGMTimestamp)}`)
+      if (can) {
+        setGmMessage(getTimeBasedGreeting(true))
+      } else {
+        setGmMessage(`Next GM in ${formatTimeUntilNextGM(lastGMTimestamp)}`)
+      }
     }, 1000)
     return () => clearInterval(t)
   }, [lastGMTimestamp])
@@ -1638,7 +1645,7 @@ export default function DashboardPage() {
     }
     try {
       pushNotification({ type: 'info', title: 'Sharing frame…', message: 'Opening Warpcast composer.', category: 'quest' })
-      const text = `GM sent on ${CHAIN_LABEL[selectedChain]}! Join me on GMEOW.`
+      const text = getTimeBasedShareText(CHAIN_LABEL[selectedChain])
       const mode = await openWarpcastComposer(text, gmFrameUrl)
       pushNotification({
         type: 'success',

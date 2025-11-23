@@ -538,6 +538,71 @@ export const formatTimeUntilNextGM = (lastGMTimestamp: number): string => {
 }
 
 // -------------------------------
+// Time-based greeting logic
+// -------------------------------
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night'
+
+export function getTimeOfDay(): TimeOfDay {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) return 'morning'
+  if (hour >= 12 && hour < 17) return 'afternoon'
+  if (hour >= 17 && hour < 21) return 'evening'
+  return 'night'
+}
+
+export function getTimeBasedGreeting(canGM: boolean, timeOfDay?: TimeOfDay): string {
+  const tod = timeOfDay || getTimeOfDay()
+  
+  if (canGM) {
+    switch (tod) {
+      case 'morning':
+        return '☀️ Good morning! Time to send your GM'
+      case 'afternoon':
+        return '🌤️ Good afternoon! Send your daily GM'
+      case 'evening':
+        return '🌆 Good evening! Don\'t forget your GM'
+      case 'night':
+        return '🌙 Good night! Send your GM before bed'
+    }
+  } else {
+    switch (tod) {
+      case 'morning':
+        return '☀️ Good morning! GM already sent today'
+      case 'afternoon':
+        return '🌤️ Good afternoon! GM already sent today'
+      case 'evening':
+        return '🌆 Good evening! GM already sent today'
+      case 'night':
+        return '🌙 Good night! GM already sent today'
+    }
+  }
+}
+
+export function getTimeBasedEmoji(timeOfDay?: TimeOfDay): string {
+  const tod = timeOfDay || getTimeOfDay()
+  switch (tod) {
+    case 'morning': return '☀️'
+    case 'afternoon': return '🌤️'
+    case 'evening': return '🌆'
+    case 'night': return '🌙'
+  }
+}
+
+export function getTimeBasedShareText(chain: string, timeOfDay?: TimeOfDay): string {
+  const tod = timeOfDay || getTimeOfDay()
+  switch (tod) {
+    case 'morning':
+      return `☀️ Good morning! GM sent on ${chain}! Join me on GMEOW.`
+    case 'afternoon':
+      return `🌤️ Good afternoon! GM sent on ${chain}! Join me on GMEOW.`
+    case 'evening':
+      return `🌆 Good evening! GM sent on ${chain}! Join me on GMEOW.`
+    case 'night':
+      return `🌙 Good night! GM sent on ${chain}! Join me on GMEOW.`
+  }
+}
+
+// -------------------------------
 // Quest Type mapping (same as contract enum)
 export type QuestTypeKey =
   | 'GENERIC'
