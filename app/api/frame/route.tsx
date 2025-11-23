@@ -995,6 +995,37 @@ export interface OverlayProfile {
   pfpUrl: string | null
 }
 
+/**
+ * Generate rich compose text for frame sharing based on frame type
+ * Used in fc:frame:text meta tag for pre-filled cast composer
+ */
+function getComposeText(frameType?: string, context?: { title?: string; chain?: string; username?: string }): string {
+  const { title, chain, username } = context || {}
+  
+  switch (frameType) {
+    case 'gm':
+      return '🌅 Just stacked my daily GM ritual! Join the meow squad @gmeowbased'
+    case 'quest':
+      return `⚔️ New quest unlocked${chain ? ` on ${chain}` : ''}! ${title || 'Check it out'} @gmeowbased`
+    case 'leaderboards':
+      return `🏆 Climbing the ranks${chain ? ` on ${chain}` : ''}! Check the leaderboard @gmeowbased`
+    case 'badge':
+      return `🎖️ New badge earned${username ? ` by @${username}` : ''}! View the collection @gmeowbased`
+    case 'guild':
+      return '🛡️ Guild quests are live! Rally your squad @gmeowbased'
+    case 'referral':
+      return '🎁 Join me on gmeowbased! Share quests, earn rewards together @gmeowbased'
+    case 'points':
+      return `💰 Check out ${username ? `@${username}'s` : 'my'} gmeowbased Points balance @gmeowbased`
+    case 'onchainstats':
+      return `📊 Flexing onchain stats${chain ? ` on ${chain}` : ''}! View my profile @gmeowbased`
+    case 'verify':
+      return '✅ Verify your quests and unlock rewards @gmeowbased'
+    default:
+      return '🎮 Explore quests, guilds, and onchain adventures @gmeowbased'
+  }
+}
+
 function buildFrameHtml(params: {
   title: string
   description: string
@@ -1062,6 +1093,15 @@ function buildFrameHtml(params: {
     return chunks
   }
   let overlaySecondaryHtml = ''
+
+  // Generate compose text for frame sharing
+  const composeText = getComposeText(frameType, {
+    title: pageTitle,
+    chain: chainLabel || undefined,
+    username: profile?.username || undefined,
+  })
+  const composeTextEsc = escapeHtml(composeText)
+
   if (overlaySecondarySegments.length) {
     if (overlaySecondarySegments.length >= 6) {
         const chunks = chunkSegments(overlaySecondarySegments, 3)
@@ -1242,6 +1282,7 @@ function buildFrameHtml(params: {
     ${imageEsc ? `<meta property="og:image:width" content="600" />` : ''}
     ${imageEsc ? `<meta property="og:image:height" content="400" />` : ''}
     <meta property="og:url" content="${urlEsc}" />
+    <meta name="fc:frame:text" content="${composeTextEsc}" />
     
     <style>
       body {
@@ -1541,7 +1582,7 @@ export async function GET(req: Request) {
       const rewardParts: string[] = []
       if (quest.rewardPoints && quest.rewardPoints > 0) {
         const formatted = formatInteger(quest.rewardPoints)
-        rewardParts.push(`${formatted ?? quest.rewardPoints} Gmeow Points`)
+        rewardParts.push(`${formatted ?? quest.rewardPoints} gmeowbased Points`)
       }
       if (quest.rewardTokenPerUser && quest.rewardTokenPerUser > 0) {
         const formatted = formatInteger(quest.rewardTokenPerUser)
@@ -1780,7 +1821,7 @@ export async function GET(req: Request) {
       const shareUrl = `${origin}/referral${code ? `?code=${encodeURIComponent(String(code))}` : ''}`
       const title = code ? `Summon Frens • Code ${String(code).toUpperCase()}` : 'Summon Frens • Referral'
       const descriptionPieces: string[] = []
-      if (code) descriptionPieces.push(`Share code ${String(code).toUpperCase()} to split Gmeow Points with frens.`)
+      if (code) descriptionPieces.push(`Share code ${String(code).toUpperCase()} to split gmeowbased Points with frens.`)
       descriptionPieces.push('Each completed quest powers up the guild streaks.')
       if (user) descriptionPieces.push(`Tracked to ${shortenHex(String(user))}`)
       descriptionPieces.push('— @gmeowbased')
@@ -2057,8 +2098,8 @@ export async function GET(req: Request) {
         const sres = await fetchUserStatsOnChain(String(user), chainKey, traces)
         if (sres.ok) stats = sres.stats
       }
-      const userDisplay = user ? shortenHex(String(user)) : 'Gmeow Points'
-      const title = `${userDisplay} • Gmeow Points`
+      const userDisplay = user ? shortenHex(String(user)) : 'gmeowbased Points'
+      const title = `${userDisplay} • gmeowbased Points`
       const parseNumeric = (value: unknown) => {
         if (value === undefined || value === null || value === '') return null
         const num = Number(value)
@@ -2132,7 +2173,7 @@ export async function GET(req: Request) {
       if (lockedFormatted) descriptionPieces.push(`Locked ${lockedFormatted}`)
       if (totalFormatted) descriptionPieces.push(`Lifetime ${totalFormatted}`)
       if (!stats) {
-        descriptionPieces.push('Connect your wallet or Farcaster profile to preview Gmeow Points balance.')
+        descriptionPieces.push('Connect your wallet or Farcaster profile to preview gmeowbased Points balance.')
       }
       descriptionPieces.push(`Chain ${chainDisplay}`)
       descriptionPieces.push('— @gmeowbased')
@@ -2224,7 +2265,7 @@ export async function GET(req: Request) {
           description: errorMsg,
           image: defaultFrameImage,
           url: origin,
-          buttons: [{ label: 'Open GMEOW', target: origin }],
+          buttons: [{ label: 'Open gmeowbased', target: origin }],
           fcMeta: { [frameKey('entity')]: 'error' },
           debug: debugPayload,
           frameOrigin: origin,
@@ -2287,7 +2328,7 @@ export async function GET(req: Request) {
     if (type === 'gm') {
       tracePush(traces, 'gm-start')
       const title = 'GM Ritual • GMEOW'
-      const desc = ['Log your GM streak', 'Unlock multipliers + hidden boosts', '— @gmeowbased'].join(' • ')
+      const desc = ['🌅 Log your GM streak', '⚡ Unlock multipliers + hidden boosts', '— @gmeowbased'].join(' • ')
       const href = `${origin}/gm`
       if (asJson) return respondJson({ ok: true, type: 'gm', href, description: desc, traces })
       
@@ -2313,8 +2354,8 @@ export async function GET(req: Request) {
 
     // Default generic frame
     tracePush(traces, 'generic-frame')
-    const title = 'GMEOW Frame'
-    const description = ['Universal GMEOW hub', 'Browse quests, guilds, and onchain flex'].join(' • ')
+    const title = 'gmeowbased Frame'
+    const description = ['🎮 Universal gmeowbased hub', '⚔️ Browse quests, guilds, and onchain flex'].join(' • ')
     const href = `${origin}`
     if (asJson) return respondJson({ ok: true, type: 'generic', href, traces })
     const html = buildFrameHtml({
@@ -2322,7 +2363,7 @@ export async function GET(req: Request) {
       description,
       image: defaultFrameImage,
       url: href,
-      buttons: [{ label: 'Open GMEOW', target: href }],
+      buttons: [{ label: 'Open gmeowbased', target: href }],
       fcMeta: { [frameKey('entity')]: 'gmeow' },
       debug: debugPayload,
       frameOrigin: origin,
@@ -2344,7 +2385,7 @@ export async function GET(req: Request) {
       description: message,
       image: `${fallbackOrigin}/og-image.png`,
       url: fallbackOrigin,
-      buttons: [{ label: 'Open GMEOW', target: fallbackOrigin }],
+      buttons: [{ label: 'Open gmeowbased', target: fallbackOrigin }],
       fcMeta: { [frameKey('entity')]: 'error' },
       debug: debugMode ? traces : undefined,
       frameOrigin: fallbackOrigin,
