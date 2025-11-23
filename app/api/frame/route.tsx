@@ -1517,6 +1517,24 @@ export async function GET(req: Request) {
       const questIdNum = Number(rawQuestId)
       tracePush(traces, 'quest-id-parsed', questIdNum)
 
+      // Phase 1F: Resolve username via Neynar if FID provided
+      const fidParam = params.fid || params.userFid
+      const fid = fidParam ? sanitizeFID(fidParam) : null
+      let username: string | null = null
+      let displayName: string | null = null
+      if (fid && Ne && typeof (Ne as any).fetchUserByFid === 'function') {
+        try {
+          const fcUser = await (Ne as any).fetchUserByFid(Number(fid))
+          if (fcUser) {
+            username = typeof fcUser.username === 'string' && fcUser.username.trim() ? fcUser.username.trim() : null
+            displayName = typeof fcUser.displayName === 'string' && fcUser.displayName.trim() ? fcUser.displayName.trim() : null
+            tracePush(traces, 'quest-profile-resolved', { fid, username })
+          }
+        } catch (error: any) {
+          tracePush(traces, 'quest-profile-error', String(error?.message || error))
+        }
+      }
+
       // If chain param present, use it, otherwise attempt to auto-detect from storage/metadata.
       const chainKey = (params.chain as string) || 'base'
 
@@ -1669,6 +1687,7 @@ export async function GET(req: Request) {
       questImageParams.set('badgeTone', 'violet')
       
       // Phase 1E: Build dynamic image URL with real quest data
+      // Phase 1F: Include username and displayName for identity display
       const imageUrl = buildDynamicFrameImageUrl({
         type: 'quest',
         questId: questIdNum,
@@ -1678,6 +1697,9 @@ export async function GET(req: Request) {
           reward: rewardSummary || undefined,
           expires: expiresText || undefined,
           progress: completionPercent?.toString() || undefined,
+          username,
+          displayName,
+          fid: fid ? String(fid) : undefined,
         }
       }, origin)
       
@@ -2330,8 +2352,19 @@ export async function GET(req: Request) {
       }
 
       // Phase 0: Check and award new user rewards
+      // Phase 1F: Also resolve username for identity display
+      let username: string | null = null
+      let displayName: string | null = null
       try {
         const userData = await Ne.fetchUserByFid(fid)
+        
+        // Phase 1F: Extract username and displayName
+        if (userData) {
+          username = typeof userData.username === 'string' && userData.username.trim() ? userData.username.trim() : null
+          displayName = typeof userData.displayName === 'string' && userData.displayName.trim() ? userData.displayName.trim() : null
+          tracePush(traces, 'badge-profile-resolved', { fid, username, displayName })
+        }
+        
         const rewardResult = await checkAndAwardNewUserRewards(fid, userData?.neynarScore)
         tracePush(traces, 'badge-rewards', {
           awarded: rewardResult.awarded,
@@ -2408,7 +2441,12 @@ export async function GET(req: Request) {
         : `Start your badge collection • ${eligibleCount} available • FID ${fid} • — @gmeowbased`
       
       const href = `${origin}/profile/${fid}/badges`
-      const imageUrl = buildDynamicFrameImageUrl({ type: 'badge', fid }, origin)
+      // Phase 1F: Pass username and displayName to image
+      const imageUrl = buildDynamicFrameImageUrl({ 
+        type: 'badge', 
+        fid,
+        extra: { username, displayName, earnedCount: String(earnedCount), eligibleCount: String(eligibleCount) }
+      }, origin)
       
       tracePush(traces, 'badge-generated', { fid, href, earnedCount, eligibleCount })
       
@@ -2439,6 +2477,22 @@ export async function GET(req: Request) {
       // Phase 1D: Query real GM data for streak milestone display
       const fidParam = params.fid || params.user
       const fid = fidParam ? sanitizeFID(fidParam) : null
+      
+      // Phase 1F: Resolve username via Neynar
+      let username: string | null = null
+      let displayName: string | null = null
+      if (fid && Ne && typeof (Ne as any).fetchUserByFid === 'function') {
+        try {
+          const fcUser = await (Ne as any).fetchUserByFid(Number(fid))
+          if (fcUser) {
+            username = typeof fcUser.username === 'string' && fcUser.username.trim() ? fcUser.username.trim() : null
+            displayName = typeof fcUser.displayName === 'string' && fcUser.displayName.trim() ? fcUser.displayName.trim() : null
+            tracePush(traces, 'gm-profile-resolved', { fid, username, displayName })
+          }
+        } catch (error: any) {
+          tracePush(traces, 'gm-profile-error', String(error?.message || error))
+        }
+      }
       
       let gmCount = 0
       let streak = 0
@@ -2530,10 +2584,11 @@ export async function GET(req: Request) {
       const href = `${origin}/gm`
       
       // Phase 1D: Build dynamic image URL with real GM data
+      // Phase 1F: Include username and displayName for proper identity display
       const imageUrl = fid ? buildDynamicFrameImageUrl({ 
         type: 'gm', 
         fid, 
-        extra: { gmCount, streak } 
+        extra: { gmCount, streak, username, displayName } 
       }, origin) : defaultFrameImage
       
       if (asJson) return respondJson({ ok: true, type: 'gm', href, description: desc, gmCount, streak, traces })

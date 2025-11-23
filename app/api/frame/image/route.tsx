@@ -156,6 +156,9 @@ export async function GET(req: Request) {
     const gmCount = readParam(url, 'gmCount', '0')
     const streak = readParam(url, 'streak', '0')
     const rank = readParam(url, 'rank', '—')
+    // Phase 1F: Read username and displayName for proper identity display
+    const username = readParam(url, 'username', '')
+    const displayName = readParam(url, 'displayName', '')
 
     // Use tier colors if available, otherwise default GM colors
     const gmPalette = tierInfo ? {
@@ -329,7 +332,7 @@ export async function GET(req: Request) {
                 </div>
 
                 {/* User info below icon */}
-                {(user || fid) && (
+                {(username || displayName || user || fid) && (
                   <div
                     style={{
                       display: 'flex',
@@ -343,7 +346,7 @@ export async function GET(req: Request) {
                     }}
                   >
                     <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
-                      👤 {user ? shortenAddress(user) : `FID ${fid}`}
+                      {username ? `@${username}` : displayName ? displayName : user ? `👤 ${shortenAddress(user)}` : `👤 FID ${fid}`}
                     </div>
                   </div>
                 )}
@@ -943,6 +946,10 @@ export async function GET(req: Request) {
     const expires = readParam(url, 'expires', '—')
     const slotsLeft = readParam(url, 'slotsLeft', '—')
     const progress = readParam(url, 'progress', '0')
+    // Phase 1F: Read username for identity display
+    const username = readParam(url, 'username', '')
+    const displayName = readParam(url, 'displayName', '')
+    const questFid = readParam(url, 'fid', '')
     
     const questPalette = {
       start: '#8e7cff',
@@ -1086,7 +1093,7 @@ export async function GET(req: Request) {
                 </div>
 
                 {/* User info below icon */}
-                {(user || fid) && (
+                {(username || displayName || user || questFid || fid) && (
                   <div
                     style={{
                       display: 'flex',
@@ -1100,7 +1107,7 @@ export async function GET(req: Request) {
                     }}
                   >
                     <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
-                      👤 {user ? shortenAddress(user) : `FID ${fid}`}
+                      {username ? `@${username}` : displayName ? displayName : user ? `👤 ${shortenAddress(user)}` : questFid ? `👤 FID ${questFid}` : `👤 FID ${fid}`}
                     </div>
                   </div>
                 )}
