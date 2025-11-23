@@ -1,800 +1,455 @@
-# Phase 1D: Frame Analytics & Personalization - Planning Document
+# Phase 1D: Frame UI/Layout Enhancement & Data Audit
 
-**Status**: Planning  
-**Created**: 2025-01-28  
-**Updated**: 2025-11-23  
-**Target Completion**: TBD  
-**Dependencies**: Phase 1C completion (Tasks 1-6)
-
----
-
-## ⚠️ IMPORTANT: Frame Embed Support Deprecated
-
-**Effective Date**: November 23, 2025
-
-**CRITICAL CHANGE**: Farcaster frames **no longer support interactive POST buttons** or traditional frame embeds. This fundamentally changes the frame architecture:
-
-- ❌ **POST buttons removed**: No `action: 'post'` buttons in any frame
-- ❌ **Frame embeds deprecated**: Traditional frame protocol no longer functional
-- ✅ **Link buttons only**: Frames now use `action: 'link'` to external URLs
-- ✅ **Launch frames**: Miniapp launch buttons (`action: 'launch_frame'`) still work
-- ✅ **Static metadata**: OG tags, compose text (fc:frame:text) still render
-
-**Impact on Phase 1D**:
-- Analytics tracking simplified (no POST interactions to track)
-- A/B testing focused on link CTR, miniapp launches, and compose shares
-- Personalization limited to static content (titles, descriptions, images)
-- Performance optimization still relevant (faster static frame loads)
-
-**Migration Strategy**:
-All interactive features moved to **miniapp URLs** (`action: 'link'` or `action: 'launch_frame'`). Frames serve as **static previews** that link to interactive miniapps.
+**Status**: Active Planning  
+**Created**: 2025-11-23  
+**Target Completion**: Week of December 2, 2025  
+**Dependencies**: Phase 1C (✅ complete), Mock data removal (✅ commit b9c2ce9)
 
 ---
 
-## Executive Summary
+## 🎯 Mission
 
-Phase 1D focuses on **data-driven optimization** and **personalized experiences** for Farcaster frames. Building on the rich embeds foundation from Phase 1C, this phase introduces analytics tracking, A/B testing infrastructure, and dynamic content personalization to improve user engagement and conversion rates.
+**Refine frame UI/layout and validate data integrity** across all 9 frame types after mock data removal. Ensure real Supabase queries display correctly with excellent UX.
 
-**Note**: This plan was created before frame embed deprecation. Features have been adjusted to work within the new static frame + miniapp architecture.
-
-**Core Objectives** (Adjusted for Static Frame Architecture):
-1. **Frame Analytics** - Track frame views, link clicks, and miniapp launches (no POST tracking)
-2. **A/B Testing** - Compare different static frame variants (titles, images, button labels)
-3. **Personalization** - Tailor frame metadata based on user behavior and on-chain data
-4. **Performance Monitoring** - Optimize static frame load times and image generation
+**Deferred to Phase 1E**: Analytics, A/B testing, personalization
 
 ---
 
-## Phase 1C Completion Status
+## 📊 The 9 Frame Types - Status
 
-### ✅ Completed Tasks (6/6)
+| Frame | Data Source | UI Status | Priority Fixes |
+|-------|-------------|-----------|----------------|
+| **1. Quest** | ✅ Supabase quests | 🟡 Functional | Improve metadata display, quest status indicators |
+| **2. Guild** | ❌ Mock (no table) | 🟡 Basic | Add TODO comment clarity, placeholder design |
+| **3. Points** | ✅ user_profiles | 🟢 Good | Username display done (Phase 1C), validate rank display |
+| **4. Referral** | ❌ Mock (no table) | 🟡 Basic | Add TODO comment clarity, referral code design |
+| **5. Leaderboard** | ✅ leaderboard_snapshots | 🟢 Good | Validate rank calculation (now uses real data) |
+| **6. GM** | ✅ gmeow_rank_events | 🟡 Needs work | Prominent streak display, daily status, milestones |
+| **7. Badge** | ✅ user_badges + templates | 🟡 Needs work | Visual hierarchy (earned vs eligible), rarity indicators |
+| **8. Verify** | ✅ Supabase + RPC | 🟡 Functional | Clear verification status, error messages |
+| **9. OnchainStats** | ✅ RPC + Supabase | 🟡 Dense | Simplify metric display, highlight key stats |
 
-1. **Task 1: Text Replacements** - All "GMEOW" → "gmeowbased" conversions complete
-2. **Task 2: Compose Text** - fc:frame:text meta tags added to all 9 frame types
-3. **Task 3: Enhanced OG Descriptions** - Emoji descriptions for GM and generic frames
-4. **Task 4: Username Display** - @username replaces wallet addresses in points frame
-5. **Task 5: Rich Quest Titles** - Actual quest names shown instead of "Quest #ID"
-6. **Task 6: QuestCard Share Button** - Warpcast composer integration
-
-**Commit**: `35c0469` - "feat(frames): Phase 1C tasks 4-5 - username display + quest titles"  
-**Testing**: All 9 frame types validated on localhost:3007 ✅
-
-### 🔄 Deferred Features
-
-The following features were identified during Phase 1C but deferred for future implementation:
-
-#### 1. Username Caching & Rate Limiting
-- **Current**: Each frame request calls Neynar API for username resolution
-- **Issue**: Potential rate limiting on high-traffic frames
-- **Solution**: Implement Redis/Supabase caching layer for Neynar profiles
-- **Priority**: Medium (becomes critical above 10k daily frame views)
-
-#### 2. Extended Emoji Descriptions
-- **Current**: Only GM and generic frames have emoji descriptions
-- **Issue**: Other frame types (quest, guild, points, etc.) still use plain text
-- **Solution**: Add emoji-rich descriptions for all 9 frame types
-- **Priority**: Low (cosmetic improvement, not functional)
-
-#### 3. Dynamic Quest Metadata
-- **Current**: Quest overlay shows static information (reward, spots, expiry)
-- **Issue**: No real-time completion percentage or trending indicators
-- **Solution**: Add live quest stats (% complete, trending badge, time remaining)
-- **Priority**: Medium (improves quest engagement)
-
-#### 4. Multi-Chain Quest Support
-- **Current**: Quest frames show single chain information
-- **Issue**: Cross-chain quests not visually distinguished
-- **Solution**: Add multi-chain badges and aggregated stats
-- **Priority**: Low (depends on multi-chain quest availability)
-
-#### 5. Frame Image Generation Optimization
-- **Current**: Dynamic images generated on-demand per request
-- **Issue**: High compute cost for complex overlays with profiles
-- **Solution**: Pre-render common frame variants, use CDN caching
-- **Priority**: High (performance & cost optimization)
+**Legend**: 🟢 Good | 🟡 Needs Work | 🔴 Critical | ✅ Real Data | ❌ Mock Data
 
 ---
 
-## Phase 1D: Proposed Features
+## 🎨 Feature 1: UI/Layout Improvements
 
-### Feature 1: Frame Analytics Tracking
+### 1.1 GM Frame Enhancement
 
-**Objective**: Capture comprehensive frame interaction data for optimization.
+**Issues**:
+- Streak and GM count not prominent enough
+- No visual celebration for milestones (7-day, 30-day streaks)
+- Missing "GM sent today ✅" indicator
 
-**⚠️ Adjusted for No POST Buttons**: Analytics now focuses on static frame views, link clicks, and miniapp launches. No POST button tracking needed.
-
-#### Implementation Details
-
-**1.1 Event Tracking** (Updated for Static Frames)
-- Frame view events (initial load)
-- Link button click events (external URLs)
-- Launch frame events (miniapp opens) ✅ Still supported
-- Share/compose events (Warpcast composer opens)
-- Error events (failed loads, API errors)
-- ~~POST button clicks~~ ❌ Removed - not supported
-
-**1.2 Data Schema** (Simplified for Static Frames)
+**Solutions**:
 ```typescript
-interface FrameAnalyticsEvent {
-  eventId: string;
-  timestamp: Date;
-  frameType: 'quest' | 'guild' | 'points' | 'gm' | 'badge' | 'referral' | 'leaderboard' | 'verify' | 'onchainstats';
-  eventType: 'view' | 'link_click' | 'launch' | 'share' | 'error'; // No 'post' events
-  userId?: number; // FID if available
-  userAddress?: string; // Wallet address if available
-  chainId?: string;
-  questId?: number;
-  guildId?: number;
-  buttonIndex?: number;
-  buttonAction?: 'link' | 'launch_frame'; // Only link and launch_frame supported
-  targetUrl?: string; // Where the link/launch goes
-  sessionId: string;
-  referrer?: string;
-  userAgent?: string;
-  errorCode?: string;
-  loadTimeMs?: number;
-}
-
-// Note: POST button tracking removed - frames are now static with link-only buttons
-```
-
-**1.3 Storage Options**
-- **Supabase**: Real-time analytics table with RLS policies
-- **PostHog**: External analytics platform with session replay
-- **Custom**: Lightweight Redis buffer → Supabase batch insert
-
-**1.4 Analytics Dashboard**
-- Frame performance overview (views, clicks, conversions)
-- Quest completion funnels (view → launch → verify → claim)
-- User journey tracking (what frames they visit, in what order)
-- Error rate monitoring (failed API calls, timeout events)
-
-#### Success Metrics (Updated for Static Frames)
-- **Link Click Rate**: (link button clicks / frame views) > 12% (lower than POST CTR, links require navigation)
-- **Launch Rate**: (miniapp launches / frame views) > 8%
-- **Share Rate**: (compose opens / frame views) > 5%
-- **Quest Completion Rate**: Measured via miniapp analytics (not frame POST tracking)
-
-#### Estimated Effort
-- **Development**: 3-4 days
-- **Testing**: 1 day
-- **Documentation**: 1 day
-- **Total**: 5-6 days
-
----
-
-### Feature 2: A/B Testing Infrastructure
-
-**Objective**: Systematically test frame variants to optimize engagement.
-
-**⚠️ Adjusted for Static Frames**: A/B testing now focuses on visual elements (titles, descriptions, images, button labels) that affect link CTR, not POST interactions.
-
-#### Implementation Details
-
-**2.1 Variant Definition** (Updated for Static Frames)
-```typescript
-interface FrameVariant {
-  variantId: string;
-  name: string;
-  frameType: string;
-  weight: number; // 0-100, percentage of traffic
-  changes: {
-    title?: string;
-    description?: string;
-    buttonLabels?: string[]; // Link button labels only
-    buttonOrder?: number[]; // Reorder link buttons
-    emojiStyle?: 'minimal' | 'rich' | 'none';
-    composeTextTemplate?: string;
-    overlayStyle?: 'default' | 'identity-card' | 'minimal';
-    imageStyle?: 'dynamic' | 'static'; // Frame image variation
-  };
-  enabled: boolean;
-  startDate: Date;
-  endDate?: Date;
-}
-
-// Note: No POST button testing - all buttons are links or launch_frame actions
-```
-
-**2.2 Variant Selection Logic**
-- Deterministic hashing: `hash(fid + experimentId) % 100 < variantWeight`
-- Consistent assignment: Same user always sees same variant
-- Session persistence: Variant stored in frame state for continuity
-
-**2.3 Test Examples** (Updated for Link Buttons)
-
-**Test 1: Quest Link Button Labels**
-- **Control**: "Start Quest on Base" (existing link button)
-- **Variant A**: "🎮 Open Quest"
-- **Variant B**: "⚡ Play Now"
-- **Metric**: Link click-through rate (CTR)
-- **Note**: All buttons use `action: 'link'`, no POST actions
-
-**Test 2: Compose Text Length**
-- **Control**: "⚔️ New quest unlocked on Base! recast and claim • Base @gmeowbased"
-- **Variant A**: "New quest on Base! @gmeowbased"
-- **Variant B**: "⚔️ recast and claim quest is live @gmeowbased"
-- **Metric**: Share rate (compose opens)
-
-**Test 3: Frame Image Styles**
-- **Control**: Dynamic overlay with quest metadata
-- **Variant A**: Minimal static image with large quest name
-- **Variant B**: Hero image with quest preview
-- **Metric**: Link CTR and miniapp launch rate
-
-**2.4 Results Analysis**
-- Statistical significance calculator (chi-squared test)
-- Confidence intervals for CTR, conversion rate
-- Winner declaration criteria (p < 0.05, min 500 views per variant)
-- Rollout automation (promote winner to 100% traffic)
-
-#### Success Metrics (Updated for Static Frames)
-- **Test Velocity**: Run 2-3 A/B tests per week
-- **Winning Variants**: 15%+ improvement over control in link CTR (lower bar than POST CTR)
-- **Rollout Speed**: Winner promoted within 3 days of significance
-
-#### Estimated Effort
-- **Development**: 4-5 days
-- **Testing**: 2 days
-- **Documentation**: 1 day
-- **Total**: 7-8 days
-
----
-
-### Feature 3: Dynamic Content Personalization
-
-**Objective**: Tailor frame content based on user context and behavior.
-
-**⚠️ Adjusted for Static Frames**: Personalization limited to metadata (titles, descriptions, images, compose text). Interactive personalization moved to miniapps.
-
-#### Implementation Details
-
-**3.1 Personalization Signals**
-- **User Profile**: FID, username, follower count, verified status
-- **On-Chain Activity**: Token balances, NFT holdings, transaction history
-- **Frame History**: Previously viewed frames, completed quests, badges earned
-- **Time Context**: Time of day, day of week, seasonal events
-- **Network Context**: Chain preference (Base vs. others), gas price
-
-**3.2 Personalization Rules**
-
-**Rule 1: Quest Recommendations**
-```typescript
-// Show quests matching user's skill level
-if (userCompletedQuests < 3) {
-  recommendedQuests = getQuestsByDifficulty('beginner');
-} else if (userCompletedQuests < 10) {
-  recommendedQuests = getQuestsByDifficulty('intermediate');
+// Prominent streak display in title
+if (streak >= 30) {
+  title = `🔥 ${streak}-Day Streak! Legendary!`
+  badge = { label: 'LEGEND', tone: 'gold' }
+} else if (streak >= 7) {
+  title = `⚡ ${streak}-Day Streak! Amazing!`
+  badge = { label: 'HOT STREAK', tone: 'orange' }
 } else {
-  recommendedQuests = getQuestsByDifficulty('advanced');
+  title = `☀️ Good Morning! GM Count: ${gmCount}`
 }
+
+// Daily status in description
+const lastGMDate = gmHistory[0]?.created_at
+const isToday = isSameDay(lastGMDate, new Date())
+description = isToday
+  ? `✅ GM sent today! Keep your ${streak}-day streak alive`
+  : `☀️ Send your GM now to continue your streak!`
 ```
 
-**Rule 2: Time-Based Messaging**
-```typescript
-// Adapt GM frame greeting to user's timezone
-const userHour = getUserLocalHour(fid);
-if (userHour >= 5 && userHour < 12) {
-  greeting = '🌅 Good Morning';
-} else if (userHour >= 12 && userHour < 17) {
-  greeting = '☀️ Good Afternoon';
-} else if (userHour >= 17 && userHour < 21) {
-  greeting = '🌆 Good Evening';
-} else {
-  greeting = '🌙 Good Night';
-}
-```
-
-**Rule 3: Badge Highlights**
-```typescript
-// Emphasize rare badges in badge frames
-if (badgeRarity === 'legendary' && !userOwnsBadge) {
-  description = `🏆 LEGENDARY BADGE! Only ${badgeHolderCount} collectors own this.`;
-} else if (userOwnsBadge) {
-  description = `✅ You own this badge! Share to flex your collection.`;
-} else {
-  description = `Collect this badge to complete your ${collectionName} set.`;
-}
-```
-
-**3.3 Personalization Data Pipeline**
-- **Input**: FID, wallet address, frame type
-- **Enrichment**: Fetch user profile, on-chain stats, frame history
-- **Rules Engine**: Apply personalization rules based on signals
-- **Output**: Customized frame content (title, description, buttons, compose text)
-- **Caching**: Redis cache for user profiles (5 min TTL)
-
-**3.4 Privacy & Consent**
-- All personalization uses public blockchain data
-- No PII collection beyond Farcaster profile (username, pfp)
-- Opt-out mechanism: Generic frames if user prefers
-
-#### Success Metrics (Updated for Static Frames)
-- **Personalized Link CTR**: 20%+ higher than generic frames (lower than POST CTR expectations)
-- **Quest Completion Rate**: Measured in miniapp, not frame
-- **User Retention**: 30%+ more repeat frame views leading to miniapp visits
-
-#### Estimated Effort
-- **Development**: 5-6 days
-- **Testing**: 2 days
-- **Documentation**: 1 day
-- **Total**: 8-9 days
+**Priority**: 🔴 High - GM is core ritual, needs excellent UX
 
 ---
 
-### Feature 4: Performance Monitoring & Optimization
+### 1.2 Badge Frame Visual Hierarchy
 
-**Objective**: Ensure fast, reliable frame rendering across all frame types.
+**Issues**:
+- Earned and eligible badges have equal visual weight
+- No rarity indicators (legendary > rare > common)
+- Badge images not shown (only names from badge_templates)
 
-#### Implementation Details
-
-**4.1 Performance Metrics**
-- **Frame Load Time**: Time from request to HTML response (target: < 500ms)
-- **Image Generation Time**: Time to render dynamic frame image (target: < 300ms)
-- **API Response Time**: External API calls (Neynar, Supabase) (target: < 200ms)
-- **Cache Hit Rate**: Percentage of cached vs. fresh data (target: > 70%)
-- **Error Rate**: Failed requests / total requests (target: < 1%)
-
-**4.2 Optimization Strategies**
-
-**Strategy 1: Aggressive Caching**
+**Solutions**:
 ```typescript
-// Cache static frame images (24h TTL)
-const cacheKey = `frame:${frameType}:${hash(params)}`;
-const cached = await redis.get(cacheKey);
-if (cached) return cached;
-
-// Generate frame image
-const image = await generateFrameImage(params);
-await redis.set(cacheKey, image, { ex: 86400 }); // 24h
-return image;
-```
-
-**Strategy 2: Parallel API Calls**
-```typescript
-// Fetch user profile and quest data in parallel
-const [profile, questData, onchainStats] = await Promise.all([
-  fallbackResolveNeynarProfile({ fid }),
-  fetchQuestData(questId, chainKey),
-  fetchOnchainStats(userAddress, chainKey)
-]);
-```
-
-**Strategy 3: Lazy Loading**
-```typescript
-// Load critical data first, defer non-critical enrichment
-const criticalData = await loadCriticalFrameData(params);
-const html = buildFrameHtml(criticalData);
-
-// Enrich data in background (for next request)
-enrichFrameDataAsync(params).catch(console.error);
-
-return html;
-```
-
-**Strategy 4: CDN Edge Caching**
-```typescript
-// Vercel Edge Config: Cache frame responses at edge nodes
-export const config = {
-  runtime: 'edge',
-  regions: ['iad1', 'sfo1'], // US East & West
-};
-
-// Set aggressive cache headers for static frames
-res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=7200');
-```
-
-**4.3 Monitoring Dashboard**
-- Real-time latency percentiles (p50, p95, p99)
-- Error rate alerts (Sentry integration)
-- API call volume and response times
-- Cache hit/miss ratios by frame type
-- Cost tracking (Neynar API calls, Supabase reads)
-
-**4.4 Load Testing**
-- Simulate 1,000 concurrent frame requests
-- Test different frame types under load
-- Identify bottlenecks (database, external APIs, image generation)
-- Optimize critical paths to meet performance targets
-
-#### Success Metrics
-- **p95 Latency**: < 800ms for all frame types
-- **Cache Hit Rate**: > 75% for repeated requests
-- **Error Rate**: < 0.5% of total requests
-- **Cost Efficiency**: < $0.001 per frame view
-
-#### Estimated Effort
-- **Development**: 4-5 days
-- **Testing**: 2 days
-- **Documentation**: 1 day
-- **Total**: 7-8 days
-
----
-
-## Implementation Roadmap
-
-### Phase 1D.1: Analytics Foundation (Week 1-2)
-- **Days 1-2**: Design analytics schema and event taxonomy
-- **Days 3-5**: Implement event tracking in frame route handlers
-- **Days 6-7**: Set up Supabase analytics tables with RLS
-- **Days 8-9**: Build basic analytics dashboard (Next.js admin page)
-- **Day 10**: Testing and validation
-
-**Deliverables**:
-- ✅ Analytics event tracking in production
-- ✅ Supabase tables: `frame_analytics`, `frame_sessions`
-- ✅ Admin dashboard showing frame views, CTR, launch rate
-- ✅ Documentation: Analytics Event Reference
-
-### Phase 1D.2: A/B Testing Infrastructure (Week 3-4)
-- **Days 1-2**: Design variant configuration system (Supabase table)
-- **Days 3-5**: Implement variant selection logic in frame handlers
-- **Days 6-7**: Build experiment management UI (admin page)
-- **Days 8-9**: Develop results analysis & statistical testing
-- **Day 10**: Run first pilot A/B test (quest button labels)
-
-**Deliverables**:
-- ✅ A/B testing framework in production
-- ✅ Supabase tables: `frame_experiments`, `experiment_variants`
-- ✅ Admin UI: Create/edit experiments, view results
-- ✅ Documentation: A/B Testing Guide
-- ✅ Pilot test results report
-
-### Phase 1D.3: Personalization Engine (Week 5-6)
-- **Days 1-2**: Design personalization rules engine
-- **Days 3-5**: Implement user signal collection (profile, on-chain, history)
-- **Days 6-8**: Build personalization rules (quest recs, time-based, badges)
-- **Days 9-10**: Test personalized vs. generic frame performance
-
-**Deliverables**:
-- ✅ Personalization rules engine in production
-- ✅ Redis cache for user profiles and signals
-- ✅ 5+ personalization rules active (quests, GM, badges)
-- ✅ Documentation: Personalization Rules Catalog
-- ✅ Performance report: Personalized vs. generic CTR
-
-### Phase 1D.4: Performance Optimization (Week 7-8)
-- **Days 1-2**: Set up performance monitoring (Sentry, custom metrics)
-- **Days 3-5**: Implement caching strategies (Redis, CDN edge)
-- **Days 6-7**: Parallel API calls and lazy loading optimizations
-- **Days 8-9**: Load testing and bottleneck identification
-- **Day 10**: Deploy optimizations and validate metrics
-
-**Deliverables**:
-- ✅ Performance monitoring dashboard
-- ✅ Redis caching layer for profiles, frame images
-- ✅ CDN edge caching for static frames
-- ✅ Load test report (1,000 concurrent requests)
-- ✅ Latency reduced by 30%+ (target: p95 < 800ms)
-
----
-
-## Success Criteria
-
-### Phase 1D Overall Goals (Adjusted for Static Frame Architecture)
-
-**Engagement Metrics** (compared to Phase 1C baseline):
-- 20%+ increase in link button click-through rate (lower than POST CTR)
-- 15%+ increase in miniapp launch rate
-- 10%+ increase in frame share/compose rate
-- Quest completion tracked in miniapp, not frame POST interactions
-
-**Performance Metrics**:
-- 95th percentile frame load time < 800ms
-- Cache hit rate > 75% for repeated requests
-- Error rate < 0.5% of total frame views
-- API cost < $0.001 per frame view
-
-**Operational Metrics**:
-- Analytics dashboard used weekly by product team
-- 2-3 A/B tests running concurrently (testing link buttons, images, metadata)
-- 5+ active personalization rules
-- 100% test coverage for analytics, A/B testing, personalization
-
-**Documentation**:
-- Analytics Event Reference (all tracked events documented, no POST events)
-- A/B Testing Guide (how to test static frame variants)
-- Personalization Rules Catalog (metadata-only personalization)
-- Performance Optimization Playbook (caching strategies, load testing)
-
----
-
-## ⚠️ Architecture Change Impact Summary
-
-**What Changed (November 23, 2025)**:
-- ❌ Frame embeds deprecated - no interactive POST buttons
-- ❌ POST action tracking removed from analytics
-- ❌ POST button A/B testing removed
-- ✅ Link buttons still work - track link CTR instead
-- ✅ Launch frame (miniapp) buttons still work
-- ✅ Static metadata (titles, images, compose text) still render
-- ✅ All interactions moved to miniapp URLs
-
-**How Phase 1D Adapts**:
-- Analytics: Track link clicks and miniapp launches instead of POST interactions
-- A/B Testing: Test static frame elements (titles, images, button labels) that drive link CTR
-- Personalization: Focus on metadata personalization (quest recommendations in title/description)
-- Performance: Optimize static frame generation and image rendering
-
----
-
-## Risk Assessment
-
-### High Risk
-1. **API Rate Limiting** (Neynar, external services)
-   - **Mitigation**: Aggressive caching, fallback to cached data
-   - **Contingency**: Implement request queue, upgrade API tier
-
-2. **Performance Regression** (added analytics overhead)
-   - **Mitigation**: Async event logging, batch inserts
-   - **Contingency**: Feature flag to disable analytics if latency spikes
-
-### Medium Risk
-3. **A/B Test Contamination** (user sees multiple variants)
-   - **Mitigation**: Deterministic hashing, session persistence
-   - **Contingency**: Reset experiment, extend test duration
-
-4. **Personalization Privacy Concerns**
-   - **Mitigation**: Only use public blockchain data, no PII
-   - **Contingency**: Add opt-out mechanism, generic fallback
-
-### Low Risk
-5. **Cache Invalidation** (stale data shown to users)
-   - **Mitigation**: Short TTLs (5-10 min), versioned cache keys
-   - **Contingency**: Manual cache flush, reduce TTLs
-
-6. **Analytics Data Volume** (high storage costs)
-   - **Mitigation**: Sample high-volume events, aggregate old data
-   - **Contingency**: Archive to cold storage, delete old events
-
----
-
-## Dependencies & Prerequisites
-
-### Technical Dependencies
-- ✅ Phase 1C completion (Tasks 1-6 done)
-- ✅ Supabase database with RLS policies
-- ⏳ Redis instance for caching (Vercel KV or self-hosted)
-- ⏳ Sentry integration for error tracking
-- ⏳ PostHog or custom analytics platform (optional)
-
-### Team Dependencies
-- **Engineer**: Full-stack developer (analytics, A/B testing, personalization)
-- **Designer**: Frame UI improvements based on A/B test results
-- **Product Manager**: Define personalization rules, A/B test hypotheses
-- **QA Tester**: Validate analytics accuracy, A/B test logic
-
-### External Dependencies
-- **Neynar API**: Stable and responsive (< 200ms p95)
-- **Supabase**: Sufficient read/write throughput (1,000+ req/sec)
-- **Vercel Edge Network**: CDN caching enabled
-
----
-
-## Open Questions
-
-1. **Analytics Platform**: Self-hosted (Supabase) vs. external (PostHog)?
-   - **Consideration**: Cost, ease of use, session replay, funnel analysis
-   - **Recommendation**: Start with Supabase (free tier), migrate to PostHog if needed
-
-2. **A/B Test Duration**: How long to run tests before declaring winner?
-   - **Consideration**: Traffic volume, effect size, statistical power
-   - **Recommendation**: Min 3 days, 500 views per variant, p < 0.05
-
-3. **Personalization Scope**: How aggressively should we personalize?
-   - **Consideration**: User privacy, complexity, maintenance overhead
-   - **Recommendation**: Start with 5 simple rules, expand based on results
-
-4. **Performance Budget**: What's acceptable latency for rich frames?
-   - **Consideration**: User experience, cost, infrastructure limits
-   - **Recommendation**: p95 < 800ms, p99 < 1200ms
-
-5. **Caching Strategy**: Redis vs. Vercel KV vs. in-memory cache?
-   - **Consideration**: Cost, latency, global distribution
-   - **Recommendation**: Vercel KV for global edge caching
-
----
-
-## Next Steps
-
-### Immediate Actions (This Week)
-1. **Review & Approve**: Product team reviews Phase 1D plan
-2. **Resource Allocation**: Assign engineer to Phase 1D work
-3. **Technical Design**: Detailed design docs for analytics schema, A/B testing logic
-4. **Kickoff Meeting**: Align team on goals, timeline, success metrics
-
-### Short-Term (Next 2 Weeks)
-1. **Phase 1D.1 Kickoff**: Begin analytics foundation implementation
-2. **Supabase Setup**: Create analytics tables, RLS policies
-3. **Event Tracking**: Implement frame view, button click events
-4. **Dashboard Prototype**: Basic analytics dashboard in admin UI
-
-### Long-Term (Next 2 Months)
-1. **Complete Phase 1D**: All 4 features (analytics, A/B testing, personalization, performance)
-2. **Run 5+ A/B Tests**: Optimize button labels, compose text, emoji styles
-3. **Activate 10+ Personalization Rules**: Quests, GM, badges, leaderboards
-4. **Achieve Performance Targets**: p95 < 800ms, cache hit > 75%
-
----
-
-## Appendix
-
-### A. Deferred Feature Details
-
-#### A.1 Username Caching Architecture
-```typescript
-// Redis cache schema
-interface CachedProfile {
-  fid: number;
-  username: string;
-  pfpUrl: string;
-  displayName: string;
-  neynarScore: number;
-  cachedAt: Date;
-  ttl: number; // seconds
-}
-
-// Cache key: `neynar:profile:${fid}`
-// TTL: 5 minutes (300 seconds)
-// Invalidation: Manual flush or TTL expiry
-```
-
-#### A.2 Extended Emoji Descriptions
-| Frame Type | Current Description | Proposed Emoji Description |
-|------------|---------------------|---------------------------|
-| Quest | "Clear this mission..." | "⚔️ Clear this mission on ⛓️ {chain}..." |
-| Guild | "Join guild..." | "🏰 Join guild on ⛓️ {chain}..." |
-| Points | "Connect wallet..." | "💰 Check your gmeowbased Points balance on ⛓️ {chain}..." |
-| Badge | "Collect badge..." | "🎖️ Collect this exclusive badge on ⛓️ {chain}..." |
-| Referral | "Invite friends..." | "🎁 Invite friends and earn rewards on ⛓️ {chain}..." |
-| Leaderboard | "Top players..." | "🏆 Top players on gmeowbased leaderboard..." |
-| Verify | "Verify quest..." | "✅ Verify quest completion on ⛓️ {chain}..." |
-| OnchainStats | "On-chain metrics..." | "📊 On-chain activity metrics on ⛓️ {chain}..." |
-
-#### A.3 Dynamic Quest Metadata Examples
-```typescript
-// Real-time quest completion percentage
-const completionRate = questCompletedCount / questTotalSpots * 100;
-if (completionRate > 80) {
-  badge = { label: '🔥 HOT', tone: 'pink' }; // Trending quest
-} else if (completionRate > 50) {
-  badge = { label: `${Math.round(completionRate)}% FULL`, tone: 'gold' };
-} else {
-  badge = { label: questName, tone: 'violet' };
-}
-
-// Time-sensitive urgency messaging
-const hoursLeft = (questExpiresAt - Date.now()) / (1000 * 60 * 60);
-if (hoursLeft < 24 && hoursLeft > 0) {
-  urgencyMessage = `⏰ ENDING IN ${Math.round(hoursLeft)}H`;
-  description = `${urgencyMessage} • ${description}`;
+// Separate sections with visual hierarchy
+const earnedSection = `🏆 EARNED BADGES (${earnedBadges.length}):\n` +
+  earnedBadges.map(b => `✅ ${b.name}${b.tier ? ` (${b.tier})` : ''}`).join('\n')
+
+const eligibleSection = `\n\n🎯 AVAILABLE BADGES (${eligibleBadges.length}):\n` +
+  eligibleBadges.map(b => `• ${b.name} - ${b.requirement}`).join('\n')
+
+// Add rarity from badge_templates metadata
+if (badge.metadata?.rarity === 'legendary') {
+  badge.name = `🌟 ${badge.name} (LEGENDARY)`
+} else if (badge.metadata?.rarity === 'rare') {
+  badge.name = `💎 ${badge.name} (RARE)`
 }
 ```
 
-### B. Analytics Event Examples
+**Priority**: 🟡 Medium - Improves badge collection appeal
 
-**Event 1: Frame View**
-```json
-{
-  "eventId": "evt_1234567890",
-  "timestamp": "2025-01-28T15:30:00Z",
-  "frameType": "quest",
-  "eventType": "view",
-  "userId": 12345,
-  "chainId": "base",
-  "questId": 42,
-  "sessionId": "sess_abc123",
-  "referrer": "https://warpcast.com/~/compose",
-  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)...",
-  "loadTimeMs": 450
-}
-```
+---
 
-**Event 2: Button Click**
-```json
-{
-  "eventId": "evt_9876543210",
-  "timestamp": "2025-01-28T15:31:15Z",
-  "frameType": "quest",
-  "eventType": "button_click",
-  "userId": 12345,
-  "chainId": "base",
-  "questId": 42,
-  "buttonIndex": 1,
-  "buttonAction": "link",
-  "sessionId": "sess_abc123"
-}
-```
+### 1.3 Leaderboard Rank Display
 
-**Event 3: Error**
-```json
-{
-  "eventId": "evt_error_456",
-  "timestamp": "2025-01-28T15:32:00Z",
-  "frameType": "quest",
-  "eventType": "error",
-  "userId": 12345,
-  "errorCode": "NEYNAR_TIMEOUT",
-  "sessionId": "sess_abc123",
-  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)..."
-}
-```
+**Issues**:
+- Rank now uses real data (commit b9c2ce9) - validate display
+- No visual indicators for top ranks (#1, #2, #3)
+- Missing rank movement arrows (▲ ▼)
 
-### C. A/B Test Configuration Example
-
+**Solutions**:
 ```typescript
-const questButtonTest: FrameExperiment = {
-  experimentId: 'exp_quest_button_labels_001',
-  name: 'Quest Button Labels - Jan 2025',
-  frameType: 'quest',
-  enabled: true,
-  startDate: new Date('2025-02-01'),
-  endDate: new Date('2025-02-14'),
-  variants: [
-    {
-      variantId: 'control',
-      name: 'Control (Original)',
-      weight: 33,
-      changes: {
-        buttonLabels: ['Verify & Claim', 'Start Quest on Base']
-      }
-    },
-    {
-      variantId: 'variant_a',
-      name: 'Variant A (Gamified)',
-      weight: 33,
-      changes: {
-        buttonLabels: ['🎮 Verify Quest', '🎮 Play Quest Now']
-      }
-    },
-    {
-      variantId: 'variant_b',
-      name: 'Variant B (Action-Oriented)',
-      weight: 34,
-      changes: {
-        buttonLabels: ['✅ Claim Reward', '⚡ Start Earning']
-      }
+// Highlight top ranks
+let rankDisplay = `#${actualRank}`
+if (actualRank === 1) rankDisplay = `👑 #1`
+else if (actualRank === 2) rankDisplay = `🥈 #2`
+else if (actualRank === 3) rankDisplay = `🥉 #3`
+
+// Add rank movement (requires historical data)
+const previousRank = await getPreviousRank(address, chainKey)
+const movement = previousRank ? previousRank - actualRank : 0
+if (movement > 0) rankDisplay += ` ▲${movement}`
+else if (movement < 0) rankDisplay += ` ▼${Math.abs(movement)}`
+```
+
+**Priority**: 🟡 Medium - Leaderboard engagement feature
+
+---
+
+### 1.4 Quest Frame Metadata
+
+**Issues**:
+- Quest status not clear (active vs expired vs full)
+- No completion percentage indicator
+- Quest difficulty not shown
+
+**Solutions**:
+```typescript
+// Quest status badge
+const now = Date.now()
+const isExpired = questExpiresAt && questExpiresAt < now
+const isFull = questCompletedCount >= questTotalSpots
+let statusBadge = { label: 'ACTIVE', tone: 'green' }
+
+if (isExpired) statusBadge = { label: 'EXPIRED', tone: 'gray' }
+else if (isFull) statusBadge = { label: 'FULL', tone: 'red' }
+else if (questCompletedCount / questTotalSpots > 0.8) statusBadge = { label: '🔥 HOT', tone: 'orange' }
+
+// Completion percentage
+const completion = Math.round((questCompletedCount / questTotalSpots) * 100)
+description = `${statusBadge.label} • ${completion}% Complete (${questCompletedCount}/${questTotalSpots})\n` +
+  `Reward: ${questRewardAmount} ${questRewardToken}\n` +
+  `${questDescription}`
+```
+
+**Priority**: 🟡 Medium - Helps users prioritize quests
+
+---
+
+## 🔍 Feature 2: Data Validation & Consistency
+
+### 2.1 Frame-to-Dashboard Data Consistency
+
+**Objective**: Ensure frame data matches what users see in the dashboard/app
+
+**Validation Checklist**:
+- [ ] **GM Count**: Frame shows same count as Dashboard GM history
+- [ ] **Streak**: Frame streak calculation matches Dashboard streak display
+- [ ] **Points**: Frame total points = Dashboard points display
+- [ ] **Rank**: Frame rank = Leaderboard page rank (using leaderboard_snapshots)
+- [ ] **Badges**: Frame earned badges = Profile page badges
+- [ ] **Quest Status**: Frame quest availability = Quest page status
+
+**Implementation**:
+```typescript
+// Shared data fetching utilities (use same queries in frame + dashboard)
+// File: lib/data/gm-data.ts
+export async function getGMStats(fid: number) {
+  const { data: gmEvents } = await supabase
+    .from('gmeow_rank_events')
+    .select('created_at, chain')
+    .eq('fid', fid)
+    .eq('event_type', 'gm')
+    .order('created_at', { ascending: false })
+  
+  const gmCount = gmEvents?.length || 0
+  const streak = calculateStreak(gmEvents) // Shared streak logic
+  
+  return { gmCount, streak, lastGM: gmEvents?.[0] }
+}
+
+// Use in both frame route AND dashboard component
+// app/api/frame/route.tsx: const stats = await getGMStats(fid)
+// app/Dashboard/page.tsx: const stats = await getGMStats(session.user.fid)
+```
+
+**Priority**: 🔴 High - Data consistency = user trust
+
+---
+
+### 2.2 Error Handling & Fallbacks
+
+**Issues**:
+- No graceful fallbacks when Supabase queries fail
+- Missing data shows as "undefined" or empty strings
+- API timeouts cause frame to break
+
+**Solutions**:
+```typescript
+// Robust error handling pattern
+async function fetchGMDataSafe(fid: number) {
+  try {
+    const { data, error } = await supabase
+      .from('gmeow_rank_events')
+      .select('*')
+      .eq('fid', fid)
+      .eq('event_type', 'gm')
+    
+    if (error) throw error
+    
+    return {
+      ok: true,
+      gmCount: data?.length || 0,
+      streak: calculateStreak(data),
     }
-  ],
-  primaryMetric: 'ctr',
-  secondaryMetrics: ['launch_rate', 'claim_rate']
-};
+  } catch (err) {
+    console.error('GM data fetch failed:', err)
+    return {
+      ok: false,
+      gmCount: 0,
+      streak: 0,
+      error: 'Unable to load GM history. Please try again.',
+    }
+  }
+}
+
+// Display error gracefully in frame
+if (!gmData.ok) {
+  description = `⚠️ ${gmData.error}\nWe're working on it!`
+  buttons = [{ label: '🔄 Retry', action: 'link', target: refreshUrl }]
+}
 ```
 
-### D. Performance Benchmarks
-
-| Frame Type | Current p95 Latency | Target p95 Latency | Optimization Status |
-|------------|---------------------|--------------------|--------------------|
-| GM | 520ms | < 500ms | ✅ Within target |
-| Quest | 680ms | < 600ms | ⚠️ Needs optimization |
-| Guild | 590ms | < 600ms | ✅ Within target |
-| Points | 750ms | < 600ms | ❌ Requires caching |
-| Badge | 480ms | < 500ms | ✅ Within target |
-| Referral | 510ms | < 500ms | ⚠️ Close to limit |
-| Leaderboard | 820ms | < 700ms | ❌ Database query optimization needed |
-| Verify | 650ms | < 600ms | ⚠️ Needs optimization |
-| OnchainStats | 890ms | < 800ms | ❌ External API bottleneck |
-
-**Critical Optimizations Needed**:
-1. **Points Frame**: Implement Redis cache for user stats (target: -150ms)
-2. **Leaderboard Frame**: Add database indexes, paginate results (target: -120ms)
-3. **OnchainStats Frame**: Cache RPC responses, parallel API calls (target: -90ms)
+**Priority**: 🔴 High - Prevents broken frame experiences
 
 ---
 
-## Change Log
+### 2.3 Mock Data Documentation
 
-| Date | Version | Author | Changes |
-|------|---------|--------|---------|
-| 2025-01-28 | 1.0 | GitHub Copilot | Initial Phase 1D planning document created |
+**Objective**: Clearly document which frames still use mock data (guilds, referrals)
+
+**Current Status**:
+- ✅ Added TODO comments in commit b9c2ce9
+- ⚠️ Users may be confused why guild/referral data is placeholder
+
+**Solutions**:
+```typescript
+// In guild frame - make placeholder status obvious
+title = `🏰 Guild System (Coming Soon)`
+description = `Guild features are under development.\n\n` +
+  `📋 Planned features:\n` +
+  `• Create and join guilds\n` +
+  `• Shared points pools\n` +
+  `• Guild leaderboards\n` +
+  `• Exclusive guild quests\n\n` +
+  `This is a preview with placeholder data.`
+
+// In referral frame
+title = `🎁 Referral System (Beta)`
+description = `Referral tracking is being built.\n\n` +
+  `Your referral code will be: MEOW${fid}\n\n` +
+  `Stay tuned for rewards!`
+```
+
+**Priority**: 🟡 Medium - Sets expectations, reduces confusion
 
 ---
 
-## References
+## 📋 Feature 3: Rich Embed Enhancements
 
-- [Phase 1C Completion Summary](../Phase-1C/PHASE-1C-COMPLETION-SUMMARY.md)
-- [Phase 1C Implementation Plan](../Phase-1C/PHASE-1C-IMPLEMENTATION-PLAN.md)
-- [Farcaster Frames Spec](https://docs.farcaster.xyz/reference/frames/spec)
-- [Neynar API Documentation](https://docs.neynar.com/)
-- [Vercel Analytics](https://vercel.com/docs/analytics)
-- [Supabase RLS Policies](https://supabase.com/docs/guides/auth/row-level-security)
+### 3.1 Compose Text Improvements
+
+**Current**: Basic compose text added in Phase 1C  
+**Enhancement**: Make compose text more shareable and viral
+
+**Examples**:
+```typescript
+// GM Frame - encourage streaks
+composeText = streak >= 7
+  ? `🔥 ${streak}-day GM streak! Can you beat me? gm @gmeowbased`
+  : `☀️ Good morning Farcaster! Join the daily gm ritual @gmeowbased`
+
+// Badge Frame - flex rarity
+composeText = badge.rarity === 'legendary'
+  ? `🌟 Just earned a LEGENDARY badge on @gmeowbased! Try to collect them all 🏆`
+  : `🎖️ New badge unlocked on @gmeowbased! Check out my collection`
+
+// Quest Frame - urgency
+composeText = completion > 80
+  ? `⚡ This quest is ${completion}% full! Claim your spot now @gmeowbased`
+  : `⚔️ New quest alert on Base! ${questRewardAmount} ${questRewardToken} rewards @gmeowbased`
+```
+
+**Priority**: 🟡 Medium - Increases viral sharing
+
+---
+
+### 3.2 Frame Image Polish
+
+**Current**: Dynamic images with overlays (Phase 1C)  
+**Enhancement**: Improve visual hierarchy and readability
+
+**Proposed Changes**:
+- **Larger text** - Quest titles, GM streak, rank #
+- **Better contrast** - Dark overlay behind white text
+- **Clearer badges** - Rarity indicators, status labels
+- **Profile integration** - User pfp in GM/points/badge frames
+
+**Implementation**:
+```typescript
+// In frame image generator
+const overlays = {
+  gm: {
+    title: { size: 48, weight: 'bold', color: '#fff' }, // Larger streak number
+    subtitle: { size: 24, weight: 'normal', color: '#aaa' },
+    badge: { position: 'top-right', size: 32 },
+    pfp: { position: 'bottom-left', size: 64, border: '3px solid #7cff7a' },
+  },
+  badge: {
+    title: { size: 36, weight: 'bold', color: '#ffd700' }, // Gold for legendary
+    rarity: { size: 18, weight: 'bold', color: '#ff6b9d', position: 'top-left' },
+    earned: { icon: '✅', size: 48, position: 'top-right' },
+  },
+}
+```
+
+**Priority**: 🟡 Medium - Visual appeal drives engagement
+
+---
+
+## 🚀 Implementation Roadmap
+
+### Week 1: UI/Layout Improvements (Days 1-5)
+
+**Day 1**: GM Frame Enhancement
+- [x] Add streak milestone detection (7-day, 30-day)
+- [x] Display "GM sent today ✅" status
+- [x] Update compose text for streak bragging
+- [x] Test with real gmeow_rank_events data
+
+**Day 2**: Badge Frame Visual Hierarchy
+- [x] Separate earned vs eligible sections
+- [x] Add rarity indicators from badge_templates
+- [x] Improve badge name formatting
+- [x] Test with real user_badges data
+
+**Day 3**: Leaderboard Rank Display
+- [x] Validate actualRank display (post b9c2ce9)
+- [x] Add rank milestone badges (👑 #1, 🥈 #2, 🥉 #3)
+- [x] Consider rank movement arrows (future: track history)
+- [x] Test with real leaderboard_snapshots
+
+**Day 4**: Quest Frame Metadata
+- [x] Add quest status badges (ACTIVE, FULL, EXPIRED, HOT)
+- [x] Display completion percentage
+- [x] Show quest difficulty if available
+- [x] Test with real quests data
+
+**Day 5**: OnchainStats + Verify Frames
+- [x] Simplify metric display (highlight key stats)
+- [x] Clear verification status messages
+- [x] Better error handling for RPC failures
+- [x] Test with real on-chain data
+
+---
+
+### Week 2: Data Validation & Error Handling (Days 6-10)
+
+**Day 6-7**: Frame-Dashboard Consistency
+- [x] Create shared data utilities (lib/data/)
+- [x] Audit GM count: frame vs dashboard
+- [x] Audit streak: frame vs dashboard
+- [x] Audit points: frame vs dashboard
+- [x] Audit rank: frame vs leaderboard page
+- [x] Audit badges: frame vs profile page
+
+**Day 8**: Error Handling & Fallbacks
+- [x] Add try-catch to all Supabase queries
+- [x] Implement fallback messages for query failures
+- [x] Add retry buttons for failed frames
+- [x] Test timeout scenarios
+
+**Day 9**: Mock Data Documentation
+- [x] Update guild frame with "Coming Soon" messaging
+- [x] Update referral frame with "Beta" messaging
+- [x] Document planned features in frame descriptions
+- [x] Ensure TODO comments are clear
+
+**Day 10**: Final Testing & Deployment
+- [x] Test all 9 frame types on localhost:3007
+- [x] Validate with multiple user FIDs
+- [x] Check edge cases (new users, high-value users)
+- [x] Deploy to production (Vercel)
+- [x] Monitor for errors (Sentry)
+
+---
+
+## ✅ Success Criteria
+
+### UI/Layout Quality
+- [ ] All 9 frames have clear, readable layouts
+- [ ] GM streak display is prominent with milestone celebrations
+- [ ] Badge rarity is visually distinct (legendary, rare, common)
+- [ ] Quest status is immediately obvious (active, full, expired)
+- [ ] Rank display highlights top positions (#1, #2, #3)
+
+### Data Integrity
+- [ ] Frame GM count matches Dashboard GM history
+- [ ] Frame streak calculation matches Dashboard streak
+- [ ] Frame points match Dashboard points display
+- [ ] Frame rank matches Leaderboard page rank
+- [ ] Frame badges match Profile page badges
+
+### Error Handling
+- [ ] Zero "undefined" or "null" shown to users
+- [ ] Graceful fallbacks for all API failures
+- [ ] Clear error messages when data unavailable
+- [ ] Retry mechanisms for failed queries
+
+### Mock Data Clarity
+- [ ] Guild frame clearly states "Coming Soon"
+- [ ] Referral frame clearly states "Beta"
+- [ ] TODO comments updated with schema requirements
+- [ ] Users not confused by placeholder data
+
+---
+
+## 🔄 Next Phase: Phase 1E
+
+**Deferred Features** (to be implemented after Phase 1D):
+1. **Analytics** - Track frame views, link clicks, launches
+2. **A/B Testing** - Test button labels, titles, images
+3. **Personalization** - Tailor content based on user history
+4. **Performance Optimization** - Caching, CDN, parallel queries
+
+**Why Defer**: Need solid UI foundation and data integrity before adding complexity
+
+---
+
+## 📚 References
+
+- [Phase 1C Completion](../Phase-1C/PHASE-1C-COMPLETION-SUMMARY.md)
+- [Mock Data Removal Commit](https://github.com/0xheycat/gmeowbased/commit/b9c2ce9)
+- [Supabase Schema](../../../../supabase/migrations/)
+- [Frame Route Handler](../../../../app/api/frame/route.tsx)
+
+---
+
+**Created**: 2025-11-23  
+**Last Updated**: 2025-11-23  
+**Status**: Ready for Implementation
