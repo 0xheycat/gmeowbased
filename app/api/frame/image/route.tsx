@@ -1194,6 +1194,8 @@ export async function GET(req: Request) {
   // OnchainStats frame type - Yu-Gi-Oh! Card Structure
   if (type === 'onchainstats') {
     // Read all onchain stats parameters passed from frame route
+    const username = readParam(url, 'username', '')
+    const displayName = readParam(url, 'displayName', '')
     const txs = readParam(url, 'txs', '0')
     const contracts = readParam(url, 'contracts', '0')
     const volume = readParam(url, 'volume', '0.00 ETH')
@@ -1205,6 +1207,20 @@ export async function GET(req: Request) {
     const firstTx = readParam(url, 'firstTx', '—')
     const lastTx = readParam(url, 'lastTx', '—')
     const address = readParam(url, 'user', user)
+    
+    // Determine identity to display (priority: @username > displayName > address > FID)
+    const identity = username 
+      ? `@${username}` 
+      : displayName 
+        ? displayName 
+        : address 
+          ? shortenAddress(address) 
+          : fid 
+            ? `FID ${fid}` 
+            : 'Anonymous'
+    
+    // Check if power badge should be shown
+    const hasPower = power && power.toLowerCase() !== '—' && power.toLowerCase() !== 'no'
 
     const statsPalette = {
       start: '#00d4ff',
@@ -1278,7 +1294,7 @@ export async function GET(req: Request) {
               }}
             />
 
-            {/* Header with ONCHAIN badge */}
+            {/* Header with ONCHAIN badge and Power Badge */}
             <div
               style={{
                 display: 'flex',
@@ -1304,148 +1320,211 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  opacity: 0.8,
+                  gap: 8,
+                  alignItems: 'center',
                 }}
               >
-                {chain}
+                {hasPower && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '4px 10px',
+                      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                      border: '2px solid #FFD700',
+                      borderRadius: 999,
+                      fontSize: 9,
+                      fontWeight: 800,
+                      boxShadow: '0 0 12px rgba(255, 215, 0, 0.6)',
+                    }}
+                  >
+                    ⚡ POWER
+                  </div>
+                )}
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    opacity: 0.8,
+                  }}
+                >
+                  {chain}
+                </div>
               </div>
             </div>
 
-            {/* Main content area */}
+            {/* Identity Header - Prominent */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 14,
+                padding: '8px 16px',
+                background: `linear-gradient(135deg, ${statsPalette.start}20, ${statsPalette.end}15)`,
+                borderRadius: 8,
+                border: `2px solid ${statsPalette.start}`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: 20,
+                  fontWeight: 900,
+                  color: '#ffffff',
+                  textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 16px ${statsPalette.start}60`,
+                }}
+              >
+                {identity}
+              </div>
+            </div>
+
+            {/* Main Stats Grid - 2 columns */}
             <div
               style={{
                 display: 'flex',
                 flex: 1,
-                gap: 16,
+                gap: 12,
               }}
             >
-              {/* Left: Stats icon + User Info */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 10,
-                }}
-              >
-                {/* Stats Icon */}
-                <div
-                  style={{
-                    width: 180,
-                    height: 180,
-                    borderRadius: 10,
-                    background: `linear-gradient(135deg, ${statsPalette.start}, ${statsPalette.end})`,
-                    border: `3px solid ${statsPalette.start}`,
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 100,
-                  }}
-                >
-                  📊
-                </div>
-
-                {/* User info below icon */}
-                {(address || fid) && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 6,
-                      padding: '10px 12px',
-                      background: `linear-gradient(135deg, ${statsPalette.start}30, ${statsPalette.end}25)`,
-                      borderRadius: 8,
-                      border: `2px solid ${statsPalette.start}`,
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
-                      👤 {address ? shortenAddress(address) : `FID ${fid}`}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right: Stats data */}
+              {/* Left Column */}
               <div
                 style={{
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  color: '#ffffff',
+                  gap: 10,
+                  padding: 12,
+                  background: 'rgba(30, 30, 32, 0.6)',
+                  border: `2px solid ${statsPalette.start}`,
+                  borderRadius: 10,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                 }}
               >
-                {/* Title - More prominent */}
+                {/* Primary Stats - Large and prominent */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Transactions</span>
+                    <span style={{ fontSize: 16, fontWeight: 900, color: statsPalette.start }}>{txs}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Contracts</span>
+                    <span style={{ fontSize: 16, fontWeight: 900, color: statsPalette.start }}>{contracts}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Volume</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: statsPalette.start }}>{volume}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Balance</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: statsPalette.start }}>{balance}</span>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ height: 1, background: `${statsPalette.start}40`, margin: '4px 0' }} />
+
+                {/* Secondary Stats */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.6 }}>Age</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, opacity: 0.9 }}>{age}</span>
+                  </div>
+                  {firstTx !== '—' && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.6 }}>First TX</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, opacity: 0.9 }}>{firstTx}</span>
+                    </div>
+                  )}
+                  {lastTx !== '—' && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.6 }}>Last TX</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, opacity: 0.9 }}>{lastTx}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column - Scores & Reputation */}
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                  padding: 12,
+                  background: 'rgba(30, 30, 32, 0.6)',
+                  border: `2px solid ${statsPalette.start}`,
+                  borderRadius: 10,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                }}
+              >
                 <div
                   style={{
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: '#ffffff',
+                    marginBottom: 6,
+                    textShadow: `0 1px 3px rgba(0, 0, 0, 0.8)`,
                   }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      fontSize: 28,
-                      fontWeight: 900,
-                      lineHeight: 1.1,
-                      color: '#ffffff',
-                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${statsPalette.start}60`,
-                    }}
-                  >
-                    Onchain Stats
-                  </div>
+                  Reputation
+                </div>
 
-                  {/* Stats box */}
+                {/* Builder Score - Highlighted */}
+                {builder !== '—' && (
                   <div
                     style={{
-                      marginTop: 10,
                       display: 'flex',
                       flexDirection: 'column',
+                      gap: 4,
                       padding: 10,
-                      background: 'rgba(30, 30, 32, 0.6)',
-                      border: `1px solid ${statsPalette.start}`,
+                      background: `linear-gradient(135deg, ${statsPalette.start}25, ${statsPalette.end}20)`,
                       borderRadius: 8,
-                      opacity: 0.8,
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-                      gap: 6,
+                      border: `1px solid ${statsPalette.start}`,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700 }}>
-                      <span style={{ opacity: 0.7 }}>TXS:</span>
-                      <span style={{ color: statsPalette.start }}>{txs}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700 }}>
-                      <span style={{ opacity: 0.7 }}>VOLUME:</span>
-                      <span style={{ color: statsPalette.start }}>{volume}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700 }}>
-                      <span style={{ opacity: 0.7 }}>BALANCE:</span>
-                      <span style={{ color: statsPalette.start }}>{balance}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600 }}>
-                      <span style={{ opacity: 0.6 }}>AGE:</span>
-                      <span style={{ opacity: 0.9 }}>{age}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600 }}>
-                      <span style={{ opacity: 0.6 }}>BUILDER:</span>
-                      <span style={{ opacity: 0.9 }}>{builder}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600 }}>
-                      <span style={{ opacity: 0.6 }}>NEYNAR:</span>
-                      <span style={{ opacity: 0.9 }}>{neynar}</span>
-                    </div>
-                    {power && power.toLowerCase() !== '—' && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 600 }}>
-                        <span style={{ opacity: 0.6 }}>POWER:</span>
-                        <span style={{ opacity: 0.9 }}>⚡ {power}</span>
-                      </div>
-                    )}
+                    <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Builder Score</span>
+                    <span style={{ fontSize: 20, fontWeight: 900, color: statsPalette.start }}>{builder}</span>
                   </div>
-                </div>
+                )}
+
+                {/* Neynar Score */}
+                {neynar !== '—' && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                      padding: 10,
+                      background: `linear-gradient(135deg, ${statsPalette.start}25, ${statsPalette.end}20)`,
+                      borderRadius: 8,
+                      border: `1px solid ${statsPalette.start}`,
+                    }}
+                  >
+                    <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Neynar Score</span>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: statsPalette.start }}>{neynar}</span>
+                  </div>
+                )}
+
+                {/* Power Badge Info (if not shown in header) */}
+                {!hasPower && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: 8,
+                      background: 'rgba(40, 40, 42, 0.5)',
+                      borderRadius: 6,
+                      opacity: 0.5,
+                    }}
+                  >
+                    <span style={{ fontSize: 9, fontWeight: 600 }}>⚪ No Power Badge</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1454,7 +1533,7 @@ export async function GET(req: Request) {
               style={{
                 display: 'flex',
                 justifyContent: 'center',
-                marginTop: 12,
+                marginTop: 10,
                 fontSize: 9,
                 opacity: 0.6,
               }}
