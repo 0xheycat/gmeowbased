@@ -2294,12 +2294,15 @@ export async function GET(req: Request) {
         user: user || undefined,
         fid: resolvedFid || undefined,
         extra: {
+          username: profile?.username || undefined,
+          displayName: profile?.displayName || undefined,
           level: levelValue?.toString() || undefined,
           xp: xpCurrentValue?.toString() || undefined,
           xpMax: xpMaxValue?.toString() || undefined,
           tier: tierName || undefined,
           tierPercent: tierPercentValue?.toString() || undefined,
-          available: availableFormatted || undefined,
+          availablePoints: availableFormatted || undefined,
+          lockedPoints: lockedFormatted || undefined,
           total: totalFormatted || undefined,
         }
       }, origin) : defaultFrameImage
