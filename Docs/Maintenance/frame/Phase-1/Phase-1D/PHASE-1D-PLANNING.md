@@ -2,8 +2,32 @@
 
 **Status**: Planning  
 **Created**: 2025-01-28  
+**Updated**: 2025-11-23  
 **Target Completion**: TBD  
 **Dependencies**: Phase 1C completion (Tasks 1-6)
+
+---
+
+## ⚠️ IMPORTANT: Frame Embed Support Deprecated
+
+**Effective Date**: November 23, 2025
+
+**CRITICAL CHANGE**: Farcaster frames **no longer support interactive POST buttons** or traditional frame embeds. This fundamentally changes the frame architecture:
+
+- ❌ **POST buttons removed**: No `action: 'post'` buttons in any frame
+- ❌ **Frame embeds deprecated**: Traditional frame protocol no longer functional
+- ✅ **Link buttons only**: Frames now use `action: 'link'` to external URLs
+- ✅ **Launch frames**: Miniapp launch buttons (`action: 'launch_frame'`) still work
+- ✅ **Static metadata**: OG tags, compose text (fc:frame:text) still render
+
+**Impact on Phase 1D**:
+- Analytics tracking simplified (no POST interactions to track)
+- A/B testing focused on link CTR, miniapp launches, and compose shares
+- Personalization limited to static content (titles, descriptions, images)
+- Performance optimization still relevant (faster static frame loads)
+
+**Migration Strategy**:
+All interactive features moved to **miniapp URLs** (`action: 'link'` or `action: 'launch_frame'`). Frames serve as **static previews** that link to interactive miniapps.
 
 ---
 
@@ -11,11 +35,13 @@
 
 Phase 1D focuses on **data-driven optimization** and **personalized experiences** for Farcaster frames. Building on the rich embeds foundation from Phase 1C, this phase introduces analytics tracking, A/B testing infrastructure, and dynamic content personalization to improve user engagement and conversion rates.
 
-**Core Objectives**:
-1. **Frame Analytics** - Track user interactions, conversions, and engagement metrics
-2. **A/B Testing** - Compare different frame variants to optimize performance
-3. **Personalization** - Tailor frame content based on user behavior and preferences
-4. **Performance Monitoring** - Identify bottlenecks and optimize frame load times
+**Note**: This plan was created before frame embed deprecation. Features have been adjusted to work within the new static frame + miniapp architecture.
+
+**Core Objectives** (Adjusted for Static Frame Architecture):
+1. **Frame Analytics** - Track frame views, link clicks, and miniapp launches (no POST tracking)
+2. **A/B Testing** - Compare different static frame variants (titles, images, button labels)
+3. **Personalization** - Tailor frame metadata based on user behavior and on-chain data
+4. **Performance Monitoring** - Optimize static frame load times and image generation
 
 ---
 
@@ -75,35 +101,41 @@ The following features were identified during Phase 1C but deferred for future i
 
 **Objective**: Capture comprehensive frame interaction data for optimization.
 
+**⚠️ Adjusted for No POST Buttons**: Analytics now focuses on static frame views, link clicks, and miniapp launches. No POST button tracking needed.
+
 #### Implementation Details
 
-**1.1 Event Tracking**
+**1.1 Event Tracking** (Updated for Static Frames)
 - Frame view events (initial load)
-- Button click events (which button, what action)
-- Launch frame events (miniapp opens)
+- Link button click events (external URLs)
+- Launch frame events (miniapp opens) ✅ Still supported
 - Share/compose events (Warpcast composer opens)
 - Error events (failed loads, API errors)
+- ~~POST button clicks~~ ❌ Removed - not supported
 
-**1.2 Data Schema**
+**1.2 Data Schema** (Simplified for Static Frames)
 ```typescript
 interface FrameAnalyticsEvent {
   eventId: string;
   timestamp: Date;
   frameType: 'quest' | 'guild' | 'points' | 'gm' | 'badge' | 'referral' | 'leaderboard' | 'verify' | 'onchainstats';
-  eventType: 'view' | 'button_click' | 'launch' | 'share' | 'error';
+  eventType: 'view' | 'link_click' | 'launch' | 'share' | 'error'; // No 'post' events
   userId?: number; // FID if available
   userAddress?: string; // Wallet address if available
   chainId?: string;
   questId?: number;
   guildId?: number;
   buttonIndex?: number;
-  buttonAction?: 'post' | 'link' | 'mint' | 'tx';
+  buttonAction?: 'link' | 'launch_frame'; // Only link and launch_frame supported
+  targetUrl?: string; // Where the link/launch goes
   sessionId: string;
   referrer?: string;
   userAgent?: string;
   errorCode?: string;
   loadTimeMs?: number;
 }
+
+// Note: POST button tracking removed - frames are now static with link-only buttons
 ```
 
 **1.3 Storage Options**
@@ -117,11 +149,11 @@ interface FrameAnalyticsEvent {
 - User journey tracking (what frames they visit, in what order)
 - Error rate monitoring (failed API calls, timeout events)
 
-#### Success Metrics
-- **Engagement Rate**: (button clicks / frame views) > 15%
+#### Success Metrics (Updated for Static Frames)
+- **Link Click Rate**: (link button clicks / frame views) > 12% (lower than POST CTR, links require navigation)
 - **Launch Rate**: (miniapp launches / frame views) > 8%
 - **Share Rate**: (compose opens / frame views) > 5%
-- **Error Rate**: < 2% of total frame views
+- **Quest Completion Rate**: Measured via miniapp analytics (not frame POST tracking)
 
 #### Estimated Effort
 - **Development**: 3-4 days
@@ -135,9 +167,11 @@ interface FrameAnalyticsEvent {
 
 **Objective**: Systematically test frame variants to optimize engagement.
 
+**⚠️ Adjusted for Static Frames**: A/B testing now focuses on visual elements (titles, descriptions, images, button labels) that affect link CTR, not POST interactions.
+
 #### Implementation Details
 
-**2.1 Variant Definition**
+**2.1 Variant Definition** (Updated for Static Frames)
 ```typescript
 interface FrameVariant {
   variantId: string;
@@ -147,16 +181,19 @@ interface FrameVariant {
   changes: {
     title?: string;
     description?: string;
-    buttonLabels?: string[];
-    buttonOrder?: number[];
+    buttonLabels?: string[]; // Link button labels only
+    buttonOrder?: number[]; // Reorder link buttons
     emojiStyle?: 'minimal' | 'rich' | 'none';
     composeTextTemplate?: string;
     overlayStyle?: 'default' | 'identity-card' | 'minimal';
+    imageStyle?: 'dynamic' | 'static'; // Frame image variation
   };
   enabled: boolean;
   startDate: Date;
   endDate?: Date;
 }
+
+// Note: No POST button testing - all buttons are links or launch_frame actions
 ```
 
 **2.2 Variant Selection Logic**
@@ -164,13 +201,14 @@ interface FrameVariant {
 - Consistent assignment: Same user always sees same variant
 - Session persistence: Variant stored in frame state for continuity
 
-**2.3 Test Examples**
+**2.3 Test Examples** (Updated for Link Buttons)
 
-**Test 1: Quest Button Labels**
-- **Control**: "Start Quest on Base" (existing)
-- **Variant A**: "🎮 Play Quest Now"
-- **Variant B**: "⚡ Start Earning"
-- **Metric**: Click-through rate (CTR)
+**Test 1: Quest Link Button Labels**
+- **Control**: "Start Quest on Base" (existing link button)
+- **Variant A**: "🎮 Open Quest"
+- **Variant B**: "⚡ Play Now"
+- **Metric**: Link click-through rate (CTR)
+- **Note**: All buttons use `action: 'link'`, no POST actions
 
 **Test 2: Compose Text Length**
 - **Control**: "⚔️ New quest unlocked on Base! recast and claim • Base @gmeowbased"
@@ -178,11 +216,11 @@ interface FrameVariant {
 - **Variant B**: "⚔️ recast and claim quest is live @gmeowbased"
 - **Metric**: Share rate (compose opens)
 
-**Test 3: Frame Description Emojis**
-- **Control**: Plain text descriptions (current for most frames)
-- **Variant A**: Rich emoji descriptions (like GM frame)
-- **Variant B**: Minimal emoji descriptions (1-2 emojis only)
-- **Metric**: Engagement rate (any button click)
+**Test 3: Frame Image Styles**
+- **Control**: Dynamic overlay with quest metadata
+- **Variant A**: Minimal static image with large quest name
+- **Variant B**: Hero image with quest preview
+- **Metric**: Link CTR and miniapp launch rate
 
 **2.4 Results Analysis**
 - Statistical significance calculator (chi-squared test)
@@ -190,9 +228,9 @@ interface FrameVariant {
 - Winner declaration criteria (p < 0.05, min 500 views per variant)
 - Rollout automation (promote winner to 100% traffic)
 
-#### Success Metrics
+#### Success Metrics (Updated for Static Frames)
 - **Test Velocity**: Run 2-3 A/B tests per week
-- **Winning Variants**: 20%+ improvement over control in primary metric
+- **Winning Variants**: 15%+ improvement over control in link CTR (lower bar than POST CTR)
 - **Rollout Speed**: Winner promoted within 3 days of significance
 
 #### Estimated Effort
@@ -206,6 +244,8 @@ interface FrameVariant {
 ### Feature 3: Dynamic Content Personalization
 
 **Objective**: Tailor frame content based on user context and behavior.
+
+**⚠️ Adjusted for Static Frames**: Personalization limited to metadata (titles, descriptions, images, compose text). Interactive personalization moved to miniapps.
 
 #### Implementation Details
 
@@ -269,10 +309,10 @@ if (badgeRarity === 'legendary' && !userOwnsBadge) {
 - No PII collection beyond Farcaster profile (username, pfp)
 - Opt-out mechanism: Generic frames if user prefers
 
-#### Success Metrics
-- **Personalized CTR**: 25%+ higher than generic frames
-- **Quest Completion Rate**: 15%+ higher with personalized recommendations
-- **User Retention**: 30%+ more repeat frame interactions
+#### Success Metrics (Updated for Static Frames)
+- **Personalized Link CTR**: 20%+ higher than generic frames (lower than POST CTR expectations)
+- **Quest Completion Rate**: Measured in miniapp, not frame
+- **User Retention**: 30%+ more repeat frame views leading to miniapp visits
 
 #### Estimated Effort
 - **Development**: 5-6 days
@@ -431,13 +471,13 @@ res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=7200');
 
 ## Success Criteria
 
-### Phase 1D Overall Goals
+### Phase 1D Overall Goals (Adjusted for Static Frame Architecture)
 
 **Engagement Metrics** (compared to Phase 1C baseline):
-- 25%+ increase in frame button click-through rate
+- 20%+ increase in link button click-through rate (lower than POST CTR)
 - 15%+ increase in miniapp launch rate
 - 10%+ increase in frame share/compose rate
-- 20%+ increase in quest completion rate (view → claim)
+- Quest completion tracked in miniapp, not frame POST interactions
 
 **Performance Metrics**:
 - 95th percentile frame load time < 800ms
@@ -447,15 +487,34 @@ res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=7200');
 
 **Operational Metrics**:
 - Analytics dashboard used weekly by product team
-- 2-3 A/B tests running concurrently
+- 2-3 A/B tests running concurrently (testing link buttons, images, metadata)
 - 5+ active personalization rules
 - 100% test coverage for analytics, A/B testing, personalization
 
 **Documentation**:
-- Analytics Event Reference (all tracked events documented)
-- A/B Testing Guide (how to create, run, analyze tests)
-- Personalization Rules Catalog (all rules with examples)
+- Analytics Event Reference (all tracked events documented, no POST events)
+- A/B Testing Guide (how to test static frame variants)
+- Personalization Rules Catalog (metadata-only personalization)
 - Performance Optimization Playbook (caching strategies, load testing)
+
+---
+
+## ⚠️ Architecture Change Impact Summary
+
+**What Changed (November 23, 2025)**:
+- ❌ Frame embeds deprecated - no interactive POST buttons
+- ❌ POST action tracking removed from analytics
+- ❌ POST button A/B testing removed
+- ✅ Link buttons still work - track link CTR instead
+- ✅ Launch frame (miniapp) buttons still work
+- ✅ Static metadata (titles, images, compose text) still render
+- ✅ All interactions moved to miniapp URLs
+
+**How Phase 1D Adapts**:
+- Analytics: Track link clicks and miniapp launches instead of POST interactions
+- A/B Testing: Test static frame elements (titles, images, button labels) that drive link CTR
+- Personalization: Focus on metadata personalization (quest recommendations in title/description)
+- Performance: Optimize static frame generation and image rendering
 
 ---
 
