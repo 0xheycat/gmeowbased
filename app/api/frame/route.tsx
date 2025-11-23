@@ -2594,9 +2594,54 @@ export async function POST(req: Request) {
       const sessionId = generateSessionId()
       const now = Date.now()
       
-      // Mock GM data for frame interactions (not blockchain)
-      const gmCount = Math.floor(Math.random() * 100) + 1
-      const streak = Math.floor(Math.random() * 30) + 1
+      // Query real GM data from gmeow_rank_events
+      let gmCount = 0
+      let streak = 0
+      
+      try {
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        
+        // Get all GM events for this user
+        const { data: gmEvents, error } = await supabase
+          .from('gmeow_rank_events')
+          .select('created_at, chain')
+          .eq('fid', Number(fid))
+          .eq('event_type', 'gm')
+          .order('created_at', { ascending: false })
+        
+        if (!error && gmEvents) {
+          gmCount = gmEvents.length
+          
+          // Calculate streak: count consecutive days with GM events
+          if (gmEvents.length > 0) {
+            streak = 1 // At least 1 if they have any GMs
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            
+            for (let i = 0; i < gmEvents.length - 1; i++) {
+              const currentDate = new Date(gmEvents[i].created_at)
+              currentDate.setHours(0, 0, 0, 0)
+              const nextDate = new Date(gmEvents[i + 1].created_at)
+              nextDate.setHours(0, 0, 0, 0)
+              
+              const dayDiff = Math.floor((currentDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24))
+              
+              if (dayDiff === 1) {
+                streak++
+              } else {
+                break // Streak broken
+              }
+            }
+          }
+        }
+      } catch (err) {
+        tracePush(traces, 'recordGM-query-error', { error: String(err) })
+        // Continue with gmCount=0, streak=0 if query fails
+      }
       
       // Save state
       const saved = await saveFrameState(sessionId, Number(fid), {
@@ -2915,24 +2960,55 @@ export async function POST(req: Request) {
         const progress = calculateRankProgress(total)
         const chainDisplay = getChainDisplayName(String(chainKey))
         
-        // Mock rank position (in real implementation, query all users and calculate actual rank)
-        // For now, estimate based on points: higher points = better rank
-        const estimatedRank = total === 0 ? 9999 : Math.max(1, Math.floor(10000 / (1 + Math.log10(total + 1))))
+        // Query real rank from leaderboard_snapshots
+        let actualRank = 9999
+        try {
+          const { createClient } = await import('@supabase/supabase-js')
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          )
+          
+          const { data: leaderboardEntry, error } = await supabase
+            .from('leaderboard_snapshots')
+            .select('rank')
+            .eq('address', address)
+            .eq('chain', String(chainKey))
+            .single()
+          
+          if (!error && leaderboardEntry && leaderboardEntry.rank) {
+            actualRank = Number(leaderboardEntry.rank)
+          } else if (total > 0) {
+            // Fallback: calculate rank by counting users with more points
+            const { count, error: countError } = await supabase
+              .from('leaderboard_snapshots')
+              .select('*', { count: 'exact', head: true })
+              .eq('chain', String(chainKey))
+              .gt('points', total)
+            
+            if (!countError && count !== null) {
+              actualRank = count + 1
+            }
+          }
+        } catch (err) {
+          tracePush(traces, 'refreshRank-query-error', { error: String(err) })
+          // Use fallback rank if query fails
+        }
         
         const message = `🏆 Leaderboard Rank on ${chainDisplay}:\n\n` +
-                       `Rank: #${formatInteger(estimatedRank)}\n` +
+                       `Rank: #${formatInteger(actualRank)}\n` +
                        `Total Points: ${formatInteger(total)}\n\n` +
                        `Level ${progress.level} • ${progress.currentTier.name}\n` +
                        `${progress.xpIntoLevel}/${progress.xpForLevel} XP (${Math.round(progress.percent * 100)}%)\n\n` +
                        `${total === 0 ? 'Start earning to climb the ranks! 🚀' : 'Keep grinding! 💪'}`
         
-        tracePush(traces, 'refreshRank-success', { address, chainKey, rank: estimatedRank, total })
+        tracePush(traces, 'refreshRank-success', { address, chainKey, rank: actualRank, total })
         
         return respondJson({
           ok: true,
           user: address,
           chain: chainKey,
-          rank: estimatedRank,
+          rank: actualRank,
           points: String(stats.total),
           level: progress.level,
           tier: progress.currentTier.name,
@@ -2968,16 +3044,64 @@ export async function POST(req: Request) {
       tracePush(traces, 'checkBadges-start', { fid })
       
       try {
-        // Mock badge data (in production, query from database or contract)
-        const earnedBadges = [
-          { id: 1, name: 'Early Adopter', earned: true, timestamp: '2025-11-01' },
-          { id: 2, name: 'GM Streak Master', earned: true, timestamp: '2025-11-15' },
-        ]
+        // Query real badge data from user_badges and badge_templates
+        let earnedBadges: any[] = []
+        let eligibleBadges: any[] = []
         
-        const eligibleBadges = [
-          { id: 3, name: 'Quest Completionist', requirement: 'Complete 10 quests', progress: '7/10' },
-          { id: 4, name: 'Points Whale', requirement: 'Earn 10,000 points', progress: '6,543/10,000' },
-        ]
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        
+        // Get user's earned badges
+        const { data: userBadges, error: badgesError } = await supabase
+          .from('user_badges')
+          .select('badge_id, assigned_at, badge_type, tier')
+          .eq('fid', Number(fid))
+        
+        if (!badgesError && userBadges) {
+          // Fetch badge templates for earned badges
+          const badgeIds = userBadges.map(b => b.badge_id)
+          if (badgeIds.length > 0) {
+            const { data: templates, error: templatesError } = await supabase
+              .from('badge_templates')
+              .select('id, name, description, image_url')
+              .in('id', badgeIds)
+            
+            if (!templatesError && templates) {
+              earnedBadges = userBadges.map(ub => {
+                const template = templates.find(t => t.id === ub.badge_id)
+                return {
+                  id: ub.badge_id,
+                  name: template?.name || ub.badge_id,
+                  earned: true,
+                  timestamp: ub.assigned_at,
+                  tier: ub.tier,
+                }
+              })
+            }
+          }
+        }
+        
+        // Get eligible badges (all active badges not yet earned)
+        const { data: allBadges, error: allBadgesError } = await supabase
+          .from('badge_templates')
+          .select('id, name, description, points_cost')
+          .eq('active', true)
+        
+        if (!allBadgesError && allBadges) {
+          const earnedBadgeIds = new Set(userBadges?.map(b => b.badge_id) || [])
+          eligibleBadges = allBadges
+            .filter(b => !earnedBadgeIds.has(b.id))
+            .map(b => ({
+              id: b.id,
+              name: b.name,
+              requirement: b.description || `Cost: ${b.points_cost} points`,
+              progress: b.points_cost ? `Available for ${b.points_cost} points` : 'Available',
+            }))
+            .slice(0, 5) // Limit to 5 eligible badges
+        }
         
         const message = `🏅 Badge Status for FID ${fid}:\n\n` +
                        `Earned: ${earnedBadges.length} badges\n` +
@@ -3122,7 +3246,9 @@ export async function POST(req: Request) {
       try {
         const chainDisplay = getChainDisplayName(String(chainKey))
         
-        // Mock guild data (in production, query from database or contract)
+        // TODO: Implement real guild data once guilds table is created
+        // Schema needed: guilds (id, name, chain, created_at), guild_members (guild_id, fid, joined_at, role)
+        // For now, using placeholder data - guild system not yet implemented in database
         const guild = {
           id: guildId,
           name: `Guild ${guildId}`,
@@ -3172,7 +3298,9 @@ export async function POST(req: Request) {
       tracePush(traces, 'viewReferrals-start', { fid, userAddr })
       
       try {
-        // Mock referral data (in production, query from database)
+        // TODO: Implement real referral data once referrals table is created
+        // Schema needed: referrals (id, referrer_fid, referred_fid, code, created_at, points_earned)
+        // For now, using placeholder data - referral system not yet implemented in database
         const referralCode = 'MEOW42'
         const stats = {
           code: referralCode,
