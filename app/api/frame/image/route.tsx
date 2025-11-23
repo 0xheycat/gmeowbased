@@ -692,6 +692,8 @@ export async function GET(req: Request) {
 
   // Verify frame type - Yu-Gi-Oh! Card Structure
   if (type === 'verify') {
+    const username = readParam(url, 'username', '')
+    const displayName = readParam(url, 'displayName', '')
     const questId = readParam(url, 'questId')
     const questName = readParam(url, 'questName', 'Verification')
     const status = readParam(url, 'status', 'Pending')
@@ -839,7 +841,7 @@ export async function GET(req: Request) {
                 </div>
 
                 {/* User info below icon */}
-                {(user || fid) && (
+                {(username || displayName || user || fid) && (
                   <div
                     style={{
                       display: 'flex',
@@ -853,7 +855,7 @@ export async function GET(req: Request) {
                     }}
                   >
                     <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#000000', textShadow: '0 1px 3px rgba(255, 255, 255, 0.8)' }}>
-                      👤 {user ? shortenAddress(user) : `FID ${fid}`}
+                      {username ? `@${username}` : displayName ? displayName : user ? `👤 ${shortenAddress(user)}` : `👤 FID ${fid}`}
                     </div>
                   </div>
                 )}

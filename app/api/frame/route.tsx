@@ -1749,31 +1749,57 @@ export async function GET(req: Request) {
 
     if (type === 'verify') {
       // help user start verification: accepts fid and cast or questId
-      const fid = Number(params.fid || 0)
+      const fidParam = params.fid || 0
+      const fid = Number(fidParam)
       const cast = params.cast || ''
       const questId = params.questId || params.id
       tracePush(traces, 'verify-start', { fid, cast, questId })
       
+      // Phase 1F: Resolve Farcaster username for display
+      let username: string | null = null
+      let displayName: string | null = null
+      
+      if (fid > 0 && Ne && typeof (Ne as any).fetchUserByFid === 'function') {
+        try {
+          const fcUser = await (Ne as any).fetchUserByFid(fid)
+          if (fcUser) {
+            username = fcUser.username?.trim() || null
+            displayName = fcUser.displayName?.trim() || null
+            tracePush(traces, 'verify-profile-resolved', { fid, username })
+          }
+        } catch (error: any) {
+          tracePush(traces, 'verify-profile-error', String(error?.message || error))
+        }
+      }
+      
       // Phase 1D: Clear verification status messages
       let title = 'Verify Quest • GMEOW'
       let description = ''
+      const userDisplay = username ? `@${username}` : displayName || (fid > 0 ? `FID ${fid}` : null)
       
       if (questId) {
         title = `Verify Quest #${questId}`
         description = fid 
-          ? `✅ Ready to verify • FID ${fid} • Quest #${questId} • — @gmeowbased`
+          ? `✅ Ready to verify • ${userDisplay} • Quest #${questId} • — @gmeowbased`
           : `⚠️ Connect Farcaster to verify • Quest #${questId} • — @gmeowbased`
       } else if (cast) {
         title = 'Verify Cast'
         description = fid
-          ? `✅ Ready to verify cast • FID ${fid} • — @gmeowbased`
+          ? `✅ Ready to verify cast • ${userDisplay} • — @gmeowbased`
           : `⚠️ Connect Farcaster to verify cast • — @gmeowbased`
       } else {
         title = 'Quest Verification'
         description = fid
-          ? `✅ Connected • FID ${fid} • Ready to verify • — @gmeowbased`
+          ? `✅ Connected • ${userDisplay} • Ready to verify • — @gmeowbased`
           : `⚠️ Provide quest ID or cast hash to verify • — @gmeowbased`
       }
+      
+      // Phase 1F: Build dynamic image URL with username
+      const imageUrl = buildDynamicFrameImageUrl({
+        type: 'verify',
+        fid: fid > 0 ? fid : undefined,
+        extra: { username, displayName, questId: String(questId || '') }
+      }, origin)
       
       if (asJson) {
         return respondJson({ ok: true, type: 'verify', fid, cast, questId, traces })
@@ -1785,7 +1811,7 @@ export async function GET(req: Request) {
       const html = buildFrameHtml({
         title,
         description,
-        image: defaultFrameImage,
+        image: imageUrl,
         url: frameBtnUrl,
         buttons: [
           { label: 'Run Verification', target: frameBtnUrl, action: 'link' },
@@ -1832,7 +1858,7 @@ export async function GET(req: Request) {
       // Phase 1F: Build dynamic image URL with username
       const imageUrl = buildDynamicFrameImageUrl({
         type: 'guild',
-        fid,
+        fid: fid || undefined,
         extra: { username, displayName, guildId: String(guildId) }
       }, origin)
       
