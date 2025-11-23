@@ -86,6 +86,21 @@ export default function UserBadgesPage() {
     { mythic: 0, legendary: 0, epic: 0, rare: 0, common: 0, minted: 0 } as Record<string, number>
   )
 
+  // Task 15: Handle individual badge click for sharing
+  const handleBadgeClick = async (badge: UserBadge) => {
+    try {
+      // Use badgeShare route for individual badge frames
+      const shareUrl = `https://gmeowhq.art/api/frame/badgeShare?fid=${fid}&badgeId=${badge.badgeId}`
+      const shareText = `Just earned the ${badge.metadata?.name || badge.badgeType} badge! 🎮✨\n\n— via @gmeowbased`
+      
+      // Open Warpcast composer
+      const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`
+      window.open(warpcastUrl, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      console.error('Failed to share badge:', error)
+    }
+  }
+
   return (
     <div className="relative min-h-screen pixel-page">
       {/* Background */}
@@ -212,7 +227,7 @@ export default function UserBadgesPage() {
               </p>
             </div>
 
-            <BadgeInventory badges={badges} />
+            <BadgeInventory badges={badges} onBadgeClick={handleBadgeClick} />
           </div>
         )}
 
@@ -225,10 +240,9 @@ export default function UserBadgesPage() {
             <button
               type="button"
               onClick={() => {
-                // Share most recent badge
-                const latestBadge = badges[0]
-                const shareUrl = `https://gmeowhq.art/api/frame/badge?fid=${fid}&badgeId=${latestBadge.badgeId}`
-                const shareText = `Just earned the ${latestBadge.metadata?.name || latestBadge.badgeType} badge! 🎮✨\n\n— via @gmeowbased`
+                // Share badge collection (all badges)
+                const shareUrl = `https://gmeowhq.art/api/frame?type=badge&fid=${fid}`
+                const shareText = `Check out my ${badges.length} badge collection on @gmeowbased! 🎮✨\n\nClick badges individually to share them!`
                 
                 // Open Warpcast composer
                 const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`
@@ -236,8 +250,11 @@ export default function UserBadgesPage() {
               }}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold transition-all"
             >
-              Share on Warpcast
+              Share Collection on Warpcast
             </button>
+            <p className="text-xs text-white/50 mt-2">
+              💡 Tip: Click individual badges above to share them separately!
+            </p>
           </div>
         )}
       </main>
