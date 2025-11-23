@@ -13,15 +13,12 @@ import { getChainIconUrl } from '@/lib/chain-icons'
 import { 
   FRAME_FONTS, 
   FRAME_COLORS, 
-  FRAME_LAYOUT,
   buildIdentityDisplay,
   buildFooterText,
 } from '@/lib/frame-design-system'
 import { 
   calculateLevelProgress, 
-  calculateRankProgress, 
   formatXp,
-  type RankProgress 
 } from '@/lib/rank'
 
 export const runtime = 'nodejs'
@@ -61,19 +58,6 @@ async function loadChainIconData(chain: string): Promise<string | null> {
     console.error(`[Frame Image] Failed to get chain icon for ${chain}:`, err)
     return null
   }
-}
-
-/**
- * Format XP/points with commas and K/M notation
- * Task 10: XP System Integration helper
- */
-function formatXpDisplay(value: string | number): string {
-  const num = typeof value === 'string' ? parseInt(value, 10) : value
-  if (!Number.isFinite(num) || isNaN(num)) return '0'
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`
-  if (num >= 10_000) return `${(num / 1000).toFixed(1)}K`
-  if (num >= 1_000) return num.toLocaleString('en-US')
-  return num.toString()
 }
 
 function readParam(url: URL, name: string, fallback = '') {
@@ -2290,7 +2274,7 @@ export async function GET(req: Request) {
                           textShadow: '0 2px 8px rgba(255, 215, 0, 0.8)',
                         }}
                       >
-                        +{formatXpDisplay(badgeXp)} XP
+                        +{formatXp(parseInt(badgeXp, 10))} XP
                       </div>
                     </div>
                   </div>
@@ -2652,8 +2636,8 @@ export async function GET(req: Request) {
                           />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.micro, opacity: 0.8 }}>
-                          <div style={{ display: 'flex' }}>{formatXpDisplay(levelProgress.xpIntoLevel)} XP</div>
-                          <div style={{ display: 'flex' }}>{formatXpDisplay(levelProgress.xpToNextLevel)} to Lvl {levelProgress.level + 1}</div>
+                          <div style={{ display: 'flex' }}>{formatXp(levelProgress.xpIntoLevel)} XP</div>
+                          <div style={{ display: 'flex' }}>{formatXp(levelProgress.xpToNextLevel)} to Lvl {levelProgress.level + 1}</div>
                         </div>
                       </div>
                     </div>
