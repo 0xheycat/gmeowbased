@@ -448,24 +448,10 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const mintUrlParam = toOptionalString(params.mintUrl)
   const mintUrl = toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=leaderboard&chain=${isGlobal ? 'all' : chainKey}&season=${rawSeason || 'current'}`
 
-  // Phase 1B.2: Add interactive POST action button
-  const leaderboardButtons = buildContextualButtons({
-    type: 'leaderboards',
-    fallback: [
-      { label: 'Open Leaderboard', target: href, action: 'link' },
-      { label: '🏆 Refresh Rank', action: 'post', target: `${origin}/api/frame` },
-    ],
-    leaderboard: {
-      openUrl,
-      openLabel: openLabelParam,
-      challengeUrl,
-      challengeLabel: challengeLabelParam,
-      referralUrl: referralIdentifier ? referralTarget : null,
-      referralLabel: referralIdentifier ? (referralLabelParam || referralFallbackLabel) : null,
-      mintUrl: mintUrl,
-      mintLabel: toOptionalString(params.mintLabel),
-    },
-  })
+  // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
+  const leaderboardButtons: FrameButton[] = [
+    { label: 'Open Leaderboard', target: href, action: 'link' },
+  ]
 
   const html = buildFrameHtml({
     title,
@@ -1691,8 +1677,19 @@ export async function GET(req: Request) {
       questImageParams.set('badgeLabel', questTypeLabel)
       questImageParams.set('badgeTone', 'violet')
       
-      // Use dynamic frame image with personalized quest data (1200x800, 3:2 ratio)
-      const image = defaultFrameImage
+      // Phase 1E: Build dynamic image URL with real quest data
+      const imageUrl = buildDynamicFrameImageUrl({
+        type: 'quest',
+        questId: questIdNum,
+        chain: chainKey as ChainKey,
+        extra: {
+          questName,
+          reward: rewardSummary || undefined,
+          expires: expiresText || undefined,
+          progress: completionPercent?.toString() || undefined,
+        }
+      }, origin)
+      
       const frameBtnUrl = `${origin}/Quest/${encodeURIComponent(chainKey)}/${encodeURIComponent(String(questIdNum))}`
       const primaryLabel = questMeta && typeof questMeta === 'object' && typeof questMeta.cta === 'string' && questMeta.cta.trim()
         ? questMeta.cta.trim()
@@ -1730,34 +1727,15 @@ export async function GET(req: Request) {
         ? (toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=quest&questId=${encodeURIComponent(String(questIdNum))}&chain=${encodeURIComponent(chainKey)}`)
         : null
       
-      // Phase 1B.2: Add interactive POST action button
-      const questButtons = buildContextualButtons({
-        type: 'quest',
-        fallback: [
-          { label: primaryLabel, target: frameBtnUrl, action: 'link' },
-          { label: '📊 Quest Progress', action: 'post', target: `${origin}/api/frame` },
-        ],
-        quest: {
-          completed: questCompleted,
-          verifyUrl: toAbsoluteUrl(verifyUrlParam, origin) ?? verifyUrlFallback,
-          verifyLabel: verifyLabelParam,
-          claimUrl: toAbsoluteUrl(claimUrlParam, origin),
-          claimLabel: claimLabelParam,
-          detailUrl: frameBtnUrl,
-          detailLabel: primaryLabel,
-          flexUrl: questCompleted ? toAbsoluteUrl(flexUrlParam, origin) : null,
-          flexLabel: flexLabelParam,
-          shareUrl: toAbsoluteUrl(shareUrlParam, origin),
-          shareLabel: shareLabelParam,
-          mintUrl: mintUrl,
-          mintLabel: mintLabelParam,
-        },
-      })
+      // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
+      const questButtons: FrameButton[] = [
+        { label: primaryLabel, target: frameBtnUrl, action: 'link' },
+      ]
 
       const html = buildFrameHtml({
         title,
         description,
-        image,
+        image: imageUrl,
         url: frameBtnUrl,
         buttons: questButtons,
         fcMeta,
@@ -1808,7 +1786,7 @@ export async function GET(req: Request) {
       const frameBtnUrl = `${origin}/api/quests/verify?debug=1&fid=${fid}${cast ? `&cast=${encodeURIComponent(String(cast))}` : ''}`
       const fcMeta = { [frameKey('entity')]: 'verify' }
       
-      // Phase 1B.2: Add interactive POST action button
+      // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
       const html = buildFrameHtml({
         title,
         description,
@@ -1816,7 +1794,6 @@ export async function GET(req: Request) {
         url: frameBtnUrl,
         buttons: [
           { label: 'Run Verification', target: frameBtnUrl, action: 'link' },
-          { label: '✅ Verify Frame', action: 'post', target: `${origin}/api/frame` },
         ],
         fcMeta,
         debug: debugPayload,
@@ -1849,25 +1826,10 @@ export async function GET(req: Request) {
         ? (toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=guild&guildId=${guildId}`)
         : null
       
-      // Phase 1B.2: Add interactive POST action button
-      const guildButtons = buildContextualButtons({
-        type: 'guild',
-        fallback: [
-          { label: 'Open Guild', target: guildUrl, action: 'link' },
-          { label: '🏯 View Guild', action: 'post', target: `${origin}/api/frame` },
-        ],
-        guild: {
-          isMember,
-          joinUrl,
-          joinLabel: toOptionalString(params.joinLabel),
-          hubUrl: guildUrl,
-          hubLabel: toOptionalString(params.hubLabel),
-          leaderboardUrl,
-          leaderboardLabel: toOptionalString(params.leaderboardLabel),
-          mintUrl: mintUrl,
-          mintLabel: toOptionalString(params.mintLabel),
-        },
-      })
+      // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
+      const guildButtons: FrameButton[] = [
+        { label: 'Open Guild', target: guildUrl, action: 'link' },
+      ]
       const html = buildFrameHtml({
         title,
         description,
@@ -1906,22 +1868,10 @@ export async function GET(req: Request) {
       const shareUrlOverride = toAbsoluteUrl(toOptionalString(params.shareUrl), origin) ?? shareUrl
       const copyUrlParam = toAbsoluteUrl(toOptionalString(params.copyUrl), origin)
       const hubUrlParam = toAbsoluteUrl(toOptionalString(params.hubUrl), origin) ?? shareUrl
-      // Phase 1B.2: Add interactive POST action button
-      const referralButtons = buildContextualButtons({
-        type: 'referral',
-        fallback: [
-          { label: code ? `Share ${String(code).toUpperCase()}` : 'Open Referral Hub', target: shareUrl, action: 'link' },
-          { label: '👥 View Referrals', action: 'post', target: `${origin}/api/frame` },
-        ],
-        referral: {
-          shareUrl: shareUrlOverride,
-          shareLabel: toOptionalString(params.shareLabel),
-          copyUrl: copyUrlParam,
-          copyLabel: toOptionalString(params.copyLabel),
-          hubUrl: hubUrlParam,
-          hubLabel: toOptionalString(params.hubLabel),
-        },
-      })
+      // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
+      const referralButtons: FrameButton[] = [
+        { label: code ? `Share ${String(code).toUpperCase()}` : 'Open Referral Hub', target: shareUrl, action: 'link' },
+      ]
       const html = buildFrameHtml({
         title,
         description,
@@ -2117,8 +2067,29 @@ export async function GET(req: Request) {
         imageParams.set('badgeIcon', '⚡')
       }
       
-      // Use dynamic frame image with personalized stats (1200x800, 3:2 ratio)
-      const image = defaultFrameImage
+      // Phase 1E: Build dynamic image URL with real onchain stats
+      const imageUrl = buildDynamicFrameImageUrl({
+        type: 'onchainstats',
+        chain: chainKey as ChainKey,
+        user: userParam || undefined,
+        fid: resolvedFid || undefined,
+        extra: {
+          statsChain: chainKey,
+          chainName: chainDisplay,
+          explorer: explorerRaw,
+          txs: metrics.txs || undefined,
+          contracts: metrics.contracts || undefined,
+          volume: metrics.volume || undefined,
+          balance: metrics.balance || undefined,
+          age: metrics.age || undefined,
+          builder: metrics.builder || undefined,
+          neynar: metrics.neynar || undefined,
+          power: metrics.power || undefined,
+          firstTx: metrics.firstTx || undefined,
+          lastTx: metrics.lastTx || undefined,
+        }
+      }, origin)
+      
       const identityForJson = resolvedProfile || userParam
         ? {
             username: resolvedProfile?.username || null,
@@ -2129,12 +2100,11 @@ export async function GET(req: Request) {
           }
         : null
       if (asJson) {
-        return respondJson({ ok: true, type: 'onchainstats', chain: chainKey, chainName: chainDisplay, chainIcon, metrics, url: hubUrl, image, description, identity: identityForJson, traces })
+        return respondJson({ ok: true, type: 'onchainstats', chain: chainKey, chainName: chainDisplay, chainIcon, metrics, url: hubUrl, image: imageUrl, description, identity: identityForJson, traces })
       }
-      // Phase 1B.2: Add interactive POST action buttons
+      // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
       const buttons: FrameButton[] = [
         { label: 'Open Onchain Hub', target: hubUrl, action: 'link' }, // Button 1 - miniapp launch
-        { label: '🔄 Refresh Stats', action: 'post', target: `${origin}/api/frame` }, // Button 2 - POST
       ]
       if (userParam && explorer && isAddress) {
         buttons.push({ label: 'View Explorer', target: `${explorer}/address/${encodeURIComponent(userParam)}`, action: 'link' })
@@ -2142,7 +2112,7 @@ export async function GET(req: Request) {
       const html = buildFrameHtml({
         title: `Onchain Stats — ${chainDisplay}`,
         description,
-        image,
+        image: imageUrl,
         url: hubUrl,
         buttons,
         fcMeta,
@@ -2332,16 +2302,32 @@ export async function GET(req: Request) {
         traces,
       }
       if (asJson) return respondJson(jsonPayload)
+      
+      // Phase 1E: Build dynamic image URL with real points data
+      const imageUrl = stats ? buildDynamicFrameImageUrl({
+        type: 'points',
+        chain: chainKey as ChainKey,
+        user: user || undefined,
+        fid: resolvedFid || undefined,
+        extra: {
+          level: levelValue?.toString() || undefined,
+          xp: xpCurrentValue?.toString() || undefined,
+          xpMax: xpMaxValue?.toString() || undefined,
+          tier: tierName || undefined,
+          tierPercent: tierPercentValue?.toString() || undefined,
+          available: availableFormatted || undefined,
+          total: totalFormatted || undefined,
+        }
+      }, origin) : defaultFrameImage
+      
       // Phase 1B.2: Add interactive POST action buttons
       const html = buildFrameHtml({
         title,
         description,
-        image: defaultFrameImage,
+        image: imageUrl,
         url: urlOpen,
         buttons: [
-          { label: 'Open Points HQ', target: urlOpen, action: 'link' }, // Button 1 - miniapp launch
-          { label: '💰 View Balance', action: 'post', target: `${origin}/api/frame` }, // Button 2 - POST
-          { label: '🎁 Tip User', action: 'post', target: `${origin}/api/frame` }, // Button 3 - POST
+          { label: 'Open Points HQ', target: urlOpen, action: 'link' },
         ],
         fcMeta,
         debug: debugPayload,
@@ -2466,7 +2452,7 @@ export async function GET(req: Request) {
       
       if (asJson) return respondJson({ ok: true, type: 'badge', fid, href, description: desc, imageUrl, earnedCount, eligibleCount, traces })
       
-      // Phase 1B.2: Add interactive POST action buttons
+      // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
       const html = buildFrameHtml({
         title,
         description: desc,
@@ -2474,8 +2460,6 @@ export async function GET(req: Request) {
         url: href,
         buttons: [
           { label: 'View Badges', target: href, action: 'link' }, // Button 1 - miniapp launch
-          { label: '🏅 Check Badges', action: 'post', target: `${origin}/api/frame` }, // Button 2 - POST
-          { label: '⚡ Mint Badge', action: 'post', target: `${origin}/api/frame` }, // Button 3 - POST
         ],
         fcMeta: { [frameKey('entity')]: 'badge', [frameKey('fid')]: String(fid) },
         debug: debugPayload,
@@ -2582,18 +2566,24 @@ export async function GET(req: Request) {
       }
       
       const href = `${origin}/gm`
+      
+      // Phase 1D: Build dynamic image URL with real GM data
+      const imageUrl = fid ? buildDynamicFrameImageUrl({ 
+        type: 'gm', 
+        fid, 
+        extra: { gmCount, streak } 
+      }, origin) : defaultFrameImage
+      
       if (asJson) return respondJson({ ok: true, type: 'gm', href, description: desc, gmCount, streak, traces })
       
-      // Phase 1B.2: Add interactive POST action buttons
+      // DEPRECATED: Interactive POST buttons no longer supported by Farcaster (removed Phase 1E)
       const html = buildFrameHtml({
         title,
         description: desc,
-        image: defaultFrameImage,
+        image: imageUrl, // Phase 1D: Use dynamic image with GM data
         url: href,
         buttons: [
           { label: 'Open GM Ritual', target: href, action: 'link' }, // Main miniapp launch button
-          { label: '🎯 Record GM', action: 'post', target: `${origin}/api/frame` }, // Phase 1B.1 POST action
-          { label: '📊 View Stats', action: 'post', target: `${origin}/api/frame` }, // Phase 1B.1 POST action
         ],
         fcMeta: { [frameKey('entity')]: 'gm' },
         debug: debugPayload,
@@ -2652,6 +2642,31 @@ export async function GET(req: Request) {
 }
 
 /**
+/*
+ * ==================================================================================
+ * DEPRECATED: POST HANDLER (Phase 1E - November 2025)
+ * ==================================================================================
+ * 
+ * This POST handler is NO LONGER FUNCTIONAL as all interactive POST buttons
+ * have been removed from Farcaster frames (POST actions deprecated by Farcaster).
+ * 
+ * All frames now use link-only buttons that open the miniapp directly.
+ * 
+ * REMOVAL PLAN:
+ * - Phase 1E: Comment out POST handler (preserve for reference)
+ * - Phase 1F: Delete entire POST handler (1000+ lines)
+ * 
+ * MIGRATION:
+ * - Frame rendering: GET /api/frame?type=X
+ * - User interactions: Miniapp routes (/gm, /Quest/[chain]/[id], etc.)
+ * 
+ * RELATED:
+ * - Phase 1B.2: Added POST actions (deprecated same release)
+ * - Phase 1E: Removed all POST buttons, deprecated POST handler
+ * ==================================================================================
+ */
+
+/*
  * POST: interactive actions
  * Body:
  *  - action: "verifyQuest" | "claimSig" | "joinGuild" | "createReferral" | "proxyVerify"
@@ -2659,7 +2674,7 @@ export async function GET(req: Request) {
  *
  * This endpoint is a convenience proxy to perform server-side operations, produce
  * signed messages, and return JSON. It does not mutate chain state (no tx sent).
- */
+ 
 export async function POST(req: Request) {
   // Rate limiting (GI-8 security requirement)
   const clientIp = getClientIp(req)
@@ -3651,6 +3666,7 @@ export async function POST(req: Request) {
     return respondJson({ ok: false, reason: msg, traces: [{ ts: nowTs(), step: 'post-unhandled', info: msg }] }, { status: 500 })
   }
 }
+*/
 
 /* -------------------- NOTES & ADVICE (for maintainers) --------------------
 - This handler intentionally keeps logic in one place to provide a universal
