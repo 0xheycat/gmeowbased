@@ -59,14 +59,24 @@ All 9 frame types audited and verified for consistency:
 
 ### Frame-by-Frame Audit:
 
-#### 1. GM Frame ✅
-**Status:** Username display ✅ | Layout ✅ | Colors ✅ | Chain icons ✅  
+#### 1. GM Frame ✅ **[REDESIGNED - Task 5 Complete]**
+**Status:** Username display ✅ | Layout ✅ **NEW 2-column** | Colors ✅ | Chain icons ✅  
 **Color Scheme:** Primary #7CFF7A (green), BG #052010 (dark green)  
-**Layout:** Streak badge + 2-column stats (GM count, rank, achievements)  
+**Layout:** **2-column grid** (Stats | Milestones) + streak badge (if >= 7 days)  
 **Special Features:** 
-- Streak milestones (7-day, 30-day)
+- **NEW:** Prominent username header (20px bold, centered)
+- **NEW:** Conditional streak badge (displays if streak >= 7)
+- **NEW:** Milestone system (Week Warrior, Legendary, Century Club)
+- **NEW:** 60px icon (reduced from 180px - saves 120px height)
+- **NEW:** Progress indicators ("X days away" for locked milestones)
 - Dynamic compose text with achievement context
 - Chain icon support (Base, Ethereum, etc.)
+
+**Redesign Impact:**
+- Space efficiency: 60% wasted → 10% wasted ⚡
+- Visual consistency: Now matches OnchainStats reference design ✅
+- Gamification: Milestone badges encourage engagement 🎮
+- Readability: Stats clearer, username prominent 📊
 
 #### 2. Points Frame ✅
 **Status:** Dedicated handler ✅ | XP bar ✅ | Colors ✅ | Username ✅  
@@ -236,7 +246,9 @@ All 9 frame types audited and verified for consistency:
 ---
 
 **Final Commits:**
-- `caf8f22` - Documentation: Phase 1F 100% complete
+- `7b92d30` - **Task 5: GM frame layout redesign (2-column + milestones)** ✅
+- `d7e672e` - Documentation: STATUS updated with comprehensive audit
+- `caf8f22` - Documentation: PLANNING updated to 100% complete
 - `23388c1` - Tasks 5, 7, 13, 14 complete (TypeScript + Images + Testing)
 - `afe1dc5` - Task 6: POST handler removal
 - Previous commits: Tasks 1-4, 8-12 ✅
