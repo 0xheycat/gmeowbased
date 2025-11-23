@@ -437,6 +437,8 @@ export async function GET(req: Request) {
 
   // Guild frame type - Yu-Gi-Oh! Card Structure
   if (type === 'guild') {
+    const username = readParam(url, 'username', '')
+    const displayName = readParam(url, 'displayName', '')
     const guildId = readParam(url, 'guildId')
     const guildName = readParam(url, 'guildName', `Guild #${guildId}`)
     const members = readParam(url, 'members', '0')
@@ -585,7 +587,7 @@ export async function GET(req: Request) {
                 </div>
 
                 {/* User info below icon */}
-                {(user || fid) && (
+                {(username || displayName || user || fid) && (
                   <div
                     style={{
                       display: 'flex',
@@ -599,7 +601,7 @@ export async function GET(req: Request) {
                     }}
                   >
                     <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
-                      👤 {user ? shortenAddress(user) : `FID ${fid}`}
+                      {username ? `@${username}` : displayName ? displayName : user ? `👤 ${shortenAddress(user)}` : `👤 FID ${fid}`}
                     </div>
                   </div>
                 )}

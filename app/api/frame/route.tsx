@@ -1803,11 +1803,39 @@ export async function GET(req: Request) {
       // show guild preview — try to fetch on-chain if id provided
       const guildId = Number(params.id || params.guildId || 0)
       tracePush(traces, 'guild-start', { guildId })
+      
+      // Phase 1F: Resolve Farcaster username for display
+      const fidParam = params.fid || params.user
+      const fid = fidParam ? sanitizeFID(fidParam) : null
+      let username: string | null = null
+      let displayName: string | null = null
+      
+      if (fid && Ne && typeof (Ne as any).fetchUserByFid === 'function') {
+        try {
+          const fcUser = await (Ne as any).fetchUserByFid(Number(fid))
+          if (fcUser) {
+            username = fcUser.username?.trim() || null
+            displayName = fcUser.displayName?.trim() || null
+            tracePush(traces, 'guild-profile-resolved', { fid, username })
+          }
+        } catch (error: any) {
+          tracePush(traces, 'guild-profile-error', String(error?.message || error))
+        }
+      }
+      
       // For brevity, we fetch guild info via contract getter if present (createGetGuildCall not implemented by default)
       // We'll fallback to simple frame with join button pointing to your site's guild page
       const title = guildId ? `Guild #${guildId}` : 'Guild'
       const description = guildId ? `Open guild ${guildId} on @gmeowbased` : '@gmeowbased guild preview'
       const guildUrl = `${origin}/guild/${guildId}`
+      
+      // Phase 1F: Build dynamic image URL with username
+      const imageUrl = buildDynamicFrameImageUrl({
+        type: 'guild',
+        fid,
+        extra: { username, displayName, guildId: String(guildId) }
+      }, origin)
+      
       if (asJson) return respondJson({ ok: true, type: 'guild', guildId, guildUrl, traces })
       
       // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
@@ -1817,7 +1845,7 @@ export async function GET(req: Request) {
       const html = buildFrameHtml({
         title,
         description,
-        image: defaultFrameImage,
+        image: imageUrl,
         url: guildUrl,
         buttons: guildButtons,
         fcMeta: {
