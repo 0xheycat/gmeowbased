@@ -404,7 +404,7 @@ export async function GET(req: Request) {
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                   lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                   color: '#ffffff',
-                  textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 16px ${gmPalette.start}60`,
+                  textShadow: FRAME_TYPOGRAPHY.textShadow.glow(gmPalette.start),
                 }}
               >
                 {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
@@ -819,7 +819,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
@@ -853,7 +853,7 @@ export async function GET(req: Request) {
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                       color: '#ffffff',
-                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${guildPalette.start}60`,
+                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(guildPalette.start),
                     }}
                   >
                     {guildName}
@@ -1091,7 +1091,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#000000', textShadow: '0 1px 3px rgba(255, 255, 255, 0.8)' }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#000000', textShadow: '0 1px 3px rgba(255, 255, 255, 0.6)' }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
@@ -1125,7 +1125,7 @@ export async function GET(req: Request) {
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                       color: '#ffffff',
-                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${verifyPalette.start}60`,
+                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(verifyPalette.start),
                     }}
                   >
                     {questName}
@@ -1365,7 +1365,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: questFid ? parseInt(questFid) : (fid ? parseInt(fid) : null) })}
                     </div>
                   </div>
@@ -1399,7 +1399,7 @@ export async function GET(req: Request) {
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                       color: '#ffffff',
-                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${questPalette.start}60`,
+                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(questPalette.start),
                     }}
                   >
                     {questName}
@@ -1444,7 +1444,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: '#ffffff',
-                          textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)',
+                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                         }}
                       >
                         +{reward} XP
@@ -1687,7 +1687,7 @@ export async function GET(req: Request) {
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                   lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                   color: '#ffffff',
-                  textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 16px ${statsPalette.start}60`,
+                  textShadow: FRAME_TYPOGRAPHY.textShadow.glow(statsPalette.start),
                 }}
               >
                 {identity}
@@ -1784,7 +1784,7 @@ export async function GET(req: Request) {
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                     color: '#ffffff',
                     marginBottom: FRAME_SPACING.section.tight,
-                    textShadow: `0 1px 3px rgba(0, 0, 0, 0.8)`,
+                    textShadow: FRAME_TYPOGRAPHY.textShadow.subtle,
                   }}
                 >
                   Reputation
@@ -2055,7 +2055,7 @@ export async function GET(req: Request) {
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                       color: '#ffffff',
-                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${leaderboardPalette.start}60`,
+                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(leaderboardPalette.start),
                     }}
                   >
                     Top Performers
@@ -2415,7 +2415,7 @@ export async function GET(req: Request) {
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                       color: '#ffffff',
-                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${badgePalette.start}60`,
+                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(badgePalette.start),
                     }}
                   >
                     Badge Collection
@@ -2455,7 +2455,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: badgePalette.start,
-                          textShadow: `0 2px 8px ${badgePalette.start}80`,
+                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                         }}
                       >
                         {earnedCount}
@@ -2487,7 +2487,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: badgePalette.end,
-                          textShadow: `0 2px 8px ${badgePalette.end}80`,
+                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                         }}
                       >
                         {eligibleCount}
@@ -2519,7 +2519,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: '#ffd700',
-                          textShadow: '0 2px 8px rgba(255, 215, 0, 0.8)',
+                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                         }}
                       >
                         +{formatXp(parseInt(badgeXp, 10))} XP
@@ -2767,7 +2767,7 @@ export async function GET(req: Request) {
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                       color: '#ffffff',
-                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${pointsPalette.start}60`,
+                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(pointsPalette.start),
                     }}
                   >
                     Points & XP
@@ -2807,7 +2807,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: pointsPalette.start,
-                          textShadow: `0 2px 8px ${pointsPalette.start}80`,
+                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                         }}
                       >
                         {availablePoints} pts
@@ -2839,7 +2839,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: pointsPalette.end,
-                          textShadow: `0 2px 8px ${pointsPalette.end}80`,
+                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                         }}
                       >
                         {lockedPoints} pts
@@ -3421,7 +3421,7 @@ export async function GET(req: Request) {
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                   }}
                 >
-                  <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                  <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
                     👤 {address ? shortenAddress(address) : `FID ${fid}`}
                   </div>
                 </div>
@@ -3455,7 +3455,7 @@ export async function GET(req: Request) {
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                     color: '#ffffff',
-                    textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${defaultPalette.start}60`,
+                    textShadow: FRAME_TYPOGRAPHY.textShadow.glow(defaultPalette.start),
                   }}
                 >
                   Onchain Stats
