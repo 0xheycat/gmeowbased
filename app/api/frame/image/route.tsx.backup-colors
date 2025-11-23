@@ -16,9 +16,7 @@ import {
   FRAME_FONT_FAMILY,
   FRAME_TYPOGRAPHY,
   FRAME_SPACING,
-  FRAME_COLORS,
-  SHARED_COLORS,
-  TIER_COLORS,
+  FRAME_COLORS, 
   buildIdentityDisplay,
   buildFooterText,
   buildBackgroundGradient,
@@ -361,8 +359,6 @@ export async function GET(req: Request) {
                   fontSize: FRAME_FONTS_V2.caption,
                   fontWeight: 700,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                  color: SHARED_COLORS.white,
-                  textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                 }}
               >
                 GM
@@ -376,7 +372,7 @@ export async function GET(req: Request) {
                   fontSize: FRAME_FONTS_V2.caption,
                   fontWeight: 600,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                  color: 'rgba(255, 255, 255, 0.85)',
+                  opacity: 0.8,
                 }}
               >
                 {chainIconData && (
@@ -407,7 +403,7 @@ export async function GET(req: Request) {
                   fontWeight: 900,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                   lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                   textShadow: FRAME_TYPOGRAPHY.textShadow.glow(gmPalette.start),
                 }}
               >
@@ -440,7 +436,7 @@ export async function GET(req: Request) {
                     fontWeight: 900,
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                    color: SHARED_COLORS.black,
+                    color: '#000000',
                   }}
                 >
                   🔥 {streak}-Day Streak
@@ -823,7 +819,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white, textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
@@ -837,7 +833,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Guild name - More prominent */}
@@ -856,7 +852,7 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textShadow: FRAME_TYPOGRAPHY.textShadow.glow(guildPalette.start),
                     }}
                   >
@@ -1023,8 +1019,7 @@ export async function GET(req: Request) {
                   fontSize: FRAME_FONTS_V2.caption,
                   fontWeight: 700,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                  color: SHARED_COLORS.white,
-                  textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
+                  color: '#000000',
                 }}
               >
                 VERIFY
@@ -1096,7 +1091,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white, textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#000000', textShadow: '0 1px 3px rgba(255, 255, 255, 0.6)' }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
@@ -1110,7 +1105,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Title - More prominent */}
@@ -1129,7 +1124,7 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textShadow: FRAME_TYPOGRAPHY.textShadow.glow(verifyPalette.start),
                     }}
                   >
@@ -1370,7 +1365,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white, textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: questFid ? parseInt(questFid) : (fid ? parseInt(fid) : null) })}
                     </div>
                   </div>
@@ -1384,7 +1379,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Quest name - More prominent */}
@@ -1403,7 +1398,7 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textShadow: FRAME_TYPOGRAPHY.textShadow.glow(questPalette.start),
                     }}
                   >
@@ -1448,7 +1443,7 @@ export async function GET(req: Request) {
                           fontWeight: 900,
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                          color: SHARED_COLORS.white,
+                          color: '#ffffff',
                           textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                         }}
                       >
@@ -1638,8 +1633,8 @@ export async function GET(req: Request) {
                       display: 'flex',
                       alignItems: 'center',
                       padding: FRAME_SPACING.padding.minimal,
-                      background: `linear-gradient(135deg, ${SHARED_COLORS.gold}, #FFA500)`,
-                      border: `2px solid ${SHARED_COLORS.gold}`,
+                      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                      border: '2px solid #FFD700',
                       borderRadius: 999,
                       fontFamily: FRAME_FONT_FAMILY.display,
                       fontSize: FRAME_FONTS_V2.micro,
@@ -1691,7 +1686,7 @@ export async function GET(req: Request) {
                   fontWeight: 900,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                   lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                   textShadow: FRAME_TYPOGRAPHY.textShadow.glow(statsPalette.start),
                 }}
               >
@@ -1787,7 +1782,7 @@ export async function GET(req: Request) {
                     fontWeight: 800,
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                    color: SHARED_COLORS.white,
+                    color: '#ffffff',
                     marginBottom: FRAME_SPACING.section.tight,
                     textShadow: FRAME_TYPOGRAPHY.textShadow.subtle,
                   }}
@@ -2040,7 +2035,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Title - More prominent */}
@@ -2059,7 +2054,7 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textShadow: FRAME_TYPOGRAPHY.textShadow.glow(leaderboardPalette.start),
                     }}
                   >
@@ -2227,7 +2222,7 @@ export async function GET(req: Request) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: 10,
-                color: SHARED_COLORS.white,
+                color: '#ffffff',
               }}
             >
               <div
@@ -2339,7 +2334,7 @@ export async function GET(req: Request) {
                               style={{
                                 fontSize: 8,
                                 fontWeight: 600,
-                                color: SHARED_COLORS.white,
+                                color: '#ffffff',
                                 textAlign: 'center',
                                 marginTop: 4,
                                 maxWidth: 64,
@@ -2383,7 +2378,7 @@ export async function GET(req: Request) {
                       fontWeight: 700,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textAlign: 'center',
                       wordBreak: 'break-word',
                     }}
@@ -2400,7 +2395,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Title */}
@@ -2419,7 +2414,7 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textShadow: FRAME_TYPOGRAPHY.textShadow.glow(badgePalette.start),
                     }}
                   >
@@ -2641,7 +2636,7 @@ export async function GET(req: Request) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: 10,
-                color: SHARED_COLORS.white,
+                color: '#ffffff',
               }}
             >
               <div
@@ -2735,7 +2730,7 @@ export async function GET(req: Request) {
                       fontWeight: 700,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textAlign: 'center',
                       wordBreak: 'break-word',
                     }}
@@ -2752,7 +2747,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Title & Tier */}
@@ -2771,7 +2766,7 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textShadow: FRAME_TYPOGRAPHY.textShadow.glow(pointsPalette.start),
                     }}
                   >
@@ -2876,7 +2871,7 @@ export async function GET(req: Request) {
                             borderRadius: 6,
                           }}
                         >
-                          <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white }}>
+                          <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff' }}>
                             LVL {levelProgress.level}
                           </div>
                         </div>
@@ -3021,7 +3016,7 @@ export async function GET(req: Request) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: 10,
-                color: SHARED_COLORS.white,
+                color: '#ffffff',
               }}
             >
               <div
@@ -3147,7 +3142,7 @@ export async function GET(req: Request) {
                     fontFamily: FRAME_FONT_FAMILY.display,
                     fontSize: FRAME_FONTS_V2.h3,
                     fontWeight: 700,
-                    color: SHARED_COLORS.white,
+                    color: '#ffffff',
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                   }}
                 >
@@ -3426,7 +3421,7 @@ export async function GET(req: Request) {
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                   }}
                 >
-                  <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white, textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
+                  <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
                     👤 {address ? shortenAddress(address) : `FID ${fid}`}
                   </div>
                 </div>
@@ -3440,7 +3435,7 @@ export async function GET(req: Request) {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                color: SHARED_COLORS.white,
+                color: '#ffffff',
               }}
             >
               {/* Title - More prominent */}
@@ -3459,7 +3454,7 @@ export async function GET(req: Request) {
                     fontWeight: 900,
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                    color: SHARED_COLORS.white,
+                    color: '#ffffff',
                     textShadow: FRAME_TYPOGRAPHY.textShadow.glow(defaultPalette.start),
                   }}
                 >

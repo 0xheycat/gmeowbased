@@ -16,15 +16,9 @@ import {
   FRAME_FONT_FAMILY,
   FRAME_TYPOGRAPHY,
   FRAME_SPACING,
-  FRAME_COLORS,
-  SHARED_COLORS,
-  TIER_COLORS,
+  FRAME_COLORS, 
   buildIdentityDisplay,
   buildFooterText,
-  buildBackgroundGradient,
-  buildBoxShadow,
-  buildOverlay,
-  buildBorderEffect,
 } from '@/lib/frame-design-system'
 import { 
   calculateLevelProgress, 
@@ -361,8 +355,6 @@ export async function GET(req: Request) {
                   fontSize: FRAME_FONTS_V2.caption,
                   fontWeight: 700,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                  color: SHARED_COLORS.white,
-                  textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                 }}
               >
                 GM
@@ -376,7 +368,7 @@ export async function GET(req: Request) {
                   fontSize: FRAME_FONTS_V2.caption,
                   fontWeight: 600,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                  color: 'rgba(255, 255, 255, 0.85)',
+                  opacity: 0.8,
                 }}
               >
                 {chainIconData && (
@@ -407,8 +399,8 @@ export async function GET(req: Request) {
                   fontWeight: 900,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                   lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                  color: SHARED_COLORS.white,
-                  textShadow: FRAME_TYPOGRAPHY.textShadow.glow(gmPalette.start),
+                  color: '#ffffff',
+                  textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 16px ${gmPalette.start}60`,
                 }}
               >
                 {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
@@ -440,7 +432,7 @@ export async function GET(req: Request) {
                     fontWeight: 900,
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                    color: SHARED_COLORS.black,
+                    color: '#000000',
                   }}
                 >
                   🔥 {streak}-Day Streak
@@ -574,10 +566,10 @@ export async function GET(req: Request) {
                         border: '1px dashed rgba(255, 255, 255, 0.2)',
                       }}
                     >
-                      <span style={{ fontSize: 18, color: 'rgba(255, 255, 255, 0.75)' }}>🎯</span>
+                      <span style={{ fontSize: 18, opacity: 0.5 }}>🎯</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.minimal }}>
-                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.85)' }}>Week Warrior</span>
-                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, color: 'rgba(255, 255, 255, 0.75)' }}>{7 - parseInt(streak)} days away</span>
+                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.6 }}>Week Warrior</span>
+                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, opacity: 0.5 }}>{7 - parseInt(streak)} days away</span>
                       </div>
                     </div>
                   )}
@@ -611,10 +603,10 @@ export async function GET(req: Request) {
                         border: '1px dashed rgba(255, 255, 255, 0.2)',
                       }}
                     >
-                      <span style={{ fontSize: 18, color: 'rgba(255, 255, 255, 0.75)' }}>💯</span>
+                      <span style={{ fontSize: 18, opacity: 0.5 }}>💯</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.minimal }}>
-                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.85)' }}>Century Club</span>
-                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, color: 'rgba(255, 255, 255, 0.75)' }}>{100 - parseInt(gmCount)} GMs away</span>
+                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.6 }}>Century Club</span>
+                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, opacity: 0.5 }}>{100 - parseInt(gmCount)} GMs away</span>
                       </div>
                     </div>
                   )}
@@ -632,7 +624,7 @@ export async function GET(req: Request) {
                 fontSize: FRAME_FONTS_V2.micro,
                 letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                 lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                color: 'rgba(255, 255, 255, 0.85)',
+                opacity: 0.6,
               }}
             >
               {buildFooterText('gm', chain)}
@@ -823,7 +815,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white, textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
@@ -837,7 +829,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Guild name - More prominent */}
@@ -856,8 +848,8 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
-                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(guildPalette.start),
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${guildPalette.start}60`,
                     }}
                   >
                     {guildName}
@@ -866,7 +858,7 @@ export async function GET(req: Request) {
                   {/* Stats box */}
                   <div
                     style={{
-                      marginTop: FRAME_SPACING.section.small,
+                      marginTop: 10,
                       display: 'flex',
                       flexDirection: 'column',
                       padding: FRAME_SPACING.section.small,
@@ -883,11 +875,11 @@ export async function GET(req: Request) {
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, color: guildPalette.start }}>{members} 👥</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.label, fontWeight: 700 }}>
-                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.85)' }}>QUESTS:</span>
+                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>QUESTS:</span>
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: guildPalette.start }}>{quests} active</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
-                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Level:</span>
+                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.6 }}>Level:</span>
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{level}</span>
                     </div>
                   </div>
@@ -905,7 +897,7 @@ export async function GET(req: Request) {
                 fontSize: FRAME_FONTS_V2.micro,
                 letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                 lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                color: 'rgba(255, 255, 255, 0.85)',
+                opacity: 0.6,
               }}
             >
               {buildFooterText('guild', `Guild #${guildId}`)}
@@ -1023,8 +1015,7 @@ export async function GET(req: Request) {
                   fontSize: FRAME_FONTS_V2.caption,
                   fontWeight: 700,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                  color: SHARED_COLORS.white,
-                  textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
+                  color: '#000000',
                 }}
               >
                 VERIFY
@@ -1096,7 +1087,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white, textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#000000', textShadow: '0 1px 3px rgba(255, 255, 255, 0.8)' }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
@@ -1110,7 +1101,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Title - More prominent */}
@@ -1129,8 +1120,8 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
-                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(verifyPalette.start),
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${verifyPalette.start}60`,
                     }}
                   >
                     {questName}
@@ -1139,7 +1130,7 @@ export async function GET(req: Request) {
                   {/* Verification info box */}
                   <div
                     style={{
-                      marginTop: FRAME_SPACING.section.small,
+                      marginTop: 10,
                       display: 'flex',
                       flexDirection: 'column',
                       padding: FRAME_SPACING.section.small,
@@ -1157,7 +1148,7 @@ export async function GET(req: Request) {
                     </div>
                     {questId && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
-                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Quest:</span>
+                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.6 }}>Quest:</span>
                         <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>#{questId}</span>
                       </div>
                     )}
@@ -1176,7 +1167,7 @@ export async function GET(req: Request) {
                 fontSize: FRAME_FONTS_V2.micro,
                 letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                 lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                color: 'rgba(255, 255, 255, 0.85)',
+                opacity: 0.6,
               }}
             >
               {buildFooterText('verify')}
@@ -1370,7 +1361,7 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white, textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
                       {buildIdentityDisplay({ username, displayName, address: user, fid: questFid ? parseInt(questFid) : (fid ? parseInt(fid) : null) })}
                     </div>
                   </div>
@@ -1384,7 +1375,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Quest name - More prominent */}
@@ -1403,8 +1394,8 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
-                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(questPalette.start),
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${questPalette.start}60`,
                     }}
                   >
                     {questName}
@@ -1413,7 +1404,7 @@ export async function GET(req: Request) {
                   {/* Description box with stats */}
                   <div
                     style={{
-                      marginTop: FRAME_SPACING.section.small,
+                      marginTop: 10,
                       display: 'flex',
                       flexDirection: 'column',
                       padding: FRAME_SPACING.section.small,
@@ -1431,7 +1422,7 @@ export async function GET(req: Request) {
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        padding: FRAME_SPACING.padding.box,
+                        padding: '8px 12px',
                         background: `linear-gradient(135deg, ${questPalette.start}, ${questPalette.end})`,
                         borderRadius: 8,
                         boxShadow: `0 0 12px ${questPalette.start}60`,
@@ -1448,8 +1439,8 @@ export async function GET(req: Request) {
                           fontWeight: 900,
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                          color: SHARED_COLORS.white,
-                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)',
                         }}
                       >
                         +{reward} XP
@@ -1457,12 +1448,12 @@ export async function GET(req: Request) {
                     </div>
                     {slotsLeft !== '—' && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.label, fontWeight: 700 }}>
-                        <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.85)' }}>SLOTS:</div>
+                        <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>SLOTS:</div>
                         <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: questPalette.start }}>{slotsLeft} left</div>
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
-                      <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Expires:</div>
+                      <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.6 }}>Expires:</div>
                       <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{expires}</div>
                     </div>
                   </div>
@@ -1480,7 +1471,7 @@ export async function GET(req: Request) {
                 fontSize: FRAME_FONTS_V2.micro,
                 letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                 lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                color: 'rgba(255, 255, 255, 0.85)',
+                opacity: 0.6,
               }}
             >
               {buildFooterText('quest', `Quest #${questId}`)}
@@ -1638,8 +1629,8 @@ export async function GET(req: Request) {
                       display: 'flex',
                       alignItems: 'center',
                       padding: FRAME_SPACING.padding.minimal,
-                      background: `linear-gradient(135deg, ${SHARED_COLORS.gold}, #FFA500)`,
-                      border: `2px solid ${SHARED_COLORS.gold}`,
+                      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                      border: '2px solid #FFD700',
                       borderRadius: 999,
                       fontFamily: FRAME_FONT_FAMILY.display,
                       fontSize: FRAME_FONTS_V2.micro,
@@ -1691,8 +1682,8 @@ export async function GET(req: Request) {
                   fontWeight: 900,
                   letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                   lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                  color: SHARED_COLORS.white,
-                  textShadow: FRAME_TYPOGRAPHY.textShadow.glow(statsPalette.start),
+                  color: '#ffffff',
+                  textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 16px ${statsPalette.start}60`,
                 }}
               >
                 {identity}
@@ -1745,20 +1736,20 @@ export async function GET(req: Request) {
                 <div style={{ height: 1, background: `${statsPalette.start}40`, margin: '4px 0' }} />
 
                 {/* Secondary Stats */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.tight }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Age</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.6 }}>Age</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{age}</span>
                   </div>
                   {firstTx !== '—' && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>First TX</span>
+                      <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.6 }}>First TX</span>
                       <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{firstTx}</span>
                     </div>
                   )}
                   {lastTx !== '—' && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Last TX</span>
+                      <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.6 }}>Last TX</span>
                       <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{lastTx}</span>
                     </div>
                   )}
@@ -1787,9 +1778,9 @@ export async function GET(req: Request) {
                     fontWeight: 800,
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                    color: SHARED_COLORS.white,
+                    color: '#ffffff',
                     marginBottom: FRAME_SPACING.section.tight,
-                    textShadow: FRAME_TYPOGRAPHY.textShadow.subtle,
+                    textShadow: `0 1px 3px rgba(0, 0, 0, 0.8)`,
                   }}
                 >
                   Reputation
@@ -1801,7 +1792,7 @@ export async function GET(req: Request) {
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: FRAME_SPACING.section.minimal,
+                      gap: 4,
                       padding: FRAME_SPACING.section.small,
                       background: `linear-gradient(135deg, ${statsPalette.start}25, ${statsPalette.end}20)`,
                       borderRadius: 8,
@@ -1819,7 +1810,7 @@ export async function GET(req: Request) {
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: FRAME_SPACING.section.minimal,
+                      gap: 4,
                       padding: FRAME_SPACING.section.small,
                       background: `linear-gradient(135deg, ${statsPalette.start}25, ${statsPalette.end}20)`,
                       borderRadius: 8,
@@ -1838,10 +1829,10 @@ export async function GET(req: Request) {
                       display: 'flex',
                       alignItems: 'center',
                       gap: FRAME_SPACING.section.tight,
-                      padding: FRAME_SPACING.section.inline,
+                      padding: 8,
                       background: 'rgba(40, 40, 42, 0.5)',
                       borderRadius: 6,
-                      color: 'rgba(255, 255, 255, 0.75)',
+                      opacity: 0.5,
                     }}
                   >
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal }}>⚪ No Power Badge</span>
@@ -1855,12 +1846,12 @@ export async function GET(req: Request) {
               style={{
                 display: 'flex',
                 justifyContent: 'center',
-                marginTop: FRAME_SPACING.section.small,
+                marginTop: 10,
                 fontFamily: FRAME_FONT_FAMILY.body,
                 fontSize: FRAME_FONTS_V2.micro,
                 letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                 lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                color: 'rgba(255, 255, 255, 0.85)',
+                opacity: 0.6,
               }}
             >
               {buildFooterText('onchainstats', chain)}
@@ -2040,7 +2031,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Title - More prominent */}
@@ -2059,8 +2050,8 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
-                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(leaderboardPalette.start),
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${leaderboardPalette.start}60`,
                     }}
                   >
                     Top Performers
@@ -2069,7 +2060,7 @@ export async function GET(req: Request) {
                   {/* Info box */}
                   <div
                     style={{
-                      marginTop: FRAME_SPACING.section.small,
+                      marginTop: 10,
                       display: 'flex',
                       flexDirection: 'column',
                       padding: FRAME_SPACING.section.small,
@@ -2089,7 +2080,7 @@ export async function GET(req: Request) {
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>SHOWING:</span>
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: leaderboardPalette.start }}>Top {limit}</span>
                     </div>
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, opacity: 0.7, marginTop: FRAME_SPACING.section.minimal }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, opacity: 0.7, marginTop: 4 }}>
                       GM Streaks • Quests • XP • Badges
                     </div>
                   </div>
@@ -2107,7 +2098,7 @@ export async function GET(req: Request) {
                 fontSize: FRAME_FONTS_V2.micro,
                 letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                 lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                color: 'rgba(255, 255, 255, 0.85)',
+                opacity: 0.6,
               }}
             >
               {buildFooterText('leaderboard', 'Multichain Rankings')}
@@ -2133,35 +2124,6 @@ export async function GET(req: Request) {
     const address = readParam(url, 'address', user)
     // Task 10: Add XP from badges tracking
     const badgeXp = readParam(url, 'badgeXp', '0')
-    // Phase 2.1 Task 2.1.1: Parse badge IDs and load actual badge images
-    const earnedBadges = readParam(url, 'earnedBadges', '')
-    const badgeIds = earnedBadges.split(',').filter(Boolean).slice(0, 9)
-    
-    // Badge metadata registry (inline for frame generation)
-    const badgeRegistry: Record<string, { name: string; tier: string }> = {
-      'neon-initiate': { name: 'Neon Initiate', tier: 'common' },
-      'pulse-runner': { name: 'Pulse Runner', tier: 'rare' },
-      'signal-luminary': { name: 'Signal Luminary', tier: 'epic' },
-      'warp-navigator': { name: 'Warp Navigator', tier: 'legendary' },
-      'gmeow-vanguard': { name: 'Gmeow Vanguard', tier: 'mythic' }
-    }
-    
-    // Tier colors for badge card borders
-    const tierColors: Record<string, string> = {
-      common: '#D3D7DC',
-      rare: '#A18CFF',
-      epic: '#61DFFF',
-      legendary: '#FFD966',
-      mythic: '#9C27FF'
-    }
-    
-    // Load badge images asynchronously
-    const badgeImages = await Promise.all(
-      badgeIds.map(async (badgeId) => {
-        const imgData = await loadImageAsDataUrl(`badges/${badgeId}.png`)
-        return imgData || ''
-      })
-    )
 
     const badgePalette = {
       start: FRAME_COLORS.badge.primary,
@@ -2227,7 +2189,7 @@ export async function GET(req: Request) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: 10,
-                color: SHARED_COLORS.white,
+                color: '#ffffff',
               }}
             >
               <div
@@ -2279,85 +2241,23 @@ export async function GET(req: Request) {
                   gap: FRAME_SPACING.section.small,
                 }}
               >
-                {/* Badge Icon - Phase 2.1 Task 2.1.1: Badge Collection Grid with Images */}
+                {/* Badge Icon */}
                 <div
                   style={{
-                    width: 240,
-                    minHeight: 120,
+                    width: 120,
+                    height: 120,
                     borderRadius: 10,
-                    background: 'rgba(15, 15, 17, 0.5)',
-                    border: '2px solid rgba(212, 175, 55, 0.3)',
+                    background: `linear-gradient(135deg, ${badgePalette.start}, ${badgePalette.end})`,
+                    border: `3px solid ${badgePalette.start}`,
                     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: 12,
+                    fontFamily: FRAME_FONT_FAMILY.display,
+                    fontSize: 70,
                   }}
                 >
-                  {badgeIds.length > 0 ? (
-                    // Show earned badges with images and names
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 8,
-                        justifyContent: 'center',
-                        alignItems: 'flex-start',
-                      }}
-                    >
-                      {badgeIds.map((badgeId, i) => {
-                        const badge = badgeRegistry[badgeId]
-                        const tierColor = badge ? tierColors[badge.tier] : tierColors.common
-                        
-                        return (
-                          <div
-                            key={badgeId}
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              width: 64,
-                              padding: 4,
-                              border: `2px solid ${tierColor}`,
-                              borderRadius: 8,
-                              background: 'rgba(255, 255, 255, 0.05)',
-                            }}
-                          >
-                            {badgeImages[i] && (
-                              <img
-                                src={badgeImages[i]}
-                                alt={badge?.name || 'Badge'}
-                                width="56"
-                                height="56"
-                                style={{
-                                  borderRadius: 6,
-                                  objectFit: 'cover',
-                                }}
-                              />
-                            )}
-                            <div
-                              style={{
-                                fontSize: 8,
-                                fontWeight: 600,
-                                color: SHARED_COLORS.white,
-                                textAlign: 'center',
-                                marginTop: 4,
-                                maxWidth: 64,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {badge?.name || 'Unknown'}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    // Show placeholder when no badges
-                    <div style={{ fontSize: 70, opacity: 0.3 }}>🏅</div>
-                  )}
+                  🏅
                 </div>
 
                 {/* User info box */}
@@ -2365,7 +2265,7 @@ export async function GET(req: Request) {
                   style={{
                     width: 120,
                     display: 'flex',
-                    padding: FRAME_SPACING.section.inline,
+                    padding: 8,
                     background: 'rgba(30, 30, 32, 0.6)',
                     border: `1px solid ${badgePalette.start}`,
                     borderRadius: 8,
@@ -2383,7 +2283,7 @@ export async function GET(req: Request) {
                       fontWeight: 700,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textAlign: 'center',
                       wordBreak: 'break-word',
                     }}
@@ -2400,7 +2300,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Title */}
@@ -2419,8 +2319,8 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
-                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(badgePalette.start),
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${badgePalette.start}60`,
                     }}
                   >
                     Badge Collection
@@ -2429,7 +2329,7 @@ export async function GET(req: Request) {
                   {/* Stats grid */}
                   <div
                     style={{
-                      marginTop: FRAME_SPACING.section.small,
+                      marginTop: 10,
                       display: 'flex',
                       flexDirection: 'column',
                       gap: FRAME_SPACING.section.medium,
@@ -2460,7 +2360,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: badgePalette.start,
-                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
+                          textShadow: `0 2px 8px ${badgePalette.start}80`,
                         }}
                       >
                         {earnedCount}
@@ -2492,7 +2392,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: badgePalette.end,
-                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
+                          textShadow: `0 2px 8px ${badgePalette.end}80`,
                         }}
                       >
                         {eligibleCount}
@@ -2524,7 +2424,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: '#ffd700',
-                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
+                          textShadow: '0 2px 8px rgba(255, 215, 0, 0.8)',
                         }}
                       >
                         +{formatXp(parseInt(badgeXp, 10))} XP
@@ -2545,7 +2445,7 @@ export async function GET(req: Request) {
                 fontSize: FRAME_FONTS_V2.micro,
                 letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                 lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                color: 'rgba(255, 255, 255, 0.85)',
+                opacity: 0.6,
               }}
             >
               {buildFooterText('badge')}
@@ -2641,7 +2541,7 @@ export async function GET(req: Request) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: 10,
-                color: SHARED_COLORS.white,
+                color: '#ffffff',
               }}
             >
               <div
@@ -2717,7 +2617,7 @@ export async function GET(req: Request) {
                   style={{
                     width: 120,
                     display: 'flex',
-                    padding: FRAME_SPACING.section.inline,
+                    padding: 8,
                     background: 'rgba(30, 30, 32, 0.6)',
                     border: `1px solid ${pointsPalette.start}`,
                     borderRadius: 8,
@@ -2735,7 +2635,7 @@ export async function GET(req: Request) {
                       fontWeight: 700,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                      color: SHARED_COLORS.white,
+                      color: '#ffffff',
                       textAlign: 'center',
                       wordBreak: 'break-word',
                     }}
@@ -2752,7 +2652,7 @@ export async function GET(req: Request) {
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
+                  color: '#ffffff',
                 }}
               >
                 {/* Title & Tier */}
@@ -2771,8 +2671,8 @@ export async function GET(req: Request) {
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
-                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(pointsPalette.start),
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${pointsPalette.start}60`,
                     }}
                   >
                     Points & XP
@@ -2781,7 +2681,7 @@ export async function GET(req: Request) {
                   {/* Stats grid */}
                   <div
                     style={{
-                      marginTop: FRAME_SPACING.section.small,
+                      marginTop: 10,
                       display: 'flex',
                       flexDirection: 'column',
                       gap: FRAME_SPACING.section.small,
@@ -2812,7 +2712,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: pointsPalette.start,
-                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
+                          textShadow: `0 2px 8px ${pointsPalette.start}80`,
                         }}
                       >
                         {availablePoints} pts
@@ -2844,7 +2744,7 @@ export async function GET(req: Request) {
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                           color: pointsPalette.end,
-                          textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
+                          textShadow: `0 2px 8px ${pointsPalette.end}80`,
                         }}
                       >
                         {lockedPoints} pts
@@ -2876,7 +2776,7 @@ export async function GET(req: Request) {
                             borderRadius: 6,
                           }}
                         >
-                          <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white }}>
+                          <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff' }}>
                             LVL {levelProgress.level}
                           </div>
                         </div>
@@ -2931,7 +2831,7 @@ export async function GET(req: Request) {
                 fontSize: FRAME_FONTS_V2.micro,
                 letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
                 lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-                color: 'rgba(255, 255, 255, 0.85)',
+                opacity: 0.6,
               }}
             >
               {buildFooterText('points')}
@@ -2946,313 +2846,6 @@ export async function GET(req: Request) {
       }
     )
     return cacheImageResponse(pointsResponse, cacheKey, startTime)
-  }
-
-  // Referral frame type - Yu-Gi-Oh! Card Structure
-  if (type === 'referral') {
-    const referrerFid = readParam(url, 'referrerFid', '')
-    const referrerUsername = readParam(url, 'referrerUsername', '')
-    const referralCount = readParam(url, 'referralCount', '0')
-    const rewardAmount = readParam(url, 'rewardAmount', '0')
-    const inviteCode = readParam(url, 'inviteCode', '')
-    const chainDisplayText = readParam(url, 'chainDisplay', 'Base')
-
-    const referralPalette = {
-      start: FRAME_COLORS.referral.primary,
-      end: FRAME_COLORS.referral.secondary
-    }
-
-    const referralResponse = new ImageResponse(
-      (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Background */}
-          {ogImageData ? (
-            <img
-              src={ogImageData}
-              alt="background"
-              style={{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                opacity: 1.0,
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                display: 'flex',
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                background: `linear-gradient(135deg, ${FRAME_COLORS.referral.bg} 0%, #0a0a0a 50%, ${FRAME_COLORS.referral.bg} 100%)`,
-              }}
-            />
-          )}
-
-          {/* Referral Card Container */}
-          <div
-            style={{
-              width: 540,
-              height: 360,
-              display: 'flex',
-              flexDirection: 'column',
-              background: `linear-gradient(145deg, rgba(32, 5, 16, 0.75) 0%, rgba(16, 2, 10, 0.85) 100%)`,
-              border: `4px solid ${referralPalette.start}`,
-              borderRadius: 12,
-              boxShadow: `0 8px 32px rgba(255, 107, 157, 0.3), inset 0 0 0 1px rgba(255, 141, 180, 0.1)`,
-              padding: FRAME_SPACING.container,
-            }}
-          >
-            {/* Header */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 10,
-                color: SHARED_COLORS.white,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  padding: FRAME_SPACING.padding.minimal,
-                  background: `linear-gradient(135deg, ${referralPalette.start}, ${referralPalette.end})`,
-                  border: `2px solid ${referralPalette.start}`,
-                  borderRadius: 999,
-                  fontFamily: FRAME_FONT_FAMILY.display,
-                  fontSize: FRAME_FONTS_V2.caption,
-                  fontWeight: 700,
-                  letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                }}
-              >
-                REFERRAL
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: FRAME_SPACING.section.tight,
-                  padding: FRAME_SPACING.padding.small,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: 8,
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}
-              >
-                {chainIconData && (
-                  <img src={chainIconData} alt="chain" style={{ width: 16, height: 16 }} />
-                )}
-                <span
-                  style={{
-                    fontFamily: FRAME_FONT_FAMILY.body,
-                    fontSize: FRAME_FONTS_V2.label,
-                    fontWeight: 600,
-                    letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
-                  }}
-                >
-                  {chainDisplayText}
-                </span>
-              </div>
-            </div>
-
-            {/* Icon section */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: FRAME_SPACING.section.small,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 80,
-                  lineHeight: 1,
-                  fontFamily: FRAME_FONT_FAMILY.display,
-                }}
-              >
-                🤝
-              </div>
-            </div>
-
-            {/* Referrer Identity */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: FRAME_SPACING.section.minimal,
-                alignItems: 'center',
-                marginBottom: FRAME_SPACING.section.medium,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: FRAME_FONT_FAMILY.display,
-                  fontSize: FRAME_FONTS_V2.h1,
-                  fontWeight: 700,
-                  color: referralPalette.start,
-                  letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
-                  textShadow: FRAME_TYPOGRAPHY.textShadow.glow(referralPalette.start),
-                }}
-              >
-                {referrerUsername ? `@${referrerUsername}` : `Referrer #${referrerFid}`}
-              </div>
-            </div>
-
-            {/* Stats Box */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: FRAME_SPACING.section.medium,
-                padding: FRAME_SPACING.padding.box,
-                background: 'rgba(255, 107, 157, 0.1)',
-                border: '2px solid rgba(255, 107, 157, 0.2)',
-                borderRadius: 10,
-                marginBottom: FRAME_SPACING.margin.section,
-              }}
-            >
-              {/* Referrals Count */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: FRAME_FONT_FAMILY.body,
-                    fontSize: FRAME_FONTS_V2.label,
-                    fontWeight: 600,
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                  }}
-                >
-                  REFERRALS:
-                </span>
-                <span
-                  style={{
-                    fontFamily: FRAME_FONT_FAMILY.display,
-                    fontSize: FRAME_FONTS_V2.h3,
-                    fontWeight: 700,
-                    color: SHARED_COLORS.white,
-                    letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
-                  }}
-                >
-                  {parseInt(referralCount, 10).toLocaleString()}
-                </span>
-              </div>
-
-              {/* Rewards Earned */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: FRAME_FONT_FAMILY.body,
-                    fontSize: FRAME_FONTS_V2.label,
-                    fontWeight: 600,
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                  }}
-                >
-                  REWARDS:
-                </span>
-                <span
-                  style={{
-                    fontFamily: FRAME_FONT_FAMILY.display,
-                    fontSize: FRAME_FONTS_V2.h3,
-                    fontWeight: 700,
-                    color: FRAME_COLORS.referral.accent,
-                    letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
-                  }}
-                >
-                  {parseInt(rewardAmount, 10).toLocaleString()} XP
-                </span>
-              </div>
-
-              {/* Invite Code */}
-              {inviteCode && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: FRAME_FONT_FAMILY.body,
-                      fontSize: FRAME_FONTS_V2.label,
-                      fontWeight: 600,
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                    }}
-                  >
-                    CODE:
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: FRAME_FONT_FAMILY.display,
-                      fontSize: FRAME_FONTS_V2.h2,
-                      fontWeight: 700,
-                      color: referralPalette.end,
-                      letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide,
-                    }}
-                  >
-                    {inviteCode.toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginTop: 'auto',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: FRAME_FONT_FAMILY.body,
-                  fontSize: FRAME_FONTS_V2.label,
-                  fontWeight: 600,
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
-                }}
-              >
-                {buildFooterText('referral')}
-              </span>
-            </div>
-          </div>
-        </div>
-      ),
-      {
-        width: 600,
-        height: 400,
-        fonts,
-      }
-    )
-    return cacheImageResponse(referralResponse, cacheKey, startTime)
   }
 
   // Default: onchainstats fallback - Yu-Gi-Oh! Card Structure
@@ -3426,7 +3019,7 @@ export async function GET(req: Request) {
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                   }}
                 >
-                  <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: SHARED_COLORS.white, textShadow: FRAME_TYPOGRAPHY.textShadow.subtle }}>
+                  <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
                     👤 {address ? shortenAddress(address) : `FID ${fid}`}
                   </div>
                 </div>
@@ -3440,7 +3033,7 @@ export async function GET(req: Request) {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                color: SHARED_COLORS.white,
+                color: '#ffffff',
               }}
             >
               {/* Title - More prominent */}
@@ -3459,8 +3052,8 @@ export async function GET(req: Request) {
                     fontWeight: 900,
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                    color: SHARED_COLORS.white,
-                    textShadow: FRAME_TYPOGRAPHY.textShadow.glow(defaultPalette.start),
+                    color: '#ffffff',
+                    textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${defaultPalette.start}60`,
                   }}
                 >
                   Onchain Stats
@@ -3469,7 +3062,7 @@ export async function GET(req: Request) {
                 {/* Stats box */}
                 <div
                   style={{
-                    marginTop: FRAME_SPACING.section.small,
+                    marginTop: 10,
                     display: 'flex',
                     flexDirection: 'column',
                     padding: FRAME_SPACING.section.small,
@@ -3489,13 +3082,13 @@ export async function GET(req: Request) {
                     )}
                     {volume !== '—' && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
-                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Volume:</span>
+                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.6 }}>Volume:</span>
                         <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{volume}</span>
                       </div>
                     )}
                     {(balance_val !== '—' || age !== '—') && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
-                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>{balance_val !== '—' ? 'Balance:' : 'Age:'}</span>
+                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.6 }}>{balance_val !== '—' ? 'Balance:' : 'Age:'}</span>
                         <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{balance_val !== '—' ? balance_val : age}</span>
                       </div>
                     )}
@@ -3514,7 +3107,7 @@ export async function GET(req: Request) {
               fontSize: FRAME_FONTS_V2.micro,
               letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal,
               lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal,
-              color: 'rgba(255, 255, 255, 0.85)',
+              opacity: 0.6,
             }}
           >
             @gmeowbased • {chain}
