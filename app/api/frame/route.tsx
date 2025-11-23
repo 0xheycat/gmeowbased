@@ -2069,8 +2069,14 @@ export async function GET(req: Request) {
 
     if (type === 'referral') {
       const user = params.user || params.addr || ''
-      const code = params.code || ''
-      tracePush(traces, 'referral', { user, code })
+      const code = params.code || params.ref || ''
+      const referrerFid = params.referrerFid || params.fid || ''
+      const referrerUsername = params.referrerUsername || params.username || ''
+      const referralCount = params.referralCount || params.count || '0'
+      const rewardAmount = params.rewardAmount || params.rewards || '0'
+      
+      tracePush(traces, 'referral', { user, code, referrerFid, referrerUsername, referralCount, rewardAmount })
+      
       const shareUrl = `${origin}/referral${code ? `?code=${encodeURIComponent(String(code))}` : ''}`
       const title = code ? `Summon Frens • Code ${String(code).toUpperCase()}` : 'Summon Frens • Referral'
       const descriptionPieces: string[] = []
@@ -2079,10 +2085,27 @@ export async function GET(req: Request) {
       if (user) descriptionPieces.push(`Tracked to ${shortenHex(String(user))}`)
       descriptionPieces.push('— @gmeowbased')
       const description = descriptionPieces.join(' • ')
+      
+      // Build dynamic image URL for referral frame
+      const imageUrl = buildDynamicFrameImageUrl({
+        type: 'referral',
+        chain: params.chain as any,
+        user,
+        fid: referrerFid ? Number(referrerFid) : undefined,
+        referral: code,
+        extra: {
+          referrerFid,
+          referrerUsername,
+          referralCount,
+          rewardAmount,
+          inviteCode: code,
+        }
+      }, origin)
+      
       const fcMeta: Record<string, string> = { [frameKey('entity')]: 'referral' }
       if (code) fcMeta[frameKey('referral_code')] = String(code)
       if (user) fcMeta[frameKey('referral_owner')] = String(user)
-      if (asJson) return respondJson({ ok: true, type: 'referral', user, code, shareUrl, description, traces })
+      if (asJson) return respondJson({ ok: true, type: 'referral', user, code, shareUrl, description, imageUrl, traces })
       
       // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
       const referralButtons: FrameButton[] = [
@@ -2091,7 +2114,7 @@ export async function GET(req: Request) {
       const html = buildFrameHtml({
         title,
         description,
-        image: defaultFrameImage,
+        image: imageUrl,
         url: shareUrl,
         buttons: referralButtons,
         fcMeta,

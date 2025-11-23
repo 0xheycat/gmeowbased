@@ -1,12 +1,17 @@
 /**
- * Frame Design System - Phase 1F Layer 2
+ * Frame Design System - Phase 2 Layer 1
  * Unified typography, colors, and layout constants for all frame image generation
+ * 
+ * Phase 2 Updates:
+ * - Premium font stack using public/fonts (PixelifySans, Gmeow)
+ * - Enhanced typography controls (letter-spacing, line-height, text-shadow)
+ * - FRAME_FONTS_V2 with semantic naming (display, h1, h2, h3)
  * 
  * Usage:
  * ```typescript
- * import { FRAME_FONTS, FRAME_COLORS, FRAME_LAYOUT } from '@/lib/frame-design-system'
+ * import { FRAME_FONTS_V2, FRAME_FONT_FAMILY, FRAME_COLORS } from '@/lib/frame-design-system'
  * 
- * <div style={{ fontSize: FRAME_FONTS.identity }}>@username</div>
+ * <div style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.h1 }}>Title</div>
  * <div style={{ color: FRAME_COLORS.gm.primary }}>Content</div>
  * ```
  */
@@ -16,8 +21,54 @@
 // ============================================================================
 
 /**
- * Standardized font scale for all frame images
- * Ensures consistent hierarchy across all 9 frame types
+ * Phase 2: Premium Font Stack
+ * Uses fonts from public/fonts/ directory
+ */
+export const FRAME_FONT_FAMILY = {
+  /** Display font for headers and titles (PixelifySans-Bold) */
+  display: 'PixelifySans',
+  
+  /** Body font for standard text (Gmeow) */
+  body: 'Gmeow',
+  
+  /** Fallback system fonts */
+  fallback: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+} as const
+
+/**
+ * Phase 2: Enhanced font scale with semantic naming
+ * Replaces hardcoded sizes (28, 24, 20) with semantic tokens
+ */
+export const FRAME_FONTS_V2 = {
+  /** Hero text (32px) - For special emphasis */
+  display: 32,
+  
+  /** H1 Frame titles (28px) - Main frame titles */
+  h1: 28,
+  
+  /** H2 Primary values (24px) - Stats, numbers */
+  h2: 24,
+  
+  /** H3 Identity headers (20px) - Username, identity */
+  h3: 20,
+  
+  /** Body text (14px) - Standard text */
+  body: 14,
+  
+  /** Labels (12px) - Uppercase labels */
+  label: 12,
+  
+  /** Caption (10px) - Secondary info */
+  caption: 10,
+  
+  /** Micro text (9px) - Footer, fine print */
+  micro: 9,
+} as const
+
+/**
+ * Legacy font scale (Phase 1F)
+ * Kept for backward compatibility, prefer FRAME_FONTS_V2
+ * @deprecated Use FRAME_FONTS_V2 for new code
  */
 export const FRAME_FONTS = {
   /** Username header / primary identity (20px) */
@@ -43,6 +94,35 @@ export const FRAME_FONTS = {
 } as const
 
 /**
+ * Phase 2: Typography controls for premium feel
+ */
+export const FRAME_TYPOGRAPHY = {
+  /** Letter spacing for different text styles */
+  letterSpacing: {
+    tight: '-0.03em',   // Display, H1, H2 (premium tight)
+    normal: '-0.01em',  // H3, body
+    wide: '0.05em',     // Labels (uppercase tracking)
+  },
+  
+  /** Line height for readability */
+  lineHeight: {
+    tight: 1.1,         // Display, H1
+    normal: 1.4,        // Body, caption
+    loose: 1.6,         // Long-form text
+  },
+  
+  /** Text shadow presets */
+  textShadow: {
+    /** Glow effect with color parameter */
+    glow: (color: string) => `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${color}60`,
+    /** Strong drop shadow */
+    strong: '0 2px 8px rgba(0, 0, 0, 0.9)',
+    /** Subtle shadow */
+    subtle: '0 1px 2px rgba(0, 0, 0, 0.5)',
+  },
+} as const
+
+/**
  * Font weights for emphasis
  */
 export const FRAME_WEIGHTS = {
@@ -50,6 +130,61 @@ export const FRAME_WEIGHTS = {
   medium: 600,
   bold: 700,
   black: 900,
+} as const
+
+// ============================================================================
+// LAYOUT SYSTEM
+// ============================================================================
+
+/**
+ * Phase 2: Spacing constants for consistent layout
+ * Replaces hardcoded padding/gap/margin values
+ */
+export const FRAME_SPACING = {
+  /** Container padding (main frame wrapper) */
+  container: 14,
+  
+  /** Section spacing */
+  section: {
+    /** Between major sections (16px) */
+    large: 16,
+    /** Between components (12px) */
+    medium: 12,
+    /** Between related items (10px) */
+    small: 10,
+    /** Between inline elements (8px) */
+    inline: 8,
+    /** Tight spacing for compact layouts (6px) */
+    tight: 6,
+    /** Minimal spacing (2px) */
+    minimal: 2,
+  },
+  
+  /** Padding values */
+  padding: {
+    /** Large padding (12-20px) for prominent sections */
+    large: '12px 20px',
+    /** Medium padding (8-16px) for standard sections */
+    medium: '8px 16px',
+    /** Small padding (5-12px) for compact elements */
+    small: '5px 12px',
+    /** Minimal padding (4-10px) for tight layouts */
+    minimal: '4px 10px',
+    /** Card/box padding (10-12px) */
+    box: '10px 12px',
+    /** Stat box padding (8-10px) */
+    stat: '8px 10px',
+  },
+  
+  /** Margin values */
+  margin: {
+    /** Top margin for footer (12px) */
+    footer: 12,
+    /** Bottom margin for headers (12px) */
+    header: 12,
+    /** Section separation (14px) */
+    section: 14,
+  },
 } as const
 
 // ============================================================================
@@ -140,6 +275,132 @@ export const SHARED_COLORS = {
   cardBg: 'rgba(30, 30, 32, 0.6)',
   cardBorder: 'rgba(255, 255, 255, 0.2)',
 } as const
+
+// ============================================================================
+// ADVANCED COLOR SYSTEM (Task 6)
+// ============================================================================
+
+/**
+ * Background gradient generators per frame type
+ * Usage: buildBackgroundGradient('gm') or buildBackgroundGradient('gm', 'card')
+ */
+export function buildBackgroundGradient(
+  frameType: keyof typeof FRAME_COLORS,
+  variant: 'page' | 'card' = 'page'
+): string {
+  const colors = FRAME_COLORS[frameType]
+  
+  if (variant === 'card') {
+    // Card gradient (semi-transparent, darker)
+    return `linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)`
+  }
+  
+  // Page gradient (full opacity, colored based on frame bg)
+  const bgBase = colors.bg
+  return `linear-gradient(135deg, #0a0a0a 0%, ${bgBase} 30%, ${adjustBrightness(bgBase, 0.8)} 60%, #0a0a0a 100%)`
+}
+
+/**
+ * Box shadow generators with frame-specific glow colors
+ * Usage: buildBoxShadow('gm', 'card') or buildBoxShadow('gm', 'badge')
+ */
+export function buildBoxShadow(
+  frameType: keyof typeof FRAME_COLORS,
+  variant: 'card' | 'badge' | 'stat' | 'button' = 'card'
+): string {
+  const colors = FRAME_COLORS[frameType]
+  const primaryGlow = `${colors.primary}90`
+  
+  switch (variant) {
+    case 'card':
+      // Main card shadow with colored glow
+      return `0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 40px ${primaryGlow}, 0 10px 50px rgba(0, 0, 0, 0.8)`
+    
+    case 'badge':
+      // Smaller glow for badge elements
+      return `0 0 12px ${colors.primary}`
+    
+    case 'stat':
+      // Subtle shadow for stat boxes
+      return `0 4px 16px rgba(0, 0, 0, 0.4)`
+    
+    case 'button':
+      // Button hover/active shadow
+      return `0 4px 16px ${colors.primary}80`
+    
+    default:
+      return `0 2px 8px rgba(0, 0, 0, 0.3)`
+  }
+}
+
+/**
+ * Overlay color generators for stat boxes, info cards
+ * Usage: buildOverlay('gm', 0.1) for 10% opacity overlay
+ */
+export function buildOverlay(
+  frameType: keyof typeof FRAME_COLORS,
+  opacity: number = 0.1
+): string {
+  const colors = FRAME_COLORS[frameType]
+  // Extract RGB from hex and apply opacity
+  const hex = colors.primary.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
+/**
+ * Border effect generators with glow and accent colors
+ * Usage: buildBorderEffect('gm', 'solid') or buildBorderEffect('gm', 'glow')
+ */
+export function buildBorderEffect(
+  frameType: keyof typeof FRAME_COLORS,
+  variant: 'solid' | 'glow' | 'accent' | 'subtle' = 'solid'
+): { border: string; boxShadow?: string } {
+  const colors = FRAME_COLORS[frameType]
+  
+  switch (variant) {
+    case 'solid':
+      return {
+        border: `4px solid ${colors.primary}`,
+        boxShadow: `0 8px 32px ${buildOverlay(frameType, 0.3)}, inset 0 0 0 1px ${buildOverlay(frameType, 0.1)}`
+      }
+    
+    case 'glow':
+      return {
+        border: `2px solid ${colors.primary}`,
+        boxShadow: `0 0 20px ${colors.primary}80`
+      }
+    
+    case 'accent':
+      return {
+        border: `2px solid ${colors.accent}`,
+        boxShadow: `0 0 12px ${colors.accent}60`
+      }
+    
+    case 'subtle':
+      return {
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+      }
+    
+    default:
+      return { border: `2px solid ${colors.primary}` }
+  }
+}
+
+/**
+ * Helper: Adjust hex color brightness
+ * @param hex - Color in #RRGGBB format
+ * @param factor - Brightness multiplier (0-1 darker, >1 lighter)
+ */
+function adjustBrightness(hex: string, factor: number): string {
+  const sanitized = hex.replace('#', '')
+  const r = Math.min(255, Math.floor(parseInt(sanitized.substring(0, 2), 16) * factor))
+  const g = Math.min(255, Math.floor(parseInt(sanitized.substring(2, 4), 16) * factor))
+  const b = Math.min(255, Math.floor(parseInt(sanitized.substring(4, 6), 16) * factor))
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
 
 // ============================================================================
 // LAYOUT SYSTEM
@@ -327,9 +588,10 @@ export function buildGradient(startColor: string, endColor: string, angle: numbe
 }
 
 /**
- * Build box shadow style
+ * Build simple box shadow style (legacy helper)
+ * @deprecated Use buildBoxShadow(frameType, variant) from Task 6 instead
  */
-export function buildBoxShadow(color: string, opacity: number = 0.3): string {
+export function buildSimpleBoxShadow(color: string, opacity: number = 0.3): string {
   return `0 8px 32px rgba(${hexToRgb(color)}, ${opacity}), inset 0 0 0 1px rgba(255, 255, 255, 0.1)`
 }
 
