@@ -347,120 +347,230 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* Main content area */}
+            {/* Identity Header - Prominent (Task 5: Phase 1F redesign) */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 14,
+                padding: '8px 16px',
+                background: `linear-gradient(135deg, ${gmPalette.start}20, ${gmPalette.end}15)`,
+                borderRadius: 8,
+                border: `2px solid ${gmPalette.start}`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: FRAME_FONTS.identity,
+                  fontWeight: 900,
+                  color: '#ffffff',
+                  textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 16px ${gmPalette.start}60`,
+                }}
+              >
+                {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
+              </div>
+            </div>
+
+            {/* Streak Badge - Prominent if >= 7 days (Task 5: Phase 1F) */}
+            {parseInt(streak) >= 7 && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                  padding: '12px 20px',
+                  background: `linear-gradient(135deg, ${gmPalette.start}, ${gmPalette.end})`,
+                  borderRadius: 12,
+                  border: `3px solid ${gmPalette.start}`,
+                  boxShadow: `0 4px 16px ${gmPalette.start}80`,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    fontSize: 24,
+                    fontWeight: 900,
+                    color: '#000000',
+                  }}
+                >
+                  🔥 {streak}-Day Streak
+                </div>
+              </div>
+            )}
+
+            {/* Main Stats Grid - 2 columns (Task 5: Phase 1F redesign) */}
             <div
               style={{
                 display: 'flex',
                 flex: 1,
-                gap: 16,
+                gap: 12,
               }}
             >
-              {/* Left: GM icon + User Info */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 10,
-                }}
-              >
-                {/* GM Icon */}
-                <div
-                  style={{
-                    width: 180,
-                    height: 180,
-                    borderRadius: 10,
-                    background: `linear-gradient(135deg, ${gmPalette.start}, ${gmPalette.end})`,
-                    border: `3px solid ${gmPalette.start}`,
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 100,
-                  }}
-                >
-                  ☀️
-                </div>
-
-                {/* User info below icon */}
-                {(username || displayName || user || fid) && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 6,
-                      padding: '10px 12px',
-                      background: `linear-gradient(135deg, ${gmPalette.start}30, ${gmPalette.end}25)`,
-                      borderRadius: 8,
-                      border: `2px solid ${gmPalette.start}`,
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', fontSize: FRAME_FONTS.body, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
-                      {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right: GM stats */}
+              {/* Left Column: GM Stats */}
               <div
                 style={{
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  color: '#ffffff',
+                  gap: 10,
+                  padding: 12,
+                  background: 'rgba(30, 30, 32, 0.6)',
+                  border: `2px solid ${gmPalette.start}`,
+                  borderRadius: 10,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                 }}
               >
-                {/* Title - More prominent */}
                 <div
                   style={{
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 60,
+                    marginBottom: 8,
                   }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      fontSize: 28,
-                      fontWeight: 900,
-                      lineHeight: 1.1,
-                      color: '#ffffff',
-                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${gmPalette.start}60`,
-                    }}
-                  >
-                    Good Morning!
+                  ☀️
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Total GMs</span>
+                    <span style={{ fontSize: 20, fontWeight: 900, color: gmPalette.start }}>{gmCount}</span>
                   </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Streak</span>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: gmPalette.start }}>🔥 {streak}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase' }}>Rank</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: gmPalette.start }}>#{rank}</span>
+                  </div>
+                </div>
+              </div>
 
-                  {/* Stats box */}
-                  <div
-                    style={{
-                      marginTop: 10,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      padding: 10,
-                      background: 'rgba(30, 30, 32, 0.6)',
-                      border: `1px solid ${gmPalette.start}`,
-                      borderRadius: 8,
-                      opacity: 0.8,
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
-                      <span style={{ opacity: 0.7 }}>TOTAL GMs:</span>
-                      <span style={{ color: gmPalette.start }}>{gmCount}</span>
+              {/* Right Column: Milestones */}
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                  padding: 12,
+                  background: 'rgba(30, 30, 32, 0.6)',
+                  border: `2px solid ${gmPalette.start}40`,
+                  borderRadius: 10,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    opacity: 0.8,
+                    textTransform: 'uppercase',
+                    marginBottom: 4,
+                  }}
+                >
+                  Milestones
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {parseInt(streak) >= 30 ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 10px',
+                        background: `linear-gradient(135deg, ${gmPalette.start}30, ${gmPalette.end}20)`,
+                        borderRadius: 8,
+                        border: `2px solid ${gmPalette.start}`,
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>👑</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: gmPalette.start }}>Legendary</span>
+                        <span style={{ fontSize: 9, opacity: 0.7 }}>30+ day streak!</span>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
-                      <span style={{ opacity: 0.7 }}>STREAK:</span>
-                      <span style={{ color: gmPalette.start }}>🔥 {streak}</span>
+                  ) : parseInt(streak) >= 7 ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 10px',
+                        background: `linear-gradient(135deg, ${gmPalette.start}30, ${gmPalette.end}20)`,
+                        borderRadius: 8,
+                        border: `2px solid ${gmPalette.start}`,
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>⚡</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: gmPalette.start }}>Week Warrior</span>
+                        <span style={{ fontSize: 9, opacity: 0.7 }}>{30 - parseInt(streak)} to Legend</span>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.caption, fontWeight: 600 }}>
-                      <span style={{ opacity: 0.6 }}>Rank:</span>
-                      <span style={{ opacity: 0.9 }}>#{rank}</span>
+                  ) : (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 10px',
+                        background: 'rgba(30, 30, 32, 0.4)',
+                        borderRadius: 8,
+                        border: '1px dashed rgba(255, 255, 255, 0.2)',
+                      }}
+                    >
+                      <span style={{ fontSize: 18, opacity: 0.5 }}>🎯</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, opacity: 0.6 }}>Week Warrior</span>
+                        <span style={{ fontSize: 9, opacity: 0.5 }}>{7 - parseInt(streak)} days away</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  {parseInt(gmCount) >= 100 ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 10px',
+                        background: `linear-gradient(135deg, ${gmPalette.start}30, ${gmPalette.end}20)`,
+                        borderRadius: 8,
+                        border: `2px solid ${gmPalette.start}`,
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>💯</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: gmPalette.start }}>Century Club</span>
+                        <span style={{ fontSize: 9, opacity: 0.7 }}>100+ GMs!</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 10px',
+                        background: 'rgba(30, 30, 32, 0.4)',
+                        borderRadius: 8,
+                        border: '1px dashed rgba(255, 255, 255, 0.2)',
+                      }}
+                    >
+                      <span style={{ fontSize: 18, opacity: 0.5 }}>💯</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, opacity: 0.6 }}>Century Club</span>
+                        <span style={{ fontSize: 9, opacity: 0.5 }}>{100 - parseInt(gmCount)} GMs away</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
