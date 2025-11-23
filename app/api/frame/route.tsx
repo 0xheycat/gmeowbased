@@ -1610,22 +1610,60 @@ export async function GET(req: Request) {
         spotsLeft = Math.max(quest.maxCompletions - claimed, 0)
       }
 
+      // Phase 1D: Add quest status badges
+      const now = new Date()
+      const expiresDate = new Date(expires)
+      const isExpired = expiresDate < now
+      const isFull = spotsLeft === 0
+      const isHot = spotsLeft !== null && spotsLeft <= 10 && spotsLeft > 0
+      const completionPercent = spotsLeft !== null && quest.maxCompletions
+        ? Math.round(((quest.maxCompletions - spotsLeft) / quest.maxCompletions) * 100)
+        : null
+      
+      let questStatusBadge = ''
+      let questStatusLabel = ''
+      
+      if (isExpired) {
+        questStatusBadge = '⏰ EXPIRED'
+        questStatusLabel = 'EXPIRED'
+      } else if (isFull) {
+        questStatusBadge = '🔴 FULL'
+        questStatusLabel = 'FULL'
+      } else if (isHot) {
+        questStatusBadge = `🔥 HOT • ${spotsLeft} left!`
+        questStatusLabel = 'HOT'
+      } else {
+        questStatusBadge = '✅ ACTIVE'
+        questStatusLabel = 'ACTIVE'
+      }
+
       const descriptionPieces: string[] = []
+      
+      // Phase 1D: Add status badge to description
+      descriptionPieces.push(questStatusBadge)
+      
       if (rewardSummary) {
         descriptionPieces.push(`Claim ${rewardSummary} by clearing this ${questTypeLabel.toLowerCase()} mission on ${questChainName}.`)
       } else {
         descriptionPieces.push(`Clear this ${questTypeLabel.toLowerCase()} mission on ${questChainName} to climb the ranks.`)
       }
       if (questMetaCopy) descriptionPieces.push(questMetaCopy)
-      if (spotsLeft !== null) {
+      if (spotsLeft !== null && !isFull && !isHot) {
         const formattedSpots = formatInteger(spotsLeft) ?? String(spotsLeft)
         descriptionPieces.push(`${formattedSpots} spots left`)
       }
-      if (expiresText) descriptionPieces.push(`Ends ${expiresText}`)
+      if (completionPercent !== null) {
+        descriptionPieces.push(`${completionPercent}% complete`)
+      }
+      if (expiresText && !isExpired) descriptionPieces.push(`Ends ${expiresText}`)
       descriptionPieces.push('— by @gmeowbased')
       const description = descriptionPieces.filter(Boolean).join(' • ')
 
-      const title = `${questName} • ${questChainName}`
+      // Phase 1D: Enhanced title with status
+      let title = `${questName} • ${questChainName}`
+      if (questStatusLabel !== 'ACTIVE') {
+        title = `[${questStatusLabel}] ${questName} • ${questChainName}`
+      }
       
       // Generate dynamic OG image for quest
       const questImageParams = new URLSearchParams()
@@ -1742,8 +1780,28 @@ export async function GET(req: Request) {
       const cast = params.cast || ''
       const questId = params.questId || params.id
       tracePush(traces, 'verify-start', { fid, cast, questId })
-      const title = 'Verify Quest / Cast'
-      const description = fid ? `Viewer FID: ${fid} — @gmeowbased verification` : 'Provide your Farcaster FID to verify this quest/cast — @gmeowbased'
+      
+      // Phase 1D: Clear verification status messages
+      let title = 'Verify Quest • GMEOW'
+      let description = ''
+      
+      if (questId) {
+        title = `Verify Quest #${questId}`
+        description = fid 
+          ? `✅ Ready to verify • FID ${fid} • Quest #${questId} • — @gmeowbased`
+          : `⚠️ Connect Farcaster to verify • Quest #${questId} • — @gmeowbased`
+      } else if (cast) {
+        title = 'Verify Cast'
+        description = fid
+          ? `✅ Ready to verify cast • FID ${fid} • — @gmeowbased`
+          : `⚠️ Connect Farcaster to verify cast • — @gmeowbased`
+      } else {
+        title = 'Quest Verification'
+        description = fid
+          ? `✅ Connected • FID ${fid} • Ready to verify • — @gmeowbased`
+          : `⚠️ Provide quest ID or cast hash to verify • — @gmeowbased`
+      }
+      
       if (asJson) {
         return respondJson({ ok: true, type: 'verify', fid, cast, questId, traces })
       }
@@ -2344,14 +2402,69 @@ export async function GET(req: Request) {
         // Continue with frame generation even if rewards fail
       }
 
-      const title = `Badge Collection • GMEOW`
-      const desc = [`Farcaster user badges`, `FID ${fid}`, `— @gmeowbased`].join(' • ')
+      // Phase 1D: Query badge counts for visual hierarchy
+      let earnedCount = 0
+      let eligibleCount = 0
+      let hasLegendary = false
+      
+      try {
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        
+        // Get earned badge count
+        const { data: userBadges, error: badgesError } = await supabase
+          .from('user_badges')
+          .select('badge_id, tier, badge_type')
+          .eq('fid', Number(fid))
+        
+        if (!badgesError && userBadges) {
+          earnedCount = userBadges.length
+          // Check for legendary tier badges
+          hasLegendary = userBadges.some(b => b.tier === 'legendary' || b.badge_type === 'legendary')
+        }
+        
+        // Get total active badge templates
+        const { data: allBadges, error: allBadgesError } = await supabase
+          .from('badge_templates')
+          .select('id')
+          .eq('active', true)
+        
+        if (!allBadgesError && allBadges) {
+          eligibleCount = allBadges.length - earnedCount
+        }
+      } catch (err) {
+        tracePush(traces, 'badge-query-error', { error: String(err) })
+        // Continue with default counts
+      }
+
+      // Phase 1D: Dynamic title with badge stats
+      let title = `Badge Collection • GMEOW`
+      let heroBadge: { label: string; tone: 'emerald' | 'violet' | 'gold' | 'blue' | 'pink'; icon?: string } | null = null
+      
+      if (hasLegendary) {
+        title = `🌟 Legendary Collector! • ${earnedCount} Badges`
+        heroBadge = { label: 'LEGENDARY', tone: 'gold', icon: '🌟' }
+      } else if (earnedCount >= 5) {
+        title = `🏆 Badge Master! • ${earnedCount} Badges`
+        heroBadge = { label: 'COLLECTOR', tone: 'violet', icon: '🏆' }
+      } else if (earnedCount > 0) {
+        title = `Badge Collection • ${earnedCount} Earned`
+      }
+      
+      // Phase 1D: Show earned vs eligible in description
+      const desc = earnedCount > 0
+        ? `🏅 ${earnedCount} earned • ${eligibleCount} available • FID ${fid} • — @gmeowbased`
+        : `Start your badge collection • ${eligibleCount} available • FID ${fid} • — @gmeowbased`
+      
       const href = `${origin}/profile/${fid}/badges`
       const imageUrl = buildDynamicFrameImageUrl({ type: 'badge', fid }, origin)
       
-      tracePush(traces, 'badge-generated', { fid, href })
+      tracePush(traces, 'badge-generated', { fid, href, earnedCount, eligibleCount })
       
-      if (asJson) return respondJson({ ok: true, type: 'badge', fid, href, description: desc, imageUrl, traces })
+      if (asJson) return respondJson({ ok: true, type: 'badge', fid, href, description: desc, imageUrl, earnedCount, eligibleCount, traces })
       
       // Phase 1B.2: Add interactive POST action buttons
       const html = buildFrameHtml({
@@ -2369,6 +2482,7 @@ export async function GET(req: Request) {
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         frameType: type,
+        heroBadge, // Phase 1D: Add collector badge
       })
       return createHtmlResponse(html)
     }
@@ -3102,14 +3216,35 @@ export async function POST(req: Request) {
           // Use fallback rank if query fails
         }
         
+        // Phase 1D: Add rank milestone badges
+        let rankDisplay = `#${formatInteger(actualRank)}`
+        let rankBadge = ''
+        
+        if (actualRank === 1) {
+          rankDisplay = `👑 #1 • Champion!`
+          rankBadge = '👑'
+        } else if (actualRank === 2) {
+          rankDisplay = `🥈 #2 • Runner-up!`
+          rankBadge = '🥈'
+        } else if (actualRank === 3) {
+          rankDisplay = `🥉 #3 • Bronze Medal!`
+          rankBadge = '🥉'
+        } else if (actualRank <= 10) {
+          rankDisplay = `⭐ #${actualRank} • Top 10!`
+          rankBadge = '⭐'
+        } else if (actualRank <= 100) {
+          rankDisplay = `🔥 #${actualRank} • Top 100!`
+          rankBadge = '🔥'
+        }
+        
         const message = `🏆 Leaderboard Rank on ${chainDisplay}:\n\n` +
-                       `Rank: #${formatInteger(actualRank)}\n` +
+                       `Rank: ${rankDisplay}\n` +
                        `Total Points: ${formatInteger(total)}\n\n` +
                        `Level ${progress.level} • ${progress.currentTier.name}\n` +
                        `${progress.xpIntoLevel}/${progress.xpForLevel} XP (${Math.round(progress.percent * 100)}%)\n\n` +
                        `${total === 0 ? 'Start earning to climb the ranks! 🚀' : 'Keep grinding! 💪'}`
         
-        tracePush(traces, 'refreshRank-success', { address, chainKey, rank: actualRank, total })
+        tracePush(traces, 'refreshRank-success', { address, chainKey, rank: actualRank, total, rankBadge })
         
         return respondJson({
           ok: true,
@@ -3179,9 +3314,20 @@ export async function POST(req: Request) {
             if (!templatesError && templates) {
               earnedBadges = userBadges.map(ub => {
                 const template = templates.find(t => t.id === ub.badge_id)
+                let badgeName = template?.name || ub.badge_id
+                
+                // Phase 1D: Add rarity indicators
+                if (ub.tier === 'legendary' || ub.badge_type === 'legendary') {
+                  badgeName = `🌟 ${badgeName} (LEGENDARY)`
+                } else if (ub.tier === 'rare' || ub.badge_type === 'rare') {
+                  badgeName = `💎 ${badgeName} (RARE)`
+                } else if (ub.tier === 'epic' || ub.badge_type === 'epic') {
+                  badgeName = `⚡ ${badgeName} (EPIC)`
+                }
+                
                 return {
                   id: ub.badge_id,
-                  name: template?.name || ub.badge_id,
+                  name: badgeName,
                   earned: true,
                   timestamp: ub.assigned_at,
                   tier: ub.tier,
@@ -3210,12 +3356,16 @@ export async function POST(req: Request) {
             .slice(0, 5) // Limit to 5 eligible badges
         }
         
-        const message = `🏅 Badge Status for FID ${fid}:\n\n` +
-                       `Earned: ${earnedBadges.length} badges\n` +
-                       `${earnedBadges.map(b => `• ${b.name}`).join('\n')}\n\n` +
-                       `Eligible: ${eligibleBadges.length} badges\n` +
-                       `${eligibleBadges.map(b => `• ${b.name} (${b.progress})`).join('\n')}\n\n` +
-                       `Keep earning! 🎯`
+        // Phase 1D: Format message with visual hierarchy (earned vs eligible sections)
+        const earnedSection = earnedBadges.length > 0
+          ? `🏆 EARNED BADGES (${earnedBadges.length}):\n${earnedBadges.map(b => `✅ ${b.name}`).join('\n')}`
+          : `🏅 No badges earned yet`
+        
+        const eligibleSection = eligibleBadges.length > 0
+          ? `\n\n🎯 AVAILABLE BADGES (${eligibleBadges.length}):\n${eligibleBadges.map(b => `• ${b.name}`).join('\n')}`
+          : ``
+        
+        const message = `🏅 Badge Collection for FID ${fid}:\n\n${earnedSection}${eligibleSection}\n\n🚀 Keep earning!`
         
         tracePush(traces, 'checkBadges-success', { fid, earned: earnedBadges.length, eligible: eligibleBadges.length })
         
