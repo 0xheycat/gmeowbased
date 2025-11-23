@@ -24,7 +24,7 @@ import gm, {
 } from '@/lib/gm-utils'
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
-import { buildFrameShareUrl, buildDynamicFrameImageUrl } from '@/lib/share'
+import { buildDynamicFrameImageUrl } from '@/lib/share'
 import {
   sanitizeFID,
   sanitizeQuestId,
@@ -491,7 +491,8 @@ function toBooleanFlag(value: unknown): boolean {
   return false
 }
 
-function toAbsoluteUrl(raw: string | null | undefined, origin: string): string | null {
+// DEPRECATED Phase 1E: toAbsoluteUrl no longer used (POST button params removed)
+/* function toAbsoluteUrl(raw: string | null | undefined, origin: string): string | null {
   if (!raw) return null
   try {
     return new URL(raw, origin).toString()
@@ -505,6 +506,7 @@ function toOptionalString(value: unknown): string | null {
   const trimmed = value.trim()
   return trimmed.length ? trimmed : null
 }
+*/
 
 /**
  * Basic HTML escape
@@ -805,7 +807,8 @@ type FrameButton = {
   action?: 'link' | 'post' | 'post_redirect'
 }
 
-type QuestButtonPlan = {
+// DEPRECATED Phase 1E: Button plan types no longer used (POST buttons removed)
+/* type QuestButtonPlan = {
   completed?: boolean
   verifyUrl?: string | null
   verifyLabel?: string | null
@@ -861,6 +864,7 @@ type LeaderboardButtonPlan = {
   mintUrl?: string | null
   mintLabel?: string | null
 }
+*/
 
 // DEPRECATED Phase 1E: ContextualButtonPlan no longer used (POST buttons removed)
 /* type ContextualButtonPlan = {
