@@ -37,6 +37,13 @@ const nextConfig = {
     return [];
   },
   images: {
+    // Phase 1F Task 7: Image optimization configuration
+    formats: ['image/avif', 'image/webp'], // Prefer modern formats (AVIF first, WebP fallback)
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920], // Frame-optimized breakpoints
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384], // Icon/thumbnail sizes
+    minimumCacheTTL: 86400, // Cache optimized images for 24 hours
+    dangerouslyAllowSVG: true, // Allow SVG badges
+    contentDispositionType: 'inline', // Display images inline, not as downloads
     remotePatterns: [
       {
         protocol: 'https',

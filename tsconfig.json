@@ -45,6 +45,7 @@
     "planning/templates/gmeow2/**/*",
     "scripts/run-migration.ts",
     "scripts/run-migration-pg.ts",
-    "scripts/test-notification-history.ts"
+    "scripts/test-notification-history.ts",
+    "backups/**/*"
   ]
 }
