@@ -1506,6 +1506,434 @@ const identity = username
 
 ---
 
+## 🚨 Layer 4 Audit: User-Reported Critical Issues (CRITICAL - 6 hours)
+
+**Status:** 95% approved by @heycat and team, 5% remaining issues identified  
+**Priority:** CRITICAL - These are blocking user engagement and frame sharing  
+**Impact:** HIGH - Users cannot flex individual badges, GM dashboard broken
+
+---
+
+### 15: Badge Page Frame Trigger Logic (CRITICAL - 3 hours)
+
+**Issue Reported:** Badge page only triggers **Signal Luminary** frame share, not all badges individually
+
+**Current State (app/profile/[fid]/badges/page.tsx:208-237):**
+```typescript
+// ❌ PROBLEM: Only shares the first badge (badges[0])
+<button onClick={() => {
+  const latestBadge = badges[0]  // ← HARDCODED: Always Signal Luminary
+  const shareUrl = `https://gmeowhq.art/api/frame/badge?fid=${fid}&badgeId=${latestBadge.badgeId}`
+  const shareText = `Just earned the ${latestBadge.metadata?.name || latestBadge.badgeType} badge! 🎮✨\n\n— via @gmeowbased`
+  
+  const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`
+  window.open(warpcastUrl, '_blank', 'noopener,noreferrer')
+}}>
+  Share on Warpcast
+</button>
+```
+
+**Root Causes:**
+1. **Single Share Button:** Only one share button for entire collection (not per-badge)
+2. **Hardcoded Selection:** Always uses `badges[0]` (Signal Luminary if it's first)
+3. **No Badge Click Handler:** Individual badges in `BadgeInventory` are not clickable
+4. **Missing Collection Frame:** No "share all badges" frame route
+
+**User Impact:**
+- ❌ Users cannot flex individual badges they earned (Signal Luminary, GM Vanguard, etc.)
+- ❌ Click on badge card does nothing (no share, no modal, no detail view)
+- ❌ Only the first badge can be shared, rest are "dead weight"
+- ❌ No way to share entire badge collection as a showcase
+
+**Dependency Graph:**
+```
+app/profile/[fid]/badges/page.tsx
+  ├─> BadgeInventory component (display only, no click handlers)
+  ├─> Single share button (hardcoded badges[0])
+  └─> Missing: Individual badge click → share handler
+
+Required Fixes:
+  ├─> components/badge/BadgeInventory.tsx
+  │   └─> Add onClick prop to each badge card
+  ├─> app/profile/[fid]/badges/page.tsx
+  │   ├─> Add handleBadgeClick(badgeId) handler
+  │   └─> Pass onClick to BadgeInventory
+  └─> app/api/frame/route.tsx
+      ├─> Add 'badge-collection' frame type
+      └─> Generate multi-badge showcase image
+```
+
+**15.1: Individual Badge Share (2 hours)**
+
+**Fix Requirements:**
+1. **BadgeInventory Component Update:**
+   ```typescript
+   // components/badge/BadgeInventory.tsx
+   interface BadgeInventoryProps {
+     badges: UserBadge[]
+     onBadgeClick?: (badge: UserBadge) => void  // NEW
+   }
+   
+   export function BadgeInventory({ badges, onBadgeClick }: BadgeInventoryProps) {
+     return badges.map(badge => (
+       <div 
+         onClick={() => onBadgeClick?.(badge)}
+         className="cursor-pointer hover:scale-105 transition-transform"
+       >
+         {/* Existing badge card */}
+       </div>
+     ))
+   }
+   ```
+
+2. **Badge Page Update:**
+   ```typescript
+   // app/profile/[fid]/badges/page.tsx
+   const handleBadgeClick = async (badge: UserBadge) => {
+     const shareUrl = buildFrameShareUrl({
+       type: 'badge',
+       fid: parseInt(fid),
+       extra: { badgeId: badge.badgeId }
+     })
+     const shareText = `Just earned the ${badge.metadata?.name || badge.badgeType} badge! 🎮✨\n\n— via @gmeowbased`
+     await openWarpcastComposer(shareText, shareUrl)
+   }
+   
+   <BadgeInventory badges={badges} onBadgeClick={handleBadgeClick} />
+   ```
+
+3. **Frame Route Update:**
+   ```typescript
+   // app/api/frame/route.tsx (badge type handler)
+   // CURRENT: Only uses fid, ignores badgeId param
+   // FIX: Read badgeId from params, generate specific badge frame
+   const badgeId = readParam(url, 'badgeId', '')
+   if (badgeId) {
+     // Show specific badge frame (already works via /api/frame/badgeShare)
+     const badgeFrame = await buildBadgeShareFrame(fid, badgeId)
+   } else {
+     // Show badge collection overview (existing behavior)
+     const collectionFrame = await buildBadgeCollectionFrame(fid)
+   }
+   ```
+
+**15.2: Badge Collection Frame (1 hour)**
+
+**New Frame Type:** `badge-collection` (multi-badge showcase)
+
+**Implementation:**
+```typescript
+// app/api/frame/route.tsx
+if (type === 'badge-collection') {
+  const badges = await getUserBadges(fid)
+  const earnedCount = badges.filter(b => b.assigned).length
+  
+  const imageUrl = buildDynamicFrameImageUrl({
+    type: 'badge-collection',
+    fid,
+    extra: {
+      earnedCount,
+      totalBadges: badges.length,
+      tierCounts: {
+        mythic: badges.filter(b => b.tier === 'mythic').length,
+        legendary: badges.filter(b => b.tier === 'legendary').length,
+        // ...
+      }
+    }
+  }, origin)
+  
+  return buildFrameHtml({
+    title: `Badge Collection • ${earnedCount} Earned`,
+    description: `@${username} earned ${earnedCount}/${badges.length} badges`,
+    image: imageUrl,
+    buttons: [
+      { label: 'View Collection', target: `/profile/${fid}/badges` }
+    ]
+  })
+}
+```
+
+**Image Generator Update:**
+```typescript
+// app/api/frame/image/route.tsx
+if (type === 'badge-collection') {
+  return new ImageResponse((
+    <div style={{ /* Yu-Gi-Oh! card layout */ }}>
+      <div>@{username}'s Badge Collection</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+        {/* Show badge tier counts with icons */}
+        <div>🌟 Mythic: {tierCounts.mythic}</div>
+        <div>💎 Legendary: {tierCounts.legendary}</div>
+        <div>⚡ Epic: {tierCounts.epic}</div>
+        <div>🎯 Rare: {tierCounts.rare}</div>
+      </div>
+      <div>{earnedCount} / {totalBadges} Earned</div>
+    </div>
+  ))
+}
+```
+
+**Success Criteria:**
+- ✅ Click on any badge → Opens Warpcast composer with that badge's frame
+- ✅ Share button updated to "Share Collection" → Shows all badges
+- ✅ Each badge shareable individually (not just Signal Luminary)
+- ✅ Badge collection frame shows tier breakdown
+
+---
+
+### 16: GM Dashboard Broken State (CRITICAL - 2 hours)
+
+**Issue Reported:** GM on dashboard page appears broken and requires handling
+
+**Investigation Needed:**
+- Check `app/Dashboard/page.tsx` GM section (lines 1960-2020)
+- Verify `ContractGMButton` component integration
+- Test streak calculation logic
+- Validate frame share URL generation
+
+**Potential Issues (Based on Code Review):**
+
+**16.1: GM Button State Issues (1 hour)**
+```typescript
+// app/Dashboard/page.tsx:1968-1988
+// Potential issues:
+1. ❌ canGM state not updating correctly
+2. ❌ Streak showing 0 when user has active streak
+3. ❌ Button disabled when it should be enabled
+4. ❌ "Send GM" handler not triggering contract call
+5. ❌ Frame share URL returning empty/broken URL
+```
+
+**Debugging Checklist:**
+- [ ] `getUserStats()` contract call returning correct data
+- [ ] `streak` state updating from contract response
+- [ ] `canGM` calculation using correct 24h window
+- [ ] `lastGMTimestamp` converting from BigInt correctly
+- [ ] `handleGM()` function wiring to `writeContract`
+- [ ] `gmFrameUrl` generating valid share URL
+- [ ] Error handling showing useful messages
+
+**16.2: Dashboard GM Section Audit (1 hour)**
+
+**Files to Check:**
+1. **Dashboard Page (app/Dashboard/page.tsx:1960-2020):**
+   - GM button rendering logic
+   - State management (streak, canGM, gmMessage)
+   - Contract integration (useReadContract, useWriteContract)
+   - Error handling and user feedback
+
+2. **ContractGMButton Component (components/ContractGMButton.tsx):**
+   - getUserStats() contract call
+   - Streak calculation from BigInt
+   - 24h cooldown logic
+   - Chain switching
+   - Share frame handler
+
+3. **GM Utils (lib/gm-utils.ts):**
+   - canGMBasedOnTimestamp() calculation
+   - formatTimeUntilNextGM() display
+   - Contract ABI accuracy
+   - Chain ID mappings
+
+**Common Failure Modes:**
+```typescript
+// Issue 1: BigInt conversion
+const streak = Number(userData[1]) // ✅ Correct
+const streak = userData[1]          // ❌ BigInt not converted
+
+// Issue 2: Timestamp comparison
+const canGM = lastGMTimestamp === 0 || Date.now() > lastGMTimestamp + 86400000
+// ✅ Correct: 24h in milliseconds
+
+// Issue 3: Contract address
+const contractAddress = getContractAddress(selectedChain)
+// ❌ If undefined → contract call fails silently
+
+// Issue 4: Frame URL
+const gmFrameUrl = buildFrameShareUrl({ type: 'gm', user: address })
+// ❌ If address undefined → empty URL
+```
+
+**Fix Strategy:**
+1. Add console.log() for all contract responses
+2. Verify BigInt → Number conversions
+3. Test canGMBasedOnTimestamp() with mock timestamps
+4. Validate frame URL generation with address
+5. Add error toast for failed contract calls
+6. Show loading states during contract reads
+
+**Success Criteria:**
+- ✅ GM button shows correct state (ready/cooling down/already sent)
+- ✅ Streak displays accurate count from contract
+- ✅ "Send GM" button triggers transaction successfully
+- ✅ "Share Frame" button opens composer with valid GM frame
+- ✅ Error messages are helpful and actionable
+- ✅ Loading states visible during contract interactions
+
+---
+
+### 17: Comprehensive Frame Deep Audit (CRITICAL - 1 hour)
+
+**Issue Reported:** "I have only provided two examples of many frames that need a deeper audit. What about guild, onchain, and others?"
+
+**Scope Expansion:** Apply same audit rigor to ALL remaining frame types
+
+**17.1: Guild Frame Deep Audit (0.5 hours)**
+
+**Current Status:** Not audited in Layer 1-3
+
+**Audit Checklist:**
+- [ ] Username display in frame image (or address fallback)
+- [ ] Guild name and member count accurate
+- [ ] Share button triggers (GuildManagementPage.tsx:396)
+- [ ] Frame image layout (2-column Yu-Gi-Oh! style?)
+- [ ] Chain icon integration (if guild is chain-specific)
+- [ ] XP rewards display (if guild quests active)
+- [ ] @gmeowbased attribution in frame text
+
+**Potential Issues:**
+```typescript
+// Guild frame image parameters (app/api/frame/image/route.tsx)
+// Check if missing:
+- username / displayName
+- guildId parameter reading
+- member count display
+- guild tier/level badges
+- quest completion stats
+```
+
+**17.2: OnchainStats Frame Deep Audit (0.25 hours)**
+
+**Status:** ✅ Fixed in Phase 1E (commit 7c5554d) but needs revalidation
+
+**Revalidation Checklist:**
+- [ ] Username still displaying correctly (@heycat not 0x7539...)
+- [ ] 2-column layout maintained (not regressed)
+- [ ] Chain-specific stats accurate (Base, Optimism, etc.)
+- [ ] Share button working (OnchainStats.tsx:849)
+- [ ] Frame image quality (1200x628, proper aspect ratio)
+- [ ] Mobile layout responsive
+
+**17.3: Remaining Frame Types Quick Audit (0.25 hours)**
+
+**Frames to Quick Check:**
+1. **Verify Frame:** Username display, verification status, CTA button
+2. **Referral Frame:** Referral code display, reward info, share button
+3. **Leaderboard Frame:** Username in leaderboard rows, rank display
+4. **Quest Frame:** Quest title, XP reward, chain badge, share button
+5. **Points Frame:** Username, points balance, level/tier badge
+
+**Quick Audit Template (5 minutes per frame):**
+```bash
+# 1. Check frame route handler
+grep -n "type === 'verify'" app/api/frame/route.tsx
+
+# 2. Check image generation
+grep -n "type === 'verify'" app/api/frame/image/route.tsx
+
+# 3. Check share button trigger
+rg "type: 'verify'" --type tsx
+
+# 4. Validate frame metadata
+curl "localhost:3001/api/frame?type=verify&fid=18139" | grep "fc:frame"
+
+# 5. Test image rendering
+open "localhost:3001/api/frame/image?type=verify&fid=18139"
+```
+
+**Success Criteria:**
+- ✅ All 9 frame types audited with same depth as Layer 1-3
+- ✅ Guild frame passes username + layout tests
+- ✅ OnchainStats still working after revalidation
+- ✅ Verify/Referral frames functional
+- ✅ Documentation updated with findings
+
+---
+
+## 📊 Updated Task Breakdown & Effort Estimation (Layer 4 Added)
+
+### Layer 1 Tasks (Functional Fixes - 24.5 hours):
+1. ✅ GM Frame Username Support (4 hours) - Priority: CRITICAL
+2. ✅ Quest Frame Username Support (3 hours) - Priority: HIGH
+3. ✅ OnchainStats Frame 2-Column Layout (6 hours) - Priority: CRITICAL
+4. ✅ Points Frame Handler (4 hours) - Priority: CRITICAL
+5. ✅ Guild Frame Username Support (2.5 hours) - Priority: MEDIUM
+6. ✅ Leaderboard Frame Username Validation (2 hours) - Priority: MEDIUM
+7. ✅ Badge Frame Username Validation (3 hours) - Priority: MEDIUM
+
+### Layer 2 Tasks (Infrastructure Completeness - 20.5 hours):
+8. ✅ Design System Consolidation (8 hours) - Priority: HIGH
+9. ✅ Chain Icon Integration (4 hours) - Priority: MEDIUM
+10. ✅ XP System Integration (5 hours) - Priority: HIGH
+11. ✅ Text Composition Enhancement (2 hours) - Priority: LOW
+12. ✅ @gmeowbased Attribution (1.5 hours) - Priority: MEDIUM
+
+### Layer 3 Tasks (System Documentation & Cleanup - 5 hours):
+13. ✅ Share Button Architecture Documentation (3 hours) - Priority: CRITICAL
+14. ✅ Missing Frame Improvements Documentation (2 hours) - Priority: CRITICAL
+
+### **Layer 4 Tasks (User-Reported Critical Issues - 6 hours):** 🆕
+15. 🔴 **Badge Page Frame Trigger Logic (3 hours)** - Priority: CRITICAL
+    - 15.1: Individual badge share handlers (2h)
+    - 15.2: Badge collection frame (1h)
+    - **Blocker:** Users cannot flex individual badges, only Signal Luminary
+
+16. 🔴 **GM Dashboard Broken State (2 hours)** - Priority: CRITICAL
+    - 16.1: GM button state debugging (1h)
+    - 16.2: Dashboard GM section audit (1h)
+    - **Blocker:** GM functionality broken, streak not updating
+
+17. 🔴 **Comprehensive Frame Deep Audit (1 hour)** - Priority: HIGH
+    - 17.1: Guild frame deep audit (0.5h)
+    - 17.2: OnchainStats revalidation (0.25h)
+    - 17.3: Remaining frames quick audit (0.25h)
+    - **Requirement:** Apply same rigor to ALL frame types
+
+**Updated Total Effort: 56 hours** (was 50h)
+- Layer 1: 24.5 hours (functional fixes)
+- Layer 2: 20.5 hours (infrastructure completeness)
+- Layer 3: 5 hours (system documentation + cleanup)
+- **Layer 4: 6 hours (user-reported critical issues)** 🆕
+
+---
+
+## 🎯 Updated Success Metrics (Layer 4 Added)
+
+### Functional Completeness (Layer 1):
+- ✅ 100% frames display username or FID
+- ✅ Points frame has dedicated handler
+- ✅ 2-column Yu-Gi-Oh! layout standard adopted
+- ✅ Zero layout waste (GM frame 60% waste fixed)
+
+### Infrastructure Health (Layer 2):
+- ✅ Design system consolidated (fonts in 1 file, colors in 1 file)
+- ✅ Chain icons used consistently (images + HTML overlays)
+- ✅ XP system integrated in 4+ frame types
+- ✅ @gmeowbased attribution 100% coverage
+
+### System Maintainability (Layer 3):
+- ✅ Share button architecture documented (10+ trigger points mapped)
+- ✅ Frame spec compliance gaps identified (aspect ratio, input, tx buttons)
+- ✅ Legacy code cleanup planned (POST handler, BadgeShareCard)
+- ✅ Missing features prioritized (HIGH: input fields, MEDIUM: tx buttons, LOW: animations)
+
+### **User Engagement (Layer 4):** 🆕
+- ✅ **Individual badge sharing working** (not just Signal Luminary)
+- ✅ **Badge collection frame live** (flex all badges at once)
+- ✅ **GM dashboard functional** (streak updating, button working)
+- ✅ **All 9 frame types audited** (guild, onchain, verify, referral, etc.)
+- ✅ **Zero user-blocking issues** (badge flex, GM broken state resolved)
+
+### Quality Gates (All Layers):
+- ✅ All edits pass GI-8 (File-Level API Sync)
+- ✅ Username resolution logic follows GI-7 (MCP Spec Sync)
+- ✅ Frame button compliance (GI-12)
+- ✅ Frame URL safety (GI-11)
+- ✅ Legacy deletion follows GI-14 (Safe-Delete Verification)
+- ✅ **GI-13 Safe Patching applied** (check file existence, patch not replace)
+
+---
+
 ## 🔗 Layer 3 Audit: Share Button Infrastructure & Missing Features
 
 ### 13: Share Button Architecture Documentation (CRITICAL - 3 hours)
