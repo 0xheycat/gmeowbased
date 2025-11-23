@@ -957,12 +957,41 @@ export interface OverlayProfile {
  * Generate rich compose text for frame sharing based on frame type
  * Used in fc:frame:text meta tag for pre-filled cast composer
  */
-function getComposeText(frameType?: string, context?: { title?: string; chain?: string; username?: string; streak?: number; gmCount?: number }): string {
-  const { title, chain, username, streak, gmCount } = context || {}
+function getComposeText(frameType?: string, context?: { 
+  title?: string; 
+  chain?: string; 
+  username?: string; 
+  streak?: number; 
+  gmCount?: number;
+  level?: number;
+  tier?: string;
+  xp?: number;
+  badgeCount?: number;
+  progress?: number;
+  reward?: number;
+}): string {
+  const { title, chain, username, streak, gmCount, level, tier, xp, badgeCount, progress, reward } = context || {}
+  
+  // Helper: Format XP for share text (K/M notation)
+  const formatXpForShare = (xpValue: number): string => {
+    if (xpValue >= 1_000_000) return `${(xpValue / 1_000_000).toFixed(1)}M`
+    if (xpValue >= 10_000) return `${(xpValue / 1000).toFixed(1)}K`
+    return xpValue.toLocaleString()
+  }
+  
+  // Helper: Get chain emoji
+  const getChainEmoji = (chainName: string): string => {
+    const chains: Record<string, string> = {
+      base: '🔵', ethereum: '⟠', optimism: '🔴',
+      arbitrum: '🔷', polygon: '🟣', avalanche: '🔺',
+      celo: '🌿', bnb: '🟡', avax: '🔺'
+    }
+    return chains[chainName.toLowerCase()] || '🌐'
+  }
   
   switch (frameType) {
     case 'gm': {
-      // Phase 1D: Dynamic compose text with streak bragging + time-based greetings
+      // Phase 1F Task 11: Enhanced compose text with XP/level/tier context
       const hour = new Date().getHours()
       let timeEmoji = '🌅'
       let timeGreeting = 'GM'
@@ -981,31 +1010,158 @@ function getComposeText(frameType?: string, context?: { title?: string; chain?: 
         timeGreeting = 'Good night'
       }
       
-      if (streak && streak >= 30) {
-        return `${timeEmoji} ${timeGreeting}! 🔥 ${streak}-day GM streak! Legendary dedication! Join @gmeowbased`
-      } else if (streak && streak >= 7) {
-        return `${timeEmoji} ${timeGreeting}! ⚡ ${streak}-day GM streak! Hot streak! Stack your daily ritual @gmeowbased`
-      } else if (gmCount && gmCount > 0) {
-        return `${timeEmoji} ${timeGreeting}! Just stacked my daily GM ritual! ${gmCount} total GMs! Join @gmeowbased`
+      // Elite tier: 30+ streak + Level 20+ + Mythic/Star Captain
+      if (streak && streak >= 30 && level && level >= 20 && tier && (tier.includes('Mythic') || tier.includes('Star Captain'))) {
+        return `${timeEmoji} ${timeGreeting}! 🔥 ${streak}-day streak + Lvl ${level} ${tier}! Unstoppable @gmeowbased`
       }
+      
+      // Mythic tier unlock
+      if (tier && tier.includes('Mythic')) {
+        return `${timeEmoji} ${timeGreeting}! 👑 Mythic GM unlocked! ${gmCount || 0} GMs • Join the elite @gmeowbased`
+      }
+      
+      // Great tier: 30+ day streak
+      if (streak && streak >= 30) {
+        const levelSuffix = level && level >= 10 ? ` • Lvl ${level}` : ''
+        return `${timeEmoji} ${timeGreeting}! 🔥 ${streak}-day streak${levelSuffix}! Legendary dedication @gmeowbased`
+      }
+      
+      // Good tier: 7+ day streak
+      if (streak && streak >= 7) {
+        const levelSuffix = level && level >= 5 ? ` • Lvl ${level}` : ''
+        return `${timeEmoji} ${timeGreeting}! ⚡ ${streak}-day streak${levelSuffix}! Hot streak @gmeowbased`
+      }
+      
+      // High count with level
+      if (gmCount && gmCount > 100 && level && level >= 10) {
+        return `${timeEmoji} ${timeGreeting}! 🌅 ${gmCount} GMs • Lvl ${level}! Join the ritual @gmeowbased`
+      }
+      
+      // High count only
+      if (gmCount && gmCount > 100) {
+        return `${timeEmoji} ${timeGreeting}! 🌅 ${gmCount} GMs and counting! Join the ritual @gmeowbased`
+      }
+      
+      // Default with level
+      if (level && level >= 5) {
+        return `${timeEmoji} ${timeGreeting}! Just stacked my daily GM • Lvl ${level}! Join @gmeowbased`
+      }
+      
       return `${timeEmoji} ${timeGreeting}! Just stacked my daily GM ritual! Join the meow squad @gmeowbased`
     }
-    case 'quest':
-      return `⚔️ New quest unlocked${chain ? ` on ${chain}` : ''}! ${title || 'Check it out'} @gmeowbased`
-    case 'leaderboards':
-      return `🏆 Climbing the ranks${chain ? ` on ${chain}` : ''}! Check the leaderboard @gmeowbased`
-    case 'badge':
+    
+    case 'quest': {
+      // Phase 1F Task 11: Add progress % and XP reward context
+      const chainEmoji = chain ? getChainEmoji(chain) : ''
+      const chainPrefix = chain ? `${chainEmoji} ` : ''
+      
+      // High progress (80%+)
+      if (progress && progress >= 80) {
+        const xpSuffix = reward ? ` • +${reward} XP` : ''
+        return `⚔️ Almost done with "${title}"! ${progress}% complete${xpSuffix} ${chainPrefix}@gmeowbased`
+      }
+      
+      // With XP reward
+      if (reward && reward > 0) {
+        return `⚔️ Quest active: "${title || 'Check it out'}" • Earn +${reward} XP ${chainPrefix}@gmeowbased`
+      }
+      
+      // With chain context
+      if (chain) {
+        return `⚔️ New quest unlocked ${chainPrefix}on ${chain}! ${title || 'Check it out'} @gmeowbased`
+      }
+      
+      return `⚔️ New quest unlocked! ${title || 'Check it out'} @gmeowbased`
+    }
+    
+    case 'badge': {
+      // Phase 1F Task 11: Add badge count and XP from badges
+      // High badge count (15+) with XP
+      if (badgeCount && badgeCount >= 15 && xp && xp > 0) {
+        return `🏆 ${badgeCount} badges collected! +${formatXpForShare(xp)} total XP earned! Badge hunter @gmeowbased`
+      }
+      
+      // High badge count (10+)
+      if (badgeCount && badgeCount >= 10) {
+        const xpSuffix = xp && xp > 0 ? ` • +${formatXpForShare(xp)} XP` : ''
+        return `🏆 ${badgeCount} badges collected${xpSuffix}! Badge master @gmeowbased`
+      }
+      
+      // Medium badge count (5+)
+      if (badgeCount && badgeCount >= 5) {
+        return `🎖️ ${badgeCount} badges earned${username ? ` by @${username}` : ''}! Growing collection @gmeowbased`
+      }
+      
+      // With XP earned
+      if (xp && xp > 0) {
+        return `🎖️ New badge unlocked! +${formatXpForShare(xp)} XP earned${username ? ` by @${username}` : ''} @gmeowbased`
+      }
+      
       return `🎖️ New badge earned${username ? ` by @${username}` : ''}! View the collection @gmeowbased`
+    }
+    
+    case 'points': {
+      // Phase 1F Task 11: Add level/tier flex with XP amount
+      // Elite tier (Mythic/Star Captain, Level 20+)
+      if (tier && (tier.includes('Mythic') || tier.includes('Star Captain')) && level && level >= 20) {
+        const xpText = xp ? `${formatXpForShare(xp)} XP` : `Lvl ${level}`
+        return `🎯 ${tier} status! ${xpText} earned${username ? ` by @${username}` : ''} • Elite player @gmeowbased`
+      }
+      
+      // High level (15+) with tier
+      if (level && level >= 15 && tier) {
+        const xpText = xp ? ` • ${formatXpForShare(xp)} XP` : ''
+        return `🎯 Lvl ${level} ${tier}${xpText}${username ? ` by @${username}` : ''}! Climbing the ranks @gmeowbased`
+      }
+      
+      // Level milestone (divisible by 5)
+      if (level && level >= 10 && level % 5 === 0) {
+        return `🎯 Level ${level} milestone${username ? ` by @${username}` : ''}! Keep grinding @gmeowbased`
+      }
+      
+      // With level
+      if (level && level >= 5) {
+        return `💰 Lvl ${level} Points${username ? ` by @${username}` : ''}! Check my balance @gmeowbased`
+      }
+      
+      return `💰 Check out ${username ? `@${username}'s` : 'my'} gmeowbased Points balance @gmeowbased`
+    }
+    
+    case 'onchainstats': {
+      // Phase 1F Task 11: Add level badge and multichain context
+      const chainEmoji = chain ? getChainEmoji(chain) : ''
+      
+      // With level badge
+      if (level && level >= 10) {
+        const chainSuffix = chain ? ` ${chainEmoji} on ${chain}` : ''
+        return `📊 Lvl ${level} onchain stats${chainSuffix}${username ? ` by @${username}` : ''}! View profile @gmeowbased`
+      }
+      
+      // With chain context
+      if (chain) {
+        return `📊 Flexing onchain stats ${chainEmoji} on ${chain}${username ? ` by @${username}` : ''}! @gmeowbased`
+      }
+      
+      return `📊 Flexing onchain stats${username ? ` by @${username}` : ''}! View my profile @gmeowbased`
+    }
+    
+    case 'leaderboards': {
+      // Phase 1F Task 11: Add chain emoji and potential rank mention
+      const chainEmoji = chain ? getChainEmoji(chain) : ''
+      const chainSuffix = chain ? ` ${chainEmoji} on ${chain}` : ''
+      
+      return `🏆 Climbing the ranks${chainSuffix}! Check the leaderboard @gmeowbased`
+    }
+    
     case 'guild':
       return '🛡️ Guild quests are live! Rally your squad @gmeowbased'
+    
     case 'referral':
       return '🎁 Join me on gmeowbased! Share quests, earn rewards together @gmeowbased'
-    case 'points':
-      return `💰 Check out ${username ? `@${username}'s` : 'my'} gmeowbased Points balance @gmeowbased`
-    case 'onchainstats':
-      return `📊 Flexing onchain stats${chain ? ` on ${chain}` : ''}! View my profile @gmeowbased`
+    
     case 'verify':
       return '✅ Verify your quests and unlock rewards @gmeowbased'
+    
     default:
       return '🎮 Explore quests, guilds, and onchain adventures @gmeowbased'
   }
@@ -1034,6 +1190,13 @@ function buildFrameHtml(params: {
   frameType?: string // ! frame type (quest, guild, leaderboards, etc.)
   streak?: number // Phase 1D: For GM frame compose text
   gmCount?: number // Phase 1D: For GM frame compose text
+  // Phase 1F Task 11: Additional compose text context
+  level?: number // User's XP level
+  tier?: string // User's rank tier (Mythic GM, Star Captain, etc.)
+  xp?: number // Total XP earned
+  badgeCount?: number // Total badges collected
+  progress?: number // Quest completion percentage
+  reward?: number // Quest XP reward
 }) {
   const {
     title,
@@ -1056,6 +1219,13 @@ function buildFrameHtml(params: {
     frameType, // Yu-Gi-Oh! frame type
     streak, // Phase 1D: For GM frame compose text
     gmCount, // Phase 1D: For GM frame compose text
+    // Phase 1F Task 11: Additional compose text context
+    level,
+    tier,
+    xp,
+    badgeCount,
+    progress,
+    reward,
   } = params
   const pageTitle = escapeHtml(title)
   const rawDescription = description || ''
@@ -1084,12 +1254,19 @@ function buildFrameHtml(params: {
   let overlaySecondaryHtml = ''
 
   // Generate compose text for frame sharing
+  // Phase 1F Task 11: Pass all available context for achievement-based messaging
   const composeText = getComposeText(frameType, {
     title: pageTitle,
     chain: chainLabel || undefined,
     username: profile?.username || undefined,
-    streak: streak || undefined, // Phase 1D: Pass streak for GM frame
-    gmCount: gmCount || undefined, // Phase 1D: Pass gmCount for GM frame
+    streak: streak || undefined,
+    gmCount: gmCount || undefined,
+    level: level || undefined,
+    tier: tier || undefined,
+    xp: xp || undefined,
+    badgeCount: badgeCount || undefined,
+    progress: progress || undefined,
+    reward: reward || undefined,
   })
   const composeTextEsc = escapeHtml(composeText)
 
@@ -1743,6 +1920,9 @@ export async function GET(req: Request) {
         frameVersion: FRAME_VERSION,
         frameType: type,
         heroBadge: { label: questName, tone: 'violet' }, // Task 5: Display quest name prominently
+        // Phase 1F Task 11: Pass quest context for compose text
+        progress: completionPercent || undefined,
+        reward: quest.rewardPoints || undefined,
       })
       return createHtmlResponse(html)
     }
@@ -2380,6 +2560,10 @@ export async function GET(req: Request) {
         frameVersion: FRAME_VERSION,
         frameType: type,
         profile, // Task 4: Pass resolved profile for username display
+        // Phase 1F Task 11: Pass achievement context for compose text
+        level: levelValue || undefined,
+        tier: tierName || undefined,
+        xp: xpCurrentValue || undefined,
       })
       return createHtmlResponse(html)
     }
@@ -2524,6 +2708,8 @@ export async function GET(req: Request) {
         frameVersion: FRAME_VERSION,
         frameType: type,
         heroBadge, // Phase 1D: Add collector badge
+        // Phase 1F Task 11: Pass badge context for compose text
+        badgeCount: earnedCount || undefined,
       })
       return createHtmlResponse(html)
     }
@@ -2665,6 +2851,7 @@ export async function GET(req: Request) {
         frameVersion: FRAME_VERSION,
         frameType: type,
         heroBadge, // Phase 1D: Add streak milestone badge
+        // Phase 1F Task 11: Pass GM context for compose text
         streak, // Phase 1D: Pass streak for compose text
         gmCount, // Phase 1D: Pass gmCount for compose text
       })
