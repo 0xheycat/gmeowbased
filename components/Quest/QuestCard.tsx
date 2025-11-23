@@ -13,7 +13,7 @@ import { isBookmarked, toggleBookmark } from '@/lib/quest-bookmarks'
 import '@/app/styles/quest-card-yugioh.css'
 import type { RewardAssetInfo, RewardDetail } from '@/components/Quest/QuestRewardCapsule'
 import type { ChainKey, QuestTypeKey } from '@/lib/gm-utils'
-import { buildFrameShareUrl } from '@/lib/share'
+import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 import {
   fetchCastByIdentifier,
   fetchUserByAddress,
@@ -411,16 +411,19 @@ export function QuestCard({ quest, index, featured = false }: QuestCardProps) {
         {/* 7. ACTION FOOTER (Frame share + Quest link) */}
         <div className="quest-card-yugioh__action-footer">
           {shareLink ? (
-            <Link 
-              href={shareLink} 
-              target="_blank" 
-              rel="noreferrer"
+            <button
+              onClick={async () => {
+                const questName = quest.name || `Quest #${quest.id}`
+                const composeText = `⚔️ Join me on "${questName}"! @gmeowbased`
+                await openWarpcastComposer(composeText, shareLink)
+              }}
               className="quest-card-yugioh__action-link"
               aria-label="Share frame on Warpcast"
+              style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
             >
               <span className="quest-card-yugioh__action-icon">📤</span>
               <span>Share Frame</span>
-            </Link>
+            </button>
           ) : (
             <span className="quest-card-yugioh__action-link" style={{ opacity: 0.5 }}>
               <span className="quest-card-yugioh__action-icon">📤</span>
