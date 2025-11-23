@@ -17,6 +17,12 @@ import {
   buildIdentityDisplay,
   buildFooterText,
 } from '@/lib/frame-design-system'
+import { 
+  calculateLevelProgress, 
+  calculateRankProgress, 
+  formatXp,
+  type RankProgress 
+} from '@/lib/rank'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -55,6 +61,19 @@ async function loadChainIconData(chain: string): Promise<string | null> {
     console.error(`[Frame Image] Failed to get chain icon for ${chain}:`, err)
     return null
   }
+}
+
+/**
+ * Format XP/points with commas and K/M notation
+ * Task 10: XP System Integration helper
+ */
+function formatXpDisplay(value: string | number): string {
+  const num = typeof value === 'string' ? parseInt(value, 10) : value
+  if (!Number.isFinite(num) || isNaN(num)) return '0'
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`
+  if (num >= 10_000) return `${(num / 1000).toFixed(1)}K`
+  if (num >= 1_000) return num.toLocaleString('en-US')
+  return num.toString()
 }
 
 function readParam(url: URL, name: string, fallback = '') {
@@ -1209,19 +1228,42 @@ export async function GET(req: Request) {
                       gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
-                      <span style={{ opacity: 0.7 }}>REWARD:</span>
-                      <span style={{ color: questPalette.start }}>+{reward} 🐾</span>
+                    {/* Task 10: XP Reward Badge - Prominent display */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: '8px 12px',
+                        background: `linear-gradient(135deg, ${questPalette.start}, ${questPalette.end})`,
+                        borderRadius: 8,
+                        boxShadow: `0 0 12px ${questPalette.start}60`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', fontSize: FRAME_FONTS.micro, fontWeight: 600, opacity: 0.9 }}>
+                        COMPLETE FOR
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          fontSize: 24,
+                          fontWeight: 900,
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)',
+                        }}
+                      >
+                        +{reward} XP
+                      </div>
                     </div>
                     {slotsLeft !== '—' && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
-                        <span style={{ opacity: 0.7 }}>SLOTS:</span>
-                        <span style={{ color: questPalette.start }}>{slotsLeft} left</span>
+                        <div style={{ display: 'flex', opacity: 0.7 }}>SLOTS:</div>
+                        <div style={{ display: 'flex', color: questPalette.start }}>{slotsLeft} left</div>
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.caption, fontWeight: 600 }}>
-                      <span style={{ opacity: 0.6 }}>Expires:</span>
-                      <span style={{ opacity: 0.9 }}>{expires}</span>
+                      <div style={{ display: 'flex', opacity: 0.6 }}>Expires:</div>
+                      <div style={{ display: 'flex', opacity: 0.9 }}>{expires}</div>
                     </div>
                   </div>
                 </div>
@@ -1851,6 +1893,8 @@ export async function GET(req: Request) {
     const earnedCount = readParam(url, 'earnedCount', '0')
     const eligibleCount = readParam(url, 'eligibleCount', '0')
     const address = readParam(url, 'address', user)
+    // Task 10: Add XP from badges tracking
+    const badgeXp = readParam(url, 'badgeXp', '0')
 
     const badgePalette = {
       start: FRAME_COLORS.badge.primary,
@@ -2110,6 +2154,35 @@ export async function GET(req: Request) {
                         {eligibleCount}
                       </div>
                     </div>
+
+                    {/* Task 10: Row 3: XP from Badges */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: 10,
+                        background: `linear-gradient(135deg, ${badgePalette.start}20, ${badgePalette.end}20)`,
+                        border: `1px solid ${badgePalette.start}`,
+                        borderRadius: 8,
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', fontSize: FRAME_FONTS.micro, fontWeight: 600, opacity: 0.8, textAlign: 'center' }}>
+                        TOTAL XP FROM BADGES
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          fontSize: 20,
+                          fontWeight: 900,
+                          color: '#ffd700',
+                          textShadow: '0 2px 8px rgba(255, 215, 0, 0.8)',
+                        }}
+                      >
+                        +{formatXpDisplay(badgeXp)} XP
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2144,6 +2217,11 @@ export async function GET(req: Request) {
     const xp = readParam(url, 'xp', '0')
     const tier = readParam(url, 'tier', 'Beginner')
     const address = readParam(url, 'address', user)
+
+    // Task 10: Calculate level and XP progression
+    const totalXp = parseInt(xp, 10) || 0
+    const levelProgress = calculateLevelProgress(totalXp)
+    const xpPercent = Math.min(100, Math.max(0, Math.round(levelProgress.levelPercent * 100)))
 
     const pointsPalette = {
       start: FRAME_COLORS.points.primary,
@@ -2404,66 +2482,68 @@ export async function GET(req: Request) {
                       </div>
                     </div>
 
-                    {/* Row 3: XP & Tier */}
+                    {/* Row 3: Level Badge + XP Progress */}
                     <div
                       style={{
                         display: 'flex',
+                        flexDirection: 'column',
                         gap: 8,
+                        padding: 10,
+                        background: 'rgba(30, 30, 32, 0.6)',
+                        border: `1px solid ${pointsPalette.start}`,
+                        borderRadius: 8,
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div
-                        style={{
-                          flex: 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          padding: 8,
-                          background: 'rgba(30, 30, 32, 0.6)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: 8,
-                          opacity: 0.9,
-                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-                        }}
-                      >
-                        <div style={{ display: 'flex', fontSize: FRAME_FONTS.micro, fontWeight: 600, opacity: 0.7 }}>
-                          XP
-                        </div>
+                      {/* Level and Tier */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div
                           style={{
                             display: 'flex',
-                            fontSize: 16,
-                            fontWeight: 800,
-                            color: '#ffffff',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '4px 8px',
+                            background: `linear-gradient(135deg, ${pointsPalette.start}, ${pointsPalette.end})`,
+                            borderRadius: 6,
                           }}
                         >
-                          {xp}
+                          <div style={{ display: 'flex', fontSize: 16, fontWeight: 900, color: '#ffffff' }}>
+                            LVL {levelProgress.level}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', fontSize: FRAME_FONTS.caption, fontWeight: 700, color: pointsPalette.start }}>
+                          {tier}
                         </div>
                       </div>
 
-                      <div
-                        style={{
-                          flex: 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          padding: 8,
-                          background: 'rgba(30, 30, 32, 0.6)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: 8,
-                          opacity: 0.9,
-                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-                        }}
-                      >
-                        <div style={{ display: 'flex', fontSize: FRAME_FONTS.micro, fontWeight: 600, opacity: 0.7 }}>
-                          TIER
+                      {/* XP Progress Bar */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.micro, opacity: 0.7 }}>
+                          <div style={{ display: 'flex' }}>XP Progress</div>
+                          <div style={{ display: 'flex' }}>{xpPercent}%</div>
                         </div>
                         <div
                           style={{
                             display: 'flex',
-                            fontSize: 16,
-                            fontWeight: 800,
-                            color: '#ffffff',
+                            height: 8,
+                            background: 'rgba(0, 0, 0, 0.5)',
+                            borderRadius: 4,
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            overflow: 'hidden',
                           }}
                         >
-                          {tier}
+                          <div
+                            style={{
+                              display: 'flex',
+                              width: `${Math.max(2, xpPercent)}%`,
+                              background: `linear-gradient(90deg, ${pointsPalette.start}, ${pointsPalette.end})`,
+                              boxShadow: `0 0 8px ${pointsPalette.start}80`,
+                            }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.micro, opacity: 0.8 }}>
+                          <div style={{ display: 'flex' }}>{formatXpDisplay(levelProgress.xpIntoLevel)} XP</div>
+                          <div style={{ display: 'flex' }}>{formatXpDisplay(levelProgress.xpToNextLevel)} to Lvl {levelProgress.level + 1}</div>
                         </div>
                       </div>
                     </div>
