@@ -9,6 +9,7 @@ import { join } from 'path'
 import { fetchUserByFid } from '@/lib/neynar'
 import { calculateTier, formatTierLabel, type TierInfo } from '@/lib/rarity-tiers'
 import { getCachedFrame, setCachedFrame, type FrameCacheKey } from '@/lib/frame-cache'
+import { getChainIconUrl } from '@/lib/chain-icons'
 import { 
   FRAME_FONTS, 
   FRAME_COLORS, 
@@ -37,6 +38,21 @@ async function loadImageAsDataUrl(relativePath: string): Promise<string | null> 
     return `data:${mimeType};base64,${base64}`
   } catch (err) {
     console.error(`[Frame Image] Failed to load ${relativePath}:`, err)
+    return null
+  }
+}
+
+/**
+ * Load chain icon from external URL (Task 9: Chain Icon Integration)
+ * Returns the icon URL for use in <img> src attribute
+ */
+async function loadChainIconData(chain: string): Promise<string | null> {
+  try {
+    const iconUrl = getChainIconUrl(chain)
+    if (!iconUrl) return null
+    return iconUrl
+  } catch (err) {
+    console.error(`[Frame Image] Failed to get chain icon for ${chain}:`, err)
     return null
   }
 }
@@ -157,6 +173,9 @@ export async function GET(req: Request) {
 
   // Load og-image.png background (matches badge frame implementation)
   const ogImageData = await loadImageAsDataUrl('og-image.png')
+  
+  // Task 9: Load chain icon for header display
+  const chainIconData = await loadChainIconData(chain)
 
   // GM frame type - Yu-Gi-Oh! Card Structure
   if (type === 'gm') {
@@ -295,11 +314,16 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
               >
+                {chainIconData && (
+                  <img src={chainIconData} alt="" style={{ width: 16, height: 16, borderRadius: 999 }} />
+                )}
                 {chain}
               </div>
             </div>
@@ -550,11 +574,16 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
               >
+                {chainIconData && (
+                  <img src={chainIconData} alt="" style={{ width: 16, height: 16, borderRadius: 999 }} />
+                )}
                 {chain}
               </div>
             </div>
@@ -804,11 +833,16 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
               >
+                {chainIconData && (
+                  <img src={chainIconData} alt="" style={{ width: 16, height: 16, borderRadius: 999 }} />
+                )}
                 {chain}
               </div>
             </div>
@@ -1060,11 +1094,16 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
               >
+                {chainIconData && (
+                  <img src={chainIconData} alt="" style={{ width: 16, height: 16, borderRadius: 999 }} />
+                )}
                 {chain}
               </div>
             </div>
@@ -1362,11 +1401,16 @@ export async function GET(req: Request) {
                 <div
                   style={{
                     display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
                     fontSize: FRAME_FONTS.caption,
                     fontWeight: 600,
                     opacity: 0.8,
                   }}
                 >
+                  {chainIconData && (
+                    <img src={chainIconData} alt="" style={{ width: 16, height: 16, borderRadius: 999 }} />
+                  )}
                   {chain}
                 </div>
               </div>
@@ -1669,11 +1713,16 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
               >
+                {chainIconData && (
+                  <img src={chainIconData} alt="" style={{ width: 16, height: 16, borderRadius: 999 }} />
+                )}
                 {chain}
               </div>
             </div>
@@ -1886,11 +1935,16 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
               >
+                {chainIconData && (
+                  <img src={chainIconData} alt="" style={{ width: 16, height: 16, borderRadius: 999 }} />
+                )}
                 GMEOW
               </div>
             </div>
@@ -2174,11 +2228,16 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                   fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
               >
+                {chainIconData && (
+                  <img src={chainIconData} alt="" style={{ width: 16, height: 16, borderRadius: 999 }} />
+                )}
                 GMEOW
               </div>
             </div>
