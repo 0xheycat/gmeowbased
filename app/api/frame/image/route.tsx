@@ -2280,11 +2280,11 @@ export async function GET(req: Request) {
                   gap: FRAME_SPACING.section.small,
                 }}
               >
-                {/* Badge Icon - Phase 2.1 Task 2.1.1: Badge Collection Grid with Images */}
+                {/* Badge Icon - Phase 2.1 Task 2.1.1: Badge Collection Grid with Images (70x70) */}
                 <div
                   style={{
-                    width: 240,
-                    minHeight: 120,
+                    width: 270,
+                    minHeight: 150,
                     borderRadius: 10,
                     background: 'rgba(15, 15, 17, 0.5)',
                     border: '2px solid rgba(212, 175, 55, 0.3)',
@@ -2317,7 +2317,7 @@ export async function GET(req: Request) {
                               display: 'flex',
                               flexDirection: 'column',
                               alignItems: 'center',
-                              width: 64,
+                              width: 70,
                               padding: 4,
                               border: `2px solid ${tierColor}`,
                               borderRadius: 8,
@@ -2328,8 +2328,8 @@ export async function GET(req: Request) {
                               <img
                                 src={badgeImages[i]}
                                 alt={badge?.name || 'Badge'}
-                                width="56"
-                                height="56"
+                                width="70"
+                                height="70"
                                 style={{
                                   borderRadius: 6,
                                   objectFit: 'cover',
@@ -2338,12 +2338,12 @@ export async function GET(req: Request) {
                             )}
                             <div
                               style={{
-                                fontSize: 8,
+                                fontSize: FRAME_FONTS_V2.micro,
                                 fontWeight: 600,
                                 color: SHARED_COLORS.white,
                                 textAlign: 'center',
                                 marginTop: 4,
-                                maxWidth: 64,
+                                maxWidth: 70,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',

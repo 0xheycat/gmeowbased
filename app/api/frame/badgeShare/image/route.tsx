@@ -14,6 +14,7 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { fetchUserByFid } from '@/lib/neynar'
+import { FRAME_FONTS_V2, FRAME_TYPOGRAPHY, SHARED_COLORS, TIER_COLORS } from '@/lib/frame-design-system'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -245,7 +246,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${tierGradient.start}, ${tierGradient.end})`,
                   border: `2px solid ${tierGradient.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS_V2.micro,
                   fontWeight: 700,
                 }}
               >
@@ -328,7 +329,7 @@ export async function GET(req: Request) {
                     {userData.username && (
                       <div style={{
                         display: 'flex',
-                        fontSize: 13,
+                        fontSize: FRAME_FONTS_V2.caption,
                         fontWeight: 800,
                         color: '#ffffff',
                         textShadow: `0 1px 3px rgba(0, 0, 0, 0.8)`,
@@ -339,7 +340,7 @@ export async function GET(req: Request) {
                     {userData.score && (
                       <div style={{
                         display: 'flex',
-                        fontSize: 12,
+                        fontSize: FRAME_FONTS_V2.caption,
                         fontWeight: 700,
                         color: tierGradient.start,
                         textShadow: `0 1px 2px rgba(0, 0, 0, 0.8)`,
@@ -373,7 +374,7 @@ export async function GET(req: Request) {
                   <div
                     style={{
                       display: 'flex',
-                      fontSize: 28,
+                      fontSize: FRAME_FONTS_V2.h1,
                       fontWeight: 900,
                       lineHeight: 1.1,
                       color: '#ffffff',
@@ -400,7 +401,7 @@ export async function GET(req: Request) {
                     <div
                       style={{
                         display: 'flex',
-                        fontSize: 9,
+                        fontSize: FRAME_FONTS_V2.micro,
                         lineHeight: 1.6,
                         margin: 0,
                         color: 'rgba(255, 255, 255, 0.85)',
@@ -416,7 +417,7 @@ export async function GET(req: Request) {
                       marginTop: 10,
                       display: 'flex',
                       gap: 6,
-                      fontSize: 9,
+                      fontSize: FRAME_FONTS_V2.micro,
                     }}
                   >
                     <div
@@ -465,13 +466,13 @@ export async function GET(req: Request) {
                   opacity: 0.7,
                   }}
                 >
-                  <div style={{ display: 'flex', fontSize: 9, opacity: 0.8, fontWeight: 600 }}>
+                  <div style={{ display: 'flex', fontSize: FRAME_FONTS_V2.micro, opacity: 0.8, fontWeight: 600 }}>
                     @gmeowbased
                   </div>
                   <div
                     style={{
                       display: 'flex',
-                      fontSize: 8,
+                      fontSize: FRAME_FONTS_V2.micro,
                       opacity: 0.6,
                       fontFamily: 'monospace',
                     }}
@@ -553,7 +554,7 @@ function ErrorImage({ message }: { message: string }) {
       </div>
       <div
         style={{
-          fontSize: 24,
+          fontSize: FRAME_FONTS_V2.h2,
           opacity: 0.7,
           margin: 0,
           marginTop: 12,
@@ -600,7 +601,7 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
       </div>
       <div
         style={{
-          fontSize: 24,
+          fontSize: FRAME_FONTS_V2.h2,
           opacity: 0.7,
           margin: 0,
           marginTop: 12,
