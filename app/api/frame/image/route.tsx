@@ -440,7 +440,8 @@ export async function GET(req: Request) {
                     fontWeight: 900,
                     letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                     lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                    color: SHARED_COLORS.black,
+                    color: SHARED_COLORS.white,
+                    textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                   }}
                 >
                   🔥 {streak}-Day Streak
