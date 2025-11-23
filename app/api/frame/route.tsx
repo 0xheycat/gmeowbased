@@ -961,16 +961,35 @@ function getComposeText(frameType?: string, context?: { title?: string; chain?: 
   const { title, chain, username, streak, gmCount } = context || {}
   
   switch (frameType) {
-    case 'gm':
-      // Phase 1D: Dynamic compose text with streak bragging
-      if (streak && streak >= 30) {
-        return `🔥 ${streak}-day GM streak! Legendary dedication! Join the meow squad @gmeowbased`
-      } else if (streak && streak >= 7) {
-        return `⚡ ${streak}-day GM streak! Hot streak! Stack your daily ritual @gmeowbased`
-      } else if (gmCount && gmCount > 0) {
-        return `🌅 Just stacked my daily GM ritual! ${gmCount} total GMs! Join @gmeowbased`
+    case 'gm': {
+      // Phase 1D: Dynamic compose text with streak bragging + time-based greetings
+      const hour = new Date().getHours()
+      let timeEmoji = '🌅'
+      let timeGreeting = 'GM'
+      
+      if (hour >= 5 && hour < 12) {
+        timeEmoji = '☀️'
+        timeGreeting = 'Good morning'
+      } else if (hour >= 12 && hour < 17) {
+        timeEmoji = '🌤️'
+        timeGreeting = 'Good afternoon'
+      } else if (hour >= 17 && hour < 21) {
+        timeEmoji = '🌆'
+        timeGreeting = 'Good evening'
+      } else {
+        timeEmoji = '🌙'
+        timeGreeting = 'Good night'
       }
-      return '🌅 Just stacked my daily GM ritual! Join the meow squad @gmeowbased'
+      
+      if (streak && streak >= 30) {
+        return `${timeEmoji} ${timeGreeting}! 🔥 ${streak}-day GM streak! Legendary dedication! Join @gmeowbased`
+      } else if (streak && streak >= 7) {
+        return `${timeEmoji} ${timeGreeting}! ⚡ ${streak}-day GM streak! Hot streak! Stack your daily ritual @gmeowbased`
+      } else if (gmCount && gmCount > 0) {
+        return `${timeEmoji} ${timeGreeting}! Just stacked my daily GM ritual! ${gmCount} total GMs! Join @gmeowbased`
+      }
+      return `${timeEmoji} ${timeGreeting}! Just stacked my daily GM ritual! Join the meow squad @gmeowbased`
+    }
     case 'quest':
       return `⚔️ New quest unlocked${chain ? ` on ${chain}` : ''}! ${title || 'Check it out'} @gmeowbased`
     case 'leaderboards':
