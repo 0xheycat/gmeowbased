@@ -9,6 +9,13 @@ import { join } from 'path'
 import { fetchUserByFid } from '@/lib/neynar'
 import { calculateTier, formatTierLabel, type TierInfo } from '@/lib/rarity-tiers'
 import { getCachedFrame, setCachedFrame, type FrameCacheKey } from '@/lib/frame-cache'
+import { 
+  FRAME_FONTS, 
+  FRAME_COLORS, 
+  FRAME_LAYOUT,
+  buildIdentityDisplay,
+  buildFooterText,
+} from '@/lib/frame-design-system'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -160,13 +167,13 @@ export async function GET(req: Request) {
     const username = readParam(url, 'username', '')
     const displayName = readParam(url, 'displayName', '')
 
-    // Use tier colors if available, otherwise default GM colors
+    // Use tier colors if available, otherwise default GM colors from design system
     const gmPalette = tierInfo ? {
       start: tierInfo.colors.gradient.start,
       end: tierInfo.colors.gradient.end
     } : {
-      start: '#ff9500',
-      end: '#ffb84d'
+      start: FRAME_COLORS.gm.primary,
+      end: FRAME_COLORS.gm.secondary
     }
 
     const borderColor = tierInfo?.colors.primary || gmPalette.start
@@ -252,7 +259,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${tierInfo.colors.gradient.start}, ${tierInfo.colors.gradient.end})`,
                   border: `2px solid ${tierInfo.colors.primary}`,
                   borderRadius: 999,
-                  fontSize: 9,
+                  fontSize: FRAME_FONTS.micro,
                   fontWeight: 800,
                   boxShadow: `0 0 12px ${tierInfo.colors.glow}`,
                   textTransform: 'uppercase',
@@ -279,7 +286,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${gmPalette.start}, ${gmPalette.end})`,
                   border: `2px solid ${gmPalette.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 700,
                 }}
               >
@@ -288,7 +295,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 11,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
@@ -345,8 +352,8 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
-                      {username ? `@${username}` : displayName ? displayName : user ? `👤 ${shortenAddress(user)}` : `👤 FID ${fid}`}
+                    <div style={{ display: 'flex', fontSize: FRAME_FONTS.body, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                      {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
                 )}
@@ -398,15 +405,15 @@ export async function GET(req: Request) {
                       gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>TOTAL GMs:</span>
                       <span style={{ color: gmPalette.start }}>{gmCount}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>STREAK:</span>
                       <span style={{ color: gmPalette.start }}>🔥 {streak}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.caption, fontWeight: 600 }}>
                       <span style={{ opacity: 0.6 }}>Rank:</span>
                       <span style={{ opacity: 0.9 }}>#{rank}</span>
                     </div>
@@ -421,11 +428,11 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'center',
                 marginTop: 12,
-                fontSize: 9,
+                fontSize: FRAME_FONTS.micro,
                 opacity: 0.6,
               }}
             >
-              @gmeowbased • {chain}
+              {buildFooterText('gm', chain)}
             </div>
           </div>
         </div>
@@ -446,8 +453,8 @@ export async function GET(req: Request) {
     const level = readParam(url, 'level', '1')
 
     const guildPalette = {
-      start: '#4da3ff',
-      end: '#7dbaff'
+      start: FRAME_COLORS.guild.primary,
+      end: FRAME_COLORS.guild.secondary
     }
 
     const guildResponse = new ImageResponse(
@@ -534,16 +541,16 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${guildPalette.start}, ${guildPalette.end})`,
                   border: `2px solid ${guildPalette.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 700,
                 }}
-              >
+              >  
                 GUILD
               </div>
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 11,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
@@ -600,8 +607,8 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
-                      {username ? `@${username}` : displayName ? displayName : user ? `👤 ${shortenAddress(user)}` : `👤 FID ${fid}`}
+                    <div style={{ display: 'flex', fontSize: FRAME_FONTS.body, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                      {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
                 )}
@@ -653,15 +660,15 @@ export async function GET(req: Request) {
                       gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>MEMBERS:</span>
                       <span style={{ color: guildPalette.start }}>{members} 👥</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>QUESTS:</span>
                       <span style={{ color: guildPalette.start }}>{quests} active</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.caption, fontWeight: 600 }}>
                       <span style={{ opacity: 0.6 }}>Level:</span>
                       <span style={{ opacity: 0.9 }}>{level}</span>
                     </div>
@@ -676,11 +683,11 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'center',
                 marginTop: 12,
-                fontSize: 9,
+                fontSize: FRAME_FONTS.micro,
                 opacity: 0.6,
               }}
             >
-              @gmeowbased • Guild #{guildId}
+              {buildFooterText('guild', `Guild #${guildId}`)}
             </div>
           </div>
         </div>
@@ -699,8 +706,8 @@ export async function GET(req: Request) {
     const status = readParam(url, 'status', 'Pending')
 
     const verifyPalette = {
-      start: '#7CFF7A',
-      end: '#a0ffa0'
+      start: FRAME_COLORS.verify.primary,
+      end: FRAME_COLORS.verify.secondary
     }
 
     const verifyResponse = new ImageResponse(
@@ -787,7 +794,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${verifyPalette.start}, ${verifyPalette.end})`,
                   border: `2px solid ${verifyPalette.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 700,
                   color: '#000000',
                 }}
@@ -797,7 +804,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 11,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
@@ -854,8 +861,8 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#000000', textShadow: '0 1px 3px rgba(255, 255, 255, 0.8)' }}>
-                      {username ? `@${username}` : displayName ? displayName : user ? `👤 ${shortenAddress(user)}` : `👤 FID ${fid}`}
+                    <div style={{ display: 'flex', fontSize: FRAME_FONTS.body, fontWeight: 800, color: '#000000', textShadow: '0 1px 3px rgba(255, 255, 255, 0.8)' }}>
+                      {buildIdentityDisplay({ username, displayName, address: user, fid: fid ? parseInt(fid) : null })}
                     </div>
                   </div>
                 )}
@@ -907,12 +914,12 @@ export async function GET(req: Request) {
                       gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>STATUS:</span>
                       <span style={{ color: verifyPalette.start }}>{status}</span>
                     </div>
                     {questId && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.caption, fontWeight: 600 }}>
                         <span style={{ opacity: 0.6 }}>Quest:</span>
                         <span style={{ opacity: 0.9 }}>#{questId}</span>
                       </div>
@@ -928,11 +935,11 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'center',
                 marginTop: 12,
-                fontSize: 9,
+                fontSize: FRAME_FONTS.micro,
                 opacity: 0.6,
               }}
             >
-              @gmeowbased • Verification
+              {buildFooterText('verify')}
             </div>
           </div>
         </div>
@@ -956,8 +963,8 @@ export async function GET(req: Request) {
     const questFid = readParam(url, 'fid', '')
     
     const questPalette = {
-      start: '#8e7cff',
-      end: '#a78bff'
+      start: FRAME_COLORS.quest.primary,
+      end: FRAME_COLORS.quest.secondary
     }
 
     const questResponse = new ImageResponse(
@@ -1044,7 +1051,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${questPalette.start}, ${questPalette.end})`,
                   border: `2px solid ${questPalette.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 700,
                 }}
               >
@@ -1053,7 +1060,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 11,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
@@ -1110,8 +1117,8 @@ export async function GET(req: Request) {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    <div style={{ display: 'flex', fontSize: 13, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
-                      {username ? `@${username}` : displayName ? displayName : user ? `👤 ${shortenAddress(user)}` : questFid ? `👤 FID ${questFid}` : `👤 FID ${fid}`}
+                    <div style={{ display: 'flex', fontSize: FRAME_FONTS.body, fontWeight: 800, color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)' }}>
+                      {buildIdentityDisplay({ username, displayName, address: user, fid: questFid ? parseInt(questFid) : (fid ? parseInt(fid) : null) })}
                     </div>
                   </div>
                 )}
@@ -1163,17 +1170,17 @@ export async function GET(req: Request) {
                       gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>REWARD:</span>
                       <span style={{ color: questPalette.start }}>+{reward} 🐾</span>
                     </div>
                     {slotsLeft !== '—' && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                         <span style={{ opacity: 0.7 }}>SLOTS:</span>
                         <span style={{ color: questPalette.start }}>{slotsLeft} left</span>
                       </div>
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.caption, fontWeight: 600 }}>
                       <span style={{ opacity: 0.6 }}>Expires:</span>
                       <span style={{ opacity: 0.9 }}>{expires}</span>
                     </div>
@@ -1188,11 +1195,11 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'center',
                 marginTop: 12,
-                fontSize: 9,
+                fontSize: FRAME_FONTS.micro,
                 opacity: 0.6,
               }}
             >
-              @gmeowbased • Quest #{questId}
+              {buildFooterText('quest', `Quest #${questId}`)}
             </div>
           </div>
         </div>
@@ -1234,8 +1241,8 @@ export async function GET(req: Request) {
     const hasPower = power && power.toLowerCase() !== '—' && power.toLowerCase() !== 'no'
 
     const statsPalette = {
-      start: '#00d4ff',
-      end: '#4de4ff'
+      start: FRAME_COLORS.onchainstats.primary,
+      end: FRAME_COLORS.onchainstats.secondary
     }
 
     const onchainstatsResponse = new ImageResponse(
@@ -1322,7 +1329,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${statsPalette.start}, ${statsPalette.end})`,
                   border: `2px solid ${statsPalette.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 700,
                 }}
               >
@@ -1344,7 +1351,7 @@ export async function GET(req: Request) {
                       background: 'linear-gradient(135deg, #FFD700, #FFA500)',
                       border: '2px solid #FFD700',
                       borderRadius: 999,
-                      fontSize: 9,
+                      fontSize: FRAME_FONTS.micro,
                       fontWeight: 800,
                       boxShadow: '0 0 12px rgba(255, 215, 0, 0.6)',
                     }}
@@ -1355,7 +1362,7 @@ export async function GET(req: Request) {
                 <div
                   style={{
                     display: 'flex',
-                    fontSize: 11,
+                    fontSize: FRAME_FONTS.caption,
                     fontWeight: 600,
                     opacity: 0.8,
                   }}
@@ -1381,7 +1388,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 20,
+                  fontSize: FRAME_FONTS.identity,
                   fontWeight: 900,
                   color: '#ffffff',
                   textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 16px ${statsPalette.start}60`,
@@ -1545,11 +1552,11 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'center',
                 marginTop: 10,
-                fontSize: 9,
+                fontSize: FRAME_FONTS.micro,
                 opacity: 0.6,
               }}
             >
-              @gmeowbased • {chain}
+              {buildFooterText('onchainstats', chain)}
             </div>
           </div>
         </div>
@@ -1565,8 +1572,8 @@ export async function GET(req: Request) {
     const limit = readParam(url, 'limit', '10')
 
     const leaderboardPalette = {
-      start: '#7c5cff',
-      end: '#a78bff'
+      start: FRAME_COLORS.leaderboards.primary,
+      end: FRAME_COLORS.leaderboards.secondary
     }
 
     const leaderboardsResponse = new ImageResponse(
@@ -1653,7 +1660,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${leaderboardPalette.start}, ${leaderboardPalette.end})`,
                   border: `2px solid ${leaderboardPalette.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 700,
                 }}
               >
@@ -1662,7 +1669,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 11,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
@@ -1752,15 +1759,15 @@ export async function GET(req: Request) {
                       gap: 8,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>SEASON:</span>
                       <span style={{ color: leaderboardPalette.start }}>{season}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: FRAME_FONTS.label, fontWeight: 700 }}>
                       <span style={{ opacity: 0.7 }}>SHOWING:</span>
                       <span style={{ color: leaderboardPalette.start }}>Top {limit}</span>
                     </div>
-                    <div style={{ display: 'flex', fontSize: 10, fontWeight: 600, opacity: 0.7, marginTop: 4 }}>
+                    <div style={{ display: 'flex', fontSize: FRAME_FONTS.caption, fontWeight: 600, opacity: 0.7, marginTop: 4 }}>
                       GM Streaks • Quests • XP • Badges
                     </div>
                   </div>
@@ -1774,11 +1781,11 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'center',
                 marginTop: 12,
-                fontSize: 9,
+                fontSize: FRAME_FONTS.micro,
                 opacity: 0.6,
               }}
             >
-              @gmeowbased • Multichain Rankings
+              {buildFooterText('leaderboard', 'Multichain Rankings')}
             </div>
           </div>
         </div>
@@ -1797,8 +1804,8 @@ export async function GET(req: Request) {
     const address = readParam(url, 'address', user)
 
     const badgePalette = {
-      start: '#d4af37',
-      end: '#c77dff'
+      start: FRAME_COLORS.badge.primary,
+      end: FRAME_COLORS.badge.secondary
     }
 
     const badgeResponse = new ImageResponse(
@@ -1870,7 +1877,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${badgePalette.start}, ${badgePalette.end})`,
                   border: `2px solid ${badgePalette.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 700,
                 }}
               >
@@ -1879,7 +1886,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 11,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
@@ -2005,7 +2012,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, opacity: 0.7 }}>
+                      <div style={{ display: 'flex', fontSize: FRAME_FONTS.caption, fontWeight: 600, opacity: 0.7 }}>
                         EARNED BADGES
                       </div>
                       <div
@@ -2034,7 +2041,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, opacity: 0.7 }}>
+                      <div style={{ display: 'flex', fontSize: FRAME_FONTS.caption, fontWeight: 600, opacity: 0.7 }}>
                         ELIGIBLE FOR
                       </div>
                       <div
@@ -2060,11 +2067,11 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'center',
                 marginTop: 12,
-                fontSize: 9,
+                fontSize: FRAME_FONTS.micro,
                 opacity: 0.6,
               }}
             >
-              @gmeowbased • Collect & Flex Your Achievements
+              {buildFooterText('badge')}
             </div>
           </div>
         </div>
@@ -2085,8 +2092,8 @@ export async function GET(req: Request) {
     const address = readParam(url, 'address', user)
 
     const pointsPalette = {
-      start: '#10b981',
-      end: '#06b6d4'
+      start: FRAME_COLORS.points.primary,
+      end: FRAME_COLORS.points.secondary
     }
 
     const pointsResponse = new ImageResponse(
@@ -2158,7 +2165,7 @@ export async function GET(req: Request) {
                   background: `linear-gradient(135deg, ${pointsPalette.start}, ${pointsPalette.end})`,
                   border: `2px solid ${pointsPalette.start}`,
                   borderRadius: 999,
-                  fontSize: 10,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 700,
                 }}
               >
@@ -2167,7 +2174,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 11,
+                  fontSize: FRAME_FONTS.caption,
                   fontWeight: 600,
                   opacity: 0.8,
                 }}
@@ -2293,7 +2300,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontSize: 10, fontWeight: 600, opacity: 0.7 }}>
+                      <div style={{ display: 'flex', fontSize: FRAME_FONTS.caption, fontWeight: 600, opacity: 0.7 }}>
                         AVAILABLE
                       </div>
                       <div
@@ -2322,7 +2329,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontSize: 10, fontWeight: 600, opacity: 0.7 }}>
+                      <div style={{ display: 'flex', fontSize: FRAME_FONTS.caption, fontWeight: 600, opacity: 0.7 }}>
                         LOCKED
                       </div>
                       <div
@@ -2358,7 +2365,7 @@ export async function GET(req: Request) {
                           boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                         }}
                       >
-                        <div style={{ display: 'flex', fontSize: 9, fontWeight: 600, opacity: 0.7 }}>
+                        <div style={{ display: 'flex', fontSize: FRAME_FONTS.micro, fontWeight: 600, opacity: 0.7 }}>
                           XP
                         </div>
                         <div
@@ -2386,7 +2393,7 @@ export async function GET(req: Request) {
                           boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                         }}
                       >
-                        <div style={{ display: 'flex', fontSize: 9, fontWeight: 600, opacity: 0.7 }}>
+                        <div style={{ display: 'flex', fontSize: FRAME_FONTS.micro, fontWeight: 600, opacity: 0.7 }}>
                           TIER
                         </div>
                         <div
@@ -2412,11 +2419,11 @@ export async function GET(req: Request) {
                 display: 'flex',
                 justifyContent: 'center',
                 marginTop: 12,
-                fontSize: 9,
+                fontSize: FRAME_FONTS.micro,
                 opacity: 0.6,
               }}
             >
-              @gmeowbased • Earn, Lock, Level Up
+              {buildFooterText('points')}
             </div>
           </div>
         </div>

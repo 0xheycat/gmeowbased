@@ -20,7 +20,6 @@ import {
   formatTimeUntilNextGM,
   createStakeForBadgeTx,
   createUnstakeForBadgeTx,
-  getTimeOfDay,
   getTimeBasedGreeting,
   getTimeBasedShareText,
 } from '@/lib/gm-utils'
