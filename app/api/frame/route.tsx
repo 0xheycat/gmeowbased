@@ -2671,10 +2671,11 @@ export async function GET(req: Request) {
           // Check for legendary tier badges
           hasLegendary = userBadges.some(b => b.tier === 'legendary' || b.badge_type === 'legendary')
           
-          // Phase 2.1 Task 2.1.1: Create badge collection display (up to 20 badge medals)
-          // Use 🏅 emoji for each badge - simple and universal
-          earnedBadgeIcons = Array(Math.min(earnedCount, 20))
-            .fill('🏅')
+          // Phase 2.1 Task 2.1.1: Extract badge IDs for collection display (up to 9 badges)
+          // Pass badge IDs so image route can load actual badge images
+          earnedBadgeIcons = userBadges
+            .slice(0, 9)
+            .map(ub => ub.badge_id)
             .join(',')
         }
         

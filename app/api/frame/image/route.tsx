@@ -2128,9 +2128,35 @@ export async function GET(req: Request) {
     const address = readParam(url, 'address', user)
     // Task 10: Add XP from badges tracking
     const badgeXp = readParam(url, 'badgeXp', '0')
-    // Phase 2.1 Task 2.1.1: Parse earned badges for collection display
+    // Phase 2.1 Task 2.1.1: Parse badge IDs and load actual badge images
     const earnedBadges = readParam(url, 'earnedBadges', '')
-    const badges = earnedBadges.split(',').filter(Boolean).slice(0, 20)
+    const badgeIds = earnedBadges.split(',').filter(Boolean).slice(0, 9)
+    
+    // Badge metadata registry (inline for frame generation)
+    const badgeRegistry: Record<string, { name: string; tier: string }> = {
+      'neon-initiate': { name: 'Neon Initiate', tier: 'common' },
+      'pulse-runner': { name: 'Pulse Runner', tier: 'rare' },
+      'signal-luminary': { name: 'Signal Luminary', tier: 'epic' },
+      'warp-navigator': { name: 'Warp Navigator', tier: 'legendary' },
+      'gmeow-vanguard': { name: 'Gmeow Vanguard', tier: 'mythic' }
+    }
+    
+    // Tier colors for badge card borders
+    const tierColors: Record<string, string> = {
+      common: '#D3D7DC',
+      rare: '#A18CFF',
+      epic: '#61DFFF',
+      legendary: '#FFD966',
+      mythic: '#9C27FF'
+    }
+    
+    // Load badge images asynchronously
+    const badgeImages = await Promise.all(
+      badgeIds.map(async (badgeId) => {
+        const imgData = await loadImageAsDataUrl(`badges/${badgeId}.png`)
+        return imgData || ''
+      })
+    )
 
     const badgePalette = {
       start: FRAME_COLORS.badge.primary,
@@ -2248,45 +2274,80 @@ export async function GET(req: Request) {
                   gap: FRAME_SPACING.section.small,
                 }}
               >
-                {/* Badge Icon - Phase 2.1 Task 2.1.1: Collection Display */}
+                {/* Badge Icon - Phase 2.1 Task 2.1.1: Badge Collection Grid with Images */}
                 <div
                   style={{
-                    width: 120,
-                    height: 120,
+                    width: 240,
+                    minHeight: 120,
                     borderRadius: 10,
-                    background: `linear-gradient(135deg, ${badgePalette.start}, ${badgePalette.end})`,
-                    border: `3px solid ${badgePalette.start}`,
+                    background: 'rgba(15, 15, 17, 0.5)',
+                    border: '2px solid rgba(212, 175, 55, 0.3)',
                     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontFamily: FRAME_FONT_FAMILY.display,
+                    padding: 12,
                   }}
                 >
-                  {badges.length > 0 ? (
-                    // Show earned badges collection
+                  {badgeIds.length > 0 ? (
+                    // Show earned badges with images and names
                     <div
                       style={{
                         display: 'flex',
                         flexWrap: 'wrap',
-                        gap: 4,
-                        padding: 8,
+                        gap: 8,
                         justifyContent: 'center',
-                        alignItems: 'center',
-                        maxWidth: 120,
+                        alignItems: 'flex-start',
                       }}
                     >
-                      {badges.slice(0, 9).map((icon: string, i: number) => (
-                        <div
-                          key={i}
-                          style={{
-                            display: 'flex',
-                            fontSize: badges.length <= 4 ? 28 : 20,
-                          }}
-                        >
-                          {icon}
-                        </div>
-                      ))}
+                      {badgeIds.map((badgeId, i) => {
+                        const badge = badgeRegistry[badgeId]
+                        const tierColor = badge ? tierColors[badge.tier] : tierColors.common
+                        
+                        return (
+                          <div
+                            key={badgeId}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              width: 64,
+                              padding: 4,
+                              border: `2px solid ${tierColor}`,
+                              borderRadius: 8,
+                              background: 'rgba(255, 255, 255, 0.05)',
+                            }}
+                          >
+                            {badgeImages[i] && (
+                              <img
+                                src={badgeImages[i]}
+                                alt={badge?.name || 'Badge'}
+                                width="56"
+                                height="56"
+                                style={{
+                                  borderRadius: 6,
+                                  objectFit: 'cover',
+                                }}
+                              />
+                            )}
+                            <div
+                              style={{
+                                fontSize: 8,
+                                fontWeight: 600,
+                                color: '#ffffff',
+                                textAlign: 'center',
+                                marginTop: 4,
+                                maxWidth: 64,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {badge?.name || 'Unknown'}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   ) : (
                     // Show placeholder when no badges
