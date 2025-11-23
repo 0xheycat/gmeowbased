@@ -1784,6 +1784,644 @@ export async function GET(req: Request) {
     return cacheImageResponse(leaderboardsResponse, cacheKey, startTime)
   }
 
+  // Badge Collection Frame - Yu-Gi-Oh! Card Structure
+  if (type === 'badge') {
+    const username = readParam(url, 'username', '')
+    const displayName = readParam(url, 'displayName', '')
+    const earnedCount = readParam(url, 'earnedCount', '0')
+    const eligibleCount = readParam(url, 'eligibleCount', '0')
+    const address = readParam(url, 'address', user)
+
+    const badgePalette = {
+      start: '#d4af37',
+      end: '#c77dff'
+    }
+
+    const badgeResponse = new ImageResponse(
+      (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Background */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 1.0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 30%, #1f0a1f 60%, #0a0a0a 100%)',
+              }}
+            />
+          )}
+
+          {/* Badge Card Container */}
+          <div
+            style={{
+              width: 540,
+              height: 360,
+              display: 'flex',
+              flexDirection: 'column',
+              background: 'linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)',
+              border: `4px solid ${badgePalette.start}`,
+              borderRadius: 12,
+              boxShadow: `0 8px 32px rgba(212, 175, 55, 0.3), inset 0 0 0 1px rgba(199, 125, 255, 0.1)`,
+              padding: 14,
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 10,
+                color: '#ffffff',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  padding: '4px 10px',
+                  background: `linear-gradient(135deg, ${badgePalette.start}, ${badgePalette.end})`,
+                  border: `2px solid ${badgePalette.start}`,
+                  borderRadius: 999,
+                  fontSize: 10,
+                  fontWeight: 700,
+                }}
+              >
+                BADGE COLLECTION
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  opacity: 0.8,
+                }}
+              >
+                GMEOW
+              </div>
+            </div>
+
+            {/* Main content area */}
+            <div
+              style={{
+                display: 'flex',
+                flex: 1,
+                gap: 16,
+              }}
+            >
+              {/* Left: Badge icon + user info */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}
+              >
+                {/* Badge Icon */}
+                <div
+                  style={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${badgePalette.start}, ${badgePalette.end})`,
+                    border: `3px solid ${badgePalette.start}`,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 70,
+                  }}
+                >
+                  🏅
+                </div>
+
+                {/* User info box */}
+                <div
+                  style={{
+                    width: 120,
+                    display: 'flex',
+                    padding: 8,
+                    background: 'rgba(30, 30, 32, 0.6)',
+                    border: `1px solid ${badgePalette.start}`,
+                    borderRadius: 8,
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: '#ffffff',
+                      textAlign: 'center',
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {username ? `@${username}` : displayName ? displayName : address ? `👤 ${address.slice(0, 6)}...${address.slice(-4)}` : fid ? `👤 FID ${fid}` : '👤 Anonymous'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Badge stats */}
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
+                }}
+              >
+                {/* Title */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${badgePalette.start}60`,
+                    }}
+                  >
+                    Badge Collection
+                  </div>
+
+                  {/* Stats grid */}
+                  <div
+                    style={{
+                      marginTop: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12,
+                    }}
+                  >
+                    {/* Row 1: Earned */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: 12,
+                        background: 'rgba(30, 30, 32, 0.6)',
+                        border: `1px solid ${badgePalette.start}`,
+                        borderRadius: 8,
+                        opacity: 0.9,
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, opacity: 0.7 }}>
+                        EARNED BADGES
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          fontSize: 24,
+                          fontWeight: 900,
+                          color: badgePalette.start,
+                          textShadow: `0 2px 8px ${badgePalette.start}80`,
+                        }}
+                      >
+                        {earnedCount}
+                      </div>
+                    </div>
+
+                    {/* Row 2: Eligible */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: 12,
+                        background: 'rgba(30, 30, 32, 0.6)',
+                        border: `1px solid ${badgePalette.end}`,
+                        borderRadius: 8,
+                        opacity: 0.9,
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, opacity: 0.7 }}>
+                        ELIGIBLE FOR
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          fontSize: 24,
+                          fontWeight: 900,
+                          color: badgePalette.end,
+                          textShadow: `0 2px 8px ${badgePalette.end}80`,
+                        }}
+                      >
+                        {eligibleCount}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: 12,
+                fontSize: 9,
+                opacity: 0.6,
+              }}
+            >
+              @gmeowbased • Collect & Flex Your Achievements
+            </div>
+          </div>
+        </div>
+      ),
+      { width: WIDTH, height: HEIGHT }
+    )
+    return cacheImageResponse(badgeResponse, cacheKey, startTime)
+  }
+
+  // Points & XP Frame - Yu-Gi-Oh! Card Structure
+  if (type === 'points') {
+    const username = readParam(url, 'username', '')
+    const displayName = readParam(url, 'displayName', '')
+    const availablePoints = readParam(url, 'availablePoints', '0')
+    const lockedPoints = readParam(url, 'lockedPoints', '0')
+    const xp = readParam(url, 'xp', '0')
+    const tier = readParam(url, 'tier', 'Beginner')
+    const address = readParam(url, 'address', user)
+
+    const pointsPalette = {
+      start: '#10b981',
+      end: '#06b6d4'
+    }
+
+    const pointsResponse = new ImageResponse(
+      (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Background */}
+          {ogImageData ? (
+            <img
+              src={ogImageData}
+              alt="background"
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 1.0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #0a1a1a 30%, #0a1a1f 60%, #0a0a0a 100%)',
+              }}
+            />
+          )}
+
+          {/* Points Card Container */}
+          <div
+            style={{
+              width: 540,
+              height: 360,
+              display: 'flex',
+              flexDirection: 'column',
+              background: 'linear-gradient(145deg, rgba(15, 15, 17, 0.75) 0%, rgba(10, 10, 12, 0.85) 100%)',
+              border: `4px solid ${pointsPalette.start}`,
+              borderRadius: 12,
+              boxShadow: `0 8px 32px rgba(16, 185, 129, 0.3), inset 0 0 0 1px rgba(6, 182, 212, 0.1)`,
+              padding: 14,
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 10,
+                color: '#ffffff',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  padding: '4px 10px',
+                  background: `linear-gradient(135deg, ${pointsPalette.start}, ${pointsPalette.end})`,
+                  border: `2px solid ${pointsPalette.start}`,
+                  borderRadius: 999,
+                  fontSize: 10,
+                  fontWeight: 700,
+                }}
+              >
+                POINTS & XP
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  opacity: 0.8,
+                }}
+              >
+                GMEOW
+              </div>
+            </div>
+
+            {/* Main content area */}
+            <div
+              style={{
+                display: 'flex',
+                flex: 1,
+                gap: 16,
+              }}
+            >
+              {/* Left: Points icon + user info */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}
+              >
+                {/* Points Icon */}
+                <div
+                  style={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: 10,
+                    background: `linear-gradient(135deg, ${pointsPalette.start}, ${pointsPalette.end})`,
+                    border: `3px solid ${pointsPalette.start}`,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 70,
+                  }}
+                >
+                  💰
+                </div>
+
+                {/* User info box */}
+                <div
+                  style={{
+                    width: 120,
+                    display: 'flex',
+                    padding: 8,
+                    background: 'rgba(30, 30, 32, 0.6)',
+                    border: `1px solid ${pointsPalette.start}`,
+                    borderRadius: 8,
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: '#ffffff',
+                      textAlign: 'center',
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {username ? `@${username}` : displayName ? displayName : address ? `👤 ${address.slice(0, 6)}...${address.slice(-4)}` : fid ? `👤 FID ${fid}` : '👤 Anonymous'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Points stats */}
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  color: '#ffffff',
+                }}
+              >
+                {/* Title & Tier */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      color: '#ffffff',
+                      textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${pointsPalette.start}60`,
+                    }}
+                  >
+                    Points & XP
+                  </div>
+
+                  {/* Stats grid */}
+                  <div
+                    style={{
+                      marginTop: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                  >
+                    {/* Row 1: Available Points */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: 10,
+                        background: 'rgba(30, 30, 32, 0.6)',
+                        border: `1px solid ${pointsPalette.start}`,
+                        borderRadius: 8,
+                        opacity: 0.9,
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', fontSize: 10, fontWeight: 600, opacity: 0.7 }}>
+                        AVAILABLE
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          fontSize: 20,
+                          fontWeight: 900,
+                          color: pointsPalette.start,
+                          textShadow: `0 2px 8px ${pointsPalette.start}80`,
+                        }}
+                      >
+                        {availablePoints} pts
+                      </div>
+                    </div>
+
+                    {/* Row 2: Locked Points */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: 10,
+                        background: 'rgba(30, 30, 32, 0.6)',
+                        border: `1px solid ${pointsPalette.end}`,
+                        borderRadius: 8,
+                        opacity: 0.9,
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', fontSize: 10, fontWeight: 600, opacity: 0.7 }}>
+                        LOCKED
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          fontSize: 20,
+                          fontWeight: 900,
+                          color: pointsPalette.end,
+                          textShadow: `0 2px 8px ${pointsPalette.end}80`,
+                        }}
+                      >
+                        {lockedPoints} pts
+                      </div>
+                    </div>
+
+                    {/* Row 3: XP & Tier */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 8,
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          padding: 8,
+                          background: 'rgba(30, 30, 32, 0.6)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: 8,
+                          opacity: 0.9,
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', fontSize: 9, fontWeight: 600, opacity: 0.7 }}>
+                          XP
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: '#ffffff',
+                          }}
+                        >
+                          {xp}
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          padding: 8,
+                          background: 'rgba(30, 30, 32, 0.6)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: 8,
+                          opacity: 0.9,
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', fontSize: 9, fontWeight: 600, opacity: 0.7 }}>
+                          TIER
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: '#ffffff',
+                          }}
+                        >
+                          {tier}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: 12,
+                fontSize: 9,
+                opacity: 0.6,
+              }}
+            >
+              @gmeowbased • Earn, Lock, Level Up
+            </div>
+          </div>
+        </div>
+      ),
+      { width: WIDTH, height: HEIGHT }
+    )
+    return cacheImageResponse(pointsResponse, cacheKey, startTime)
+  }
+
   // Default: onchainstats fallback - Yu-Gi-Oh! Card Structure
   // Note: fid and user already declared at top (lines 34-35)
   const totalTxs = readParam(url, 'totalTxs', readParam(url, 'txs', '—'))
