@@ -431,23 +431,6 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
 
   if (asJson) return respondJson(jsonPayload)
 
-  const openUrlParam = toOptionalString(params.openUrl) ?? toOptionalString(params.openTarget)
-  const openUrl = toAbsoluteUrl(openUrlParam, origin) ?? href
-  const openLabelParam = toOptionalString(params.openLabel) ?? toOptionalString(params.openText)
-
-  const challengeUrlParam = toOptionalString(params.challengeUrl) ?? toOptionalString(params.challengeTarget)
-  const challengeUrl = toAbsoluteUrl(challengeUrlParam, origin)
-  const challengeLabelParam = toOptionalString(params.challengeLabel) ?? toOptionalString(params.challengeText)
-
-  const referralOverrideParam = toOptionalString(params.referralUrl) ?? toOptionalString(params.recruitUrl)
-  const referralOverrideUrl = toAbsoluteUrl(referralOverrideParam, origin)
-  const referralLabelParam = toOptionalString(params.referralLabel) ?? toOptionalString(params.recruitLabel)
-  const referralFallbackLabel = referralCode ? `Join ${referralCode}` : 'Recruit a Pilot'
-  const referralTarget = referralOverrideUrl || referralFrameUrl || referralLandingUrl || href
-
-  const mintUrlParam = toOptionalString(params.mintUrl)
-  const mintUrl = toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=leaderboard&chain=${isGlobal ? 'all' : chainKey}&season=${rawSeason || 'current'}`
-
   // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
   const leaderboardButtons: FrameButton[] = [
     { label: 'Open Leaderboard', target: href, action: 'link' },
@@ -482,19 +465,6 @@ const nowTs = () => Date.now()
 function tracePush(traces: Trace, step: string, info?: any) {
   traces.push({ ts: nowTs(), step, info })
   return traces
-}
-
-function safeJson(obj: any) {
-  // Avoid circular structures — use deterministic replacer
-  const seen = new WeakSet()
-  return JSON.parse(JSON.stringify(obj, (_k, v) => {
-    if (typeof v === 'bigint') return v.toString()
-    if (v && typeof v === 'object') {
-      if (seen.has(v)) return '[Circular]'
-      seen.add(v)
-    }
-    return v
-  }))
 }
 
 /**
@@ -908,7 +878,8 @@ type ContextualButtonPlan = {
   leaderboard?: LeaderboardButtonPlan
 }
 
-function buildContextualButtons(plan: ContextualButtonPlan): FrameButton[] {
+// DEPRECATED Phase 1E: buildContextualButtons no longer used (POST buttons removed)
+/* function buildContextualButtons(plan: ContextualButtonPlan): FrameButton[] {
   const { type, fallback } = plan
   const deduped: FrameButton[] = []
   const push = (btn: FrameButton | null | undefined) => {
@@ -974,6 +945,7 @@ function buildContextualButtons(plan: ContextualButtonPlan): FrameButton[] {
 
   return deduped.length ? deduped : fallback
 }
+*/
 
 export interface OverlayProfile {
   username: string | null
@@ -1709,24 +1681,6 @@ export async function GET(req: Request) {
       const out = { ok: true, type: 'quest', quest, title, description, chain: chainKey, chainName: questChainName, chainIcon: questChainIcon, traces }
       if (asJson) return respondJson(out)
 
-      const questCompleted = toBooleanFlag(params.completed ?? params.questCompleted ?? params.done)
-      const verifyUrlFallback = `${origin}/api/frame?type=verify&questId=${encodeURIComponent(String(questIdNum))}&chain=${encodeURIComponent(chainKey)}`
-      const verifyUrlParam = toOptionalString(params.verifyUrl)
-      const claimUrlParam = toOptionalString(params.claimUrl)
-      const flexUrlParam = toOptionalString(params.flexUrl)
-      const shareUrlParam = toOptionalString(params.shareUrl) ?? toOptionalString(params.inviteUrl)
-      const mintUrlParam = toOptionalString(params.mintUrl)
-      const verifyLabelParam = toOptionalString(params.verifyLabel)
-      const claimLabelParam = toOptionalString(params.claimLabel)
-      const flexLabelParam = toOptionalString(params.flexLabel)
-      const shareLabelParam = toOptionalString(params.shareLabel)
-      const mintLabelParam = toOptionalString(params.mintLabel)
-      
-      // Generate mint URL for completed quests
-      const mintUrl = questCompleted 
-        ? (toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=quest&questId=${encodeURIComponent(String(questIdNum))}&chain=${encodeURIComponent(chainKey)}`)
-        : null
-      
       // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
       const questButtons: FrameButton[] = [
         { label: primaryLabel, target: frameBtnUrl, action: 'link' },
