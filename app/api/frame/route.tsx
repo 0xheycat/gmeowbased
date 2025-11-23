@@ -1717,6 +1717,7 @@ export async function GET(req: Request) {
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         frameType: type,
+        heroBadge: { label: questName, tone: 'violet' }, // Task 5: Display quest name prominently
       })
       return createHtmlResponse(html)
     }
@@ -2098,7 +2099,39 @@ export async function GET(req: Request) {
         const sres = await fetchUserStatsOnChain(String(user), chainKey, traces)
         if (sres.ok) stats = sres.stats
       }
-      const userDisplay = user ? shortenHex(String(user)) : 'gmeowbased Points'
+      
+      // Resolve username for display (Task 4: Phase 1C)
+      let profile: OverlayProfile | null = null
+      let resolvedFid: number | null = null
+      if (user && typeof user === 'string') {
+        const userStr = String(user).trim()
+        const isAddress = /^0x[0-9a-fA-F]{40}$/.test(userStr)
+        const fidParam = params.fid || params.userFid
+        const parsedFid = fidParam ? (() => {
+          const num = Number(fidParam)
+          return Number.isFinite(num) && num > 0 ? num : null
+        })() : null
+        
+        if (parsedFid) resolvedFid = parsedFid
+        
+        // Try to resolve Neynar profile
+        const fallback = await fallbackResolveNeynarProfile({
+          address: isAddress ? userStr : undefined,
+          fid: parsedFid,
+          username: null,
+        })
+        if (fallback.profile) {
+          profile = fallback.profile
+          tracePush(traces, 'points-profile-resolved', { username: fallback.profile.username, fid: fallback.fid })
+        }
+        if (!resolvedFid && fallback.fid) resolvedFid = fallback.fid
+      }
+      
+      const userDisplay = profile?.username
+        ? `@${profile.username}`
+        : user
+          ? shortenHex(String(user))
+          : 'gmeowbased Points'
       const title = `${userDisplay} • gmeowbased Points`
       const parseNumeric = (value: unknown) => {
         if (value === undefined || value === null || value === '') return null
@@ -2247,6 +2280,7 @@ export async function GET(req: Request) {
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         frameType: type,
+        profile, // Task 4: Pass resolved profile for username display
       })
       return createHtmlResponse(html)
     }
