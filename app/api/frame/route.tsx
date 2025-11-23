@@ -290,12 +290,6 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
 
   const referralCode = topEntry ? await fetchReferralCodeForUser(topEntry.chain, topEntry.address) : null
   const referralIdentifier = topEntry ? (referralCode && referralCode.length ? referralCode : topEntry.address) : null
-  const referralFrameUrl = referralIdentifier
-    ? buildFrameShareUrl({ type: 'referral', chain: topEntry?.chain ?? chainKey, referral: referralIdentifier })
-    : ''
-  const referralLandingUrl = topEntry
-    ? `${origin}/referral${referralCode ? `?code=${encodeURIComponent(referralCode)}` : `?addr=${encodeURIComponent(topEntry.address)}`}`
-    : ''
 
   const heroStatsData: Array<{ label: string; value: string; accent?: boolean }> = []
   const squadValue = totalPilots > 1 ? `${formatInteger(totalPilots) ?? totalPilots} Pilots` : totalPilots === 1 ? 'Solo Run' : 'Empty Deck'
@@ -868,7 +862,8 @@ type LeaderboardButtonPlan = {
   mintLabel?: string | null
 }
 
-type ContextualButtonPlan = {
+// DEPRECATED Phase 1E: ContextualButtonPlan no longer used (POST buttons removed)
+/* type ContextualButtonPlan = {
   type: FrameType
   fallback: FrameButton[]
   quest?: QuestButtonPlan
@@ -877,6 +872,7 @@ type ContextualButtonPlan = {
   points?: PointsButtonPlan
   leaderboard?: LeaderboardButtonPlan
 }
+*/
 
 // DEPRECATED Phase 1E: buildContextualButtons no longer used (POST buttons removed)
 /* function buildContextualButtons(plan: ContextualButtonPlan): FrameButton[] {
@@ -1768,17 +1764,6 @@ export async function GET(req: Request) {
       const description = guildId ? `Open guild ${guildId} on @gmeowbased` : '@gmeowbased guild preview'
       const guildUrl = `${origin}/guild/${guildId}`
       if (asJson) return respondJson({ ok: true, type: 'guild', guildId, guildUrl, traces })
-      const isMember = toBooleanFlag(params.member ?? params.isMember ?? params.joined)
-      const joinUrlParam = toOptionalString(params.joinUrl)
-      const joinUrl = toAbsoluteUrl(joinUrlParam, origin) ?? (guildId ? `${guildUrl}?join=1` : `${origin}/guild?join=1`)
-      const leaderboardTargetRaw = toOptionalString(params.guildLeaderboardUrl) ?? toOptionalString(params.leaderboardUrl)
-      const leaderboardUrl = toAbsoluteUrl(leaderboardTargetRaw, origin) ?? (guildId ? `${origin}/leaderboard?guild=${guildId}` : null)
-      const mintUrlParam = toOptionalString(params.mintUrl)
-      
-      // Generate mint URL for guild members
-      const mintUrl = isMember 
-        ? (toAbsoluteUrl(mintUrlParam, origin) ?? `${origin}/api/nft/mint?type=guild&guildId=${guildId}`)
-        : null
       
       // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
       const guildButtons: FrameButton[] = [
@@ -1819,9 +1804,7 @@ export async function GET(req: Request) {
       if (code) fcMeta[frameKey('referral_code')] = String(code)
       if (user) fcMeta[frameKey('referral_owner')] = String(user)
       if (asJson) return respondJson({ ok: true, type: 'referral', user, code, shareUrl, description, traces })
-      const shareUrlOverride = toAbsoluteUrl(toOptionalString(params.shareUrl), origin) ?? shareUrl
-      const copyUrlParam = toAbsoluteUrl(toOptionalString(params.copyUrl), origin)
-      const hubUrlParam = toAbsoluteUrl(toOptionalString(params.hubUrl), origin) ?? shareUrl
+      
       // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)
       const referralButtons: FrameButton[] = [
         { label: code ? `Share ${String(code).toUpperCase()}` : 'Open Referral Hub', target: shareUrl, action: 'link' },
