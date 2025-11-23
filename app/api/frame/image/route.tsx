@@ -2128,6 +2128,9 @@ export async function GET(req: Request) {
     const address = readParam(url, 'address', user)
     // Task 10: Add XP from badges tracking
     const badgeXp = readParam(url, 'badgeXp', '0')
+    // Phase 2.1 Task 2.1.1: Parse earned badges for collection display
+    const earnedBadges = readParam(url, 'earnedBadges', '')
+    const badges = earnedBadges.split(',').filter(Boolean).slice(0, 20)
 
     const badgePalette = {
       start: FRAME_COLORS.badge.primary,
@@ -2245,7 +2248,7 @@ export async function GET(req: Request) {
                   gap: FRAME_SPACING.section.small,
                 }}
               >
-                {/* Badge Icon */}
+                {/* Badge Icon - Phase 2.1 Task 2.1.1: Collection Display */}
                 <div
                   style={{
                     width: 120,
@@ -2258,10 +2261,37 @@ export async function GET(req: Request) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontFamily: FRAME_FONT_FAMILY.display,
-                    fontSize: 70,
                   }}
                 >
-                  🏅
+                  {badges.length > 0 ? (
+                    // Show earned badges collection
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 4,
+                        padding: 8,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        maxWidth: 120,
+                      }}
+                    >
+                      {badges.slice(0, 9).map((icon: string, i: number) => (
+                        <div
+                          key={i}
+                          style={{
+                            display: 'flex',
+                            fontSize: badges.length <= 4 ? 28 : 20,
+                          }}
+                        >
+                          {icon}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    // Show placeholder when no badges
+                    <div style={{ fontSize: 70, opacity: 0.3 }}>🏅</div>
+                  )}
                 </div>
 
                 {/* User info box */}

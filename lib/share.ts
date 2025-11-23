@@ -226,12 +226,23 @@ export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride
   if (input.type === 'quest' && input.questId != null) {
     params.set('questId', String(input.questId))
   }
-  if (input.type === 'badge' && input.badgeId) {
-    params.set('badgeId', input.badgeId)
-    // Badge images: dynamic generation with aggressive CDN caching for speed
-    // Cache buster: v=2 to invalidate old cached error responses (2025-11-20 multi-line CSS fix)
-    params.set('v', '2')
-    return `${origin}/api/frame/badgeShare/image?${params.toString()}`
+  if (input.type === 'badge') {
+    if (input.badgeId) {
+      // Badge share route (single badge)
+      params.set('badgeId', input.badgeId)
+      // Badge images: dynamic generation with aggressive CDN caching for speed
+      // Cache buster: v=2 to invalidate old cached error responses (2025-11-20 multi-line CSS fix)
+      params.set('v', '2')
+      return `${origin}/api/frame/badgeShare/image?${params.toString()}`
+    } else {
+      // Badge collection route (multiple badges) - Phase 2.1 Task 2.1.1
+      if (input.extra?.earnedBadges) params.set('earnedBadges', String(input.extra.earnedBadges))
+      if (input.extra?.earnedCount) params.set('earnedCount', String(input.extra.earnedCount))
+      if (input.extra?.eligibleCount) params.set('eligibleCount', String(input.extra.eligibleCount))
+      if (input.extra?.username) params.set('username', String(input.extra.username))
+      if (input.extra?.displayName) params.set('displayName', String(input.extra.displayName))
+      return `${origin}/api/frame/image?${params.toString()}`
+    }
   }
   if (input.type === 'leaderboards' && input.extra) {
     if (input.extra.limit) params.set('limit', String(input.extra.limit))

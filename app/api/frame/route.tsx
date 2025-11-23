@@ -2651,6 +2651,7 @@ export async function GET(req: Request) {
       let earnedCount = 0
       let eligibleCount = 0
       let hasLegendary = false
+      let earnedBadgeIcons = '' // Phase 2.1 Task 2.1.1: Store badge icons for collection display
       
       try {
         const { createClient } = await import('@supabase/supabase-js')
@@ -2669,6 +2670,12 @@ export async function GET(req: Request) {
           earnedCount = userBadges.length
           // Check for legendary tier badges
           hasLegendary = userBadges.some(b => b.tier === 'legendary' || b.badge_type === 'legendary')
+          
+          // Phase 2.1 Task 2.1.1: Create badge collection display (up to 20 badge medals)
+          // Use 🏅 emoji for each badge - simple and universal
+          earnedBadgeIcons = Array(Math.min(earnedCount, 20))
+            .fill('🏅')
+            .join(',')
         }
         
         // Get total active badge templates
@@ -2705,11 +2712,19 @@ export async function GET(req: Request) {
         : `Start your badge collection • ${eligibleCount} available • FID ${fid} • — @gmeowbased`
       
       const href = `${origin}/profile/${fid}/badges`
+      
       // Phase 1F: Pass username and displayName to image
+      // Phase 2.1: Added earnedBadges for collection display
       const imageUrl = buildDynamicFrameImageUrl({ 
         type: 'badge', 
         fid,
-        extra: { username, displayName, earnedCount: String(earnedCount), eligibleCount: String(eligibleCount) }
+        extra: { 
+          username, 
+          displayName, 
+          earnedCount: String(earnedCount), 
+          eligibleCount: String(eligibleCount),
+          earnedBadges: earnedBadgeIcons
+        }
       }, origin)
       
       tracePush(traces, 'badge-generated', { fid, href, earnedCount, eligibleCount })
