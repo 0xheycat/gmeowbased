@@ -999,11 +999,19 @@ export interface OverlayProfile {
  * Generate rich compose text for frame sharing based on frame type
  * Used in fc:frame:text meta tag for pre-filled cast composer
  */
-function getComposeText(frameType?: string, context?: { title?: string; chain?: string; username?: string }): string {
-  const { title, chain, username } = context || {}
+function getComposeText(frameType?: string, context?: { title?: string; chain?: string; username?: string; streak?: number; gmCount?: number }): string {
+  const { title, chain, username, streak, gmCount } = context || {}
   
   switch (frameType) {
     case 'gm':
+      // Phase 1D: Dynamic compose text with streak bragging
+      if (streak && streak >= 30) {
+        return `🔥 ${streak}-day GM streak! Legendary dedication! Join the meow squad @gmeowbased`
+      } else if (streak && streak >= 7) {
+        return `⚡ ${streak}-day GM streak! Hot streak! Stack your daily ritual @gmeowbased`
+      } else if (gmCount && gmCount > 0) {
+        return `🌅 Just stacked my daily GM ritual! ${gmCount} total GMs! Join @gmeowbased`
+      }
       return '🌅 Just stacked my daily GM ritual! Join the meow squad @gmeowbased'
     case 'quest':
       return `⚔️ New quest unlocked${chain ? ` on ${chain}` : ''}! ${title || 'Check it out'} @gmeowbased`
@@ -1047,6 +1055,8 @@ function buildFrameHtml(params: {
   heroList?: Array<{ primary: string; secondary?: string; icon?: string }>
   defaultFrameImage?: string | null
   frameType?: string // ! frame type (quest, guild, leaderboards, etc.)
+  streak?: number // Phase 1D: For GM frame compose text
+  gmCount?: number // Phase 1D: For GM frame compose text
 }) {
   const {
     title,
@@ -1067,6 +1077,8 @@ function buildFrameHtml(params: {
     heroStats = [],
     heroList = [],
     frameType, // Yu-Gi-Oh! frame type
+    streak, // Phase 1D: For GM frame compose text
+    gmCount, // Phase 1D: For GM frame compose text
   } = params
   const pageTitle = escapeHtml(title)
   const rawDescription = description || ''
@@ -1099,6 +1111,8 @@ function buildFrameHtml(params: {
     title: pageTitle,
     chain: chainLabel || undefined,
     username: profile?.username || undefined,
+    streak: streak || undefined, // Phase 1D: Pass streak for GM frame
+    gmCount: gmCount || undefined, // Phase 1D: Pass gmCount for GM frame
   })
   const composeTextEsc = escapeHtml(composeText)
 
@@ -2361,10 +2375,100 @@ export async function GET(req: Request) {
 
     if (type === 'gm') {
       tracePush(traces, 'gm-start')
-      const title = 'GM Ritual • GMEOW'
-      const desc = ['🌅 Log your GM streak', '⚡ Unlock multipliers + hidden boosts', '— @gmeowbased'].join(' • ')
+      
+      // Phase 1D: Query real GM data for streak milestone display
+      const fidParam = params.fid || params.user
+      const fid = fidParam ? sanitizeFID(fidParam) : null
+      
+      let gmCount = 0
+      let streak = 0
+      let lastGMDate: Date | null = null
+      
+      if (fid) {
+        try {
+          const { createClient } = await import('@supabase/supabase-js')
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          )
+          
+          // Get all GM events for this user
+          const { data: gmEvents, error } = await supabase
+            .from('gmeow_rank_events')
+            .select('created_at, chain')
+            .eq('fid', Number(fid))
+            .eq('event_type', 'gm')
+            .order('created_at', { ascending: false })
+          
+          if (!error && gmEvents && gmEvents.length > 0) {
+            gmCount = gmEvents.length
+            lastGMDate = new Date(gmEvents[0].created_at)
+            
+            // Calculate streak: count consecutive days with GM events
+            // Group events by date (YYYY-MM-DD) since users can GM multiple times per day
+            const uniqueDates = Array.from(
+              new Set(
+                gmEvents.map(event => {
+                  const d = new Date(event.created_at)
+                  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+                })
+              )
+            ).sort().reverse() // Sort descending (most recent first)
+            
+            // Count consecutive days starting from the most recent
+            streak = 1 // At least 1 if they have any GMs
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            
+            for (let i = 0; i < uniqueDates.length - 1; i++) {
+              const currentDate = new Date(uniqueDates[i] + 'T00:00:00')
+              const nextDate = new Date(uniqueDates[i + 1] + 'T00:00:00')
+              
+              const dayDiff = Math.floor((currentDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24))
+              
+              if (dayDiff === 1) {
+                streak++
+              } else {
+                break // Streak broken
+              }
+            }
+          }
+        } catch (err) {
+          tracePush(traces, 'gm-query-error', { error: String(err) })
+          // Continue with default values if query fails
+        }
+      }
+      
+      // Phase 1D: Dynamic title with streak milestones
+      let title = 'GM Ritual • GMEOW'
+      let heroBadge: { label: string; tone: 'emerald' | 'violet' | 'gold' | 'blue' | 'pink'; icon?: string } | null = null
+      
+      if (streak >= 30) {
+        title = `🔥 ${streak}-Day Streak! Legendary!`
+        heroBadge = { label: 'LEGEND', tone: 'gold', icon: '🔥' }
+      } else if (streak >= 7) {
+        title = `⚡ ${streak}-Day Streak! Amazing!`
+        heroBadge = { label: 'HOT STREAK', tone: 'violet', icon: '⚡' }
+      } else if (gmCount > 0) {
+        title = `☀️ Good Morning! GM Count: ${gmCount}`
+      }
+      
+      // Phase 1D: Daily status in description
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const isToday = lastGMDate && lastGMDate.getTime() >= today.getTime()
+      
+      let desc: string
+      if (isToday && streak > 0) {
+        desc = `✅ GM sent today! Keep your ${streak}-day streak alive • ⚡ Unlock multipliers + hidden boosts • — @gmeowbased`
+      } else if (streak > 0) {
+        desc = `☀️ Send your GM now to continue your ${streak}-day streak! • ⚡ Unlock multipliers + hidden boosts • — @gmeowbased`
+      } else {
+        desc = '🌅 Log your GM streak • ⚡ Unlock multipliers + hidden boosts • — @gmeowbased'
+      }
+      
       const href = `${origin}/gm`
-      if (asJson) return respondJson({ ok: true, type: 'gm', href, description: desc, traces })
+      if (asJson) return respondJson({ ok: true, type: 'gm', href, description: desc, gmCount, streak, traces })
       
       // Phase 1B.2: Add interactive POST action buttons
       const html = buildFrameHtml({
@@ -2382,6 +2486,9 @@ export async function GET(req: Request) {
         frameOrigin: origin,
         frameVersion: FRAME_VERSION,
         frameType: type,
+        heroBadge, // Phase 1D: Add streak milestone badge
+        streak, // Phase 1D: Pass streak for compose text
+        gmCount, // Phase 1D: Pass gmCount for compose text
       })
       return createHtmlResponse(html)
     }
