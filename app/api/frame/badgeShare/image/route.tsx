@@ -545,7 +545,7 @@ function ErrorImage({ message }: { message: string }) {
       </div>
       <div
         style={{
-          fontSize: 48,
+          fontSize: FRAME_FONTS_V2.display,
           fontWeight: 700,
           margin: 0,
         }}
@@ -592,7 +592,7 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
       </div>
       <div
         style={{
-          fontSize: 48,
+          fontSize: FRAME_FONTS_V2.display,
           fontWeight: 700,
           margin: 0,
         }}
@@ -611,7 +611,7 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
       </div>
       <div
         style={{
-          fontSize: 18,
+          fontSize: FRAME_FONTS_V2.body,
           opacity: 0.5,
           margin: 0,
           marginTop: 8,
