@@ -3,9 +3,11 @@
  * Unified typography, colors, and layout constants for all frame image generation
  * 
  * Phase 2 Updates:
- * - Premium font stack using public/fonts (PixelifySans, Gmeow)
+ * - Premium font stack using app/fonts (Gmeow)
  * - Enhanced typography controls (letter-spacing, line-height, text-shadow)
  * - FRAME_FONTS_V2 with semantic naming (display, h1, h2, h3)
+ * 
+ * Note: PixelifySans-Bold removed in commit 419276f (bundle optimization)
  * 
  * Usage:
  * ```typescript
@@ -22,11 +24,11 @@
 
 /**
  * Phase 2: Premium Font Stack
- * Uses fonts from public/fonts/ directory
+ * Uses Gmeow font from app/fonts/ directory (loaded via loadFonts() in frame API route)
  */
 export const FRAME_FONT_FAMILY = {
-  /** Display font for headers and titles (PixelifySans-Bold) */
-  display: 'PixelifySans',
+  /** Display font for headers and titles (Gmeow with higher weight) */
+  display: 'Gmeow',
   
   /** Body font for standard text (Gmeow) */
   body: 'Gmeow',
