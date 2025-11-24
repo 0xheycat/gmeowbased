@@ -10,6 +10,7 @@ import { getMiniappContext } from '@/lib/miniappEnv'
 import { fetchFidByAddress } from '@/lib/neynar'
 // GI-10: Confetti loaded dynamically for performance
 import { getBadgeArtworkBackground } from '@/lib/badge-artwork'
+import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
 import '@/app/styles/quest-card-yugioh.css'
 import '@/app/styles/quest-card-glass.css'
 import '@/app/styles/onboarding-mobile.css'
@@ -1002,10 +1003,14 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
   const Icon = displayedStage.icon
   const progress = ((stage + 1) / ONBOARDING_STAGES.length) * 100
 
+  // Category 11 Batch 3: Focus trap for modal accessibility
+  const focusTrapRef = useFocusTrap(visible)
+
   if (!visible) return null
 
   return (
     <div
+      ref={focusTrapRef}
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg transition-opacity duration-300 ${
         closing ? 'opacity-0' : 'opacity-100'
       }`}
