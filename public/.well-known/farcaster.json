@@ -1,0 +1,50 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjE4MTM5LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4NzUzOTQ3MkRBZDZhMzcxZTZFMTUyQzVBMjAzNDY5YUEzMjMxNDEzMCJ9",
+    "payload": "eyJkb21haW4iOiJnbWVvd2hxLmFydCJ9",
+    "signature": "TURZpn1Psyf48uIuDZbU54FvYFqZgo7PnzXBE4/6J89/nazDAJNI56QYCfY2v3ubODbu63Tkg0yVt+qA7rDHVxw="
+  },
+  "baseBuilder": {
+    "ownerAddress": "0xB4F2fF92E8ccbbeAb7094cef5514A15aeBbbD11F"
+  },
+  "miniapp": {
+    "version": "1.1",
+    "name": "Gmeowbased Adventure",
+    "iconUrl": "https://gmeowhq.art/favicon.ico",
+    "homeUrl": "https://gmeowhq.art",
+    "imageUrl": "https://gmeowhq.art/og-image.png",
+    "buttonTitle": "👋 Say GM",
+    "splashImageUrl": "https://gmeowhq.art/splash.png",
+    "splashBackgroundColor": "#0B0A16",
+    "webhookUrl": "https://gmeowhq.art/api/neynar/webhook",
+    "subtitle": "Daily GM Quest Hub",
+    "description": "Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.",
+    "primaryCategory": "social",
+    "tags": ["gm", "streak", "base", "social", "daily"],
+    "heroImageUrl": "https://gmeowhq.art/hero.png",
+    "tagline": "Keep your GM streak alive",
+    "ogTitle": "Gmeowbased Quest Game",
+    "ogDescription": "Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.",
+    "ogImageUrl": "https://gmeowhq.art/og-image.png",
+    "screenshotUrls": [
+      "https://gmeowhq.art/screenshots/gm-streak.png",
+      "https://gmeowhq.art/screenshots/leaderboard.png",
+      "https://gmeowhq.art/screenshots/badges.png",
+      "https://gmeowhq.art/screenshots/guild.png",
+      "https://gmeowhq.art/screenshots/quest.png"
+    ],
+    "castShareUrl": "https://gmeowhq.art/share/[fid]",
+    "noindex": false,
+    "canonicalDomain": "gmeowhq.art",
+    "requiredChains": [
+      "eip155:8453",
+      "eip155:10",
+      "eip155:42220"
+    ],
+    "requiredCapabilities": [
+      "actions.ready",
+      "actions.composeCast",
+      "wallet.getEthereumProvider"
+    ]
+  }
+}
