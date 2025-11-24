@@ -10054,3 +10054,969 @@ const sizes: Record<SizeNames, [string, string]> = {
 **Next**: Implementation (Actions 1-2)  
 **Deferred**: Actions 3-4 → Category 11 CSS Architecture
 
+
+================================================================================
+CATEGORY 8: MODALS / DIALOGS / POPOVERS (DISCOVERY PHASE)
+================================================================================
+Date: 2024-11-24
+Auditor: GitHub Copilot (Claude Sonnet 4.5)
+Scope: Modal accessibility, z-index layering, scroll locking, dismiss behavior
+
+---
+
+## 8.1 Discovery Phase
+
+### A. Modal/Dialog Inventory
+
+**Total Found**: 8 modal/dialog/overlay components
+
+#### 1. **ProgressXP Modal** (components/ProgressXP.tsx)
+
+**Usage**: XP celebration modal (quest completion, GM, staking)  
+**z-index**: `z-[999]` (999)  
+**WCAG**: ✅ 100% AAA compliant (GI-11 audit)
+
+**ARIA Implementation**:
+```tsx
+<div
+  ref={dialogRef}
+  tabIndex={-1}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby={titleId}
+  aria-describedby={descriptionId}
+  className="fixed inset-0 z-[999] flex items-center justify-center p-6"
+>
+```
+
+**Accessibility Features**:
+- ✅ **role="dialog"** + **aria-modal="true"**
+- ✅ **Focus trap**: Tab loops within modal (FOCUSABLE_SELECTOR)
+- ✅ **Escape key**: Closes modal
+- ✅ **Focus management**: Auto-focus first element, restore on close
+- ✅ **Backdrop click-to-close**: MouseDown handler (event.target === event.currentTarget)
+- ✅ **useId()**: Unique IDs for aria-labelledby/aria-describedby
+
+**Focus Trap Code**:
+```tsx
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+useEffect(() => {
+  if (!open) return
+  const dialogNode = dialogRef.current
+  if (!dialogNode) return
+
+  // Focus first element
+  const focusable = Array.from(dialogNode.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+  if (focusable.length) {
+    focusable[0].focus()
+  } else {
+    dialogNode.focus()
+  }
+
+  // Trap focus within dialog
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+      return
+    }
+    if (event.key !== 'Tab') return
+
+    const focusable = Array.from(dialogNode.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+    // Tab loop implementation...
+  }
+  
+  document.addEventListener('keydown', handleKeyDown)
+  return () => document.removeEventListener('keydown', handleKeyDown)
+}, [open])
+```
+
+**Score**: 100/100 🎯 PERFECT (GI-11 audit verified)
+
+---
+
+#### 2. **XPEventOverlay** (components/XPEventOverlay.tsx)
+
+**Usage**: Wrapper for ProgressXP with event-specific copy (GM, stake, quest, etc.)  
+**z-index**: Inherits from ProgressXP (`z-[999]`)
+
+**Event Types** (10 variants):
+- `gm`: Daily GM celebrations
+- `stake` / `unstake`: Badge staking
+- `quest-create` / `quest-verify`: Quest creation/completion
+- `onchainstats`: Onchain stats sharing
+- `profile`: Profile level-ups
+- `guild`: Guild milestones
+- `referral`: Referral claims
+- `tip`: Tips received
+
+**Features**:
+- ✅ Event-specific headlines ("Daily GM locked in", "Quest completed")
+- ✅ Dynamic share/visit labels
+- ✅ Icon customization (☀️, 🛡️, 🚀, etc.)
+- ✅ Zero-delta guard (doesn't show for 0 XP)
+
+**Score**: 100/100 🎯 PERFECT (wraps ProgressXP properly)
+
+---
+
+#### 3. **OnboardingFlow Modal** (components/intro/OnboardingFlow.tsx)
+
+**Usage**: First-time user onboarding (5-stage tour)  
+**z-index**: `z-[9999]` ⚠️ **EXTREME OUTLIER**
+
+**ARIA Implementation**:
+```tsx
+<div
+  className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="onboarding-title"
+  aria-describedby="onboarding-description"
+  aria-live="polite"
+>
+```
+
+**Accessibility Features**:
+- ✅ **role="dialog"** + **aria-modal="true"**
+- ✅ **Stage navigation**: Tab list with arrow keys (role="tablist", role="tab")
+- ✅ **Progress bar**: aria-valuenow, aria-valuemin, aria-valuemax
+- ✅ **aria-current="step"**: Current stage indicator
+- ✅ **Close button**: Enhanced aria-label with stage info
+- ✅ **Keyboard navigation**: Tab, Shift+Tab, Arrow keys
+
+**Stage Dots Navigation**:
+```tsx
+<div role="tablist" aria-label="Onboarding stages">
+  {ONBOARDING_STAGES.map((stageItem, idx) => (
+    <button
+      key={idx}
+      role="tab"
+      onClick={() => setStage(idx)}
+      aria-selected={idx === stage}
+      aria-label={`${stageItem.title} (Stage ${idx + 1} of ${ONBOARDING_STAGES.length})`}
+      aria-current={idx === stage ? 'step' : undefined}
+      tabIndex={idx === stage ? 0 : -1}
+    />
+  ))}
+</div>
+```
+
+**Issues**:
+- ⚠️ **z-index 9999**: Extreme outlier (should be 90-100 per MCP scale)
+- ⚠️ **No focus trap**: Tab can escape modal (missing focus trap hook)
+- ✅ **Progress**: 100% WCAG AAA except focus trap
+
+**Score**: 92/100 (excellent ARIA, needs focus trap + z-index fix)
+
+---
+
+#### 4. **PixelToast Notification System** (components/ui/PixelToast.tsx)
+
+**Usage**: Toast notifications (success, error, info, warn)  
+**z-index**: `z-[1000]` (1000)  
+**Position**: Fixed bottom-right (mobile: bottom-4, desktop: right-4)
+
+**ARIA Implementation**:
+```tsx
+<div
+  className="fixed bottom-4 right-4 z-[1000] pointer-events-none"
+  role="region"
+  aria-label="Notifications board"
+>
+  <ul>
+    <li role={toast.type === 'error' ? 'alert' : 'status'}>
+      {/* Toast content */}
+    </li>
+  </ul>
+</div>
+```
+
+**Features**:
+- ✅ **role="region"**: Toast container
+- ✅ **role="alert"**: Error toasts (assertive)
+- ✅ **role="status"**: Info/success toasts (polite)
+- ✅ **aria-label**: "Notifications board", "Dismiss notification"
+- ✅ **Toast filtering**: hiddenTypes prop (e.g., hide errors)
+- ✅ **Progress bar**: Visual duration indicator (aria-hidden)
+- ✅ **Clear all button**: Batch dismiss
+
+**Toast Types**:
+- `success`: ✅ Green (#3ee38a)
+- `error`: ⛔ Red (#ff6b6b)
+- `warn`: ⚠️ Yellow (#ffd166)
+- `info`: 💬 Purple (#a07cff)
+
+**Score**: 98/100 (excellent, minor: progress bar could use aria-valuenow)
+
+---
+
+#### 5. **GuildTeamsPage Modal** (components/Guild/GuildTeamsPage.tsx)
+
+**Usage**: Guild team selection modal  
+**z-index**: `z-[1600]` ⚠️ **VERY HIGH**
+
+**Implementation**:
+```tsx
+<div className="guild-modal-backdrop fixed inset-0 z-[1600] flex items-end justify-center px-4 pb-24 transition-opacity duration-200 sm:items-center sm:pb-0">
+  {/* Modal content */}
+</div>
+```
+
+**Issues**:
+- ⚠️ **z-index 1600**: Way too high (should be 90-100)
+- ⚠️ **No role="dialog"**: Missing ARIA dialog role
+- ⚠️ **No aria-modal**: Missing aria-modal="true"
+- ⚠️ **No focus trap**: Tab can escape
+- ⚠️ **No keyboard close**: Missing Escape key handler
+
+**Score**: 60/100 (functional but poor accessibility)
+
+---
+
+#### 6. **BadgeManagerPanel Modals** (components/admin/BadgeManagerPanel.tsx)
+
+**Usage**: Admin badge management (2 modals: create/edit)  
+**z-index**: `z-[90]` ✅ **GOOD**
+
+**Implementation**:
+```tsx
+<div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+  {/* Modal content */}
+</div>
+```
+
+**Features**:
+- ✅ **z-index 90**: Within recommended range (90-100)
+- ✅ **Scrollable**: overflow-y-auto for long forms
+- ⚠️ **No role="dialog"**: Missing ARIA dialog role
+- ⚠️ **No aria-modal**: Missing aria-modal="true"
+- ⚠️ **No focus trap**: Tab can escape
+
+**Score**: 70/100 (good z-index, missing ARIA)
+
+---
+
+#### 7. **App Providers Loading Modal** (app/providers.tsx)
+
+**Usage**: Global loading spinner (wallet connection, auth)  
+**z-index**: `z-[10000]` ⚠️ **EXTREME OUTLIER**
+
+**Implementation**:
+```tsx
+<div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[#060720]/95 backdrop-blur-lg">
+  {/* Loading spinner */}
+</div>
+```
+
+**Issues**:
+- ⚠️ **z-index 10000**: Extreme outlier (highest in entire app)
+- ⚠️ **No ARIA**: Not a dialog, just loading overlay
+- ✅ **Backdrop blur**: Good visual treatment
+
+**Score**: 75/100 (functional, extreme z-index)
+
+---
+
+#### 8. **Quest Wizard Mobile Sheet** (components/quest-wizard/components/Mobile.tsx)
+
+**Usage**: Bottom sheet for mobile quest wizard  
+**z-index**: Backdrop `z-40`, Sheet `z-50`
+
+**Implementation**:
+```tsx
+{/* Backdrop */}
+<div
+  className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+  onClick={onClose}
+/>
+
+{/* Sheet */}
+<div
+  className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl border-t border-white/10 bg-slate-950/95 backdrop-blur-xl lg:hidden"
+>
+  {/* Sheet content */}
+</div>
+```
+
+**Features**:
+- ✅ **z-40/z-50**: Reasonable layering (backdrop < sheet)
+- ✅ **max-h-[90vh]**: Prevents overflow
+- ✅ **Backdrop click-to-close**: onClick handler
+- ⚠️ **No role="dialog"**: Missing ARIA dialog role
+- ⚠️ **No aria-modal**: Missing aria-modal="true"
+- ⚠️ **No focus trap**: Tab can escape
+
+**Score**: 80/100 (good UX, missing ARIA)
+
+---
+
+### B. Z-Index Chaos Audit
+
+**Current z-index values found**: 29 instances across 12 files
+
+#### Z-Index Distribution:
+
+| z-index | Count | Usage | Status |
+|---------|-------|-------|--------|
+| **10000** | 1 | App providers loading | ⛔ EXTREME |
+| **9999** | 2 | Onboarding, gacha animation | ⛔ EXTREME |
+| **2100** | 1 | Live notifications (anchor) | ⚠️ HIGH |
+| **2000** | 1 | Live notifications | ⚠️ HIGH |
+| **1600** | 1 | Guild teams modal | ⚠️ HIGH |
+| **1000** | 2 | Toast, quest FAB | ⚠️ HIGH |
+| **999** | 1 | ProgressXP modal | ✅ REASONABLE |
+| **100** | 1 | Mobile pixel-nav | ⚠️ HIGH |
+| **90** | 2 | Badge admin modals | ✅ GOOD |
+| **60** | 1 | Quest archive | ✅ GOOD |
+| **50** | 4 | Header, FAB, sheet, tooltip | ✅ GOOD |
+| **48** | 1 | Footer nav | ✅ GOOD |
+| **40** | 2 | Dropdown, backdrop | ✅ GOOD |
+| **0-10** | 9 | Content layers | ✅ GOOD |
+
+**Analysis**:
+- ⛔ **3 EXTREME OUTLIERS**: z-10000, z-9999 (×2)
+- ⚠️ **5 HIGH VALUES**: z-2100, z-2000, z-1600, z-1000 (×2)
+- ✅ **21 REASONABLE**: z-90 and below
+
+---
+
+### C. Recommended Z-Index Scale (MCP Best Practice)
+
+**Proposed Standard**:
+```css
+:root {
+  /* Background */
+  --z-bg: -1;
+  --z-bg-overlay: -10;
+  
+  /* Content */
+  --z-content: 0;
+  --z-elevated: 10;
+  
+  /* Navigation */
+  --z-dropdown: 40;
+  --z-header: 45;
+  --z-mobile-nav: 48;
+  
+  /* Overlays */
+  --z-modal-backdrop: 50;
+  --z-modal: 60;
+  --z-sheet: 65;
+  --z-toast: 70;
+  --z-tooltip: 80;
+  
+  /* Critical */
+  --z-critical: 90;        /* Onboarding, loading */
+  --z-dev-tools: 9999;     /* Dev-only */
+}
+```
+
+**Layering Order** (bottom to top):
+1. **Content** (0-10): Base page content
+2. **Navigation** (40-48): Dropdowns, header, mobile nav
+3. **Overlays** (50-80): Modals, sheets, toasts, tooltips
+4. **Critical** (90): Onboarding, full-screen loading
+5. **Dev Tools** (9999): Development aids only
+
+---
+
+### D. Modal Accessibility Patterns
+
+#### ✅ **PERFECT** (ProgressXP pattern):
+```tsx
+// 1. Focus trap hook
+const dialogRef = useFocusTrap(open)
+
+// 2. ARIA attributes
+<div
+  ref={dialogRef}
+  tabIndex={-1}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby={titleId}
+  aria-describedby={descriptionId}
+>
+
+// 3. Keyboard handlers
+useEffect(() => {
+  if (!open) return
+  
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
+    // Tab trap logic...
+  }
+  
+  document.addEventListener('keydown', handleKeyDown)
+  return () => document.removeEventListener('keydown', handleKeyDown)
+}, [open])
+
+// 4. Backdrop click-to-close
+const handleBackdropMouseDown = (event: ReactMouseEvent) => {
+  if (event.target === event.currentTarget) onClose()
+}
+```
+
+#### ⚠️ **NEEDS IMPROVEMENT** (Common pattern):
+```tsx
+// Missing ARIA roles
+<div className="fixed inset-0 z-[1600]">
+  {/* No role="dialog", aria-modal, focus trap */}
+</div>
+```
+
+---
+
+### E. Focus Trap Hook (components/quest-wizard/components/Accessibility.tsx)
+
+**Available**: `useFocusTrap(isActive: boolean)` ✅
+
+**Implementation**:
+```tsx
+export function useFocusTrap(isActive: boolean) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const previousFocus = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (!isActive) return
+
+    // Save previous focus
+    previousFocus.current = document.activeElement as HTMLElement
+
+    // Get focusable elements
+    const getFocusableElements = () => {
+      if (!containerRef.current) return []
+      return Array.from(
+        containerRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      )
+    }
+
+    // Focus first element
+    const focusableElements = getFocusableElements()
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus()
+    }
+
+    // Tab trap
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      
+      const focusable = getFocusableElements()
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      
+      // Restore focus
+      if (previousFocus.current) {
+        previousFocus.current.focus()
+      }
+    }
+  }, [isActive])
+
+  return containerRef
+}
+```
+
+**Features**:
+- ✅ Saves/restores previous focus
+- ✅ Tab loops within modal (forward + backward)
+- ✅ Auto-focus first element
+- ✅ Query excludes [tabindex="-1"]
+
+**Usage**: Already exists, needs to be applied to 5 modals
+
+---
+
+## 8.2 Issue Summary
+
+### Issues Found: 6 (0 P1, 3 P2 HIGH, 3 P3 MEDIUM)
+
+---
+
+### ⚠️ P2 HIGH ISSUE 1: Z-Index Chaos (Extreme Outliers)
+
+**Problem**: 3 extreme z-index values (10000, 9999, 9999) break layering expectations
+
+**Current State**:
+- **z-10000**: App providers loading (app/providers.tsx)
+- **z-9999**: Onboarding modal (components/intro/OnboardingFlow.tsx)
+- **z-9999**: Gacha animation (app/styles/gacha-animation.css)
+
+**Impact**:
+- ⚠️ **UNPREDICTABLE**: Developers unsure what renders above what
+- ⚠️ **COLLISION RISK**: Impossible to layer above these modals
+- ⚠️ **MAINTENANCE**: Extreme values encourage escalation ("just use z-10001")
+
+**Recommendation**: Migrate to MCP z-index scale (z-90 for critical, z-9999 for dev-only)
+
+**Migration**:
+```tsx
+// app/providers.tsx (line 111)
+- <div className="fixed inset-0 z-[10000] ...">
++ <div className="fixed inset-0 z-[90] ...">  /* --z-critical */
+
+// components/intro/OnboardingFlow.tsx (line 1009)
+- <div className="fixed inset-0 z-[9999] ...">
++ <div className="fixed inset-0 z-[90] ...">  /* --z-critical */
+
+// app/styles/gacha-animation.css (line 163)
+- z-index: 9999;
++ z-index: 90;  /* --z-critical */
+```
+
+**Touch Count**: 3 files
+
+---
+
+### ⚠️ P2 HIGH ISSUE 2: High Z-Index Values (1000-2100)
+
+**Problem**: 5 components use z-1000+ (toast, FAB, notifications), higher than modals
+
+**Current State**:
+- **z-2100**: Live notifications anchor (components/ui/live-notifications.tsx)
+- **z-2000**: Live notifications (components/ui/live-notifications.tsx)
+- **z-1600**: Guild teams modal (components/Guild/GuildTeamsPage.tsx)
+- **z-1000**: Toast (components/ui/PixelToast.tsx), Quest FAB (app/globals.css)
+
+**Impact**:
+- ⚠️ **LAYERING CONFLICT**: Toast/FAB render above modals (z-999, z-90)
+- ⚠️ **INTERACTION BLOCKING**: Users can't click modals below toast
+- ⚠️ **INCONSISTENT**: Guild modal at z-1600 but ProgressXP at z-999
+
+**Recommendation**: Migrate to MCP scale (toast z-70, FAB z-50, notifications z-80)
+
+**Migration**:
+```tsx
+// components/ui/PixelToast.tsx (line 63)
+- <div className="fixed bottom-4 right-4 z-[1000] ...">
++ <div className="fixed bottom-4 right-4 z-[70] ...">  /* --z-toast */
+
+// components/ui/live-notifications.tsx (line 200, 224)
+- z-[2000]
++ z-[80]  /* --z-tooltip */
+- z-[2100]
++ z-[80]  /* --z-tooltip */
+
+// app/globals.css (line 93, quest-fab-container)
+- z-index: 1000;
++ z-index: 50;  /* --z-modal-backdrop */
+
+// components/Guild/GuildTeamsPage.tsx (line 159)
+- z-[1600]
++ z-[60]  /* --z-modal */
+```
+
+**Touch Count**: 4 files
+
+---
+
+### ⚠️ P2 HIGH ISSUE 3: Missing ARIA Dialog Roles (5 modals)
+
+**Problem**: 5 modals missing role="dialog" + aria-modal="true"
+
+**Affected Modals**:
+1. **GuildTeamsPage** (z-1600) - No ARIA at all
+2. **BadgeManagerPanel** (×2, z-90) - No ARIA
+3. **Quest Wizard Mobile Sheet** (z-50) - No ARIA
+4. **OnboardingFlow** (z-9999) - Has ARIA but no focus trap
+
+**Impact**:
+- ⚠️ **WCAG 4.1.2 FAIL**: Name, Role, Value (Level A)
+- ⚠️ **SCREEN READERS**: Can't identify modal context
+- ⚠️ **KEYBOARD NAVIGATION**: Tab escapes modal (no focus trap)
+
+**Recommendation**: Add role="dialog", aria-modal="true", use useFocusTrap hook
+
+**Example Fix** (GuildTeamsPage):
+```tsx
+// Before:
+<div className="guild-modal-backdrop fixed inset-0 z-[1600] ...">
+
+// After:
+const dialogRef = useFocusTrap(isModalOpen)
+
+<div 
+  ref={dialogRef}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="guild-modal-title"
+  className="guild-modal-backdrop fixed inset-0 z-[60] ..."
+>
+  <h2 id="guild-modal-title">Select Team</h2>
+```
+
+**Touch Count**: 5 components (Guild, BadgeManager ×2, QuestWizard, OnboardingFlow)
+
+---
+
+### ⚠️ P3 MEDIUM ISSUE 4: Mobile Nav Z-Index Too High
+
+**Problem**: Mobile pixel-nav (z-100) renders above modals (z-60, z-90)
+
+**Current State**:
+```css
+/* app/styles/mobile-miniapp.css (line 237) */
+.pixel-nav {
+  z-index: 100;
+}
+```
+
+**Impact**:
+- ⚠️ **MODAL BLOCKING**: Nav renders above modals, prevents interaction
+- ⚠️ **VISUAL HIERARCHY**: Nav shouldn't be above overlays
+
+**Recommendation**: Reduce to z-48 (--z-mobile-nav)
+
+**Migration**:
+```css
+/* app/styles/mobile-miniapp.css (line 237) */
+.pixel-nav {
+- z-index: 100;
++ z-index: 48;  /* --z-mobile-nav */
+}
+```
+
+**Touch Count**: 1 file
+
+---
+
+### ✅ P3 MEDIUM ISSUE 5: Toast Progress Bar Missing aria-valuenow
+
+**Problem**: Toast progress bar is aria-hidden, but could use aria-valuenow for screen readers
+
+**Current State**:
+```tsx
+// components/ui/PixelToast.tsx (line 160)
+<div className="px-toast-progress-track" aria-hidden>
+  <div className="px-toast-progress" style={{ animationDuration: `${t.duration}ms` }} />
+</div>
+```
+
+**Impact**:
+- ⚠️ **SCREEN READERS**: Can't announce time remaining
+- ✅ **VISUAL**: Progress bar animates correctly
+
+**Recommendation**: Add role="progressbar" + aria-valuenow (optional enhancement)
+
+**Migration**:
+```tsx
+<div 
+  role="progressbar"
+  aria-valuenow={remainingPercent}
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-label={`${remainingSeconds}s remaining`}
+  className="px-toast-progress-track"
+>
+```
+
+**Priority**: P3 MEDIUM (enhancement, not critical)  
+**Touch Count**: 1 file
+
+---
+
+### ✅ P3 MEDIUM ISSUE 6: OnboardingFlow No Focus Trap
+
+**Problem**: Onboarding modal (z-9999) has ARIA but Tab can escape
+
+**Current State**:
+- ✅ Has role="dialog", aria-modal="true"
+- ✅ Has progress bar with aria-valuenow
+- ✅ Has stage navigation with role="tablist"
+- ⚠️ Missing focus trap (Tab escapes modal)
+
+**Impact**:
+- ⚠️ **KEYBOARD NAVIGATION**: Tab key can escape to page behind modal
+- ⚠️ **WCAG 2.4.3**: Focus Order (Level A)
+
+**Recommendation**: Use useFocusTrap hook (already exists)
+
+**Migration**:
+```tsx
+// components/intro/OnboardingFlow.tsx
+import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
+
+export function OnboardingFlow({ ... }) {
+  const dialogRef = useFocusTrap(visible)
+  
+  return (
+    <div ref={dialogRef} role="dialog" aria-modal="true" ...>
+      {/* Existing content */}
+    </div>
+  )
+}
+```
+
+**Touch Count**: 1 file
+
+---
+
+## 8.3 Score Assessment
+
+### Modal/Dialog Health
+
+| Component | ARIA | Focus Trap | Z-Index | Keyboard | Backdrop | Score | Notes |
+|-----------|------|------------|---------|----------|----------|-------|-------|
+| ProgressXP | 100/100 🎯 | ✅ Yes | ⚠️ z-999 (high) | ✅ Tab + Esc | ✅ Click | 98/100 | EXCELLENT |
+| XPEventOverlay | 100/100 🎯 | ✅ Yes (inherit) | ⚠️ z-999 (inherit) | ✅ Tab + Esc | ✅ Click | 98/100 | EXCELLENT |
+| OnboardingFlow | 100/100 🎯 | ❌ No | ⛔ z-9999 (EXTREME) | ⚠️ Tab escapes | ✅ Click | 85/100 | Good ARIA, needs trap |
+| PixelToast | 98/100 | N/A (toast) | ⚠️ z-1000 (high) | ✅ Dismiss | ✅ Clear | 95/100 | EXCELLENT |
+| LiveNotifications | 95/100 | N/A (toast) | ⛔ z-2000+ (EXTREME) | ✅ Dismiss | ✅ Click | 90/100 | GOOD |
+| GuildTeamsModal | ❌ 0/100 | ❌ No | ⛔ z-1600 (EXTREME) | ❌ No Esc | ⚠️ Click | 60/100 | Poor accessibility |
+| BadgeManagerModal | ❌ 0/100 | ❌ No | ✅ z-90 (GOOD) | ❌ No Esc | ⚠️ Click | 70/100 | Good z-index, no ARIA |
+| QuestWizardSheet | ❌ 0/100 | ❌ No | ✅ z-40/z-50 (GOOD) | ❌ No Esc | ✅ Click | 80/100 | Good UX, no ARIA |
+| AppProviders | ❌ N/A (loading) | N/A | ⛔ z-10000 (EXTREME) | N/A | N/A | 75/100 | Functional, extreme z |
+
+**Average Score**: **83/100** (good, but 5 modals need ARIA + focus trap)
+
+**Breakdown**:
+- ✅ **STRENGTHS**: ProgressXP/XPEventOverlay (98-100/100), Toast (95/100)
+- ⚠️ **CONCERNS**: 3 extreme z-index values (9999-10000), 5 modals without ARIA
+- ⛔ **FAILURES**: GuildTeamsModal (60/100), BadgeManagerModal (70/100)
+
+---
+
+## 8.4 Expected Impact (Quick Fixes + Deferred)
+
+### BEFORE (Current):
+- ⛔ 3 extreme z-index outliers (z-9999, z-10000)
+- ⚠️ 5 high z-index values (z-1000 to z-2100)
+- ⚠️ 5 modals missing ARIA dialog roles
+- ⚠️ 5 modals missing focus traps
+- ⚠️ Mobile nav (z-100) blocks modals
+- ✅ ProgressXP/XPEventOverlay: PERFECT (100/100)
+- ✅ Toast: EXCELLENT (95/100)
+
+### AFTER (Quick Fixes):
+- ✅ Document z-index scale (CSS variables in COMPONENT-SYSTEM.md update)
+- ✅ Document modal ARIA pattern (add to COMPONENT-SYSTEM.md)
+- ⏸️ Defer z-index migration to Category 11 (13 files touched)
+- ⏸️ Defer ARIA migration to Category 11 (5 modals touched)
+- ✅ Maintain ProgressXP PERFECT score (100/100)
+
+**Score Improvement**: 83/100 → **85/100** (+2 points, documentation clarity)
+
+---
+
+## 8.5 Recommended Actions
+
+### ✅ Action 1: Document Z-Index Scale (P2 HIGH, 1 file)
+
+**Problem**: No documented z-index standards, chaos across 29 instances
+
+**Solution**: Add Z-Index Scale section to COMPONENT-SYSTEM.md
+
+**Content Addition**:
+```md
+## Z-Index Scale (MCP Best Practice)
+
+### Standard Scale:
+:root {
+  --z-bg: -1;
+  --z-bg-overlay: -10;
+  --z-content: 0;
+  --z-elevated: 10;
+  --z-dropdown: 40;
+  --z-header: 45;
+  --z-mobile-nav: 48;
+  --z-modal-backdrop: 50;
+  --z-modal: 60;
+  --z-sheet: 65;
+  --z-toast: 70;
+  --z-tooltip: 80;
+  --z-critical: 90;
+  --z-dev-tools: 9999;
+}
+
+### Usage Guidelines:
+- **Content** (0-10): Page content, cards, sections
+- **Navigation** (40-48): Dropdowns, header, mobile nav
+- **Overlays** (50-80): Modals, sheets, toasts, tooltips
+- **Critical** (90): Onboarding, full-screen loading
+- **Dev Tools** (9999): Development aids only (DO NOT USE in production)
+
+### ⛔ AVOID:
+- z-index > 100 (except z-9999 for dev tools)
+- Arbitrary values (z-1600, z-10000)
+- Escalation wars ("just use z-10001")
+```
+
+**Priority**: P2 HIGH (critical for maintainability)  
+**Risk**: ZERO (documentation only)
+
+---
+
+### ✅ Action 2: Document Modal ARIA Pattern (P2 HIGH, 1 file)
+
+**Problem**: 5 modals missing ARIA, no documented pattern
+
+**Solution**: Add Modal Accessibility section to COMPONENT-SYSTEM.md
+
+**Content Addition**:
+```md
+## Modal Accessibility Pattern (WCAG AAA)
+
+### Required ARIA:
+- role="dialog"
+- aria-modal="true"
+- aria-labelledby (references title ID)
+- aria-describedby (references description ID, optional)
+
+### Focus Trap:
+import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
+
+const dialogRef = useFocusTrap(isOpen)
+
+<div ref={dialogRef} role="dialog" aria-modal="true" ...>
+
+### Keyboard Navigation:
+- **Escape**: Close modal
+- **Tab**: Loop within modal (focus trap)
+- **Shift+Tab**: Reverse loop
+
+### Backdrop:
+const handleBackdropMouseDown = (e: MouseEvent) => {
+  if (e.target === e.currentTarget) onClose()
+}
+
+### Example (ProgressXP pattern):
+See components/ProgressXP.tsx (100/100 WCAG AAA)
+```
+
+**Priority**: P2 HIGH (5 modals need this)  
+**Risk**: ZERO (documentation only)
+
+---
+
+### ⏸️ Action 3: DEFER Z-Index Migration (P2 HIGH, ~13 files)
+
+**Problem**: 13 files with non-standard z-index values
+
+**Rationale for Deferral**:
+- **High touch count**: 13 files (CSS + TSX)
+- **Visual regression testing required**: Layering changes need QA
+- **Low current impact**: Modals functional, just chaotic
+- **Better batched**: Category 11 CSS Architecture (systematic refactor)
+
+**Migration Plan** (Category 11):
+1. **Create CSS variables**: Add z-index scale to app/globals.css
+2. **Migrate extreme outliers**: z-9999, z-10000 → z-90
+3. **Migrate high values**: z-1000 to z-2100 → z-50 to z-80
+4. **Migrate mobile nav**: z-100 → z-48
+5. **Test layering**: Visual QA on all pages (modals, toasts, nav)
+
+**Touch Count**: ~13 files
+
+---
+
+### ⏸️ Action 4: DEFER ARIA Migration (P2 HIGH, ~5 components)
+
+**Problem**: 5 modals missing role="dialog" + aria-modal + focus trap
+
+**Rationale for Deferral**:
+- **Medium touch count**: 5 components
+- **Functional testing required**: Focus trap needs keyboard QA
+- **Low current impact**: Modals work, just poor screen reader support
+- **Better batched**: Category 11 (with z-index migration)
+
+**Migration Plan** (Category 11):
+1. **GuildTeamsPage**: Add ARIA + useFocusTrap
+2. **BadgeManagerPanel** (×2): Add ARIA + useFocusTrap
+3. **QuestWizardSheet**: Add ARIA + useFocusTrap
+4. **OnboardingFlow**: Add useFocusTrap (already has ARIA)
+5. **Test keyboard navigation**: Tab, Shift+Tab, Escape on all modals
+
+**Touch Count**: ~5 components
+
+---
+
+## 8.6 Decision Rationale
+
+### ✅ Quick Fixes (Actions 1-2):
+- **Action 1**: Z-index scale documentation (~1 section in COMPONENT-SYSTEM.md, P2 HIGH)
+- **Action 2**: Modal ARIA pattern documentation (~1 section in COMPONENT-SYSTEM.md, P2 HIGH)
+
+**Impact**: +2 points (83/100 → 85/100, clarity improvement)
+
+### ⏸️ Deferred to Category 11 (Actions 3-4):
+- **Action 3**: Z-index migration (~13 files, P2 HIGH)
+- **Action 4**: ARIA migration (~5 components, P2 HIGH)
+
+**Rationale**:
+- **Total deferred touch count**: ~18 files
+- **Visual regression testing required**: Layering changes need QA
+- **Keyboard testing required**: Focus trap needs functional QA
+- **Better batched**: Category 11 CSS Architecture (systematic refactor)
+- **Low current impact**: Modals functional, chaos contained
+
+---
+
+## 8.7 Deliverables
+
+1. ✅ **Discovery Audit**: Comprehensive modal/dialog analysis (~800 lines)
+2. ✅ **Z-Index Inventory**: 29 instances across 12 files, categorized
+3. ✅ **Issue Identification**: 6 issues (0 P1, 3 P2, 3 P3), prioritized
+4. 🎯 **Quick Fixes**: Actions 1-2 (z-index scale docs + modal ARIA pattern)
+5. ⏸️ **Deferred Work**: Actions 3-4 → Category 11 (~18 files)
+6. 🎯 **Score Improvement**: 83/100 → 85/100 (+2 points)
+
+---
+
+## 8.8 Next Actions
+
+### Implementation Checklist:
+
+**Phase 1: Documentation (Z-Index Scale)**:
+- [ ] Update COMPONENT-SYSTEM.md with z-index scale section
+  - CSS variables (--z-bg to --z-dev-tools)
+  - Usage guidelines (content, navigation, overlays, critical)
+  - Avoid list (z-index > 100, arbitrary values)
+  - Migration plan for Category 11
+
+**Phase 2: Documentation (Modal ARIA Pattern)**:
+- [ ] Update COMPONENT-SYSTEM.md with modal accessibility section
+  - Required ARIA (role, aria-modal, aria-labelledby)
+  - Focus trap usage (useFocusTrap hook)
+  - Keyboard navigation (Escape, Tab, Shift+Tab)
+  - Backdrop click-to-close pattern
+  - Reference ProgressXP as PERFECT example
+
+**Phase 3: Verification**:
+- [ ] TypeScript verification (pnpm tsc --noEmit)
+
+**Phase 4: Git Commit**:
+- [ ] Stage changes: documentation updates
+- [ ] Commit: "docs(modals): Category 8 quick wins - z-index scale + ARIA patterns (85/100)"
+- [ ] Push to main
+
+**Phase 5: Category 9 Prep**:
+- [ ] Continue to Category 9 (Performance & Smoothness)
+- [ ] Deferred work tracked in Category 11 backlog (~18 files: z-index + ARIA)
+
+---
+
+**Category 8 Status**: ✅ DISCOVERY COMPLETE  
+**Next**: Implementation (Actions 1-2)  
+**Deferred**: Actions 3-4 → Category 11 CSS Architecture
+
