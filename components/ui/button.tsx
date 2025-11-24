@@ -100,7 +100,7 @@ const sizes: Record<SizeNames, [string, string]> = {
   large: ['px-8 py-4 text-[12px] sm:text-xs', 'h-14 w-14 sm:h-16 sm:w-16'],
   medium: ['px-6 py-3 text-[11px] sm:text-xs', 'h-12 w-12 sm:h-13 sm:w-13'],
   small: ['px-4 py-2 text-[10px]', 'h-10 w-10'],
-  mini: ['px-3 py-1.5 text-[9px]', 'h-8 w-8'],
+  mini: ['px-3 py-1.5 text-[9px]', 'h-8 w-8'], // 32px - below 44px touch target (Apple HIG). Use only for desktop-only, non-primary actions (tags, badges, compact UI)
 }
 
 const variantBase: Record<VariantNames, string> = {
