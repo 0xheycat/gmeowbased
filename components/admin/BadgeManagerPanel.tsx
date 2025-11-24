@@ -801,7 +801,7 @@ export default function BadgeManagerPanel() {
         ) : null}
 
         {!loading && templates.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 text-center text-sm text-[var(--px-sub)]">
             No badge templates yet. Create your first template to unlock admin badge uploads.
           </div>
         ) : null}

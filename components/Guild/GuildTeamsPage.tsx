@@ -1062,7 +1062,7 @@ export default function GuildTeamsPage() {
               ))}
             </div>
           ) : showDirectoryEmpty ? (
-            <div className="guild-panel guild-panel--muted rounded-2xl p-5 text-[12px] text-[var(--px-sub)]">
+            <div className="guild-panel guild-panel--muted rounded-2xl p-5 text-sm text-[var(--px-sub)]">
               No guilds match your filters yet. Expand your search or launch a new guild above.
             </div>
           ) : (
