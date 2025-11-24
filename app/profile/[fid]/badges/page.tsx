@@ -114,7 +114,7 @@ export default function UserBadgesPage() {
         {/* Back Button */}
         <Link
           href={`/profile/${fid}`}
-          className="inline-flex items-center gap-2 mb-6 text-sm text-white/70 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 mb-6 min-h-[44px] py-2 text-sm text-white/70 hover:text-white transition-colors"
         >
           <ArrowLeft size={16} weight="bold" />
           Back to Profile
@@ -173,7 +173,7 @@ export default function UserBadgesPage() {
               <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-3">
                 Collection by Tier
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
                 {[
                   { tier: 'mythic', label: 'Mythic', color: '#9C27FF' },
                   { tier: 'legendary', label: 'Legendary', color: '#FFD966' },

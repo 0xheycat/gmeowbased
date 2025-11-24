@@ -615,7 +615,7 @@ export default function ProfilePage() {
                   <label className="mega-card__label" htmlFor="profile-address">
                     Wallet lookup
                   </label>
-                  <div className="mega-card__input-row">
+                  <div className="mega-card__input-row gap-2 sm:gap-3">
                     <input
                       id="profile-address"
                       value={manualInput}
@@ -628,7 +628,7 @@ export default function ProfilePage() {
                       autoComplete="off"
                       inputMode="text"
                     />
-                    <button type="submit" className="pixel-button mega-card__submit">
+                    <button type="submit" className="pixel-button mega-card__submit min-h-[48px]">
                       Sync
                     </button>
                   </div>
@@ -636,7 +636,7 @@ export default function ProfilePage() {
                     {contextAddress ? (
                       <button
                         type="button"
-                        className="mega-card__ghost"
+                        className="mega-card__ghost min-h-[44px] py-2"
                         onClick={() => {
                           setManualInput(contextAddress)
                           setManualMessage('Switched to linked wallet.')

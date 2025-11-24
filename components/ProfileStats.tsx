@@ -415,7 +415,7 @@ export function ProfileStats({ address, data, loading, error }: ProfileStatsProp
                 </div>
               </div>
 
-              <div className="grid flex-1 gap-3 sm:grid-cols-2">
+              <div className="grid flex-1 gap-2 sm:gap-3 sm:grid-cols-2">
                 <MetricCard title="Total points" value={formatNumber(data.totalPoints)} hint="Lifetime earned across chains" />
                 <MetricCard title="Estimated GMs" value={formatNumber(data.estimatedGMs)} hint="Based on per-chain GM reward" />
                 <MetricCard title="Best streak" value={formatNumber(data.streak)} hint="Across all chains" />
