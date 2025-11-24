@@ -14,7 +14,7 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { fetchUserByFid } from '@/lib/neynar'
-import { FRAME_FONTS_V2, FRAME_TYPOGRAPHY, SHARED_COLORS, TIER_COLORS } from '@/lib/frame-design-system'
+import { FRAME_FONTS_V2 } from '@/lib/frame-design-system'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

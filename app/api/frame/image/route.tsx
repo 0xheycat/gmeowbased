@@ -316,14 +316,14 @@ export async function GET(req: Request) {
               }}
             />
 
-            {/* Tier label (top-right badge) */}
+            {/* Tier label (top-right badge) - positioned above header to avoid overlap */}
             {tierInfo && (
               <div
                 style={{
                   display: 'flex',
                   position: 'absolute',
-                  top: 14,
-                  right: 14,
+                  top: 8,
+                  right: 8,
                   padding: FRAME_SPACING.padding.minimal,
                   background: `linear-gradient(135deg, ${tierInfo.colors.gradient.start}, ${tierInfo.colors.gradient.end})`,
                   border: `2px solid ${tierInfo.colors.primary}`,
@@ -484,7 +484,7 @@ export async function GET(req: Request) {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.inline }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Total GMs</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Total GMs</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.h3, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: gmPalette.start }}>{gmCount}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -1725,19 +1725,19 @@ export async function GET(req: Request) {
                 {/* Primary Stats - Large and prominent */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.inline }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Transactions</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Transactions</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: statsPalette.start }}>{txs}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Contracts</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Contracts</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: statsPalette.start }}>{contracts}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Volume</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Volume</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: statsPalette.start }}>{volume}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Balance</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Balance</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.body, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: statsPalette.start }}>{balance}</span>
                   </div>
                 </div>
@@ -1754,13 +1754,13 @@ export async function GET(req: Request) {
                   {firstTx !== '—' && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>First TX</span>
-                      <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{firstTx}</span>
+                      <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.9)' }}>{firstTx}</span>
                     </div>
                   )}
                   {lastTx !== '—' && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Last TX</span>
-                      <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{lastTx}</span>
+                      <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.9)' }}>{lastTx}</span>
                     </div>
                   )}
                 </div>
