@@ -159,7 +159,7 @@ html.dark {
 .card {
   background: linear-gradient(185deg, color-mix(in srgb, var(--shell-overlay) 55%, transparent 45%), color-mix(in srgb, var(--shell-bg) 60%, transparent 40%));
   border: 1px solid color-mix(in srgb, var(--shell-border) 70%, transparent 30%);
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.06),
     inset 0 -6px 14px color-mix(in srgb, var(--gmeow-shell-shadow) 40%, transparent 60%),
@@ -193,7 +193,7 @@ html.dark {
 
 .pixel-button {
   display:inline-flex; align-items:center; justify-content:center; gap:0.5rem;
-  padding:.5rem 1rem; border-radius:.5rem; font-size: .875rem; user-select:none;
+  padding:.5rem 1rem; border-radius:var(--radius-sm); font-size: .875rem; user-select:none;
   background: linear-gradient(180deg, color-mix(in srgb, rgba(255,255,255,0.14) 60%, transparent 40%), rgba(0,0,0,0.28));
   border: 1px solid color-mix(in srgb, var(--shell-border) 65%, transparent 35%);
   color: color-mix(in srgb, var(--shell-text) 90%, white 10%);
@@ -356,7 +356,7 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
    ========================= */
 
 /* Points guide slider */
-.pxg-slider { position:relative; overflow:hidden; border-radius:14px; background: rgba(12,16,28,0.6); padding:6px; }
+.pxg-slider { position:relative; overflow:hidden; border-radius:var(--radius-md-plus); background: rgba(12,16,28,0.6); padding:6px; }
 .pxg-track { display:flex; width:100%; transition: transform 420ms cubic-bezier(.2,.9,.25,1); will-change: transform; }
 .pxg-slide { flex:0 0 100%; padding:6px; }
 .pxg-card { background: color-mix(in srgb, var(--shell-heading) 45%, transparent 55%); border-radius:var(--radius-md); padding:12px; box-shadow: inset 0 0 0 3px var(--px-inner), 0 0 0 3px var(--px-outer); transition: transform 150ms ease, filter 150ms ease; }
@@ -426,7 +426,7 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
    ========================= */
 
 .rank-progress { font-family: var(--site-font, 'Space Grotesk', sans-serif); color:#fefbff; }
-.rank-progress--plain { border-radius: .75rem; border:1px solid rgba(255,215,128,0.18); background: rgba(26,18,48,0.45); padding:1rem; box-shadow: 0 16px 38px rgba(10,8,28,0.35); backdrop-filter: blur(16px); }
+.rank-progress--plain { border-radius: var(--radius-md); border:1px solid rgba(255,215,128,0.18); background: rgba(26,18,48,0.45); padding:1rem; box-shadow: 0 16px 38px rgba(10,8,28,0.35); backdrop-filter: blur(16px); }
 .rank-progress__top { display:flex; align-items:center; justify-content:space-between; gap:1.1rem; }
 .rank-progress__identity { display:flex; align-items:center; gap:.95rem; }
 .rank-progress__level { display:inline-flex; align-items:center; gap:.65rem; border-radius:var(--radius-full); padding:.35rem .9rem .35rem .6rem; background: linear-gradient(120deg, rgba(255,215,128,0.25) 0%, rgba(140,103,255,0.35) 100%); border:1px solid rgba(255,236,171,0.4); box-shadow: 0 14px 32px rgba(39,19,65,0.45), inset 0 1px 0 rgba(255,231,179,0.4); }
@@ -467,7 +467,7 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
    ========================= */
 
 .retro-hero {
-  position:relative; border-radius:32px; border:1px solid rgba(111,148,255,0.35);
+  position:relative; border-radius:var(--radius-4xl); border:1px solid rgba(111,148,255,0.35);
   padding: clamp(2.5rem, 4vw, 3.75rem);
   background: linear-gradient(135deg, rgba(12,18,42,0.94), rgba(6,9,24,0.98));
   box-shadow: 0 35px 80px rgba(5,9,20,0.55); overflow:hidden;
@@ -496,7 +496,7 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
 
 /* ticker & chart */
 .retro-hero-ticker { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:1rem; }
-.ticker-card { position:relative; padding:1.15rem 1.4rem; border-radius:20px; border:1px solid rgba(148,178,255,0.28); background: rgba(12,18,42,0.72); box-shadow: 0 18px 35px rgba(5,9,20,0.32); display:flex; flex-direction:column; gap:.5rem; }
+.ticker-card { position:relative; padding:1.15rem 1.4rem; border-radius:var(--radius-2xl); border:1px solid rgba(148,178,255,0.28); background: rgba(12,18,42,0.72); box-shadow: 0 18px 35px rgba(5,9,20,0.32); display:flex; flex-direction:column; gap:.5rem; }
 .ticker-card::after { content:""; position:absolute; inset:0; border-radius:inherit; opacity:.25; pointer-events:none; }
 .ticker-card.accent-emerald::after { background: radial-gradient(circle at 20% 20%, rgba(122,252,202,0.45), transparent 65%); }
 .ticker-label { font-size:.7rem; letter-spacing:.32em; text-transform:uppercase; color: rgba(148,178,255,0.75); }
@@ -550,9 +550,9 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
 .live-quests .quest-card { background: var(--overlay-dark-24); border-radius:var(--radius-lg); padding:1.6rem 1.5rem; border:1px solid var(--overlay-light-6); display:flex; flex-direction:column; gap:var(--spacing-4); transition: transform .2s ease, box-shadow .2s ease; }
 .live-quests .quest-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
 .live-quests .quest-card-actions { display:flex; gap:.75rem; }
-.live-quests .quest-start { background: rgba(255,255,255,0.12); color:#fff; border-radius:8px; padding:.7rem 1rem; font-weight:600; cursor:pointer; min-height:44px; border:none; flex:1; } /* Issue #1: 43.2px→44px, increased padding */
+.live-quests .quest-start { background: var(--overlay-light-12); color:#fff; border-radius:var(--radius-sm); padding:.7rem 1rem; font-weight:600; cursor:pointer; min-height:44px; border:none; flex:1; } /* Issue #1: 43.2px→44px, increased padding */
 .live-quests .quest-start:hover { background: rgba(255,210,90,0.28); }
-.live-quests .quest-share { background:transparent; color: rgba(255,255,255,0.7); border:1px dashed rgba(255,255,255,0.24); border-radius:8px; padding:.7rem 1rem; min-height:44px; flex:1; } /* Issue #1: 43.2px→44px */
+.live-quests .quest-share { background:transparent; color: rgba(255,255,255,0.7); border:1px dashed rgba(255,255,255,0.24); border-radius:var(--radius-sm); padding:.7rem 1rem; min-height:44px; flex:1; } /* Issue #1: 43.2px→44px */
 .live-quests .quest-share:hover { transform: translateY(-1px); color:#fff; border-color: rgba(255,210,90,0.4); }
 
 /* Performance optimization - Issue #10 */
@@ -690,7 +690,7 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
 .roster-select { appearance:none; -webkit-appearance:none; background-position: right 12px center; background-repeat:no-repeat; padding-right:36px; }
 .roster-select::-ms-expand { display:none; }
 
-.roster-stat { padding:12px 18px; border-radius:14px; background: color-mix(in srgb, var(--shell-overlay) 72%, transparent 28%); border:1px solid color-mix(in srgb, var(--frost-accent) 18%, transparent 82%); display:flex; flex-direction:column; gap:4px; min-width:140px; }
+.roster-stat { padding:12px 18px; border-radius:var(--radius-md-plus); background: color-mix(in srgb, var(--shell-overlay) 72%, transparent 28%); border:1px solid color-mix(in srgb, var(--frost-accent) 18%, transparent 82%); display:flex; flex-direction:column; gap:4px; min-width:140px; }
 .roster-stat strong { font-size:1.25rem; line-height:1.4rem; color: color-mix(in srgb, var(--frost-accent) 72%, white 28%); letter-spacing:.01em; }
 
 /* guild pill */
@@ -698,14 +698,14 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
 .guild-pill--active { background: color-mix(in srgb, var(--guild-pill-bg) 60%, var(--frost-accent) 40%); border-color: color-mix(in srgb, var(--guild-pill-border) 45%, var(--frost-accent) 55%); color: color-mix(in srgb, var(--guild-text) 75%, black 25%); }
 
 /* guild toggle */
-.guild-toggle { display:inline-flex; align-items:stretch; border-radius:14px; border:1px solid var(--guild-border); background: var(--guild-surface); overflow:hidden; }
+.guild-toggle { display:inline-flex; align-items:stretch; border-radius:var(--radius-md-plus); border:1px solid var(--guild-border); background: var(--guild-surface); overflow:hidden; }
 .guild-toggle__option { display:inline-flex; align-items:center; gap:.35rem; padding:.45rem .85rem; min-height:44px; font-size:.68rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color: color-mix(in srgb, var(--guild-text) 65%, var(--guild-text-muted) 35%); background:transparent; border:none; cursor:pointer; transition: color .18s ease, background .18s ease, border-color .18s ease; }
 .guild-toggle__option + .guild-toggle__option { border-left:1px solid color-mix(in srgb, var(--guild-border) 75%, transparent 25%); }
 .guild-toggle__option:hover { color:var(--guild-text); background: color-mix(in srgb, var(--guild-surface-strong) 88%, transparent 12%); }
 .guild-toggle__option.is-active { background: var(--guild-surface-strong); color: var(--guild-text); }
 
 /* guild buttons */
-.guild-button { display:inline-flex; align-items:center; justify-content:center; border-radius:.375rem; font-weight:600; transition: all .16s ease; padding:.6rem 1.1rem; font-size:.82rem; border:1px solid var(--guild-border); background: var(--guild-surface); color: var(--guild-text); box-shadow: 0 10px 26px color-mix(in srgb, var(--guild-glow) 60%, transparent 40%); }
+.guild-button { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--radius-xs); font-weight:600; transition: all .16s ease; padding:.6rem 1.1rem; font-size:.82rem; border:1px solid var(--guild-border); background: var(--guild-surface); color: var(--guild-text); box-shadow: 0 10px 26px color-mix(in srgb, var(--guild-glow) 60%, transparent 40%); }
 .guild-button:hover { transform: translateY(-1px); border-color: var(--guild-border-strong); }
 .guild-button:disabled { opacity:.65; cursor:not-allowed; transform:none; }
 .guild-button--primary { background: linear-gradient(135deg, color-mix(in srgb, var(--glass-accent) 72%, transparent 28%), color-mix(in srgb, var(--frost-accent) 68%, transparent 32%)); border-color: color-mix(in srgb, var(--glass-accent) 55%, var(--guild-border-strong) 45%); color: var(--guild-contrast); }
@@ -731,15 +731,15 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
    ========================= */
 
 .profile-surface { font-family: var(--site-font, 'Space Grotesk', ui-sans-serif); color: var(--shell-text); }
-.profile-avatar-frame { display:grid; place-items:center; width:6rem; height:6rem; border-radius:1rem; overflow:hidden; background: var(--profile-avatar-bg); box-shadow: 0 0 0 2px color-mix(in srgb, var(--profile-border-strong) 70%, transparent 30%), inset 0 0 0 2px color-mix(in srgb, var(--profile-border) 55%, transparent 45%); }
+.profile-avatar-frame { display:grid; place-items:center; width:6rem; height:6rem; border-radius:var(--radius-lg); overflow:hidden; background: var(--profile-avatar-bg); box-shadow: 0 0 0 2px color-mix(in srgb, var(--profile-border-strong) 70%, transparent 30%), inset 0 0 0 2px color-mix(in srgb, var(--profile-border) 55%, transparent 45%); }
 .profile-skeleton-bar { width:8rem; height:1.5rem; border-radius:var(--radius-full); background: color-mix(in srgb, var(--profile-border-soft) 36%, transparent 64%); }
-.profile-metric-card { display:flex; flex-direction:column; gap:.35rem; border-radius:1rem; padding:1rem 1.25rem; background: color-mix(in srgb, var(--profile-surface) 88%, transparent 12%); border:1px solid var(--profile-border); box-shadow: inset 0 0 0 1px color-mix(in srgb, white 5%, transparent), 0 12px 28px color-mix(in srgb, var(--profile-shadow-soft) 55%, transparent 45%); }
+.profile-metric-card { display:flex; flex-direction:column; gap:.35rem; border-radius:var(--radius-lg); padding:1rem 1.25rem; background: color-mix(in srgb, var(--profile-surface) 88%, transparent 12%); border:1px solid var(--profile-border); box-shadow: inset 0 0 0 1px color-mix(in srgb, white 5%, transparent), 0 12px 28px color-mix(in srgb, var(--profile-shadow-soft) 55%, transparent 45%); }
 .profile-metric-title { font-size:.7rem; text-transform:uppercase; letter-spacing:.18em; color: color-mix(in srgb, var(--shell-text) 64%, var(--text-muted) 36%); }
 .profile-metric-value { margin-top:.15rem; font-size:1.35rem; font-weight:800; color: var(--shell-text); text-shadow: 0 1px 0 color-mix(in srgb, var(--profile-shadow) 70%, transparent 30%); }
 
 /* profile history entries */
-.profile-history-entry { display:flex; align-items:center; justify-content:space-between; gap:.75rem; border-radius:.75rem; padding:.5rem .75rem; background: color-mix(in srgb, var(--profile-surface) 88%, transparent 12%); border:1px solid var(--profile-border); box-shadow: inset 0 0 0 1px color-mix(in srgb, white 4%, transparent), 0 8px 20px color-mix(in srgb, var(--profile-shadow-soft) 50%, transparent 50%); }
-.profile-history-streak { display:grid; place-items:center; width:2rem; height:2rem; border-radius:.5rem; font-weight:700; color:#fffbea; background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%); text-shadow: 0 1px 0 rgba(0,0,0,0.35); box-shadow: 0 6px 14px rgba(247,115,24,0.35); }
+.profile-history-entry { display:flex; align-items:center; justify-content:space-between; gap:.75rem; border-radius:var(--radius-md); padding:.5rem .75rem; background: color-mix(in srgb, var(--profile-surface) 88%, transparent 12%); border:1px solid var(--profile-border); box-shadow: inset 0 0 0 1px color-mix(in srgb, white 4%, transparent), 0 8px 20px color-mix(in srgb, var(--profile-shadow-soft) 50%, transparent 50%); }
+.profile-history-streak { display:grid; place-items:center; width:2rem; height:2rem; border-radius:var(--radius-sm); font-weight:700; color:#fffbea; background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%); text-shadow: 0 1px 0 rgba(0,0,0,0.35); box-shadow: 0 6px 14px rgba(247,115,24,0.35); }
 
 /* =========================
    Quest-builder surfaces

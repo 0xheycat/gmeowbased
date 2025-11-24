@@ -164,12 +164,15 @@
   --spacing-24: 6rem;    /* 96px */
 
   /* Border-radius scale tokens (GI-15 Category 11.3) */
-  --radius-sm: 8px;      /* small elements */
+  --radius-xs: 6px;      /* extra small elements (badges, indicators) */
+  --radius-sm: 8px;      /* small elements (buttons) */
   --radius-md: 12px;     /* medium cards */
+  --radius-md-plus: 14px; /* between medium and large */
   --radius-lg: 16px;     /* large cards, default */
   --radius-xl: 18px;     /* extra large cards */
   --radius-2xl: 20px;    /* panels */
   --radius-3xl: 24px;    /* sections */
+  --radius-4xl: 32px;    /* extra large sections */
   --radius-full: 999px;  /* fully rounded (pills, badges) */
 }
 
