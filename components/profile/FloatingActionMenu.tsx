@@ -56,7 +56,7 @@ export function FloatingActionMenu({ actions, className }: FloatingActionMenuPro
         onClick={toggleMenu}
         className={cn(
           'flex items-center justify-center',
-          'w-14 h-14 rounded-full',
+          'w-12 h-12 rounded-full',
           'bg-gradient-to-br from-cyan-500 to-violet-600',
           'hover:from-cyan-400 hover:to-violet-500',
           'active:scale-95',
