@@ -1459,7 +1459,14 @@ function buildFrameHtml(params: {
         background: linear-gradient(135deg, ${framePalette.background}, ${framePalette.secondary}20);
         font-family: system-ui, -apple-system, sans-serif;
         color: white;
-        min-height: 100vh;
+        /* Use dynamic viewport height for iOS Safari address bar handling */
+        min-height: 100dvh;
+      }
+      /* Fallback for browsers without dvh support */
+      @supports not (height: 100dvh) {
+        body {
+          min-height: 100vh;
+        }
       }
       .container {
         max-width: 600px;

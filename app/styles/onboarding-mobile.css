@@ -133,10 +133,18 @@
   }
   
   /* Center onboarding content above mobile nav */
+  /* Use dynamic viewport height for iOS Safari address bar handling */
   .fixed.inset-0.z-\[9999\] > div {
-    max-height: calc(100vh - 100px);
+    max-height: calc(100dvh - 100px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fallback for browsers without dvh support */
+  @supports not (height: 100dvh) {
+    .fixed.inset-0.z-\[9999\] > div {
+      max-height: calc(100vh - 100px);
+    }
   }
 }
 
