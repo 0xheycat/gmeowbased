@@ -1212,3 +1212,4 @@ Special thanks to the Farcaster community for inspiration and feedback.
 
 ---
 
+# Manifest deployment 1763956707
