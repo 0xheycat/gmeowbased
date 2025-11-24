@@ -1197,13 +1197,19 @@ export default function BadgeManagerPanel() {
 
         {/* Phase 3B: Badge Detail Modal */}
         {detailModalOpen && detailModalBadge && (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/70 p-4">
-            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl">
+          <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="badge-detail-title"
+              className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl"
+            >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="pixel-section-title text-lg">Badge Details</h3>
+                <h3 id="badge-detail-title" className="pixel-section-title text-lg">Badge Details</h3>
                 <button
                   className="pixel-button btn-sm min-h-[44px]"
                   onClick={() => setDetailModalOpen(false)}
+                  aria-label="Close badge details modal"
                 >
                   Close
                 </button>
@@ -1289,13 +1295,18 @@ export default function BadgeManagerPanel() {
         )}
 
         {formOpen ? (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/70 p-4">
-            <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl">
+          <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="badge-form-title"
+              className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl"
+            >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="pixel-section-title text-lg">
+                <h3 id="badge-form-title" className="pixel-section-title text-lg">
                   {isEditing ? 'Edit badge template' : 'New badge template'}
                 </h3>
-                <button className="pixel-button btn-sm min-h-[44px]" onClick={closeForm} disabled={formBusy}>
+                <button className="pixel-button btn-sm min-h-[44px]" onClick={closeForm} disabled={formBusy} aria-label="Close badge form modal">
                   Close
                 </button>
               </div>

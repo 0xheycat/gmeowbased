@@ -356,7 +356,7 @@ export function ProfileStats({ address, data, loading, error }: ProfileStatsProp
       {showEmptyState ? (
         <div className="pixel-card w-full">
           <h2 className="pixel-section-title">No profile data yet</h2>
-          <p className="text-base text-[var(--px-sub)]">We couldn't find on-chain activity for this wallet yet. Try sending a GM or joining a guild.</p>
+          <p className="text-base text-[var(--px-sub)]">We couldn&apos;t find on-chain activity for this wallet yet. Try sending a GM or joining a guild.</p>
         </div>
       ) : null}
 

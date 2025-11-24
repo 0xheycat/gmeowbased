@@ -5,6 +5,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import clsx from 'clsx'
 import { useAccount, useChainId, useConfig, useSwitchChain } from 'wagmi'
+import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
 import { getPublicClient, waitForTransactionReceipt, writeContract } from 'wagmi/actions'
 import {
   CHAIN_IDS,
@@ -155,20 +156,39 @@ async function getCurrentUserFarcaster(): Promise<FarcasterUser | null> {
 }
 
 function GuildRulesPanel({ chains, onClose }: { chains: ChainKey[]; onClose: () => void }) {
+  const containerRef = useFocusTrap(true)
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [onClose])
+
   return (
-    <div className="guild-modal-backdrop fixed inset-0 z-[1600] flex items-end justify-center px-4 pb-24 transition-opacity duration-200 sm:items-center sm:pb-0">
+    <div className="guild-modal-backdrop fixed inset-0 z-40 flex items-end justify-center px-4 pb-24 transition-opacity duration-200 sm:items-center sm:pb-0">
       <div className="w-full max-w-xl">
-        <div className="pixel-card guild-modal-card relative overflow-hidden text-left">
+        <div
+          ref={containerRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="guild-rules-title"
+          className="pixel-card guild-modal-card relative overflow-hidden text-left"
+        >
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close guild rules modal"
             className="guild-modal-close absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold uppercase tracking-[0.22em]"
           >
             ✕
           </button>
           <header className="mb-4 flex flex-col gap-1 pr-10">
             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200/70">Gmeow Guilds</p>
-            <h3 className="pixel-heading text-[22px]">Guild Rules &amp; Quick Guide</h3>
+            <h3 id="guild-rules-title" className="pixel-heading text-[22px]">Guild Rules &amp; Quick Guide</h3>
             <p className="text-[12px] text-slate-200">Keep your squads aligned across Base, Optimism, Celo, Ink, and Unichain.</p>
           </header>
           <ol className="list-decimal space-y-3 pl-6 text-[13px] text-sky-100">
