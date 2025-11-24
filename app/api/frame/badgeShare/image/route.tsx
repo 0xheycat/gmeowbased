@@ -14,7 +14,7 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { fetchUserByFid } from '@/lib/neynar'
-import { FRAME_FONTS_V2 } from '@/lib/frame-design-system'
+import { FRAME_FONTS_V2, FRAME_FONT_FAMILY, FRAME_TYPOGRAPHY } from '@/lib/frame-design-system'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -360,7 +360,7 @@ export async function GET(req: Request) {
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   color: '#ffffff',
-                  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+                  fontFamily: FRAME_FONT_FAMILY.body,
                 }}
               >
                 {/* Badge name - More prominent */}
@@ -376,7 +376,7 @@ export async function GET(req: Request) {
                       display: 'flex',
                       fontSize: FRAME_FONTS_V2.h1,
                       fontWeight: 900,
-                      lineHeight: 1.1,
+                      lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
                       color: '#ffffff',
                       textShadow: `0 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px ${tierGradient.start}60`,
                     }}
@@ -402,7 +402,7 @@ export async function GET(req: Request) {
                       style={{
                         display: 'flex',
                         fontSize: FRAME_FONTS_V2.micro,
-                        lineHeight: 1.6,
+                        lineHeight: FRAME_TYPOGRAPHY.lineHeight.loose,
                         margin: 0,
                         color: 'rgba(255, 255, 255, 0.85)',
                       }}
@@ -536,7 +536,7 @@ function ErrorImage({ message }: { message: string }) {
     >
       <div
         style={{
-          fontSize: 80,
+          fontSize: FRAME_FONTS_V2.h1,
           marginBottom: 24,
           fontWeight: 700,
         }}
@@ -584,7 +584,7 @@ function NotFoundImage({ badgeId }: { badgeId: string }) {
     >
       <div
         style={{
-          fontSize: 80,
+          fontSize: FRAME_FONTS_V2.h1,
           marginBottom: 24,
         }}
       >
