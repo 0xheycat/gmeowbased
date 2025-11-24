@@ -143,8 +143,8 @@ function MaintenanceContent() {
 
         <form
           onSubmit={submit}
-          className="pixel-card w-full max-w-sm text-left"
-          style={{ padding: 16, background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))' }}
+          className="pixel-card w-full max-w-sm text-left p-4 sm:p-6"
+          style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))' }}
         >
           <label className="block text-[11px] mb-2">Password</label>
           <input
@@ -156,6 +156,7 @@ function MaintenanceContent() {
               outline: 'none',
               boxShadow: '0 0 0 3px var(--px-outer), inset 0 0 0 3px var(--px-inner)',
               background: '#0e1220',
+              minHeight: '48px',
             }}
             placeholder="Enter access password"
             value={password}
@@ -165,7 +166,7 @@ function MaintenanceContent() {
           />
           <button
             type="submit"
-            className="pixel-button w-full disabled:opacity-60"
+            className="pixel-button w-full min-h-[48px] disabled:opacity-60"
             disabled={loading || !password}
             title="Unlock"
           >

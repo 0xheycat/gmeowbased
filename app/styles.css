@@ -638,6 +638,7 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
 /* inputs */
 .pixel-input, .pixel-textarea, .pixel-select, .pixel-form-control, .theme-shell-input, .theme-shell-select, .theme-shell-textarea {
   background: color-mix(in srgb, var(--shell-overlay) 88%, transparent 12%); border:1px solid color-mix(in srgb, var(--shell-border) 75%, transparent 25%); color:var(--shell-text); border-radius:12px; padding:.75rem 1rem;
+  min-height: 48px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 16px color-mix(in srgb, var(--frost-shadow) 40%, transparent 60%);
   backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }

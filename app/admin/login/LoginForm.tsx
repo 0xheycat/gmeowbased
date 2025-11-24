@@ -49,7 +49,7 @@ export function AdminLoginForm({ totpRequired, nextPath }: AdminLoginFormProps) 
 
   return (
     <form
-      className="mt-6 space-y-4"
+      className="mt-6 space-y-5"
       onSubmit={(event) => {
         event.preventDefault()
         void handleSubmit()
@@ -58,7 +58,7 @@ export function AdminLoginForm({ totpRequired, nextPath }: AdminLoginFormProps) 
       <label className="flex flex-col gap-1 text-[12px] text-white/80">
         Admin passphrase
         <input
-          className="rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+          className="rounded-lg border border-white/15 bg-black/40 px-3 py-3 min-h-[48px] text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
           type="password"
           autoComplete="current-password"
           value={passcode}
@@ -70,7 +70,7 @@ export function AdminLoginForm({ totpRequired, nextPath }: AdminLoginFormProps) 
       <label className="flex flex-col gap-1 text-[12px] text-white/80">
         One-time code {totpRequired ? '(required)' : '(optional)'}
         <input
-          className="rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+          className="rounded-lg border border-white/15 bg-black/40 px-3 py-3 min-h-[48px] text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
@@ -99,7 +99,7 @@ export function AdminLoginForm({ totpRequired, nextPath }: AdminLoginFormProps) 
 
       <button
         type="submit"
-        className="pixel-button w-full justify-center py-2 text-sm disabled:opacity-50"
+        className="pixel-button w-full justify-center py-3 min-h-[48px] text-sm disabled:opacity-50"
         disabled={submitting}
       >
         {submitting ? 'Signing in…' : 'Unlock control center'}
