@@ -26,7 +26,7 @@ export default function DashboardMobileTabs<Id extends string = string>({
             key={tab.id}
             type="button"
             className={clsx(
-              'flex min-w-[7.5rem] items-center justify-center gap-2 rounded-xl px-3 py-2 text-[12px] uppercase tracking-[0.18em] transition',
+              'flex min-w-[7.5rem] min-h-[44px] items-center justify-center gap-2 rounded-xl px-3 py-2 text-[12px] uppercase tracking-[0.18em] transition',
               active
                 ? 'bg-emerald-500/15 text-emerald-100 shadow-[0_0_16px_rgba(16,185,129,0.35)] border border-emerald-400/60'
                 : 'bg-white/5 text-white/70 border border-white/10 hover:border-emerald-300/40 hover:text-white'
