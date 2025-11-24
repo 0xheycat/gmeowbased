@@ -21,6 +21,8 @@
   border-radius: 16px;
   background: linear-gradient(145deg, var(--card-gold-light), var(--card-gold-dark));
   padding: 8px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 550px;
   box-shadow: 
     0 8px 32px var(--card-shadow),
     0 0 0 1px var(--card-gold-light),
@@ -92,11 +94,16 @@
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid var(--card-gold-dark);
   border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 0.9rem;
+  padding: 10px 12px;
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .quest-card-yugioh__bookmark:hover {
@@ -522,6 +529,7 @@
   .quest-card-yugioh {
     max-width: 100%;
     padding: 6px;
+    aspect-ratio: 2.5 / 3.2;
   }
   
   .quest-card-yugioh__body {
@@ -552,6 +560,48 @@
   
   .quest-card-yugioh__description-text {
     font-size: 0.7rem;
+  }
+  
+  .quest-card-yugioh:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--card-shadow);
+  }
+}
+
+@media (max-width: 375px) {
+  .quest-card-yugioh {
+    padding: 5px;
+    aspect-ratio: 2.5 / 2.9;
+  }
+  
+  .quest-card-yugioh__body {
+    padding: 6px;
+    gap: 3px;
+  }
+  
+  .quest-card-yugioh__name {
+    font-size: 0.85rem;
+  }
+  
+  .quest-card-yugioh__attribute-corner {
+    width: 42px;
+    height: 42px;
+    top: 10px;
+    right: 10px;
+  }
+  
+  .quest-card-yugioh__description-box {
+    padding: 6px;
+    max-height: 100px;
+  }
+}
+
+@media (hover: none) {
+  .quest-card-yugioh:hover {
+    transform: none;
+    box-shadow: 
+      0 8px 32px var(--card-shadow),
+      0 0 0 1px var(--card-gold-light);
   }
 }
 
