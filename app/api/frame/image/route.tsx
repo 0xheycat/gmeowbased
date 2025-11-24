@@ -488,11 +488,11 @@ export async function GET(req: Request) {
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.h3, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: gmPalette.start }}>{gmCount}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Streak</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Streak</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.h3, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: gmPalette.start }}>🔥 {streak}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Rank</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Rank</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.h3, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: gmPalette.start}}>#{rank}</span>
                   </div>
                 </div>
@@ -1749,7 +1749,7 @@ export async function GET(req: Request) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.tight }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Age</span>
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{age}</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 700, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.9)' }}>{age}</span>
                   </div>
                   {firstTx !== '—' && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1809,7 +1809,7 @@ export async function GET(req: Request) {
                       border: `1px solid ${statsPalette.start}`,
                     }}
                   >
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Builder Score</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Builder Score</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.h3, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: statsPalette.start }}>{builder}</span>
                   </div>
                 )}
@@ -1827,7 +1827,7 @@ export async function GET(req: Request) {
                       border: `1px solid ${statsPalette.start}`,
                     }}
                   >
-                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7, textTransform: 'uppercase' }}>Neynar Score</span>
+                    <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase' }}>Neynar Score</span>
                     <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.h2, fontWeight: 900, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight, color: statsPalette.start }}>{neynar}</span>
                   </div>
                 )}
