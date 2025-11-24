@@ -6,7 +6,6 @@ import './styles/mobile-miniapp.css'
 import { MiniAppProvider } from './providers'
 import type { ReactNode } from 'react'
 import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
-import { SkipToContent } from '@/components/quest-wizard/components/Accessibility'
 
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
@@ -81,7 +80,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="fc:frame" content={JSON.stringify(gmFrame)} />
       </head>
       <body className="min-h-screen pixel-page" style={{ color: 'var(--text-color)' }}>
-        <SkipToContent targetId="main-content" />
+        <a
+          href="#main-content"
+          className="absolute left-4 top-4 z-50 -translate-y-24 rounded-lg bg-sky-500 px-4 py-2 font-semibold text-white transition focus:translate-y-0"
+        >
+          Skip to main content
+        </a>
         <MiniAppProvider>
           <GmeowLayout>{children}</GmeowLayout>
         </MiniAppProvider>
