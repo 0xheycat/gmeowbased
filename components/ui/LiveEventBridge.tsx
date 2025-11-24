@@ -112,7 +112,7 @@ export function LiveEventBridge() {
         address: getContractAddress(chain),
         abi: GM_CONTRACT_ABI,
         poll: true,
-        pollingInterval: 8000,
+        pollingInterval: 15000, // Increased from 8s to 15s to reduce RPC pressure
       } as const
 
       const register = (stop?: () => void) => {
