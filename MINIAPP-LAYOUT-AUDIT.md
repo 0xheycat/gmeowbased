@@ -14775,3 +14775,194 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
 ---
 
+
+---
+
+### 🔍 BATCH 2 DISCOVERY: P2 HIGH - Modal Accessibility
+
+**Status**: 🔍 IN PROGRESS  
+**Date**: November 24, 2025  
+**Objective**: Audit 5 modals for ARIA compliance and keyboard support, audit 13 files for z-index migration
+
+---
+
+#### **Modal Audit Results**
+
+**1. OnboardingFlow.tsx** ✅ ALREADY COMPLIANT (95/100):
+- **Location**: `components/intro/OnboardingFlow.tsx` (1630 lines)
+- **ARIA Attributes**: ✅ COMPLETE
+  - `role="dialog"` (line 1012)
+  - `aria-modal="true"` (line 1013)
+  - `aria-labelledby="onboarding-title"` (line 1014)
+  - Progress bar: `role="progressbar"` with aria-valuenow, aria-valuemin, aria-valuemax, aria-label (line 1035)
+  - Tab navigation: `role="tablist"` and `role="tab"` with tabIndex (lines 1053-1065)
+  - Stage content: `role="article"` with `aria-labelledby` (lines 1100-1101)
+- **Keyboard Support**: ✅ IMPLEMENTED
+  - Escape key closes modal (lines 880-881: `if (e.key === 'Escape')`)
+  - Arrow key navigation for stages (documented in Category 10)
+  - Tab focus management with tabIndex={idx === stage ? 0 : -1}
+- **Missing**: Focus trap (useFocusTrap not used)
+- **Score**: 95/100 (excellent ARIA, missing focus trap)
+- **Action**: Add useFocusTrap for Tab loop containment
+
+---
+
+**2. GuildRulesPanel** (GuildTeamsPage.tsx) ❌ NEEDS ARIA (40/100):
+- **Location**: `components/Guild/GuildTeamsPage.tsx` lines 157-197
+- **ARIA Attributes**: ❌ MISSING
+  - No `role="dialog"`
+  - No `aria-modal="true"`
+  - No `aria-labelledby` (has h3.pixel-heading "Guild Rules & Quick Guide")
+- **Keyboard Support**: ❌ MISSING
+  - No Escape key handler
+  - No focus trap
+  - No keyboard close button (only mouse onClick)
+- **Structure**:
+  ```tsx
+  <div className="guild-modal-backdrop fixed inset-0 z-[1600]...">
+    <div className="w-full max-w-xl">
+      <div className="pixel-card guild-modal-card relative overflow-hidden text-left">
+        <button type="button" onClick={onClose} className="guild-modal-close absolute right-4 top-4...">✕</button>
+        <header className="mb-4 flex flex-col gap-1 pr-10">
+          <p className="text-[11px]...">Gmeow Guilds</p>
+          <h3 className="pixel-heading text-[22px]">Guild Rules & Quick Guide</h3>
+        </header>
+        ...
+      </div>
+    </div>
+  </div>
+  ```
+- **Score**: 40/100 (modal structure exists, no ARIA/keyboard)
+- **Action**: Add role="dialog", aria-modal, aria-labelledby, Escape handler, useFocusTrap
+
+---
+
+**3. BadgeManagerPanel - Detail Modal** ❌ NEEDS ARIA (40/100):
+- **Location**: `components/admin/BadgeManagerPanel.tsx` lines 1199-1280+ (Phase 3B)
+- **ARIA Attributes**: ❌ MISSING
+  - No `role="dialog"`
+  - No `aria-modal="true"`
+  - No `aria-labelledby` (has h3.pixel-section-title "Badge Details")
+- **Keyboard Support**: ❌ MISSING
+  - No Escape key handler
+  - No focus trap
+  - No keyboard close button (only mouse onClick)
+- **Structure**:
+  ```tsx
+  {detailModalOpen && detailModalBadge && (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="pixel-section-title text-lg">Badge Details</h3>
+          <button className="pixel-button btn-sm min-h-[44px]" onClick={() => setDetailModalOpen(false)}>Close</button>
+        </div>
+        ...
+      </div>
+    </div>
+  )}
+  ```
+- **Score**: 40/100 (modal structure exists, no ARIA/keyboard)
+- **Action**: Add role="dialog", aria-modal, aria-labelledby, Escape handler, useFocusTrap
+
+---
+
+**4. BadgeManagerPanel - Create/Edit Modal** (Search Required):
+- **Location**: `components/admin/BadgeManagerPanel.tsx` (1628 lines total)
+- **Status**: Need to search for additional modals in BadgeManagerPanel
+- **Action**: Search for modal patterns (fixed inset-0, z-[90+], backdrop)
+
+---
+
+**5. QuestWizard.tsx** ⚠️ PARTIAL (60/100):
+- **Location**: `components/quest-wizard/QuestWizard.tsx` (257 lines)
+- **Modal Type**: Full-page wizard (not traditional modal)
+- **ARIA Attributes**: ⚠️ PARTIAL
+  - No explicit `role="dialog"` (full-page context)
+  - Uses WizardHeader component (need to check for aria-labelledby)
+  - Stepper component likely has ARIA (documented in Category 10)
+- **Keyboard Support**: ⚠️ PARTIAL
+  - Dynamic imports (PreviewCard, DebugPanel, XPEventOverlay)
+  - Need to check for Escape handler, focus management
+- **Score**: 60/100 (partial implementation, full-page wizard context)
+- **Action**: Verify ARIA labels, add Escape handler if missing, consider focus management
+
+---
+
+#### **Modal Discovery Summary**
+
+**Files Requiring ARIA Migration**:
+1. ❌ **GuildTeamsPage.tsx** (GuildRulesPanel) - Lines 157-197
+2. ❌ **BadgeManagerPanel.tsx** (Detail Modal) - Lines 1199-1280+
+3. ⚠️ **BadgeManagerPanel.tsx** (Create/Edit Modal) - Location TBD
+4. ⚠️ **QuestWizard.tsx** - Lines 1-257 (verify/enhance)
+5. ✅ **OnboardingFlow.tsx** - Lines 1-1630 (add focus trap only)
+
+**Priority Classification**:
+- **P2 HIGH (CRITICAL)**: GuildRulesPanel, BadgeManagerPanel Detail Modal (complete ARIA missing)
+- **P2 HIGH (ENHANCEMENT)**: OnboardingFlow (add focus trap)
+- **P3 MEDIUM (VERIFY)**: QuestWizard, BadgeManagerPanel Create/Edit Modal
+
+**Estimated Effort**: 2-3 hours
+- GuildRulesPanel: 30 minutes (add ARIA + keyboard + focus trap)
+- BadgeManagerPanel Detail Modal: 30 minutes (add ARIA + keyboard + focus trap)
+- BadgeManagerPanel Create/Edit Modal: 30 minutes (search + implement)
+- QuestWizard: 30 minutes (verify + enhance)
+- OnboardingFlow: 15 minutes (add focus trap)
+- Testing: 30 minutes (keyboard, screen reader, ARIA validation)
+
+---
+
+#### **Z-Index Audit** (13 files from Category 5)
+
+**Z-Index System** (Documented in Category 5):
+```
+z-0    = Base content
+z-10   = Sticky elements (headers, nav)
+z-20   = Dropdowns
+z-30   = Overlays (tooltips, popovers)
+z-40   = Modals (dialogs, drawers)
+z-50   = Critical UI (notifications, alerts, skip-to-content)
+z-[60+]  = Custom overrides (to migrate)
+```
+
+**Files with z-[custom] values** (from Category 5 discovery):
+1. `components/Guild/GuildTeamsPage.tsx`: `z-[1600]` → should be `z-40` (modal)
+2. `components/admin/BadgeManagerPanel.tsx`: `z-[90]` → should be `z-40` (modal)
+3-13. **Additional files**: Need grep search for `z-\[` pattern across components/ and app/
+
+**Z-Index Migration Plan**:
+1. Search for all `z-\[` arbitrary values in components, pages, CSS
+2. Categorize by element type (modal, dropdown, overlay, notification)
+3. Replace with Tailwind scale (z-10, z-20, z-30, z-40, z-50)
+4. Test stacking order (modals above dropdowns, notifications above modals)
+5. Update CSS files (globals.css, Dashboard.css, etc.)
+
+**Estimated Effort**: 1 hour
+- Search: 10 minutes
+- Categorization: 10 minutes
+- Migration: 30 minutes (batch replace)
+- Testing: 10 minutes (visual stacking order)
+
+---
+
+#### **Next Steps**
+
+**Immediate Actions**:
+1. ✅ Search for additional BadgeManagerPanel modals
+2. ✅ Search for all z-[custom] values across codebase
+3. ✅ Verify QuestWizard modal implementation
+4. ⏸️ Start implementing ARIA fixes (GuildRulesPanel, BadgeManagerPanel)
+
+**GI-13 Dependency Audit Preparation**:
+- [ ] Component hierarchy: Verify modal parent-child relationships
+- [ ] Bundle size: useFocusTrap already exists (no new dependencies)
+- [ ] Performance: Modal ARIA attributes have no performance impact
+- [ ] Mobile/MiniApp: Modal keyboard support improves touch+keyboard users
+- [ ] Frame metadata: Not affected (no OG changes)
+- [ ] Test coverage: Keyboard navigation, screen reader, ARIA validation
+- [ ] Safe patching: No new files, update existing modals
+- [ ] Caching: Not affected (no API changes)
+- [ ] Documentation: Update MINIAPP-LAYOUT-AUDIT.md, COMPONENT-SYSTEM.md
+
+---
+
