@@ -40,7 +40,7 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
     
     // After 3 seconds, assume we're not in a miniapp context and proceed
     const fallbackTimer = setTimeout(() => {
-      if (mounted && !miniappChecked) {
+      if (mounted) {
         console.log('[MiniAppProvider] Miniapp check timeout, proceeding without miniapp context')
         setMiniappChecked(true)
       }
@@ -51,7 +51,7 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('miniapp:ready', handleMiniappReady as EventListener)
       clearTimeout(fallbackTimer)
     }
-  }, [miniappChecked])
+  }, [])
 
   // Load miniapp context on mount (for logging/debugging)
   useEffect(() => {
