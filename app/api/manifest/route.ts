@@ -78,6 +78,8 @@ export const GET = withErrorHandler(async () => {
       name: 'Gmeowbased Adventure',
       iconUrl: toAbsoluteUrl('/favicon.ico', baseUrl),
       homeUrl: toAbsoluteUrl('/', baseUrl),
+      imageUrl: toAbsoluteUrl('/og-image.png', baseUrl), // Social share image
+      buttonTitle: '👋 Say GM', // Launch CTA
       splashImageUrl: toAbsoluteUrl('/splash.png', baseUrl),
       splashBackgroundColor: '#0B0A16',
       webhookUrl: toAbsoluteUrl('/api/neynar/webhook', baseUrl),
@@ -92,6 +94,14 @@ export const GET = withErrorHandler(async () => {
       ogDescription:
         'Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.',
       ogImageUrl: toAbsoluteUrl('/og-image.png', baseUrl),
+      screenshotUrls: [
+        toAbsoluteUrl('/screenshots/gm-streak.png', baseUrl),
+        toAbsoluteUrl('/screenshots/leaderboard.png', baseUrl),
+        toAbsoluteUrl('/screenshots/badges.png', baseUrl),
+        toAbsoluteUrl('/screenshots/guild.png', baseUrl),
+        toAbsoluteUrl('/screenshots/quest.png', baseUrl),
+      ], // App store screenshots
+      castShareUrl: toAbsoluteUrl('/share/[fid]', baseUrl), // Personalized sharing
       noindex: false,
       canonicalDomain: baseUrl.hostname,
       requiredChains: ['eip155:8453', 'eip155:10', 'eip155:42220'],
