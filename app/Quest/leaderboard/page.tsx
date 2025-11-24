@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkle } from 'phosphor-react'
+import { Sparkle } from '@phosphor-icons/react'
 import { buildFrameShareUrl, openWarpcastComposer, type FrameShareInput } from '@/lib/share'
 
 type Row = {
