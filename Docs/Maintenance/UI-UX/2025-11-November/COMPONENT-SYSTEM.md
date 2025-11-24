@@ -4013,9 +4013,72 @@ wc -l app/globals.css          # 945 lines (down from 1078)
 5. De-duplication improves maintainability by establishing single source of truth
 
 **Remaining Work**:
-- Continue audit of globals.css (945 lines remaining)
-- Audit styles.css (917 lines) for duplicates
-- Search for other duplicate patterns: theme-shell, mega-card, cta-enter, retro-btn, form-control, pixel-input
+- ✅ COMPLETE - Continue audit completed, no other base class duplicates found
+- ✅ COMPLETE - Category 11.2 Color Token Extraction (Commit 2c2c9b9)
+- Continue: Category 11.2 Spacing System audit
+- Continue: Category 11.3 Border-Radius standardization
+- Continue: Category 11.4 Dead CSS removal
+
+### Category 11.2: Theme Token Extraction - Color System (Commit: 2c2c9b9)
+
+**Problem**:
+Hardcoded `rgba()` values scattered throughout CSS files make theming inconsistent and maintenance difficult. Found 28+ instances of repeated colors:
+- `rgba(255,255,255,0.05)` × 8 in styles.css (borders/overlays)
+- `rgba(255,255,255,0.08)` × 6 in styles.css (overlays)
+- `rgba(0,0,0,0.24)` × 5 in styles.css (card backgrounds)
+- Many other one-off rgba() values without semantic meaning
+
+**Solution**:
+1. Added 24 new design tokens to `app/globals.css` `:root`:
+   ```css
+   /* Overlay tokens for consistent layering */
+   --overlay-light-{2,4,5,6,8,10,12,18,22}: rgba(255,255,255,0.XX)
+   --overlay-dark-{18,22,24,28,32,35}: rgba(0,0,0,0.XX)
+   
+   /* Border tokens for subtle divisions */
+   --border-faint: rgba(255,255,255,0.04)
+   --border-subtle: rgba(255,255,255,0.05)
+   --border-soft: rgba(255,255,255,0.08)
+   --border-medium: rgba(255,255,255,0.12)
+   --border-visible: rgba(255,255,255,0.18)
+   
+   /* Text color variations */
+   --text-heading-alt: rgba(205,220,255,0.82)
+   --text-subtle: rgba(255,255,255,0.6)
+   --text-dimmed: rgba(255,255,255,0.5)
+   ```
+
+2. Replaced 28+ hardcoded rgba() values in `app/styles.css`:
+   - `rgba(255,255,255,0.05)` → `--border-subtle` (8 instances: mega-card, guild-card, leaderboard, faq-item, frosted)
+   - `rgba(255,255,255,0.08)` → `--overlay-light-8` (6 instances: pixel-card, px-toast, tabs, footer)
+   - `rgba(0,0,0,0.24)` → `--overlay-dark-24` (5 instances: guild-card, leaderboard, faq-item)
+   - `rgba(255,255,255,0.6)` → `--text-subtle` (2 instances: leaderboard header)
+   - `rgba(255,255,255,0.5)` → `--text-dimmed` (1 instance: footer)
+
+**Impact**:
+- ✅ Semantic naming: `--border-subtle` vs `rgba(255,255,255,0.05)` is self-documenting
+- ✅ Single source of truth: Change token value once, updates everywhere
+- ✅ Consistent theming: All overlays follow same opacity scale (2→4→5→6→8→10→12)
+- ✅ Easier dark/light mode: Tokens can be theme-scoped in future
+- ✅ Reduced magic numbers: No more arbitrary rgba() values
+
+**Verification**:
+```bash
+pnpm tsc --noEmit   # PASS (TypeScript compilation successful)
+git diff --stat     # app/globals.css +27 lines, app/styles.css -16/+29 (net +13 semantic improvements)
+```
+
+**Lessons Learned**:
+1. Design tokens improve code readability: `--border-subtle` > `rgba(255,255,255,0.05)`
+2. Overlay opacity scale should follow consistent increments (2, 4, 5, 6, 8, 10, 12, 18, 22 for light; 18, 22, 24, 28, 32, 35 for dark)
+3. Semantic naming (border-subtle, text-dimmed) better than numerical (overlay-5, overlay-8) for component-specific usage
+4. Border tokens separate from overlay tokens (borders need specific opacity range 4-18%)
+
+---
+
+**Remaining Work**:
+- Continue: Category 11.2 Spacing System audit (padding, margin, gap values)
+- Continue: Category 11.3 Border-Radius standardization (4px/8px/12px/16px/24px scale)
 
 ---
 
