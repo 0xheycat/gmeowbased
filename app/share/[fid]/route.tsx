@@ -38,8 +38,8 @@ async function loadFonts() {
         style: 'normal' as const,
       },
     ]
-  } catch (err) {
-    console.error('[Share Route] Failed to load fonts:', err)
+  } catch {
+    console.error('[Share Route] Failed to load fonts')
     return []
   }
 }
@@ -84,6 +84,7 @@ export async function GET(
       >
         {/* Background Image */}
         {bgImage && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={bgImage}
             alt="background"
