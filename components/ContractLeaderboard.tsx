@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Sparkle } from 'phosphor-react'
+import { Sparkle } from '@phosphor-icons/react'
 import { Progress } from '@/components/ui/progress'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 
