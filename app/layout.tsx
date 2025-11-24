@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import localFont from 'next/font/local'
 import './globals.css'
 import './styles.css'
 import './styles/quest-card.css'
@@ -6,6 +7,24 @@ import './styles/mobile-miniapp.css'
 import { MiniAppProvider } from './providers'
 import type { ReactNode } from 'react'
 import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
+
+// Category 11 Frame Fix: Import Gmeow font from app/fonts (deleted from public/fonts in 419276f)
+const gmeowFont = localFont({
+  src: [
+    {
+      path: './fonts/gmeow.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: './fonts/gmeow.woff',
+      weight: '400',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-gmeow',
+  display: 'swap',
+})
 
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
@@ -75,7 +94,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={gmeowFont.variable}>
       <head>
         <meta name="fc:frame" content={JSON.stringify(gmFrame)} />
       </head>

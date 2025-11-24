@@ -217,17 +217,12 @@
 /* ===== END QUEST FAB ===== */
 
 /* ===== GLOBAL STYLES ===== */
-@font-face {
-  font-family: 'Gmeow';
-  src: url('/fonts/gmeow.woff2') format('woff2'),
-       url('/fonts/gmeow.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* Category 11 Frame Fix: Use Next.js localFont variable instead of @font-face
+   Font files moved from /public/fonts/ to app/fonts/ in commit 419276f
+   Now imported via next/font/local in app/layout.tsx as --font-gmeow variable */
 
 :root {
-  --site-font: 'Gmeow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --site-font: var(--font-gmeow), 'Gmeow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* ======================================================
