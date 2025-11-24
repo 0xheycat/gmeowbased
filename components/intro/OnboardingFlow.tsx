@@ -472,21 +472,36 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           }
         }
         
-        // Priority 3: Try miniapp context with extended timeout
+        // Priority 3: Try miniapp context with extended timeout for mobile
         if (!fid) {
           try {
             console.log('[OnboardingFlow] Attempting miniapp context...')
-            const miniappContext = await Promise.race([
-              getMiniappContext(),
-              new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
+            // Wait for miniapp:ready event or timeout after 8 seconds
+            const miniappReady = await Promise.race([
+              new Promise<boolean>((resolve) => {
+                const handler = (e: CustomEvent) => {
+                  if (e.detail?.success) {
+                    window.removeEventListener('miniapp:ready', handler as EventListener)
+                    resolve(true)
+                  }
+                }
+                window.addEventListener('miniapp:ready', handler as EventListener)
+              }),
+              new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000))
             ])
             
-            if (miniappContext?.user?.fid) {
-              fid = miniappContext.user.fid
-              fidSource = 'miniapp-context'
-              console.log('[OnboardingFlow] ✅ FID from miniapp context:', fid)
+            if (miniappReady) {
+              // SDK is ready, now get context
+              const miniappContext = await getMiniappContext()
+              if (miniappContext?.user?.fid) {
+                fid = miniappContext.user.fid
+                fidSource = 'miniapp-context'
+                console.log('[OnboardingFlow] ✅ FID from miniapp context:', fid)
+              } else {
+                console.log('[OnboardingFlow] ⚠️ No FID in miniapp context:', miniappContext)
+              }
             } else {
-              console.log('[OnboardingFlow] ⚠️ No FID in miniapp context:', miniappContext)
+              console.log('[OnboardingFlow] ⚠️ Miniapp SDK not ready after 8s timeout')
             }
           } catch (miniappError) {
             console.log('[OnboardingFlow] ⚠️ Miniapp context error:', miniappError)

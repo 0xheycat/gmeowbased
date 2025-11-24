@@ -24,7 +24,7 @@ export function isAllowedReferrer(): boolean {
 }
 
 // Probe the miniapp. Only returns true if we’re embedded in an allowed referrer and SDK handshakes.
-export async function probeMiniappReady(timeoutMs = 800): Promise<boolean> {
+export async function probeMiniappReady(timeoutMs = 2000): Promise<boolean> {
   if (!isEmbedded() || !isAllowedReferrer()) return false
   try {
     const { sdk } = await import('@farcaster/miniapp-sdk')
@@ -53,11 +53,11 @@ export async function getMiniappContext(): Promise<any | null> {
     console.log('[getMiniappContext] Loading SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
     
-    // Wait for context with timeout
+    // Wait for context with longer timeout for mobile
     const context = await Promise.race([
       sdk.context,
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('SDK context timeout')), 5000)
+        setTimeout(() => reject(new Error('SDK context timeout')), 10000)
       )
     ])
     
@@ -118,22 +118,22 @@ export async function fireMiniappReady(): Promise<void> {
     console.log('[miniappEnv] Embedded in allowed referrer, loading SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
     
-    // Wait for context to be available with extended timeout
+    // Wait for context to be available with extended timeout (longer for mobile)
     console.log('[miniappEnv] Waiting for SDK context...')
     const context = await Promise.race([
       sdk.context,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 8000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 15000))
     ])
     
     console.log('[miniappEnv] SDK context ready:', context)
     
-    // Call ready action with retry logic
+    // Call ready action with retry logic (longer timeout for mobile)
     if (sdk.actions?.ready) {
       console.log('[miniappEnv] Calling actions.ready()...')
       try {
         await Promise.race([
           sdk.actions.ready(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout')), 5000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout')), 10000))
         ])
         console.log('[miniappEnv] ✅ actions.ready() completed successfully')
       } catch (readyError) {

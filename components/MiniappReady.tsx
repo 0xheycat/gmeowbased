@@ -21,29 +21,34 @@ export function MiniappReady() {
             .then(() => {
               if (mounted) {
                 console.log('[MiniappReady] Successfully fired ready signal')
+                // Emit custom event for other components to listen
+                window.dispatchEvent(new CustomEvent('miniapp:ready', { detail: { success: true } }))
               }
             })
             .catch((error) => {
               console.warn('[MiniappReady] Error firing ready:', error)
               
-              // Retry up to 3 times with exponential backoff
-              if (mounted && attemptsRef.current < 3) {
-                const delay = Math.min(1000 * Math.pow(2, attemptsRef.current), 4000)
-                console.log(`[MiniappReady] Retrying in ${delay}ms... (attempt ${attemptsRef.current + 1}/3)`)
+              // Retry up to 5 times with exponential backoff (increased for mobile)
+              if (mounted && attemptsRef.current < 5) {
+                const delay = Math.min(2000 * Math.pow(1.5, attemptsRef.current), 10000)
+                console.log(`[MiniappReady] Retrying in ${delay}ms... (attempt ${attemptsRef.current + 1}/5)`)
                 
                 retryTimeoutRef.current = setTimeout(() => {
                   attemptsRef.current += 1
                   attemptReady()
                 }, delay)
+              } else if (mounted) {
+                // Emit failure event after all retries exhausted
+                window.dispatchEvent(new CustomEvent('miniapp:ready', { detail: { success: false, error } }))
               }
             })
         }
 
         if ('requestIdleCallback' in window) {
-          requestIdleCallback(runReady, { timeout: 500 })
+          requestIdleCallback(runReady, { timeout: 1000 })
         } else {
           // Fallback for browsers without requestIdleCallback
-          setTimeout(runReady, 100)
+          setTimeout(runReady, 200)
         }
       } catch (error) {
         console.warn('[MiniappReady] Unexpected error:', error)

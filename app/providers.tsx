@@ -17,12 +17,43 @@ import { getMiniappContext } from '@/lib/miniappEnv'
 
 export function MiniAppProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
+  const [miniappReady, setMiniappReady] = useState(false)
+  const [miniappChecked, setMiniappChecked] = useState(false)
 
   // Initialize performance monitoring
   useEffect(() => {
     initWebVitals()
     initPerformanceMonitoring()
   }, [])
+
+  // Listen for miniapp ready status
+  useEffect(() => {
+    let mounted = true
+    
+    const handleMiniappReady = (e: CustomEvent) => {
+      if (mounted) {
+        console.log('[MiniAppProvider] Miniapp ready event:', e.detail)
+        setMiniappReady(e.detail?.success ?? false)
+        setMiniappChecked(true)
+      }
+    }
+    
+    window.addEventListener('miniapp:ready', handleMiniappReady as EventListener)
+    
+    // After 3 seconds, assume we're not in a miniapp context and proceed
+    const fallbackTimer = setTimeout(() => {
+      if (mounted && !miniappChecked) {
+        console.log('[MiniAppProvider] Miniapp check timeout, proceeding without miniapp context')
+        setMiniappChecked(true)
+      }
+    }, 3000)
+    
+    return () => {
+      mounted = false
+      window.removeEventListener('miniapp:ready', handleMiniappReady as EventListener)
+      clearTimeout(fallbackTimer)
+    }
+  }, [miniappChecked])
 
   // Load miniapp context on mount (for logging/debugging)
   useEffect(() => {
@@ -77,6 +108,23 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
         >
           <LayoutModeProvider>
             <MiniappReady />
+            {/* Show loading overlay if we're checking miniapp status */}
+            {!miniappChecked && typeof window !== 'undefined' && window.self !== window.top && (
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[#060720]/95 backdrop-blur-lg">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-white/5 shadow-[0_24px_80px_rgba(12,13,54,0.45)]">
+                    <div className="absolute inset-0 rounded-3xl border border-white/10" />
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-[#fdbb2d]" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-extrabold text-white">Connecting to Farcaster...</h1>
+                    <p className="mt-2 text-sm text-slate-400">
+                      Initializing miniapp environment
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <NotificationProvider>
               <LiveEventBridge />
               {children}
