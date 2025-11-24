@@ -1,13 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 import dynamic from 'next/dynamic'
 import { OnboardingFlow } from '@/components/intro/OnboardingFlow'
-import { HeroSection } from '@/components/home/HeroSection'
 import { OnchainHub } from '@/components/home/OnchainHub'
-import type { FAQItem, GuildPreview, HeroUser, LeaderboardEntry, QuestPreview } from '@/components/home/types'
-import { fetchUserByAddress, type FarcasterUser } from '@/lib/neynar'
+import type { FAQItem, GuildPreview, LeaderboardEntry, QuestPreview } from '@/components/home/types'
 
 // Below-fold sections - dynamically loaded to improve initial page load
 const HowItWorks = dynamic(() => import('@/components/home/HowItWorks').then(mod => ({ default: mod.HowItWorks })), {
@@ -107,7 +105,6 @@ const INTRO_STORAGE_KEY = 'gmeow:onboarding.v1'
 
 function HomePage() {
   const { address, isConnected } = useAccount()
-  const [userProfile, setUserProfile] = useState<FarcasterUser | null>(null)
   const [forceIntro, setForceIntro] = useState(false)
   const [statsLoading, setStatsLoading] = useState(false)
   const [hydrated, setHydrated] = useState(false)
@@ -115,34 +112,6 @@ function HomePage() {
   useEffect(() => {
     setHydrated(true)
   }, [])
-
-  useEffect(() => {
-    if (!address) {
-      setUserProfile(null)
-      return
-    }
-
-    let cancelled = false
-
-    const loadProfile = async () => {
-      try {
-        const profile = await fetchUserByAddress(address)
-        if (!cancelled) {
-          setUserProfile(profile ?? null)
-        }
-      } catch {
-        if (!cancelled) {
-          setUserProfile(null)
-        }
-      }
-    }
-
-    loadProfile()
-
-    return () => {
-      cancelled = true
-    }
-  }, [address])
 
   useEffect(() => {
     if (!hydrated) return
@@ -159,29 +128,6 @@ function HomePage() {
     }
   }, [hydrated])
 
-  const heroUser = useMemo<HeroUser>(() => {
-    if (!userProfile) return {}
-    return {
-      fid: userProfile.fid ?? null,
-      username: userProfile.username ?? userProfile.displayName ?? null,
-      streak: userProfile.contractData?.currentStreak ?? 0,
-      longestStreak: userProfile.contractData?.longestStreak ?? 0,
-      totalGMs: userProfile.contractData?.totalGMs ?? 0,
-      points: userProfile.contractData?.points ?? 0,
-      lastGMTimestamp: userProfile.contractData?.lastGMTimestamp ?? null,
-      canGM:
-        typeof userProfile.contractData?.canGMToday === 'boolean' ? userProfile.contractData?.canGMToday : undefined,
-      powerBadge: userProfile.powerBadge ?? null,
-    }
-  }, [userProfile])
-
-  const scrollToStats = useCallback(() => {
-    const target = document.getElementById('onchain-hub')
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }, [])
-
   const handleIntroFinish = useCallback(() => {
     setForceIntro(false)
     try {
@@ -189,15 +135,6 @@ function HomePage() {
     } catch {
       // ignore storage write errors
     }
-  }, [])
-
-  const handleReplayIntro = useCallback(() => {
-    try {
-      window.localStorage.removeItem(INTRO_STORAGE_KEY)
-    } catch {
-      // ignore storage access issues
-    }
-    setForceIntro(true)
   }, [])
 
   const handleStatsLoading = useCallback((loading: boolean) => {
@@ -211,12 +148,6 @@ function HomePage() {
       <OnboardingFlow forceShow={forceIntro} onComplete={handleIntroFinish} />
       <div className="page-root">
         <main>
-          <HeroSection
-            user={heroUser}
-            statsLoading={statsLoading}
-            onRevealStats={scrollToStats}
-            onReplayIntro={handleReplayIntro}
-          />
           <OnchainHub loading={statsLoading} onLoadingChange={handleStatsLoading} />
           <HowItWorks />
           <LiveQuests quests={QUEST_PREVIEWS} />
