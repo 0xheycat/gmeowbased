@@ -465,3 +465,406 @@ import { Loader } from '@/components/ui/loader'
 **Last Updated**: 2024-11-24  
 **Next Review**: Category 11 CSS Architecture  
 **Maintainer**: @Copilot
+
+---
+
+## Z-Index Scale (MCP Best Practice)
+
+**Last Updated**: 2024-11-24 (Category 8: Modals/Dialogs/Popovers)  
+**Status**: Recommended standard (migration to Category 11)
+
+### Current State: Z-Index Chaos
+
+**29 z-index values found** across 12 files:
+- ⛔ **3 extreme outliers**: z-10000, z-9999 (×2)
+- ⚠️ **5 high values**: z-2100, z-2000, z-1600, z-1000 (×2)
+- ✅ **21 reasonable**: z-90 and below
+
+### Standard Z-Index Scale
+
+```css
+:root {
+  /* Background layers */
+  --z-bg: -1;              /* Background patterns, overlays */
+  --z-bg-overlay: -10;     /* Decorative background effects */
+  
+  /* Content layers */
+  --z-content: 0;          /* Base page content */
+  --z-elevated: 10;        /* Raised cards, sections */
+  
+  /* Navigation layers */
+  --z-dropdown: 40;        /* Dropdown menus */
+  --z-header: 45;          /* Page header */
+  --z-mobile-nav: 48;      /* Bottom mobile navigation */
+  
+  /* Overlay layers */
+  --z-modal-backdrop: 50;  /* Modal backdrop */
+  --z-modal: 60;           /* Modal dialogs */
+  --z-sheet: 65;           /* Bottom sheets */
+  --z-toast: 70;           /* Toast notifications */
+  --z-tooltip: 80;         /* Tooltips, popovers */
+  
+  /* Critical layers */
+  --z-critical: 90;        /* Onboarding, full-screen loading */
+  --z-dev-tools: 9999;     /* Dev-only (DO NOT USE in production) */
+}
+```
+
+### Layering Hierarchy (Bottom to Top)
+
+| Layer | Z-Index | Usage | Examples |
+|-------|---------|-------|----------|
+| **Background** | -10 to -1 | Decorative effects | Gradients, patterns |
+| **Content** | 0 to 10 | Page content | Cards, sections |
+| **Navigation** | 40 to 48 | Menus, headers | Dropdowns, nav bars |
+| **Overlays** | 50 to 80 | Floating UI | Modals, toasts, tooltips |
+| **Critical** | 90 | Full-screen | Onboarding, loading |
+| **Dev Tools** | 9999 | Dev-only | Debug panels (never production) |
+
+### Usage Guidelines
+
+#### ✅ DO:
+- **Use CSS variables**: `z-index: var(--z-modal);` instead of `z-index: 60;`
+- **Follow hierarchy**: Content → Navigation → Overlays → Critical
+- **Stay within range**: 0-90 for production UI (9999 dev-only)
+- **Document exceptions**: If you must deviate, explain why
+
+#### ⛔ AVOID:
+- **z-index > 100**: Breaks layering expectations (except z-9999 for dev)
+- **Arbitrary values**: z-1600, z-10000, z-2100 (chaos)
+- **Escalation wars**: "Just use z-10001" to fix conflicts
+- **Inline styles**: Use CSS variables or Tailwind classes
+
+### Migration Guide (Category 11)
+
+**Current Issues** (to be fixed in Category 11):
+
+| Current | Status | Should Be | File |
+|---------|--------|-----------|------|
+| z-10000 | ⛔ EXTREME | z-90 (--z-critical) | app/providers.tsx |
+| z-9999 (×2) | ⛔ EXTREME | z-90 (--z-critical) | OnboardingFlow, gacha-animation |
+| z-2100, z-2000 | ⚠️ HIGH | z-80 (--z-tooltip) | live-notifications.tsx |
+| z-1600 | ⚠️ HIGH | z-60 (--z-modal) | GuildTeamsPage.tsx |
+| z-1000 (×2) | ⚠️ HIGH | z-70 (--z-toast), z-50 (--z-backdrop) | PixelToast, quest-fab |
+| z-100 | ⚠️ HIGH | z-48 (--z-mobile-nav) | mobile-miniapp.css |
+
+**Migration Steps**:
+1. Create CSS variables in `app/globals.css` (--z-* scale)
+2. Migrate extreme outliers first (z-9999, z-10000 → z-90)
+3. Migrate high values (z-1000 to z-2100 → z-50 to z-80)
+4. Migrate mobile nav (z-100 → z-48)
+5. Visual regression testing (modal layering QA)
+
+### Examples
+
+#### ✅ GOOD (Using CSS Variables):
+```css
+/* app/globals.css */
+.modal-backdrop {
+  z-index: var(--z-modal-backdrop);  /* 50 */
+}
+
+.modal-content {
+  z-index: var(--z-modal);  /* 60 */
+}
+```
+
+#### ⚠️ NEEDS MIGRATION (Arbitrary Values):
+```tsx
+// BEFORE: Arbitrary z-index
+<div className="fixed inset-0 z-[1600] ...">
+
+// AFTER: Use CSS variable
+<div className="fixed inset-0 z-[60] ...">  /* --z-modal */
+```
+
+---
+
+## Modal Accessibility Pattern (WCAG AAA)
+
+**Last Updated**: 2024-11-24 (Category 8: Modals/Dialogs/Popovers)  
+**Status**: Required for all dialogs (5 modals need migration in Category 11)
+
+### Current State: Mixed Accessibility
+
+**8 modals audited**:
+- ✅ **2 PERFECT**: ProgressXP (100/100), XPEventOverlay (100/100)
+- ⚠️ **5 NEEDS ARIA**: GuildTeams, BadgeManager (×2), QuestWizard, OnboardingFlow
+- ⚠️ **5 NEEDS FOCUS TRAP**: Same 5 modals
+
+### Required ARIA Attributes
+
+Every modal/dialog MUST have:
+
+```tsx
+<div
+  ref={dialogRef}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-title-id"
+  aria-describedby="modal-description-id"  // Optional but recommended
+  tabIndex={-1}
+>
+  <h2 id="modal-title-id">Modal Title</h2>
+  <p id="modal-description-id">Description of what this modal does</p>
+</div>
+```
+
+**Why each attribute matters**:
+- **role="dialog"**: Identifies modal to screen readers (WCAG 4.1.2 Level A)
+- **aria-modal="true"**: Restricts screen reader navigation to modal content
+- **aria-labelledby**: Links modal to title element (screen reader reads title first)
+- **aria-describedby**: Links to description (provides context)
+- **tabIndex={-1}**: Allows programmatic focus (not keyboard focus)
+
+### Focus Trap Implementation
+
+**Use existing hook**: `components/quest-wizard/components/Accessibility.tsx`
+
+```tsx
+import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
+
+export function MyModal({ isOpen, onClose }: ModalProps) {
+  const dialogRef = useFocusTrap(isOpen)
+  
+  return isOpen ? (
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="my-modal-title"
+    >
+      <h2 id="my-modal-title">Modal Title</h2>
+      {/* Modal content */}
+    </div>
+  ) : null
+}
+```
+
+**What the hook does**:
+1. **Saves previous focus**: `previousFocus.current = document.activeElement`
+2. **Focuses first element**: Auto-focus button/input on modal open
+3. **Traps Tab key**: Loops focus within modal (forward + backward)
+4. **Restores focus**: Returns focus to trigger element on close
+
+### Keyboard Navigation
+
+**Required keyboard handlers**:
+
+```tsx
+useEffect(() => {
+  if (!isOpen) return
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+    }
+  }
+
+  document.addEventListener('keydown', handleKeyDown)
+  return () => document.removeEventListener('keydown', handleKeyDown)
+}, [isOpen, onClose])
+```
+
+**Keyboard requirements**:
+- **Escape**: Close modal (WCAG 2.1.1 Keyboard Level A)
+- **Tab**: Loop within modal (forward)
+- **Shift+Tab**: Loop within modal (backward)
+- **Enter/Space**: Activate focused button
+
+### Backdrop Click-to-Close
+
+**Safe implementation** (prevents accidental closes):
+
+```tsx
+const handleBackdropMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+  // Only close if clicking backdrop itself, not modal content
+  if (event.target === event.currentTarget) {
+    onClose()
+  }
+}
+
+return (
+  <div
+    className="fixed inset-0 bg-black/80"
+    onMouseDown={handleBackdropMouseDown}
+  >
+    <div className="modal-content">
+      {/* Modal content - clicks here won't trigger onClose */}
+    </div>
+  </div>
+)
+```
+
+**Why onMouseDown instead of onClick**:
+- Prevents click propagation from modal content
+- User can press mouse inside modal, release outside → no close
+
+### Complete Modal Example (ProgressXP Pattern)
+
+**PERFECT 100/100 WCAG AAA implementation**:
+
+```tsx
+'use client'
+
+import { useCallback, useEffect, useId, useRef } from 'react'
+import type { MouseEvent as ReactMouseEvent } from 'react'
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+export function ProgressXP({ open, onClose }: ModalProps) {
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const titleId = useId()
+  const descriptionId = useId()
+
+  // Backdrop click-to-close
+  const handleBackdropMouseDown = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (event.target === event.currentTarget) onClose()
+    },
+    [onClose]
+  )
+
+  // Focus management + keyboard handlers
+  useEffect(() => {
+    if (!open) return
+
+    const dialogNode = dialogRef.current
+    if (!dialogNode) return
+
+    // Focus first element
+    const focusable = Array.from(
+      dialogNode.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+    )
+    if (focusable.length) {
+      focusable[0].focus()
+    } else {
+      dialogNode.focus()
+    }
+
+    // Keyboard handlers
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      // Tab trap logic
+      const focusable = Array.from(
+        dialogNode.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+      ).filter(
+        (element) => !element.hasAttribute('aria-hidden')
+      )
+
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === first) {
+          event.preventDefault()
+          last.focus()
+        }
+      } else {
+        // Tab
+        if (document.activeElement === last) {
+          event.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open, onClose])
+
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-6"
+      onMouseDown={handleBackdropMouseDown}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" aria-hidden="true" />
+
+      {/* Modal content */}
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        className="relative max-w-md w-full"
+      >
+        <h2 id={titleId}>XP Earned!</h2>
+        <p id={descriptionId}>You gained 50 XP from completing this quest.</p>
+        
+        <button onClick={onClose}>Close</button>
+      </div>
+    </div>
+  )
+}
+```
+
+### Migration Checklist (Category 11)
+
+**5 modals need ARIA + focus trap**:
+
+- [ ] **GuildTeamsPage.tsx** (z-1600)
+  - Add role="dialog", aria-modal="true"
+  - Add useFocusTrap hook
+  - Add Escape key handler
+  - Reduce z-index to z-60 (--z-modal)
+
+- [ ] **BadgeManagerPanel.tsx** (×2 modals, z-90)
+  - Add role="dialog", aria-modal="true" (both modals)
+  - Add useFocusTrap hook (both)
+  - Add Escape key handler (both)
+  - Z-index already good (90)
+
+- [ ] **QuestWizardSheet (Mobile.tsx)** (z-40/z-50)
+  - Add role="dialog", aria-modal="true"
+  - Add useFocusTrap hook
+  - Add Escape key handler
+  - Z-index already good (40/50)
+
+- [ ] **OnboardingFlow.tsx** (z-9999)
+  - Already has role="dialog", aria-modal="true" ✅
+  - Add useFocusTrap hook (missing)
+  - Reduce z-index to z-90 (--z-critical)
+
+### Testing Checklist
+
+After migration, test each modal:
+
+**Keyboard Navigation**:
+- [ ] Press Tab → Focus loops within modal
+- [ ] Press Shift+Tab → Focus loops backward
+- [ ] Press Escape → Modal closes
+- [ ] Focus returns to trigger element after close
+
+**Screen Reader** (NVDA/JAWS/VoiceOver):
+- [ ] Modal announced as "dialog"
+- [ ] Title read first (aria-labelledby)
+- [ ] Description read (aria-describedby)
+- [ ] Navigation restricted to modal (aria-modal)
+
+**Mouse/Touch**:
+- [ ] Click backdrop → Modal closes
+- [ ] Click modal content → Modal stays open
+- [ ] All buttons clickable
+
+---
+
+**Last Updated**: 2024-11-24  
+**Next Migration**: Category 11 CSS Architecture  
+**Maintainer**: @Copilot
