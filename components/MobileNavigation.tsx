@@ -24,10 +24,10 @@ export function MobileNavigation() {
 
   const items: NavItem[] = [
     { href: '/', label: 'Home', icon: HouseLine },
-    { href: '/Dashboard', label: 'Dash', icon: ChartLine },
-    { href: '/Quest', label: 'Quests', icon: Scroll },
-    { href: '/leaderboard', label: 'Ranks', icon: Trophy },
+    { href: '/Quest', label: 'Quests', icon: Scroll }, // Most used - left thumb easy
+    { href: '/Dashboard', label: 'Dash', icon: ChartLine }, // Center - both hands
     { href: '/Guild', label: 'Guild', icon: UsersThree },
+    { href: '/leaderboard', label: 'Ranks', icon: Trophy },
     // Profile removed - accessible via header dropdown
   ]
 

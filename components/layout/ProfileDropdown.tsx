@@ -122,7 +122,7 @@ export function ProfileDropdown() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 transition-colors hover:border-[#7CFF7A]/30 hover:bg-[#7CFF7A]/10 sm:pr-3"
+        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1.5 transition-colors hover:border-[#7CFF7A]/30 hover:bg-[#7CFF7A]/10 sm:p-1 sm:pr-3"
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-label={`Profile menu for @${username}`}
@@ -153,7 +153,7 @@ export function ProfileDropdown() {
 
       {/* Dropdown menu */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-72 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-72 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0B0A16]/95 shadow-2xl backdrop-blur-xl">
             {/* Profile header */}
             <div className="border-b border-white/10 p-4">

@@ -57,7 +57,7 @@ export function GmeowLayout({ children }: { children: ReactNode }) {
       <div className="gmeow-layout-main flex min-h-screen flex-1 flex-col">
         <GmeowHeader />
         <main className="flex-1 px-3 pb-24 pt-4 sm:px-6 sm:pb-28 sm:pt-6 lg:px-10 xl:px-12 2xl:px-16 2xl:pt-8">
-          <div className="mx-auto w-full max-w-6xl space-y-8 sm:space-y-10 lg:space-y-12">{children}</div>
+          <div className="mx-auto w-full max-w-6xl space-y-6 sm:space-y-8 lg:space-y-10 xl:space-y-12">{children}</div>
         </main>
         <SiteFooter />
         {isMobile && <MobileNavigation />}

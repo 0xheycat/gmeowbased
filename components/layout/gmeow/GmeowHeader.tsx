@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { Scroll, Lightning } from '@phosphor-icons/react'
 
 import { LayoutModeSwitch } from '@/components/ui/LayoutModeSwitch'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
@@ -38,14 +39,23 @@ export function GmeowHeader() {
     >
       {/* LEFT */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Mobile: Layout + Theme switches on left */}
-        <div className="flex items-center gap-1.5 lg:hidden">
-          <div className="theme-shell-icon theme-shell-icon--badge grid h-8 w-8 place-items-center rounded-lg border">
-            <LayoutModeSwitch className="scale-75" />
-          </div>
-          <div className="theme-shell-icon theme-shell-icon--badge grid h-8 w-8 place-items-center rounded-lg border">
-            <ThemeToggle />
-          </div>
+        {/* Mobile: Quick actions (GM + Quests) */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <Link
+            href="/Quest"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 transition-colors hover:border-[var(--px-accent)]/60 hover:bg-[var(--px-accent)]/5"
+            aria-label="View Quests"
+          >
+            <Scroll size={18} weight="regular" />
+          </Link>
+          <Link
+            href="/gm"
+            className="flex h-9 items-center gap-1.5 rounded-full border border-[#7CFF7A]/30 bg-[#7CFF7A]/10 px-3 text-sm font-medium transition-colors hover:border-[#7CFF7A]/50 hover:bg-[#7CFF7A]/15"
+            aria-label="Daily GM"
+          >
+            <Lightning size={16} weight="fill" className="text-[#7CFF7A]" />
+            <span className="text-[#7CFF7A]">GM</span>
+          </Link>
         </div>
 
         {/* Desktop: Logo + text */}
