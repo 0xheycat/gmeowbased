@@ -698,7 +698,7 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
 
 /* guild toggle */
 .guild-toggle { display:inline-flex; align-items:stretch; border-radius:14px; border:1px solid var(--guild-border); background: var(--guild-surface); overflow:hidden; }
-.guild-toggle__option { display:inline-flex; align-items:center; gap:.35rem; padding:.45rem .85rem; font-size:.68rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color: color-mix(in srgb, var(--guild-text) 65%, var(--guild-text-muted) 35%); background:transparent; border:none; cursor:pointer; transition: color .18s ease, background .18s ease, border-color .18s ease; }
+.guild-toggle__option { display:inline-flex; align-items:center; gap:.35rem; padding:.45rem .85rem; min-height:44px; font-size:.68rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color: color-mix(in srgb, var(--guild-text) 65%, var(--guild-text-muted) 35%); background:transparent; border:none; cursor:pointer; transition: color .18s ease, background .18s ease, border-color .18s ease; }
 .guild-toggle__option + .guild-toggle__option { border-left:1px solid color-mix(in srgb, var(--guild-border) 75%, transparent 25%); }
 .guild-toggle__option:hover { color:var(--guild-text); background: color-mix(in srgb, var(--guild-surface-strong) 88%, transparent 12%); }
 .guild-toggle__option.is-active { background: var(--guild-surface-strong); color: var(--guild-text); }

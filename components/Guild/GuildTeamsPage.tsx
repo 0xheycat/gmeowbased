@@ -162,7 +162,7 @@ function GuildRulesPanel({ chains, onClose }: { chains: ChainKey[]; onClose: () 
           <button
             type="button"
             onClick={onClose}
-            className="guild-modal-close absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold uppercase tracking-[0.22em]"
+            className="guild-modal-close absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full text-xs font-semibold uppercase tracking-[0.22em]"
           >
             ✕
           </button>
@@ -186,7 +186,7 @@ function GuildRulesPanel({ chains, onClose }: { chains: ChainKey[]; onClose: () 
             ))}
           </div>
           <div className="mt-6 flex justify-end">
-            <button type="button" className="guild-button guild-button--secondary guild-button--sm" onClick={onClose}>
+            <button type="button" className="guild-button guild-button--secondary guild-button--sm min-h-[44px]" onClick={onClose}>
               Got it
             </button>
           </div>
@@ -751,10 +751,10 @@ export default function GuildTeamsPage() {
               </h1>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button className="guild-button guild-button--secondary guild-button--sm" onClick={() => setShowRules(true)}>
+              <button className="guild-button guild-button--secondary guild-button--sm min-h-[44px]" onClick={() => setShowRules(true)}>
                 Quick rules
               </button>
-              <Link className="guild-button guild-button--secondary guild-button--sm" href="/Quest">
+              <Link className="guild-button guild-button--secondary guild-button--sm min-h-[44px]" href="/Quest">
                 Seasonal quests
               </Link>
             </div>
@@ -790,7 +790,7 @@ export default function GuildTeamsPage() {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              className={clsx('guild-pill guild-pill--compact', isSelected && 'guild-pill--active')}
+                              className={clsx('guild-pill guild-pill--compact min-h-[44px]', isSelected && 'guild-pill--active')}
                               onClick={() => setSelectedGuildChain(guild.chain)}
                             >
                               <ChainIcon chain={guild.chain} size={ICON_SIZES.xs} /> {CHAIN_LABEL[guild.chain]}
@@ -803,12 +803,12 @@ export default function GuildTeamsPage() {
                           </div>
                         </div>
                         <div className="flex flex-col gap-2">
-                          <Link className="guild-button guild-button--primary guild-button--sm" href={`/Guild/guild/${guild.chain}/${manageSlug}`}>
+                          <Link className="guild-button guild-button--primary guild-button--sm min-h-[44px]" href={`/Guild/guild/${guild.chain}/${manageSlug}`}>
                             Manage guild
                           </Link>
                           <button
                             type="button"
-                            className="guild-button guild-button--secondary guild-button--sm"
+                            className="guild-button guild-button--secondary guild-button--sm min-h-[44px]"
                             onClick={() => setSelectedGuildChain(guild.chain)}
                           >
                             Set active
@@ -848,7 +848,7 @@ export default function GuildTeamsPage() {
                   {shareLink ? (
                     <button
                       type="button"
-                      className="guild-button guild-button--secondary guild-button--sm"
+                      className="guild-button guild-button--secondary guild-button--sm min-h-[44px]"
                       onClick={() => handleCopy(shareLink, 'Invite link')}
                     >
                       Copy
@@ -858,14 +858,14 @@ export default function GuildTeamsPage() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className="guild-button guild-button--primary"
+                    className="guild-button guild-button--primary min-h-[44px]"
                     onClick={handleShareInvite}
                     disabled={!shareFrameUrl}
                   >
                     Share on Farcaster
                   </button>
                   <Link
-                    className="guild-button guild-button--secondary"
+                    className="guild-button guild-button--secondary min-h-[44px]"
                     href={`/Guild/guild/${selectedMembership.chain}/${buildGuildSlug(selectedMembership.teamName, selectedMembership.teamId)}`}
                   >
                     Open guild console
@@ -895,7 +895,7 @@ export default function GuildTeamsPage() {
                     <button
                       key={chain}
                       type="button"
-                      className={clsx('guild-pill guild-pill--compact', chainForCreate === chain && 'guild-pill--active')}
+                      className={clsx('guild-pill guild-pill--compact min-h-[44px]', chainForCreate === chain && 'guild-pill--active')}
                       onClick={() => setChainForCreate(chain)}
                     >
                       <ChainIcon chain={chain} size={ICON_SIZES.xs} /> {CHAIN_LABEL[chain]}
@@ -927,7 +927,7 @@ export default function GuildTeamsPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  className="guild-button guild-button--primary"
+                  className="guild-button guild-button--primary min-h-[44px]"
                   disabled={!canCreate || isCreating}
                   onClick={handleCreateGuild}
                 >
@@ -948,7 +948,7 @@ export default function GuildTeamsPage() {
                     <button
                       key={chain}
                       type="button"
-                      className={clsx('guild-pill guild-pill--compact', refChain === chain && 'guild-pill--active')}
+                      className={clsx('guild-pill guild-pill--compact min-h-[44px]', refChain === chain && 'guild-pill--active')}
                       onClick={() => setRefChain(chain)}
                     >
                       <ChainIcon chain={chain} size={ICON_SIZES.xs} /> {CHAIN_LABEL[chain]}
@@ -966,7 +966,7 @@ export default function GuildTeamsPage() {
                 <input className="pixel-input flex-1" value={editRefCode} onChange={(e) => setEditRefCode(e.target.value.toLowerCase())} placeholder="e.g. heycat" />
                 <button
                   type="button"
-                  className="guild-button guild-button--primary sm:w-auto"
+                  className="guild-button guild-button--primary sm:w-auto min-h-[44px]"
                   onClick={handleSetReferralCode}
                   disabled={refLoading === 'setCode' || !editRefCode.trim()}
                 >
@@ -976,7 +976,7 @@ export default function GuildTeamsPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  className={clsx('guild-button guild-button--secondary guild-button--sm', !myRefCode && 'cursor-not-allowed opacity-50')}
+                  className={clsx('guild-button guild-button--secondary guild-button--sm min-h-[44px]', !myRefCode && 'cursor-not-allowed opacity-50')}
                   onClick={() => myRefCode && handleCopy(myRefCode, 'Referral code')}
                   disabled={!myRefCode}
                 >
@@ -985,7 +985,7 @@ export default function GuildTeamsPage() {
                 <button
                   type="button"
                   className={clsx(
-                    'guild-button guild-button--secondary guild-button--sm',
+                    'guild-button guild-button--secondary guild-button--sm min-h-[44px]',
                     (!shareLink || !selectedMembership) && 'cursor-not-allowed opacity-50',
                   )}
                   onClick={() => selectedMembership && shareLink && handleCopy(shareLink, 'Invite link')}
@@ -999,7 +999,7 @@ export default function GuildTeamsPage() {
                   <input className="pixel-input flex-1" value={referralInput} onChange={(e) => setReferralInput(e.target.value.toLowerCase())} placeholder="friend-code" />
                   <button
                     type="button"
-                    className="guild-button guild-button--secondary sm:w-auto"
+                    className="guild-button guild-button--secondary sm:w-auto min-h-[44px]"
                     onClick={handleRegisterByCode}
                     disabled={refLoading === 'linkReferrer' || !referralInput.trim() || myRegistered}
                   >
@@ -1056,7 +1056,7 @@ export default function GuildTeamsPage() {
             </div>
           ) : null}
           {showDirectorySkeleton ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {Array.from({ length: 4 }).map((_, idx) => (
                 <div key={idx} className="guild-panel guild-panel--muted guild-card guild-card--hover h-32 animate-pulse" />
               ))}
@@ -1066,7 +1066,7 @@ export default function GuildTeamsPage() {
               No guilds match your filters yet. Expand your search or launch a new guild above.
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {filteredTeams.map((team) => {
                 const key = `${team.chain}-${team.teamId}`
                 const joined = memberships.some((m) => m.chain === team.chain && m.teamId === team.teamId)
@@ -1098,13 +1098,13 @@ export default function GuildTeamsPage() {
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <button
                         type="button"
-                        className="guild-button guild-button--primary"
+                        className="guild-button guild-button--primary min-h-[44px]"
                         disabled={joiningKey === key || joined}
                         onClick={() => handleJoinTeam(team.chain, team.teamId)}
                       >
                         {joined ? 'Already joined' : joiningKey === key ? 'Joining…' : 'Join guild'}
                       </button>
-                      <Link className="guild-button guild-button--secondary" href={`/Guild/guild/${team.chain}/${slug}`}>
+                      <Link className="guild-button guild-button--secondary min-h-[44px]" href={`/Guild/guild/${team.chain}/${slug}`}>
                         View console
                       </Link>
                     </div>
@@ -1116,7 +1116,7 @@ export default function GuildTeamsPage() {
           <div className="flex justify-center">
             <button
               type="button"
-              className="guild-button guild-button--secondary"
+              className="guild-button guild-button--secondary min-h-[44px]"
               onClick={() => setScanLimit((limit) => Math.min(limit + 20, MAX_DIRECTORY_SCAN))}
               disabled={isLoadingTeams || scanLimit >= MAX_DIRECTORY_SCAN}
             >
@@ -1131,7 +1131,7 @@ export default function GuildTeamsPage() {
 
         <section className="guild-panel guild-panel--strong space-y-4 rounded-2xl p-5">
           <h2 className="pixel-section-title m-0 text-lg">How guilds work</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {HOW_IT_WORKS_STEPS.map((step, idx) => (
               <div key={step.title} className="guild-panel guild-panel--muted guild-card guild-card--hover rounded-2xl p-4">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--px-sub)]">Step {idx + 1}</div>
@@ -1146,7 +1146,7 @@ export default function GuildTeamsPage() {
 
         <section className="guild-panel guild-panel--strong space-y-4 rounded-2xl p-5">
           <h2 className="pixel-section-title m-0 text-lg">Friendly tips</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {FRIENDLY_TIPS.map((tip) => (
               <div key={tip.title} className="guild-panel guild-panel--muted guild-card guild-card--hover rounded-2xl p-4">
                 <div className="text-2xl">{tip.icon}</div>
