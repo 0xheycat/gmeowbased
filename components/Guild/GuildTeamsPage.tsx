@@ -19,6 +19,7 @@ import type { FarcasterUser } from '@/lib/neynar'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import { RankProgress } from '@/components/ui/RankProgress'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import { ICON_SIZES } from '@/lib/icon-sizes'
 import { readStorageCache, writeStorageCache } from '@/lib/utils'
 
 const QRCode = dynamic(() => import('qrcode.react').then((m) => m.QRCodeSVG), { ssr: false })
@@ -179,7 +180,7 @@ function GuildRulesPanel({ chains, onClose }: { chains: ChainKey[]; onClose: () 
           <div className="mt-6 flex flex-wrap gap-2">
             {chains.map((chain) => (
               <span key={chain} className="guild-pill guild-pill--compact flex items-center gap-1.5">
-                <ChainIcon chain={chain} size={12} />
+                <ChainIcon chain={chain} size={ICON_SIZES.xs} />
                 <span>{CHAIN_BRAND[chain].title}</span>
               </span>
             ))}
@@ -792,7 +793,7 @@ export default function GuildTeamsPage() {
                               className={clsx('guild-pill guild-pill--compact', isSelected && 'guild-pill--active')}
                               onClick={() => setSelectedGuildChain(guild.chain)}
                             >
-                              <ChainIcon chain={guild.chain} size={12} /> {CHAIN_LABEL[guild.chain]}
+                              <ChainIcon chain={guild.chain} size={ICON_SIZES.xs} /> {CHAIN_LABEL[guild.chain]}
                             </button>
                             {guild.registered ? <span className="guild-pill guild-pill--compact">Friend code linked</span> : null}
                           </div>
@@ -897,7 +898,7 @@ export default function GuildTeamsPage() {
                       className={clsx('guild-pill guild-pill--compact', chainForCreate === chain && 'guild-pill--active')}
                       onClick={() => setChainForCreate(chain)}
                     >
-                      <ChainIcon chain={chain} size={12} /> {CHAIN_LABEL[chain]}
+                      <ChainIcon chain={chain} size={ICON_SIZES.xs} /> {CHAIN_LABEL[chain]}
                     </button>
                   ))}
                 </div>
@@ -950,7 +951,7 @@ export default function GuildTeamsPage() {
                       className={clsx('guild-pill guild-pill--compact', refChain === chain && 'guild-pill--active')}
                       onClick={() => setRefChain(chain)}
                     >
-                      <ChainIcon chain={chain} size={12} /> {CHAIN_LABEL[chain]}
+                      <ChainIcon chain={chain} size={ICON_SIZES.xs} /> {CHAIN_LABEL[chain]}
                     </button>
                   ))}
                 </div>
