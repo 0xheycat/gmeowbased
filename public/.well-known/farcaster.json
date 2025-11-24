@@ -8,7 +8,7 @@
     "ownerAddress": "0xB4F2fF92E8ccbbeAb7094cef5514A15aeBbbD11F"
   },
   "miniapp": {
-    "version": "1.1",
+    "version": "1",
     "name": "Gmeowbased Adventure",
     "iconUrl": "https://gmeowhq.art/favicon.ico",
     "homeUrl": "https://gmeowhq.art",
@@ -29,9 +29,7 @@
     "screenshotUrls": [
       "https://gmeowhq.art/screenshots/gm-streak.png",
       "https://gmeowhq.art/screenshots/leaderboard.png",
-      "https://gmeowhq.art/screenshots/badges.png",
-      "https://gmeowhq.art/screenshots/guild.png",
-      "https://gmeowhq.art/screenshots/quest.png"
+      "https://gmeowhq.art/screenshots/badges.png"
     ],
     "castShareUrl": "https://gmeowhq.art/share/[fid]",
     "noindex": false,
