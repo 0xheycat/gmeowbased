@@ -3,7 +3,7 @@ import Loader from '@/components/ui/loader'
 export default function Loading() {
   return (
     <div className="min-h-screen bg-[#060720] via-[#110c3a] to-[#1b0d4a] bg-gradient-to-br text-slate-200" aria-busy="true">
-      <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-6 py-24 text-center" style={{ fontFamily: 'var(--site-font)' }}>
+      <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-4 sm:px-6 py-24 text-center" style={{ fontFamily: 'var(--site-font)' }}>
         <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-white/5 shadow-[0_24px_80px_rgba(12,13,54,0.45)]">
           <div className="absolute inset-0 rounded-3xl border border-white/10" />
           <Loader size="large" variant="moveUp" className="text-[#fdbb2d]" />

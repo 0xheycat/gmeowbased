@@ -48,8 +48,8 @@ export default function QuestLoadingDeck({ count = DEFAULT_COUNT, columns = 'aut
           border-radius: 22px;
           border: 1px solid color-mix(in srgb, var(--frost-accent) 30%, var(--frost-border) 70%);
           background: color-mix(in srgb, var(--shell-overlay) 90%, transparent 10%);
-          padding: 26px 24px;
-          min-height: 260px;
+          padding: 20px 18px;
+          min-height: 180px;
         
           display: flex;
           flex-direction: column;
@@ -71,8 +71,8 @@ export default function QuestLoadingDeck({ count = DEFAULT_COUNT, columns = 'aut
         }
         
         .quest-loading-card--dense {
-          padding: 20px 18px;
-          min-height: 210px;
+          padding: 18px 16px;
+          min-height: 160px;
           border-radius: 18px;
         }
         
@@ -275,6 +275,21 @@ export default function QuestLoadingDeck({ count = DEFAULT_COUNT, columns = 'aut
         
           .quest-loading-card {
             transition: none !important;
+          }
+        }
+        
+        /* ----------------------------------------------------------
+           RESPONSIVE SIZING (Mobile optimization)
+        ---------------------------------------------------------- */
+        @media (min-width: 640px) {
+          .quest-loading-card {
+            padding: 26px 24px;
+            min-height: 260px;
+          }
+          
+          .quest-loading-card--dense {
+            padding: 22px 20px;
+            min-height: 210px;
           }
         }
         
