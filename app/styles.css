@@ -873,3 +873,37 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
    End of S1 FINAL
    ========================= */
 
+/* ===== DASHBOARD MOBILE OPTIMIZATIONS ===== */
+
+.dash-switch-btn {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.dash-gm-button {
+  min-height: 48px;
+  min-width: 120px;
+  padding: 0.75rem 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .dash-switch-btn {
+    padding: 0.6rem 0.85rem;
+  }
+  
+  .dash-gm-button {
+    width: 100%;
+    min-height: 48px;
+  }
+  
+  .pixel-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 300px;
+  }
+}
+

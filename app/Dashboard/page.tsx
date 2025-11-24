@@ -2014,7 +2014,7 @@ export default function DashboardPage() {
 
       {/* Streak/Points Card */}
       <div className="pixel-card">
-        <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
           <div>
             <div className="pixel-stat text-orange-300">{streak}</div>
             <div className="text-[11px] text-[var(--px-sub)]">Current Streak</div>
@@ -2437,7 +2437,7 @@ export default function DashboardPage() {
           </div>
         ) : badges.length ? (
           <>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {badges.map((b) => (
                 <div key={`${b.chain}-${b.badgeId}`} className="text-center">
                   <div className="dash-badge-tile" title={`${b.name || `Badge #${b.badgeId}`}`}>
