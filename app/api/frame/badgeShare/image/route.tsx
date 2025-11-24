@@ -22,6 +22,40 @@ export const dynamic = 'force-dynamic'
 const WIDTH = 600
 const HEIGHT = 400 // 3:2 aspect ratio per Farcaster spec (matches Farville)
 
+/**
+ * Load font files for ImageResponse
+ * Loads PixelifySans-Bold and Gmeow fonts from public/fonts/
+ */
+async function loadFonts() {
+  try {
+    const pixelifySansPath = join(process.cwd(), 'public', 'fonts', 'PixelifySans-Bold.ttf')
+    const gmeowPath = join(process.cwd(), 'public', 'fonts', 'gmeow2.ttf')
+    
+    const [pixelifySansBuffer, gmeowBuffer] = await Promise.all([
+      readFile(pixelifySansPath),
+      readFile(gmeowPath),
+    ])
+    
+    return [
+      {
+        name: 'PixelifySans',
+        data: pixelifySansBuffer.buffer as ArrayBuffer,
+        weight: 700 as const,
+        style: 'normal' as const,
+      },
+      {
+        name: 'Gmeow',
+        data: gmeowBuffer.buffer as ArrayBuffer,
+        weight: 400 as const,
+        style: 'normal' as const,
+      },
+    ]
+  } catch (err) {
+    console.error('[BadgeShare] Failed to load fonts:', err)
+    return []
+  }
+}
+
 // Tier configuration (inline, no external imports)
 const TIERS = {
   legendary: { name: 'Legendary', color: '#FFD700', start: '#FFD700', end: '#FFA500' },
@@ -115,11 +149,14 @@ export async function GET(req: Request) {
   const fid = searchParams.get('fid')
 
   try {
+    // Load fonts for proper rendering
+    const fonts = await loadFonts()
+
     // Validate badge ID
     if (!badgeId || !BADGES[badgeId]) {
       return new ImageResponse(
         <NotFoundImage badgeId={badgeId || 'unknown'} />,
-        { width: WIDTH, height: HEIGHT }
+        { width: WIDTH, height: HEIGHT, fonts }
       )
     }
 
@@ -502,6 +539,7 @@ export async function GET(req: Request) {
       {
         width: WIDTH,
         height: HEIGHT,
+        fonts,
         headers: {
           'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
           'CDN-Cache-Control': 'public, max-age=31536000',
@@ -511,9 +549,10 @@ export async function GET(req: Request) {
     )
   } catch (err: unknown) {
     console.error('[Frame BadgeShare Image] Error:', err)
+    const fonts = await loadFonts()
     return new ImageResponse(
       <ErrorImage message={err instanceof Error ? err.message : 'Unknown error'} />,
-      { width: WIDTH, height: HEIGHT }
+      { width: WIDTH, height: HEIGHT, fonts }
     )
   }
 }
