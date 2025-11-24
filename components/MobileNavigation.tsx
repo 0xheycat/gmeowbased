@@ -47,12 +47,13 @@ export function MobileNavigation() {
                     'pixel-tab nav-link site-font flex flex-col items-center justify-center gap-1 py-2',
                     active && 'pixel-tab-active'
                   )}
+                  aria-current={active ? 'page' : undefined}
                   data-active={active ? 'true' : 'false'}
                 >
                   <span className="nav-glow" aria-hidden />
                   <Icon size={20} weight={active ? 'fill' : 'regular'} className="nav-icon" aria-hidden />
                   <span className="text-[10px] leading-none">{it.label}</span>
-                  {active ? <span className="pixel-pill text-[8px] mt-0.5 px-1.5 py-0.5">ON</span> : null}
+                  {active ? <span className="pixel-pill text-[8px] mt-0.5 px-1.5 py-0.5" aria-hidden="true">ON</span> : null}
                 </Link>
               </li>
             )
