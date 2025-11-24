@@ -3952,6 +3952,73 @@ x-render-time: 3016ms ✅
 
 ---
 
+## Category 11: CSS Architecture & Systematic Fixes
+
+### Category 11.1: CSS Architecture De-duplication
+
+**Context**: Discovered critical CSS duplication during architecture audit of `app/globals.css` (1078 lines) and `app/styles/styles.css` (917 lines).
+
+#### Quest-FAB Duplicate Removal (Commit: cefd5ea)
+
+**Problem**:
+- `.quest-fab-container` defined 5 times (lines 89, 212, 855, 867, 1070)
+- Two complete implementations with conflicting styles:
+  - **Version 1 (lines 86-217)**: Basic HSL colors, z-index: 1000 (conflicts with MCP scale), fadeInUp 300ms, no responsive design
+  - **Version 2 (lines 851-1074)**: Glass morphism with color-mix(), z-index: 50 (proper MCP scale), fabMenuSlideIn 280ms, responsive @media (min-width: 768px)
+
+**Analysis**:
+```
+Version 1 Issues:
+- Z-index 1000 conflicts with proper stacking context (MCP scale uses z-50 for FABs)
+- Basic HSL colors: hsl(var(--primary)), hsl(var(--card)) - inconsistent with design system
+- Animation: fadeInUp 300ms ease - simpler, no easing function
+- No responsive breakpoints (only hides on desktop @media min-width: 1024px)
+- 129 lines total
+
+Version 2 Advantages:
+- Z-index 50 follows MCP component hierarchy scale
+- Glass morphism: color-mix(in srgb, var(--frost-accent) 32%, var(--shell-overlay) 68%)
+- Backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
+- Animation: fabMenuSlideIn 280ms cubic-bezier(0.4, 0, 0.2, 1) - smoother easing
+- Responsive: @media (min-width: 768px) adjusts bottom/right positioning
+- 220 lines total, more comprehensive styling
+```
+
+**Solution**:
+1. Removed lines 86-217 (old quest-fab section including header comment)
+2. Fixed empty ruleset at line 937: @media (min-width: 1024px) with .quest-fab-container {}
+3. Kept Version 2 (lines 851-1074, now 723-936 after line shift)
+4. Result: 133 lines removed (12.3% reduction), 1078→945 lines
+
+**Impact**:
+- ✅ Z-index conflict resolved: quest-fab now uses z-50 (proper MCP stacking)
+- ✅ Visual consistency: Glass morphism design system maintained
+- ✅ File size: globals.css reduced 12.3% (1078→945 lines)
+- ✅ Maintainability: Single source of truth for quest-fab styles
+- ✅ Responsive: Preserved @media breakpoints for mobile/tablet/desktop
+
+**Verification**:
+```bash
+pnpm tsc --noEmit              # PASS (no errors)
+pnpm lint --max-warnings=0     # PASS (0 errors, 0 warnings)
+curl http://localhost:3002/Quest -I  # HTTP/1.1 200 OK, compiles 38.8s
+wc -l app/globals.css          # 945 lines (down from 1078)
+```
+
+**Lessons Learned**:
+1. CSS duplicates cause cascading conflicts (z-index 1000 overrode z-50)
+2. Modern CSS color-mix() provides better theme integration than basic HSL vars
+3. Responsive design requires explicit @media breakpoints (Version 2 had 768px adjustments)
+4. Empty rulesets trigger ESLint errors (must remove or add declarations)
+5. De-duplication improves maintainability by establishing single source of truth
+
+**Remaining Work**:
+- Continue audit of globals.css (945 lines remaining)
+- Audit styles.css (917 lines) for duplicates
+- Search for other duplicate patterns: theme-shell, mega-card, cta-enter, retro-btn, form-control, pixel-input
+
+---
+
 **Last Updated**: 2025-11-24  
-**Next Update**: Category 11 Batch 4 (Typography System Migration)
+**Next Update**: Category 11.1 Part 2 (CSS Architecture Audit Continuation)
 
