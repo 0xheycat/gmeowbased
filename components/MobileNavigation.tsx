@@ -6,7 +6,7 @@ import clsx from 'clsx'
 import type { ComponentType } from 'react'
 import {
   HouseLine,
-  ChartLine,
+  Gauge,
   Scroll,
   Trophy,
   UsersThree,
@@ -25,7 +25,7 @@ export function MobileNavigation() {
   const items: NavItem[] = [
     { href: '/', label: 'Home', icon: HouseLine },
     { href: '/Quest', label: 'Quests', icon: Scroll }, // Most used - left thumb easy
-    { href: '/Dashboard', label: 'Dash', icon: ChartLine }, // Center - both hands
+    { href: '/Dashboard', label: 'Dash', icon: Gauge }, // Center - both hands
     { href: '/Guild', label: 'Guild', icon: UsersThree },
     { href: '/leaderboard', label: 'Ranks', icon: Trophy },
     // Profile removed - accessible via header dropdown
