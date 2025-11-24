@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "=== UPDATE ACCOUNT ASSOCIATION IN .env.local ==="
+echo ""
+echo "Your new account association values:"
+echo ""
+echo "FARCASTER_ACCOUNT_ASSOCIATION_HEADER=eyJmaWQiOjE4MTM5LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4NzUzOTQ3MkRBZDZhMzcxZTZFMTUyQzVBMjAzNDY5YUEzMjMxNDEzMCJ9"
+echo "FARCASTER_ACCOUNT_ASSOCIATION_PAYLOAD=eyJkb21haW4iOiJnbWVvd2hxLmFydCJ9"
+echo "FARCASTER_ACCOUNT_ASSOCIATION_SIGNATURE=TURZpn1Psyf48uIuDZbU54FvYFqZgo7PnzXBE4/6J89/nazDAJNI56QYCfY2v3ubODbu63Tkg0yVt+qA7rDHVxw="
+echo ""
+echo "These are already in public/.well-known/farcaster.json ✅"
+echo ""
+echo "If you want the API route (/api/manifest) to match,"
+echo "add these to your .env.local file (or Vercel environment variables)"
