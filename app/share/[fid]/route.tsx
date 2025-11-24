@@ -52,16 +52,16 @@ async function loadImageAsDataUrl(relativePath: string): Promise<string | null> 
     const ext = relativePath.split('.').pop()
     const mimeType = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp'
     return `data:${mimeType};base64,${base64}`
-  } catch (err) {
+  } catch {
     return null
   }
 }
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  { params }: { params: Promise<{ fid: string }> }
 ) {
-  const fid = params.fid
+  const { fid } = await params
   const fonts = await loadFonts()
   const bgImage = await loadImageAsDataUrl('og-background.png')
 
