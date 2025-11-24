@@ -2297,12 +2297,12 @@ export async function GET(req: Request) {
                   }}
                 >
                   {badgeIds.length > 0 ? (
-                    // Show earned badges with images and names
+                    // Show earned badges with smart sizing based on count
                     <div
                       style={{
                         display: 'flex',
                         flexWrap: 'wrap',
-                        gap: 8,
+                        gap: badgeIds.length <= 6 ? 8 : badgeIds.length <= 12 ? 6 : 4,
                         justifyContent: 'center',
                         alignItems: 'flex-start',
                       }}
@@ -2311,6 +2311,10 @@ export async function GET(req: Request) {
                         const badge = badgeRegistry[badgeId]
                         const tierColor = badge ? tierColors[badge.tier] : tierColors.common
                         
+                        // Smart sizing: 1-6=70px, 7-12=60px, 13-18=50px
+                        const cardSize = badgeIds.length <= 6 ? 70 : badgeIds.length <= 12 ? 60 : 50
+                        const showName = badgeIds.length <= 12 // Hide names for 13+ to prevent overflow
+                        
                         return (
                           <div
                             key={badgeId}
@@ -2318,8 +2322,8 @@ export async function GET(req: Request) {
                               display: 'flex',
                               flexDirection: 'column',
                               alignItems: 'center',
-                              width: 70,
-                              padding: 4,
+                              width: cardSize,
+                              padding: showName ? 4 : 2,
                               border: `2px solid ${tierColor}`,
                               borderRadius: 8,
                               background: 'rgba(255, 255, 255, 0.05)',
@@ -2329,29 +2333,31 @@ export async function GET(req: Request) {
                               <img
                                 src={badgeImages[i]}
                                 alt={badge?.name || 'Badge'}
-                                width="70"
-                                height="70"
+                                width={cardSize.toString()}
+                                height={cardSize.toString()}
                                 style={{
                                   borderRadius: 6,
                                   objectFit: 'cover',
                                 }}
                               />
                             )}
-                            <div
-                              style={{
-                                fontSize: FRAME_FONTS_V2.micro,
-                                fontWeight: 600,
-                                color: SHARED_COLORS.white,
-                                textAlign: 'center',
-                                marginTop: 4,
-                                maxWidth: 70,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {badge?.name || 'Unknown'}
-                            </div>
+                            {showName && (
+                              <div
+                                style={{
+                                  fontSize: FRAME_FONTS_V2.micro,
+                                  fontWeight: 600,
+                                  color: SHARED_COLORS.white,
+                                  textAlign: 'center',
+                                  marginTop: 2,
+                                  maxWidth: cardSize,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {badge?.name || 'Unknown'}
+                              </div>
+                            )}
                           </div>
                         )
                       })}
@@ -2412,22 +2418,6 @@ export async function GET(req: Request) {
                     gap: FRAME_SPACING.section.small,
                   }}
                 >
-                  {/* Title */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      fontFamily: FRAME_FONT_FAMILY.display,
-                      fontSize: FRAME_FONTS_V2.h2,
-                      fontWeight: 900,
-                      letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
-                      lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
-                      color: SHARED_COLORS.white,
-                      textShadow: FRAME_TYPOGRAPHY.textShadow.glow(badgePalette.start),
-                    }}
-                  >
-                    Badge Collection
-                  </div>
-
                   {/* Stats grid */}
                   <div
                     style={{

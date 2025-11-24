@@ -301,7 +301,7 @@ export async function GET(req: Request) {
                   ) : (
                     <div style={{
                       display: 'flex',
-                      fontSize: 80,
+                      fontSize: FRAME_FONTS_V2.h1,
                       fontWeight: 900,
                       color: '#ffffff',
                     }}>
