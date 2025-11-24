@@ -511,7 +511,8 @@ html.light .quest-archive__overlay {
 
 .quest-archive {
   width: min(720px, 100%);
-  max-height: calc(100vh - 3rem);
+  /* Use dynamic viewport height for iOS Safari address bar handling */
+  max-height: calc(100dvh - 3rem);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -525,6 +526,13 @@ html.light .quest-archive__overlay {
   backdrop-filter: blur(calc(var(--glass-blur-large) + 2px)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(calc(var(--glass-blur-large) + 2px)) saturate(var(--glass-saturate));
   isolation: isolate;
+}
+
+/* Fallback for browsers without dvh support */
+@supports not (height: 100dvh) {
+  .quest-archive {
+    max-height: calc(100vh - 3rem);
+  }
 }
 
 .quest-archive__subtitle {

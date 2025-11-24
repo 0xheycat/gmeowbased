@@ -11,7 +11,7 @@ export function PixelSidebar() {
     { href: '/profile', label: 'Me', icon: '🐱' },
   ]
   return (
-    <aside className="hidden md:block md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:w-64">
+    <aside className="hidden md:block md:sticky md:top-4 md:h-[calc(100dvh-2rem)] md:w-64">
       <div className="pixel-frame p-3">
         <div className="pixel-nav-grid" />
         <div className="mb-3 flex items-center justify-between">

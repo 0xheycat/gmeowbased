@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import './styles.css'
 import './styles/quest-card.css'
@@ -8,6 +8,15 @@ import type { ReactNode } from 'react'
 import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
 
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
+
+// MCP-compliant viewport configuration for miniapp embedding
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Prevent pinch-zoom in miniapp context
+  viewportFit: 'cover', // CRITICAL: Enable safe-area-inset-* CSS env() variables
+}
 
 const gmEmbed = {
   version: '1',
