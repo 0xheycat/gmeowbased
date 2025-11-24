@@ -19,6 +19,8 @@
   max-width: 420px;
   margin: 0 auto;
   border-radius: 24px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 520px;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.1) 0%,
@@ -346,15 +348,15 @@
 }
 
 /* Mobile responsiveness */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .quest-card-glass {
     max-width: 100%;
-    border-radius: 20px;
+    border-radius: 18px;
   }
   
   .quest-card-glass__body {
-    padding: 20px;
-    min-height: 480px;
+    padding: 18px;
+    min-height: 400px;
   }
   
   .quest-card-glass__title {
@@ -379,6 +381,32 @@
     width: 40px;
     height: 40px;
     font-size: 1.2rem;
+  }
+  
+  .quest-card-glass:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--glass-shadow);
+  }
+}
+
+@media (max-width: 375px) {
+  .quest-card-glass__body {
+    padding: 16px;
+    min-height: 360px;
+  }
+  
+  .quest-card-glass__title {
+    font-size: 1.35rem;
+  }
+  
+  .quest-card-glass__icon-wrapper {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .quest-card-glass__icon-wrapper svg {
+    width: 50px;
+    height: 50px;
   }
 }
 
