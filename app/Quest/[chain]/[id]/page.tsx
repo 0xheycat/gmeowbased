@@ -1426,7 +1426,7 @@ export default function VerifyQuestPage() {
   return (
     <>
       <div className="pixel-page px-4 sm:px-6 py-4 text-slate-200">
-      <div className="max-w-[980px] mx-auto pb-8">
+      <div className="max-w-5xl mx-auto pb-8">
         <div className="flex flex-col gap-3 mb-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">

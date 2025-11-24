@@ -669,7 +669,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-6 flex justify-center sm:mt-8 lg:mt-10">
-              <div className="w-full max-w-[1080px] space-y-6">
+              <div className="w-full max-w-5xl space-y-6">
                 {contextUser?.fid && embeddedApp && (
                   <ProfileSettings
                     fid={contextUser.fid}

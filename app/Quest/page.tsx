@@ -635,7 +635,7 @@ export default function QuestHubPage() {
   const showSkeleton = loading && !quests.length
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-14 px-4 pb-24 pt-16 sm:px-8 lg:px-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-4 pb-24 pt-16 sm:px-8 lg:px-10">
       <section className="relative overflow-hidden pixel-card px-6 py-10 sm:px-10 sm:py-12">
         <span className="quest-hero-orbit" aria-hidden />
         <div className="relative z-10 flex flex-col gap-6">
