@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
 import dynamic from 'next/dynamic'
-import { MiniappReady } from '@/components/MiniappReady'
 import { OnboardingFlow } from '@/components/intro/OnboardingFlow'
 import { HeroSection } from '@/components/home/HeroSection'
 import { OnchainHub } from '@/components/home/OnchainHub'
