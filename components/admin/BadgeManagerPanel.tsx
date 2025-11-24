@@ -6,6 +6,7 @@ import Image from 'next/image'
 
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
 import {
   getPendingMints,
   getFailedMints,
@@ -110,6 +111,10 @@ export default function BadgeManagerPanel() {
   const [manualAssignBusy, setManualAssignBusy] = useState(false)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [detailModalBadge, setDetailModalBadge] = useState<TemplateRecord | null>(null)
+
+  // Category 11 Batch 3: Focus trap refs (must be called unconditionally)
+  const detailModalFocusTrapRef = useFocusTrap(detailModalOpen)
+  const formModalFocusTrapRef = useFocusTrap(formOpen)
 
   const loadTemplates = useCallback(
     async (force?: boolean) => {
@@ -1197,8 +1202,14 @@ export default function BadgeManagerPanel() {
 
         {/* Phase 3B: Badge Detail Modal */}
         {detailModalOpen && detailModalBadge && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+          <div 
+            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-4"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setDetailModalOpen(false)
+            }}
+          >
             <div
+              ref={detailModalFocusTrapRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="badge-detail-title"
@@ -1295,8 +1306,14 @@ export default function BadgeManagerPanel() {
         )}
 
         {formOpen ? (
-          <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+          <div 
+            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-4"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && !formBusy) closeForm()
+            }}
+          >
             <div
+              ref={formModalFocusTrapRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="badge-form-title"
