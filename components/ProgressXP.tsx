@@ -204,7 +204,7 @@ export function ProgressXP({
 
   return (
     <div
-      className="fixed inset-0 z-[999] flex items-center justify-center p-6"
+      className="fixed inset-0 z-40 flex items-center justify-center p-6"
       role="presentation"
       onMouseDown={handleBackdropMouseDown}
       style={{

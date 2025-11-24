@@ -197,7 +197,7 @@ function LiveNotificationSurface({
 }) {
   const headlineTone = notifications[0]?.tone ?? 'info'
   const stackAnchorClass =
-    'pointer-events-none fixed right-3 sm:right-4 top-20 sm:top-24 z-[2000] flex justify-end lg:right-10'
+    'pointer-events-none fixed right-3 sm:right-4 top-20 sm:top-24 z-50 flex justify-end lg:right-10'
   const stackWrapperClass = 'flex w-full max-w-[360px] sm:max-w-sm flex-col gap-2 sm:gap-3'
 
   return (
@@ -221,7 +221,7 @@ function NotificationBelt({ count, tone }: { count: number; tone: NotificationTo
   const { icon, beacon } = toneVisuals[tone]
   const active = count > 0
   const displayCount = count > 9 ? '9+' : count.toString()
-  const anchorClass = 'pointer-events-none fixed right-4 sm:right-5 top-4 sm:top-5 z-[2100] lg:right-10'
+  const anchorClass = 'pointer-events-none fixed right-4 sm:right-5 top-4 sm:top-5 z-50 lg:right-10'
   const labelClass = 'pointer-events-none mt-1.5 sm:mt-2 block text-center text-[9px] sm:text-[10px] uppercase tracking-[0.28em] sm:tracking-[0.32em] text-slate-400'
 
   return (

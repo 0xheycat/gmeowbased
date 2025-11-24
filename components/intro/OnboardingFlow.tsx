@@ -1006,7 +1006,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg transition-opacity duration-300 ${
         closing ? 'opacity-0' : 'opacity-100'
       }`}
       role="dialog"
