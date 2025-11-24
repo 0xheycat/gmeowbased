@@ -10,7 +10,7 @@
   "miniapp": {
     "version": "1",
     "name": "Gmeowbased Adventure",
-    "iconUrl": "https://gmeowhq.art/favicon.ico",
+    "iconUrl": "https://gmeowhq.art/favicon.png",
     "homeUrl": "https://gmeowhq.art",
     "imageUrl": "https://gmeowhq.art/og-image.png",
     "buttonTitle": "👋 Say GM",
