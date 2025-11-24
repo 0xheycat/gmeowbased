@@ -24,25 +24,16 @@ const HEIGHT = 400 // 3:2 aspect ratio per Farcaster spec (matches Farville)
 
 /**
  * Load font files for ImageResponse
- * Loads PixelifySans-Bold and Gmeow fonts from public/fonts/
+ * Loads Gmeow font from app/fonts/ directory
+ * Note: PixelifySans-Bold removed in commit 419276f (bundle optimization)
  */
 async function loadFonts() {
   try {
-    const pixelifySansPath = join(process.cwd(), 'public', 'fonts', 'PixelifySans-Bold.ttf')
-    const gmeowPath = join(process.cwd(), 'public', 'fonts', 'gmeow2.ttf')
+    const gmeowPath = join(process.cwd(), 'app', 'fonts', 'gmeow2.ttf')
     
-    const [pixelifySansBuffer, gmeowBuffer] = await Promise.all([
-      readFile(pixelifySansPath),
-      readFile(gmeowPath),
-    ])
+    const gmeowBuffer = await readFile(gmeowPath)
     
     return [
-      {
-        name: 'PixelifySans',
-        data: pixelifySansBuffer.buffer as ArrayBuffer,
-        weight: 700 as const,
-        style: 'normal' as const,
-      },
       {
         name: 'Gmeow',
         data: gmeowBuffer.buffer as ArrayBuffer,
