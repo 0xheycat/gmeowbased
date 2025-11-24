@@ -1198,11 +1198,11 @@ export default function BadgeManagerPanel() {
         {/* Phase 3B: Badge Detail Modal */}
         {detailModalOpen && detailModalBadge && (
           <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/70 p-4">
-            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-6 shadow-xl">
+            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="pixel-section-title text-lg">Badge Details</h3>
                 <button
-                  className="pixel-button btn-xs"
+                  className="pixel-button btn-sm min-h-[44px]"
                   onClick={() => setDetailModalOpen(false)}
                 >
                   Close
@@ -1290,12 +1290,12 @@ export default function BadgeManagerPanel() {
 
         {formOpen ? (
           <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/70 p-4">
-            <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-6 shadow-xl">
+            <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="pixel-section-title text-lg">
                   {isEditing ? 'Edit badge template' : 'New badge template'}
                 </h3>
-                <button className="pixel-button btn-xs" onClick={closeForm} disabled={formBusy}>
+                <button className="pixel-button btn-sm min-h-[44px]" onClick={closeForm} disabled={formBusy}>
                   Close
                 </button>
               </div>

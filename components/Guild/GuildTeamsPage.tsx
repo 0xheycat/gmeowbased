@@ -162,7 +162,7 @@ function GuildRulesPanel({ chains, onClose }: { chains: ChainKey[]; onClose: () 
           <button
             type="button"
             onClick={onClose}
-            className="guild-modal-close absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full text-xs font-semibold uppercase tracking-[0.22em]"
+            className="guild-modal-close absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold uppercase tracking-[0.22em]"
           >
             ✕
           </button>
@@ -186,7 +186,7 @@ function GuildRulesPanel({ chains, onClose }: { chains: ChainKey[]; onClose: () 
             ))}
           </div>
           <div className="mt-6 flex justify-end">
-            <button type="button" className="guild-button guild-button--secondary guild-button--sm min-h-[44px]" onClick={onClose}>
+            <button type="button" className="guild-button guild-button--secondary min-h-[44px]" onClick={onClose}>
               Got it
             </button>
           </div>

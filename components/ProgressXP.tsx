@@ -224,7 +224,7 @@ export function ProgressXP({
       </div>
       <div
         ref={dialogRef}
-        className="relative w-full max-w-3xl focus:outline-none"
+        className="relative w-full max-w-[calc(100vw-2rem)] sm:max-w-3xl focus:outline-none"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -235,7 +235,7 @@ export function ProgressXP({
           <button
             ref={closeButtonRef}
             type="button"
-            className="px-3 py-1 rounded-full border-2 border-[#ffd700]/30 bg-[#06091a]/90 hover:bg-[#0b0f2a] hover:border-[#ffd700]/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd700]"
+            className="px-3 py-2 min-h-[44px] rounded-full border-2 border-[#ffd700]/30 bg-[#06091a]/90 hover:bg-[#0b0f2a] hover:border-[#ffd700]/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd700]"
             onClick={onClose}
           >
             Close
