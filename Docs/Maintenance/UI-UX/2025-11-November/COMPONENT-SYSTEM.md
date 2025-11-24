@@ -3,7 +3,7 @@
 **Last Updated**: 2025-11-24  
 **Maintainer**: GitHub Copilot (Claude Sonnet 4.5)  
 **Category**: UI/UX Component Architecture  
-**Status**: Phase 3 Category 11 - CSS Architecture & Systematic Fixes
+**Status**: Phase 3 Category 11 - CSS Architecture & Systematic Fixes (Batches 1-3 Complete, Font Fix Applied)
 
 ---
 
@@ -3679,6 +3679,115 @@ curl -I "https://gmeowhq.art/api/frame/image?type=guild&guildId=1"
 - ✅ React hooks rules: PASS (no violations)
 - ✅ Frame endpoint: Working (200 OK, image/png)
 - ✅ Keyboard navigation: Tab, Shift+Tab, Escape all functional
+
+---
+
+## Font System Fix (Category 11 - Frame Compatibility)
+
+**Implementation Date**: 2025-11-24  
+**Status**: ✅ COMPLETE  
+**Git Commit**: 291771a
+
+### Issue
+
+Frame dynamic images broken after commit 419276f deleted `/public/fonts/` files:
+- `app/globals.css` had `@font-face` referencing `/fonts/gmeow.woff2` and `/fonts/gmeow.otf`
+- Font files were moved to `app/fonts/` but CSS still referenced old paths
+- Next.js SSR couldn't resolve font files, causing frame generation failures
+
+### Solution
+
+Migrated to Next.js `localFont` API for proper font bundling:
+
+**app/layout.tsx** (Font Import):
+```tsx
+import localFont from 'next/font/local'
+
+const gmeowFont = localFont({
+  src: [
+    {
+      path: './fonts/gmeow.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: './fonts/gmeow.woff',
+      weight: '400',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-gmeow',
+  display: 'swap',
+})
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning className={gmeowFont.variable}>
+      {/* ... */}
+    </html>
+  )
+}
+```
+
+**app/globals.css** (CSS Variable):
+```css
+/* BEFORE (broken): */
+@font-face {
+  font-family: 'Gmeow';
+  src: url('/fonts/gmeow.woff2') format('woff2'),
+       url('/fonts/gmeow.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --site-font: 'Gmeow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* AFTER (fixed): */
+:root {
+  --site-font: var(--font-gmeow), 'Gmeow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+```
+
+### Benefits
+
+1. **Frame Compatibility**: Next.js bundles fonts correctly for SSR/frame generation
+2. **Performance**: Automatic font optimization (preload, font-display: swap)
+3. **Type Safety**: Font variable generated at build time
+4. **Bundle Optimization**: Removes duplicate font references
+5. **CSS Variables**: Clean fallback chain with `var(--font-gmeow)`
+
+### Testing
+
+**Local Development**:
+```bash
+pnpm dev
+curl http://localhost:3000/api/frame/image?type=guild&guildId=1 -I
+# HTTP/1.1 200 OK
+# content-type: image/png
+```
+
+**Production**:
+```bash
+curl https://gmeowhq.art/api/frame/image?type=guild&guildId=1 -I
+# HTTP/2 200
+# content-type: image/png
+# ✅ Frame working correctly
+```
+
+**HTML Output**:
+```html
+<html lang="en" class="__variable_2f95f1">
+  <!-- Font variable applied to root -->
+</html>
+```
+
+### Files Modified
+
+1. **app/layout.tsx**: Added `localFont` import, `gmeowFont` config, applied `className={gmeowFont.variable}`
+2. **app/globals.css**: Removed `@font-face` declaration, updated `--site-font` to use `var(--font-gmeow)`
 
 ---
 
