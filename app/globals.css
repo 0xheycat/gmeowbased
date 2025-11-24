@@ -114,6 +114,35 @@
   --glass-blur: 12px;
   --glass-blur-large: 18px;
   --glass-saturate: 135%;
+
+  /* Overlay tokens for consistent layering (GI-15 Category 11.2) */
+  --overlay-light-2: rgba(255,255,255,0.02);
+  --overlay-light-4: rgba(255,255,255,0.04);
+  --overlay-light-5: rgba(255,255,255,0.05);
+  --overlay-light-6: rgba(255,255,255,0.06);
+  --overlay-light-8: rgba(255,255,255,0.08);
+  --overlay-light-10: rgba(255,255,255,0.1);
+  --overlay-light-12: rgba(255,255,255,0.12);
+  --overlay-light-18: rgba(255,255,255,0.18);
+  --overlay-light-22: rgba(255,255,255,0.22);
+  --overlay-dark-18: rgba(0,0,0,0.18);
+  --overlay-dark-22: rgba(0,0,0,0.22);
+  --overlay-dark-24: rgba(0,0,0,0.24);
+  --overlay-dark-28: rgba(0,0,0,0.28);
+  --overlay-dark-32: rgba(0,0,0,0.32);
+  --overlay-dark-35: rgba(0,0,0,0.35);
+
+  /* Border tokens for subtle divisions */
+  --border-faint: rgba(255,255,255,0.04);
+  --border-subtle: rgba(255,255,255,0.05);
+  --border-soft: rgba(255,255,255,0.08);
+  --border-medium: rgba(255,255,255,0.12);
+  --border-visible: rgba(255,255,255,0.18);
+
+  /* Text color variations */
+  --text-heading-alt: rgba(205,220,255,0.82);
+  --text-subtle: rgba(255,255,255,0.6);
+  --text-dimmed: rgba(255,255,255,0.5);
 }
 
 /* --- Theme tokens (dark baseline and light override) --- */
