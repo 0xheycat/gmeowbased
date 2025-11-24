@@ -70,7 +70,7 @@ export class ErrorBoundary extends Component<Props, State> {
               this.setState({ hasError: false, error: null })
               window.location.reload()
             }}
-            className="rounded-xl border border-primary bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="rounded-xl border border-primary bg-primary px-6 py-3 min-h-[44px] text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Try Again
           </button>
@@ -100,7 +100,7 @@ export function QuestWizardErrorBoundary({ children }: { children: ReactNode }) 
           <div className="flex gap-3">
             <button
               onClick={() => window.location.reload()}
-              className="rounded-xl border border-primary bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="rounded-xl border border-primary bg-primary px-6 py-3 min-h-[44px] text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Refresh Page
             </button>
@@ -109,7 +109,7 @@ export function QuestWizardErrorBoundary({ children }: { children: ReactNode }) 
                 localStorage.removeItem('quest-wizard-draft')
                 window.location.href = '/Quest'
               }}
-              className="rounded-xl border px-6 py-2 text-sm font-medium transition-colors hover:bg-muted"
+              className="rounded-xl border px-6 py-3 min-h-[44px] text-sm font-medium transition-colors hover:bg-muted"
             >
               Go to Quests
             </button>
@@ -144,7 +144,7 @@ export function LeaderboardErrorBoundary({ children }: { children: ReactNode }) 
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-xl border border-primary bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="rounded-xl border border-primary bg-primary px-6 py-3 min-h-[44px] text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Retry
           </button>
