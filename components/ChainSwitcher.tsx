@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import type { ChainKey } from '@/lib/gm-utils'
+import { ICON_SIZES } from '@/lib/icon-sizes'
 
 export const CHAIN_BRAND: Record<ChainKey, { bg: string; fg: string; label: string; title: string }> = {
   base: { bg: '#0052ff', fg: '#ffffff', label: 'B', title: 'Base' },
@@ -154,7 +155,7 @@ export function ChainSwitcher({
               data-chain-index={index}
               className={`px-menu-item ${c === selected ? 'active' : ''} ${index === focusedIndex ? 'focused' : ''}`}
               onClick={() => pick(c)}>
-              <ChainIcon chain={c} size={12} />
+              <ChainIcon chain={c} size={ICON_SIZES.xs} />
               <span className="px-item-label">{CHAIN_BRAND[c].title}</span>
               {c === selected ? <span className="px-check">✓</span> : null}
             </button>

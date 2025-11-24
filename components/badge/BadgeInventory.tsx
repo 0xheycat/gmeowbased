@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Crown, Sparkle, Lock } from '@phosphor-icons/react'
 import { useAccount } from 'wagmi'
 import { useNotifications } from '@/components/ui/live-notifications'
+import { ICON_SIZES } from '@/lib/icon-sizes'
 
 export type UserBadge = {
   id: string
@@ -259,7 +260,7 @@ export function BadgeInventory({
                 {/* Minted Status */}
                 {badge.minted && (
                   <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-white backdrop-blur-sm">
-                    <Sparkle size={12} weight="fill" />
+                    <Sparkle size={ICON_SIZES.xs} weight="fill" />
                     Minted
                   </div>
                 )}
@@ -275,7 +276,7 @@ export function BadgeInventory({
                       <>Claiming...</>
                     ) : (
                       <>
-                        <Sparkle size={12} weight="fill" />
+                        <Sparkle size={ICON_SIZES.xs} weight="fill" />
                         Claim
                       </>
                     )}
