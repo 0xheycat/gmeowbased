@@ -209,7 +209,6 @@ function HomePage() {
 
   return (
     <>
-      <MiniappReady />
       <OnboardingFlow forceShow={forceIntro} onComplete={handleIntroFinish} />
       <div className="page-root">
         <main>
