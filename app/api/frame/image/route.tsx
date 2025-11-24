@@ -2268,11 +2268,12 @@ export async function GET(req: Request) {
             <div
               style={{
                 display: 'flex',
+                flexDirection: 'column',
                 flex: 1,
-                gap: FRAME_SPACING.section.large,
+                gap: FRAME_SPACING.section.small,
               }}
             >
-              {/* Left: Badge icon + user info */}
+              {/* Top: Badge grid section */}
               <div
                 style={{
                   display: 'flex',
@@ -2283,7 +2284,7 @@ export async function GET(req: Request) {
                 {/* Badge Icon - Phase 2.1 Task 2.1.1: Badge Collection Grid with Images (70x70) */}
                 <div
                   style={{
-                    width: 270,
+                    width: '100%',
                     minHeight: 150,
                     borderRadius: 10,
                     background: 'rgba(15, 15, 17, 0.5)',
@@ -2360,11 +2361,20 @@ export async function GET(req: Request) {
                     <div style={{ fontSize: 70, opacity: 0.3 }}>🏅</div>
                   )}
                 </div>
+              </div>
 
+              {/* Bottom: User info + Stats */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: FRAME_SPACING.section.small,
+                  alignItems: 'flex-start',
+                }}
+              >
                 {/* User info box */}
                 <div
                   style={{
-                    width: 120,
+                    width: 140,
                     display: 'flex',
                     padding: FRAME_SPACING.section.inline,
                     background: 'rgba(30, 30, 32, 0.6)',
@@ -2392,31 +2402,22 @@ export async function GET(req: Request) {
                     {username ? `@${username}` : displayName ? displayName : address ? `👤 ${address.slice(0, 6)}...${address.slice(-4)}` : fid ? `👤 FID ${fid}` : '👤 Anonymous'}
                   </div>
                 </div>
-              </div>
 
-              {/* Right: Badge stats */}
-              <div
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  color: SHARED_COLORS.white,
-                }}
-              >
-                {/* Title */}
+                {/* Stats section */}
                 <div
                   style={{
+                    flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: FRAME_SPACING.section.medium,
+                    gap: FRAME_SPACING.section.small,
                   }}
                 >
+                  {/* Title */}
                   <div
                     style={{
                       display: 'flex',
                       fontFamily: FRAME_FONT_FAMILY.display,
-                      fontSize: FRAME_FONTS_V2.h1,
+                      fontSize: FRAME_FONTS_V2.h2,
                       fontWeight: 900,
                       letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                       lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
@@ -2430,18 +2431,17 @@ export async function GET(req: Request) {
                   {/* Stats grid */}
                   <div
                     style={{
-                      marginTop: FRAME_SPACING.section.small,
                       display: 'flex',
-                      flexDirection: 'column',
-                      gap: FRAME_SPACING.section.medium,
+                      gap: FRAME_SPACING.section.small,
                     }}
                   >
-                    {/* Row 1: Earned */}
+                    {/* Stat card: Earned */}
                     <div
                       style={{
+                        flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
-                        padding: FRAME_SPACING.section.medium,
+                        padding: FRAME_SPACING.section.small,
                         background: 'rgba(30, 30, 32, 0.6)',
                         border: `1px solid ${badgePalette.start}`,
                         borderRadius: 8,
@@ -2449,14 +2449,14 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>
-                        EARNED BADGES
+                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>
+                        EARNED
                       </div>
                       <div
                         style={{
                           display: 'flex',
                           fontFamily: FRAME_FONT_FAMILY.display,
-                          fontSize: FRAME_FONTS_V2.h2,
+                          fontSize: FRAME_FONTS_V2.h3,
                           fontWeight: 900,
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
@@ -2468,12 +2468,13 @@ export async function GET(req: Request) {
                       </div>
                     </div>
 
-                    {/* Row 2: Eligible */}
+                    {/* Stat card: Eligible */}
                     <div
                       style={{
+                        flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
-                        padding: FRAME_SPACING.section.medium,
+                        padding: FRAME_SPACING.section.small,
                         background: 'rgba(30, 30, 32, 0.6)',
                         border: `1px solid ${badgePalette.end}`,
                         borderRadius: 8,
@@ -2481,14 +2482,14 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>
-                        ELIGIBLE FOR
+                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>
+                        ELIGIBLE
                       </div>
                       <div
                         style={{
                           display: 'flex',
                           fontFamily: FRAME_FONT_FAMILY.display,
-                          fontSize: FRAME_FONTS_V2.h2,
+                          fontSize: FRAME_FONTS_V2.h3,
                           fontWeight: 900,
                           letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight,
                           lineHeight: FRAME_TYPOGRAPHY.lineHeight.tight,
@@ -2500,9 +2501,10 @@ export async function GET(req: Request) {
                       </div>
                     </div>
 
-                    {/* Task 10: Row 3: XP from Badges */}
+                    {/* Stat card: XP from Badges */}
                     <div
                       style={{
+                        flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
                         padding: FRAME_SPACING.section.small,
@@ -2513,7 +2515,7 @@ export async function GET(req: Request) {
                       }}
                     >
                       <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.8)', textAlign: 'center' }}>
-                        TOTAL XP FROM BADGES
+                        XP
                       </div>
                       <div
                         style={{
@@ -2528,7 +2530,7 @@ export async function GET(req: Request) {
                           textShadow: FRAME_TYPOGRAPHY.textShadow.strong,
                         }}
                       >
-                        +{formatXp(parseInt(badgeXp, 10))} XP
+                        +{formatXp(parseInt(badgeXp, 10))}
                       </div>
                     </div>
                   </div>
