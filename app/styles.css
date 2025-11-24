@@ -672,7 +672,7 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
 .pixel-section-title { font-size:.875rem; font-weight:500; text-transform:uppercase; letter-spacing:.12em; margin-bottom:.25rem; color: rgba(220,240,255,0.85); }
 .frosted { background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 24px rgba(6,16,30,0.5), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -6px 14px rgba(0,0,0,0.35); backdrop-filter: blur(14px) saturate(160%); }
 .text-gradient { -webkit-background-clip:text; background-clip:text; color:transparent; background-image: linear-gradient(90deg, var(--glass-accent), #d6a7ff); }
-.site-font { font-family: var(--site-font, 'Space Grotesk', ui-sans-serif); }
+.site-font { font-family: var(--site-font); }
 
 /* =========================
    Roster, guild pill, toggles, buttons

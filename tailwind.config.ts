@@ -10,6 +10,18 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontSize: {
+  			'2xs': ['0.625rem', { lineHeight: '0.875rem' }],  // 10px / 14px leading
+  			'11': ['0.6875rem', { lineHeight: '1rem' }],       // 11px / 16px leading
+  		},
+  		letterSpacing: {
+  			'pill': '0.18em',         // .guild-pill, .pixel-pill
+  			'label': '0.22em',        // uppercase labels
+  			'section': '0.12em',      // .pixel-section-title
+  			'button': '0.08em',       // buttons, CTAs
+  			'subtle': '0.04em',       // body text emphasis
+  			'tight-custom': '-0.02em', // tight headings
+  		},
   		colors: {
   			'farcaster-purple': '#8B5CF6',
   			'base-blue': '#0052FF',
