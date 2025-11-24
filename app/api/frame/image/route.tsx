@@ -542,7 +542,7 @@ export async function GET(req: Request) {
                       <span style={{ fontSize: 20 }}>👑</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.minimal }}>
                         <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.caption, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, color: gmPalette.start }}>Legendary</span>
-                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, opacity: 0.7 }}>30+ day streak!</span>
+                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, color: 'rgba(255, 255, 255, 0.7)' }}>30+ day streak!</span>
                       </div>
                     </div>
                   ) : parseInt(streak) >= 7 ? (
@@ -560,7 +560,7 @@ export async function GET(req: Request) {
                       <span style={{ fontSize: 20 }}>⚡</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.minimal }}>
                         <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.caption, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, color: gmPalette.start }}>Week Warrior</span>
-                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, opacity: 0.7 }}>{30 - parseInt(streak)} to Legend</span>
+                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, color: 'rgba(255, 255, 255, 0.7)' }}>{30 - parseInt(streak)} to Legend</span>
                       </div>
                     </div>
                   ) : (
@@ -597,7 +597,7 @@ export async function GET(req: Request) {
                       <span style={{ fontSize: 20 }}>💯</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: FRAME_SPACING.section.minimal }}>
                         <span style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.caption, fontWeight: 800, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, color: gmPalette.start }}>Century Club</span>
-                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, opacity: 0.7 }}>100+ GMs!</span>
+                        <span style={{ fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, color: 'rgba(255, 255, 255, 0.7)' }}>100+ GMs!</span>
                       </div>
                     </div>
                   ) : (
@@ -880,7 +880,7 @@ export async function GET(req: Request) {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.label, fontWeight: 700 }}>
-                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>MEMBERS:</span>
+                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>MEMBERS:</span>
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, color: guildPalette.start }}>{members} 👥</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.label, fontWeight: 700 }}>
@@ -889,7 +889,7 @@ export async function GET(req: Request) {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Level:</span>
-                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{level}</span>
+                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.9)' }}>{level}</span>
                     </div>
                   </div>
                 </div>
@@ -1153,13 +1153,13 @@ export async function GET(req: Request) {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.label, fontWeight: 700 }}>
-                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>STATUS:</span>
+                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>STATUS:</span>
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: verifyPalette.start }}>{status}</span>
                     </div>
                     {questId && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
                         <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Quest:</span>
-                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>#{questId}</span>
+                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.9)' }}>#{questId}</span>
                       </div>
                     )}
                   </div>
@@ -1438,7 +1438,7 @@ export async function GET(req: Request) {
                         boxShadow: `0 0 12px ${questPalette.start}60`,
                       }}
                     >
-                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.9 }}>
+                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.9)' }}>
                         COMPLETE FOR
                       </div>
                       <div
@@ -1464,7 +1464,7 @@ export async function GET(req: Request) {
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
                       <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Expires:</div>
-                      <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{expires}</div>
+                      <div style={{ display: 'flex', letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.9)' }}>{expires}</div>
                     </div>
                   </div>
                 </div>
@@ -2083,14 +2083,14 @@ export async function GET(req: Request) {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.label, fontWeight: 700 }}>
-                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>SEASON:</span>
+                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>SEASON:</span>
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: leaderboardPalette.start }}>{season}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.label, fontWeight: 700 }}>
-                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>SHOWING:</span>
+                      <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>SHOWING:</span>
                       <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: leaderboardPalette.start }}>Top {limit}</span>
                     </div>
-                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, opacity: 0.7, marginTop: FRAME_SPACING.section.minimal }}>
+                    <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, lineHeight: FRAME_TYPOGRAPHY.lineHeight.normal, color: 'rgba(255, 255, 255, 0.7)', marginTop: FRAME_SPACING.section.minimal }}>
                       GM Streaks • Quests • XP • Badges
                     </div>
                   </div>
@@ -2126,7 +2126,7 @@ export async function GET(req: Request) {
   }
 
   // Badge Collection Frame - Yu-Gi-Oh! Card Structure
-  if (type === 'badge') {
+  if (type === 'badgeCollection' || type === 'badge') {
     const username = readParam(url, 'username', '')
     const displayName = readParam(url, 'displayName', '')
     const earnedCount = readParam(url, 'earnedCount', '0')
@@ -2449,7 +2449,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>
+                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>
                         EARNED BADGES
                       </div>
                       <div
@@ -2481,7 +2481,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>
+                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>
                         ELIGIBLE FOR
                       </div>
                       <div
@@ -2512,7 +2512,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.8, textAlign: 'center' }}>
+                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.8)', textAlign: 'center' }}>
                         TOTAL XP FROM BADGES
                       </div>
                       <div
@@ -2801,7 +2801,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>
+                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>
                         AVAILABLE
                       </div>
                       <div
@@ -2833,7 +2833,7 @@ export async function GET(req: Request) {
                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                       }}
                     >
-                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>
+                      <div style={{ display: 'flex', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>
                         LOCKED
                       </div>
                       <div
@@ -2888,7 +2888,7 @@ export async function GET(req: Request) {
 
                       {/* XP Progress Bar */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.7 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.7)' }}>
                           <div style={{ display: 'flex' }}>XP Progress</div>
                           <div style={{ display: 'flex' }}>{xpPercent}%</div>
                         </div>
@@ -2911,7 +2911,7 @@ export async function GET(req: Request) {
                             }}
                           />
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.micro, letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.8)' }}>
                           <div style={{ display: 'flex' }}>{formatXp(levelProgress.xpIntoLevel)} XP</div>
                           <div style={{ display: 'flex' }}>{formatXp(levelProgress.xpToNextLevel)} to Lvl {levelProgress.level + 1}</div>
                         </div>
@@ -3484,20 +3484,20 @@ export async function GET(req: Request) {
                 >
                     {totalTxs !== '—' && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.label, fontWeight: 700 }}>
-                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, opacity: 0.7 }}>TXS:</span>
+                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.wide, color: 'rgba(255, 255, 255, 0.7)' }}>TXS:</span>
                         <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.tight, color: defaultPalette.start }}>{totalTxs}</span>
                       </div>
                     )}
                     {volume !== '—' && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
                         <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>Volume:</span>
-                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{volume}</span>
+                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.9)' }}>{volume}</span>
                       </div>
                     )}
                     {(balance_val !== '—' || age !== '—') && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FRAME_FONT_FAMILY.body, fontSize: FRAME_FONTS_V2.caption, fontWeight: 600 }}>
                         <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.85)' }}>{balance_val !== '—' ? 'Balance:' : 'Age:'}</span>
-                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, opacity: 0.9 }}>{balance_val !== '—' ? balance_val : age}</span>
+                        <span style={{ letterSpacing: FRAME_TYPOGRAPHY.letterSpacing.normal, color: 'rgba(255, 255, 255, 0.9)' }}>{balance_val !== '—' ? balance_val : age}</span>
                       </div>
                     )}
                 </div>
