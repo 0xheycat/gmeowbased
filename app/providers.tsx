@@ -17,7 +17,6 @@ import { getMiniappContext } from '@/lib/miniappEnv'
 
 export function MiniAppProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
-  const [miniappReady, setMiniappReady] = useState(false)
   const [miniappChecked, setMiniappChecked] = useState(false)
 
   // Initialize performance monitoring
@@ -33,7 +32,6 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
     const handleMiniappReady = (e: CustomEvent) => {
       if (mounted) {
         console.log('[MiniAppProvider] Miniapp ready event:', e.detail)
-        setMiniappReady(e.detail?.success ?? false)
         setMiniappChecked(true)
       }
     }
