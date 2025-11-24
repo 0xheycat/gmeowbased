@@ -200,7 +200,7 @@ export default function MegaLeaderboard() {
         <div className="flex flex-wrap items-center gap-3">
           {seasonSupported && (
             <select
-              className="roster-chip roster-select text-sm text-gray-200"
+              className="roster-chip roster-select text-sm text-gray-200 min-h-[48px]"
               value={season}
               onChange={event => setSeason(event.target.value)}
               aria-label="Select season"
@@ -216,7 +216,7 @@ export default function MegaLeaderboard() {
           )}
 
           <select
-            className="roster-chip roster-select text-sm text-gray-200"
+            className="roster-chip roster-select text-sm text-gray-200 min-h-[48px]"
             value={selectedChain}
             onChange={event => setSelectedChain(event.target.value as ChainKey)}
             disabled={global}
@@ -306,7 +306,7 @@ export default function MegaLeaderboard() {
               return (
                 <motion.div
                   key={row.address}
-                  className="roster-orbit-card flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="roster-orbit-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
