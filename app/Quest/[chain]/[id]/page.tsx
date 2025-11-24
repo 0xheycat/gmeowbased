@@ -1540,7 +1540,7 @@ export default function VerifyQuestPage() {
                   onChange={(e) => setCastInput(e.currentTarget.value)}
                   onBlur={(e) => previewCast(e.currentTarget.value)}
                 />
-                <button className="pixel-button" onClick={() => previewCast(castInput || metaPreview?.castUrl || metaPreview?.identifier || '')}>
+                <button className="pixel-button min-h-[44px]" onClick={() => previewCast(castInput || metaPreview?.castUrl || metaPreview?.identifier || '')}>
                   Preview Cast
                 </button>
               </div>
@@ -1554,7 +1554,7 @@ export default function VerifyQuestPage() {
                     onChange={(e) => setInputFid(e.target.value.replace(/[^\d]/g, ''))}
                   />
                   <button
-                    className="pixel-button"
+                    className="pixel-button min-h-[44px]"
                     onClick={() => {
                       const possible = castPreview?.author?.fid || castPreview?.author_fid || 0
                       if (possible) {
@@ -1569,7 +1569,7 @@ export default function VerifyQuestPage() {
                   >
                     Auto-fill from Cast
                   </button>
-                  <button className="pixel-button" disabled={linkFidDisabled} onClick={async () => { try { await linkFidOnContract() } catch {} }}>
+                  <button className="pixel-button min-h-[44px]" disabled={linkFidDisabled} onClick={async () => { try { await linkFidOnContract() } catch {} }}>
                     {linkingFid ? 'Linking…' : 'Link FID'}
                   </button>
                   <div className="ml-auto text-xs text-slate-300">{copyMessage ?? ''}</div>
@@ -1589,7 +1589,7 @@ export default function VerifyQuestPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="pixel-button" disabled={verifyButtonDisabled} onClick={async () => { try { await handleVerifyClick() } catch {} }}>
+                  <button className="pixel-button min-h-[44px]" disabled={verifyButtonDisabled} onClick={async () => { try { await handleVerifyClick() } catch {} }}>
                     {verifying ? 'Verifying...' : 'Verify'}
                   </button>
                 </div>
