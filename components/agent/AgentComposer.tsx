@@ -66,8 +66,8 @@ export function AgentComposer({ className }: AgentComposerProps) {
       <Card tone="frosted" padding="sm" className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-white">Quick prompts</h2>
-            <p className="text-xs text-white/60">Use these to jumpstart agent responses.</p>
+            <h2 className="text-lg font-semibold text-white dark:text-slate-950 dark:text-white">Quick prompts</h2>
+            <p className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">Use these to jumpstart agent responses.</p>
           </div>
         </div>
         <div className="relative">
@@ -79,7 +79,7 @@ export function AgentComposer({ className }: AgentComposerProps) {
             aria-label="Search quick prompts"
             className="pl-9"
           />
-          <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/40" weight="bold" />
+          <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/40" weight="bold" />
         </div>
         <ul className="space-y-3">
           {filteredSuggestions.length ? (
@@ -89,14 +89,14 @@ export function AgentComposer({ className }: AgentComposerProps) {
                 <li key={item.id}>
                   <CardSection tone="muted" padding="sm" className="space-y-3">
                     <div className="space-y-1">
-                      <div className="text-sm font-semibold text-white">{item.title}</div>
-                      <CardDescription className="text-xs text-white/60">{item.detail}</CardDescription>
+                      <div className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{item.title}</div>
+                      <CardDescription className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">{item.detail}</CardDescription>
                     </div>
-                    <p className="rounded-lg border border-white/10 bg-black/30 p-3 text-[13px] text-white/80">{item.prompt}</p>
+                    <p className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/30 p-3 text-[13px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">{item.prompt}</p>
                     <button
                       type="button"
                       onClick={() => handleCopy(item.id, item.prompt)}
-                      className="inline-flex items-center gap-2 self-start rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:border-emerald-300/40 hover:bg-emerald-400/10"
+                      className="inline-flex items-center gap-2 self-start rounded-full border border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-xs font-semibold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition hover:border-emerald-300/40 hover:bg-emerald-400/10"
                     >
                       {isCopied ? (
                         <>
@@ -105,7 +105,7 @@ export function AgentComposer({ className }: AgentComposerProps) {
                         </>
                       ) : (
                         <>
-                          <Copy className="size-4 text-white/70" weight="bold" />
+                          <Copy className="size-4 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70" weight="bold" />
                           Copy prompt
                         </>
                       )}
@@ -116,7 +116,7 @@ export function AgentComposer({ className }: AgentComposerProps) {
             })
           ) : (
             <li>
-              <CardSection tone="muted" padding="sm" className="text-sm text-white/65">
+              <CardSection tone="muted" padding="sm" className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/65">
                 No prompts match “{query}”.
               </CardSection>
             </li>

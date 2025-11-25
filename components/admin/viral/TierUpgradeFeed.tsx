@@ -115,7 +115,7 @@ export default function TierUpgradeFeed({
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5 shadow-lg backdrop-blur">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="pixel-section-title text-base">🔄 Viral Tier Upgrades</h3>
@@ -128,7 +128,7 @@ export default function TierUpgradeFeed({
           <select
             value={tierFilter}
             onChange={(e) => setTierFilter(e.target.value)}
-            className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
+            className="rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-[11px] text-white dark:text-slate-950 dark:text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
             aria-label="Filter tier upgrades by tier"
           >
             <option value="all">All Tiers</option>
@@ -159,12 +159,12 @@ export default function TierUpgradeFeed({
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="h-16 animate-pulse rounded-xl border border-white/10 bg-white/5"
+              className="h-16 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5"
             />
           ))}
         </div>
       ) : upgrades.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+        <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
           No tier upgrades yet. When users reach viral status, they&apos;ll appear here.
         </div>
       ) : (
@@ -172,10 +172,10 @@ export default function TierUpgradeFeed({
           {upgrades.map((upgrade) => (
             <div
               key={upgrade.id}
-              className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3 transition hover:border-emerald-400/30 hover:bg-white/10"
+              className="group flex items-center gap-3 rounded-xl border border-white dark:border-slate-700/10 bg-white dark:bg-slate-900/[0.04] p-3 transition hover:border-emerald-400/30 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5"
             >
               {/* User Avatar */}
-              <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-white/20">
+              <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-white dark:border-slate-700/20">
                 {upgrade.avatar_url ? (
                   <Image
                     src={upgrade.avatar_url}
@@ -184,7 +184,7 @@ export default function TierUpgradeFeed({
                     className="object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500/30 to-purple-500/30 text-sm font-bold text-white">
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500/30 to-purple-500/30 text-sm font-bold text-white dark:text-slate-950 dark:text-white">
                     {upgrade.username?.[0]?.toUpperCase() ?? '?'}
                   </div>
                 )}
@@ -193,11 +193,11 @@ export default function TierUpgradeFeed({
               {/* User Info */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-[13px] font-semibold text-white">
+                  <span className="truncate text-[13px] font-semibold text-white dark:text-slate-950 dark:text-white">
                     {upgrade.display_name ?? upgrade.username ?? `FID ${upgrade.fid}`}
                   </span>
                   {upgrade.username && (
-                    <span className="truncate text-[11px] text-white/50">
+                    <span className="truncate text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">
                       @{upgrade.username}
                     </span>
                   )}
@@ -212,7 +212,7 @@ export default function TierUpgradeFeed({
                   >
                     {TIER_LABELS[upgrade.old_tier] ?? upgrade.old_tier}
                   </span>
-                  <span className="text-white/40">→</span>
+                  <span className="text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/40">→</span>
                   <span
                     className={`rounded-md border px-2 py-0.5 font-medium ${
                       TIER_COLORS[upgrade.new_tier] ?? TIER_COLORS.viral
@@ -228,7 +228,7 @@ export default function TierUpgradeFeed({
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-300">
                   +{upgrade.xp_bonus_awarded} XP
                 </span>
-                <span className="text-[10px] text-white/40">
+                <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/40">
                   {formatTimestamp(upgrade.changed_at)}
                 </span>
               </div>

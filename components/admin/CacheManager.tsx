@@ -37,7 +37,7 @@ export function CacheManager() {
   }
 
   return (
-    <div className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
+    <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-900/50 p-4">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-bold">Cache Manager</h3>
         <div className="flex gap-2">
@@ -105,7 +105,7 @@ function CacheBlock({
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded-md border border-white/5 bg-white/5 p-3">
+    <div className="rounded-md border border-white dark:border-slate-700/5 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
       <div
         className="flex cursor-pointer items-center justify-between"
         onClick={() => setExpanded(!expanded)}
@@ -120,7 +120,7 @@ function CacheBlock({
       </div>
 
       {expanded && stats.entries.length > 0 && (
-        <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
+        <div className="mt-2 space-y-1 border-t border-white dark:border-slate-700/5 pt-2">
           {stats.entries.map((entry, idx) => (
             <div key={idx} className="flex items-center justify-between text-xs">
               <span className="truncate text-slate-300" title={entry.key}>

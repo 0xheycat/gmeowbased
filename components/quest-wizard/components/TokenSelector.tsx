@@ -289,7 +289,7 @@ export function TokenSelector({
 	return (
 		<div ref={containerRef} className="relative">
 			<div
-				className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-2 text-slate-200 shadow-sm backdrop-blur transition focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-300 focus-within:ring-offset-2 focus-within:ring-offset-slate-950"
+				className="flex w-full items-center gap-3 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 px-3 py-2 text-slate-200 shadow-sm backdrop-blur transition focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-300 focus-within:ring-offset-2 focus-within:ring-offset-slate-950"
 				onClick={() => {
 					if (!open) {
 						setOpen(true)
@@ -305,7 +305,7 @@ export function TokenSelector({
 							alt={`${selectedToken.symbol} icon`}
 							width={32}
 							height={32}
-							className="h-8 w-8 flex-none rounded-full border border-white/10 bg-slate-900 object-cover"
+							className="h-8 w-8 flex-none rounded-full border border-white dark:border-slate-700/10 bg-slate-900 object-cover"
 							unoptimized
 						/>
 						<span className="flex min-w-0 flex-col text-left">
@@ -340,8 +340,8 @@ export function TokenSelector({
 				</span>
 			</div>
 			{open ? (
-				<div className="absolute right-0 z-30 mt-2 w-full min-w-[280px] max-w-[360px] overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-[0_18px_44px_rgba(17,24,39,0.45)] backdrop-blur-xl">
-					<div className="border-b border-white/10 bg-slate-950/80 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-slate-500">
+				<div className="absolute right-0 z-30 mt-2 w-full min-w-[280px] max-w-[360px] overflow-hidden rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/95 shadow-[0_18px_44px_rgba(17,24,39,0.45)] backdrop-blur-xl">
+					<div className="border-b border-white dark:border-slate-700/10 bg-slate-950/80 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-slate-500">
 						Results refresh automatically as you type.
 					</div>
 					<div 
@@ -404,7 +404,7 @@ export function TokenSelector({
 													: active
 														? 'bg-sky-500/15 text-sky-100'
 														: selectable
-															? 'hover:bg-white/5'
+															? 'hover:bg-slate-100/90 dark:bg-white/5/5'
 															: ''
 											}`}
 											>
@@ -414,7 +414,7 @@ export function TokenSelector({
 														alt={`${token.symbol} icon`}
 														width={32}
 														height={32}
-														className="h-8 w-8 rounded-full border border-white/10 bg-slate-900 object-cover"
+														className="h-8 w-8 rounded-full border border-white dark:border-slate-700/10 bg-slate-900 object-cover"
 														unoptimized
 													/>
 													<span className="flex flex-col text-sm font-medium text-slate-100">

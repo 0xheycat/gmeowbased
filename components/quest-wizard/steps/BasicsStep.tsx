@@ -41,7 +41,7 @@ function QuestTypeGuide({ questType, detail, config }: QuestTypeGuideProps) {
 	const showPanels = requirementHints.length > 0 || tips.length > 0
 
 	return (
-		<section className="rounded-3xl border border-white/10 bg-white/5 p-5">
+		<section className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5">
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div>
 					<p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Quest template</p>
@@ -55,7 +55,7 @@ function QuestTypeGuide({ questType, detail, config }: QuestTypeGuideProps) {
 			{showPanels ? (
 				<div className="mt-4 grid gap-3 lg:grid-cols-2">
 					{requirementHints.length ? (
-						<div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
+						<div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/50 p-4">
 							<p className="text-[11px] uppercase tracking-[0.26em] text-slate-400">Fields</p>
 							<ul className="mt-2 space-y-1 text-sm text-slate-200">
 								{requirementHints.map((hint, index) => (
@@ -68,7 +68,7 @@ function QuestTypeGuide({ questType, detail, config }: QuestTypeGuideProps) {
 						</div>
 					) : null}
 					{tips.length ? (
-						<div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
+						<div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/50 p-4">
 							<p className="text-[11px] uppercase tracking-[0.26em] text-slate-400">Tips</p>
 							<ul className="mt-2 space-y-1 text-sm text-slate-200">
 								{tips.map((tip, index) => (
@@ -371,9 +371,9 @@ export function BasicsStep({
 						onChange={(event) => onChange({ media: event.target.value, mediaPreview: event.target.value })}
 					/>
 				</Field>
-				<div className="flex h-full items-center justify-center rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+				<div className="flex h-full items-center justify-center rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/40 p-4">
 					{draft.mediaPreview ? (
-						<div className="w-full max-w-[220px] overflow-hidden rounded-2xl border border-white/10 shadow-lg shadow-sky-500/20">
+						<div className="w-full max-w-[220px] overflow-hidden rounded-2xl border border-white dark:border-slate-700/10 shadow-lg shadow-sky-500/20">
 							<Image
 								src={draft.mediaPreview}
 								alt="Quest media preview"
@@ -383,7 +383,7 @@ export function BasicsStep({
 								unoptimized
 							/>
 							{draft.mediaFileName ? (
-								<div className="border-t border-white/10 bg-slate-950/80 px-3 py-2 text-center text-[11px] text-slate-300">
+								<div className="border-t border-white dark:border-slate-700/10 bg-slate-950/80 px-3 py-2 text-center text-[11px] text-slate-300">
 									{draft.mediaFileName}
 								</div>
 							) : null}

@@ -207,7 +207,7 @@ export function ContractLeaderboard() {
                 </div>
 
                 {u.byChain && (
-                  <div className="mt-2 text-[11px] text-gray-500">
+                  <div className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
                     {Object.entries(u.byChain).map(([chain, d]) => (
                       <span key={chain} className="mr-3">
                         {chain.toUpperCase()}: {d.points} XP / {d.completed}Q

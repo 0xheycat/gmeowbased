@@ -74,7 +74,7 @@ export function QuickExpiryPicker({ value, onChange, id, 'aria-describedby': ari
 					onClick={() => handlePresetClick('evergreen', () => '')}
 					className={`rounded-2xl border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
 						activePreset === 'evergreen'
-							? 'border-white/60 bg-white/80 text-slate-900 shadow-lg shadow-white/20'
+							? 'border-white/60 bg-slate-100/90 dark:bg-white/5/80 text-slate-900 dark:text-slate-500 shadow-lg shadow-white/20'
 							: 'border-white/12 text-slate-300 hover:border-white/20'
 					}`}
 					aria-pressed={activePreset === 'evergreen'}
@@ -90,11 +90,11 @@ export function QuickExpiryPicker({ value, onChange, id, 'aria-describedby': ari
 						className={`rounded-2xl border px-3 py-1.5 text-xs uppercase tracking-[0.18em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
 							activePreset === preset.id
 								? preset.tone === 'emerald'
-									? 'border-emerald-300/70 bg-emerald-300/80 text-slate-900 shadow-lg shadow-emerald-400/25'
+									? 'border-emerald-300/70 bg-emerald-300/80 text-slate-900 dark:text-slate-500 shadow-lg shadow-emerald-400/25'
 									: preset.tone === 'purple'
-										? 'border-fuchsia-300/70 bg-fuchsia-400/80 text-white shadow-lg shadow-fuchsia-400/25'
+										? 'border-fuchsia-300/70 bg-fuchsia-400/80 text-slate-900 dark:text-slate-950 dark:text-white shadow-lg shadow-fuchsia-400/25'
 										: preset.tone === 'indigo'
-											? 'border-indigo-300/70 bg-indigo-400/80 text-white shadow-lg shadow-indigo-400/25'
+											? 'border-indigo-300/70 bg-indigo-400/80 text-slate-900 dark:text-slate-950 dark:text-white shadow-lg shadow-indigo-400/25'
 											: 'border-sky-300/70 bg-sky-300/80 text-slate-950 shadow-lg shadow-sky-400/25'
 									: 'border-white/12 text-slate-300 hover:border-white/20'
 						}`}
@@ -106,7 +106,7 @@ export function QuickExpiryPicker({ value, onChange, id, 'aria-describedby': ari
 				{/* @edit-end */}
 			</div>
 			{activeCaption ? <p className="text-[11px] text-slate-400">{activeCaption}</p> : null}
-			<div className="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3">
+			<div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/40 px-4 py-3">
 				<label className="flex flex-col gap-2 text-xs text-slate-300">
 					<span className="font-semibold text-slate-200">Custom UTC expiry</span>
 					<input

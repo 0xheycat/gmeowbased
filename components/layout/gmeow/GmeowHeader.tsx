@@ -43,18 +43,18 @@ export function GmeowHeader() {
         <div className="flex items-center gap-2 lg:hidden">
           <Link
             href="/Quest"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 transition-colors hover:border-[var(--px-accent)]/60 hover:bg-[var(--px-accent)]/5"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 transition-colors hover:border-[var(--px-accent)]/60 hover:bg-[var(--px-accent)]/5 backdrop-blur-xl backdrop-saturate-150"
             aria-label="View Quests"
           >
             <Scroll size={18} weight="regular" />
           </Link>
           <Link
             href="/gm"
-            className="flex h-9 items-center gap-1.5 rounded-full border border-[#7CFF7A]/30 bg-[#7CFF7A]/10 px-3 text-sm font-medium transition-colors hover:border-[#7CFF7A]/50 hover:bg-[#7CFF7A]/15"
+            className="flex h-9 items-center gap-1.5 rounded-full border border-accent-green/30 bg-accent-green/10 px-3 text-sm font-medium transition-colors hover:border-accent-green/50 hover:bg-accent-green/15"
             aria-label="Daily GM"
           >
-            <Lightning size={16} weight="fill" className="text-[#7CFF7A]" />
-            <span className="text-[#7CFF7A]">GM</span>
+            <Lightning size={16} weight="fill" className="text-accent-green" />
+            <span className="text-accent-green">GM</span>
           </Link>
         </div>
 
@@ -97,7 +97,7 @@ export function GmeowHeader() {
                 'flex h-10 w-10 lg:h-12 lg:w-12 items-center justify-center rounded-xl border transition-all',
                 active
                   ? 'border-[var(--px-accent)] bg-[var(--px-accent)]/10 text-[var(--px-accent)] shadow-[0_0_12px_rgba(124,255,122,0.25)]'
-                  : 'border-white/10 text-white/70 hover:border-[var(--px-accent)]/60 hover:text-[var(--px-accent)]'
+                  : 'border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-500/70 dark:text-slate-700/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-[var(--px-accent)]/60 hover:text-[var(--px-accent)]'
               )}
             >
               <Icon size={18} weight={active ? 'fill' : 'regular'} />

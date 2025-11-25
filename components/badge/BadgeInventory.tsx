@@ -160,9 +160,9 @@ export function BadgeInventory({
   if (badges.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <Lock size={48} weight="duotone" className="text-white/20 mb-4" />
-        <p className="text-lg font-bold text-white/60 mb-2">No Badges Yet</p>
-        <p className="text-sm text-white/40">
+        <Lock size={48} weight="duotone" className="text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-white/20 dark:text-slate-950 dark:text-slate-700 dark:text-white/20 mb-4" />
+        <p className="text-lg font-bold text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-white/60 dark:text-slate-950 dark:text-slate-700 dark:text-white/60 mb-2">No Badges Yet</p>
+        <p className="text-sm text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-white/40 dark:text-slate-950 dark:text-slate-700 dark:text-white/40">
           Complete onboarding or join quests to earn your first badge!
         </p>
       </div>
@@ -255,7 +255,7 @@ export function BadgeInventory({
 
                 {/* Minted Status */}
                 {badge.minted && (
-                  <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-white backdrop-blur-sm">
+                  <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-sm">
                     <Sparkle size={ICON_SIZES.xs} weight="fill" />
                     Minted
                   </div>
@@ -266,7 +266,7 @@ export function BadgeInventory({
                   <button
                     onClick={(e) => handleClaimBadge(badge, e)}
                     disabled={claimingBadge === badge.badgeId}
-                    className="absolute top-2 right-2 flex items-center gap-2 px-3 py-2 min-h-6 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute top-2 right-2 flex items-center gap-2 px-3 py-2 min-h-6 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-900 dark:text-slate-950 dark:text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {claimingBadge === badge.badgeId ? (
                       <>Claiming...</>
@@ -286,11 +286,11 @@ export function BadgeInventory({
                     background: `linear-gradient(to top, ${tierConfig.color}80, ${tierConfig.color}20)`,
                   }}
                 >
-                  <p className="text-xs font-bold text-white truncate">
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-950 dark:text-white truncate">
                     {badge.metadata?.name || badge.badgeType}
                   </p>
                   {!badge.minted && (
-                    <p className="text-[10px] text-white/70">Mint Pending</p>
+                    <p className="text-[10px] text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Mint Pending</p>
                   )}
                 </div>
               </div>
@@ -317,24 +317,24 @@ export function BadgeInventory({
                       {tierConfig.label}
                     </span>
                     {badge.minted && (
-                      <span className="flex items-center gap-2 px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/80 text-white">
+                      <span className="flex items-center gap-2 px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/80 text-slate-900 dark:text-slate-950 dark:text-white">
                         <Sparkle size={10} weight="fill" />
                         Minted
                       </span>
                     )}
                   </div>
 
-                  <h4 className="text-sm font-bold text-white mb-1">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-950 dark:text-white mb-1">
                     {badge.metadata?.name || badge.badgeType}
                   </h4>
 
                   {badge.metadata?.description && (
-                    <p className="text-xs text-white/70 mb-2">
+                    <p className="text-xs text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 mb-2">
                       {String(badge.metadata.description)}
                     </p>
                   )}
 
-                  <div className="space-y-1 text-[10px] text-white/50">
+                  <div className="space-y-1 text-[10px] text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-white/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">
                     <p>Assigned: {new Date(badge.assignedAt).toLocaleDateString()}</p>
                     {badge.minted && badge.mintedAt && (
                       <p>Minted: {new Date(badge.mintedAt).toLocaleDateString()}</p>
@@ -353,7 +353,7 @@ export function BadgeInventory({
       {/* Show More Indicator */}
       {maxDisplay && badges.length > maxDisplay && (
         <div className="mt-6 text-center">
-          <p className="text-sm text-white/50">
+          <p className="text-sm text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-white/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">
             Showing {maxDisplay} of {badges.length} badges
           </p>
         </div>

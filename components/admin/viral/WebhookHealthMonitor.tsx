@@ -100,7 +100,7 @@ export default function WebhookHealthMonitor() {
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5 shadow-lg backdrop-blur">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="pixel-section-title text-base">🛠️ Webhook Health</h3>
@@ -110,12 +110,12 @@ export default function WebhookHealthMonitor() {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-[11px] text-white/70">
+          <label className="flex items-center gap-2 text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
             <input
               type="checkbox"
               checked={autoRefresh}
               onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="rounded border-white/20"
+              className="rounded border-white dark:border-slate-700/20"
             />
             Auto-refresh
           </label>
@@ -138,8 +138,8 @@ export default function WebhookHealthMonitor() {
         </div>
       ) : loading && !health ? (
         <div className="space-y-4">
-          <div className="h-24 animate-pulse rounded-xl border border-white/10 bg-white/5" />
-          <div className="h-32 animate-pulse rounded-xl border border-white/10 bg-white/5" />
+          <div className="h-24 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5" />
+          <div className="h-32 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5" />
         </div>
       ) : health ? (
         <>
@@ -167,22 +167,22 @@ export default function WebhookHealthMonitor() {
 
           {/* Metrics Grid */}
           <div className="mb-4 grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-white/60">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
                 Last Webhook
               </div>
-              <div className="mt-1 text-[13px] font-bold text-white">
+              <div className="mt-1 text-[13px] font-bold text-white dark:text-slate-950 dark:text-white">
                 {formatRelativeTime(health.last_webhook_at)}
               </div>
               {health.last_webhook_at && (
-                <div className="mt-0.5 text-[9px] text-white/40">
+                <div className="mt-0.5 text-[9px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/40">
                   {formatTimestamp(health.last_webhook_at)}
                 </div>
               )}
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-white/60">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
                 Today&apos;s Webhooks
               </div>
               <div className="mt-1 text-[13px] font-bold text-emerald-300">
@@ -190,11 +190,11 @@ export default function WebhookHealthMonitor() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-white/60">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
                 Avg Processing
               </div>
-              <div className="mt-1 text-[13px] font-bold text-white">
+              <div className="mt-1 text-[13px] font-bold text-white dark:text-slate-950 dark:text-white">
                 {health.avg_processing_time_ms
                   ? `${health.avg_processing_time_ms}ms`
                   : 'N/A'}
@@ -204,7 +204,7 @@ export default function WebhookHealthMonitor() {
 
           {/* Recent Errors */}
           <div>
-            <h4 className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-white/70">
+            <h4 className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
               Recent Errors (Last 24h)
             </h4>
 

@@ -827,7 +827,7 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
     }
     const g = (c1: string, c2: string) => ({ ...common, backgroundImage: `linear-gradient(90deg, ${c1}, ${c2})` })
     switch (k) {
-      case 'txs': return g('#7CFF7A', '#19C37D')
+      case 'txs': return g('rgb(124, 255, 122)', '#19C37D')  // accent-green approximation
       case 'contracts': return g('#FFC46B', '#FF7A00')
       case 'age': return g('#C084FC', '#7C3AED')
       case 'talent': return g('#60A5FA', '#22D3EE')

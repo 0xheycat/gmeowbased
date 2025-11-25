@@ -20,23 +20,23 @@ import dynamic from 'next/dynamic'
 
 // Client components - dynamically loaded to reduce initial bundle
 const TierUpgradeFeed = dynamic(() => import('@/components/admin/viral/TierUpgradeFeed'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 h-96" />,
 })
 
 const NotificationAnalytics = dynamic(() => import('@/components/admin/viral/NotificationAnalytics'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 h-96" />,
 })
 
 const AchievementDistribution = dynamic(() => import('@/components/admin/viral/AchievementDistribution'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 h-96" />,
 })
 
 const TopViralCasts = dynamic(() => import('@/components/admin/viral/TopViralCasts'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 h-96" />,
 })
 
 const WebhookHealthMonitor = dynamic(() => import('@/components/admin/viral/WebhookHealthMonitor'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 h-96" />,
 })
 
 export default async function ViralAdminPage() {
@@ -60,7 +60,7 @@ export default async function ViralAdminPage() {
           <span className="text-[11px] uppercase tracking-[0.32em] text-[var(--px-sub)]">
             Gmeow Admin
           </span>
-          <h1 className="mt-1 text-2xl font-bold text-white md:text-3xl">
+          <h1 className="mt-1 text-2xl font-bold text-white dark:text-slate-950 dark:text-white md:text-3xl">
             🔔 Viral Notifications Dashboard
           </h1>
           <p className="mt-1 text-[12px] text-[var(--px-sub)]">
@@ -69,7 +69,7 @@ export default async function ViralAdminPage() {
         </div>
 
         <Link
-          className="pixel-button btn-sm border-white/20 bg-white/10 text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+          className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
           href="/admin"
         >
           ← Back to Admin
@@ -111,11 +111,11 @@ export default async function ViralAdminPage() {
       </div>
 
       {/* Footer Notes */}
-      <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4">
-        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-white/70">
+      <div className="mt-8 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
+        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
           📝 Admin Notes
         </h4>
-        <ul className="space-y-1 text-[11px] text-white/60">
+        <ul className="space-y-1 text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
           <li>
             • <strong>Tier Upgrades:</strong> Real-time feed of users leveling up viral tiers.
             Auto-refreshes every 10 seconds.

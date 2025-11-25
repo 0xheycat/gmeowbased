@@ -656,7 +656,7 @@ export function MegaIntro({
                   </button>
                 </div>
                 {usernameUser && (
-                  <div className="text-xs text-amber-400 mt-3 p-3 bg-black/20 rounded-lg">
+                  <div className="text-xs text-amber-400 mt-3 p-3 bg-black dark:bg-slate-950/20 rounded-lg">
                     ✅ Found: @{usernameUser.username} (FID: {usernameUser.fid})
                     {usernameUser.fid && usernameUser.fid < 10000 && (
                       <span className="block mt-1 font-semibold">

@@ -29,7 +29,7 @@ export function ProfileStickyHeader({
   globalRank,
 }: ProfileStickyHeaderProps) {
   return (
-    <div className="sticky top-0 z-40 bg-[#080f21]/95 backdrop-blur-md px-3 py-2 sm:hidden border-b border-white/10 shadow-lg shadow-black/20">
+    <div className="sticky top-0 z-40 bg-[#080f21]/95 backdrop-blur-md px-3 py-2 sm:hidden border-b border-white dark:border-slate-700/10 shadow-lg shadow-black/20">
       <div className="flex items-center justify-between gap-3">
         {/* Avatar + Name */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -39,11 +39,11 @@ export function ProfileStickyHeader({
               width={32} 
               height={32} 
               alt={displayName}
-              className="rounded-full border border-white/20 pixelated" 
+              className="rounded-full border border-white dark:border-slate-700/20 pixelated" 
               unoptimized
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold border border-white/20">
+            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold border border-white dark:border-slate-700/20">
               {displayName[0]?.toUpperCase() || '?'}
             </div>
           )}
@@ -56,10 +56,10 @@ export function ProfileStickyHeader({
         {/* Quick Stats */}
         <div className="flex items-center gap-3 text-xs flex-shrink-0">
           <div className="text-right">
-            <div className="font-black text-[#7CFF7A] leading-tight">{formatNumber(totalPoints)}</div>
+            <div className="font-black text-accent-green leading-tight">{formatNumber(totalPoints)}</div>
             <div className="text-[9px] text-slate-500 uppercase tracking-wider">XP</div>
           </div>
-          <div className="h-8 w-px bg-white/10" />
+          <div className="h-8 w-px bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5" />
           <div className="text-right">
             <div className="font-black text-amber-400 leading-tight">#{formatNumber(globalRank || 0)}</div>
             <div className="text-[9px] text-slate-500 uppercase tracking-wider">Rank</div>

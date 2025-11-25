@@ -26,7 +26,7 @@ export function SkipToContent({ targetId = 'main-content' }: { targetId?: string
 	return (
 		<a
 			href={`#${targetId}`}
-			className="absolute left-4 top-4 z-50 -translate-y-24 rounded-lg bg-sky-500 px-4 py-2 font-semibold text-white transition focus:translate-y-0"
+			className="absolute left-4 top-4 z-50 -translate-y-24 rounded-lg bg-sky-500 px-4 py-2 font-semibold text-white dark:text-slate-950 dark:text-white transition focus:translate-y-0"
 		>
 			Skip to main content
 		</a>
@@ -159,9 +159,9 @@ export function AccessibleButton({
 	variant?: 'primary' | 'secondary' | 'danger'
 }) {
 	const variants = {
-		primary: 'bg-sky-500 hover:bg-sky-600 text-white',
-		secondary: 'bg-white/10 hover:bg-white/20 text-white',
-		danger: 'bg-red-500 hover:bg-red-600 text-white',
+		primary: 'bg-sky-500 hover:bg-sky-600 text-slate-900 dark:text-slate-950 dark:text-white',
+		secondary: 'bg-slate-100/90 dark:bg-white/5/10 hover:bg-slate-100/90 dark:bg-white/5/20 text-slate-900 dark:text-slate-950 dark:text-white',
+		danger: 'bg-red-500 hover:bg-red-600 text-slate-900 dark:text-slate-950 dark:text-white',
 	}
 
 	return (
@@ -314,7 +314,7 @@ export function ProgressIndicator({
 				<span>{label || 'Progress'}</span>
 				<span>{percentage}%</span>
 			</div>
-			<div className="h-2 overflow-hidden rounded-full bg-white/10">
+			<div className="h-2 overflow-hidden rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5">
 				<div
 					className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 transition-all duration-300"
 					style={{ width: `${percentage}%` }}

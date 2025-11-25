@@ -9,7 +9,7 @@ export function SelectorState({ variant, message, hint }: { variant: SelectorSta
 				? 'border-sky-400/40 bg-sky-500/10 text-sky-100'
 				: variant === 'no-results'
 					? 'border-amber-400/30 bg-amber-500/5 text-amber-100'
-					: 'border-white/15 bg-white/5 text-slate-300'
+					: 'border-white/15 bg-slate-100/90 dark:bg-white/5/5 text-slate-300'
 	
 	const icon =
 		variant === 'error'

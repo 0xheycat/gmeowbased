@@ -239,7 +239,7 @@ export function EligibilityStep({
 			{draft.eligibilityMode === 'open' ? (
 				<p className="text-sm text-slate-300">No gating configured. Anyone on {CHAIN_LABEL[draft.chain]} can claim.</p>
 			) : (
-				<div className="space-y-5 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+				<div className="space-y-5 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 p-4">
 					<CatalogStatusBanner
 						label="Eligibility assets"
 						loading={combinedLoading}

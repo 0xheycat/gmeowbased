@@ -4,7 +4,7 @@ export function TemplateSkeletonGrid() {
 			{[...Array(6)].map((_, i) => (
 				<div
 					key={i}
-					className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-6 animate-pulse"
+					className="overflow-hidden rounded-2xl border border-white dark:border-slate-700/10 bg-gradient-to-br from-slate-900 to-slate-950 p-6 animate-pulse"
 				>
 					{/* Icon skeleton */}
 					<div className="mb-4 h-16 w-16 rounded-2xl bg-slate-800/60" />
@@ -36,7 +36,7 @@ export function AssetListSkeleton({ count = 5 }: { count?: number }) {
 			{[...Array(count)].map((_, i) => (
 				<div
 					key={i}
-					className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 animate-pulse"
+					className="flex items-center gap-3 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3 animate-pulse"
 				>
 					{/* Asset icon skeleton */}
 					<div className="h-10 w-10 rounded-full bg-slate-800/60" />
@@ -58,7 +58,7 @@ export function AssetListSkeleton({ count = 5 }: { count?: number }) {
 
 export function FormFieldSkeleton() {
 	return (
-		<div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 animate-pulse">
+		<div className="space-y-3 rounded-2xl border border-white dark:border-slate-700/10 bg-white dark:bg-slate-900/[0.04] p-4 animate-pulse">
 			{/* Label skeleton */}
 			<div className="h-4 w-32 rounded bg-slate-800/60" />
 			

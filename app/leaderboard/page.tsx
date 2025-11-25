@@ -253,15 +253,15 @@ export default function MegaLeaderboard() {
 
         <div className="flex flex-wrap gap-3 text-xs sm:text-sm text-gray-300">
           <div className="roster-stat">
-            <span className="uppercase tracking-wide text-[10px] text-gray-500">Pilots tracked</span>
+            <span className="uppercase tracking-wide text-[10px] text-gray-500 dark:text-gray-400">Pilots tracked</span>
             <strong>{meta.total.toLocaleString()}</strong>
           </div>
           <div className="roster-stat">
-            <span className="uppercase tracking-wide text-[10px] text-gray-500">Roster mode</span>
+            <span className="uppercase tracking-wide text-[10px] text-gray-500 dark:text-gray-400">Roster mode</span>
             <strong>{global ? 'All chains' : CHAIN_LABEL[selectedChain]}</strong>
           </div>
           <div className="roster-stat">
-            <span className="uppercase tracking-wide text-[10px] text-gray-500">Synced</span>
+            <span className="uppercase tracking-wide text-[10px] text-gray-500 dark:text-gray-400">Synced</span>
             <strong>{formatRelativeTime(meta.updatedAt)}</strong>
           </div>
         </div>
@@ -284,7 +284,7 @@ export default function MegaLeaderboard() {
           {loading ? (
             <div className="animate-pulse space-y-2">
               {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="h-20 bg-white/5 rounded-xl" />
+                <div key={index} className="h-20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 rounded-xl" />
               ))}
             </div>
           ) : filteredRows.length === 0 ? (
@@ -322,7 +322,7 @@ export default function MegaLeaderboard() {
                   )}
 
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-black/60 border border-white/10 overflow-hidden flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-xl bg-black dark:bg-slate-950/60 border border-white dark:border-slate-700/10 overflow-hidden flex items-center justify-center">
                       {row.pfpUrl ? (
                         <Image src={row.pfpUrl} alt="pfp" width={56} height={56} className="w-full h-full object-cover" unoptimized />
                       ) : (
@@ -331,9 +331,9 @@ export default function MegaLeaderboard() {
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-white">{displayName}</span>
+                        <span className="text-lg font-bold text-white dark:text-slate-950 dark:text-white">{displayName}</span>
                         <span className="text-xs text-gray-400">#{row.rank}</span>
-                        <span className="roster-chip text-[10px] uppercase tracking-wider bg-white/10 text-gray-200">
+                        <span className="roster-chip text-[10px] uppercase tracking-wider bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-gray-200">
                           {CHAIN_LABEL[row.chain]}
                         </span>
                       </div>
@@ -371,7 +371,7 @@ export default function MegaLeaderboard() {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.4 }}
-                        className="absolute -top-3 right-3 bg-emerald-400 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg"
+                        className="absolute -top-3 right-3 bg-emerald-400 text-black dark:text-white dark:text-slate-950 dark:text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg"
                       >
                         Rank up
                       </motion.div>
@@ -395,7 +395,7 @@ export default function MegaLeaderboard() {
             >
               Prev
             </button>
-            <span className="text-xs uppercase tracking-wide text-gray-500">Offset {offset}</span>
+            <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Offset {offset}</span>
             <button
               className="roster-chip"
               disabled={!canPageForward || loading}

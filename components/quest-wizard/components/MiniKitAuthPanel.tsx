@@ -167,7 +167,7 @@ export function MiniKitAuthPanel({
 					) : null}
 				</div>
 			</div>
-			<div className="mt-6 rounded-3xl border border-white/10 bg-slate-950/40 p-4">
+			<div className="mt-6 rounded-3xl border border-white dark:border-slate-700/10 bg-slate-950/40 p-4">
 				{profileLoading ? (
 					<p className="text-sm text-slate-300">Loading Neynar profile…</p>
 				) : identityStats.length ? (

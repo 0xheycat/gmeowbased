@@ -1044,7 +1044,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                     ? 'w-8 bg-gold-dark' 
                     : idx < stage 
                     ? 'w-2 bg-green-400' 
-                    : 'w-2 bg-white/20 hover:bg-white/40'
+                    : 'w-2 bg-slate-100/90 dark:bg-white/5/20 hover:bg-slate-100/90 dark:bg-white/5/40'
                 }`}
               />
             ))}
@@ -1131,7 +1131,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                     {isFinalStage && farcasterProfile?.neynarScore !== undefined && (
                       <div className="absolute top-4 right-4 z-10" role="img" aria-label={`Neynar reputation score: ${farcasterProfile.neynarScore.toFixed(2)} out of 1.0`}>
                         <div 
-                          className="flex flex-col items-center justify-center rounded-full border-4 bg-black/80 backdrop-blur-sm w-20 h-20 shadow-lg"
+                          className="flex flex-col items-center justify-center rounded-full border-4 bg-black dark:bg-slate-950/80 backdrop-blur-sm w-20 h-20 shadow-lg"
                           style={{ 
                             borderColor: TIER_CONFIG[farcasterProfile.tier || 'common'].color 
                           }}
@@ -1144,7 +1144,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                           >
                             {farcasterProfile.neynarScore.toFixed(1)}
                           </div>
-                          <div className="text-[0.6rem] uppercase tracking-wider text-white/70">
+                          <div className="text-[0.6rem] uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
                             Score
                           </div>
                         </div>
@@ -1184,7 +1184,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                       <p className="text-sm text-blue-200 mb-3 font-semibold">
                         ✨ Easiest Way: Connect Your Wallet
                       </p>
-                      <p className="text-xs text-white/60 mb-3">
+                      <p className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60 mb-3">
                         If your wallet is linked to Farcaster, we&apos;ll automatically detect your FID.
                       </p>
                       <ConnectWallet />
@@ -1216,11 +1216,11 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                         }
                       }}
                       placeholder="Enter FID (e.g., 18139)"
-                      className="w-full px-4 py-3 bg-black/40 border border-purple-400/30 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
+                      className="w-full px-4 py-3 bg-black dark:bg-slate-950/40 border border-purple-400/30 rounded-lg text-white dark:text-slate-950 dark:text-white placeholder:text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
                       aria-label="Farcaster ID input"
                       aria-describedby="fid-help-text"
                     />
-                    <p id="fid-help-text" className="text-xs text-white/60 mt-2">
+                    <p id="fid-help-text" className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60 mt-2">
                       Find your FID at <a href="https://warpcast.com/~/settings" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">warpcast.com/~/settings</a>
                     </p>
                   </div>
@@ -1240,7 +1240,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                       }
                     }}
                     disabled={!fidInputValue || parseInt(fidInputValue, 10) <= 0}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:transform-none"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white dark:text-slate-950 dark:text-white font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:transform-none"
                   >
                     Continue with FID
                   </button>
@@ -1272,12 +1272,12 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                       <div className="text-sm font-bold text-gold-dark uppercase tracking-wider">
                         Badge Unlocked!
                       </div>
-                      <div className="text-lg font-bold text-white">
+                      <div className="text-lg font-bold text-white dark:text-slate-950 dark:text-white">
                         {assignedBadge.metadata.name || 'Tier Badge'}
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-white/70 pl-15">
+                  <div className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 pl-15">
                     {assignedBadge.metadata.description || 'Your tier badge has been assigned.'}
                   </div>
                   <div className="mt-2 flex items-center gap-2 pl-15">
@@ -1292,7 +1292,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                       {TIER_CONFIG[assignedBadge.tier].label}
                     </span>
                     {!assignedBadge.minted && (
-                      <span className="text-[0.65rem] text-white/50">
+                      <span className="text-[0.65rem] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">
                         • Mint pending
                       </span>
                     )}
@@ -1457,12 +1457,12 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
 
         {/* Phase 4.8: Success celebration message */}
         {showSuccessCelebration && (
-          <div className="success-celebration mt-4 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A]/20 to-[#4ADE80]/20 px-6 py-4 backdrop-blur-sm">
+          <div className="success-celebration mt-4 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green/20 to-[#4ADE80]/20 px-6 py-4 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <span className="text-3xl">🎉</span>
               <div>
-                <p className="font-bold text-[#7CFF7A]">Rewards Claimed Successfully!</p>
-                <p className="text-sm text-white/80">
+                <p className="font-bold text-accent-green">Rewards Claimed Successfully!</p>
+                <p className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
                   You earned {claimedRewards?.totalPoints} points and {claimedRewards?.totalXP} XP!
                 </p>
               </div>
@@ -1493,14 +1493,14 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 type="button"
                 onClick={handleClaimRewards}
                 disabled={isClaiming || hasOnboarded || isLoading}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-[#7CFF7A]/50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-accent-green-dark px-6 py-3 font-bold text-black dark:text-white dark:text-slate-950 dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-accent-green/50"
                 aria-label={isClaiming ? 'Claiming rewards, please wait' : hasOnboarded ? 'Rewards already claimed' : 'Claim your onboarding rewards'}
                 aria-busy={isClaiming}
                 aria-live="polite"
               >
                 {isClaiming ? (
                   <>
-                    <span className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-black/30 border-t-black" />
+                    <span className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-black dark:border-slate-600/30 border-t-black" />
                     <span className="animate-pulse">Claiming Rewards...</span>
                   </>
                 ) : hasOnboarded ? (
@@ -1510,7 +1510,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                   </>
                 ) : isLoading ? (
                   <>
-                    <span className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-black/30 border-t-black" />
+                    <span className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-black dark:border-slate-600/30 border-t-black" />
                     <span className="animate-pulse">Loading...</span>
                   </>
                 ) : (
@@ -1560,7 +1560,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#7CFF7A]/50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-accent-green-dark px-6 py-3 font-bold text-black dark:text-white dark:text-slate-950 dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-accent-green/50"
                     aria-label={`Continue to stage ${stage + 2} of ${ONBOARDING_STAGES.length}`}
                   >
                     Next Card
@@ -1581,7 +1581,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                   <button
                     type="button"
                     onClick={handleSkip}
-                    className="flex-shrink-0 rounded-xl border-2 border-white/20 bg-white/5 px-6 py-3 font-bold text-white/70 backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10 hover:text-white sm:w-auto"
+                    className="flex-shrink-0 rounded-xl border-2 border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-6 py-3 font-bold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 backdrop-blur-sm transition-all hover:border-white dark:border-slate-700/40 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 hover:text-white dark:text-slate-950 dark:text-white sm:w-auto"
                   >
                     Skip Tour
                   </button>
@@ -1590,7 +1590,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 <button
                   type="button"
                   onClick={handleComplete}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#7CFF7A] bg-gradient-to-r from-[#7CFF7A] to-[#4ADE80] px-6 py-3 font-bold text-black shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-[#4ADE80] px-6 py-3 font-bold text-black dark:text-white dark:text-slate-950 dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
                 >
                   <Sparkle size={20} weight="fill" />
                   Start Hunting

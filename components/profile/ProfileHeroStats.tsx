@@ -25,7 +25,7 @@ export function ProfileHeroStats({ totalPoints, globalRank, streak }: ProfileHer
     <div className="sm:hidden mega-card mb-6 bg-gradient-to-br from-cyan-500/20 via-violet-500/15 to-violet-500/20 border-2 border-cyan-400/30">
       <div className="text-center py-6 px-4">
         {/* Main XP Display */}
-        <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#7CFF7A] to-emerald-400 leading-none">
+        <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent-green to-emerald-400 leading-none">
           {formatNumber(totalPoints)}
         </div>
         <div className="text-xs uppercase tracking-[0.2em] text-slate-400 mt-2 font-semibold">

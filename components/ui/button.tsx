@@ -60,7 +60,7 @@ const colors: Record<ColorNames, { text: string; background: string; border: str
   },
   white: {
     text: 'text-slate-900',
-    background: 'bg-white text-slate-900',
+    background: 'bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-500',
     border: 'border-white/80',
     drip: 'rgba(22, 36, 67, 0.18)',
   },
@@ -109,7 +109,7 @@ const variantBase: Record<VariantNames, string> = {
   ghost:
     'bg-transparent hover:-translate-y-0.5 hover:shadow-[0_16px_48px_rgba(22,32,68,0.32)] focus:-translate-y-0.5 focus:shadow-[0_20px_60px_rgba(36,56,112,0.35)]',
   transparent:
-    'bg-transparent hover:bg-white/8 focus:bg-white/8 hover:shadow-none focus:shadow-none',
+    'bg-transparent hover:bg-slate-100/90 dark:bg-white/5/8 focus:bg-slate-100/90 dark:bg-white/5/8 hover:shadow-none focus:shadow-none',
 }
 
 export const buttonVariants = ({
@@ -309,12 +309,12 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement>, SharedCardPro
 }
 
 const CARD_TONE_STYLES: Record<CardTone, string> = {
-  neutral: 'border-white/15 bg-white/5 text-white/90',
-  frosted: 'border-white/12 bg-white/5 text-white/90',
-  accent: 'border-emerald-400/30 bg-emerald-400/10 text-white shadow-[0_0_40px_rgba(16,185,129,0.18)]',
-  muted: 'border-white/12 bg-black/25 text-white/85',
-  danger: 'border-rose-400/35 bg-rose-500/15 text-white shadow-[0_0_40px_rgba(244,63,94,0.18)]',
-  info: 'border-sky-400/35 bg-sky-500/15 text-white shadow-[0_0_40px_rgba(56,189,248,0.18)]',
+  neutral: 'border-white/15 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90',
+  frosted: 'border-white/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90',
+  accent: 'border-emerald-400/30 bg-emerald-400/10 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(16,185,129,0.18)]',
+  muted: 'border-white/12 bg-black/25 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/85',
+  danger: 'border-rose-400/35 bg-rose-500/15 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(244,63,94,0.18)]',
+  info: 'border-sky-400/35 bg-sky-500/15 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(56,189,248,0.18)]',
 }
 
 const CARD_PADDING_STYLES: Record<CardPadding, string> = {
@@ -381,7 +381,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(function
   ref,
 ) {
   const Comp = asChild ? Slot : 'h2'
-  return <Comp ref={ref} className={cn('text-lg font-semibold text-white sm:text-xl', className)} {...props} />
+  return <Comp ref={ref} className={cn('text-lg font-semibold text-slate-900 dark:text-slate-950 dark:text-white sm:text-xl', className)} {...props} />
 })
 
 export interface CardDescriptionProps extends HTMLAttributes<HTMLParagraphElement> {
@@ -393,7 +393,7 @@ export const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionP
   ref,
 ) {
   const Comp = asChild ? Slot : 'p'
-  return <Comp ref={ref} className={cn('text-sm text-white/70', className)} {...props} />
+  return <Comp ref={ref} className={cn('text-sm text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70', className)} {...props} />
 })
 
 export type CardFooterProps = HTMLAttributes<HTMLDivElement>
@@ -402,7 +402,7 @@ export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(function C
   { className, ...props },
   ref,
 ) {
-  return <div ref={ref} className={cn('flex items-center gap-2 text-xs text-white/60', className)} {...props} />
+  return <div ref={ref} className={cn('flex items-center gap-2 text-xs text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/60', className)} {...props} />
 })
 
 // @edit-start 2025-02-15 — Align InputProps size with custom tokens
@@ -427,7 +427,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       type={type}
       disabled={disabled}
       className={cn(
-        'pixel-input block w-full rounded-xl border border-white/15 bg-black/20 text-white placeholder:text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-0 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50',
+        'pixel-input block w-full rounded-xl border border-white/15 bg-black/20 text-slate-900 dark:text-slate-950 dark:text-white placeholder:text-slate-950 dark:text-slate-700 dark:text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-0 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50',
         INPUT_SIZE_STYLES[size],
         className,
       )}
@@ -446,10 +446,10 @@ export interface EmptyStateProps extends Pick<CardProps, 'tone' | 'padding' | 'c
 export function EmptyState({ icon, title, description, action, tone = 'muted', padding = 'sm', className }: EmptyStateProps) {
   return (
     <Card tone={tone} padding={padding} className={cn('flex flex-col items-center gap-3 text-center', className)}>
-      {icon ? <span className="text-white/60">{icon}</span> : null}
+      {icon ? <span className="text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">{icon}</span> : null}
       <div className="space-y-1">
-        <h3 className="text-base font-semibold text-white">{title}</h3>
-        {description ? <p className="text-sm text-white/70">{description}</p> : null}
+        <h3 className="text-base font-semibold text-white dark:text-slate-950 dark:text-white">{title}</h3>
+        {description ? <p className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">{description}</p> : null}
       </div>
       {action ?? null}
     </Card>

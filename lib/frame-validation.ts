@@ -248,11 +248,13 @@ export function sanitizeButtons<T extends { label?: string; target?: string }>(b
   })
   
   if (truncated) {
+    console.warn(
       `[FRAME_VALIDATION] Button count exceeded: ${originalCount} buttons provided, truncated to ${MAX_FRAME_BUTTONS}`
     )
   }
   
   if (invalidTitles.length > 0) {
+    console.warn(
       `[FRAME_VALIDATION] Button title length violations (max 32 chars):`,
       invalidTitles
     )

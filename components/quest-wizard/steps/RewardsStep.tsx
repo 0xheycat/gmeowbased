@@ -191,7 +191,7 @@ export function RewardsStep({
 					</Field>
 				</div>
 			) : (
-				<div className="space-y-5 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+				<div className="space-y-5 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 p-4">
 					<CatalogStatusBanner label="Reward inventory" loading={combinedLoading} error={bannerError} onRefresh={onRefreshCatalog} policy={policy} />
 					{draft.rewardMode === 'token' ? (
 						<TokenSelector
@@ -281,11 +281,11 @@ export function RewardsStep({
 				</div>
 			)}
 
-			<div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+			<div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/40 p-4">
 				<label className="flex items-center gap-3 text-sm">
 					<input
 						type="checkbox"
-						className="h-5 w-5 rounded border border-white/20 bg-slate-900"
+						className="h-5 w-5 rounded border border-white dark:border-slate-700/20 bg-slate-900"
 						checked={draft.raffleEnabled}
 						disabled={raffleLocked}
 						onChange={(event) => {

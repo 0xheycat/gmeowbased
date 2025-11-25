@@ -301,7 +301,7 @@ export default function TipScoringPanel() {
           <button
             type="button"
             onClick={resetConfig}
-            className="pixel-button btn-sm border-white/20 bg-white/5 text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+            className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
           >
             Reset defaults
           </button>
@@ -319,9 +319,9 @@ export default function TipScoringPanel() {
         {summaryHighlights.map((item) => (
           <div
             key={item.key}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_14px_36px_-24px_rgba(45,212,191,0.45)] backdrop-blur transition hover:border-emerald-400/30 hover:bg-white/10"
+            className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4 shadow-[0_14px_36px_-24px_rgba(45,212,191,0.45)] backdrop-blur transition hover:border-emerald-400/30 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5"
           >
-            <div className="text-[10px] uppercase tracking-[0.18em] text-white/60">{item.label}</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">{item.label}</div>
             <div className="mt-2 text-2xl font-semibold text-emerald-200">{item.value}</div>
             <div className="mt-1 text-[11px] text-[var(--px-sub)]">{item.hint}</div>
           </div>
@@ -331,8 +331,8 @@ export default function TipScoringPanel() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-3">
           {configEntries.map((entry) => (
-            <label key={entry.key} className="block text-[12px] text-white/85">
-              <span className="mb-1 block font-semibold text-white">{entry.label}</span>
+            <label key={entry.key} className="block text-[12px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/85">
+              <span className="mb-1 block font-semibold text-white dark:text-slate-950 dark:text-white">{entry.label}</span>
               <p className="mb-2 text-[11px] text-[var(--px-sub)]">{entry.description}</p>
               <input
                 className="pixel-input w-full"
@@ -348,8 +348,8 @@ export default function TipScoringPanel() {
 
         <div className="space-y-3">
           {cooldownEntries.map((entry) => (
-            <label key={entry.key} className="block text-[12px] text-white/85">
-              <span className="mb-1 block font-semibold text-white">{entry.label}</span>
+            <label key={entry.key} className="block text-[12px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/85">
+              <span className="mb-1 block font-semibold text-white dark:text-slate-950 dark:text-white">{entry.label}</span>
               <p className="mb-2 text-[11px] text-[var(--px-sub)]">{entry.description}</p>
               <input
                 className="pixel-input w-full"
@@ -364,13 +364,13 @@ export default function TipScoringPanel() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+      <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/30 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h4 className="pixel-section-title text-sm">Preview timeline</h4>
             <p className="text-[11px] text-[var(--px-sub)]">Simulated mention stream based on the current scoring configuration.</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-[11px] text-white/75">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/75">
             <span className="pixel-pill border border-emerald-400/40 bg-emerald-500/10 text-emerald-100">
               Awarded: {totalAwarded} pts
             </span>
@@ -381,20 +381,20 @@ export default function TipScoringPanel() {
         </div>
 
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-white/10 text-left text-[11px] text-white/80">
+          <table className="min-w-full divide-y divide-white/10 text-left text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
             <thead>
               <tr>
-                <th className="px-3 py-2 font-semibold text-white/70">Event</th>
-                <th className="px-3 py-2 font-semibold text-white/70">Actor</th>
-                <th className="px-3 py-2 font-semibold text-white/70">Outcome</th>
-                <th className="px-3 py-2 font-semibold text-white/70 text-right">Points</th>
+                <th className="px-3 py-2 font-semibold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Event</th>
+                <th className="px-3 py-2 font-semibold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Actor</th>
+                <th className="px-3 py-2 font-semibold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Outcome</th>
+                <th className="px-3 py-2 font-semibold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 text-right">Points</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
               {preview.timeline.map(({ event, outcome }) => (
                 <tr key={event.id} className={clsx(outcome.suppressed ? 'opacity-70' : 'opacity-100')}>
                   <td className="px-3 py-2">
-                    <div className="font-semibold text-white">
+                    <div className="font-semibold text-white dark:text-slate-950 dark:text-white">
                       {event.type === 'direct_mention' && 'Direct mention'}
                       {event.type === 'reply_mention' && 'Reply mention'}
                       {event.type === 'keyword_signal' && 'Keyword ping'}
@@ -424,7 +424,7 @@ export default function TipScoringPanel() {
                       Global 24h: {pointFormatter.format(outcome.globalPoints24h)} pts
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-right text-[12px] font-semibold text-white">
+                  <td className="px-3 py-2 text-right text-[12px] font-semibold text-white dark:text-slate-950 dark:text-white">
                     {pointFormatter.format(outcome.awardedPoints)}
                   </td>
                 </tr>
