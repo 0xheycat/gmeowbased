@@ -396,7 +396,7 @@ body.reduced-glass * {
   -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px));
   isolation: isolate;
 }
-@media (min-width: 680px) {
+@media (min-width: 768px) {
   .quest-empty {
     grid-template-columns: 160px 1fr;
     align-items: center;

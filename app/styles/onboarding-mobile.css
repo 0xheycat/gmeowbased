@@ -149,7 +149,7 @@
 }
 
 /* Extra small devices (phones in portrait) */
-@media (max-width: 375px) {
+@media (max-width: 640px) {
   .quest-card-yugioh {
     max-width: 340px;
   }

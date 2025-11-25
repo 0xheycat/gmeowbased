@@ -389,7 +389,7 @@
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 640px) {
   .quest-card-glass__body {
     padding: 16px;
     min-height: 360px;
