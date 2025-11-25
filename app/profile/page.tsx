@@ -628,7 +628,7 @@ export default function ProfilePage() {
                       autoComplete="off"
                       inputMode="text"
                     />
-                    <button type="submit" className="pixel-button mega-card__submit min-h-[48px]">
+                    <button type="submit" className="pixel-button mega-card__submit min-h-6">
                       Sync
                     </button>
                   </div>

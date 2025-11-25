@@ -166,7 +166,7 @@ function MaintenanceContent() {
           />
           <button
             type="submit"
-            className="pixel-button w-full min-h-[48px] disabled:opacity-60"
+            className="pixel-button w-full min-h-6 disabled:opacity-60"
             disabled={loading || !password}
             title="Unlock"
           >
