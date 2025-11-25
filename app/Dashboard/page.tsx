@@ -2017,15 +2017,15 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
           <div>
             <div className="pixel-stat text-orange-300">{streak}</div>
-            <div className="text-[11px] text-[var(--px-sub)]">Current Streak</div>
+            <div className="text-sm text-[var(--px-sub)]">Current Streak</div>
           </div>
           <div>
             <div className="pixel-stat text-cyan-300">{availablePoints.toLocaleString()}</div>
-            <div className="text-[11px] text-[var(--px-sub)]">Points (available)</div>
+            <div className="text-sm text-[var(--px-sub)]">Points (available)</div>
           </div>
         </div>
         <div className="pixel-divider my-3" />
-        <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+        <div className="grid grid-cols-3 gap-2 text-center text-sm">
           <div>
             <div className="font-bold">{availablePoints.toLocaleString()}</div>
             <div className="text-[var(--px-sub)]">Available</div>
@@ -2044,7 +2044,7 @@ export default function DashboardPage() {
           Daily Bonus: <span className="font-bold text-emerald-300">+{dailyBonus} pts</span>
         </div>
         <div className="pixel-divider my-3" />
-        <div className="text-center text-[11px] text-[var(--px-sub)]">
+        <div className="text-center text-sm text-[var(--px-sub)]">
           Lifetime earned:{' '}
           <span className="font-bold text-sky-300">{totalEarned.toLocaleString()} pts</span>
         </div>
@@ -2060,7 +2060,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-bold">{team.name}</div>
-                <div className="text-[11px] text-[var(--px-sub)]">
+                <div className="text-sm text-[var(--px-sub)]">
                   {CHAIN_LABEL[team.chain]} • Members {team.memberCount}
                 </div>
               </div>
@@ -2078,7 +2078,7 @@ export default function DashboardPage() {
                 Invite via Code
               </button>
             </div>
-            <div className="text-[11px] text-[var(--px-sub)]">
+            <div className="text-sm text-[var(--px-sub)]">
               {myRefCode ? (
                 <div className="flex items-center gap-2 flex-wrap">
                   <span>Your code: <span className="font-bold">@{myRefCode}</span> — share it freely.</span>
@@ -2109,13 +2109,13 @@ export default function DashboardPage() {
           <h3 className="pixel-section-title">Stake for Badge</h3>
           <span className="pixel-pill text-[10px]">{CHAIN_LABEL[selectedChain]}</span>
         </div>
-        <div className="mb-2 text-[11px] text-[var(--px-sub)]">
+        <div className="mb-2 text-sm text-[var(--px-sub)]">
           Stats on {CHAIN_LABEL[selectedChain]}: Avail {availablePoints.toLocaleString()} • Locked {lockedPoints.toLocaleString()} • Total {totalPoints.toLocaleString()}
           {statsLoading ? <span className="ml-2">(<span className="animate-pulse">updating…</span>)</span> : null}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <div className="text-[11px] text-[var(--px-sub)] mb-1">Points</div>
+            <div className="text-sm text-[var(--px-sub)] mb-1">Points</div>
             <input
               className="pixel-input w-full"
               inputMode="numeric"
@@ -2134,7 +2134,7 @@ export default function DashboardPage() {
             />
           </div>
           <div>
-            <div className="text-[11px] text-[var(--px-sub)] mb-1">Badge ID</div>
+            <div className="text-sm text-[var(--px-sub)] mb-1">Badge ID</div>
             <input
               className="pixel-input w-full"
               inputMode="numeric"
@@ -2147,7 +2147,7 @@ export default function DashboardPage() {
 
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
   <div>
-    <div className="flex items-center justify-between text-[11px] mb-1">
+    <div className="flex items-center justify-between text-sm mb-1">
       <label htmlFor="stake-percent-range">Stake % of total</label>
       <span className="font-bold">{stakePercent}%</span>
     </div>
@@ -2162,7 +2162,7 @@ export default function DashboardPage() {
       className="w-full"
       aria-label={`Stake percentage: ${stakePercent}%`}
     />
-    <label className="mt-1 flex items-center gap-2 text-[11px]">
+    <label className="mt-1 flex items-center gap-2 text-sm">
       <input
                 type="checkbox"
                 checked={linkToPercent}
@@ -2172,13 +2172,13 @@ export default function DashboardPage() {
             </label>
           </div>
           <div className="dash-apy-card">
-            <div className="flex items-center justify-between text-[11px] mb-1">
+            <div className="flex items-center justify-between text-sm mb-1">
               <span>Projected APY</span>
               <span className="font-bold">
                 {gmDerivedYields?.apy != null ? `${gmDerivedYields.apy > 999 ? '999+' : gmDerivedYields.apy.toFixed(1)}%` : '—'}
               </span>
             </div>
-            <div className="text-[11px] text-[var(--px-sub)] leading-relaxed space-y-1">
+            <div className="text-sm text-[var(--px-sub)] leading-relaxed space-y-1">
               <div>
                 Reward / GM:{' '}
                 <span className="font-semibold">
@@ -2226,7 +2226,7 @@ export default function DashboardPage() {
             {stakeBusy ? 'Processing…' : 'Unstake'}
           </button>
         </div>
-        <div className="text-[11px] text-[var(--px-sub)] mt-2">
+        <div className="text-sm text-[var(--px-sub)] mt-2">
           Burn points to mint or power-up badges. Unstake to retrieve points if supported.
         </div>
       </div>
@@ -2250,7 +2250,7 @@ export default function DashboardPage() {
           <h3 className="pixel-section-title">Leaderboard</h3>
           <span className="pixel-pill text-[10px]">Top 5</span>
         </div>
-        <div className="grid grid-cols-[2rem,1fr,6rem] sm:grid-cols-[2.5rem,1fr,7rem] gap-2 px-3 py-2 text-[10px] sm:text-[11px] text-[var(--px-sub)]">
+        <div className="grid grid-cols-[2rem,1fr,6rem] sm:grid-cols-[2.5rem,1fr,7rem] gap-2 px-3 py-2 text-xs sm:text-sm text-[var(--px-sub)]">
           <div>#</div>
           <div>Name</div>
           <div className="text-right">Points</div>
@@ -2287,24 +2287,24 @@ export default function DashboardPage() {
         <div className="mb-3">
           <div className="flex items-center justify-between text-sm">
             <div className="font-bold">Daily GM</div>
-            <div className="text-[11px] text-[var(--px-sub)]">{gmQuestProgress}/1</div>
+            <div className="text-sm text-[var(--px-sub)]">{gmQuestProgress}/1</div>
           </div>
           <div className="dash-progress-track mt-1">
             <div className="dash-progress-fill bg-emerald-400" style={{ width: `${(gmQuestProgress / 1) * 100}%` }} />
           </div>
-          <div className="text-[11px] text-[var(--px-sub)] mt-1">Send GM on {CHAIN_LABEL[selectedChain]}</div>
+          <div className="text-sm text-[var(--px-sub)] mt-1">Send GM on {CHAIN_LABEL[selectedChain]}</div>
         </div>
 
         {/* Quest 2: Join a Team (preview) */}
         <div>
           <div className="flex items-center justify-between text-sm">
             <div className="font-bold">Join a Team</div>
-            <div className="text-[11px] text-[var(--px-sub)]">{team ? '1/1' : '0/1'}</div>
+            <div className="text-sm text-[var(--px-sub)]">{team ? '1/1' : '0/1'}</div>
           </div>
           <div className="dash-progress-track mt-1">
             <div className="dash-progress-fill bg-cyan-400" style={{ width: `${team ? 100 : 0}%` }} />
           </div>
-          <div className="text-[11px] text-[var(--px-sub)] mt-1">Join or create a team to unlock bonuses</div>
+          <div className="text-sm text-[var(--px-sub)] mt-1">Join or create a team to unlock bonuses</div>
         </div>
       </div>
 
@@ -2357,7 +2357,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-[10px] text-[var(--px-sub)]">#{r.questId}</div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 text-[11px] text-[var(--px-sub)]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 text-sm text-[var(--px-sub)]">
                     <div>
                       Status: <span className="font-bold">{r.isActive ? 'Active (but expired)' : 'Closed'}</span>
                       {r.expiresAt ? <> • Expires: {new Date(r.expiresAt * 1000).toLocaleString()}</> : <> • Expires: never</>}
@@ -2395,7 +2395,7 @@ export default function DashboardPage() {
                     >
                       {refundBusyId === rowKey(r) ? 'Claiming…' : `Claim Escrow (${chainLabel})`}
                     </button>
-                    <Link className="underline text-[11px]" href={`/Quest/${r.chain}/${r.questId}`} title="Open quest page">
+                    <Link className="underline text-sm" href={`/Quest/${r.chain}/${r.questId}`} title="Open quest page">
                       Open quest ↗
                     </Link>
                   </div>
@@ -2455,7 +2455,7 @@ export default function DashboardPage() {
                       <span className="text-xs text-[var(--px-sub)]">#{b.badgeId}</span>
                     )}
                   </div>
-                  <div className="text-[11px] truncate">{b.name || `Badge #${b.badgeId}`}</div>
+                  <div className="text-sm truncate">{b.name || `Badge #${b.badgeId}`}</div>
                   <div className="text-[10px] text-[var(--px-sub)]">{CHAIN_LABEL[b.chain]}</div>
                 </div>
               ))}
@@ -2463,7 +2463,7 @@ export default function DashboardPage() {
             <div className="mt-3 text-right">
               <Link 
                 href={linkedFid ? `/profile/${linkedFid}/badges` : '/profile'} 
-                className="underline text-[11px] hover:text-[var(--px-accent)] transition-colors"
+                className="underline text-sm hover:text-[var(--px-accent)] transition-colors"
               >
                 View full badge collection ↗
               </Link>
@@ -2476,7 +2476,7 @@ export default function DashboardPage() {
               <div className="mt-2">
                 <Link 
                   href={`/profile/${linkedFid}/badges`}
-                  className="text-[11px] text-[var(--px-accent)] hover:underline"
+                  className="text-sm text-[var(--px-accent)] hover:underline"
                 >
                   View badges page →
                 </Link>
@@ -2496,7 +2496,7 @@ export default function DashboardPage() {
       <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3">
         <h1 className="pixel-section-title">GMEOW Dashboard</h1>
         <div className="flex items-center gap-2">
-          <label className="text-[10px] sm:text-[11px] text-[var(--px-sub)]">Chain</label>
+          <label className="text-xs sm:text-sm text-[var(--px-sub)]">Chain</label>
           <ChainSwitcher
             selected={selectedChain}
             onSelect={(c) => setSelectedChain(c)}
