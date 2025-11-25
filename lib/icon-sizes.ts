@@ -13,6 +13,7 @@
  * - 4xl: Hero sections, prominent feature displays
  */
 export const ICON_SIZES = {
+  '2xs': 12, // Micro badges, minimal decoration
   xs: 14,   // Badges, inline icons
   sm: 16,   // Compact UI, secondary actions
   md: 18,   // Navigation, menu items
@@ -21,6 +22,7 @@ export const ICON_SIZES = {
   '2xl': 32, // Large profile icons
   '3xl': 48, // Badge display, large modals
   '4xl': 64, // Hero badges, prominent displays
+  '5xl': 80, // Extra large heroes, splash
 } as const
 
 export type IconSize = keyof typeof ICON_SIZES
