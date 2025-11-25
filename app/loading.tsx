@@ -9,13 +9,13 @@ export default function Loading() {
           <Loader size="large" variant="moveUp" className="text-[#fdbb2d]" />
         </div>
         <div>
-          <p className="text-[11px] uppercase tracking-[0.32em] text-slate-400">Gmeow Systems</p>
+          <p className="text-sm uppercase tracking-[0.32em] text-slate-400">Gmeow Systems</p>
           <h1 className="mt-3 text-2xl font-extrabold">Warming up the quest grid…</h1>
           <p className="mt-2 text-sm text-slate-400">
             Syncing live notifications and loading your cross-chain streaks.
           </p>
         </div>
-        <div className="flex w-full flex-col gap-2 text-[11px] uppercase tracking-[0.32em] text-slate-500">
+        <div className="flex w-full flex-col gap-2 text-sm uppercase tracking-[0.32em] text-slate-500">
           <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/5">
             <span className="block h-full w-full animate-[progress-drip_1.6s_ease-in-out_infinite] bg-gradient-to-r from-[#6366f1] via-[#ec4899] to-[#fdbb2d]" />
           </div>

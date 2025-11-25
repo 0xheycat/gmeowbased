@@ -877,7 +877,7 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
             <div
               className="h-3 w-3 rounded-full animate-spin inline-block mr-2 align-middle oc-spinner"
             />
-            <span className="text-[12px] text-[var(--px-sub)] align-middle">Fetching {chainCfg.name} stats…</span>
+            <span className="text-sm text-[var(--px-sub)] align-middle">Fetching {chainCfg.name} stats…</span>
           </div>
         )}
         {errMsg && <p className="text-xs text-red-400 mb-3">Error: {errMsg}</p>}
@@ -953,10 +953,10 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
                   </a>
                 </div>
                 <div className="pixel-tile-value">{short(stats.featured.address)}</div>
-                <div className="mt-2 text-[12px] text-[var(--px-sub)]">
+                <div className="mt-2 text-sm text-[var(--px-sub)]">
                   Creator: <a className="hover:underline" href={addrUrl(stats.featured.creator)} target="_blank" rel="noopener noreferrer">{short(stats.featured.creator)}</a>
                 </div>
-                <div className="text-[12px] text-[var(--px-sub)]">
+                <div className="text-sm text-[var(--px-sub)]">
                   Creation TX: <a className="hover:underline" href={txUrl(stats.featured.creationTx)} target="_blank" rel="noopener noreferrer">{short(stats.featured.creationTx, 8, 6)}</a>
                 </div>
               </div>
@@ -975,11 +975,11 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
                   <div className="mb-1">
                     First TX: <a className="hover:underline" href={txUrl(stats.featured.firstTxHash)} target="_blank" rel="noopener noreferrer">{short(stats.featured.firstTxHash, 8, 6)}</a>
                   </div>
-                  <div className="text-[12px] text-[var(--px-sub)] mb-2">at {fmtDate(stats.featured.firstTxTime)}</div>
+                  <div className="text-sm text-[var(--px-sub)] mb-2">at {fmtDate(stats.featured.firstTxTime)}</div>
                   <div className="mb-1">
                     Last TX: <a className="hover:underline" href={txUrl(stats.featured.lastTxHash)} target="_blank" rel="noopener noreferrer">{short(stats.featured.lastTxHash, 8, 6)}</a>
                   </div>
-                  <div className="text-[12px] text-[var(--px-sub)]">at {fmtDate(stats.featured.lastTxTime)}</div>
+                  <div className="text-sm text-[var(--px-sub)]">at {fmtDate(stats.featured.lastTxTime)}</div>
                 </div>
               </div>
             </div>

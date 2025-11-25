@@ -144,7 +144,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
           </span>
           <div>
             <h3 className="text-sm font-semibold text-white">Notification Settings</h3>
-            <p className="text-[11px] text-[var(--px-sub)]">
+            <p className="text-sm text-[var(--px-sub)]">
               Configure your notification preferences
             </p>
           </div>
@@ -163,7 +163,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
         <div className="mt-3 space-y-4 rounded-xl border border-white/10 bg-white/5 p-4">
           {/* Save message */}
           {saveMessage && (
-            <div className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-center text-[11px] text-emerald-100">
+            <div className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-center text-sm text-emerald-100">
               {saveMessage}
             </div>
           )}
@@ -172,7 +172,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-sm font-semibold text-white">Enable Notifications</h4>
-              <p className="text-[11px] text-[var(--px-sub)]">Master toggle for all notifications</p>
+              <p className="text-sm text-[var(--px-sub)]">Master toggle for all notifications</p>
             </div>
             <label className="relative inline-flex cursor-pointer items-center">
               <input
@@ -189,7 +189,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
           <div className="flex items-center justify-between border-t border-white/10 pt-3">
             <div>
               <h4 className="text-sm font-semibold text-white">Sound Effects</h4>
-              <p className="text-[11px] text-[var(--px-sub)]">Play sounds for notifications</p>
+              <p className="text-sm text-[var(--px-sub)]">Play sounds for notifications</p>
             </div>
             <label className="relative inline-flex cursor-pointer items-center">
               <input
@@ -207,7 +207,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
           <div className="flex items-center justify-between border-t border-white/10 pt-3">
             <div>
               <h4 className="text-sm font-semibold text-white">Push Notifications</h4>
-              <p className="text-[11px] text-[var(--px-sub)]">
+              <p className="text-sm text-[var(--px-sub)]">
                 {preferences.pushTokenRegistered
                   ? 'Token registered for push alerts'
                   : 'Enable miniapp push notifications'}
@@ -241,7 +241,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
                         {icon}
                       </span>
                       <div>
-                        <h5 className="text-[12px] font-semibold text-white">{label}</h5>
+                        <h5 className="text-sm font-semibold text-white">{label}</h5>
                         <p className="text-[10px] text-[var(--px-sub)]">{description}</p>
                       </div>
                     </div>
@@ -266,7 +266,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
             <button
               type="button"
               onClick={resetToDefaults}
-              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white/80 transition hover:border-amber-300/40 hover:text-white"
+              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm uppercase tracking-[0.22em] text-white/80 transition hover:border-amber-300/40 hover:text-white"
             >
               Reset to Defaults
             </button>

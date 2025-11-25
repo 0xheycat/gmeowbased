@@ -101,7 +101,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white">Notifications</h3>
-            <p className="text-[11px] text-[var(--px-sub)]">
+            <p className="text-sm text-[var(--px-sub)]">
               {unreadCount === 0 ? 'No new notifications' : `${unreadCount} unread ${unreadCount === 1 ? 'notification' : 'notifications'}`}
             </p>
           </div>
@@ -170,7 +170,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                           <div className="min-w-0 flex-1">
                             <h5 className="text-[13px] font-semibold text-white">{note.title}</h5>
                             {note.description ? (
-                              <p className="mt-1 text-[11px] leading-relaxed text-[var(--px-sub)]">{note.description}</p>
+                              <p className="mt-1 text-sm leading-relaxed text-[var(--px-sub)]">{note.description}</p>
                             ) : null}
                             <div className="mt-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.26em] text-[var(--px-sub)]">
                               <span>{formatTimeAgo(note.createdAt)}</span>
@@ -195,7 +195,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                           <div className="mt-3">
                             <button
                               type="button"
-                              className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-4 py-2 text-[11px] uppercase tracking-[0.26em] text-emerald-100 transition hover:bg-emerald-500/25"
+                              className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-4 py-2 text-sm uppercase tracking-[0.26em] text-emerald-100 transition hover:bg-emerald-500/25"
                               onClick={() => handlePrimaryAction(note)}
                             >
                               {primaryActionLabel}
@@ -212,7 +212,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                 <div className="mb-2 text-3xl" aria-hidden>
                   🎉
                 </div>
-                <p className="text-[12px] text-[var(--px-sub)]">
+                <p className="text-sm text-[var(--px-sub)]">
                   {activeFilter === 'all'
                     ? 'All clear! No notifications right now.'
                     : `No ${FILTER_LABELS[activeFilter].toLowerCase()} notifications.`}
@@ -223,7 +223,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
 
           {/* Show more indicator */}
           {filtered.length > 10 && (
-            <div className="rounded-lg border border-white/10 bg-white/3 px-3 py-2 text-center text-[11px] text-[var(--px-sub)]">
+            <div className="rounded-lg border border-white/10 bg-white/3 px-3 py-2 text-center text-sm text-[var(--px-sub)]">
               Showing 10 of {filtered.length} notifications
             </div>
           )}
