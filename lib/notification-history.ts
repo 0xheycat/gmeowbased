@@ -56,7 +56,6 @@ function ensureSupabase() {
  */
 export async function saveNotification(input: SaveNotificationInput): Promise<boolean> {
   if (!input.fid && !input.walletAddress) {
-    console.warn('[notification-history] No user identifier provided')
     return false
   }
 
@@ -99,7 +98,6 @@ export async function saveNotification(input: SaveNotificationInput): Promise<bo
  */
 export async function fetchNotifications(input: FetchNotificationsInput): Promise<NotificationHistoryItem[]> {
   if (!input.fid && !input.walletAddress) {
-    console.warn('[notification-history] No user identifier provided')
     return []
   }
 
@@ -177,7 +175,6 @@ export async function dismissNotification(notificationId: string): Promise<boole
  */
 export async function dismissAllNotifications(fid?: number | null, walletAddress?: string | null): Promise<boolean> {
   if (!fid && !walletAddress) {
-    console.warn('[notification-history] No user identifier provided')
     return false
   }
 
@@ -214,7 +211,6 @@ export async function dismissAllNotifications(fid?: number | null, walletAddress
  */
 export async function clearHistory(fid?: number | null, walletAddress?: string | null): Promise<boolean> {
   if (!fid && !walletAddress) {
-    console.warn('[notification-history] No user identifier provided')
     return false
   }
 

@@ -21,10 +21,10 @@ export default function QuestLayout({ children }: { children: React.ReactNode })
         defaultTheme: Theme.Dark,
         eventsCallbacks: {
           onAuthSuccess: () => {
-            console.log('✅ Neynar auth success')
+            // Auth successful
           },
           onSignout: () => {
-            console.log('👋 Signed out of Neynar')
+            // Signed out
           },
         },
       }}

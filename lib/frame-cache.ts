@@ -33,7 +33,6 @@ function getRedisClient(): Redis | null {
         url: process.env.UPSTASH_REDIS_REST_URL,
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
       })
-      console.log('[FRAME_CACHE] Redis client initialized')
     } catch (err) {
       console.error('[FRAME_CACHE] Failed to initialize Redis:', err)
       return null
@@ -100,11 +99,9 @@ export async function getCachedFrame(key: FrameCacheKey): Promise<Buffer | null>
     const cached = await redis.get<string>(cacheKey)
 
     if (cached && typeof cached === 'string') {
-      console.log(`[FRAME_CACHE] HIT: ${cacheKey}`)
       return Buffer.from(cached, 'base64')
     }
 
-    console.log(`[FRAME_CACHE] MISS: ${cacheKey}`)
     return null
   } catch (err) {
     console.error('[FRAME_CACHE] Get error:', err)
@@ -129,7 +126,6 @@ export async function setCachedFrame(
     const base64Image = imageBuffer.toString('base64')
 
     await redis.setex(cacheKey, ttl, base64Image)
-    console.log(`[FRAME_CACHE] SET: ${cacheKey} (TTL: ${ttl}s, Size: ${Math.round(base64Image.length / 1024)}KB)`)
     return true
   } catch (err) {
     console.error('[FRAME_CACHE] Set error:', err)
@@ -148,7 +144,6 @@ export async function invalidateFrame(key: FrameCacheKey): Promise<boolean> {
   try {
     const cacheKey = generateCacheKey(key)
     await redis.del(cacheKey)
-    console.log(`[FRAME_CACHE] INVALIDATED: ${cacheKey}`)
     return true
   } catch (err) {
     console.error('[FRAME_CACHE] Invalidate error:', err)
@@ -170,12 +165,10 @@ export async function invalidateUserFrames(fid: number): Promise<number> {
     const keys = await redis.keys(pattern)
 
     if (keys.length === 0) {
-      console.log(`[FRAME_CACHE] No frames found for FID ${fid}`)
       return 0
     }
 
     await redis.del(...keys)
-    console.log(`[FRAME_CACHE] Invalidated ${keys.length} frames for FID ${fid}`)
     return keys.length
   } catch (err) {
     console.error('[FRAME_CACHE] Invalidate user frames error:', err)
@@ -225,7 +218,6 @@ export async function clearAllFrameCache(): Promise<number> {
     if (keys.length === 0) return 0
 
     await redis.del(...keys)
-    console.log(`[FRAME_CACHE] Cleared ${keys.length} cached frames`)
     return keys.length
   } catch (err) {
     console.error('[FRAME_CACHE] Clear all error:', err)

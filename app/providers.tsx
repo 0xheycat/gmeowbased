@@ -31,7 +31,6 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
     
     const handleMiniappReady = (e: CustomEvent) => {
       if (mounted) {
-        console.log('[MiniAppProvider] Miniapp ready event:', e.detail)
         setMiniappChecked(true)
       }
     }
@@ -41,7 +40,6 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
     // After 3 seconds, assume we're not in a miniapp context and proceed
     const fallbackTimer = setTimeout(() => {
       if (mounted) {
-        console.log('[MiniAppProvider] Miniapp check timeout, proceeding without miniapp context')
         setMiniappChecked(true)
       }
     }, 3000)
@@ -59,21 +57,13 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
 
     const loadContext = async () => {
       try {
-        console.log('[MiniAppProvider] Loading miniapp context...')
         const context = await getMiniappContext()
         
-        if (mounted) {
-          if (context) {
-            console.log('[MiniAppProvider] ✅ Miniapp context loaded:', {
-              fid: context.user?.fid,
-              username: context.user?.username,
-            })
-          } else {
-            console.log('[MiniAppProvider] ⚠️ Not in miniapp context')
-          }
+        if (mounted && !context) {
+          // Not in miniapp context, silent failure
         }
       } catch (error) {
-        console.error('[MiniAppProvider] ❌ Error loading context:', error)
+        console.error('[MiniAppProvider] Error loading context:', error)
       }
     }
 

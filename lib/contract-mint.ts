@@ -128,9 +128,7 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
     transport: http(rpcUrl),
   })
 
-  console.log(`[Mint] Starting mint for FID ${mint.fid}, badge ${mint.badgeType} on ${chain}`)
-  console.log(`[Mint] GmeowMultichain contract: ${gmContractAddress}`)
-  console.log(`[Mint] Points required: ${pointsRequired}`)
+
 
   try {
     // Auto-deposit if oracle balance is too low (requires OWNER_PRIVATE_KEY)
@@ -149,8 +147,6 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
       args: [account.address],
     }) as bigint
 
-    console.log(`[Mint] Oracle points balance: ${oraclePoints}`)
-    
     if (oraclePoints < BigInt(pointsRequired)) {
       throw new Error(
         `Insufficient points in oracle wallet. ` +
@@ -170,7 +166,6 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
 
     // Execute the mint
     const hash = await walletClient.writeContract(request)
-    console.log(`[Mint] Transaction submitted: ${hash}`)
 
     // Wait for transaction receipt
     const receipt = await publicClient.waitForTransactionReceipt({
@@ -181,8 +176,6 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
     if (receipt.status !== 'success') {
       throw new Error(`Transaction reverted: ${hash}`)
     }
-
-    console.log(`[Mint] Transaction confirmed in block ${receipt.blockNumber}`)
 
     // Extract tokenId from BadgeMinted event logs
     let tokenId = 0
@@ -197,7 +190,6 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
         if (decoded.eventName === 'BadgeMinted') {
           if (decoded.args.tokenId) {
             tokenId = Number(decoded.args.tokenId)
-            console.log(`[Mint] Token ID: ${tokenId}`)
             break
           }
         }

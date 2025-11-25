@@ -20,18 +20,15 @@ export function MiniappReady() {
           fireMiniappReady()
             .then(() => {
               if (mounted) {
-                console.log('[MiniappReady] Successfully fired ready signal')
                 // Emit custom event for other components to listen
                 window.dispatchEvent(new CustomEvent('miniapp:ready', { detail: { success: true } }))
               }
             })
             .catch((error) => {
-              console.warn('[MiniappReady] Error firing ready:', error)
               
               // Retry up to 5 times with exponential backoff (increased for mobile)
               if (mounted && attemptsRef.current < 5) {
                 const delay = Math.min(2000 * Math.pow(1.5, attemptsRef.current), 10000)
-                console.log(`[MiniappReady] Retrying in ${delay}ms... (attempt ${attemptsRef.current + 1}/5)`)
                 
                 retryTimeoutRef.current = setTimeout(() => {
                   attemptsRef.current += 1
@@ -61,7 +58,6 @@ export function MiniappReady() {
     // Re-fire when app regains focus/visibility (miniapp can re-show splash)
     const onVis = () => {
       if (document.visibilityState === 'visible' && mounted) {
-        console.log('[MiniappReady] Visibility changed, re-firing ready')
         attemptsRef.current = 0 // Reset attempts on visibility change
         attemptReady()
       }
@@ -69,7 +65,6 @@ export function MiniappReady() {
     
     const onFocus = () => {
       if (mounted) {
-        console.log('[MiniappReady] Window focused, re-firing ready')
         attemptsRef.current = 0 // Reset attempts on focus
         attemptReady()
       }
