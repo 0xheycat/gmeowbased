@@ -121,7 +121,6 @@ export function ContractGMButton({ chain }: ContractGMButtonProps) {
   }, [userData])
 
   useEffect(() => {
-    if (readErr) console.warn('getUserData error:', readErr.message)
   }, [readErr])
 
   // Update state when parsed data changes

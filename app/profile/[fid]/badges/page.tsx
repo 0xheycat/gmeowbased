@@ -124,7 +124,7 @@ export default function UserBadgesPage() {
         <div className="pixel-card mb-8">
           <div className="flex items-center gap-6">
             {/* User Avatar */}
-            <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-[#d4af37]">
+              <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-gold-dark">
               {user?.pfpUrl ? (
                 <Image
                   src={user.pfpUrl}

@@ -44,7 +44,6 @@ export function checkAdminAuth(request: NextRequest): {
   error?: string
 } {
   if (!ADMIN_API_KEY) {
-    console.warn('[Auth] ADMIN_API_KEY not configured')
     return {
       authenticated: false,
       error: 'Admin authentication not configured'
@@ -89,7 +88,6 @@ export function checkBotAuth(request: NextRequest): {
   error?: string
 } {
   if (!BOT_API_KEY) {
-    console.warn('[Auth] BOT_API_KEY not configured')
     return {
       authenticated: false,
       error: 'Bot authentication not configured'

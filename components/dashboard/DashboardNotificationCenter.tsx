@@ -263,7 +263,7 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
             {tipFeed.slice(0, 4).map((tip) => {
               const valueLabel = formatTipValue(tip)
               return (
-                <li key={tip.id} className="rounded-xl border border-white/10 bg-[#081223]/70 px-3 py-2 text-[11px] text-white/80">
+                <li key={tip.id} className="rounded-xl border border-white/10 bg-dark-bg-panel/70 px-3 py-2 text-[11px] text-white/80">
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-semibold">
                     {formatTipSender(tip)}

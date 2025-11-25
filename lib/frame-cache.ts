@@ -22,7 +22,6 @@ let redisClient: Redis | null = null
 function getRedisClient(): Redis | null {
   // Check if Redis credentials are configured
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    console.warn('[FRAME_CACHE] Redis not configured, caching disabled')
     return null
   }
 

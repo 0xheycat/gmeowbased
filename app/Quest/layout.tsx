@@ -9,7 +9,6 @@ const clientId =
   ''
 
 if (!clientId && typeof window !== 'undefined') {
-  console.warn('⚠️ Missing NEXT_PUBLIC_NEYNAR_CLIENT_ID for Neynar context provider.')
 }
 
 export default function QuestLayout({ children }: { children: React.ReactNode }) {

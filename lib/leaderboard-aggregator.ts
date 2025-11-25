@@ -181,13 +181,11 @@ async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState>
   const effectiveFrom = nextFromBlock > baseStartBlock ? nextFromBlock : baseStartBlock
 
   if (AGGREGATOR_DEBUG) {
-    console.info('[aggregator] chain=%s baseStart=%s lastProcessed=%s latestBlock=%s effectiveFrom=%s', chain, baseStartBlock.toString(), lastProcessed.toString(), latestBlock.toString(), effectiveFrom.toString())
   }
 
   if (effectiveFrom <= latestBlock) {
     const logs = await fetchLogsInChunks(client, contractAddr, effectiveFrom, latestBlock)
     if (AGGREGATOR_DEBUG) {
-      console.info('[aggregator] chain=%s fetchedLogs=%d range=%s-%s', chain, logs.length, effectiveFrom.toString(), latestBlock.toString())
     }
     for (const lg of logs) {
       const { user, pointsAwarded, fid } = lg.args

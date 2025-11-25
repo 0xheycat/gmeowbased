@@ -29,6 +29,14 @@ const config: Config = {
   				DEFAULT: '#ffd700',    // Bright gold
   				dark: '#d4af37',       // Darker gold variant
   			},
+  			'dark-bg': {
+  				DEFAULT: '#06091a',    // Dark overlay
+  				'hover': '#0b0f2a',    // Hover state
+  				'card': '#08122e',     // Card backgrounds
+  				'panel': '#081223',    // Panel backgrounds
+  				'surface': '#0a1529',  // Surface backgrounds
+  				'elevated': '#091324', // Elevated surfaces
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

@@ -653,7 +653,6 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
                   talentUpdatedAt = builder.last_calculated_at || null
                 }
               } else if (resp.status === 401) {
-                console.warn('Talent API unauthorized. Set NEXT_PUBLIC_TALENT_API_KEY.')
               }
             }
           }

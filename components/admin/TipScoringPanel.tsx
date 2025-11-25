@@ -179,7 +179,6 @@ export default function TipScoringPanel() {
 
   const handleCopyConfig = useCallback(() => {
     if (typeof navigator === 'undefined' || typeof navigator.clipboard?.writeText !== 'function') {
-      console.warn('[tip-scoring] clipboard API unavailable')
       return
     }
     navigator.clipboard
