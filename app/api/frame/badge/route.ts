@@ -220,7 +220,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       }
       .minted {
         margin-top: 10px;
-        color: #7CFF7A;
+        color: rgb(124 255 122);
         font-size: 14px;
       }
     </style>

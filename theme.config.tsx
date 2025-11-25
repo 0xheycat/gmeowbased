@@ -3,8 +3,8 @@ import { useRouter } from 'next/router'
 
 const config = {
   logo: (
-    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span style={{ fontSize: '24px' }}>🐱</span>
+    <span className="flex items-center gap-2">
+      <span className="text-2xl">🐱</span>
       <strong>GMEOWBASED Docs</strong>
     </span>
   ),

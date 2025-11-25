@@ -1512,7 +1512,7 @@ function buildFrameHtml(params: {
       }
       p {
         line-height: 1.7;
-        color: #e2e7ff;
+        color: rgb(226 231 255);
         margin: 12px 0;
         font-size: 15px;
       }
