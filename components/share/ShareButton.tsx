@@ -27,35 +27,35 @@ interface ShareButtonProps {
 
 const TIER_CONFIG = {
   mythic: { 
-    color: '#9C27FF', 
+    color: 'rgb(168 85 247)', 
     label: 'Mythic',
     emoji: '🌟',
     gradient: 'from-purple-500/20 via-violet-500/10 to-purple-500/20',
     borderGradient: 'from-purple-500 via-violet-400 to-purple-500'
   },
   legendary: { 
-    color: '#FFD966', 
+    color: 'rgb(251 191 36)', 
     label: 'Legendary',
     emoji: '👑',
     gradient: 'from-yellow-500/20 via-amber-500/10 to-yellow-500/20',
     borderGradient: 'from-yellow-500 via-amber-400 to-yellow-500'
   },
   epic: { 
-    color: '#61DFFF', 
+    color: 'rgb(6 182 212)', 
     label: 'Epic',
     emoji: '💎',
     gradient: 'from-cyan-500/20 via-blue-500/10 to-cyan-500/20',
     borderGradient: 'from-cyan-500 via-blue-400 to-cyan-500'
   },
   rare: { 
-    color: '#A18CFF', 
+    color: 'rgb(139 92 246)', 
     label: 'Rare',
     emoji: '⚡',
     gradient: 'from-indigo-500/20 via-purple-500/10 to-indigo-500/20',
     borderGradient: 'from-indigo-500 via-purple-400 to-indigo-500'
   },
   common: { 
-    color: '#D3D7DC', 
+    color: 'rgb(156 163 175)', 
     label: 'Common',
     emoji: '✨',
     gradient: 'from-gray-500/20 via-slate-500/10 to-gray-500/20',
