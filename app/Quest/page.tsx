@@ -1204,7 +1204,7 @@ function VirtualQuestGrid({
   const items = virtualizer.getVirtualItems()
   
   return (
-    <div ref={parentRef} style={{ height: '800px', overflow: 'auto' }}>
+    <div ref={parentRef} style={{ height: '50rem', overflow: 'auto' }}>
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
@@ -1293,7 +1293,7 @@ function VirtualArchiveList({ results }: { results: QuestArchiveEntry[] }) {
   const items = virtualizer.getVirtualItems()
   
   return (
-    <div ref={parentRef} className="quest-archive__list" style={{ height: '500px', overflow: 'auto' }}>
+    <div ref={parentRef} className="quest-archive__list" style={{ height: '31.25rem', overflow: 'auto' }}>
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
