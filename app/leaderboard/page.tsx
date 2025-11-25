@@ -200,7 +200,7 @@ export default function MegaLeaderboard() {
         <div className="flex flex-wrap items-center gap-3">
           {seasonSupported && (
             <select
-              className="roster-chip roster-select text-sm text-gray-200 min-h-[48px]"
+              className="roster-chip roster-select text-sm text-gray-200 min-h-6"
               value={season}
               onChange={event => setSeason(event.target.value)}
               aria-label="Select season"
@@ -216,7 +216,7 @@ export default function MegaLeaderboard() {
           )}
 
           <select
-            className="roster-chip roster-select text-sm text-gray-200 min-h-[48px]"
+            className="roster-chip roster-select text-sm text-gray-200 min-h-6"
             value={selectedChain}
             onChange={event => setSelectedChain(event.target.value as ChainKey)}
             disabled={global}
