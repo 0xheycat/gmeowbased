@@ -35,7 +35,7 @@ export function MobileNavigation() {
     <nav className="pixel-nav safe-area-bottom">
       <div className="pixel-frame">
         <div className="pixel-nav-grid" />
-        <ul className="flex items-center justify-around gap-1 px-2 py-2">
+        <ul className="flex items-center justify-around gap-2 px-2 py-2">
           {items.map((it) => {
             const active = pathname === it.href || (it.href !== '/' && pathname?.startsWith(it.href))
             const Icon = it.icon
@@ -44,7 +44,7 @@ export function MobileNavigation() {
                 <Link
                   href={it.href}
                   className={clsx(
-                    'pixel-tab nav-link site-font flex flex-col items-center justify-center gap-1 py-2',
+                    'pixel-tab nav-link site-font flex flex-col items-center justify-center gap-2 py-2',
                     active && 'pixel-tab-active'
                   )}
                   aria-current={active ? 'page' : undefined}

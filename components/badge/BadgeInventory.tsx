@@ -259,7 +259,7 @@ export function BadgeInventory({
 
                 {/* Minted Status */}
                 {badge.minted && (
-                  <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-white backdrop-blur-sm">
+                  <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-white backdrop-blur-sm">
                     <Sparkle size={ICON_SIZES.xs} weight="fill" />
                     Minted
                   </div>
@@ -270,7 +270,7 @@ export function BadgeInventory({
                   <button
                     onClick={(e) => handleClaimBadge(badge, e)}
                     disabled={claimingBadge === badge.badgeId}
-                    className="absolute top-2 right-2 flex items-center gap-1 px-3 py-2 min-h-[40px] rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute top-2 right-2 flex items-center gap-2 px-3 py-2 min-h-[40px] rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {claimingBadge === badge.badgeId ? (
                       <>Claiming...</>
@@ -321,7 +321,7 @@ export function BadgeInventory({
                       {tierConfig.label}
                     </span>
                     {badge.minted && (
-                      <span className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/80 text-white">
+                      <span className="flex items-center gap-2 px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/80 text-white">
                         <Sparkle size={10} weight="fill" />
                         Minted
                       </span>
