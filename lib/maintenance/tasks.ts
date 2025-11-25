@@ -956,7 +956,7 @@ Should use content-visibility: auto for off-screen rendering skip.
     estimatedTime: '5 min',
     fix: 'aurora-spin-speed',
     dependencies: [],
-    status: 'pending',
+    status: 'fixed',
     instanceCount: 2,
     changelogReference: 'CHANGELOG-CATEGORY-9.md',
     blastRadius: 'low',
@@ -1744,7 +1744,7 @@ Should optimize for swipe/scroll interactions.
 - [ ] No gesture conflicts
     `,
     dependencies: [],
-    status: 'pending',
+    status: 'fixed',
   },
 ]
 
@@ -1791,7 +1791,7 @@ Should use EmptyState component for zero-data scenarios.
 - [ ] Tone appropriate
     `,
     dependencies: [],
-    status: 'pending',
+    status: 'fixed',
   },
   {
     id: 'cat14-error-boundary',
