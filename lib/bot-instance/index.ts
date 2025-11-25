@@ -282,7 +282,6 @@ async function checkNewCasts() {
     const resolvedStats = updatedStats ?? initialStats
 
     if (!resolvedStats) {
-      console.warn('[bot] quest verification telemetry skipped — stats unavailable')
       rememberCast(castHash)
       continue
     }
@@ -343,7 +342,6 @@ async function checkNewCasts() {
       console.warn('[bot] failed to record quest telemetry', (error as Error)?.message || error)
     }
 
-    console.log(`✅ Verified quest ${questId} on ${chain} for user ${maskAddress(address)}`)
 
     rememberCast(castHash)
     // @edit-end
@@ -593,7 +591,6 @@ function selectResponseVariant(variants: string[] | undefined | null, previous: 
 
 async function publishBotReply(cast: any, message: string) {
   if (!botSignerUuid) {
-    console.warn('[bot] Missing signer UUID; cannot reply to stats request')
     return
   }
 
@@ -604,7 +601,6 @@ async function publishBotReply(cast: any, message: string) {
   try {
     const publish = (neynar as any).publishCast ?? (neynar as any).v2?.cast?.publish
     if (!publish) {
-      console.warn('[bot] publishCast method unavailable on Neynar client')
       return
     }
 

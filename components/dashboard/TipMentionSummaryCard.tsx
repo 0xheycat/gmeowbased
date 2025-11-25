@@ -142,7 +142,7 @@ export function TipMentionSummaryCard({ summary, loading, error, onRefresh }: Ti
                 {topActors.map((actor) => (
                   <li
                     key={actor.actorId}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#0a1529]/70 px-3 py-2 text-[11px] text-white/80"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-dark-bg-surface/70 px-3 py-2 text-[11px] text-white/80"
                   >
                     <div>
                       <div className="font-semibold text-white">{actor.actorLabel}</div>
@@ -172,7 +172,7 @@ export function TipMentionSummaryCard({ summary, loading, error, onRefresh }: Ti
                 {recent.map((entry) => (
                   <li
                     key={entry.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#091324]/70 px-3 py-2 text-[11px] text-white/80"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-dark-bg-elevated/70 px-3 py-2 text-[11px] text-white/80"
                   >
                     <div>
                       <div className="font-semibold text-white">{entry.actorLabel}</div>

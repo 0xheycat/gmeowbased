@@ -161,7 +161,6 @@ export async function cleanupExpiredSessions(): Promise<number> {
       return 0
     }
 
-    console.log(`[frame-state] Cleaned up ${data} expired sessions`)
     return data as number
   } catch (err) {
     console.error('[frame-state] Error during cleanup:', err)

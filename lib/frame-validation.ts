@@ -111,7 +111,6 @@ export function sanitizeSplashImageUrl(url: unknown): string | null {
   
   // Enforce max 32 character limit for splash image URL
   if (str.length > 32) {
-    console.warn(`[FRAME_VALIDATION] Splash image URL exceeds max length: ${str.length} > 32`)
     return null
   }
   
@@ -153,7 +152,6 @@ export function sanitizeUrl(url: unknown, options?: { allowHttp?: boolean; maxLe
   
   // Enforce URL length limit (Farcaster spec: max 1024 chars)
   if (str.length > maxLength) {
-    console.warn(`[FRAME_VALIDATION] URL exceeds max length: ${str.length} > ${maxLength}`)
     return null
   }
   
@@ -167,7 +165,6 @@ export function sanitizeUrl(url: unknown, options?: { allowHttp?: boolean; maxLe
     
     // Security: HTTPS-only in production (unless explicitly allowed)
     if (parsed.protocol === 'http:' && !allowHttp) {
-      console.warn(`[FRAME_VALIDATION] HTTP not allowed (HTTPS required): ${str}`)
       return null
     }
     
@@ -251,13 +248,11 @@ export function sanitizeButtons<T extends { label?: string; target?: string }>(b
   })
   
   if (truncated) {
-    console.warn(
       `[FRAME_VALIDATION] Button count exceeded: ${originalCount} buttons provided, truncated to ${MAX_FRAME_BUTTONS}`
     )
   }
   
   if (invalidTitles.length > 0) {
-    console.warn(
       `[FRAME_VALIDATION] Button title length violations (max 32 chars):`,
       invalidTitles
     )

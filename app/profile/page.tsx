@@ -120,7 +120,6 @@ export default function ProfilePage() {
 
   const registerPushNotifications = useCallback(async () => {
     if (!contextUser?.fid || !embeddedApp) {
-      console.warn('[Push] Not in miniapp context or missing FID')
       return false
     }
 
@@ -130,7 +129,6 @@ export default function ProfilePage() {
       const notificationDetails = context?.client?.notificationDetails
 
       if (!notificationDetails?.url || !notificationDetails?.token) {
-        console.warn('[Push] Missing notification details from SDK context')
         pushNotification({
           tone: 'warning',
           category: 'system',

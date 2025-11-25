@@ -235,7 +235,7 @@ export function ProgressXP({
           <button
             ref={closeButtonRef}
             type="button"
-            className="px-3 py-2 min-h-[44px] rounded-full border-2 border-gold/30 bg-[#06091a]/90 hover:bg-[#0b0f2a] hover:border-gold/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+            className="px-3 py-2 min-h-[44px] rounded-full border-2 border-gold/30 bg-dark-bg/90 hover:bg-dark-bg-hover hover:border-gold/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             onClick={onClose}
           >
             Close
@@ -318,7 +318,7 @@ export function ProgressXP({
                   <span>Progress to next tier</span>
                   <span className="font-bold text-gold">{Math.round(animatedPercent)}%</span>
                 </div>
-                <div className="relative h-3 sm:h-4 overflow-hidden rounded-full border-2 border-gold/30 bg-[#08122e] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
+                <div className="relative h-3 sm:h-4 overflow-hidden rounded-full border-2 border-gold/30 bg-dark-bg-card shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
                   <div
                     className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.8),inset_0_1px_2px_rgba(255,255,255,0.5)]"
                     style={{ width: `${Math.max(8, animatedPercent)}%`, transition: 'width 0.4s ease-out' }}

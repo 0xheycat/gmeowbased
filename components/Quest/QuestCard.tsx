@@ -417,9 +417,8 @@ export function QuestCard({ quest, index, featured = false }: QuestCardProps) {
                 const composeText = `⚔️ Join me on "${questName}"! @gmeowbased`
                 await openWarpcastComposer(composeText, shareLink)
               }}
-              className="quest-card-yugioh__action-link"
+              className="quest-card-yugioh__action-link cursor-pointer bg-transparent border-0 p-0"
               aria-label="Share frame on Warpcast"
-              style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
             >
               <span className="quest-card-yugioh__action-icon">📤</span>
               <span>Share Frame</span>

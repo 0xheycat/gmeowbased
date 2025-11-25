@@ -207,7 +207,7 @@ const ProfileSkeleton = () => (
       {/* Avatar skeleton */}
       <div className="relative">
         <div className="h-32 w-32 rounded-full bg-gradient-to-br from-[#d4af37]/30 to-[#ffd700]/10 animate-shimmer" />
-        <div className="absolute inset-0 rounded-full border-4 border-[#d4af37]/20" />
+        <div className="absolute inset-0 rounded-full border-4 border-gold-dark/20" />
       </div>
       
       {/* Username skeleton */}
@@ -702,7 +702,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           const badgesRes = await fetch(`/api/badges/list?fid=${farcasterProfile.fid}`)
           
           if (!badgesRes.ok) {
-            console.warn('Failed to fetch badge details:', badgesRes.statusText)
             setIsFetchingBadge(false)
             return // Non-blocking: continue without badge details
           }

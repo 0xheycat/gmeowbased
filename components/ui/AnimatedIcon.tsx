@@ -21,7 +21,6 @@ const DotLottiePlayer = dynamic(() => import('@lottiefiles/dotlottie-react').the
   const exports = mod as unknown as { DotLottieReact?: ComponentType<PlayerProps> }
   if (!exports.DotLottieReact) {
     if (process.env.NODE_ENV !== 'production') {
-      console.warn('DotLottieReact export not found in @lottiefiles/dotlottie-react')
     }
     return (() => null) as ComponentType<PlayerProps>
   }
