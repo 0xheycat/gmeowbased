@@ -280,7 +280,7 @@ export function fixIconSize40to24(content: string): string {
 }
 
 export function fixIconSize48to24(content: string): string {
-  // Replace 48px icons with 24px
+  // Replace 48px icons with 24px (and min-height for button heights)
   
   let result = content
   
@@ -293,6 +293,7 @@ export function fixIconSize48to24(content: string): string {
   result = result.replace(/height:\s*48px/g, 'height: 24px')
   result = result.replace(/width:\s*['"]48px['"]/g, "width: '24px'")
   result = result.replace(/height:\s*['"]48px['"]/g, "height: '24px'")
+  result = result.replace(/minHeight:\s*['"]48px['"]/g, "minHeight: '3rem'") // 48px = 3rem (12 * 4px)
   
   return result
 }
@@ -384,34 +385,49 @@ export function fixZIndex9999toZToast(content: string): string {
 
 export function fixColorTokenMigration(content: string): string {
   // Replace hardcoded colors with design tokens
-  // Example: #10b981 -> emerald-500
+  // Handles both Tailwind classes AND inline styles
   
   let result = content
   
-  // Common hardcoded colors to token names
-  const colorMap: Record<string, string> = {
-    '#10b981': 'emerald-500',
-    '#06b6d4': 'cyan-500',
-    '#8b5cf6': 'purple-500',
-    '#f59e0b': 'amber-500',
-    '#f43f5e': 'rose-500',
-    '#ffffff': 'white',
-    '#000000': 'black',
+  // Badge tier colors mapping (inline styles in TIER_CONFIG)
+  const tierColorMap: Record<string, string> = {
+    '#9C27FF': '#a855f7', // mythic -> purple-500
+    '#FFD966': '#fbbf24', // legendary -> amber-400
+    '#61DFFF': '#06b6d4', // epic -> cyan-500
+    '#A18CFF': '#8b5cf6', // rare -> violet-500
+    '#D3D7DC': '#9ca3af', // common -> gray-400
   }
   
-  Object.entries(colorMap).forEach(([hex, token]) => {
+  // Common colors
+  const colorMap: Record<string, string> = {
+    '#10b981': '#10b981', // emerald-500
+    '#06b6d4': '#06b6d4', // cyan-500
+    '#8b5cf6': '#8b5cf6', // purple-500
+    '#f59e0b': '#f59e0b', // amber-500
+    '#f43f5e': '#f43f5e', // rose-500
+    '#0a0a0a': '#09090b', // zinc-950
+    ...tierColorMap,
+  }
+  
+  Object.entries(colorMap).forEach(([oldHex, newHex]) => {
+    // Inline styles: color: '#9C27FF' -> color: '#a855f7'
+    result = result.replace(
+      new RegExp(`(color|backgroundColor):\\s*['"]${oldHex.replace('#', '#')}['"]`, 'gi'),
+      `$1: '${newHex}'`
+    )
+    
     // Tailwind classes
     result = result.replace(
-      new RegExp(`text-\\[${hex}\\]`, 'gi'),
-      `text-${token}`
+      new RegExp(`text-\\[${oldHex}\\]`, 'gi'),
+      `text-[${newHex}]`
     )
     result = result.replace(
-      new RegExp(`bg-\\[${hex}\\]`, 'gi'),
-      `bg-${token}`
+      new RegExp(`bg-\\[${oldHex}\\]`, 'gi'),
+      `bg-[${newHex}]`
     )
     result = result.replace(
-      new RegExp(`border-\\[${hex}\\]`, 'gi'),
-      `border-${token}`
+      new RegExp(`border-\\[${oldHex}\\]`, 'gi'),
+      `border-[${newHex}]`
     )
   })
   
