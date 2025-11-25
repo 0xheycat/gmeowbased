@@ -80,7 +80,7 @@ const config = {
   sidebar: {
     titleComponent({ title, type }: { title: string; type: string }) {
       if (type === 'separator') {
-        return <div style={{ fontWeight: 'bold', marginTop: '16px' }}>{title}</div>
+        return <div className="font-bold mt-4">{title}</div>
       }
       return <>{title}</>
     },
