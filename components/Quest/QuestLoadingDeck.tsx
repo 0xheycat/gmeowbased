@@ -114,7 +114,7 @@ export default function QuestLoadingDeck({ count = DEFAULT_COUNT, columns = 'aut
           filter: blur(30px);
           opacity: 0.78;
         
-          animation: quest-loading-spin 9s linear infinite;
+          animation: quest-loading-spin 5s linear infinite;
           pointer-events: none;
           z-index: 0;
         
