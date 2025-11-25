@@ -55,7 +55,7 @@ export function AdminLoginForm({ totpRequired, nextPath }: AdminLoginFormProps) 
         void handleSubmit()
       }}
     >
-      <label className="flex flex-col gap-1 text-[12px] text-white/80">
+      <label className="flex flex-col gap-1 text-sm text-white/80">
         Admin passphrase
         <input
           className="rounded-lg border border-white/15 bg-black/40 px-3 py-3 min-h-[48px] text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
@@ -67,7 +67,7 @@ export function AdminLoginForm({ totpRequired, nextPath }: AdminLoginFormProps) 
         />
       </label>
 
-      <label className="flex flex-col gap-1 text-[12px] text-white/80">
+      <label className="flex flex-col gap-1 text-sm text-white/80">
         One-time code {totpRequired ? '(required)' : '(optional)'}
         <input
           className="rounded-lg border border-white/15 bg-black/40 px-3 py-3 min-h-[48px] text-sm text-white focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
@@ -81,7 +81,7 @@ export function AdminLoginForm({ totpRequired, nextPath }: AdminLoginFormProps) 
         />
       </label>
 
-      <label className="flex items-center gap-2 text-[12px] text-white/70">
+      <label className="flex items-center gap-2 text-sm text-white/70">
         <input
           type="checkbox"
           className="h-4 w-4 rounded border-white/30 bg-black/40 text-emerald-400 focus:ring-emerald-400"
@@ -92,7 +92,7 @@ export function AdminLoginForm({ totpRequired, nextPath }: AdminLoginFormProps) 
       </label>
 
       {error ? (
-        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-[12px] text-red-200">
+        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {error}
         </div>
       ) : null}
