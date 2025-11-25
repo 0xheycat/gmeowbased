@@ -314,7 +314,7 @@
   padding-top: 8px;
   border-top: 1px solid rgba(212, 175, 55, 0.3);
   font-size: 0.65rem;
-  color: #5a4a35;
+  color: rgb(90 74 53);
 }
 
 .quest-card-yugioh__meta-item {
@@ -362,12 +362,12 @@
 
 /* Reward stat in green (like ATK) */
 .quest-card-yugioh__stat--reward .quest-card-yugioh__stat-value {
-  color: #2d5016;
+  color: rgb(45 80 22);
 }
 
 /* Participants stat in red (like DEF) */
 .quest-card-yugioh__stat--participants .quest-card-yugioh__stat-value {
-  color: #5a1616;
+  color: rgb(90 22 22);
 }
 
 /* Expiry indicator */

@@ -615,7 +615,7 @@ export function MegaIntro({
             {/* Username lookup input */}
             {(!identity || identityStatus === 'error') && (
               <div className="username-lookup" style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255, 215, 0, 0.05)', border: '1px solid rgba(255, 215, 0, 0.2)', borderRadius: '12px' }}>
-                <p style={{ fontSize: '0.875rem', fontWeight: '600', color: '#ffd700', marginBottom: '0.75rem' }}>
+                <p className="text-sm font-semibold text-amber-400" style={{ marginBottom: '0.75rem' }}>
                   🔍 Lookup Farcaster User
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -656,7 +656,7 @@ export function MegaIntro({
                   </button>
                 </div>
                 {usernameUser && (
-                  <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', fontSize: '0.75rem', color: '#ffd700' }}>
+                  <div className="text-xs text-amber-400" style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
                     ✅ Found: @{usernameUser.username} (FID: {usernameUser.fid})
                     {usernameUser.fid && usernameUser.fid < 10000 && (
                       <span style={{ display: 'block', marginTop: '0.25rem', fontWeight: '600' }}>
