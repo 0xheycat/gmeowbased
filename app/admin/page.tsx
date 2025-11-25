@@ -796,7 +796,7 @@ export default function AdminAnalyticsPage() {
             {error ? (
               <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
                 <div className="mb-1 font-semibold">Refresh failed</div>
-                <p className="text-[12px]">{error}</p>
+                <p className="text-sm">{error}</p>
                 <p className="mt-2 text-[11px] text-red-300">
                   Using cached or fallback data. Try again after confirming the telemetry API is online.
                 </p>
@@ -830,7 +830,7 @@ export default function AdminAnalyticsPage() {
                     <div className="relative z-10 mt-3 text-3xl font-extrabold" style={{ color: card.accent }}>
                       {formatNumber(value)}
                     </div>
-                    <div className="relative z-10 mt-2 text-[12px] text-white/70">
+                    <div className="relative z-10 mt-2 text-sm text-white/70">
                       <span className={delta >= 0 ? 'text-emerald-300 font-semibold' : 'text-red-300 font-semibold'}>{deltaLabel(delta)}</span>{' '}
                       vs previous period
                     </div>
@@ -891,12 +891,12 @@ export default function AdminAnalyticsPage() {
                             {new Date(alert.occurredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <p className="mt-1 text-[12px] text-[var(--px-sub)]">{alert.detail}</p>
+                        <p className="mt-1 text-sm text-[var(--px-sub)]">{alert.detail}</p>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-[12px] text-[var(--px-sub)]">
+                  <p className="text-sm text-[var(--px-sub)]">
                     No alerts yet. When the telemetry service is live, high-signal events will stream here and into the notification belt.
                   </p>
                 )}
@@ -907,7 +907,7 @@ export default function AdminAnalyticsPage() {
                   <h3 className="pixel-section-title text-base">Next steps</h3>
                   <span className="pixel-pill text-[10px]">Phase 2</span>
                 </div>
-                <ul className="space-y-2 text-[12px] text-[var(--px-sub)]">
+                <ul className="space-y-2 text-sm text-[var(--px-sub)]">
                   <li>➤ Wire telemetry API to Supabase and on-chain aggregators.</li>
                   <li>➤ Swap placeholder bars with sparkline charts once data bindings land.</li>
                   <li>➤ Push high-priority alerts into the live notification belt.</li>
@@ -941,7 +941,7 @@ export default function AdminAnalyticsPage() {
                 View analytics ↺
               </button>
             </div>
-            <ul className="mt-3 grid list-disc gap-1 pl-5 text-[12px] text-white/80 marker:text-emerald-300">
+            <ul className="mt-3 grid list-disc gap-1 pl-5 text-sm text-white/80 marker:text-emerald-300">
               <li>Generate fresh leaderboard snapshots stored in Supabase.</li>
               <li>Load recent partner snapshot history with eligibility metrics across supported chains.</li>
               <li>Quickly select or clear eligible chains using bulk actions.</li>
@@ -967,13 +967,13 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {leaderboardError ? (
-              <div className="mt-3 rounded-2xl border border-rose-500/40 bg-rose-500/15 p-3 text-[12px] text-rose-100">
+              <div className="mt-3 rounded-2xl border border-rose-500/40 bg-rose-500/15 p-3 text-sm text-rose-100">
                 {leaderboardError}
               </div>
             ) : null}
 
             {leaderboardSnapshot ? (
-              <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-[12px] text-emerald-100">
+              <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="uppercase tracking-[0.24em] text-emerald-200/80">Snapshot stored</span>
                   <span className="font-mono text-[11px] text-emerald-100/80">{leaderboardSnapshotLabel}</span>
@@ -983,7 +983,7 @@ export default function AdminAnalyticsPage() {
                 </div>
               </div>
             ) : (
-              <p className="mt-4 text-[12px] text-[var(--px-sub)]">Run the snapshot to collect the latest leaderboard rows.</p>
+              <p className="mt-4 text-sm text-[var(--px-sub)]">Run the snapshot to collect the latest leaderboard rows.</p>
             )}
           </div>
 
@@ -1015,7 +1015,7 @@ export default function AdminAnalyticsPage() {
                 View analytics ↺
               </button>
             </div>
-            <ul className="mt-3 grid list-disc gap-1 pl-5 text-[12px] text-white/80 marker:text-emerald-300">
+            <ul className="mt-3 grid list-disc gap-1 pl-5 text-sm text-white/80 marker:text-emerald-300">
               <li>Live signer status with approval links and permission visibility.</li>
               <li>Environment secret checks with masked previews and mismatch detection.</li>
               <li>Community interaction telemetry with mentions, replies, recasts, follows, and keyword pulse.</li>

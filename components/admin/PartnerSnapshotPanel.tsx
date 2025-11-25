@@ -447,7 +447,7 @@ export default function PartnerSnapshotPanel() {
         {responseError ? (
           <div className="rounded-2xl border border-rose-500/40 bg-rose-500/15 p-4 text-sm text-rose-100">
             <div className="font-semibold">Snapshot failed</div>
-            <p className="mt-1 text-[12px]">{responseError}</p>
+            <p className="mt-1 text-sm">{responseError}</p>
           </div>
         ) : null}
 
@@ -456,7 +456,7 @@ export default function PartnerSnapshotPanel() {
             <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
               <h3 className="pixel-section-title text-base">Partner details</h3>
               <div className="mt-4 grid gap-4">
-                <label className="flex flex-col gap-1 text-[12px]">
+                <label className="flex flex-col gap-1 text-sm">
                   <span>Partner name</span>
                   <input
                     className="pixel-input"
@@ -468,7 +468,7 @@ export default function PartnerSnapshotPanel() {
                   {formErrors.partnerName ? <span className="text-[11px] text-amber-200">{formErrors.partnerName}</span> : null}
                 </label>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="flex flex-col gap-1 text-[12px]">
+                  <label className="flex flex-col gap-1 text-sm">
                     <span>Snapshot ID (optional)</span>
                     <input
                       className="pixel-input"
@@ -477,7 +477,7 @@ export default function PartnerSnapshotPanel() {
                       onChange={(event) => setSnapshotId(event.target.value)}
                     />
                   </label>
-                  <label className="flex flex-col gap-1 text-[12px]">
+                  <label className="flex flex-col gap-1 text-sm">
                     <span>Max addresses / chain</span>
                     <input
                       className="pixel-input"
@@ -489,7 +489,7 @@ export default function PartnerSnapshotPanel() {
                     {formErrors.maxAddressesPerChain ? <span className="text-[11px] text-amber-200">{formErrors.maxAddressesPerChain}</span> : null}
                   </label>
                 </div>
-                <label className="flex flex-col gap-1 text-[12px]">
+                <label className="flex flex-col gap-1 text-sm">
                   <span>Metadata (JSON, optional)</span>
                   <textarea
                     className="pixel-input min-h-[120px]"
@@ -555,7 +555,7 @@ export default function PartnerSnapshotPanel() {
             <p className="mt-1 text-[11px] text-[var(--px-sub)]">Configure the gating logic applied across the selected networks.</p>
 
             <div className="mt-4 grid gap-3">
-              <label className="flex flex-col gap-1 text-[12px]">
+              <label className="flex flex-col gap-1 text-sm">
                 <span>Requirement kind</span>
                 <select
                   className="pixel-input"
@@ -574,7 +574,7 @@ export default function PartnerSnapshotPanel() {
               </label>
 
               {requirementKind !== 'points' ? (
-                <label className="flex flex-col gap-1 text-[12px]">
+                <label className="flex flex-col gap-1 text-sm">
                   <span>Contract address</span>
                   <input
                     className="pixel-input"
@@ -588,7 +588,7 @@ export default function PartnerSnapshotPanel() {
               ) : null}
 
               {requirementKind === 'erc1155' ? (
-                <label className="flex flex-col gap-1 text-[12px]">
+                <label className="flex flex-col gap-1 text-sm">
                   <span>ERC-1155 token ID</span>
                   <input
                     className="pixel-input"
@@ -601,7 +601,7 @@ export default function PartnerSnapshotPanel() {
                 </label>
               ) : null}
 
-              <label className="flex flex-col gap-1 text-[12px]">
+              <label className="flex flex-col gap-1 text-sm">
                 <span>Minimum required</span>
                 <input
                   className="pixel-input"
@@ -622,7 +622,7 @@ export default function PartnerSnapshotPanel() {
               <div>
                 <h3 className="pixel-section-title text-base">Latest snapshot</h3>
                 <p className="text-[11px] text-sky-100/80">
-                  Snapshot ID <span className="font-mono text-[12px] text-sky-50">{summary.snapshotId}</span>
+                  Snapshot ID <span className="font-mono text-sm text-sky-50">{summary.snapshotId}</span>
                 </p>
               </div>
               <div className="text-right text-[11px] text-sky-100/80">
@@ -631,7 +631,7 @@ export default function PartnerSnapshotPanel() {
               </div>
             </div>
 
-            <dl className="mt-4 grid gap-3 text-[12px] text-sky-50 sm:grid-cols-4">
+            <dl className="mt-4 grid gap-3 text-sm text-sky-50 sm:grid-cols-4">
               <div>
                 <dt className="text-[11px] uppercase tracking-[0.24em] text-sky-200/80">Partner</dt>
                 <dd className="mt-1 font-semibold">{summary.partner}</dd>
@@ -652,7 +652,7 @@ export default function PartnerSnapshotPanel() {
 
             {chainSummaryEntries.length ? (
               <div className="mt-4 overflow-x-auto rounded-2xl border border-sky-400/30 bg-sky-500/5">
-                <table className="min-w-full text-left text-[12px] text-sky-50/90">
+                <table className="min-w-full text-left text-sm text-sky-50/90">
                   <thead>
                     <tr className="border-b border-sky-400/20 text-[10px] uppercase tracking-[0.26em] text-sky-200/70">
                       <th className="px-4 py-2">Chain</th>
@@ -676,7 +676,7 @@ export default function PartnerSnapshotPanel() {
             ) : null}
 
             {summary.metadata ? (
-              <details className="mt-4 rounded-2xl border border-sky-400/30 bg-sky-500/5 p-4 text-[12px] text-sky-50/90">
+              <details className="mt-4 rounded-2xl border border-sky-400/30 bg-sky-500/5 p-4 text-sm text-sky-50/90">
                 <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-200">Metadata payload</summary>
                 <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-xl bg-black/40 p-3 font-mono text-[11px]">
                   {stringifyJson(summary.metadata)}
@@ -685,7 +685,7 @@ export default function PartnerSnapshotPanel() {
             ) : null}
 
             {requestPreview ? (
-              <details className="mt-4 rounded-2xl border border-sky-400/20 bg-sky-500/5 p-4 text-[12px] text-sky-50/80">
+              <details className="mt-4 rounded-2xl border border-sky-400/20 bg-sky-500/5 p-4 text-sm text-sky-50/80">
                 <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-200">Request payload</summary>
                 <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-xl bg-black/40 p-3 font-mono text-[11px]">
                   {JSON.stringify(requestPreview, null, 2)}
@@ -694,7 +694,7 @@ export default function PartnerSnapshotPanel() {
             ) : null}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-[12px] text-[var(--px-sub)]">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-[var(--px-sub)]">
             Run a snapshot to preview per-chain eligibility counts and request details.
           </div>
         )}
@@ -717,7 +717,7 @@ export default function PartnerSnapshotPanel() {
         </div>
 
         {historyError ? (
-          <div className="mt-3 rounded-2xl border border-rose-500/40 bg-rose-500/15 p-3 text-[12px] text-rose-100">
+          <div className="mt-3 rounded-2xl border border-rose-500/40 bg-rose-500/15 p-3 text-sm text-rose-100">
             {historyError}
           </div>
         ) : null}
@@ -729,15 +729,15 @@ export default function PartnerSnapshotPanel() {
                 <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--px-sub)]">
                   <div>
                     <div className="text-[10px] uppercase tracking-[0.28em] text-white/50">Snapshot ID</div>
-                    <div className="font-mono text-[12px] text-white/80">{entry.snapshotId}</div>
+                    <div className="font-mono text-sm text-white/80">{entry.snapshotId}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] uppercase tracking-[0.28em] text-white/50">Computed</div>
-                    <div className="text-[12px] text-white/80">{formatDateTime(entry.computedAt)}</div>
+                    <div className="text-sm text-white/80">{formatDateTime(entry.computedAt)}</div>
                   </div>
                 </div>
 
-                <dl className="mt-3 grid gap-3 text-[12px] text-white/80 sm:grid-cols-4">
+                <dl className="mt-3 grid gap-3 text-sm text-white/80 sm:grid-cols-4">
                   <div>
                     <dt className="text-[10px] uppercase tracking-[0.24em] text-white/50">Partner</dt>
                     <dd className="mt-1 font-semibold">{entry.partner}</dd>
@@ -782,7 +782,7 @@ export default function PartnerSnapshotPanel() {
                 ) : null}
 
                 {entry.metadata ? (
-                  <details className="mt-3 rounded-xl border border-white/12 bg-white/5 p-3 text-[12px] text-white/75">
+                  <details className="mt-3 rounded-xl border border-white/12 bg-white/5 p-3 text-sm text-white/75">
                     <summary className="cursor-pointer text-[10px] uppercase tracking-[0.2em] text-white/50">Metadata</summary>
                     <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-xl bg-black/40 p-3 font-mono text-[11px]">
                       {stringifyJson(entry.metadata) ?? '—'}
@@ -793,9 +793,9 @@ export default function PartnerSnapshotPanel() {
             ))}
           </div>
         ) : historyLoading ? (
-          <p className="mt-4 text-[12px] text-[var(--px-sub)]">Loading snapshot history…</p>
+          <p className="mt-4 text-sm text-[var(--px-sub)]">Loading snapshot history…</p>
         ) : (
-          <p className="mt-4 text-[12px] text-[var(--px-sub)]">No partner snapshots recorded yet.</p>
+          <p className="mt-4 text-sm text-[var(--px-sub)]">No partner snapshots recorded yet.</p>
         )}
       </div>
     </section>
