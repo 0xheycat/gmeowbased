@@ -106,20 +106,8 @@ function withTiming(handler: ApiHandler): ApiHandler {
       }
       recordMetric(metric)
       
-      // Log performance
-      if (ENABLE_TIMING_LOGS) {
-        const emoji = isSlow ? '🐌' : '⚡'
-        console.log(
-          `${emoji} [PERF] ${method} ${route} - ${duration.toFixed(2)}ms - ${status}`
-        )
-      }
-      
       // Alert on slow requests
       if (isSlow && ENABLE_SLOW_REQUEST_ALERTS) {
-        console.warn(
-          `[SLOW REQUEST] ${method} ${route} took ${duration.toFixed(2)}ms (threshold: ${SLOW_REQUEST_THRESHOLD_MS}ms)`
-        )
-        
         // Send to analytics (if available)
         await logSlowRequest(route, method, duration, status)
       }

@@ -77,10 +77,6 @@ export function BadgeInventory({
   const { address } = useAccount()
   const { push } = useNotifications()
 
-  // Debug: log wallet connection status
-  console.log('[BadgeInventory] Wallet address:', address)
-  console.log('[BadgeInventory] Badges with unminted status:', badges.filter(b => !b.minted).length)
-
   const displayBadges = useMemo(() => {
     if (maxDisplay) return badges.slice(0, maxDisplay)
     return badges

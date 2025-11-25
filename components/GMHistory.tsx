@@ -379,7 +379,6 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
                       href={EXPLORER_TX[record.chain](record.txHash)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => console.log('Open explorer for TX', record.chain, record.txHash)}
                     >
                       View TX ↗
                     </a>

@@ -48,16 +48,6 @@ function sendToAnalytics(metric: Metric) {
   const { name, value, id, navigationType } = webVitalMetric
   const rating = getMetricRating(name as MetricName, value)
 
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Web Vitals] ${name}:`, {
-      value: Math.round(value),
-      rating,
-      id,
-      navigationType,
-    })
-  }
-
   // Send to analytics services
   try {
     // Posthog

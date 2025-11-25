@@ -45,7 +45,6 @@ export function LeaderboardList() {
 
   const handleRefresh = async () => {
     pushNotification({ type: 'info', title: 'Refreshing…', message: 'Fetching latest leaderboard.' })
-    console.info('Refreshing leaderboard…')
     // Reuse the same mock loading flow
     setLoading(true)
     setTimeout(() => {
