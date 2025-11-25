@@ -2,7 +2,7 @@ import type { StepperProps } from '../shared'
 
 export function Stepper({ activeIndex, steps, onSelect }: StepperProps) {
 	return (
-		<ol className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto rounded-3xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur lg:grid lg:grid-cols-4 lg:gap-3 lg:overflow-visible">
+		<ol className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto rounded-3xl border border-white dark:border-slate-700/10 bg-slate-950/70 p-4 backdrop-blur lg:grid lg:grid-cols-4 lg:gap-3 lg:overflow-visible">
 			{steps.map((step, index) => {
 				const isActive = step.status === 'active' || index === activeIndex
 				const isDone = step.status === 'done'
@@ -17,7 +17,7 @@ export function Stepper({ activeIndex, steps, onSelect }: StepperProps) {
 									? 'border-sky-400/60 bg-sky-400/10 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]'
 									: isDone
 										? 'border-emerald-400/40 bg-emerald-500/5'
-										: 'border-white/5 hover:border-white/15 hover:bg-white/5'
+										: 'border-white/5 hover:border-white/15 hover:bg-slate-100/90 dark:bg-white/5/5'
 							}`}
 							aria-current={isActive ? 'step' : undefined}
 						>

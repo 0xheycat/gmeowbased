@@ -30,7 +30,7 @@ export const TokenListItem = memo<{
 				onMouseEnter={onMouseEnter}
 				disabled={!isSelectable}
 				className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 ${
-					isSelectable ? 'cursor-pointer hover:bg-white/5' : 'cursor-not-allowed opacity-60'
+					isSelectable ? 'cursor-pointer hover:bg-slate-100/90 dark:bg-white/5/5' : 'cursor-not-allowed opacity-60'
 				} ${isSelected ? 'bg-sky-500/15 text-sky-100' : ''}`}
 			>
 				<span className="flex items-center gap-3">
@@ -39,7 +39,7 @@ export const TokenListItem = memo<{
 						alt={`${token.symbol} icon`}
 						width={32}
 						height={32}
-						className="h-8 w-8 rounded-full border border-white/10 bg-slate-900 object-cover"
+						className="h-8 w-8 rounded-full border border-white dark:border-slate-700/10 bg-slate-900 object-cover"
 						unoptimized
 					/>
 					<span className="flex flex-col text-sm font-medium text-slate-100">
@@ -98,7 +98,7 @@ export const NftListItem = memo<{
 				onClick={() => isSelectable && onSelect(nft)}
 				disabled={!isSelectable}
 				className={`flex w-full items-center gap-3 px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 ${
-					isSelected ? 'bg-sky-500/15 text-sky-100' : isSelectable ? 'hover:bg-white/5' : 'cursor-not-allowed opacity-60'
+					isSelected ? 'bg-sky-500/15 text-sky-100' : isSelectable ? 'hover:bg-slate-100/90 dark:bg-white/5/5' : 'cursor-not-allowed opacity-60'
 				}`}
 			>
 				<Image
@@ -106,7 +106,7 @@ export const NftListItem = memo<{
 					alt={`${nft.name} cover`}
 					width={44}
 					height={44}
-					className="h-11 w-11 rounded-xl border border-white/10 bg-slate-900 object-cover"
+					className="h-11 w-11 rounded-xl border border-white dark:border-slate-700/10 bg-slate-900 object-cover"
 					unoptimized
 				/>
 				<div className="flex flex-col text-sm text-slate-100">

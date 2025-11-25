@@ -54,7 +54,7 @@ export function TemplateSelector({
 			<div className="mx-auto max-w-6xl">
 				{/* Header */}
 				<div className="mb-8 text-center">
-					<h1 className="text-4xl font-bold text-white">Create Your Quest</h1>
+					<h1 className="text-4xl font-bold text-white dark:text-slate-950 dark:text-white">Create Your Quest</h1>
 					<p className="mt-2 text-slate-400">
 						Choose a template to get started quickly, or start from scratch
 					</p>
@@ -67,7 +67,7 @@ export function TemplateSelector({
 						placeholder="Search templates..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
-						className="flex-1 rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+						className="flex-1 rounded-xl border border-white dark:border-slate-700/10 bg-slate-950/60 px-4 py-3 text-white dark:text-slate-950 dark:text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
 					/>
 					<button
 						onClick={onStartFromScratch}
@@ -85,8 +85,8 @@ export function TemplateSelector({
 							onClick={() => setSelectedCategory(cat.key)}
 							className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
 								selectedCategory === cat.key
-									? 'bg-sky-500 text-white'
-									: 'bg-white/5 text-slate-400 hover:bg-white/10'
+									? 'bg-sky-500 text-slate-900 dark:text-slate-950 dark:text-white'
+									: 'bg-slate-100/90 dark:bg-white/5/5 text-slate-400 hover:bg-slate-100/90 dark:bg-white/5/10'
 							}`}
 						>
 							<span>{cat.icon}</span>
@@ -122,13 +122,13 @@ export function TemplateSelector({
 						<div className="flex justify-center gap-3">
 							<button
 								onClick={() => setSearchQuery('')}
-								className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 hover:border-white/20 hover:bg-white/5"
+								className="rounded-full border border-white dark:border-slate-700/10 px-4 py-2 text-sm text-slate-300 hover:border-white dark:border-slate-700/20 hover:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5"
 							>
 								Clear search
 							</button>
 							<button
 								onClick={onStartFromScratch}
-								className="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+								className="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white dark:text-slate-950 dark:text-white hover:bg-sky-600"
 							>
 								Start from scratch
 							</button>
@@ -142,7 +142,7 @@ export function TemplateSelector({
 						<p className="mb-4 text-sm text-slate-400">Start building your quest from scratch</p>
 						<button
 							onClick={onStartFromScratch}
-							className="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+							className="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-white dark:text-slate-950 dark:text-white hover:bg-sky-600"
 						>
 							Start from scratch
 						</button>
@@ -171,7 +171,7 @@ function TemplateCard({
 			onClick={onSelect}
 			whileHover={{ scale: 1.02, y: -4 }}
 			whileTap={{ scale: 0.98 }}
-			className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-6 text-left transition hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/20"
+			className="group relative overflow-hidden rounded-2xl border border-white dark:border-slate-700/10 bg-gradient-to-br from-slate-900 to-slate-950 p-6 text-left transition hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/20"
 		>
 			{/* Gradient overlay on hover */}
 			<div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
@@ -181,18 +181,18 @@ function TemplateCard({
 				<div className="mb-4 text-4xl">{template.icon}</div>
 
 				{/* Title & Description */}
-				<h3 className="mb-2 text-lg font-semibold text-white">{template.name}</h3>
+				<h3 className="mb-2 text-lg font-semibold text-white dark:text-slate-950 dark:text-white">{template.name}</h3>
 				<p className="mb-4 text-sm leading-relaxed text-slate-400">{template.description}</p>
 
 				{/* Meta info */}
 				<div className="flex flex-wrap gap-2 text-xs">
-					<span className={`rounded-full bg-white/5 px-2 py-1 ${difficultyColors[template.difficulty]}`}>
+					<span className={`rounded-full bg-slate-100/90 dark:bg-white/5/5 px-2 py-1 ${difficultyColors[template.difficulty]}`}>
 						{template.difficulty}
 					</span>
-					<span className="rounded-full bg-white/5 px-2 py-1 text-slate-400">
+					<span className="rounded-full bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-2 py-1 text-slate-400">
 						⏱️ {template.estimatedTime}
 					</span>
-					<span className="rounded-full bg-white/5 px-2 py-1 capitalize text-slate-400">
+					<span className="rounded-full bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-2 py-1 capitalize text-slate-400">
 						{template.category}
 					</span>
 				</div>

@@ -329,7 +329,6 @@ export default function GuildTeamsPage() {
       await switchChainAsync({ chainId: targetId })
       return true
     } catch (err) {
-      console.debug('Switch chain refused', err)
       return false
     }
   }, [currentChainId, switchChainAsync])
@@ -817,7 +816,7 @@ export default function GuildTeamsPage() {
                             </button>
                             {guild.registered ? <span className="guild-pill guild-pill--compact">Friend code linked</span> : null}
                           </div>
-                          <div className="text-sm font-semibold text-white">{guild.teamName || `Guild #${guild.teamId}`}</div>
+                          <div className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{guild.teamName || `Guild #${guild.teamId}`}</div>
                           <div className="text-[11px] text-[var(--px-sub)]">
                             Founder {shortAddr(guild.founder)} • Members {formatNumber(guild.memberCount)} • Points {formatNumber(guild.totalPoints)}
                           </div>
@@ -980,7 +979,7 @@ export default function GuildTeamsPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-[11px] text-[var(--px-sub)]">My referral code</label>
-                <div className={clsx('pixel-input', myRefCode ? 'text-white' : 'text-[var(--px-sub)]')}>{myRefCode || 'Not set yet'}</div>
+                <div className={clsx('pixel-input', myRefCode ? 'text-slate-950 dark:text-white' : 'text-[var(--px-sub)]')}>{myRefCode || 'Not set yet'}</div>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <input className="pixel-input flex-1" value={editRefCode} onChange={(e) => setEditRefCode(e.target.value.toLowerCase())} placeholder="e.g. heycat" />
@@ -1099,7 +1098,7 @@ export default function GuildTeamsPage() {
                     <div className="flex items-start gap-3">
                       <ChainIcon chain={team.chain} size={20} />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-semibold text-white">{team.name || `Guild #${team.teamId}`}</div>
+                        <div className="truncate text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{team.name || `Guild #${team.teamId}`}</div>
                         <div className="mt-1 text-[11px] text-[var(--px-sub)]">
                           {CHAIN_LABEL[team.chain]} • Members {formatNumber(team.memberCount)} • Points {formatNumber(team.totalPoints)}
                         </div>
@@ -1155,7 +1154,7 @@ export default function GuildTeamsPage() {
             {HOW_IT_WORKS_STEPS.map((step, idx) => (
               <div key={step.title} className="guild-panel guild-panel--muted guild-card guild-card--hover rounded-2xl p-4">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--px-sub)]">Step {idx + 1}</div>
-                <div className="mt-1 text-lg font-semibold text-white">{step.title}</div>
+                <div className="mt-1 text-lg font-semibold text-white dark:text-slate-950 dark:text-white">{step.title}</div>
                 <div className="mt-2 text-[12px] text-[var(--px-sub)]">{step.summary}</div>
                 <p className="mt-2 text-[12px] text-[var(--px-sub)]">{step.body}</p>
                 {step.action ? <div className="mt-3 text-[11px] text-indigo-300">Pro tip: {step.action}</div> : null}
@@ -1170,7 +1169,7 @@ export default function GuildTeamsPage() {
             {FRIENDLY_TIPS.map((tip) => (
               <div key={tip.title} className="guild-panel guild-panel--muted guild-card guild-card--hover rounded-2xl p-4">
                 <div className="text-2xl">{tip.icon}</div>
-                <div className="mt-2 text-sm font-semibold text-white">{tip.title}</div>
+                <div className="mt-2 text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{tip.title}</div>
                 <div className="mt-1 text-[12px] text-[var(--px-sub)]">{tip.body}</div>
               </div>
             ))}

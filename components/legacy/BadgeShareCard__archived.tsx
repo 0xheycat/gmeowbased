@@ -93,7 +93,7 @@ export function BadgeShareCard({
   return (
     <div
       className={clsx(
-        'relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 transition-all hover:border-white/20 hover:bg-white/10',
+        'relative overflow-hidden rounded-2xl border border-white/10 bg-slate-100/90 dark:bg-white/5/5 p-5 transition-all hover:border-white/20 hover:bg-slate-100/90 dark:bg-white/5/10',
         className
       )}
     >
@@ -134,7 +134,7 @@ export function BadgeShareCard({
           {badge.minted && (
             <div className="absolute bottom-1 right-1 rounded-full bg-emerald-500/90 p-1">
               <svg
-                className="h-3 w-3 text-white"
+                className="h-3 w-3 text-white dark:text-slate-950 dark:text-white"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -150,7 +150,7 @@ export function BadgeShareCard({
 
         {/* Badge info */}
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-white">{badgeName}</h3>
+          <h3 className="text-base font-semibold text-white dark:text-slate-950 dark:text-white">{badgeName}</h3>
 
           {/* Tier pill */}
           <div className="mt-1 inline-flex items-center gap-2">
@@ -171,13 +171,13 @@ export function BadgeShareCard({
 
           {/* Description */}
           {badgeDescription && (
-            <p className="mt-2 text-xs text-white/60 line-clamp-2">
+            <p className="mt-2 text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60 line-clamp-2">
               {badgeDescription}
             </p>
           )}
 
           {/* Earned date */}
-          <p className="mt-2 text-[10px] text-white/40">
+          <p className="mt-2 text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/40">
             Earned: {formatBadgeDate(badge.assignedAt)}
           </p>
         </div>
@@ -190,7 +190,7 @@ export function BadgeShareCard({
         disabled={sharing}
         className={clsx(
           'mt-4 w-full rounded-xl px-4 py-2 text-sm font-semibold transition-all',
-          'border border-white/20 bg-white/5 text-white hover:border-white/30 hover:bg-white/10',
+          'border border-white/20 bg-slate-100/90 dark:bg-white/5/5 text-slate-950 dark:text-white hover:border-white/30 hover:bg-slate-100/90 dark:bg-white/5/10',
           'disabled:cursor-not-allowed disabled:opacity-50'
         )}
       >

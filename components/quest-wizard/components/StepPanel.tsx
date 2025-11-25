@@ -147,7 +147,7 @@ export function StepPanel({
 					type="button"
 					onClick={onPrev}
 					disabled={index === 0}
-					className="rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+					className="rounded-full border border-white dark:border-slate-700/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
 				>
 					← Back
 				</button>
@@ -155,7 +155,7 @@ export function StepPanel({
 					<button
 						type="button"
 						onClick={onReset}
-						className="flex-1 sm:flex-none rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/5 touch-manipulation"
+						className="flex-1 sm:flex-none rounded-full border border-white dark:border-slate-700/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 touch-manipulation"
 					>
 						Reset draft
 					</button>
@@ -170,7 +170,7 @@ export function StepPanel({
 									? 'Fill in all required fields'
 									: 'Continue to next step'
 						}
-						className="flex-1 sm:flex-none rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 px-6 py-3 text-sm font-semibold text-black shadow-lg shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation"
+						className="flex-1 sm:flex-none rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 px-6 py-3 text-sm font-semibold text-black dark:text-white dark:text-slate-950 dark:text-white shadow-lg shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation"
 					>
 						{!validation.valid && errorCount > 0 ? `Next (${errorCount})` : 'Next'} ↗
 					</button>

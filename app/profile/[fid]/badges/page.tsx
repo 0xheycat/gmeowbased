@@ -114,7 +114,7 @@ export default function UserBadgesPage() {
         {/* Back Button */}
         <Link
           href={`/profile/${fid}`}
-          className="inline-flex items-center gap-2 mb-6 min-h-[44px] py-2 text-sm text-white/70 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 mb-6 min-h-[44px] py-2 text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:text-white dark:text-slate-950 dark:text-white transition-colors"
         >
           <ArrowLeft size={16} weight="bold" />
           Back to Profile
@@ -135,31 +135,31 @@ export default function UserBadgesPage() {
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-purple-900 to-purple-700 flex items-center justify-center">
-                  <User size={32} weight="bold" className="text-white" />
+                  <User size={32} weight="bold" className="text-white dark:text-slate-950 dark:text-white" />
                 </div>
               )}
             </div>
 
             {/* User Info */}
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-white mb-1">
+              <h1 className="text-2xl font-bold text-white dark:text-slate-950 dark:text-white mb-1">
                 {user?.displayName || `User ${fid}`}&apos;s Badges
               </h1>
-              <p className="text-sm text-white/60">
+              <p className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
                 @{user?.username || `fid-${fid}`} • FID {fid}
               </p>
 
               {/* Badge Count Stats */}
               <div className="flex items-center gap-4 mt-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-white">{badges.length}</span>
-                  <span className="text-xs text-white/50 uppercase tracking-wider">
+                  <span className="text-xl font-bold text-white dark:text-slate-950 dark:text-white">{badges.length}</span>
+                  <span className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50 uppercase tracking-wider">
                     Total Badges
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-bold text-emerald-400">{badgeStats.minted}</span>
-                  <span className="text-xs text-white/50 uppercase tracking-wider">
+                  <span className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50 uppercase tracking-wider">
                     Minted
                   </span>
                 </div>
@@ -169,8 +169,8 @@ export default function UserBadgesPage() {
 
           {/* Tier Distribution */}
           {badges.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-white/10">
-              <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-3">
+            <div className="mt-6 pt-6 border-t border-white dark:border-slate-700/10">
+              <h3 className="text-sm font-bold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 uppercase tracking-wider mb-3">
                 Collection by Tier
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
@@ -192,7 +192,7 @@ export default function UserBadgesPage() {
                     <div className="text-2xl font-bold" style={{ color }}>
                       {badgeStats[tier] || 0}
                     </div>
-                    <div className="text-xs text-white/60 mt-1">{label}</div>
+                    <div className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60 mt-1">{label}</div>
                   </div>
                 ))}
               </div>
@@ -204,8 +204,8 @@ export default function UserBadgesPage() {
         {loading && (
           <div className="pixel-card">
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-12 h-12 border-4 border-white/20 border-t-white/80 rounded-full animate-spin mb-4" />
-              <p className="text-sm text-white/60">Loading badge collection...</p>
+              <div className="w-12 h-12 border-4 border-white dark:border-slate-700/20 border-t-white/80 rounded-full animate-spin mb-4" />
+              <p className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">Loading badge collection...</p>
             </div>
           </div>
         )}
@@ -222,7 +222,7 @@ export default function UserBadgesPage() {
           <div className="pixel-card">
             <div className="mb-6">
               <h2 className="pixel-section-title">Badge Collection</h2>
-              <p className="text-sm text-white/50 mt-2">
+              <p className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50 mt-2">
                 All badges earned by this user. Badges with glow effects are minted on-chain.
               </p>
             </div>
@@ -234,7 +234,7 @@ export default function UserBadgesPage() {
         {/* Share Card */}
         {!loading && !error && badges.length > 0 && (
           <div className="pixel-card mt-6 text-center">
-            <p className="text-sm text-white/60 mb-4">
+            <p className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60 mb-4">
               Share your latest badge on Farcaster
             </p>
             <button
@@ -248,11 +248,11 @@ export default function UserBadgesPage() {
                 const warpcastUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`
                 window.open(warpcastUrl, '_blank', 'noopener,noreferrer')
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white dark:text-slate-950 dark:text-white font-bold transition-all"
             >
               Share Collection on Warpcast
             </button>
-            <p className="text-xs text-white/50 mt-2">
+            <p className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50 mt-2">
               💡 Tip: Click individual badges above to share them separately!
             </p>
           </div>

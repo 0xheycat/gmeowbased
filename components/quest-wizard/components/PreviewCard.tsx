@@ -91,7 +91,7 @@ export function PreviewCard({
 				<div className="flex justify-end gap-2">
 					<button
 						onClick={() => setViewMode('standard')}
-						className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-white/10"
+						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5"
 					>
 						Standard View
 					</button>
@@ -121,13 +121,13 @@ export function PreviewCard({
 				<div className="flex justify-end gap-2">
 					<button
 						onClick={() => setViewMode('standard')}
-						className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-slate-400"
+						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-xs text-slate-400"
 					>
 						Standard View
 					</button>
 					<button
 						onClick={() => setViewMode('card')}
-						className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-white/10"
+						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5"
 					>
 						Card View ✨
 					</button>
@@ -135,7 +135,7 @@ export function PreviewCard({
 			)}
 			
 			<motion.div
-			className="group relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-[1px]"
+			className="group relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white dark:border-slate-700/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-[1px]"
 			/* @edit-start 2025-11-12 — Disable hover wobble when reduced motion is requested */
 			whileHover={prefersReducedMotion ? undefined : { rotateX: -2, rotateY: 3 }}
 			transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 220, damping: 20 }}
@@ -171,7 +171,7 @@ export function PreviewCard({
 				</div>
 
 				<div className="mt-4 lg:mt-6 space-y-4 lg:space-y-5">
-					<div className="relative h-36 lg:h-40 w-full overflow-hidden rounded-xl lg:rounded-2xl border border-white/10 bg-slate-900">
+					<div className="relative h-36 lg:h-40 w-full overflow-hidden rounded-xl lg:rounded-2xl border border-white dark:border-slate-700/10 bg-slate-900">
 						{summary.mediaPreview ? (
 							<Image src={summary.mediaPreview} alt="Quest cover" fill className="object-cover" sizes="320px" unoptimized />
 						) : (
@@ -185,12 +185,12 @@ export function PreviewCard({
 					</div>
 
 					<div className="flex flex-wrap gap-2 text-[10px] lg:text-[11px] uppercase tracking-[0.2em] text-slate-400">
-						<span className="rounded-full border border-white/10 px-3 py-1">{summary.chainLabel}</span>
-						<span className="rounded-full border border-white/10 px-3 py-1">{summary.questTypeLabel}</span>
-						<span className="rounded-full border border-white/10 px-3 py-1">
+						<span className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1">{summary.chainLabel}</span>
+						<span className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1">{summary.questTypeLabel}</span>
+						<span className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1">
 							{summary.questMode === 'social' ? 'Social quest' : 'Onchain quest'}
 						</span>
-						{summary.eligibilityBadge ? <span className="rounded-full border border-white/10 px-3 py-1">{summary.eligibilityBadge}</span> : null}
+						{summary.eligibilityBadge ? <span className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1">{summary.eligibilityBadge}</span> : null}
 						{summary.rewardBadge ? <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-emerald-200">{summary.rewardBadge}</span> : null}
 					</div>
 
@@ -212,6 +212,6 @@ export function PreviewCard({
 
 function CardLoadingSkeleton() {
 	return (
-		<div className="h-[440px] w-full max-w-[320px] animate-pulse rounded-2xl bg-white/5" />
+		<div className="h-[440px] w-full max-w-[320px] animate-pulse rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5" />
 	)
 }

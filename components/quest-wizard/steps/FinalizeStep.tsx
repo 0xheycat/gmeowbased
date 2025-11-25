@@ -207,7 +207,7 @@ export function FinalizeStep({
 	return (
 		<div className="space-y-6">
 			<span className="sr-only" data-escrow-state={escrowStateDataAttr} />
-			<div className="rounded-3xl border border-white/10 bg-slate-950/70 p-4">
+			<div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-950/70 p-4">
 				<div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-500">
 					<span>Launch checklist</span>
 					<span>{summary.expiryLabel}</span>
@@ -215,12 +215,12 @@ export function FinalizeStep({
 				<h3 className="mt-3 text-lg font-semibold text-slate-100">{summary.title}</h3>
 				<p className="text-sm text-slate-300">{summary.subtitle}</p>
 				<div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.2em] text-slate-400">
-					<span className="rounded-full border border-white/10 px-3 py-1">{summary.chainLabel}</span>
-					<span className="rounded-full border border-white/10 px-3 py-1">{summary.questTypeLabel}</span>
-					<span className="rounded-full border border-white/10 px-3 py-1">
+					<span className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1">{summary.chainLabel}</span>
+					<span className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1">{summary.questTypeLabel}</span>
+					<span className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1">
 						{summary.questMode === 'social' ? 'Social quest' : 'Onchain quest'}
 					</span>
-					{summary.eligibilityBadge ? <span className="rounded-full border border-white/10 px-3 py-1">{summary.eligibilityBadge}</span> : null}
+					{summary.eligibilityBadge ? <span className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1">{summary.eligibilityBadge}</span> : null}
 					{summary.rewardBadge ? <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-emerald-200">{summary.rewardBadge}</span> : null}
 				</div>
 			</div>
@@ -228,7 +228,7 @@ export function FinalizeStep({
 			<div className="grid gap-4">
 				<Field label="ERC-20 escrow readiness">
 					{!isTokenReward ? (
-						<p className="rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-300">Token escrow not required for this quest.</p>
+						<p className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-300">Token escrow not required for this quest.</p>
 					) : !escrowStatus ? (
 						<div className="rounded-2xl border border-amber-500/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
 							Select a verified ERC-20 reward and complete the funding fields in Step 3 to unlock this summary.
@@ -243,26 +243,26 @@ export function FinalizeStep({
 								</div>
 							</div>
 							<div className="grid gap-3 sm:grid-cols-2">
-								<div className="rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-2">
+								<div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/50 px-3 py-2">
 									<p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Funding target</p>
 									<p className="mt-1 text-sm font-semibold text-slate-100">{expectedDisplay ?? '—'}</p>
 									<p className="text-[11px] text-slate-400">
 										{perUserDisplay ? `${perUserDisplay} each${claimerSummary ? ` · ${claimerSummary}` : ''}` : claimerSummary ?? 'Per claimer pending'}
 									</p>
 								</div>
-								<div className="rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-2">
+								<div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/50 px-3 py-2">
 									<p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Recorded deposit</p>
 									<p className="mt-1 text-sm font-semibold text-slate-100">{recordedDisplay ?? '—'}</p>
 									<p className="text-[11px] text-slate-400">
 										{recordedDisplay ? 'Matches latest queue snapshot' : 'Awaiting deposit snapshot'}
 									</p>
 								</div>
-								<div className="rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-2">
+								<div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/50 px-3 py-2">
 									<p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Detection</p>
 									<p className="mt-1 text-sm font-semibold text-slate-100">{detectedAtLabel ?? '—'}</p>
 									<p className="text-[11px] text-slate-400">{detectionSummary}</p>
 								</div>
-								<div className="rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-2">
+								<div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/50 px-3 py-2">
 									<p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Warm-up status</p>
 									<p className="mt-1 text-sm font-semibold text-slate-100">{warmupSummary}</p>
 								</div>
@@ -281,7 +281,7 @@ export function FinalizeStep({
 					)}
 				</Field>
 				<Field label="Narrative overview">
-					<p className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-200">{summary.description}</p>
+					<p className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-200">{summary.description}</p>
 					{summary.partnerCopy ? (
 						<p className="rounded-2xl border border-sky-400/30 bg-sky-400/10 px-4 py-3 text-xs text-sky-200">{summary.partnerCopy}</p>
 					) : null}
@@ -324,7 +324,7 @@ export function FinalizeStep({
 								type="button"
 								onClick={() => void onVerifyDraft({ force: true })}
 								disabled={verificationStatus === 'pending'}
-								className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] text-slate-100 transition hover:border-white/20 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+								className="rounded-full border border-white dark:border-slate-700/10 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1 text-[11px] text-slate-100 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/20 dark:bg-slate-100/90 dark:bg-white/5/5 disabled:cursor-not-allowed disabled:opacity-50"
 							>
 								{verifyButtonLabel}
 							</button>
@@ -380,7 +380,7 @@ export function FinalizeStep({
 
 				<Field label="Uploaded media">
 					<div className="flex flex-wrap gap-4">
-						<div className="relative h-36 w-36 overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
+						<div className="relative h-36 w-36 overflow-hidden rounded-2xl border border-white dark:border-slate-700/10 bg-slate-900">
 							{summary.mediaPreview ? (
 								<Image src={summary.mediaPreview} alt="Quest media" fill className="object-cover" sizes="150px" unoptimized />
 							) : (

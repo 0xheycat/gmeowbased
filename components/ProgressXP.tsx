@@ -321,10 +321,10 @@ export function ProgressXP({
                 <div className="relative h-3 sm:h-4 overflow-hidden rounded-full border-2 border-gold/30 bg-dark-bg-card shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
                   <div
                     className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.8),inset_0_1px_2px_rgba(255,255,255,0.5)]"
-                    style={{ width: `${Math.max(8, animatedPercent)}%`, transition: 'width 0.4s ease-out' }}
-                  />
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-[#ffd700]/30 via-transparent to-transparent mix-blend-screen animate-pulse" aria-hidden style={{animationDuration: '2s'}} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] animate-[shimmer_2s_ease-in-out_infinite]" aria-hidden />
+                  style={{ width: `${Math.max(8, animatedPercent)}%`, transition: 'width 0.4s ease-out' }}
+                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-gold/30 via-transparent to-transparent mix-blend-screen animate-pulse" aria-hidden style={{animationDuration: '2s'}} />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] animate-[shimmer_2s_ease-in-out_infinite]" aria-hidden />
                 </div>
                 <div className="flex items-center justify-between text-xs text-gold/80 font-semibold">
                   <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{formatInt(animatedXp)} XP earned</span>
@@ -335,7 +335,7 @@ export function ProgressXP({
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border-2 border-gold/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
+                <div className="rounded-2xl border-2 border-gold/25 bg-dark-bg-alt/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
                   <div className="text-sm uppercase tracking-[0.2em] text-gold/50">Current Rank</div>
                   <div className="mt-1 text-lg font-semibold text-gold">{tierName || 'Adventurer'}</div>
                 </div>
@@ -343,7 +343,7 @@ export function ProgressXP({
                   <div className="text-sm uppercase tracking-[0.2em] text-slate-400">XP Earned</div>
                   <div className="mt-1 text-lg font-semibold text-emerald-300">+{formatInt(xpEarned)}</div>
                 </div>
-                <div className="rounded-2xl border-2 border-gold/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
+                <div className="rounded-2xl border-2 border-gold/25 bg-dark-bg-alt/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
                   <div className="text-sm uppercase tracking-[0.2em] text-gold/50">Total Points</div>
                   <div className="mt-1 text-lg font-semibold text-gold">{formatInt(totalPoints || 0)}</div>
                 </div>

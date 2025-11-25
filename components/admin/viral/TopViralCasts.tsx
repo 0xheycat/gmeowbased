@@ -96,7 +96,7 @@ export default function TopViralCasts() {
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5 shadow-lg backdrop-blur">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="pixel-section-title text-base">🏆 Top Viral Casts</h3>
@@ -109,7 +109,7 @@ export default function TopViralCasts() {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value as '24h' | '7d' | '30d')}
-            className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
+            className="rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-[11px] text-white dark:text-slate-950 dark:text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
             aria-label="Select timeframe"
           >
             {TIMEFRAME_OPTIONS.map((option) => (
@@ -140,19 +140,19 @@ export default function TopViralCasts() {
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="h-16 animate-pulse rounded-xl border border-white/10 bg-white/5"
+              className="h-16 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5"
             />
           ))}
         </div>
       ) : casts.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+        <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
           No viral casts yet for this timeframe.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10 text-left text-[10px] uppercase tracking-wider text-white/60">
+              <tr className="border-b border-white dark:border-slate-700/10 text-left text-[10px] uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
                 <th className="pb-2 pr-3 font-medium">#</th>
                 <th className="pb-2 pr-3 font-medium">User</th>
                 <th className="pb-2 pr-3 font-medium">Tier</th>
@@ -165,17 +165,17 @@ export default function TopViralCasts() {
               {casts.map((cast, index) => (
                 <tr
                   key={cast.cast_hash}
-                  className="group border-b border-white/5 transition hover:bg-white/5"
+                  className="group border-b border-white dark:border-slate-700/5 transition hover:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5"
                 >
                   {/* Rank */}
-                  <td className="py-3 pr-3 text-[12px] font-bold text-white/40">
+                  <td className="py-3 pr-3 text-[12px] font-bold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/40">
                     {index + 1}
                   </td>
 
                   {/* User */}
                   <td className="py-3 pr-3">
                     <div className="flex items-center gap-2">
-                      <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-white/20">
+                      <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-white dark:border-slate-700/20">
                         {cast.avatar_url ? (
                           <Image
                             src={cast.avatar_url}
@@ -184,17 +184,17 @@ export default function TopViralCasts() {
                             className="object-cover"
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500/30 to-purple-500/30 text-[10px] font-bold text-white">
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500/30 to-purple-500/30 text-[10px] font-bold text-white dark:text-slate-950 dark:text-white">
                             {cast.username?.[0]?.toUpperCase() ?? '?'}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-[12px] font-semibold text-white">
+                        <div className="truncate text-[12px] font-semibold text-white dark:text-slate-950 dark:text-white">
                           {cast.display_name ?? cast.username ?? `FID ${cast.fid}`}
                         </div>
                         {cast.username && (
-                          <div className="truncate text-[10px] text-white/50">
+                          <div className="truncate text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">
                             @{cast.username}
                           </div>
                         )}
@@ -223,10 +223,10 @@ export default function TopViralCasts() {
                   {/* Engagement */}
                   <td className="py-3 pr-3">
                     <div className="flex flex-col items-end gap-0.5">
-                      <span className="text-[13px] font-bold text-white">
+                      <span className="text-[13px] font-bold text-white dark:text-slate-950 dark:text-white">
                         {getTotalEngagement(cast).toLocaleString()}
                       </span>
-                      <div className="flex gap-1.5 text-[9px] text-white/50">
+                      <div className="flex gap-1.5 text-[9px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">
                         <span title="Likes">❤️ {cast.likes_count}</span>
                         <span title="Recasts">🔁 {cast.recasts_count}</span>
                         <span title="Replies">💬 {cast.replies_count}</span>
@@ -236,7 +236,7 @@ export default function TopViralCasts() {
 
                   {/* Date */}
                   <td className="py-3">
-                    <span className="text-[10px] text-white/50">
+                    <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">
                       {formatDate(cast.created_at)}
                     </span>
                   </td>

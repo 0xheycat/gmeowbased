@@ -87,7 +87,7 @@ export function ViralTierBadge({
           className="
             absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2
             px-3 py-2 rounded-lg text-sm font-medium
-            bg-gray-900 text-white shadow-xl
+            bg-gray-900 text-white dark:text-slate-950 dark:text-white shadow-xl
             opacity-0 group-hover:opacity-100 group-focus-within:opacity-100
             transition-opacity duration-200 pointer-events-none
             whitespace-nowrap
@@ -220,7 +220,7 @@ export function ViralTierProgress({
         {' / '}
         <span>{nextTier.minScore}</span>
         {' '}
-        <span className="text-gray-500">({Math.round(progress)}%)</span>
+        <span className="text-gray-500 dark:text-gray-400">({Math.round(progress)}%)</span>
       </div>
 
       {/* GI-13: CSS Animation with prefers-reduced-motion support */}

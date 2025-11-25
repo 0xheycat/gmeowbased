@@ -109,10 +109,10 @@ export function QuestCard({ summary, variant = 'rare', showFlip = true, classNam
 						<div className={`relative ${colors.bg} px-4 py-3`}>
 							<div className="flex items-start justify-between">
 									<div className="flex-1 min-w-0">
-										<h3 className="truncate text-lg font-bold text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+										<h3 className="truncate text-lg font-bold text-white dark:text-slate-950 dark:text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
 											{summary.title || 'Untitled Quest'}
 										</h3>
-										<p className="text-xs uppercase tracking-wider text-white/80">{summary.questTypeLabel}</p>
+										<p className="text-xs uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">{summary.questTypeLabel}</p>
 								</div>
 								<RarityBadge variant={variant} />
 							</div>
@@ -140,14 +140,14 @@ export function QuestCard({ summary, variant = 'rare', showFlip = true, classNam
 						</div>
 
 						{/* Description box */}
-						<div className="border-t-2 border-white/10 bg-slate-950/90 px-4 py-3">
+						<div className="border-t-2 border-white dark:border-slate-700/10 bg-slate-950/90 px-4 py-3">
 							<p className="line-clamp-3 text-xs leading-relaxed text-slate-300">
 								{summary.subtitle || summary.description || 'A legendary quest awaits brave adventurers...'}
 							</p>
 						</div>
 
 						{/* Stats footer (ATK/DEF style) */}
-						<div className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t-2 border-white/10 bg-slate-950/95 px-4 py-2">
+						<div className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t-2 border-white dark:border-slate-700/10 bg-slate-950/95 px-4 py-2">
 							<StatBadge label="ATK" value={attackPoints} color="text-red-400" />
 							<ChainBadge chain={summary.chainLabel} />
 							<StatBadge label="DEF" value={defensePoints} color="text-blue-400" />
@@ -166,9 +166,9 @@ export function QuestCard({ summary, variant = 'rare', showFlip = true, classNam
 					>
 						<div className={`relative h-[440px] overflow-hidden rounded-2xl border-2 ${colors.border} ${colors.glow} shadow-2xl`}>
 							<div className={`h-full ${colors.bg} p-6`}>
-								<h4 className="mb-4 text-center text-xl font-bold text-white">Quest Details</h4>
+								<h4 className="mb-4 text-center text-xl font-bold text-white dark:text-slate-950 dark:text-white">Quest Details</h4>
 								
-								<div className="space-y-3 text-sm text-white/90">
+								<div className="space-y-3 text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/90">
 									<DetailRow label="Type" value={summary.questTypeLabel} />
 									<DetailRow label="Chain" value={summary.chainLabel} />
 									<DetailRow label="Reward" value={summary.rewardBadge || 'TBD'} />
@@ -178,8 +178,8 @@ export function QuestCard({ summary, variant = 'rare', showFlip = true, classNam
 									)}
 								</div>
 
-								<div className="absolute bottom-6 left-6 right-6 rounded-xl border border-white/20 bg-white/5 p-3 text-center backdrop-blur">
-									<p className="text-xs text-white/70">Click to flip back</p>
+								<div className="absolute bottom-6 left-6 right-6 rounded-xl border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3 text-center backdrop-blur">
+									<p className="text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Click to flip back</p>
 								</div>
 							</div>
 						</div>
@@ -207,7 +207,7 @@ function RarityBadge({ variant }: { variant: QuestCardProps['variant'] }) {
 function StatBadge({ label, value, color }: { label: string; value: number | string; color: string }) {
 	return (
 		<div className="flex items-center gap-1.5">
-			<span className="text-[10px] font-bold uppercase tracking-wider text-white/60">{label}</span>
+			<span className="text-[10px] font-bold uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">{label}</span>
 			<span className={`text-lg font-black ${color}`} style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
 				{value}
 			</span>
@@ -224,7 +224,7 @@ function ChainBadge({ chain }: { chain: string }) {
 	}
 
 	return (
-		<div className="rounded-full border border-white/20 bg-white/5 px-3 py-1 backdrop-blur">
+		<div className="rounded-full border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1 backdrop-blur">
 			<span className="text-sm">{chainIcons[chain] || '⛓️'}</span>
 		</div>
 	)
@@ -233,8 +233,8 @@ function ChainBadge({ chain }: { chain: string }) {
 function DetailRow({ label, value }: { label: string; value: string }) {
 	return (
 		<div className="flex justify-between">
-			<span className="font-semibold text-white/60">{label}:</span>
-			<span className="text-right text-white">{value}</span>
+			<span className="font-semibold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">{label}:</span>
+			<span className="text-right text-white dark:text-slate-950 dark:text-white">{value}</span>
 		</div>
 	)
 }
@@ -253,7 +253,7 @@ function ParticleEffect() {
 			{particles.map((p) => (
 				<motion.div
 					key={p.id}
-					className="absolute rounded-full bg-white/60"
+					className="absolute rounded-full bg-slate-100/60 dark:bg-slate-100/90 dark:bg-white/5/5"
 					style={{
 						left: `${p.x}%`,
 						top: `${p.y}%`,

@@ -109,7 +109,7 @@ export function NftSelector({
 								alt={`${selectedNft.name} cover`}
 								width={40}
 								height={40}
-								className="h-10 w-10 flex-none rounded-xl border border-white/10 bg-slate-900 object-cover"
+								className="h-10 w-10 flex-none rounded-xl border border-white dark:border-slate-700/10 bg-slate-900 object-cover"
 								unoptimized
 							/>
 							<span className="flex min-w-0 flex-col">
@@ -133,8 +133,8 @@ export function NftSelector({
 				<span className={`text-xs text-slate-400 transition ${open ? 'rotate-180' : ''}`}>⌄</span>
 			</button>
 			{open ? (
-				<div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_24px_60px_rgba(17,24,39,0.55)] backdrop-blur-xl">
-					<form onSubmit={handleSubmit} className="border-b border-white/10 bg-slate-950/70 p-3">
+				<div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/90 shadow-[0_24px_60px_rgba(17,24,39,0.55)] backdrop-blur-xl">
+					<form onSubmit={handleSubmit} className="border-b border-white dark:border-slate-700/10 bg-slate-950/70 p-3">
 						<div className="flex gap-2">
 							<input
 								type="search"
@@ -199,7 +199,7 @@ export function NftSelector({
 												aria-disabled={!selectable}
 												title={disabledReason}
 													className={`flex w-full items-center gap-3 px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
-														active ? 'bg-sky-500/15 text-sky-100' : selectable ? 'hover:bg-white/5' : 'cursor-not-allowed'
+														active ? 'bg-sky-500/15 text-sky-100' : selectable ? 'hover:bg-slate-100/90 dark:bg-white/5/5' : 'cursor-not-allowed'
 													}`}
 													role="option"
 													aria-selected={active}
@@ -209,7 +209,7 @@ export function NftSelector({
 													alt={`${nft.name} cover`}
 													width={44}
 													height={44}
-													className="h-11 w-11 rounded-xl border border-white/10 bg-slate-900 object-cover"
+													className="h-11 w-11 rounded-xl border border-white dark:border-slate-700/10 bg-slate-900 object-cover"
 													unoptimized
 												/>
 												<div className="flex flex-col text-sm text-slate-100">

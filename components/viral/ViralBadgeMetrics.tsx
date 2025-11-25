@@ -125,7 +125,7 @@ export function ViralBadgeMetrics({
             onClick={() => window.location.reload()}
             className="
               px-4 py-2 min-h-[44px] rounded-lg
-              bg-purple-500 hover:bg-purple-600 text-white font-medium
+              bg-purple-500 hover:bg-purple-600 text-white dark:text-slate-950 dark:text-white font-medium
               transition-colors duration-200
               focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2
             "
@@ -180,7 +180,7 @@ export function ViralBadgeMetrics({
               transition-colors duration-200
               focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2
               ${selectedSort === 'xp'
-                ? 'bg-purple-500 text-white'
+                ? 'bg-purple-500 text-slate-900 dark:text-slate-950 dark:text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }
             `}
@@ -197,7 +197,7 @@ export function ViralBadgeMetrics({
               transition-colors duration-200
               focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2
               ${selectedSort === 'casts'
-                ? 'bg-purple-500 text-white'
+                ? 'bg-purple-500 text-slate-900 dark:text-slate-950 dark:text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }
             `}
@@ -214,7 +214,7 @@ export function ViralBadgeMetrics({
               transition-colors duration-200
               focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2
               ${selectedSort === 'engagement'
-                ? 'bg-purple-500 text-white'
+                ? 'bg-purple-500 text-slate-900 dark:text-slate-950 dark:text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }
             `}

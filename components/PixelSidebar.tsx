@@ -27,7 +27,7 @@ export function PixelSidebar() {
                   href={it.href}
                   className={clsx(
                     'flex items-center gap-2 px-3 py-2 rounded-md site-font',
-                    active ? 'pixel-tab-active' : 'text-slate-200/80 hover:text-white'
+                    active ? 'pixel-tab-active' : 'text-slate-200/80 hover:text-slate-950 dark:text-white'
                   )}
                 >
                   <span className="pixel-icon">{it.icon}</span>

@@ -120,7 +120,7 @@ export function ViralLeaderboard({
             onClick={() => window.location.reload()}
             className="
               px-4 py-2 min-h-[44px] rounded-lg
-              bg-blue-500 hover:bg-blue-600 text-white font-medium
+              bg-blue-500 hover:bg-blue-600 text-white dark:text-slate-950 dark:text-white font-medium
               transition-colors duration-200
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
             "

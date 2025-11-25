@@ -699,7 +699,7 @@ export default function BadgeManagerPanel() {
 
   return (
     <section className="px-2 sm:px-4">
-      <div className="mx-auto w-full max-w-6xl rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-emerald-500/10">
+      <div className="mx-auto w-full max-w-6xl rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5 shadow-lg shadow-emerald-500/10">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="pixel-section-title text-lg">Badge Management</h2>
@@ -718,7 +718,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'templates'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+                : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
             )}
           >
             Templates
@@ -730,7 +730,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'queue'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+                : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
             )}
           >
             Mint Queue
@@ -747,7 +747,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'registry'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+                : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
             )}
           >
             Registry
@@ -759,7 +759,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'assign'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+                : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
             )}
           >
             Manual Assign
@@ -770,7 +770,7 @@ export default function BadgeManagerPanel() {
         {activeTab === 'templates' && (
           <div>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-white">Badge Templates</h3>
+              <h3 className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Badge Templates</h3>
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -800,22 +800,22 @@ export default function BadgeManagerPanel() {
         {loading && !templates.length ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, idx) => (
-              <div key={idx} className="h-24 animate-pulse rounded-2xl bg-white/10" />
+              <div key={idx} className="h-24 animate-pulse rounded-2xl bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5" />
             ))}
           </div>
         ) : null}
 
         {!loading && templates.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 text-center text-sm text-[var(--px-sub)]">
+          <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4 sm:p-6 text-center text-sm text-[var(--px-sub)]">
             No badge templates yet. Create your first template to unlock admin badge uploads.
           </div>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {templates.map((template) => (
-            <div key={template.id} className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div key={template.id} className="relative overflow-hidden rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
               <div className="flex items-start gap-3">
-                <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/40">
                   {template.imageUrl ? (
                     <Image src={template.imageUrl} alt={template.name} fill sizes="64px" className="object-cover" />
                   ) : (
@@ -826,11 +826,11 @@ export default function BadgeManagerPanel() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="truncate text-sm font-semibold text-white">{template.name}</h3>
+                    <h3 className="truncate text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{template.name}</h3>
                     <span
                       className={clsx(
                         'pixel-pill text-[10px]',
-                        template.active ? 'bg-emerald-500/20 text-emerald-200' : 'bg-white/10 text-white/60',
+                        template.active ? 'bg-emerald-500/20 text-emerald-200' : 'bg-slate-100/90 dark:bg-white/5/10 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/60',
                       )}
                     >
                       {template.active ? 'Active' : 'Disabled'}
@@ -838,11 +838,11 @@ export default function BadgeManagerPanel() {
                   </div>
                   <div className="mt-1 text-[11px] text-[var(--px-sub)]">{template.badgeType}</div>
                   {template.description ? (
-                    <p className="mt-2 line-clamp-3 text-[12px] text-white/70">{template.description}</p>
+                    <p className="mt-2 line-clamp-3 text-[12px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">{template.description}</p>
                   ) : null}
                 </div>
               </div>
-              <dl className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white/70">
+              <dl className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
                 <div>
                   <dt className="text-[var(--px-sub)]">Chain</dt>
                   <dd>{CHAIN_LABEL[template.chain]}</dd>
@@ -853,7 +853,7 @@ export default function BadgeManagerPanel() {
                 </div>
                 <div className="col-span-2">
                   <dt className="text-[var(--px-sub)]">Slug</dt>
-                  <dd className="truncate text-white/80">{template.slug}</dd>
+                  <dd className="truncate text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">{template.slug}</dd>
                 </div>
               </dl>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -896,7 +896,7 @@ export default function BadgeManagerPanel() {
         {activeTab === 'queue' && (
           <div>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-white">Mint Queue</h3>
+              <h3 className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Mint Queue</h3>
               <button
                 type="button"
                 className="pixel-button btn-sm"
@@ -909,20 +909,20 @@ export default function BadgeManagerPanel() {
 
             {/* Queue Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">Pending</div>
+              <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Pending</div>
                 <div className="mt-1 text-2xl font-bold text-emerald-400">{queueStats.pending}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">Minting</div>
+              <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Minting</div>
                 <div className="mt-1 text-2xl font-bold text-amber-400">{queueStats.minting}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">Minted</div>
-                <div className="mt-1 text-2xl font-bold text-white">{queueStats.minted}</div>
+              <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Minted</div>
+                <div className="mt-1 text-2xl font-bold text-white dark:text-slate-950 dark:text-white">{queueStats.minted}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">Failed</div>
+              <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Failed</div>
                 <div className="mt-1 text-2xl font-bold text-red-400">{queueStats.failed}</div>
               </div>
             </div>
@@ -938,7 +938,7 @@ export default function BadgeManagerPanel() {
                     'pixel-button btn-xs transition',
                     queueFilter === filter
                       ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                      : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20'
+                      : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
                   )}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -950,28 +950,28 @@ export default function BadgeManagerPanel() {
             {queueLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, idx) => (
-                  <div key={idx} className="h-16 animate-pulse rounded-2xl bg-white/10" />
+                  <div key={idx} className="h-16 animate-pulse rounded-2xl bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5" />
                 ))}
               </div>
             ) : mintQueue.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+              <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
                 No mints in queue with status: {queueFilter}
               </div>
             ) : (
               <div className="space-y-2">
                 {mintQueue.map((mint) => (
-                  <div key={mint.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div key={mint.id} className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white">FID {mint.fid}</span>
+                          <span className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">FID {mint.fid}</span>
                           <span className="text-[11px] text-[var(--px-sub)]">{mint.badgeType}</span>
                           <span
                             className={clsx(
                               'pixel-pill text-[10px]',
                               mint.status === 'pending' && 'bg-emerald-500/20 text-emerald-200',
                               mint.status === 'minting' && 'bg-amber-500/20 text-amber-200',
-                              mint.status === 'minted' && 'bg-white/10 text-white/70',
+                              mint.status === 'minted' && 'bg-slate-100/90 dark:bg-white/5/10 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70',
                               mint.status === 'failed' && 'bg-red-500/20 text-red-200'
                             )}
                           >
@@ -1015,7 +1015,7 @@ export default function BadgeManagerPanel() {
         {activeTab === 'registry' && (
           <div>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-white">Badge Registry</h3>
+              <h3 className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Badge Registry</h3>
               <button
                 type="button"
                 className="pixel-button btn-sm"
@@ -1029,45 +1029,45 @@ export default function BadgeManagerPanel() {
             {registryLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, idx) => (
-                  <div key={idx} className="h-24 animate-pulse rounded-2xl bg-white/10" />
+                  <div key={idx} className="h-24 animate-pulse rounded-2xl bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5" />
                 ))}
               </div>
             ) : !badgeRegistry ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+              <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
                 Failed to load badge registry
               </div>
             ) : (
               <div className="space-y-4">
                 {/* Registry Info */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
                   <div className="grid gap-2 text-[12px]">
                     <div className="flex justify-between">
                       <span className="text-[var(--px-sub)]">Version:</span>
-                      <span className="font-semibold text-white">{badgeRegistry.version}</span>
+                      <span className="font-semibold text-white dark:text-slate-950 dark:text-white">{badgeRegistry.version}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[var(--px-sub)]">Last Updated:</span>
-                      <span className="font-semibold text-white">{badgeRegistry.lastUpdated}</span>
+                      <span className="font-semibold text-white dark:text-slate-950 dark:text-white">{badgeRegistry.lastUpdated}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[var(--px-sub)]">Total Badges:</span>
-                      <span className="font-semibold text-white">{badgeRegistry.badges.length}</span>
+                      <span className="font-semibold text-white dark:text-slate-950 dark:text-white">{badgeRegistry.badges.length}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Tier Overview */}
                 <div>
-                  <h4 className="mb-3 text-sm font-semibold text-white">Tiers</h4>
+                  <h4 className="mb-3 text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Tiers</h4>
                   <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                     {Object.entries(badgeRegistry.tiers).map(([key, tier]) => (
-                      <div key={key} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                      <div key={key} className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
                         <div className="flex items-center gap-2">
                           <div
                             className="h-3 w-3 rounded-full"
                             style={{ backgroundColor: tier.color }}
                           />
-                          <span className="text-sm font-semibold text-white">{tier.name}</span>
+                          <span className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{tier.name}</span>
                         </div>
                         <div className="mt-2 text-[11px] text-[var(--px-sub)]">
                           Score: {tier.scoreRange.min.toFixed(2)} - {tier.scoreRange.max.toFixed(2)}
@@ -1082,19 +1082,19 @@ export default function BadgeManagerPanel() {
 
                 {/* Badges List */}
                 <div>
-                  <h4 className="mb-3 text-sm font-semibold text-white">Registry Badges</h4>
+                  <h4 className="mb-3 text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Registry Badges</h4>
                   <div className="space-y-2">
                     {badgeRegistry.badges.map((badge) => (
-                      <div key={badge.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div key={badge.id} className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
                         <div className="flex items-start gap-3">
                           {badge.imageUrl && (
-                            <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/10">
+                            <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white dark:border-slate-700/10">
                               <Image src={badge.imageUrl} alt={badge.name} fill sizes="48px" className="object-cover" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-white">{badge.name}</span>
+                              <span className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{badge.name}</span>
                               <span
                                 className="pixel-pill text-[10px]"
                                 style={{ backgroundColor: `${badgeRegistry.tiers[badge.tier].color}20`, color: badgeRegistry.tiers[badge.tier].color }}
@@ -1109,7 +1109,7 @@ export default function BadgeManagerPanel() {
                             </div>
                             <div className="mt-1 text-[11px] text-[var(--px-sub)]">{badge.description}</div>
                             <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-                              <span className="text-[var(--px-sub)]">Type: <span className="font-mono text-white">{badge.badgeType}</span></span>
+                              <span className="text-[var(--px-sub)]">Type: <span className="font-mono text-white dark:text-slate-950 dark:text-white">{badge.badgeType}</span></span>
                               <span className="text-[var(--px-sub)]">•</span>
                               <span className="text-[var(--px-sub)]">Chain: {badge.chain}</span>
                               {badge.assignmentRule && (
@@ -1134,14 +1134,14 @@ export default function BadgeManagerPanel() {
         {activeTab === 'assign' && (
           <div>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-white">Manual Badge Assignment</h3>
+              <h3 className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Manual Badge Assignment</h3>
               <p className="text-[11px] text-[var(--px-sub)]">Assign a badge to a specific Farcaster ID</p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="flex flex-col gap-1 text-[12px]">
-                  <span className="text-white">Farcaster ID (FID)</span>
+                  <span className="text-white dark:text-slate-950 dark:text-white">Farcaster ID (FID)</span>
                   <input
                     type="number"
                     className="pixel-input"
@@ -1152,7 +1152,7 @@ export default function BadgeManagerPanel() {
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-[12px]">
-                  <span className="text-white">Badge Type</span>
+                  <span className="text-white dark:text-slate-950 dark:text-white">Badge Type</span>
                   <input
                     type="text"
                     className="pixel-input"
@@ -1181,16 +1181,16 @@ export default function BadgeManagerPanel() {
             {/* Available Badge Types Reference */}
             {badgeRegistry && (
               <div className="mt-5">
-                <h4 className="mb-3 text-sm font-semibold text-white">Available Badge Types</h4>
+                <h4 className="mb-3 text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Available Badge Types</h4>
                 <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
                   {badgeRegistry.badges.map((badge) => (
                     <button
                       key={badge.id}
                       type="button"
                       onClick={() => setManualAssignBadgeType(badge.badgeType)}
-                      className="rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-emerald-400/40 hover:bg-white/10"
+                      className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3 text-left transition hover:border-emerald-400/40 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5"
                     >
-                      <div className="text-sm font-semibold text-white">{badge.name}</div>
+                      <div className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{badge.name}</div>
                       <div className="mt-1 font-mono text-[11px] text-[var(--px-sub)]">{badge.badgeType}</div>
                     </button>
                   ))}
@@ -1203,7 +1203,7 @@ export default function BadgeManagerPanel() {
         {/* Phase 3B: Badge Detail Modal */}
         {detailModalOpen && detailModalBadge && (
           <div 
-            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-4"
+            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black dark:bg-slate-950/70 p-4"
             onKeyDown={(e) => {
               if (e.key === 'Escape') setDetailModalOpen(false)
             }}
@@ -1213,7 +1213,7 @@ export default function BadgeManagerPanel() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="badge-detail-title"
-              className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl"
+              className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/80 p-4 sm:p-6 shadow-xl"
             >
               <div className="mb-4 flex items-center justify-between">
                 <h3 id="badge-detail-title" className="pixel-section-title text-lg">Badge Details</h3>
@@ -1230,7 +1230,7 @@ export default function BadgeManagerPanel() {
                 {/* Badge Preview */}
                 <div className="flex items-start gap-4">
                   {detailModalBadge.imageUrl && (
-                    <div className="h-24 w-24 overflow-hidden rounded-xl border border-white/10">
+                    <div className="h-24 w-24 overflow-hidden rounded-xl border border-white dark:border-slate-700/10">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={detailModalBadge.imageUrl}
@@ -1240,30 +1240,30 @@ export default function BadgeManagerPanel() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <h4 className="text-lg font-semibold text-white">{detailModalBadge.name}</h4>
+                    <h4 className="text-lg font-semibold text-white dark:text-slate-950 dark:text-white">{detailModalBadge.name}</h4>
                     <div className="mt-1 text-[12px] text-[var(--px-sub)]">{detailModalBadge.description}</div>
                   </div>
                 </div>
 
                 {/* Badge Info */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <h5 className="mb-3 text-sm font-semibold text-white">Information</h5>
+                <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
+                  <h5 className="mb-3 text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Information</h5>
                   <dl className="grid gap-2 text-[12px]">
                     <div className="flex justify-between">
                       <dt className="text-[var(--px-sub)]">Badge Type:</dt>
-                      <dd className="font-mono text-white">{detailModalBadge.badgeType}</dd>
+                      <dd className="font-mono text-white dark:text-slate-950 dark:text-white">{detailModalBadge.badgeType}</dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-[var(--px-sub)]">Slug:</dt>
-                      <dd className="font-mono text-white">{detailModalBadge.slug}</dd>
+                      <dd className="font-mono text-white dark:text-slate-950 dark:text-white">{detailModalBadge.slug}</dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-[var(--px-sub)]">Chain:</dt>
-                      <dd className="text-white">{CHAIN_LABEL[detailModalBadge.chain]}</dd>
+                      <dd className="text-white dark:text-slate-950 dark:text-white">{CHAIN_LABEL[detailModalBadge.chain]}</dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-[var(--px-sub)]">Points Cost:</dt>
-                      <dd className="text-white">{detailModalBadge.pointsCost.toLocaleString()}</dd>
+                      <dd className="text-white dark:text-slate-950 dark:text-white">{detailModalBadge.pointsCost.toLocaleString()}</dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-[var(--px-sub)]">Status:</dt>
@@ -1273,7 +1273,7 @@ export default function BadgeManagerPanel() {
                             'pixel-pill text-[10px]',
                             detailModalBadge.active
                               ? 'bg-emerald-500/20 text-emerald-200'
-                              : 'bg-white/10 text-white/60'
+                              : 'bg-slate-100/90 dark:bg-white/5/10 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/60'
                           )}
                         >
                           {detailModalBadge.active ? 'Active' : 'Inactive'}
@@ -1285,17 +1285,17 @@ export default function BadgeManagerPanel() {
 
                 {/* Metadata */}
                 {detailModalBadge.metadata && (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <h5 className="mb-3 text-sm font-semibold text-white">Metadata</h5>
-                    <pre className="max-h-60 overflow-auto rounded border border-white/10 bg-black/40 p-3 font-mono text-[11px] text-white/80">
+                  <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
+                    <h5 className="mb-3 text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Metadata</h5>
+                    <pre className="max-h-60 overflow-auto rounded border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/40 p-3 font-mono text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
                       {JSON.stringify(detailModalBadge.metadata, null, 2)}
                     </pre>
                   </div>
                 )}
 
                 {/* Assignment History Placeholder */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <h5 className="mb-3 text-sm font-semibold text-white">Assignment History</h5>
+                <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
+                  <h5 className="mb-3 text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Assignment History</h5>
                   <div className="text-[12px] text-[var(--px-sub)]">
                     Assignment history tracking coming soon...
                   </div>
@@ -1307,7 +1307,7 @@ export default function BadgeManagerPanel() {
 
         {formOpen ? (
           <div 
-            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-4"
+            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black dark:bg-slate-950/70 p-4"
             onKeyDown={(e) => {
               if (e.key === 'Escape' && !formBusy) closeForm()
             }}
@@ -1317,7 +1317,7 @@ export default function BadgeManagerPanel() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="badge-form-title"
-              className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/10 bg-black/80 p-4 sm:p-6 shadow-xl"
+              className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/80 p-4 sm:p-6 shadow-xl"
             >
               <div className="mb-4 flex items-center justify-between">
                 <h3 id="badge-form-title" className="pixel-section-title text-lg">
@@ -1420,7 +1420,7 @@ export default function BadgeManagerPanel() {
                   </div>
                 ) : (
                   <>
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
                       <div className="flex flex-col gap-2">
                         <p className="text-[12px] font-semibold">Distribution chains</p>
                         <p className="text-[11px] text-[var(--px-sub)]">
@@ -1438,7 +1438,7 @@ export default function BadgeManagerPanel() {
                                 'pixel-button btn-xs transition-colors',
                                 selected
                                   ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-100'
-                                  : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20',
+                                  : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20',
                               )}
                               onClick={() => handleChainToggle(option.value)}
                               disabled={formBusy || uploadBusy}
@@ -1451,7 +1451,7 @@ export default function BadgeManagerPanel() {
                       <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
                         <button
                           type="button"
-                          className="pixel-button btn-xs border-white/15 bg-white/10 text-white/70 hover:border-white/25"
+                          className="pixel-button btn-xs border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white dark:border-slate-700/25"
                           onClick={handleSelectAllChains}
                           disabled={formBusy || uploadBusy}
                         >
@@ -1459,7 +1459,7 @@ export default function BadgeManagerPanel() {
                         </button>
                         <button
                           type="button"
-                          className="pixel-button btn-xs border-white/15 bg-white/10 text-white/70 hover:border-white/25"
+                          className="pixel-button btn-xs border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white dark:border-slate-700/25"
                           onClick={handleClearChains}
                           disabled={formBusy || uploadBusy}
                         >
@@ -1495,7 +1495,7 @@ export default function BadgeManagerPanel() {
                 )}
 
                 <div className="grid gap-4 lg:grid-cols-5">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-3">
+                  <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4 lg:col-span-3">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <p className="text-[12px] font-semibold">Badge artwork</p>
@@ -1518,7 +1518,7 @@ export default function BadgeManagerPanel() {
                       </label>
                     </div>
                     {formState.imageUrl ? (
-                      <div className="relative mt-3 h-48 overflow-hidden rounded-xl border border-white/10">
+                      <div className="relative mt-3 h-48 overflow-hidden rounded-xl border border-white dark:border-slate-700/10">
                         <Image src={formState.imageUrl} alt="Badge preview" fill sizes="400px" className="object-cover" />
                       </div>
                     ) : null}

@@ -9,7 +9,7 @@ export function AgentHero() {
       asChild
       tone="frosted"
       padding="md"
-      className="relative overflow-hidden rounded-3xl border-white/12 pb-6 sm:pb-6"
+      className="relative overflow-hidden rounded-3xl border-white dark:border-slate-700/12 pb-6 sm:pb-6"
     >
       <section>
         <div
@@ -20,7 +20,7 @@ export function AgentHero() {
           <div className="max-w-2xl space-y-3">
             <p className="text-xs uppercase tracking-[0.34em] text-emerald-200/80">GMEOW Companion</p>
             <CardTitle asChild>
-              <h1 className="site-font text-2xl font-semibold text-white sm:text-3xl">
+              <h1 className="site-font text-2xl font-semibold text-white dark:text-slate-950 dark:text-white sm:text-3xl">
                 Pilot the community feed from your pocket.
               </h1>
             </CardTitle>

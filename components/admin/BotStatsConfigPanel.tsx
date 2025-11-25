@@ -226,7 +226,7 @@ export default function BotStatsConfigPanel() {
         </div>
         <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--px-sub)]">
           {dirty ? <span className="pixel-pill border-amber-400/40 bg-amber-500/10 text-amber-200">Unsaved changes</span> : null}
-          {saving ? <span className="pixel-pill border-white/15 bg-white/10 text-white/70">Saving…</span> : null}
+          {saving ? <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">Saving…</span> : null}
         </div>
       </div>
 
@@ -255,23 +255,23 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Mention triggers
             <textarea
-              className="min-h-[90px] rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[90px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-white dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.mentionMatchers}
               onChange={handleChange('mentionMatchers')}
               placeholder="@gmeowbased\n#gmeowbased"
             />
-            <span className="text-[10px] text-white/60">One per line. Bot only responds when at least one mention matches.</span>
+            <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">One per line. Bot only responds when at least one mention matches.</span>
           </label>
 
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Signal keywords
             <textarea
-              className="min-h-[90px] rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[90px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-white dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.signalKeywords}
               onChange={handleChange('signalKeywords')}
               placeholder="stats\nrank\nlevel"
             />
-            <span className="text-[10px] text-white/60">Lowercase keywords that must appear in the cast text.</span>
+            <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">Lowercase keywords that must appear in the cast text.</span>
           </label>
         </div>
 
@@ -279,23 +279,23 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Question starters
             <textarea
-              className="min-h-[80px] rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[80px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-white dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.questionStarters}
               onChange={handleChange('questionStarters')}
               placeholder="what\nhow\nshow"
             />
-            <span className="text-[10px] text-white/60">If no question mark is present, the cast must start with one of these verbs.</span>
+            <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">If no question mark is present, the cast must start with one of these verbs.</span>
           </label>
 
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Response variants
             <textarea
-              className="min-h-[80px] rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[80px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-white dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.responseVariants}
               onChange={handleChange('responseVariants')}
               placeholder="Signal sync complete\nTelemetry uplink secure"
             />
-            <span className="text-[10px] text-white/60">Optional intro phrases rotated to avoid repetitive tone.</span>
+            <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">Optional intro phrases rotated to avoid repetitive tone.</span>
           </label>
         </div>
 
@@ -303,46 +303,46 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Cooldown minutes
             <input
-              className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-white dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={1}
               max={240}
               value={form.cooldownMinutes}
               onChange={handleChange('cooldownMinutes')}
             />
-            <span className="text-[10px] text-white/60">Minimum delay between full stat replies per user.</span>
+            <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">Minimum delay between full stat replies per user.</span>
           </label>
 
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Repeat question minutes
             <input
-              className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-white dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={1}
               max={120}
               value={form.repeatCooldownMinutes}
               onChange={handleChange('repeatCooldownMinutes')}
             />
-            <span className="text-[10px] text-white/60">Time before identical prompts get a fresh reply.</span>
+            <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">Time before identical prompts get a fresh reply.</span>
           </label>
 
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             XP delta threshold
             <input
-              className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-white dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={0}
               max={5000}
               value={form.minDeltaPoints}
               onChange={handleChange('minDeltaPoints')}
             />
-            <span className="text-[10px] text-white/60">Used to highlight progress when XP moves beyond this threshold.</span>
+            <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">Used to highlight progress when XP moves beyond this threshold.</span>
           </label>
 
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Minimum Neynar score
             <input
-              className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-white dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={0}
               max={1}
@@ -350,15 +350,15 @@ export default function BotStatsConfigPanel() {
               value={form.minNeynarScore}
               onChange={handleChange('minNeynarScore')}
             />
-            <span className="text-[10px] text-white/60">
+            <span className="text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
               Casts only receive auto replies when their Neynar score meets this bar. Set to 0 to disable the gate.
             </span>
           </label>
         </div>
 
-        <label className="flex items-center gap-2 text-[12px] text-white/80">
+        <label className="flex items-center gap-2 text-[12px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
           <input
-            className="h-4 w-4 rounded border-white/30 bg-black/40 text-emerald-400 focus:ring-emerald-400"
+            className="h-4 w-4 rounded border-white dark:border-slate-700/30 bg-black dark:bg-slate-950/40 text-emerald-400 focus:ring-emerald-400"
             type="checkbox"
             checked={form.requireQuestionMark}
             onChange={handleChange('requireQuestionMark')}
@@ -375,7 +375,7 @@ export default function BotStatsConfigPanel() {
             {saving ? 'Saving…' : 'Save configuration'}
           </button>
           <button
-            className="pixel-button btn-sm border-white/15 bg-white/10 text-white/70 hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+            className="pixel-button btn-sm border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
             type="button"
             onClick={handleRevert}
             disabled={!dirty || saving}

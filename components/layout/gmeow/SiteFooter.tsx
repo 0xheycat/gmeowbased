@@ -8,7 +8,7 @@ export function SiteFooter() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="site-font border-t border-white/10 bg-white/5 px-4 py-12 backdrop-blur-md sm:px-6 lg:px-10">
+    <footer className="site-font border-t border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-4 py-12 backdrop-blur-md sm:px-6 lg:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-3">
@@ -49,7 +49,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-[var(--px-sub)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 border-t border-white dark:border-slate-700/10 pt-6 text-sm text-[var(--px-sub)] sm:flex-row sm:items-center sm:justify-between">
           <span>© {year} Gmeowbased. All rights reserved.</span>
         </div>
       </div>

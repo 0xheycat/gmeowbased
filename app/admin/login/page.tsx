@@ -16,7 +16,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12">
-      <div className="rounded-2xl border border-white/10 bg-black/60 p-6 shadow-2xl shadow-emerald-500/10 backdrop-blur">
+      <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/60 p-6 shadow-2xl shadow-emerald-500/10 backdrop-blur">
         <h1 className="pixel-section-title text-xl">Admin access</h1>
         <p className="mt-2 text-sm text-[var(--px-sub)]">
           Protected operations require the shared admin passphrase{totpRequired ? ' and a one-time code' : ''}.

@@ -41,12 +41,12 @@ export function WizardHeader({
 	const avatarUrl = profileAvatarUrl || contextUserAvatarUrl
 
 	return (
-		<header className={`sticky top-14 sm:top-16 lg:top-0 z-50 transition ${collapsed ? 'mb-2' : 'mb-4'}`}>
-			<div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+		<header className={`sticky top-14 sm:top-16 lg:top-0 z-40 transition ${collapsed ? 'mb-2' : 'mb-4'}`}>
+			<div className="flex flex-col gap-4 rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5 backdrop-blur-xl">
 				<div className="flex flex-wrap items-center justify-between gap-3">
 					<div className="flex items-center gap-3">
 						{avatarUrl ? (
-							<div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-white/10 bg-slate-950">
+							<div className="relative h-12 w-12 overflow-hidden rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950">
 								<Image src={avatarUrl} alt={username || 'Farcaster avatar'} fill sizes="48px" className="object-cover" unoptimized />
 							</div>
 						) : null}
@@ -61,7 +61,7 @@ export function WizardHeader({
 						<button
 							type="button"
 							onClick={onToggleCollapsed}
-							className="rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-slate-300 transition hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+							className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-slate-300 transition hover:border-white dark:border-slate-700/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
 						>
 							{collapsed ? 'Expand header' : 'Collapse header'}
 						</button>
