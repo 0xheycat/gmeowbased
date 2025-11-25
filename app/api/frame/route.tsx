@@ -1469,7 +1469,7 @@ function buildFrameHtml(params: {
         }
       }
       .container {
-        max-width: 600px;
+        max-width: 768px;
         margin: 0 auto;
         padding: 30px;
         background: rgba(0, 0, 0, 0.6);
