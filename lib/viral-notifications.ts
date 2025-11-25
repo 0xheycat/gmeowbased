@@ -536,7 +536,6 @@ export async function processPendingNotifications(deps?: NotificationDependencie
         successCount++
       } else if (result.rateLimited) {
         // Stop processing batch if rate limited
-        console.log('[ViralNotifications] Rate limit hit, pausing batch processing')
         break
       }
 

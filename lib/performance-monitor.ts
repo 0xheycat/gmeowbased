@@ -66,15 +66,6 @@ export class PerformanceMonitor {
   }) {
     const { name, value, type, metadata = {} } = metric
 
-    // Log in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Performance] ${name}:`, {
-        value: Math.round(value),
-        type,
-        ...metadata,
-      })
-    }
-
     // Send to analytics
     try {
       if (typeof window !== 'undefined' && window.posthog) {

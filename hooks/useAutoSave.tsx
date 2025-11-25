@@ -46,10 +46,6 @@ export function useAutoSave(draft: Partial<QuestDraft>, enabled: boolean = true)
 			}
 			localStorage.setItem(AUTOSAVE_METADATA_KEY, JSON.stringify(metadata))
 
-			console.log('[AutoSave] Draft saved:', {
-				version: saveCountRef.current,
-				name: metadata.draftName,
-			})
 		} catch (error) {
 			console.error('[AutoSave] Failed to save draft:', error)
 		}

@@ -403,10 +403,6 @@ export async function checkAndAwardAchievements(
       (result) => result.status === 'fulfilled' && result.value === true
     ).length
 
-    console.log(
-      `[Achievements] Awarded ${successCount}/${checkResult.unlocked.length} achievements to user ${fid}`
-    )
-
     return successCount
   } catch (error) {
     console.error('[Achievements] Error in checkAndAwardAchievements:', error)

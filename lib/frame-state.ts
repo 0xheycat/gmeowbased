@@ -99,7 +99,6 @@ export async function loadFrameState(
     const hoursSinceUpdate = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60)
 
     if (hoursSinceUpdate > 24) {
-      console.log('[frame-state] Session expired:', sessionId)
       await deleteFrameState(sessionId) // Cleanup
       return null
     }

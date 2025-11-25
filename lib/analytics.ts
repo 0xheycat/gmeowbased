@@ -121,11 +121,6 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
       },
     }
     
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Analytics]', event, properties)
-    }
-    
     // Send to analytics service (Posthog, Mixpanel, GA4, etc.)
     if (typeof window !== 'undefined' && (window as any).posthog) {
       (window as any).posthog.capture(event, properties)

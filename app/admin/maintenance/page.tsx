@@ -114,7 +114,6 @@ export default function MaintenanceDashboard() {
     const autoInitialize = async () => {
       if (tasks.length === 0 || (tasks.length > 0 && tasks.every(t => t.status === 'pending' && !t.fixedAt))) {
         // Tasks array is empty or looks uninitialized - auto-init DB
-        console.log('Auto-initializing database...')
         await initializeDatabase()
       }
     }
