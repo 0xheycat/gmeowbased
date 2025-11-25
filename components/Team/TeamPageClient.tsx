@@ -150,7 +150,7 @@ export default function TeamPageClient({ chain, teamId, initialSummary }: Props)
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="pixel-section-title m-0 truncate">{summary?.name || `Team #${teamId}`}</h1>
-            <div className="text-[11px] text-[var(--px-sub)]">
+            <div className="text-sm text-[var(--px-sub)]">
               Founder {summary?.founder ? `${summary.founder.slice(0,6)}…${summary.founder.slice(-4)}` : '-'}
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function TeamPageClient({ chain, teamId, initialSummary }: Props)
 
         <div className="mt-3 flex items-center gap-2">
           {!address ? (
-            <span className="text-[11px] text-[var(--px-sub)]">Connect wallet to interact.</span>
+            <span className="text-sm text-[var(--px-sub)]">Connect wallet to interact.</span>
           ) : myStatus.teamId === teamId ? (
             <>
               <span className="pixel-pill text-[10px]">Joined</span>
@@ -183,11 +183,11 @@ export default function TeamPageClient({ chain, teamId, initialSummary }: Props)
               {op.busy === 'join' ? 'Joining…' : 'Join Team'}
             </button>
           ) : (
-            <span className="text-[11px] text-[var(--px-sub)]">Register on this chain or leave current team to join.</span>
+            <span className="text-sm text-[var(--px-sub)]">Register on this chain or leave current team to join.</span>
           )}
         </div>
         {(op.msg || op.err) && (
-          <div className="mt-2 text-[11px]">{op.msg ? <span className="text-emerald-400">{op.msg}</span> : null}{op.err ? <span className="text-red-400">{op.err}</span> : null}</div>
+          <div className="mt-2 text-sm">{op.msg ? <span className="text-emerald-400">{op.msg}</span> : null}{op.err ? <span className="text-red-400">{op.err}</span> : null}</div>
         )}
       </div>
 
@@ -228,7 +228,7 @@ export default function TeamPageClient({ chain, teamId, initialSummary }: Props)
         ) : members.length ? (
           <div className="divide-y divide-[rgba(138,99,210,0.25)]">
             {members.map((m) => (
-              <div key={m.address} className="px-3 py-2 grid grid-cols-2 sm:grid-cols-[1fr,7rem,7rem] gap-1 sm:gap-2 items-center">
+              <div key={m.address} className="px-3 py-2 grid grid-cols-2 sm:grid-cols-[1fr,7rem,7rem] gap-2 sm:gap-2 items-center">
                 <div className="truncate order-1 col-span-2 sm:order-none sm:col-span-1">
                   <span className="font-extrabold">{m.address.slice(0,6)}…{m.address.slice(-4)}</span>
                 </div>
@@ -238,7 +238,7 @@ export default function TeamPageClient({ chain, teamId, initialSummary }: Props)
             ))}
           </div>
         ) : (
-          <div className="text-[12px] text-[var(--px-sub)]">No members found.</div>
+          <div className="text-sm text-[var(--px-sub)]">No members found.</div>
         )}
       </div>
     </div>
