@@ -614,8 +614,8 @@ export function MegaIntro({
             
             {/* Username lookup input */}
             {(!identity || identityStatus === 'error') && (
-              <div className="username-lookup" style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255, 215, 0, 0.05)', border: '1px solid rgba(255, 215, 0, 0.2)', borderRadius: '12px' }}>
-                <p className="text-sm font-semibold text-amber-400" style={{ marginBottom: '0.75rem' }}>
+              <div className="username-lookup mt-6 p-4 bg-amber-400/5 border border-amber-400/20 rounded-xl">
+                <p className="text-sm font-semibold text-amber-400 mb-3">
                   🔍 Lookup Farcaster User
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -656,10 +656,10 @@ export function MegaIntro({
                   </button>
                 </div>
                 {usernameUser && (
-                  <div className="text-xs text-amber-400" style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
+                  <div className="text-xs text-amber-400 mt-3 p-3 bg-black/20 rounded-lg">
                     ✅ Found: @{usernameUser.username} (FID: {usernameUser.fid})
                     {usernameUser.fid && usernameUser.fid < 10000 && (
-                      <span style={{ display: 'block', marginTop: '0.25rem', fontWeight: '600' }}>
+                      <span className="block mt-1 font-semibold">
                         🏆 OG Pioneer Detected!
                       </span>
                     )}
