@@ -116,7 +116,7 @@ export function LeaderboardList() {
     <div className="max-w-3xl mx-auto site-font">
       <div className="flex items-center justify-between mb-3">
         <h2 className="pixel-heading">Top GM Streaks</h2>
-        <button className="pixel-pill text-[11px]" onClick={handleRefresh}>Refresh</button>
+        <button className="pixel-pill text-sm" onClick={handleRefresh}>Refresh</button>
       </div>
 
       <div className="space-y-3">
@@ -176,7 +176,7 @@ export function LeaderboardList() {
                 {/* Right: Stats */}
                 <div className="text-right">
                   <div className="pixel-stat text-orange-300 leading-none">{entry.currentStreak}</div>
-                  <div className="text-[11px] text-[var(--px-sub)]">{entry.totalGMs} total GMs</div>
+                  <div className="text-sm text-[var(--px-sub)]">{entry.totalGMs} total GMs</div>
                 </div>
               </div>
 

@@ -231,7 +231,7 @@ export function ProgressXP({
         aria-describedby={tierTagline ? descriptionId : undefined}
         tabIndex={-1}
       >
-        <div className="absolute -top-12 right-0 flex gap-2 text-[11px] text-[#ffd700]/70">
+        <div className="absolute -top-12 right-0 flex gap-2 text-sm text-[#ffd700]/70">
           <button
             ref={closeButtonRef}
             type="button"
@@ -296,7 +296,7 @@ export function ProgressXP({
               <div className="text-center">
                 <div className="text-xs uppercase tracking-[0.36em] text-[#ffd700]/60">Chain</div>
                 <div className="text-xl font-bold text-[#ffd700] drop-shadow-[0_2px_12px_rgba(255,215,0,0.6)]">{ chainLabel}</div>
-                {badgeLabel ? <div className="text-[11px] text-[#ffd700]/50 mt-1">{badgeLabel}</div> : null}
+                {badgeLabel ? <div className="text-sm text-[#ffd700]/50 mt-1">{badgeLabel}</div> : null}
               </div>
             </div>
             <div className="relative flex flex-col gap-6">
@@ -336,15 +336,15 @@ export function ProgressXP({
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border-2 border-[#ffd700]/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-[#ffd700]/50">Current Rank</div>
+                  <div className="text-sm uppercase tracking-[0.2em] text-[#ffd700]/50">Current Rank</div>
                   <div className="mt-1 text-lg font-semibold text-[#ffd700]">{tierName || 'Adventurer'}</div>
                 </div>
                 <div className="rounded-2xl border border-slate-700/70 bg-[#07122d]/70 p-4 text-center">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-slate-400">XP Earned</div>
+                  <div className="text-sm uppercase tracking-[0.2em] text-slate-400">XP Earned</div>
                   <div className="mt-1 text-lg font-semibold text-emerald-300">+{formatInt(xpEarned)}</div>
                 </div>
                 <div className="rounded-2xl border-2 border-[#ffd700]/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-[#ffd700]/50">Total Points</div>
+                  <div className="text-sm uppercase tracking-[0.2em] text-[#ffd700]/50">Total Points</div>
                   <div className="mt-1 text-lg font-semibold text-[#ffd700]">{formatInt(totalPoints || 0)}</div>
                 </div>
               </div>

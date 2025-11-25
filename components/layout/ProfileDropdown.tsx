@@ -176,14 +176,14 @@ export function ProfileDropdown() {
             {/* Mini stats */}
             <div className="grid grid-cols-3 gap-2 border-b border-white/10 p-4">
               <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-[#7CFF7A]">
+                <div className="flex items-center justify-center gap-2 text-[#7CFF7A]">
                   <Trophy size={14} weight="fill" />
                   <span className="text-sm font-bold">{formatNumber(points)}</span>
                 </div>
                 <p className="mt-1 text-[10px] uppercase tracking-wider text-white/40">Points</p>
               </div>
               <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-yellow-400">
+                <div className="flex items-center justify-center gap-2 text-yellow-400">
                   <Lightning size={14} weight="fill" />
                   <span className="text-sm font-bold">{streak}</span>
                 </div>
