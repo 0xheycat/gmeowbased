@@ -113,7 +113,7 @@ export async function fireMiniappReady(): Promise<void> {
     const { sdk } = await import('@farcaster/miniapp-sdk')
     
     // Wait for context to be available with extended timeout (longer for mobile)
-    const context = await Promise.race([
+    await Promise.race([
       sdk.context,
       new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 15000))
     ])
@@ -125,7 +125,7 @@ export async function fireMiniappReady(): Promise<void> {
           sdk.actions.ready(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout')), 10000))
         ])
-      } catch (readyError) {
+      } catch {
         // Don't throw - allow app to continue even if ready() times out
       }
     }

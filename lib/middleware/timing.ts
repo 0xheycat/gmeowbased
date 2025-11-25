@@ -47,7 +47,7 @@ type PerformanceStats = {
 // ========================================
 
 const SLOW_REQUEST_THRESHOLD_MS = Number(process.env.SLOW_REQUEST_THRESHOLD_MS ?? 500)
-const ENABLE_TIMING_LOGS = process.env.ENABLE_TIMING_LOGS !== 'false'
+// const ENABLE_TIMING_LOGS = process.env.ENABLE_TIMING_LOGS !== 'false' // Reserved for future use
 const ENABLE_SLOW_REQUEST_ALERTS = process.env.ENABLE_SLOW_REQUEST_ALERTS !== 'false'
 
 // ========================================
