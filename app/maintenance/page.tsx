@@ -156,7 +156,7 @@ function MaintenanceContent() {
               outline: 'none',
               boxShadow: '0 0 0 3px var(--px-outer), inset 0 0 0 3px var(--px-inner)',
               background: '#0e1220',
-              minHeight: '48px',
+              minHeight: '3rem',
             }}
             placeholder="Enter access password"
             value={password}

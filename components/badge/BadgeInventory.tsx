@@ -33,27 +33,27 @@ type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
 
 const TIER_CONFIG: Record<TierType, { color: string; label: string; glow: string }> = {
   mythic: { 
-    color: '#9C27FF', 
+    color: '#a855f7', 
     label: 'Mythic',
     glow: '0 0 20px rgba(156, 39, 255, 0.6), 0 0 40px rgba(156, 39, 255, 0.4)'
   },
   legendary: { 
-    color: '#FFD966', 
+    color: '#fbbf24', 
     label: 'Legendary',
     glow: '0 0 20px rgba(255, 217, 102, 0.6), 0 0 40px rgba(255, 217, 102, 0.4)'
   },
   epic: { 
-    color: '#61DFFF', 
+    color: '#06b6d4', 
     label: 'Epic',
     glow: '0 0 15px rgba(97, 223, 255, 0.5), 0 0 30px rgba(97, 223, 255, 0.3)'
   },
   rare: { 
-    color: '#A18CFF', 
+    color: '#8b5cf6', 
     label: 'Rare',
     glow: '0 0 15px rgba(161, 140, 255, 0.5), 0 0 30px rgba(161, 140, 255, 0.3)'
   },
   common: { 
-    color: '#D3D7DC', 
+    color: '#9ca3af', 
     label: 'Common',
     glow: '0 0 10px rgba(211, 215, 220, 0.3)'
   }
@@ -304,7 +304,7 @@ export function BadgeInventory({
                 <div 
                   className="absolute z-50 left-1/2 -translate-x-1/2 -top-2 -translate-y-full w-64 p-4 rounded-xl shadow-2xl pointer-events-none"
                   style={{
-                    backgroundColor: '#0a0a0a',
+                    backgroundColor: '#09090b',
                     border: `2px solid ${tierConfig.color}`,
                     boxShadow: tierConfig.glow,
                   }}
