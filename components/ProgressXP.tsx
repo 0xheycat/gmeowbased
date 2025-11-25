@@ -231,11 +231,11 @@ export function ProgressXP({
         aria-describedby={tierTagline ? descriptionId : undefined}
         tabIndex={-1}
       >
-        <div className="absolute -top-12 right-0 flex gap-2 text-sm text-[#ffd700]/70">
+        <div className="absolute -top-12 right-0 flex gap-2 text-sm text-gold/70">
           <button
             ref={closeButtonRef}
             type="button"
-            className="px-3 py-2 min-h-[44px] rounded-full border-2 border-[#ffd700]/30 bg-[#06091a]/90 hover:bg-[#0b0f2a] hover:border-[#ffd700]/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd700]"
+            className="px-3 py-2 min-h-[44px] rounded-full border-2 border-gold/30 bg-[#06091a]/90 hover:bg-[#0b0f2a] hover:border-gold/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             onClick={onClose}
           >
             Close
@@ -284,28 +284,28 @@ export function ProgressXP({
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-sky-500/10 via-transparent to-purple-500/10" aria-hidden />
                   <div className="flex h-full w-full items-center justify-center">
                   {glyph ? (
-                    <span className="text-3xl sm:text-4xl font-black text-[#ffd700] drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]">{glyph}</span>
+                    <span className="text-3xl sm:text-4xl font-black text-gold drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]">{glyph}</span>
                   ) : chainIcon ? (
                     <Image src={chainIcon} alt={chainLabel} width={48} height={48} className="drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
                   ) : (
-                    <span className="text-3xl sm:text-4xl font-black text-[#ffd700] drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]">{chainLabel?.slice(0, 2) ?? 'XP'}</span>
+                    <span className="text-3xl sm:text-4xl font-black text-gold drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]">{chainLabel?.slice(0, 2) ?? 'XP'}</span>
                   )}
                   </div>
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-xs uppercase tracking-[0.36em] text-[#ffd700]/60">Chain</div>
-                <div className="text-xl font-bold text-[#ffd700] drop-shadow-[0_2px_12px_rgba(255,215,0,0.6)]">{ chainLabel}</div>
-                {badgeLabel ? <div className="text-sm text-[#ffd700]/50 mt-1">{badgeLabel}</div> : null}
+                <div className="text-xs uppercase tracking-[0.36em] text-gold/60">Chain</div>
+                <div className="text-xl font-bold text-gold drop-shadow-[0_2px_12px_rgba(255,215,0,0.6)]">{ chainLabel}</div>
+                {badgeLabel ? <div className="text-sm text-gold/50 mt-1">{badgeLabel}</div> : null}
               </div>
             </div>
             <div className="relative flex flex-col gap-6">
               <div>
-                <div className="flex items-center gap-2 text-xs sm:text-sm uppercase tracking-[0.25em] text-[#ffd700]/80">
+                <div className="flex items-center gap-2 text-xs sm:text-sm uppercase tracking-[0.25em] text-gold/80">
                   {eventIcon ? <span className="text-xl sm:text-2xl leading-none animate-pulse" aria-hidden style={{animationDuration: '2s'}}>{eventIcon}</span> : null}
                   <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{headline || 'XP Boost Unlocked'}</span>
                 </div>
-                <div className="text-3xl sm:text-4xl font-black text-[#ffd700] drop-shadow-[0_0_30px_rgba(255,215,0,0.8),0_4px_20px_rgba(0,0,0,0.9)]">
+                <div className="text-3xl sm:text-4xl font-black text-gold drop-shadow-[0_0_30px_rgba(255,215,0,0.8),0_4px_20px_rgba(0,0,0,0.9)]">
                   Level {level} • {tierName || 'Adventurer'}
                 </div>
                 {tierTagline ? (
@@ -314,11 +314,11 @@ export function ProgressXP({
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-[#ffd700]/70">
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-gold/70">
                   <span>Progress to next tier</span>
-                  <span className="font-bold text-[#ffd700]">{Math.round(animatedPercent)}%</span>
+                  <span className="font-bold text-gold">{Math.round(animatedPercent)}%</span>
                 </div>
-                <div className="relative h-3 sm:h-4 overflow-hidden rounded-full border-2 border-[#ffd700]/30 bg-[#08122e] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
+                <div className="relative h-3 sm:h-4 overflow-hidden rounded-full border-2 border-gold/30 bg-[#08122e] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
                   <div
                     className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.8),inset_0_1px_2px_rgba(255,255,255,0.5)]"
                     style={{ width: `${Math.max(8, animatedPercent)}%`, transition: 'width 0.4s ease-out' }}
@@ -326,33 +326,33 @@ export function ProgressXP({
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-[#ffd700]/30 via-transparent to-transparent mix-blend-screen animate-pulse" aria-hidden style={{animationDuration: '2s'}} />
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] animate-[shimmer_2s_ease-in-out_infinite]" aria-hidden />
                 </div>
-                <div className="flex items-center justify-between text-xs text-[#ffd700]/80 font-semibold">
+                <div className="flex items-center justify-between text-xs text-gold/80 font-semibold">
                   <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{formatInt(animatedXp)} XP earned</span>
-                  <span className="text-[#ffd700]">
+                  <span className="text-gold">
                     {formatInt(xpIntoLevel)} / {formatInt(xpForLevel)} XP
                   </span>
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border-2 border-[#ffd700]/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
-                  <div className="text-sm uppercase tracking-[0.2em] text-[#ffd700]/50">Current Rank</div>
-                  <div className="mt-1 text-lg font-semibold text-[#ffd700]">{tierName || 'Adventurer'}</div>
+                <div className="rounded-2xl border-2 border-gold/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
+                  <div className="text-sm uppercase tracking-[0.2em] text-gold/50">Current Rank</div>
+                  <div className="mt-1 text-lg font-semibold text-gold">{tierName || 'Adventurer'}</div>
                 </div>
                 <div className="rounded-2xl border border-slate-700/70 bg-[#07122d]/70 p-4 text-center">
                   <div className="text-sm uppercase tracking-[0.2em] text-slate-400">XP Earned</div>
                   <div className="mt-1 text-lg font-semibold text-emerald-300">+{formatInt(xpEarned)}</div>
                 </div>
-                <div className="rounded-2xl border-2 border-[#ffd700]/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
-                  <div className="text-sm uppercase tracking-[0.2em] text-[#ffd700]/50">Total Points</div>
-                  <div className="mt-1 text-lg font-semibold text-[#ffd700]">{formatInt(totalPoints || 0)}</div>
+                <div className="rounded-2xl border-2 border-gold/25 bg-[#070f25]/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
+                  <div className="text-sm uppercase tracking-[0.2em] text-gold/50">Total Points</div>
+                  <div className="mt-1 text-lg font-semibold text-gold">{formatInt(totalPoints || 0)}</div>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
                 {canShare ? (
                   <button
-                    className="pixel-button flex-1 min-w-[140px] sm:min-w-[180px] justify-center border-2 border-[#ffd700]/60 bg-gradient-to-r from-[#ffd700]/30 via-[#ffed4e]/20 to-[#ffd700]/30 px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ffd700] shadow-[0_8px_32px_rgba(255,215,0,0.4),0_0_40px_rgba(255,215,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.3)] transition hover:scale-[1.02] hover:shadow-[0_12px_48px_rgba(255,215,0,0.6),0_0_60px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd700]"
+                    className="pixel-button flex-1 min-w-[140px] sm:min-w-[180px] justify-center border-2 border-gold/60 bg-gradient-to-r from-gold/30 via-[#ffed4e]/20 to-gold/30 px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold shadow-[0_8px_32px_rgba(255,215,0,0.4),0_0_40px_rgba(255,215,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.3)] transition hover:scale-[1.02] hover:shadow-[0_12px_48px_rgba(255,215,0,0.6),0_0_60px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                     onClick={() => {
                       if (onShare) {
                         onShare()
@@ -366,7 +366,7 @@ export function ProgressXP({
                 ) : null}
                 {visitUrl ? (
                   <button
-                    className="pixel-button flex-1 min-w-[120px] sm:min-w-[160px] justify-center border-2 border-[#ffd700]/30 bg-[#060b1d] px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ffd700]/80 transition hover:bg-[#0b132d] hover:border-[#ffd700]/50 hover:text-[#ffd700] hover:shadow-[0_4px_16px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd700]"
+                    className="pixel-button flex-1 min-w-[120px] sm:min-w-[160px] justify-center border-2 border-gold/30 bg-[#060b1d] px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold/80 transition hover:bg-[#0b132d] hover:border-gold/50 hover:text-gold hover:shadow-[0_4px_16px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                     onClick={() => {
                       if (onVisit) onVisit()
                       else window.open(visitUrl, '_blank', 'noopener')
