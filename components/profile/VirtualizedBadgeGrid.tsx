@@ -78,7 +78,7 @@ export function VirtualizedBadgeGrid({
     <div
       ref={parentRef}
       className="relative overflow-auto"
-      style={{ height: '400px', maxHeight: '60vh' }}
+      style={{ height: '25rem', maxHeight: '60vh' }}
     >
       <div
         style={{
