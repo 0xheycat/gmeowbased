@@ -305,7 +305,7 @@ export function ProgressXP({
                   {eventIcon ? <span className="text-xl sm:text-2xl leading-none animate-pulse" aria-hidden style={{animationDuration: '2s'}}>{eventIcon}</span> : null}
                   <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{headline || 'XP Boost Unlocked'}</span>
                 </div>
-                <div className="text-3xl sm:text-4xl font-black text-[#ffd700] drop-shadow-[0_0_30px_rgba(255,215,0,0.8),0_4px_20px_rgba(0,0,0,0.9)]" style={{textShadow: '0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4), 0 4px 20px rgba(0,0,0,0.9)'}}>
+                <div className="text-3xl sm:text-4xl font-black text-[#ffd700] drop-shadow-[0_0_30px_rgba(255,215,0,0.8),0_4px_20px_rgba(0,0,0,0.9)]">
                   Level {level} • {tierName || 'Adventurer'}
                 </div>
                 {tierTagline ? (
