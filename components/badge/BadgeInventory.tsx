@@ -270,7 +270,7 @@ export function BadgeInventory({
                   <button
                     onClick={(e) => handleClaimBadge(badge, e)}
                     disabled={claimingBadge === badge.badgeId}
-                    className="absolute top-2 right-2 flex items-center gap-2 px-3 py-2 min-h-[40px] rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute top-2 right-2 flex items-center gap-2 px-3 py-2 min-h-6 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {claimingBadge === badge.badgeId ? (
                       <>Claiming...</>
