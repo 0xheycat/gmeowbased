@@ -18,7 +18,7 @@ function MaintenanceSkeleton() {
     <div
       className="fixed inset-0"
       style={{
-        zIndex: 100000,
+        zIndex: 40000,
         background:
           'radial-gradient(1200px 800px at 50% 20%, rgba(255,255,255,0.08), rgba(0,0,0,0.85)), linear-gradient(180deg, #0b0f18, #070a12)',
         fontFamily: 'var(--site-font)',
@@ -98,7 +98,7 @@ function MaintenanceContent() {
     <div
       className="fixed inset-0"
       style={{
-        zIndex: 100000,
+        zIndex: 40000,
         background:
           'radial-gradient(1200px 800px at 50% 20%, rgba(255,255,255,0.08), rgba(0,0,0,0.85)), linear-gradient(180deg, #0b0f18, #070a12)',
         fontFamily: 'var(--site-font)',

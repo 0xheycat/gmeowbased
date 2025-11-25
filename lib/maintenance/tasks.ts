@@ -1,14 +1,20 @@
 /**
  * 🤖 MAINTENANCE TASK DATABASE
  * 
- * Comprehensive classification of all 102 UI/UX issues across 14 categories
+ * Comprehensive classification of 60 UI/UX issues across 14 categories
+ * Updated: November 25, 2025 (Added 11 new issues from codebase audit)
  * 
  * Task Types:
- * - AUTO: Deterministic fixes with 100% confidence (42 tasks, ~18-22h)
- * - SEMI-AUTO: AI-assisted with human approval (35 tasks, ~16-20h)
- * - MANUAL: Requires human creativity and judgment (25 tasks, ~11-15h)
+ * - AUTO: Deterministic fixes with 100% confidence (20 tasks, ~8-11h)
+ * - SEMI-AUTO: AI-assisted with human approval (30 tasks, ~16-20h)
+ * - MANUAL: Requires human creativity and judgment (10 tasks, ~6-9h)
  * 
- * Total: 102 tasks, ~47-55h implementation time
+ * Total: 60 tasks, ~30-40h implementation time
+ * 
+ * New Tracking Fields (as of Nov 25, 2025):
+ * - instanceCount: Actual count from grep audit (e.g., 93 animation timings)
+ * - changelogReference: Link to CHANGELOG-CATEGORY-*.md documentation
+ * - blastRadius: Impact scope (low/medium/high/critical)
  */
 
 export type TaskType = 'auto' | 'semi-auto' | 'manual'
@@ -29,6 +35,10 @@ export interface MaintenanceTask {
   status: TaskStatus
   fixedAt?: Date
   fixedBy?: 'auto' | 'semi-auto' | 'manual'
+  // NEW: Tracking fields added Nov 25, 2025
+  instanceCount?: number // Actual count from grep audit
+  changelogReference?: string // CHANGELOG-CATEGORY-*.md file
+  blastRadius?: 'low' | 'medium' | 'high' | 'critical' // Impact scope
 }
 
 /**
@@ -375,10 +385,87 @@ Should follow semantic hierarchy for accessibility.
 /**
  * CATEGORY 5: ICONOGRAPHY
  * Score: 90/100 ✅
- * Total: 6 issues, ~2.5-3.5h deferred
+ * Total: 8 issues (3 old + 2 NEW + 3 old), ~5-6.5h deferred
  */
 const CATEGORY_5_TASKS: MaintenanceTask[] = [
-  // AUTO TASKS (6 tasks, 2.5-3.5h)
+  // AUTO TASKS (8 tasks, 5-6.5h)
+  {
+    id: 'cat5-icon-sizes-migration',
+    category: 5,
+    severity: 'P2',
+    type: 'semi-auto',
+    description: 'Migrate 50 hardcoded icon sizes to ICON_SIZES tokens',
+    files: [
+      'components/MobileNavigation.tsx',
+      'components/layout/ThemeToggle.tsx',
+      'components/layout/ProfileDropdown.tsx',
+      'components/GMButton.tsx',
+      'components/Badge.tsx',
+      'components/Navigation.tsx',
+      'components/Quest/QuestCard.tsx',
+      'components/Guild/GuildCard.tsx',
+      'app/Dashboard/page.tsx',
+      'app/leaderboard/page.tsx',
+      // ... +40 more files (50 total instances)
+    ],
+    estimatedTime: '2-3h',
+    fix: 'icon-sizes-token-migration',
+    instructions: `
+# Semi-Auto Task: Icon Size Migration
+
+## Context
+Grep audit found 50 instances of hardcoded icon sizes (size={20}, size={16}).
+Should use ICON_SIZES design tokens for consistency.
+
+## Pattern
+**Before**: <Icon size={20} />
+**After**: <Icon size={ICON_SIZES.lg} />
+
+## Token Mapping
+- size={12} → ICON_SIZES.xs
+- size={16} → ICON_SIZES.sm
+- size={20} → ICON_SIZES.md
+- size={24} → ICON_SIZES.lg
+- size={28} → ICON_SIZES.xl
+
+## AI Will
+1. Find all hardcoded size={number} props
+2. Replace with ICON_SIZES tokens
+3. Verify touch targets ≥44px for interactive icons
+
+## Human Reviews
+1. Icon sizes visually consistent
+2. Touch targets adequate (mobile)
+3. No layout shifts
+
+## Verification
+- [ ] All 50 instances migrated
+- [ ] Touch targets ≥44px
+- [ ] TypeScript passes
+    `,
+    dependencies: ['cat5-icon-tokens-extension'],
+    status: 'pending',
+    instanceCount: 50,
+    changelogReference: 'CHANGELOG-CATEGORY-5.md',
+    blastRadius: 'medium',
+  },
+  {
+    id: 'cat5-icon-tokens-extension',
+    category: 5,
+    severity: 'P3',
+    type: 'auto',
+    description: 'Extend ICON_SIZES with missing tokens (2xs, 2xl, 3xl, 4xl, 5xl)',
+    files: [
+      'lib/design-tokens.ts',
+    ],
+    estimatedTime: '15 min',
+    fix: 'icon-tokens-extension',
+    dependencies: [],
+    status: 'pending',
+    instanceCount: 8,
+    changelogReference: 'CHANGELOG-CATEGORY-5.md',
+    blastRadius: 'low',
+  },
   {
     id: 'cat5-icon-size-32px',
     category: 5,
@@ -429,10 +516,29 @@ const CATEGORY_5_TASKS: MaintenanceTask[] = [
 /**
  * CATEGORY 6: SPACING & SIZING
  * Score: 91/100 ✅
- * Total: 5 issues, ~3-4h deferred
+ * Total: 6 issues (5 old + 1 NEW), ~3.5-4.5h deferred
  */
 const CATEGORY_6_TASKS: MaintenanceTask[] = [
-  // AUTO TASKS (5 tasks, 3-4h)
+  // AUTO TASKS (6 tasks, 3.5-4.5h)
+  {
+    id: 'cat6-arbitrary-padding-margin',
+    category: 6,
+    severity: 'P3',
+    type: 'auto',
+    description: 'Migrate 14 arbitrary padding/margin values to Tailwind tokens',
+    files: [
+      'components/live-notifications.tsx',
+      'components/Agent/AgentHeroDisplay.tsx',
+      'components/quest-wizard/steps/BasicsStep.tsx',
+    ],
+    estimatedTime: '30 min',
+    fix: 'arbitrary-spacing-migration',
+    dependencies: [],
+    status: 'pending',
+    instanceCount: 14,
+    changelogReference: 'CHANGELOG-CATEGORY-6.md',
+    blastRadius: 'low',
+  },
   {
     id: 'cat6-gap-1',
     category: 6,
@@ -646,7 +752,7 @@ AI will generate proper ARIA pattern, human reviews before applying.
 /**
  * CATEGORY 9: PERFORMANCE
  * Score: 91/100 ✅
- * Total: 8 issues, ~8-12h deferred
+ * Total: 7 issues (5 old + 2 NEW), ~8.2-12.3h deferred
  */
 const CATEGORY_9_TASKS: MaintenanceTask[] = [
   // SEMI-AUTO TASKS (6 tasks, 6-9h)
@@ -837,6 +943,41 @@ Should use content-visibility: auto for off-screen rendering skip.
     dependencies: [],
     status: 'pending',
   },
+  // NEW TASKS ADDED (2 tasks, 15 min)
+  {
+    id: 'cat9-aurora-spin-speed',
+    category: 9,
+    severity: 'P3',
+    type: 'auto',
+    description: 'Speed up Aurora spin animation from 9s to 6s (2 instances)',
+    files: [
+      'components/Quest/QuestLoadingDeck.tsx',
+    ],
+    estimatedTime: '5 min',
+    fix: 'aurora-spin-speed',
+    dependencies: [],
+    status: 'pending',
+    instanceCount: 2,
+    changelogReference: 'CHANGELOG-CATEGORY-9.md',
+    blastRadius: 'low',
+  },
+  {
+    id: 'cat9-reduced-motion-loading',
+    category: 9,
+    severity: 'P3',
+    type: 'auto',
+    description: 'Add @media (prefers-reduced-motion) to app/loading.tsx inline animation',
+    files: [
+      'app/loading.tsx',
+    ],
+    estimatedTime: '10 min',
+    fix: 'reduced-motion-loading',
+    dependencies: [],
+    status: 'pending',
+    instanceCount: 1,
+    changelogReference: 'CHANGELOG-CATEGORY-9.md',
+    blastRadius: 'low',
+  },
 ]
 
 /**
@@ -1024,10 +1165,161 @@ const CATEGORY_11_TASKS: MaintenanceTask[] = []
 /**
  * CATEGORY 12: VISUAL CONSISTENCY
  * Score: 92/100 ✅
- * Total: 14 issues, ~4.5-5.5h deferred
+ * Total: 17 issues (14 old + 3 NEW), ~11-14h deferred
  */
 const CATEGORY_12_TASKS: MaintenanceTask[] = [
-  // AUTO TASKS (5 tasks, 1-1.5h)
+  // AUTO TASKS (8 tasks, 4.5-6h)
+  {
+    id: 'cat12-animation-timing-standardization',
+    category: 12,
+    severity: 'P1',
+    type: 'semi-auto',
+    description: 'Standardize 93 animation timing variations to 200ms default',
+    files: [
+      'components/GMButton.tsx',
+      'components/Badge.tsx',
+      'components/Navigation.tsx',
+      'components/Quest/QuestCard.tsx',
+      'components/Guild/GuildCard.tsx',
+      'app/globals.css',
+      // ... +87 more instances across codebase
+    ],
+    estimatedTime: '2-3h',
+    fix: 'animation-timing-consolidation',
+    instructions: `
+# Semi-Auto Task: Animation Timing Standardization
+
+## Context
+Grep audit found 93 animation timing variations (100ms, 150ms, 200ms, 300ms, etc.).
+Should consolidate to standard timing scale: 200ms (default), 300ms (complex), 150ms (micro).
+
+## Patterns
+- transition-all duration-100 → duration-200
+- transition-all duration-150 → duration-200
+- transition-all duration-300 → Keep (complex animations)
+- animate-spin → Verify 1s duration (keep)
+
+## AI Will
+1. Find all duration-* and animation timing values
+2. Consolidate to 200ms standard (keep 300ms for complex)
+3. Ensure @media (prefers-reduced-motion) support
+
+## Human Reviews
+1. Animations feel consistent
+2. No janky transitions
+3. Reduced-motion works
+
+## Verification
+- [ ] 93 instances standardized
+- [ ] Visual consistency maintained
+- [ ] Reduced-motion tested
+    `,
+    dependencies: [],
+    status: 'pending',
+    instanceCount: 93,
+    changelogReference: 'CHANGELOG-CATEGORY-12.md',
+    blastRadius: 'critical',
+  },
+  {
+    id: 'cat12-box-shadow-migration',
+    category: 12,
+    severity: 'P1',
+    type: 'semi-auto',
+    description: 'Migrate 77 hardcoded box-shadow values to CSS variables (3X worse than documented!)',
+    files: [
+      'hooks/useAutoSave.ts',
+      'components/Leaderboard/LeaderboardList.tsx',
+      'components/badge/BadgeInventory.tsx',
+      'components/Quest/QuestLoadingDeck.tsx',
+      'components/Badge.tsx',
+      'components/GMButton.tsx',
+      // ... +71 more files (77 total instances)
+    ],
+    estimatedTime: '3-4h',
+    fix: 'box-shadow-token-migration',
+    instructions: `
+# Semi-Auto Task: Box-Shadow Migration
+
+## Context
+Grep audit found 77 hardcoded box-shadow instances (CHANGELOG estimated 20-25, 3X WORSE!).
+Should migrate to CSS variables: --fx-elev-1, --fx-elev-2, --fx-elev-3.
+
+## Patterns
+- box-shadow: 0 1px 2px rgba(...) → var(--fx-elev-1)
+- box-shadow: 0 4px 8px rgba(...) → var(--fx-elev-2)
+- box-shadow: 0 8px 16px rgba(...) → var(--fx-elev-3)
+- box-shadow: inset ... → var(--fx-inset-1)
+
+## Phased Approach
+1. Phase 1: Inset shadows (10 instances)
+2. Phase 2: Elevation shadows (50 instances)
+3. Phase 3: Animated shadows (17 instances)
+
+## AI Will
+1. Categorize shadows by type (inset/elevation/animated)
+2. Replace with appropriate CSS variables
+3. Test dark mode compatibility
+
+## Human Reviews
+1. Shadows visually match original
+2. Dark mode consistent
+3. MiniApp Warpcast compatible
+
+## Verification
+- [ ] All 77 instances migrated
+- [ ] Dark mode tested
+- [ ] MiniApp verified
+    `,
+    dependencies: [],
+    status: 'pending',
+    instanceCount: 77,
+    changelogReference: 'CHANGELOG-CATEGORY-12.md',
+    blastRadius: 'high',
+  },
+  {
+    id: 'cat12-backdrop-blur-tokens',
+    category: 12,
+    severity: 'P2',
+    type: 'semi-auto',
+    description: 'Add blur-24 token and migrate 55 backdrop-blur instances',
+    files: [
+      'components/Quest/QuestCard.tsx',
+      'components/Guild/GuildCard.tsx',
+      'components/modals/ShareModal.tsx',
+      'app/globals.css',
+      // ... +51 more instances
+    ],
+    estimatedTime: '1h',
+    fix: 'backdrop-blur-token-expansion',
+    instructions: `
+# Semi-Auto Task: Backdrop-Blur Token Expansion
+
+## Context
+Grep audit found 55 backdrop-blur instances.
+Quest cards need blur-24 token (missing from current token set).
+
+## Steps
+1. Add blur-24 to Tailwind config (backdrop-blur-24: '24px')
+2. Migrate 10-15 Quest card instances to use blur-24
+3. Verify remaining 40 instances use existing tokens (blur-sm, blur-md, blur-lg)
+
+## Token Mapping
+- backdrop-blur-sm → Keep (4px)
+- backdrop-blur-md → Keep (12px)
+- Custom 24px → backdrop-blur-24 (NEW)
+- backdrop-blur-lg → Keep (16px)
+
+## Verification
+- [ ] blur-24 token added
+- [ ] Quest cards use blur-24
+- [ ] Visual consistency maintained
+    `,
+    dependencies: [],
+    status: 'pending',
+    instanceCount: 55,
+    changelogReference: 'CHANGELOG-CATEGORY-12.md',
+    blastRadius: 'medium',
+  },
   {
     id: 'cat12-color-tokens-1',
     category: 12,
@@ -1244,10 +1536,28 @@ Requires human judgment to ensure visual hierarchy is clear.
 /**
  * CATEGORY 13: INTERACTION DESIGN
  * Score: 94/100 ✅
- * Total: 12 issues, ~3.5-4.5h deferred
+ * Total: 13 issues (12 old + 1 NEW), ~3.8-4.8h deferred
  */
 const CATEGORY_13_TASKS: MaintenanceTask[] = [
-  // SEMI-AUTO TASKS (9 tasks, 3-4h)
+  // SEMI-AUTO TASKS (10 tasks, 3.3-4.3h)
+  {
+    id: 'cat13-touch-action-prevention',
+    category: 13,
+    severity: 'P2',
+    type: 'auto',
+    description: 'Add touch-action: manipulation to prevent double-tap zoom',
+    files: [
+      'components/ui/button.tsx',
+      'app/globals.css',
+    ],
+    estimatedTime: '20 min',
+    fix: 'touch-action-css',
+    dependencies: [],
+    status: 'pending',
+    instanceCount: 0,
+    changelogReference: 'CHANGELOG-CATEGORY-13.md',
+    blastRadius: 'low',
+  },
   {
     id: 'cat13-haptic-feedback',
     category: 13,
@@ -1486,9 +1796,9 @@ Should use EmptyState component for zero-data scenarios.
   {
     id: 'cat14-error-boundary',
     category: 14,
-    severity: 'P2',
+    severity: 'P1',
     type: 'semi-auto',
-    description: 'Create global error boundary (app/error.tsx)',
+    description: 'Create global error boundary (app/error.tsx) - CRITICAL reliability issue',
     files: ['app/error.tsx'],
     estimatedTime: '30 min',
     fix: 'global-error-boundary',
@@ -1516,6 +1826,9 @@ Should use Next.js error.tsx pattern.
     `,
     dependencies: [],
     status: 'pending',
+    instanceCount: 0,
+    changelogReference: 'CHANGELOG-CATEGORY-14.md',
+    blastRadius: 'critical',
   },
   {
     id: 'cat14-optimistic-ui',
@@ -1639,7 +1952,7 @@ export const MAINTENANCE_TASKS: MaintenanceTask[] = [
   ...CATEGORY_6_TASKS,
   ...CATEGORY_7_TASKS,
   ...CATEGORY_8_TASKS,
-  ...CATEGORY_9_TASKS,
+  ...CATEGORY_9_TASKS, // Now includes 2 new tasks: aurora-spin-speed, reduced-motion-loading
   ...CATEGORY_10_TASKS,
   ...CATEGORY_11_TASKS,
   ...CATEGORY_12_TASKS,
@@ -1667,15 +1980,15 @@ export const CATEGORY_METADATA: CategoryMetadata[] = [
   { id: 2, name: 'Responsiveness', score: 88, totalTasks: 7, autoTasks: 6, semiAutoTasks: 0, manualTasks: 1, estimatedTime: '2-3h', status: 'pending' },
   { id: 3, name: 'Navigation UX', score: 98, totalTasks: 1, autoTasks: 0, semiAutoTasks: 0, manualTasks: 1, estimatedTime: '0.5h', status: 'pending' },
   { id: 4, name: 'Typography', score: 85, totalTasks: 4, autoTasks: 2, semiAutoTasks: 0, manualTasks: 2, estimatedTime: '2-3h', status: 'pending' },
-  { id: 5, name: 'Iconography', score: 90, totalTasks: 3, autoTasks: 3, semiAutoTasks: 0, manualTasks: 0, estimatedTime: '2.5-3.5h', status: 'pending' },
-  { id: 6, name: 'Spacing & Sizing', score: 91, totalTasks: 5, autoTasks: 5, semiAutoTasks: 0, manualTasks: 0, estimatedTime: '3-4h', status: 'pending' },
+  { id: 5, name: 'Iconography', score: 90, totalTasks: 5, autoTasks: 1, semiAutoTasks: 1, manualTasks: 0, estimatedTime: '5-6.5h', status: 'pending' },
+  { id: 6, name: 'Spacing & Sizing', score: 91, totalTasks: 6, autoTasks: 6, semiAutoTasks: 0, manualTasks: 0, estimatedTime: '3.5-4.5h', status: 'pending' },
   { id: 7, name: 'Component System', score: 94, totalTasks: 0, autoTasks: 0, semiAutoTasks: 0, manualTasks: 0, estimatedTime: '0h', status: 'complete' },
   { id: 8, name: 'Modals / Dialogs', score: 85, totalTasks: 4, autoTasks: 3, semiAutoTasks: 1, manualTasks: 0, estimatedTime: '6-8h', status: 'pending' },
-  { id: 9, name: 'Performance', score: 91, totalTasks: 5, autoTasks: 0, semiAutoTasks: 3, manualTasks: 2, estimatedTime: '8-12h', status: 'pending' },
+  { id: 9, name: 'Performance', score: 91, totalTasks: 7, autoTasks: 2, semiAutoTasks: 3, manualTasks: 2, estimatedTime: '8.2-12.3h', status: 'pending' },
   { id: 10, name: 'Accessibility', score: 95, totalTasks: 4, autoTasks: 0, semiAutoTasks: 3, manualTasks: 1, estimatedTime: '3-4h', status: 'pending' },
   { id: 11, name: 'CSS Architecture', score: 100, totalTasks: 0, autoTasks: 0, semiAutoTasks: 0, manualTasks: 0, estimatedTime: '0h', status: 'complete' },
-  { id: 12, name: 'Visual Consistency', score: 92, totalTasks: 6, autoTasks: 1, semiAutoTasks: 4, manualTasks: 1, estimatedTime: '4.5-5.5h', status: 'pending' },
-  { id: 13, name: 'Interaction Design', score: 94, totalTasks: 5, autoTasks: 0, semiAutoTasks: 4, manualTasks: 1, estimatedTime: '3.5-4.5h', status: 'pending' },
+  { id: 12, name: 'Visual Consistency', score: 92, totalTasks: 9, autoTasks: 1, semiAutoTasks: 7, manualTasks: 1, estimatedTime: '11-14h', status: 'pending' },
+  { id: 13, name: 'Interaction Design', score: 94, totalTasks: 6, autoTasks: 1, semiAutoTasks: 4, manualTasks: 1, estimatedTime: '3.8-4.8h', status: 'pending' },
   { id: 14, name: 'Micro-UX Quality', score: 96, totalTasks: 6, autoTasks: 0, semiAutoTasks: 5, manualTasks: 1, estimatedTime: '2.5-3h', status: 'pending' },
 ]
 

@@ -67,7 +67,7 @@
 
 .nextra-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px -10px rgba(168, 85, 247, 0.3);
+  box-shadow: var(--fx-elev-2);
 }
 
 /* TOC (Table of Contents) */
