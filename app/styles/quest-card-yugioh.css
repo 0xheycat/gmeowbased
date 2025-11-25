@@ -568,7 +568,7 @@
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 640px) {
   .quest-card-yugioh {
     padding: 5px;
     aspect-ratio: 2.5 / 2.9;

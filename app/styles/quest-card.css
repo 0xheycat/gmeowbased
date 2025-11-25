@@ -815,7 +815,7 @@
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 640px) {
   .quest-card__glass {
     padding: 14px;
     gap: 10px;
