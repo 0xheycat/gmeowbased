@@ -1001,7 +1001,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         <button
           type="button"
           onClick={handleSkip}
-          className="absolute -right-2 -top-2 z-50 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#d4af37] bg-gradient-to-br from-[#d4af37] to-[#8b7327] text-[#1a1410] shadow-lg transition-all hover:scale-110 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#d4af37]/50"
+          className="absolute -right-2 -top-2 z-50 flex h-10 w-10 items-center justify-center rounded-full border-2 border-gold-dark bg-gradient-to-br from-gold-dark to-[#8b7327] text-[#1a1410] shadow-lg transition-all hover:scale-110 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-gold-dark/50"
           aria-label={`Close onboarding (stage ${stage + 1} of ${ONBOARDING_STAGES.length})`}
           title="Close onboarding and skip tour"
         >
@@ -1011,14 +1011,14 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         {/* Progress bar - GI-9: ARIA labels */}
         <div className="mb-6" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} aria-label={`Onboarding progress: ${Math.round(progress)}% complete`}>
           <div className="flex items-center justify-between mb-https://dequeuniversity.com/rules/axe/4.11/aria-valid-attr-value?application%3DaxeAPI2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]" id="onboarding-title">
+            <span className="text-xs font-bold uppercase tracking-wider text-gold-dark" id="onboarding-title">
               Card {stage + 1} of {ONBOARDING_STAGES.length}
             </span>
-            <span className="text-xs font-bold text-[#d4af37]" aria-live="polite">{Math.round(progress)}%</span>
+            <span className="text-xs font-bold text-gold-dark" aria-live="polite">{Math.round(progress)}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[#1a1410] border-2 border-[#d4af37]/30">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[#1a1410] border-2 border-gold-dark/30">
             <div
-              className="h-full bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#d4af37] transition-all duration-500"
+              className="h-full bg-gradient-to-r from-gold-dark via-gold to-gold-dark transition-all duration-500"
               style={{ width: `${progress}%` }}
               role="presentation"
             />
@@ -1040,9 +1040,9 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 aria-label={`${stageItem.title} (Stage ${idx + 1} of ${ONBOARDING_STAGES.length})`}
                 aria-current={idx === stage ? 'step' : undefined}
                 tabIndex={idx === stage ? 0 : -1}
-                className={`h-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:ring-offset-2 focus:ring-offset-black ${
+                className={`h-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-gold-dark focus:ring-offset-2 focus:ring-offset-black ${
                   idx === stage 
-                    ? 'w-8 bg-[#d4af37]' 
+                    ? 'w-8 bg-gold-dark' 
                     : idx < stage 
                     ? 'w-2 bg-[#7CFF7A]' 
                     : 'w-2 bg-white/20 hover:bg-white/40'
@@ -1251,26 +1251,26 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               
               {/* Phase 5.4: Badge unlock with pop animation */}
               {isFetchingBadge && (
-                <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-[#d4af37]/10 via-[#ffd700]/5 to-[#d4af37]/10 border-2 border-[#d4af37]/30">
+                <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-gold-dark/10 via-gold/5 to-gold-dark/10 border-2 border-gold-dark/30">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4af37]/30 to-[#ffd700]/20 flex items-center justify-center animate-pulse">
-                      <Crown size={24} className="text-[#d4af37] animate-spin" style={{ animationDuration: '3s' }} />
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-dark/30 to-gold/20 flex items-center justify-center animate-pulse">
+                      <Crown size={24} className="text-gold-dark animate-spin" style={{ animationDuration: '3s' }} />
                     </div>
                     <div className="flex-1">
-                      <div className="h-4 w-32 bg-[#d4af37]/20 rounded animate-pulse" />
-                      <div className="h-3 w-48 bg-[#d4af37]/10 rounded animate-pulse mt-2" style={{ animationDelay: '0.2s' }} />
+                      <div className="h-4 w-32 bg-gold-dark/20 rounded animate-pulse" />
+                      <div className="h-3 w-48 bg-gold-dark/10 rounded animate-pulse mt-2" style={{ animationDelay: '0.2s' }} />
                     </div>
                   </div>
                 </div>
               )}
               {!isFetchingBadge && isFinalStage && assignedBadge && (
-                <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-[#d4af37]/20 via-[#ffd700]/10 to-[#d4af37]/20 border-2 border-[#d4af37]/50 gacha-badge-pop">
+                <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-gold-dark/20 via-gold/10 to-gold-dark/20 border-2 border-gold-dark/50 gacha-badge-pop">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4af37] to-[#ffd700] flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-dark to-gold flex items-center justify-center">
                       <Crown size={24} weight="fill" className="text-[#1a1410]" />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-[#d4af37] uppercase tracking-wider">
+                      <div className="text-sm font-bold text-gold-dark uppercase tracking-wider">
                         Badge Unlocked!
                       </div>
                       <div className="text-lg font-bold text-white">
@@ -1354,7 +1354,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             {/* Contract reference */}
             {displayedStage.contractFeature && (
               <div className="quest-card-yugioh__action-footer">
-                <span className="text-[0.65rem] text-[#d4af37]">
+                <span className="text-[0.65rem] text-gold-dark">
                   🎴 {displayedStage.contractFeature}
                 </span>
               </div>
@@ -1534,7 +1534,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                     <button
                       type="button"
                       disabled={!hasOnboarded}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#ffd700] px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gold-dark bg-gradient-to-r from-gold-dark to-gold px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Crown size={20} weight="fill" />
                       Mint OG Badge
@@ -1549,7 +1549,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               {displayedStage.showMintButton && (
                 <button
                   type="button"
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#ffd700] px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gold-dark bg-gradient-to-r from-gold-dark to-gold px-6 py-3 font-bold text-[#1a1410] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
                 >
                   <Crown size={20} weight="fill" />
                   Mint NFT Badge
@@ -1573,7 +1573,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                     <button
                       type="button"
                       onClick={() => setStage(4)}
-                      className="flex-shrink-0 rounded-xl border-2 border-[#d4af37]/30 bg-gradient-to-r from-[#d4af37]/10 to-[#ffd700]/10 px-4 py-3 text-sm font-bold text-[#d4af37] backdrop-blur-sm transition-all hover:border-[#d4af37]/50 hover:from-[#d4af37]/20 hover:to-[#ffd700]/20 sm:w-auto"
+                      className="flex-shrink-0 rounded-xl border-2 border-gold-dark/30 bg-gradient-to-r from-gold-dark/10 to-gold/10 px-4 py-3 text-sm font-bold text-gold-dark backdrop-blur-sm transition-all hover:border-gold-dark/50 hover:from-gold-dark/20 hover:to-gold/20 sm:w-auto"
                     >
                       Skip to Rewards →
                     </button>

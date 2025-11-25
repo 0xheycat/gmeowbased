@@ -25,6 +25,10 @@ const config: Config = {
   		colors: {
   			'farcaster-purple': '#8B5CF6',
   			'base-blue': '#0052FF',
+  			gold: {
+  				DEFAULT: '#ffd700',    // Bright gold
+  				dark: '#d4af37',       // Darker gold variant
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
