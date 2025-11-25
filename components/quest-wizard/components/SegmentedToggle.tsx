@@ -35,7 +35,7 @@ export function SegmentedToggle<T extends string>({ options, value, onChange, si
 	}
 	const baseInactive = 'border border-white/12 text-slate-300 hover:border-white/20'
 	const padding = size === 'sm' ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'
-	const layout = size === 'sm' ? 'gap-1' : 'gap-1.5'
+	const layout = size === 'sm' ? 'gap-1' : 'gap-2'
 	const minWidth = size === 'sm' ? 'min-w-[120px]' : 'min-w-[160px]'
 	const focusRing = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
 	// @edit-start 2025-11-11 — Ignore disabled items when computing active index
