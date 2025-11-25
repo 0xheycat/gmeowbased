@@ -36,6 +36,11 @@ const config: Config = {
   				'panel': '#081223',    // Panel backgrounds
   				'surface': '#0a1529',  // Surface backgrounds
   				'elevated': '#091324', // Elevated surfaces
+  				'alt': '#070f25',      // Alternative dark
+  				'secondary': '#07122d', // Secondary dark
+  				'tertiary': '#060b1d', // Tertiary dark
+  				'quaternary': '#0b132d', // Quaternary dark
+  				'neutral': '#1a1410',  // Neutral dark brown
   			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

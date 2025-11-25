@@ -212,14 +212,14 @@ const ProfileSkeleton = () => (
       
       {/* Username skeleton */}
       <div className="flex flex-col items-center gap-2">
-        <div className="h-6 w-40 rounded bg-[#d4af37]/30 animate-shimmer" />
-        <div className="h-4 w-24 rounded bg-[#d4af37]/20 animate-shimmer" style={{ animationDelay: '0.2s' }} />
+        <div className="h-6 w-40 rounded bg-gold-dark/30 animate-shimmer" />
+        <div className="h-4 w-24 rounded bg-gold-dark/20 animate-shimmer" style={{ animationDelay: '0.2s' }} />
       </div>
       
       {/* Stats skeleton */}
       <div className="flex gap-3">
-        <div className="h-8 w-16 rounded-full bg-[#d4af37]/20 animate-shimmer" style={{ animationDelay: '0.4s' }} />
-        <div className="h-8 w-16 rounded-full bg-[#d4af37]/20 animate-shimmer" style={{ animationDelay: '0.6s' }} />
+        <div className="h-8 w-16 rounded-full bg-gold-dark/20 animate-shimmer" style={{ animationDelay: '0.4s' }} />
+        <div className="h-8 w-16 rounded-full bg-gold-dark/20 animate-shimmer" style={{ animationDelay: '0.6s' }} />
       </div>
     </div>
   </div>
@@ -1015,7 +1015,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             </span>
             <span className="text-xs font-bold text-gold-dark" aria-live="polite">{Math.round(progress)}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[#1a1410] border-2 border-gold-dark/30">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-dark-bg-neutral border-2 border-gold-dark/30">
             <div
               className="h-full bg-gradient-to-r from-gold-dark via-gold to-gold-dark transition-all duration-500"
               style={{ width: `${progress}%` }}
@@ -1043,7 +1043,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                   idx === stage 
                     ? 'w-8 bg-gold-dark' 
                     : idx < stage 
-                    ? 'w-2 bg-[#7CFF7A]' 
+                    ? 'w-2 bg-green-400' 
                     : 'w-2 bg-white/20 hover:bg-white/40'
                 }`}
               />

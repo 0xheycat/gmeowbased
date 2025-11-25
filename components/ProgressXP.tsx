@@ -339,7 +339,7 @@ export function ProgressXP({
                   <div className="text-sm uppercase tracking-[0.2em] text-gold/50">Current Rank</div>
                   <div className="mt-1 text-lg font-semibold text-gold">{tierName || 'Adventurer'}</div>
                 </div>
-                <div className="rounded-2xl border border-slate-700/70 bg-[#07122d]/70 p-4 text-center">
+                <div className="rounded-2xl border border-slate-700/70 bg-dark-bg-secondary/70 p-4 text-center">
                   <div className="text-sm uppercase tracking-[0.2em] text-slate-400">XP Earned</div>
                   <div className="mt-1 text-lg font-semibold text-emerald-300">+{formatInt(xpEarned)}</div>
                 </div>
@@ -366,7 +366,7 @@ export function ProgressXP({
                 ) : null}
                 {visitUrl ? (
                   <button
-                    className="pixel-button flex-1 min-w-[120px] sm:min-w-[160px] justify-center border-2 border-gold/30 bg-[#060b1d] px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold/80 transition hover:bg-[#0b132d] hover:border-gold/50 hover:text-gold hover:shadow-[0_4px_16px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+                    className="pixel-button flex-1 min-w-[120px] sm:min-w-[160px] justify-center border-2 border-gold/30 bg-dark-bg-tertiary px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold/80 transition hover:bg-dark-bg-quaternary hover:border-gold/50 hover:text-gold hover:shadow-[0_4px_16px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                     onClick={() => {
                       if (onVisit) onVisit()
                       else window.open(visitUrl, '_blank', 'noopener')
