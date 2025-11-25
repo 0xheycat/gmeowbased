@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Command Roster — Base</title>
+    <meta name="description" content="heycat.base.eth🐬 holds #1 with 2 XP from 2 quests. 2 XP banked (1 XP / quest). Solo sortie in progress — time to challenge the lead. Base leaderboard. Synced 2025-11-19 18:33:12 UTC. — @gmeowbased" />
+    
+    <meta name="fc:frame" content="{&quot;version&quot;:&quot;next&quot;,&quot;imageUrl&quot;:&quot;http://localhost:3000/api/frame/image?type=leaderboards&quot;,&quot;button&quot;:{&quot;title&quot;:&quot;Open Leaderboard&quot;,&quot;action&quot;:{&quot;type&quot;:&quot;launch_frame&quot;,&quot;name&quot;:&quot;Gmeowbased&quot;,&quot;url&quot;:&quot;http://localhost:3000/leaderboard?chain=base&quot;,&quot;splashImageUrl&quot;:&quot;http://localhost:3000/splash.png&quot;,&quot;splashBackgroundColor&quot;:&quot;#000000&quot;}}}" />
+    <meta property="fc:frame:state" content="{&quot;frameType&quot;:&quot;leaderboards&quot;}" />
+    <meta property="fc:frame:post_url" content="http://localhost:3000/api/frame" />
+    <meta property="fc:frame:button:1" content="Open Leaderboard" />
+    <meta property="fc:frame:button:1:action" content="link" />
+    <meta property="fc:frame:button:1:target" content="http://localhost:3000/leaderboard?chain=base" />
+    <meta property="og:title" content="Command Roster — Base" />
+    <meta property="og:description" content="heycat.base.eth🐬 holds #1 with 2 XP from 2 quests. 2 XP banked (1 XP / quest). Solo sortie in progress — time to challenge the lead. Base leaderboard. Synced 2025-11-19 18:33:12 UTC. — @gmeowbased" />
+    <meta property="og:image" content="http://localhost:3000/api/frame/image?type=leaderboards" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="400" />
+    <meta property="og:url" content="http://localhost:3000/leaderboard?chain=base" />
+    <meta name="fc:frame:text" content="🏆 Climbing the ranks 🔵 on Base! Check the leaderboard @gmeowbased" />
+    
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #201a05, #ffed4e20);
+        font-family: system-ui, -apple-system, sans-serif;
+        color: white;
+        /* Use dynamic viewport height for iOS Safari address bar handling */
+        min-height: 100dvh;
+      }
+      /* Fallback for browsers without dvh support */
+      @supports not (height: 100dvh) {
+        body {
+          min-height: 100vh;
+        }
+      }
+      .container {
+        max-width: 768px;
+        margin: 0 auto;
+        padding: 30px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 20px;
+        border: 2px solid #ffd700;
+        box-shadow: 0 0 40px #ffd70040;
+        position: relative;
+        overflow: hidden;
+      }
+      .container::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, #ffd70020, #ffed4e10);
+        border-radius: 20px;
+        z-index: -1;
+      }
+      .frame-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        background: #ffd70040;
+        border: 1px solid #ffd700;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #ffd700;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+      }
+      h1 {
+        color: #ffd700;
+        margin: 0 0 16px 0;
+        font-size: 24px;
+        font-weight: 700;
+        text-shadow: 0 2px 8px #ffd70040;
+      }
+      p {
+        line-height: 1.7;
+        color: rgb(226 231 255);
+        margin: 12px 0;
+        font-size: 15px;
+      }
+      .meta-info {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 16px 0;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+        border: 1px solid #ffd70020;
+      }
+      .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .meta-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #ffed4e;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+      }
+      .meta-value {
+        font-size: 16px;
+        color: #ff6b6b;
+        font-weight: 700;
+      }
+      a {
+        color: #ff6b6b;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+      a:hover {
+        text-decoration: underline;
+        text-shadow: 0 0 8px #ff6b6b60;
+      }
+      .powered-by {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid #ffd70020;
+        font-size: 12px;
+        color: #ffed4e80;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <span class="frame-badge">LEADERBOARD</span>
+      <h1>Command Roster — Base</h1>
+      <p>heycat.base.eth🐬 holds #1 with 2 XP from 2 quests. 2 XP banked (1 XP / quest). Solo sortie in progress — time to challenge the lead. Base leaderboard. Synced 2025-11-19 18:33:12 UTC. — @gmeowbased</p>
+      <div class="powered-by">Powered by @gmeowbased</div>
+    </div>
+  </body>
+</html>

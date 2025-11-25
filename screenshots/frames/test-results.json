@@ -1,0 +1,124 @@
+{
+  "total": 16,
+  "passed": 16,
+  "failed": 0,
+  "duration": 82967,
+  "tests": [
+    {
+      "name": "quest-frame",
+      "url": "/frame/quest/test-quest-123",
+      "description": "Quest frame with dynamic OG",
+      "success": true,
+      "duration": 4165
+    },
+    {
+      "name": "quest-leaderboard-frame",
+      "url": "/frame/quest/test-quest-123/leaderboard",
+      "description": "Quest leaderboard frame",
+      "success": true,
+      "duration": 11964
+    },
+    {
+      "name": "profile-frame",
+      "url": "/frame/profile/3621",
+      "description": "User profile frame",
+      "success": true,
+      "duration": 4694
+    },
+    {
+      "name": "profile-badges-frame",
+      "url": "/frame/profile/3621/badges",
+      "description": "User badges frame",
+      "success": true,
+      "duration": 4667
+    },
+    {
+      "name": "badge-frame",
+      "url": "/frame/badge/mythic-founder",
+      "description": "Single badge frame",
+      "success": true,
+      "duration": 3808
+    },
+    {
+      "name": "badge-collection-frame",
+      "url": "/frame/badges",
+      "description": "Badge collection overview",
+      "success": true,
+      "duration": 4905
+    },
+    {
+      "name": "global-leaderboard-frame",
+      "url": "/frame/leaderboard",
+      "description": "Global leaderboard frame",
+      "success": true,
+      "duration": 10246
+    },
+    {
+      "name": "guild-leaderboard-frame",
+      "url": "/frame/Guild/leaderboard",
+      "description": "Guild leaderboard frame",
+      "success": true,
+      "duration": 5071
+    },
+    {
+      "name": "agent-frame",
+      "url": "/frame/Agent",
+      "description": "AI Agent interaction frame",
+      "success": true,
+      "duration": 5087
+    },
+    {
+      "name": "guild-frame",
+      "url": "/frame/Guild",
+      "description": "Guild overview frame",
+      "success": true,
+      "duration": 4718
+    },
+    {
+      "name": "gm-frame",
+      "url": "/frame/gm",
+      "description": "GM greeting frame",
+      "success": true,
+      "duration": 4680
+    },
+    {
+      "name": "dashboard-frame",
+      "url": "/frame/Dashboard",
+      "description": "User dashboard frame",
+      "success": true,
+      "duration": 4738
+    },
+    {
+      "name": "og-quest-image",
+      "url": "/api/og/quest?questId=test-quest-123&title=Epic%20Quest&participants=42",
+      "description": "Dynamic quest OG image",
+      "type": "api",
+      "success": true,
+      "duration": 3306
+    },
+    {
+      "name": "og-profile-image",
+      "url": "/api/og/profile?fid=3621&username=heycat&followers=1337",
+      "description": "Dynamic profile OG image",
+      "type": "api",
+      "success": true,
+      "duration": 4342
+    },
+    {
+      "name": "og-badge-image",
+      "url": "/api/og/badge?badgeId=mythic-founder&tier=mythic&holders=100",
+      "description": "Dynamic badge OG image",
+      "type": "api",
+      "success": true,
+      "duration": 3268
+    },
+    {
+      "name": "og-leaderboard-image",
+      "url": "/api/og/leaderboard?type=global&topUser=alice&topScore=9999",
+      "description": "Dynamic leaderboard OG image",
+      "type": "api",
+      "success": true,
+      "duration": 3308
+    }
+  ]
+}

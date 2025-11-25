@@ -1,0 +1,21 @@
+{
+  "name": "global-leaderboard-frame",
+  "url": "/frame/leaderboard",
+  "description": "Global leaderboard frame",
+  "timestamp": "2025-11-25T22:58:09.166Z",
+  "duration": 10246,
+  "metaTags": {
+    "fc:frame:state": "{\"frameType\":\"leaderboards\"}",
+    "fc:frame:post_url": "http://localhost:3000/api/frame",
+    "fc:frame:button:1": "Open Leaderboard",
+    "fc:frame:button:1:action": "link",
+    "fc:frame:button:1:target": "http://localhost:3000/leaderboard?chain=base",
+    "og:title": "Command Roster — Base",
+    "og:description": "heycat.base.eth🐬 holds #1 with 2 XP from 2 quests. 2 XP banked (1 XP / quest). Solo sortie in progress — time to challenge the lead. Base leaderboard. Synced 2025-11-19 18:33:12 UTC. — @gmeowbased",
+    "og:image": "http://localhost:3000/api/frame/image?type=leaderboards",
+    "og:image:width": "600",
+    "og:image:height": "400",
+    "og:url": "http://localhost:3000/leaderboard?chain=base"
+  },
+  "status": 200
+}
