@@ -20,12 +20,11 @@
  * - 🧠 MANUAL: Human judgment (25 tasks, ~11-15h)
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   MAINTENANCE_TASKS,
   CATEGORY_METADATA,
-  getCategoryStats,
   type MaintenanceTask,
 } from '@/lib/maintenance/tasks'
 
@@ -41,7 +40,6 @@ export default function MaintenanceDashboard() {
   const searchParams = useSearchParams()
   const [isScanning, setIsScanning] = useState(false)
   const [scanProgress, setScanProgress] = useState(0)
-  const [isInitializing, setIsInitializing] = useState(false)
   const [dbInitialized, setDbInitialized] = useState(false)
   const [tasks, setTasks] = useState<MaintenanceTask[]>(MAINTENANCE_TASKS)
 
@@ -53,28 +51,18 @@ export default function MaintenanceDashboard() {
   const [fixingTasks, setFixingTasks] = useState<Set<string>>(new Set())
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  // Load tasks from database on mount
-  useEffect(() => {
-    loadTasksFromDB()
+  // Toast management
+  const showToast = useCallback((type: Toast['type'], message: string) => {
+    const id = Math.random().toString(36).substring(7)
+    setToasts((prev) => [...prev, { id, type, message }])
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id))
+    }, 5000)
   }, [])
 
-  // Auto-initialize database if empty
-  useEffect(() => {
-    const autoInitialize = async () => {
-      if (tasks.length === 0 || (tasks.length > 0 && tasks.every(t => t.status === 'pending' && !t.fixedAt))) {
-        // Tasks array is empty or looks uninitialized - auto-init DB
-        console.log('Auto-initializing database...')
-        await initializeDatabase()
-      }
-    }
-    
-    // Run after tasks are loaded
-    if (tasks.length === MAINTENANCE_TASKS.length && !dbInitialized) {
-      autoInitialize()
-    }
-  }, [tasks.length, dbInitialized])
-
-  const loadTasksFromDB = async () => {
+  const loadTasksFromDB = useCallback(async () => {
     try {
       const response = await fetch('/api/maintenance/sync?action=tasks')
       if (response.ok) {
@@ -89,11 +77,10 @@ export default function MaintenanceDashboard() {
       // Fallback to in-memory tasks
       setTasks(MAINTENANCE_TASKS)
     }
-  }
+  }, [])
 
   // Initialize database with all tasks
-  const initializeDatabase = async () => {
-    setIsInitializing(true)
+  const initializeDatabase = useCallback(async () => {
     showToast('info', '🔄 Initializing database...')
 
     try {
@@ -114,10 +101,29 @@ export default function MaintenanceDashboard() {
       }
     } catch (error) {
       showToast('error', `❌ Network error: ${error instanceof Error ? error.message : 'Unknown'}`)
-    } finally {
-      setIsInitializing(false)
     }
-  }
+  }, [loadTasksFromDB, showToast])
+
+  // Load tasks from database on mount
+  useEffect(() => {
+    loadTasksFromDB()
+  }, [loadTasksFromDB])
+
+  // Auto-initialize database if empty
+  useEffect(() => {
+    const autoInitialize = async () => {
+      if (tasks.length === 0 || (tasks.length > 0 && tasks.every(t => t.status === 'pending' && !t.fixedAt))) {
+        // Tasks array is empty or looks uninitialized - auto-init DB
+        console.log('Auto-initializing database...')
+        await initializeDatabase()
+      }
+    }
+    
+    // Run after tasks are loaded
+    if (tasks.length === MAINTENANCE_TASKS.length && !dbInitialized) {
+      autoInitialize()
+    }
+  }, [tasks, dbInitialized, initializeDatabase])
 
   // Calculate stats from current tasks
   const stats = useMemo(() => {
@@ -157,17 +163,6 @@ export default function MaintenanceDashboard() {
       return categoryTasks.some((task) => task.type === activeFilter)
     })
   }, [activeFilter, tasks])
-
-  // Toast management
-  const showToast = (type: Toast['type'], message: string) => {
-    const id = Math.random().toString(36).substring(7)
-    setToasts((prev) => [...prev, { id, type, message }])
-    
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 5000)
-  }
 
   const dismissToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
