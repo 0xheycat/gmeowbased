@@ -356,13 +356,15 @@ export function fixZIndex99toZModal(content: string): string {
 }
 
 export function fixZIndex100toZModal(content: string): string {
-  // Replace z-[100] with z-40 (modal layer)
+  // Replace extremely high z-index values with z-50 (highest standardized layer)
+  // Handles: zIndex: 100, 4000, 10000, 40000, 100000, etc.
   
   let result = content
   
-  result = result.replace(/z-\[100\]/g, 'z-40')
-  result = result.replace(/zIndex:\s*100/g, 'zIndex: 40')
-  result = result.replace(/z-index:\s*100/g, 'z-index: 40')
+  // Match any zIndex value >= 100 (very high z-index abuse)
+  result = result.replace(/zIndex:\s*(\d{3,})/g, 'zIndex: 50') // 100-999999
+  result = result.replace(/z-index:\s*(\d{3,})/g, 'z-index: 50')
+  result = result.replace(/z-\[(\d{3,})\]/g, 'z-50')
   
   return result
 }
