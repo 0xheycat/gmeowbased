@@ -281,6 +281,15 @@ html.light {
     background: transparent;
   }
 
+  /* Prevent double-tap zoom on interactive elements (GI-12 Mobile UX) */
+  button,
+  a,
+  [role="button"],
+  [type="button"],
+  [type="submit"] {
+    touch-action: manipulation;
+  }
+
   /* Removed global border application to avoid accidental overrides.
      Apply border colors where explicitly needed (see components). */
 }

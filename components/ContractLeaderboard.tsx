@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Sparkle } from '@phosphor-icons/react'
 import { Progress } from '@/components/ui/progress'
+import { EmptyState } from '@/components/ui/button'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 
 type Row = {
@@ -145,7 +146,16 @@ export function ContractLeaderboard() {
       {error ? <div className="text-red-400 break-words">{error}</div> : null}
 
       {/* Rows */}
-      <div className="space-y-3">
+      <div className="space-y-2">
+        {!loading && rows.length === 0 && (
+          <EmptyState
+            icon={<Sparkle size={48} weight="duotone" />}
+            title="No leaderboard entries yet"
+            description="Complete quests to appear on the leaderboard"
+            tone="muted"
+            padding="lg"
+          />
+        )}
         {rows.map((u, i) => {
           const top3 = i < 3 && offset === 0
           const nextGoal = Math.ceil((u.points || 0) / 100) * 100 + 100
