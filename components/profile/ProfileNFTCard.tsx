@@ -85,7 +85,7 @@ export function ProfileNFTCard({
               </div>
             )}
             <div>
-              <h3 className="text-xl font-black text-[#ffd700]" style={{ textShadow: '0 0 15px rgba(255,215,0,0.6)' }}>
+              <h3 className="text-xl font-black text-[#ffd700] drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">
                 {username || 'Pioneer'}
               </h3>
               <p className="text-sm text-gray-400">Level {level} • {tier}</p>
@@ -174,7 +174,7 @@ function StatBox({ label, value, icon }: { label: string; value: string | number
       <div className="absolute right-2 top-2 text-2xl opacity-20">{icon}</div>
       <div className="relative">
         <div className="text-xs uppercase tracking-wide text-[#ffd700]/60">{label}</div>
-        <div className="mt-1 text-2xl font-black text-[#ffd700]" style={{ textShadow: '0 0 10px rgba(255,215,0,0.5)' }}>
+        <div className="mt-1 text-2xl font-black text-[#ffd700] drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">
           {value}
         </div>
       </div>
