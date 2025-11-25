@@ -692,8 +692,10 @@ export const exampleHighBlastRadius: IssueDependencyGraph = {
  * Remember: Time spent auditing < time spent debugging incomplete fixes
  */
 
-export default {
+const dependencyGraphExamples = {
   exampleLowBlastRadius,
   exampleMediumBlastRadius,
   exampleHighBlastRadius
 }
+
+export default dependencyGraphExamples
