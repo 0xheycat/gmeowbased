@@ -175,11 +175,11 @@ export default function UserBadgesPage() {
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
                 {[
-                  { tier: 'mythic', label: 'Mythic', color: '#9C27FF' },
-                  { tier: 'legendary', label: 'Legendary', color: '#FFD966' },
-                  { tier: 'epic', label: 'Epic', color: '#61DFFF' },
-                  { tier: 'rare', label: 'Rare', color: '#A18CFF' },
-                  { tier: 'common', label: 'Common', color: '#D3D7DC' },
+                  { tier: 'mythic', label: 'Mythic', color: 'rgb(168 85 247)' },
+                  { tier: 'legendary', label: 'Legendary', color: 'rgb(251 191 36)' },
+                  { tier: 'epic', label: 'Epic', color: 'rgb(6 182 212)' },
+                  { tier: 'rare', label: 'Rare', color: 'rgb(139 92 246)' },
+                  { tier: 'common', label: 'Common', color: 'rgb(156 163 175)' },
                 ].map(({ tier, label, color }) => (
                   <div
                     key={tier}

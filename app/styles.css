@@ -425,15 +425,15 @@ html[data-layout-mode='mobile'] .gmeow-sidebar-left, html[data-layout-mode='mobi
    Rank Progress (card)
    ========================= */
 
-.rank-progress { font-family: var(--site-font, 'Space Grotesk', sans-serif); color:#fefbff; }
+.rank-progress { font-family: var(--site-font, 'Space Grotesk', sans-serif); color:rgb(248 250 252); }
 .rank-progress--plain { border-radius: var(--radius-md); border:1px solid rgba(255,215,128,0.18); background: rgba(26,18,48,0.45); padding:1rem; box-shadow: 0 16px 38px rgba(10,8,28,0.35); backdrop-filter: blur(16px); }
 .rank-progress__top { display:flex; align-items:center; justify-content:space-between; gap:1.1rem; }
 .rank-progress__identity { display:flex; align-items:center; gap:.95rem; }
 .rank-progress__level { display:inline-flex; align-items:center; gap:.65rem; border-radius:var(--radius-full); padding:.35rem .9rem .35rem .6rem; background: linear-gradient(120deg, rgba(255,215,128,0.25) 0%, rgba(140,103,255,0.35) 100%); border:1px solid rgba(255,236,171,0.4); box-shadow: 0 14px 32px rgba(39,19,65,0.45), inset 0 1px 0 rgba(255,231,179,0.4); }
 .rank-progress__level-icon { font-size:1.4rem; display:flex; align-items:center; justify-content:center; filter: drop-shadow(0 6px 16px rgba(255,215,128,0.45)); }
-.rank-progress__level-value { font-size:1.35rem; font-weight:800; color:#fff9d6; text-shadow: 0 2px 6px rgba(46,22,70,0.55); }
+.rank-progress__level-value { font-size:1.35rem; font-weight:800; color:rgb(254 243 199); text-shadow: 0 2px 6px rgba(46,22,70,0.55); }
 
-.rank-progress__pill { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--radius-lg); background: linear-gradient(150deg, rgba(255,207,122,0.35), rgba(151,103,255,0.32), rgba(69,38,120,0.55)); border:1px solid rgba(255,228,177,0.5); padding:var(--spacing-2) var(--spacing-3); font-weight:700; color:#fff5d1; min-width:72px; box-shadow: 0 16px 30px rgba(20,14,52,0.45), inset 0 1px 0 rgba(255,255,255,0.1); }
+.rank-progress__pill { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--radius-lg); background: linear-gradient(150deg, rgba(255,207,122,0.35), rgba(151,103,255,0.32), rgba(69,38,120,0.55)); border:1px solid rgba(255,228,177,0.5); padding:var(--spacing-2) var(--spacing-3); font-weight:700; color:rgb(254 243 199); min-width:72px; box-shadow: 0 16px 30px rgba(20,14,52,0.45), inset 0 1px 0 rgba(255,255,255,0.1); }
 
 /* progress bar & indicator */
 .rank-progress__bar { position:relative; border-radius:var(--radius-full); background: rgba(118,90,184,0.35); overflow:hidden; }

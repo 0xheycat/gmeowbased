@@ -64,7 +64,7 @@ const TIER_CONFIG = {
   mythic: { 
     min: 1.0, 
     max: Infinity, 
-    color: '#9C27FF', 
+    color: 'rgb(168 85 247)', 
     label: 'Mythic', 
     points: 1000,
     bgGradient: 'from-purple-900/20 via-violet-800/15 to-purple-900/20'
@@ -72,7 +72,7 @@ const TIER_CONFIG = {
   legendary: { 
     min: 0.8, 
     max: 1.0, 
-    color: '#FFD966', 
+    color: 'rgb(251 191 36)', 
     label: 'Legendary', 
     points: 400,
     bgGradient: 'from-yellow-900/20 via-amber-800/15 to-yellow-900/20'
@@ -80,7 +80,7 @@ const TIER_CONFIG = {
   epic: { 
     min: 0.5, 
     max: 0.8, 
-    color: '#61DFFF', 
+    color: 'rgb(6 182 212)', 
     label: 'Epic', 
     points: 200,
     bgGradient: 'from-cyan-900/20 via-blue-800/15 to-cyan-900/20'
@@ -88,7 +88,7 @@ const TIER_CONFIG = {
   rare: { 
     min: 0.3, 
     max: 0.5, 
-    color: '#A18CFF', 
+    color: 'rgb(139 92 246)', 
     label: 'Rare', 
     points: 100,
     bgGradient: 'from-indigo-900/20 via-purple-800/15 to-indigo-900/20'
@@ -96,7 +96,7 @@ const TIER_CONFIG = {
   common: { 
     min: 0, 
     max: 0.3, 
-    color: '#D3D7DC', 
+    color: 'rgb(156 163 175)', 
     label: 'Common', 
     points: 0,
     bgGradient: 'from-gray-900/20 via-slate-800/15 to-gray-900/20'
