@@ -510,7 +510,7 @@ export async function applyFix(
   }
 
   return {
-    success: errors.length === 0 && filesModified.length > 0,
+    success: errors.length === 0, // Success if no errors, even if no files modified (idempotent)
     filesModified,
     changes,
     errors,
