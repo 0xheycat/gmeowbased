@@ -762,7 +762,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           startVelocity: 30, 
           spread: 360, 
           ticks: 60, 
-          zIndex: 10000,
+          zIndex: 4000,
           colors: tierColors
         }
 

@@ -1,9 +1,13 @@
 # Component System Guidelines
 
-**Last Updated**: 2025-11-24  
+**Last Updated**: 2025-11-25  
 **Maintainer**: GitHub Copilot (Claude Sonnet 4.5)  
 **Category**: UI/UX Component Architecture  
 **Status**: Phase 3 Category 11 - CSS Architecture & Systematic Fixes (Batches 1-3 Complete, Frame API Font Fix Applied)
+
+> **⚠️ NOTE ON FRAME WORK**: All frame-related fixes (API routes, OG image generation, font loading)  
+> completed separately. See `Docs/Maintenance/frame/` for 4-day audit results.  
+> Frame references below retained for historical context only.
 
 ---
 

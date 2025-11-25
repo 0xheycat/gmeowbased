@@ -5,6 +5,9 @@
 **Category:** Responsiveness & Layout (Big Mega Maintenance - Category 2)  
 **Status:** ACTIVE GUIDELINE  
 
+> **⚠️ NOTE**: Frame route references (app/api/frame/route.tsx) retained for historical context.  
+> Frame work already completed separately — see `Docs/Maintenance/frame/`.
+
 ---
 
 ## Purpose

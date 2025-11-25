@@ -37,7 +37,7 @@ export function FloatingActionMenu({ actions, className }: FloatingActionMenuPro
                 'flex items-center gap-3 px-4 py-3 rounded-2xl',
                 'bg-slate-800/95 backdrop-blur border border-slate-700/50',
                 'hover:bg-slate-700/95 hover:border-slate-600/50',
-                'active:scale-95 transition-all duration-150',
+                'active:scale-95 transition-all duration-200',
                 'min-h-[44px] min-w-[44px]',
                 'shadow-lg shadow-black/20',
                 'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-800/95'
