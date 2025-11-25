@@ -98,7 +98,7 @@ export default function GuildManagementPage({ chain, teamId, slug }: Props) {
     try {
       await switchChainAsync({ chainId: target })
       return true
-    } catch (err) {
+    } catch {
       return false
     }
   }, [chain, currentChainId, switchChainAsync])

@@ -56,6 +56,7 @@ async function fetchStatsWithBackoff(address: string, previousTotal: number | nu
   return { stats: latest, attempts: STAT_POLL_ATTEMPTS }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function maskAddress(address: string): string {
   const normalized = normalizeAddress(address)
   if (!normalized) return address

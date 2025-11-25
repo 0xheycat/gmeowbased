@@ -176,7 +176,7 @@ function validatePfpUrl(pfpUrl: string | undefined | null): string {
       return '/logo.png'
     }
     return pfpUrl
-  } catch (error) {
+  } catch {
     return '/logo.png'
   }
 }
@@ -438,7 +438,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         
         // AUTO-DETECT FID: Try multiple sources with improved timing
         let fid: number | null = userFid // Use manual input if provided
-        let fidSource: string = 'unknown'
         
         // Priority 1: Check connected wallet address
         if (!fid && isConnected && address) {
@@ -446,7 +445,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             const walletFid = await fetchFidByAddress(address)
             if (walletFid) {
               fid = walletFid
-              fidSource = 'wallet-address'
             }
           } catch (walletError) {
             console.warn('[OnboardingFlow] Wallet FID lookup failed:', walletError)
@@ -461,7 +459,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             const parsedFid = parseInt(fidParam, 10)
             if (!isNaN(parsedFid) && parsedFid > 0) {
               fid = parsedFid
-              fidSource = 'url-parameter'
             }
           }
         }
@@ -488,10 +485,9 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               const miniappContext = await getMiniappContext()
               if (miniappContext?.user?.fid) {
                 fid = miniappContext.user.fid
-                fidSource = 'miniapp-context'
               }
             }
-          } catch (miniappError) {
+          } catch {
             // Miniapp context not available
           }
         }
@@ -569,9 +565,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             (window.location.href.includes('warpcast.com') || 
              document.referrer.includes('warpcast.com'))
           
-          let custodyAddress: string | undefined
-          let verifiedAddresses: string[] = []
-          
           if (isDesktop && !isMiniapp && profileData.fid) {
             try {
               // Fetch full Neynar user object with addresses
@@ -581,8 +574,9 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 const neynarUserData = await neynarUserRes.json()
                 
                 if (neynarUserData.user) {
-                  custodyAddress = neynarUserData.user.custody_address
-                  verifiedAddresses = neynarUserData.user.verified_addresses || []
+                  // Address data available for future use
+                  // const custodyAddress = neynarUserData.user.custody_address
+                  // const verifiedAddresses = neynarUserData.user.verified_addresses || []
                 }
               }
             } catch (addressError) {

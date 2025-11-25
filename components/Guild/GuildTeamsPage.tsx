@@ -328,7 +328,7 @@ export default function GuildTeamsPage() {
     try {
       await switchChainAsync({ chainId: targetId })
       return true
-    } catch (err) {
+    } catch {
       return false
     }
   }, [currentChainId, switchChainAsync])
