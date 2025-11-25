@@ -108,7 +108,7 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
             <MiniappReady />
             {/* Show loading overlay if we're checking miniapp status */}
             {!miniappChecked && typeof window !== 'undefined' && window.self !== window.top && (
-              <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[#060720]/95 backdrop-blur-lg">
+              <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#060720]/95 backdrop-blur-lg">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-white/5 shadow-[0_24px_80px_rgba(12,13,54,0.45)]">
                     <div className="absolute inset-0 rounded-3xl border border-white/10" />
