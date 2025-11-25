@@ -426,8 +426,6 @@ function buildBadgeTemplatesKey(includeInactive: boolean): string {
  * Call this on server startup or after cache clear
  */
 async function warmCache(): Promise<void> {
-  console.log('[Cache] Cache warming started...')
-  
   // Pre-load badge templates (most accessed)
   try {
     const { listBadgeTemplates } = await import('@/lib/badges')
@@ -437,12 +435,9 @@ async function warmCache(): Promise<void> {
       () => listBadgeTemplates({ includeInactive: false }),
       { ttl: 300 } // 5 minutes
     )
-    console.log('[Cache] Badge templates warmed')
   } catch (error) {
     console.error('[Cache] Failed to warm badge templates:', error)
   }
-  
-  console.log('[Cache] Cache warming complete')
 }
 
 // ========================================

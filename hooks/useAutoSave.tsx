@@ -79,10 +79,9 @@ export function useAutoSave(draft: Partial<QuestDraft>, enabled: boolean = true)
 		try {
 			localStorage.removeItem(AUTOSAVE_KEY)
 			localStorage.removeItem(AUTOSAVE_METADATA_KEY)
-			lastSavedRef.current = ''
-			saveCountRef.current = 0
-			console.log('[AutoSave] Draft cleared')
-		} catch (error) {
+		lastSavedRef.current = ''
+		saveCountRef.current = 0
+	} catch (error) {
 			console.error('[AutoSave] Failed to clear draft:', error)
 		}
 	}, [])
@@ -92,9 +91,8 @@ export function useAutoSave(draft: Partial<QuestDraft>, enabled: boolean = true)
 			const saved = localStorage.getItem(AUTOSAVE_KEY)
 			if (!saved) return null
 
-			const draft = JSON.parse(saved) as Partial<QuestDraft>
-			console.log('[AutoSave] Draft loaded:', draft.name || 'Untitled')
-			return draft
+		const draft = JSON.parse(saved) as Partial<QuestDraft>
+		return draft
 		} catch (error) {
 			console.error('[AutoSave] Failed to load draft:', error)
 			return null

@@ -46,11 +46,9 @@ export async function getMiniappContext(): Promise<any | null> {
   try {
     // Check if we're embedded and allowed first
     if (!isEmbedded() || !isAllowedReferrer()) {
-      console.log('[getMiniappContext] Not in miniapp environment')
       return null
     }
 
-    console.log('[getMiniappContext] Loading SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
     
     // Wait for context with longer timeout for mobile
@@ -61,7 +59,6 @@ export async function getMiniappContext(): Promise<any | null> {
       )
     ])
     
-    console.log('[getMiniappContext] ✅ Got context:', context)
     return context
   } catch (error) {
     console.warn('[getMiniappContext] Failed to get context:', error)
@@ -106,42 +103,31 @@ export async function fireMiniappReady(): Promise<void> {
   // Call as early as possible on the client; gate to embedded + allowed referrer
   try {
     if (!isEmbedded()) {
-      console.log('[miniappEnv] Not embedded, skipping ready call')
       return
     }
     
     if (!isAllowedReferrer()) {
-      console.log('[miniappEnv] Referrer not allowed:', referrerHost())
       return
     }
 
-    console.log('[miniappEnv] Embedded in allowed referrer, loading SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
     
     // Wait for context to be available with extended timeout (longer for mobile)
-    console.log('[miniappEnv] Waiting for SDK context...')
     const context = await Promise.race([
       sdk.context,
       new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 15000))
     ])
     
-    console.log('[miniappEnv] SDK context ready:', context)
-    
     // Call ready action with retry logic (longer timeout for mobile)
     if (sdk.actions?.ready) {
-      console.log('[miniappEnv] Calling actions.ready()...')
       try {
         await Promise.race([
           sdk.actions.ready(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout')), 10000))
         ])
-        console.log('[miniappEnv] ✅ actions.ready() completed successfully')
       } catch (readyError) {
-        console.warn('[miniappEnv] ⚠️ actions.ready() timed out, but continuing:', readyError)
         // Don't throw - allow app to continue even if ready() times out
       }
-    } else {
-      console.warn('[miniappEnv] ⚠️ actions.ready not available on SDK')
     }
   } catch (error) {
     console.error('[miniappEnv] ❌ Error in fireMiniappReady:', error)

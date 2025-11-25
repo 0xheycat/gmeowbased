@@ -173,12 +173,10 @@ function validatePfpUrl(pfpUrl: string | undefined | null): string {
     const url = new URL(pfpUrl)
     // Only allow https protocol for security
     if (url.protocol !== 'https:') {
-      console.warn('[OnboardingFlow] Invalid protocol for pfpUrl:', pfpUrl)
       return '/logo.png'
     }
     return pfpUrl
   } catch (error) {
-    console.warn('[OnboardingFlow] Invalid pfpUrl format:', pfpUrl, error)
     return '/logo.png'
   }
 }
@@ -445,14 +443,10 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         // Priority 1: Check connected wallet address
         if (!fid && isConnected && address) {
           try {
-            console.log('[OnboardingFlow] Checking wallet address for FID:', address)
             const walletFid = await fetchFidByAddress(address)
             if (walletFid) {
               fid = walletFid
               fidSource = 'wallet-address'
-              console.log('[OnboardingFlow] ✅ FID from wallet address:', fid)
-            } else {
-              console.log('[OnboardingFlow] ⚠️ No FID linked to wallet:', address)
             }
           } catch (walletError) {
             console.warn('[OnboardingFlow] Wallet FID lookup failed:', walletError)
@@ -468,7 +462,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
             if (!isNaN(parsedFid) && parsedFid > 0) {
               fid = parsedFid
               fidSource = 'url-parameter'
-              console.log('[OnboardingFlow] ✅ FID from URL param:', fid)
             }
           }
         }
@@ -476,7 +469,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
         // Priority 3: Try miniapp context with extended timeout for mobile
         if (!fid) {
           try {
-            console.log('[OnboardingFlow] Attempting miniapp context...')
             // Wait for miniapp:ready event or timeout after 8 seconds
             const miniappReady = await Promise.race([
               new Promise<boolean>((resolve) => {
@@ -497,21 +489,15 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
               if (miniappContext?.user?.fid) {
                 fid = miniappContext.user.fid
                 fidSource = 'miniapp-context'
-                console.log('[OnboardingFlow] ✅ FID from miniapp context:', fid)
-              } else {
-                console.log('[OnboardingFlow] ⚠️ No FID in miniapp context:', miniappContext)
               }
-            } else {
-              console.log('[OnboardingFlow] ⚠️ Miniapp SDK not ready after 8s timeout')
             }
           } catch (miniappError) {
-            console.log('[OnboardingFlow] ⚠️ Miniapp context error:', miniappError)
+            // Miniapp context not available
           }
         }
         
         // If no FID found anywhere, show manual input option
         if (!fid) {
-          console.log('[OnboardingFlow] ❌ No FID detected from any source')
           setShowFidInput(true)
           setErrorMessage(
             isConnected 
@@ -523,7 +509,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
           return
         }
         
-        console.log(`[OnboardingFlow] 🔍 Using FID ${fid} (source: ${fidSource})`)
         setUserFid(fid) // Store for later use
         
         // Check if user already completed onboarding
@@ -598,10 +583,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 if (neynarUserData.user) {
                   custodyAddress = neynarUserData.user.custody_address
                   verifiedAddresses = neynarUserData.user.verified_addresses || []
-                  console.log('[OnboardingFlow] Desktop address auto-fetch:', {
-                    custody: custodyAddress,
-                    verified: verifiedAddresses.length,
-                  })
                 }
               }
             } catch (addressError) {
@@ -798,15 +779,6 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
       }
       
       triggerConfetti()
-      
-      // Log success details
-      if (data.phase4?.instantMinting) {
-        console.log('🎉 Mythic badge minted instantly via Neynar!')
-      }
-      if (data.badge?.txHash) {
-        console.log('Mint transaction:', data.badge.txHash)
-      }
-      console.log('Onboarding rewards claimed:', data)
       
     } catch (error) {
       // GI-7: Enhanced error handling with categorization
