@@ -56,7 +56,7 @@ const gmFrame = {
     title: '🎮 Launch Game',
     action: {
       type: 'launch_frame',
-      name: 'Gmeowbased',
+      name: 'Gmeowbased Adventure',
       url: baseUrl,
       splashImageUrl: `${baseUrl}/splash.png`,
       splashBackgroundColor: '#000000',
