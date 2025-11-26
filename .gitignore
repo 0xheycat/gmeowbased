@@ -61,3 +61,6 @@ authbase.md
 .copilot/
 /backups/
 .vercel
+
+# GitHub secrets backup (DO NOT COMMIT)
+.github-secrets-values.txt
