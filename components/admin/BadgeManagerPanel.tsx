@@ -718,7 +718,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'templates'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
+                : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-slate-200 dark:border-white/10/20'
             )}
           >
             Templates
@@ -730,7 +730,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'queue'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
+                : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-slate-200 dark:border-white/10/20'
             )}
           >
             Mint Queue
@@ -747,7 +747,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'registry'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
+                : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-slate-200 dark:border-white/10/20'
             )}
           >
             Registry
@@ -759,7 +759,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'assign'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
+                : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-slate-200 dark:border-white/10/20'
             )}
           >
             Manual Assign
@@ -938,7 +938,7 @@ export default function BadgeManagerPanel() {
                     'pixel-button btn-xs transition',
                     queueFilter === filter
                       ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                      : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20'
+                      : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-slate-200 dark:border-white/10/20'
                   )}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -1438,7 +1438,7 @@ export default function BadgeManagerPanel() {
                                 'pixel-button btn-xs transition-colors',
                                 selected
                                   ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-100'
-                                  : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-white/20',
+                                  : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-slate-200 dark:border-white/10/20',
                               )}
                               onClick={() => handleChainToggle(option.value)}
                               disabled={formBusy || uploadBusy}

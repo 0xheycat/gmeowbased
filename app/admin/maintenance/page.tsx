@@ -433,7 +433,7 @@ export default function MaintenanceDashboard() {
             className={`px-6 py-3 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold whitespace-nowrap transition-all ${
               activeFilter === 'all'
                 ? 'bg-slate-100/90 dark:bg-white/5 text-black dark:text-white dark:text-slate-950 dark:text-white'
-                : 'bg-slate-100/90 dark:bg-white/5/5 hover:bg-slate-100/90 dark:bg-white/5/10 border border-white/10'
+                : 'bg-slate-100/90 dark:bg-white/5/5 hover:bg-slate-100/90 dark:bg-white/5/10 border border-slate-200 dark:border-white/10/10'
             }`}
           >
             📋 All ({stats.total})
@@ -443,7 +443,7 @@ export default function MaintenanceDashboard() {
             className={`px-6 py-3 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold whitespace-nowrap transition-all ${
               activeFilter === 'auto'
                 ? 'bg-emerald-500 text-black dark:text-white dark:text-slate-950 dark:text-white'
-                : 'bg-slate-100/90 dark:bg-white/5/5 hover:bg-slate-100/90 dark:bg-white/5/10 border border-white/10'
+                : 'bg-slate-100/90 dark:bg-white/5/5 hover:bg-slate-100/90 dark:bg-white/5/10 border border-slate-200 dark:border-white/10/10'
             }`}
           >
             ⚡ Auto ({stats.auto})
@@ -453,7 +453,7 @@ export default function MaintenanceDashboard() {
             className={`px-6 py-3 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold whitespace-nowrap transition-all ${
               activeFilter === 'semi-auto'
                 ? 'bg-cyan-500 text-black dark:text-white dark:text-slate-950 dark:text-white'
-                : 'bg-slate-100/90 dark:bg-white/5/5 hover:bg-slate-100/90 dark:bg-white/5/10 border border-white/10'
+                : 'bg-slate-100/90 dark:bg-white/5/5 hover:bg-slate-100/90 dark:bg-white/5/10 border border-slate-200 dark:border-white/10/10'
             }`}
           >
             🤖 Semi-Auto ({stats.semiAuto})
@@ -463,7 +463,7 @@ export default function MaintenanceDashboard() {
             className={`px-6 py-3 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold whitespace-nowrap transition-all ${
               activeFilter === 'manual'
                 ? 'bg-purple-500 text-black dark:text-white dark:text-slate-950 dark:text-white'
-                : 'bg-slate-100/90 dark:bg-white/5/5 hover:bg-slate-100/90 dark:bg-white/5/10 border border-white/10'
+                : 'bg-slate-100/90 dark:bg-white/5/5 hover:bg-slate-100/90 dark:bg-white/5/10 border border-slate-200 dark:border-white/10/10'
             }`}
           >
             🧠 Manual ({stats.manual})
@@ -600,7 +600,7 @@ export default function MaintenanceDashboard() {
 
                       // Status badge
                       const statusConfig = {
-                        pending: { badge: '⏳ Pending', bg: 'bg-slate-100/90 dark:bg-white/5/5', border: 'border-white/10' },
+                        pending: { badge: '⏳ Pending', bg: 'bg-slate-100/90 dark:bg-white/5/5', border: 'border-slate-200 dark:border-white/10/10' },
                         'in-progress': { badge: '⚙️ Fixing...', bg: 'bg-cyan-500/20', border: 'border-cyan-500/50' },
                         fixed: { badge: '✅ Fixed', bg: 'bg-emerald-500/20', border: 'border-emerald-500/50' },
                         failed: { badge: '❌ Failed', bg: 'bg-rose-500/20', border: 'border-rose-500/50' },
@@ -617,7 +617,7 @@ export default function MaintenanceDashboard() {
                                   {typeConfig.badge}
                                 </span>
                                 <span
-                                  className={`px-2 py-1 bg-slate-100/90 dark:bg-white/5/5 border border-white/10 rounded text-[10px] uppercase tracking-wider font-bold ${severityConfig.color}`}
+                                  className={`px-2 py-1 bg-slate-100/90 dark:bg-white/5/5 border border-slate-200 dark:border-white/10/10 rounded text-[10px] uppercase tracking-wider font-bold ${severityConfig.color}`}
                                 >
                                   {severityConfig.text}
                                 </span>

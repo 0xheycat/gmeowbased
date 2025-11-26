@@ -34,7 +34,7 @@ export function ReminderPanel({ reminders }: { reminders: DashboardReminder[] })
       {reminders.length ? (
         <ul className="space-y-3">
           {reminders.map((reminder) => {
-            const toneClass = reminder.tone ? toneClasses[reminder.tone] : 'border-white/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/80'
+            const toneClass = reminder.tone ? toneClasses[reminder.tone] : 'border-slate-200 dark:border-white/10/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/80'
             return (
               <li
                 key={reminder.id}

@@ -664,7 +664,7 @@ export default function BotManagerPanel() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
-                <span className={clsx('pixel-pill', insights.bot.powerBadge ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200' : 'border-white/15 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70')}>
+                <span className={clsx('pixel-pill', insights.bot.powerBadge ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200' : 'border-slate-200 dark:border-white/10/15 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70')}>
                   Power badge {insights.bot.powerBadge ? 'enabled' : 'missing'}
                 </span>
                 <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
@@ -828,7 +828,7 @@ export default function BotManagerPanel() {
                         const meta = INTERACTION_TYPE_META[type]
                         const value = watcher.categories[type]?.total ?? 0
                         return (
-                          <span key={type} className={clsx('pixel-pill', value > 0 ? meta.accent : 'border-white/15 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/60')}>
+                          <span key={type} className={clsx('pixel-pill', value > 0 ? meta.accent : 'border-slate-200 dark:border-white/10/15 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/60')}>
                             {meta.icon} {formatMetric(value)}
                           </span>
                         )

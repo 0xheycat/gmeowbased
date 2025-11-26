@@ -517,7 +517,7 @@ export default function PartnerSnapshotPanel() {
                         'pixel-pill px-3 py-1 text-[11px] tracking-[0.16em] transition',
                         active
                           ? 'border-sky-400/60 bg-sky-400/15 text-sky-100 shadow-[0_0_16px_rgba(56,189,248,0.35)]'
-                          : 'border-white/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-sky-300/40 hover:text-slate-950 dark:text-white',
+                          : 'border-slate-200 dark:border-white/10/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-sky-300/40 hover:text-slate-950 dark:text-white',
                       )}
                     >
                       {entry.label}

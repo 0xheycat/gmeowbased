@@ -181,7 +181,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
                 onChange={toggleEnabled}
                 className="peer sr-only"
               />
-              <div className="peer h-6 w-11 rounded-full bg-slate-100/90 dark:bg-white/5 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-700/20 dark:border-white after:bg-slate-900 dark:after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/50"></div>
+              <div className="peer h-6 w-11 rounded-full bg-slate-100/90 dark:bg-white/5 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-700/20 dark:border-slate-200 dark:border-white/10 after:bg-slate-900 dark:after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-slate-200 dark:border-white/10 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/50"></div>
             </label>
           </div>
 
@@ -199,7 +199,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
                 disabled={!preferences.enabled}
                 className="peer sr-only"
               />
-              <div className="peer h-6 w-11 rounded-full bg-slate-100/90 dark:bg-white/5 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-700/20 dark:border-white after:bg-slate-900 dark:after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-disabled:opacity-30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/50"></div>
+              <div className="peer h-6 w-11 rounded-full bg-slate-100/90 dark:bg-white/5 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-700/20 dark:border-slate-200 dark:border-white/10 after:bg-slate-900 dark:after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-slate-200 dark:border-white/10 peer-disabled:opacity-30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/50"></div>
             </label>
           </div>
 
@@ -221,7 +221,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
                 disabled={!preferences.enabled || loading}
                 className="peer sr-only"
               />
-              <div className="peer h-6 w-11 rounded-full bg-slate-100/90 dark:bg-white/5 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-700/20 dark:border-white after:bg-slate-900 dark:after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-disabled:opacity-30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/50"></div>
+              <div className="peer h-6 w-11 rounded-full bg-slate-100/90 dark:bg-white/5 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-700/20 dark:border-slate-200 dark:border-white/10 after:bg-slate-900 dark:after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-slate-200 dark:border-white/10 peer-disabled:opacity-30 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/50"></div>
             </label>
           </div>
 
@@ -234,7 +234,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
                 return (
                   <div
                     key={category}
-                    className="flex items-start justify-between gap-3 rounded-lg border border-slate-700/5 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 p-3"
+                    className="flex items-start justify-between gap-3 rounded-lg border border-slate-700/5 dark:border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5 p-3"
                   >
                     <div className="flex items-start gap-2">
                       <span className="text-lg" aria-hidden>
@@ -253,7 +253,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
                         disabled={!preferences.enabled}
                         className="peer sr-only"
                       />
-                      <div className="peer h-5 w-9 rounded-full bg-slate-100/90 dark:bg-white/5 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-slate-700/20 dark:border-white after:bg-slate-900 dark:after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-disabled:opacity-30 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-emerald-500/50"></div>
+                      <div className="peer h-5 w-9 rounded-full bg-slate-100/90 dark:bg-white/5 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-slate-700/20 dark:border-slate-200 dark:border-white/10 after:bg-slate-900 dark:after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-slate-200 dark:border-white/10 peer-disabled:opacity-30 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-emerald-500/50"></div>
                     </label>
                   </div>
                 )
@@ -266,7 +266,7 @@ export function ProfileSettings({ fid, onPushRegistrationRequest, className }: P
             <button
               type="button"
               onClick={resetToDefaults}
-              className="rounded-lg border border-slate-700/10 dark:border-white/20 bg-slate-100/90 dark:bg-white/5 px-4 py-2 text-sm uppercase tracking-[0.22em] text-slate-950 dark:text-white/80 transition hover:border-amber-300/40 hover:text-slate-950 dark:hover:text-white"
+              className="rounded-lg border border-slate-700/10 dark:border-slate-200 dark:border-white/10/20 bg-slate-100/90 dark:bg-white/5 px-4 py-2 text-sm uppercase tracking-[0.22em] text-slate-950 dark:text-white/80 transition hover:border-amber-300/40 hover:text-slate-950 dark:hover:text-white"
             >
               Reset to Defaults
             </button>

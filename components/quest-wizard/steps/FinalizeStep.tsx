@@ -67,7 +67,7 @@ export function FinalizeStep({
 		success: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-100',
 		error: 'border-rose-500/40 bg-rose-500/15 text-rose-100',
 		pending: 'border-sky-400/40 bg-sky-500/10 text-sky-100',
-		idle: 'border-white/10 bg-slate-950/60 text-slate-200',
+		idle: 'border-slate-200 dark:border-white/10/10 bg-slate-950/60 text-slate-200',
 	}[verificationVariant]
 	const requirementEntries = verificationData ? Object.entries(verificationData.requirement || {}) : []
 	const metaEntries = verificationData ? Object.entries(verificationData.meta || {}) : []

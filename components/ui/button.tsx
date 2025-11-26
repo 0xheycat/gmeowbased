@@ -61,7 +61,7 @@ const colors: Record<ColorNames, { text: string; background: string; border: str
   white: {
     text: 'text-slate-900',
     background: 'bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-500',
-    border: 'border-white/80',
+    border: 'border-slate-200 dark:border-white/10/80',
     drip: 'rgba(22, 36, 67, 0.18)',
   },
   gray: {
@@ -309,10 +309,10 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement>, SharedCardPro
 }
 
 const CARD_TONE_STYLES: Record<CardTone, string> = {
-  neutral: 'border-white/15 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90',
-  frosted: 'border-white/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90',
+  neutral: 'border-slate-200 dark:border-white/10/15 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90',
+  frosted: 'border-slate-200 dark:border-white/10/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90',
   accent: 'border-emerald-400/30 bg-emerald-400/10 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(16,185,129,0.18)]',
-  muted: 'border-white/12 bg-black/25 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/85',
+  muted: 'border-slate-200 dark:border-white/10/12 bg-black/25 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/85',
   danger: 'border-rose-400/35 bg-rose-500/15 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(244,63,94,0.18)]',
   info: 'border-sky-400/35 bg-sky-500/15 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(56,189,248,0.18)]',
 }
@@ -427,7 +427,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       type={type}
       disabled={disabled}
       className={cn(
-        'pixel-input block w-full rounded-xl border border-white/15 bg-black/20 text-slate-900 dark:text-slate-950 dark:text-white placeholder:text-slate-950 dark:text-slate-700 dark:text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-0 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50',
+        'pixel-input block w-full rounded-xl border border-slate-200 dark:border-white/10/15 bg-black/20 text-slate-900 dark:text-slate-950 dark:text-white placeholder:text-slate-950 dark:text-slate-700 dark:text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-0 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50',
         INPUT_SIZE_STYLES[size],
         className,
       )}

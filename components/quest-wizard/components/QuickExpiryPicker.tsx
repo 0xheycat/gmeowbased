@@ -74,8 +74,8 @@ export function QuickExpiryPicker({ value, onChange, id, 'aria-describedby': ari
 					onClick={() => handlePresetClick('evergreen', () => '')}
 					className={`rounded-2xl border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
 						activePreset === 'evergreen'
-							? 'border-white/60 bg-slate-100/90 dark:bg-white/5/80 text-slate-900 dark:text-slate-500 shadow-lg shadow-white/20'
-							: 'border-white/12 text-slate-300 hover:border-white/20'
+							? 'border-slate-200 dark:border-white/10/60 bg-slate-100/90 dark:bg-white/5/80 text-slate-900 dark:text-slate-500 shadow-lg shadow-white/20'
+							: 'border-slate-200 dark:border-white/10/12 text-slate-300 hover:border-slate-200 dark:border-white/10/20'
 					}`}
 					aria-pressed={activePreset === 'evergreen'}
 				>
@@ -96,7 +96,7 @@ export function QuickExpiryPicker({ value, onChange, id, 'aria-describedby': ari
 										: preset.tone === 'indigo'
 											? 'border-indigo-300/70 bg-indigo-400/80 text-slate-900 dark:text-slate-950 dark:text-white shadow-lg shadow-indigo-400/25'
 											: 'border-sky-300/70 bg-sky-300/80 text-slate-950 shadow-lg shadow-sky-400/25'
-									: 'border-white/12 text-slate-300 hover:border-white/20'
+									: 'border-slate-200 dark:border-white/10/12 text-slate-300 hover:border-slate-200 dark:border-white/10/20'
 						}`}
 						aria-pressed={activePreset === preset.id}
 					>
