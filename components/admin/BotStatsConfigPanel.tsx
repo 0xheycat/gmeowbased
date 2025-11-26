@@ -226,7 +226,7 @@ export default function BotStatsConfigPanel() {
         </div>
         <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--px-sub)]">
           {dirty ? <span className="pixel-pill border-amber-400/40 bg-amber-500/10 text-amber-200">Unsaved changes</span> : null}
-          {saving ? <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/70">Saving…</span> : null}
+          {saving ? <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white/70">Saving…</span> : null}
         </div>
       </div>
 
@@ -255,7 +255,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Mention triggers
             <textarea
-              className="min-h-[90px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[90px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.mentionMatchers}
               onChange={handleChange('mentionMatchers')}
               placeholder="@gmeowbased\n#gmeowbased"
@@ -266,7 +266,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Signal keywords
             <textarea
-              className="min-h-[90px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[90px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.signalKeywords}
               onChange={handleChange('signalKeywords')}
               placeholder="stats\nrank\nlevel"
@@ -279,7 +279,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Question starters
             <textarea
-              className="min-h-[80px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[80px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.questionStarters}
               onChange={handleChange('questionStarters')}
               placeholder="what\nhow\nshow"
@@ -290,7 +290,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Response variants
             <textarea
-              className="min-h-[80px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[80px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.responseVariants}
               onChange={handleChange('responseVariants')}
               placeholder="Signal sync complete\nTelemetry uplink secure"
@@ -303,7 +303,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Cooldown minutes
             <input
-              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={1}
               max={240}
@@ -316,7 +316,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Repeat question minutes
             <input
-              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={1}
               max={120}
@@ -329,7 +329,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             XP delta threshold
             <input
-              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={0}
               max={5000}
@@ -342,7 +342,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Minimum Neynar score
             <input
-              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={0}
               max={1}
@@ -375,7 +375,7 @@ export default function BotStatsConfigPanel() {
             {saving ? 'Saving…' : 'Save configuration'}
           </button>
           <button
-            className="pixel-button btn-sm border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/70 hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+            className="pixel-button btn-sm border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white/70 hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
             type="button"
             onClick={handleRevert}
             disabled={!dirty || saving}

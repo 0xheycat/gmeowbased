@@ -96,7 +96,7 @@ export default function TopViralCasts() {
   }
 
   return (
-    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5 shadow-lg backdrop-blur">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="pixel-section-title text-base">🏆 Top Viral Casts</h3>
@@ -109,7 +109,7 @@ export default function TopViralCasts() {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value as '24h' | '7d' | '30d')}
-            className="rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-[11px] text-slate-950 dark:text-slate-950 dark:text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
+            className="rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-white/5 px-3 py-1.5 text-[11px] text-slate-950 dark:text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
             aria-label="Select timeframe"
           >
             {TIMEFRAME_OPTIONS.map((option) => (
@@ -140,12 +140,12 @@ export default function TopViralCasts() {
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="h-16 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5"
+              className="h-16 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5"
             />
           ))}
         </div>
       ) : casts.length === 0 ? (
-        <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+        <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
           No viral casts yet for this timeframe.
         </div>
       ) : (
@@ -165,7 +165,7 @@ export default function TopViralCasts() {
               {casts.map((cast, index) => (
                 <tr
                   key={cast.cast_hash}
-                  className="group border-b border-white dark:border-slate-700/5 transition hover:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5"
+                  className="group border-b border-white dark:border-slate-700/5 transition hover:bg-slate-100/5 dark:bg-white/5"
                 >
                   {/* Rank */}
                   <td className="py-3 pr-3 text-[12px] font-bold text-slate-950 dark:text-white/40">

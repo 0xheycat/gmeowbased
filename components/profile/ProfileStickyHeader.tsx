@@ -59,7 +59,7 @@ export function ProfileStickyHeader({
             <div className="font-black text-accent-green leading-tight">{formatNumber(totalPoints)}</div>
             <div className="text-[9px] text-slate-500 uppercase tracking-wider">XP</div>
           </div>
-          <div className="h-8 w-px bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5" />
+          <div className="h-8 w-px bg-slate-100/10 dark:bg-white/5" />
           <div className="text-right">
             <div className="font-black text-amber-400 leading-tight">#{formatNumber(globalRank || 0)}</div>
             <div className="text-[9px] text-slate-500 uppercase tracking-wider">Rank</div>

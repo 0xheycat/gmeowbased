@@ -92,11 +92,11 @@ export function AgentComposer({ className }: AgentComposerProps) {
                       <div className="text-sm font-semibold text-slate-950 dark:text-white">{item.title}</div>
                       <CardDescription className="text-xs text-slate-950 dark:text-white/60">{item.detail}</CardDescription>
                     </div>
-                    <p className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/30 p-3 text-[13px] text-slate-950 dark:text-slate-950 dark:text-white/80">{item.prompt}</p>
+                    <p className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/30 p-3 text-[13px] text-slate-950 dark:text-white/80">{item.prompt}</p>
                     <button
                       type="button"
                       onClick={() => handleCopy(item.id, item.prompt)}
-                      className="inline-flex items-center gap-2 self-start rounded-full border border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-950 dark:text-slate-950 dark:text-white/80 transition hover:border-emerald-300/40 hover:bg-emerald-400/10"
+                      className="inline-flex items-center gap-2 self-start rounded-full border border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-950 dark:text-white/80 transition hover:border-emerald-300/40 hover:bg-emerald-400/10"
                     >
                       {isCopied ? (
                         <>

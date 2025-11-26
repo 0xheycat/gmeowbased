@@ -103,7 +103,7 @@ export function AgentEventFeed({ events, emptyHint }: AgentEventFeedProps) {
                       {event.eventType.replace(/-/g, ' ')}
                     </span>
                     {chainLabel ? (
-                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-[10px] text-slate-950 dark:text-slate-950 dark:text-white/70">{chainLabel}</span>
+                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 text-[10px] text-slate-950 dark:text-white/70">{chainLabel}</span>
                     ) : null}
                     {isNew ? (
                       <span className="rounded-full border border-emerald-200/40 bg-emerald-400/10 px-2 py-[2px] text-[10px] text-emerald-100">
@@ -124,23 +124,23 @@ export function AgentEventFeed({ events, emptyHint }: AgentEventFeedProps) {
                       {formatRelativeTime(event.createdAt)}
                     </span>
                     {event.delta != null ? (
-                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-xs text-slate-950 dark:text-slate-950 dark:text-white/80">
+                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 text-xs text-slate-950 dark:text-white/80">
                         Δ {event.delta > 0 ? '+' : ''}{event.delta.toLocaleString()} pts
                       </span>
                     ) : null}
                     {event.totalPoints != null ? (
-                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-xs text-slate-950 dark:text-slate-950 dark:text-white/80">
+                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 text-xs text-slate-950 dark:text-white/80">
                         {event.totalPoints.toLocaleString()} pts total
                       </span>
                     ) : null}
                     {tierLabel ? (
-                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-xs text-slate-950 dark:text-slate-950 dark:text-white/80">{tierLabel}</span>
+                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 text-xs text-slate-950 dark:text-white/80">{tierLabel}</span>
                     ) : null}
                   </CardFooter>
                 </div>
                 {event.cta ? (
                   <a
-                    className="inline-flex items-center gap-2 self-start rounded-full border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-950 dark:text-slate-950 dark:text-white/90 transition hover:border-emerald-200/60 hover:bg-emerald-400/10"
+                    className="inline-flex items-center gap-2 self-start rounded-full border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-950 dark:text-white/90 transition hover:border-emerald-200/60 hover:bg-emerald-400/10"
                     href={event.cta.href}
                   >
                     {event.cta.label}

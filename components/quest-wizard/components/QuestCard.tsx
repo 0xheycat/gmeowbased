@@ -178,7 +178,7 @@ export function QuestCard({ summary, variant = 'rare', showFlip = true, classNam
 									)}
 								</div>
 
-								<div className="absolute bottom-6 left-6 right-6 rounded-xl border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3 text-center backdrop-blur">
+								<div className="absolute bottom-6 left-6 right-6 rounded-xl border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-white/5 p-3 text-center backdrop-blur">
 									<p className="text-xs text-slate-950 dark:text-white/70">Click to flip back</p>
 								</div>
 							</div>
@@ -224,7 +224,7 @@ function ChainBadge({ chain }: { chain: string }) {
 	}
 
 	return (
-		<div className="rounded-full border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1 backdrop-blur">
+		<div className="rounded-full border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-white/5 px-3 py-1 backdrop-blur">
 			<span className="text-sm">{chainIcons[chain] || '⛓️'}</span>
 		</div>
 	)
@@ -253,7 +253,7 @@ function ParticleEffect() {
 			{particles.map((p) => (
 				<motion.div
 					key={p.id}
-					className="absolute rounded-full bg-slate-100/60 dark:bg-slate-100/90 dark:bg-white/5"
+					className="absolute rounded-full bg-slate-100/60 dark:bg-white/5"
 					style={{
 						left: `${p.x}%`,
 						top: `${p.y}%`,

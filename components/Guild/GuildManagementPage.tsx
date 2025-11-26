@@ -567,7 +567,7 @@ export default function GuildManagementPage({ chain, teamId, slug }: Props) {
                 <div className="guild-divided">
                   {members.map((member) => (
                     <div key={member.address} className="grid grid-cols-[minmax(0,1fr),6.5rem,6rem] items-center gap-2 px-3 py-2 text-[13px]">
-                      <div className="truncate font-semibold text-white dark:text-slate-950 dark:text-white">{shortAddr(member.address)}</div>
+                      <div className="truncate font-semibold text-white dark:text-white">{shortAddr(member.address)}</div>
                       <div className="text-right font-semibold text-purple-300">{formatNumber(member.points)}</div>
                       <div className="text-right font-semibold text-emerald-300">{member.contributionPct.toFixed(2)}%</div>
                     </div>
@@ -626,7 +626,7 @@ export default function GuildManagementPage({ chain, teamId, slug }: Props) {
                     <div key={quest.id} className="guild-panel guild-panel--muted rounded-xl p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <div className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{quest.name}</div>
+                          <div className="text-sm font-semibold text-white dark:text-white">{quest.name}</div>
                           <div className="text-[11px] text-[var(--px-sub)]">Reward {formatNumber(quest.rewardPoints)} pts</div>
                         </div>
                         <button

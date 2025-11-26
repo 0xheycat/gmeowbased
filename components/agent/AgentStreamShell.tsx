@@ -11,14 +11,14 @@ import { useCommunityEventStream } from '@/hooks/useCommunityEvents'
 
 function EventSkeletonCard() {
   return (
-    <div className="animate-pulse rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 sm:p-5">
-      <div className="h-3 w-24 rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5" />
-      <div className="mt-4 h-4 w-3/4 rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5" />
-      <div className="mt-2 h-3 w-full rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5" />
-      <div className="mt-2 h-3 w-2/3 rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5" />
+    <div className="animate-pulse rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 sm:p-5">
+      <div className="h-3 w-24 rounded-full bg-slate-100/10 dark:bg-white/5" />
+      <div className="mt-4 h-4 w-3/4 rounded-full bg-slate-100/10 dark:bg-white/5" />
+      <div className="mt-2 h-3 w-full rounded-full bg-slate-100/10 dark:bg-white/5" />
+      <div className="mt-2 h-3 w-2/3 rounded-full bg-slate-100/10 dark:bg-white/5" />
       <div className="mt-4 flex gap-2">
-        <div className="h-3 w-20 rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5" />
-        <div className="h-3 w-20 rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5" />
+        <div className="h-3 w-20 rounded-full bg-slate-100/10 dark:bg-white/5" />
+        <div className="h-3 w-20 rounded-full bg-slate-100/10 dark:bg-white/5" />
       </div>
     </div>
   )
@@ -70,7 +70,7 @@ export function AgentStreamShell() {
           <button
             type="button"
             onClick={() => refresh()}
-            className="inline-flex items-center gap-1 rounded-full border border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-950 dark:text-slate-950 dark:text-white/75 transition hover:border-emerald-300/40 hover:bg-emerald-400/10"
+            className="inline-flex items-center gap-1 rounded-full border border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-950 dark:text-white/75 transition hover:border-emerald-300/40 hover:bg-emerald-400/10"
           >
             <ArrowClockwise className={clsx('size-4', status === 'loading' ? 'animate-spin' : undefined)} weight="bold" />
             Refresh

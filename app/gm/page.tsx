@@ -26,7 +26,7 @@ export default function GMPage() {
         </div>
 
         {/* GM Button Section */}
-        <div className="bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-white dark:border-slate-700/10 p-8 mb-8">
+        <div className="bg-slate-100/5 dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-white dark:border-slate-700/10 p-8 mb-8">
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-semibold text-slate-950 dark:text-white mb-4">
@@ -67,13 +67,13 @@ export default function GMPage() {
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => router.push('/Dashboard')}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-slate-950 dark:text-slate-950 dark:text-white rounded-lg transition-colors"
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-slate-950 dark:text-white rounded-lg transition-colors"
           >
             Dashboard
           </button>
           <button
             onClick={() => router.push('/leaderboard')}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-slate-950 dark:text-slate-950 dark:text-white rounded-lg transition-colors"
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-slate-950 dark:text-white rounded-lg transition-colors"
           >
             Leaderboard
           </button>

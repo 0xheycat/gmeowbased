@@ -25,7 +25,7 @@ export default function AdminHero({ metrics, refreshing, lastUpdatedLabel, onRef
       <div className="relative z-10 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-center">
         <div className="space-y-6">
           <div>
-            <span className="pixel-pill border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-[10px] uppercase tracking-[0.22em] text-slate-950 dark:text-slate-950 dark:text-white/70">
+            <span className="pixel-pill border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-white/5 text-[10px] uppercase tracking-[0.22em] text-slate-950 dark:text-white/70">
               Gmeow Operations Command Deck
             </span>
             <h1 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950 dark:text-white sm:text-4xl lg:text-5xl">
@@ -40,7 +40,7 @@ export default function AdminHero({ metrics, refreshing, lastUpdatedLabel, onRef
             <button
               type="button"
               onClick={onRefresh}
-              className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+              className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
               disabled={refreshing}
             >
               {refreshing ? 'Refreshing…' : 'Refresh analytics'}

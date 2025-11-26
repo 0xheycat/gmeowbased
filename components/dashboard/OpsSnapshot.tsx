@@ -113,7 +113,7 @@ export default function OpsSnapshot({ data, loading, error, stale = false, lastU
           {METRIC_DEFINITIONS.map((metric) => {
             const value = totals[metric.key as MetricKey] ?? 0
             return (
-              <div key={metric.key} className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-3">
+              <div key={metric.key} className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-3 py-3">
                 <div className="text-[11px] text-[var(--px-sub)]">{metric.label}</div>
                 <div className={clsx('mt-1 text-xl font-extrabold', metric.accent)}>
                   {formatNumber(value)}
@@ -132,7 +132,7 @@ export default function OpsSnapshot({ data, loading, error, stale = false, lastU
           </div>
           <div className="overflow-hidden rounded-xl border border-white dark:border-slate-700/10">
             <table className="w-full text-left text-[11px] sm:text-[12px]">
-              <thead className="bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-[var(--px-sub)]">
+              <thead className="bg-slate-100/5 dark:bg-white/5 text-[var(--px-sub)]">
                 <tr>
                   <th className="px-3 py-2 font-semibold">Chain</th>
                   <th className="px-3 py-2 font-semibold text-right">Pilots</th>
@@ -145,7 +145,7 @@ export default function OpsSnapshot({ data, loading, error, stale = false, lastU
               </thead>
               <tbody>
                 {chains.map((chain) => (
-                  <tr key={chain.chain} className="odd:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5">
+                  <tr key={chain.chain} className="odd:bg-slate-100/5 dark:bg-white/5">
                     <td className="px-3 py-2 font-semibold uppercase tracking-wide text-[var(--px-sub)]">{chain.chain}</td>
                     <td className="px-3 py-2 text-right">{formatNumber(chain.activePilots24h)}</td>
                     <td className="px-3 py-2 text-right">{formatNumber(chain.questCompletions24h)}</td>
@@ -169,7 +169,7 @@ export default function OpsSnapshot({ data, loading, error, stale = false, lastU
         {notes.length ? (
           <div className="flex flex-wrap items-center gap-2">
             {notes.slice(0, 3).map((note, idx) => (
-              <span key={`${note}-${idx}`} className="pixel-pill bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-[10px]">
+              <span key={`${note}-${idx}`} className="pixel-pill bg-slate-100/5 dark:bg-white/5 text-[10px]">
                 {note}
               </span>
             ))}

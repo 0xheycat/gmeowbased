@@ -55,7 +55,7 @@ export default function EventMatrixPanel() {
 
   return (
     <div className="space-y-6">
-      <header className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-lg shadow-emerald-500/5 backdrop-blur">
+      <header className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5 shadow-lg shadow-emerald-500/5 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="pixel-section-title text-lg">On-chain event matrix</h2>
@@ -65,13 +65,13 @@ export default function EventMatrixPanel() {
             </p>
           </div>
           <div className="min-w-[220px] max-w-xs">
-            <label className="flex items-center gap-2 rounded-2xl border border-white dark:border-slate-700/12 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-2 text-[12px] text-slate-950 dark:text-slate-950 dark:text-white/70 focus-within:border-emerald-400/60 focus-within:text-slate-950 dark:text-slate-950 dark:text-white/90">
+            <label className="flex items-center gap-2 rounded-2xl border border-white dark:border-slate-700/12 bg-slate-100/10 dark:bg-white/5 px-3 py-2 text-[12px] text-slate-950 dark:text-white/70 focus-within:border-emerald-400/60 focus-within:text-slate-950 dark:text-white/90">
               <span className="text-[11px] uppercase tracking-[0.12em] text-slate-950 dark:text-white/60">Search</span>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Filter events…"
-                className="w-full bg-transparent text-[13px] text-slate-950 dark:text-slate-950 dark:text-white placeholder:text-slate-950 dark:text-slate-950 dark:text-white/40 focus:outline-none"
+                className="w-full bg-transparent text-[13px] text-slate-950 dark:text-white placeholder:text-slate-950 dark:text-white/40 focus:outline-none"
                 type="search"
               />
             </label>
@@ -83,7 +83,7 @@ export default function EventMatrixPanel() {
       </header>
 
       {grouped.length === 0 ? (
-        <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 text-center text-[13px] text-slate-950 dark:text-slate-950 dark:text-white/70">
+        <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-6 text-center text-[13px] text-slate-950 dark:text-white/70">
           No events match your filter. Try adjusting the search query.
         </div>
       ) : null}
@@ -98,7 +98,7 @@ export default function EventMatrixPanel() {
             {group.events.map((event) => (
               <article
                 key={event.signature}
-                className="group relative overflow-hidden rounded-3xl border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-sm shadow-emerald-500/5 transition hover:border-emerald-300/50"
+                className="group relative overflow-hidden rounded-3xl border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-white/5 p-5 shadow-sm shadow-emerald-500/5 transition hover:border-emerald-300/50"
               >
                 <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                   style={{ background: 'linear-gradient(135deg, rgba(94,234,212,0.12), transparent 60%)' }}
@@ -167,7 +167,7 @@ export default function EventMatrixPanel() {
                       </ul>
                     ) : null}
                     {event.notification.preview ? (
-                      <div className="mt-3 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3 text-[12px] text-slate-950 dark:text-slate-950 dark:text-white/80">
+                      <div className="mt-3 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3 text-[12px] text-slate-950 dark:text-white/80">
                         <span className="font-semibold text-slate-950 dark:text-white/90">Preview:</span> {event.notification.preview}
                       </div>
                     ) : null}

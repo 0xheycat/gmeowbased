@@ -100,7 +100,7 @@ export default function WebhookHealthMonitor() {
   }
 
   return (
-    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5 shadow-lg backdrop-blur">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="pixel-section-title text-base">🛠️ Webhook Health</h3>
@@ -138,8 +138,8 @@ export default function WebhookHealthMonitor() {
         </div>
       ) : loading && !health ? (
         <div className="space-y-4">
-          <div className="h-24 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5" />
-          <div className="h-32 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5" />
+          <div className="h-24 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5" />
+          <div className="h-32 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5" />
         </div>
       ) : health ? (
         <>
@@ -167,7 +167,7 @@ export default function WebhookHealthMonitor() {
 
           {/* Metrics Grid */}
           <div className="mb-4 grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-950 dark:text-white/60">
                 Last Webhook
               </div>
@@ -181,7 +181,7 @@ export default function WebhookHealthMonitor() {
               )}
             </div>
 
-            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-950 dark:text-white/60">
                 Today&apos;s Webhooks
               </div>
@@ -190,7 +190,7 @@ export default function WebhookHealthMonitor() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-950 dark:text-white/60">
                 Avg Processing
               </div>

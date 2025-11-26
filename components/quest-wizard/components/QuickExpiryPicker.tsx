@@ -92,9 +92,9 @@ export function QuickExpiryPicker({ value, onChange, id, 'aria-describedby': ari
 								? preset.tone === 'emerald'
 									? 'border-emerald-300/70 bg-emerald-300/80 text-slate-900 dark:text-slate-500 shadow-lg shadow-emerald-400/25'
 									: preset.tone === 'purple'
-										? 'border-fuchsia-300/70 bg-fuchsia-400/80 text-slate-900 dark:text-slate-950 dark:text-white shadow-lg shadow-fuchsia-400/25'
+										? 'border-fuchsia-300/70 bg-fuchsia-400/80 text-slate-900 dark:text-white shadow-lg shadow-fuchsia-400/25'
 										: preset.tone === 'indigo'
-											? 'border-indigo-300/70 bg-indigo-400/80 text-slate-900 dark:text-slate-950 dark:text-white shadow-lg shadow-indigo-400/25'
+											? 'border-indigo-300/70 bg-indigo-400/80 text-slate-900 dark:text-white shadow-lg shadow-indigo-400/25'
 											: 'border-sky-300/70 bg-sky-300/80 text-slate-950 shadow-lg shadow-sky-400/25'
 									: 'border-slate-200 dark:border-white/10 text-slate-300 hover:border-slate-200 dark:border-white/10'
 						}`}

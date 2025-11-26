@@ -1210,7 +1210,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                         }
                       }}
                       placeholder="Enter FID (e.g., 18139)"
-                      className="w-full px-4 py-3 bg-black dark:bg-slate-950/40 border border-purple-400/30 rounded-lg text-slate-950 dark:text-slate-950 dark:text-white placeholder:text-slate-950 dark:text-slate-950 dark:text-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
+                      className="w-full px-4 py-3 bg-black dark:bg-slate-950/40 border border-purple-400/30 rounded-lg text-slate-950 dark:text-white placeholder:text-slate-950 dark:text-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
                       aria-label="Farcaster ID input"
                       aria-describedby="fid-help-text"
                     />
@@ -1487,7 +1487,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 type="button"
                 onClick={handleClaimRewards}
                 disabled={isClaiming || hasOnboarded || isLoading}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-accent-green-dark px-6 py-3 font-bold text-black dark:text-slate-950 dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-accent-green/50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-accent-green-dark px-6 py-3 font-bold text-black dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-accent-green/50"
                 aria-label={isClaiming ? 'Claiming rewards, please wait' : hasOnboarded ? 'Rewards already claimed' : 'Claim your onboarding rewards'}
                 aria-busy={isClaiming}
                 aria-live="polite"
@@ -1554,7 +1554,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-accent-green-dark px-6 py-3 font-bold text-black dark:text-slate-950 dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-accent-green/50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-accent-green-dark px-6 py-3 font-bold text-black dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-accent-green/50"
                     aria-label={`Continue to stage ${stage + 2} of ${ONBOARDING_STAGES.length}`}
                   >
                     Next Card
@@ -1575,7 +1575,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                   <button
                     type="button"
                     onClick={handleSkip}
-                    className="flex-shrink-0 rounded-xl border-2 border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-6 py-3 font-bold text-slate-950 dark:text-slate-950 dark:text-white/70 backdrop-blur-sm transition-all hover:border-white dark:border-slate-700/40 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 hover:text-slate-950 dark:text-slate-950 dark:text-white sm:w-auto"
+                    className="flex-shrink-0 rounded-xl border-2 border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-white/5 px-6 py-3 font-bold text-slate-950 dark:text-white/70 backdrop-blur-sm transition-all hover:border-white dark:border-slate-700/40 hover:bg-slate-100/10 dark:bg-white/5 hover:text-slate-950 dark:text-white sm:w-auto"
                   >
                     Skip Tour
                   </button>
@@ -1584,7 +1584,7 @@ export function OnboardingFlow({ forceShow = false, onComplete }: OnboardingFlow
                 <button
                   type="button"
                   onClick={handleComplete}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-[#4ADE80] px-6 py-3 font-bold text-black dark:text-slate-950 dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-accent-green bg-gradient-to-r from-accent-green to-[#4ADE80] px-6 py-3 font-bold text-black dark:text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
                 >
                   <Sparkle size={20} weight="fill" />
                   Start Hunting

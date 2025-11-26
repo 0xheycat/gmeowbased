@@ -119,7 +119,7 @@ export function ProfileNFTCard({
         <button
           onClick={handleMint}
           disabled={isMinting || !address}
-          className="relative w-full overflow-hidden rounded-full border-2 border-gold/60 bg-gradient-to-r from-gold/30 via-gold-dark/20 to-gold/30 px-6 py-4 font-bold text-white dark:text-slate-950 dark:text-white shadow-[0_8px_32px_rgba(255,215,0,0.4),0_0_40px_rgba(255,215,0,0.2)] transition-all hover:scale-105 hover:shadow-[0_12px_40px_rgba(255,215,0,0.6)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+          className="relative w-full overflow-hidden rounded-full border-2 border-gold/60 bg-gradient-to-r from-gold/30 via-gold-dark/20 to-gold/30 px-6 py-4 font-bold text-white dark:text-white shadow-[0_8px_32px_rgba(255,215,0,0.4),0_0_40px_rgba(255,215,0,0.2)] transition-all hover:scale-105 hover:shadow-[0_12px_40px_rgba(255,215,0,0.6)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
         >
           {isMinting ? (
             <>

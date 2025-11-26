@@ -42,7 +42,7 @@ export function WizardHeader({
 
 	return (
 		<header className={`sticky top-14 sm:top-16 lg:top-0 z-40 transition ${collapsed ? 'mb-2' : 'mb-4'}`}>
-			<div className="flex flex-col gap-4 rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 backdrop-blur-xl">
+			<div className="flex flex-col gap-4 rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5 backdrop-blur-xl">
 				<div className="flex flex-wrap items-center justify-between gap-3">
 					<div className="flex items-center gap-3">
 						{avatarUrl ? (

@@ -43,7 +43,7 @@ export function GmeowHeader() {
         <div className="flex items-center gap-2 lg:hidden">
           <Link
             href="/Quest"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 transition-colors hover:border-[var(--px-accent)]/60 hover:bg-[var(--px-accent)]/5 backdrop-blur-xl backdrop-saturate-150"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 transition-colors hover:border-[var(--px-accent)]/60 hover:bg-[var(--px-accent)]/5 backdrop-blur-xl backdrop-saturate-150"
             aria-label="View Quests"
           >
             <Scroll size={18} weight="regular" />
@@ -97,7 +97,7 @@ export function GmeowHeader() {
                 'flex h-10 w-10 lg:h-12 lg:w-12 items-center justify-center rounded-xl border transition-all',
                 active
                   ? 'border-[var(--px-accent)] bg-[var(--px-accent)]/10 text-[var(--px-accent)] shadow-[0_0_12px_rgba(124,255,122,0.25)]'
-                  : 'border-slate-200 dark:border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-500/70 dark:text-slate-700 dark:text-slate-300/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-[var(--px-accent)]/60 hover:text-[var(--px-accent)]'
+                  : 'border-slate-200 dark:border-white/10 text-slate-900 dark:text-white/70 hover:border-[var(--px-accent)]/60 hover:text-[var(--px-accent)]'
               )}
             >
               <Icon size={18} weight={active ? 'fill' : 'regular'} />

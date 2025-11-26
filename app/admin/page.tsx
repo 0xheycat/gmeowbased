@@ -14,31 +14,31 @@ import AdminHero from '@/components/admin/AdminHero'
 
 // Heavy admin panels - dynamically loaded to reduce initial bundle
 const OpsSnapshot = dynamic(() => import('@/components/dashboard/OpsSnapshot'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-64" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-64" />,
 })
 
 const BotManagerPanel = dynamic(() => import('@/components/admin/BotManagerPanel'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const TipScoringPanel = dynamic(() => import('@/components/admin/TipScoringPanel'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const BadgeManagerPanel = dynamic(() => import('@/components/admin/BadgeManagerPanel'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const EventMatrixPanel = dynamic(() => import('@/components/admin/EventMatrixPanel'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const PartnerSnapshotPanel = dynamic(() => import('@/components/admin/PartnerSnapshotPanel'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const BotStatsConfigPanel = dynamic(() => import('@/components/admin/BotStatsConfigPanel'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const CACHE_KEY = 'gmeowAdminAnalytics_v1'
@@ -174,7 +174,7 @@ type QuickAction = {
 
 const QUICK_ACTION_CLASSES: Record<QuickActionTone, string> = {
   primary: 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100 hover:border-emerald-300/60 hover:bg-emerald-500/20',
-  neutral: 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 hover:border-emerald-300/30 hover:text-emerald-100',
+  neutral: 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/80 hover:border-emerald-300/30 hover:text-emerald-100',
   aux: 'border-sky-400/30 bg-sky-500/15 text-sky-100 hover:border-sky-300/50 hover:bg-sky-500/20',
 }
 
@@ -622,7 +622,7 @@ export default function AdminAnalyticsPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <span className="text-[11px] uppercase tracking-[0.32em] text-[var(--px-sub)]">Gmeow Admin</span>
         <Link
-          className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+          className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
           href="/Dashboard"
         >
           Back to dashboard ↗
@@ -641,7 +641,7 @@ export default function AdminAnalyticsPage() {
                 'pixel-pill group flex items-center gap-3 border px-4 py-2 text-[11px] uppercase tracking-[0.16em] transition',
                 activeTab === tab.id
                   ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.35)]'
-                  : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white'
+                  : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white'
               )}
             >
               <span className="flex items-center gap-2 text-left">
@@ -652,7 +652,7 @@ export default function AdminAnalyticsPage() {
               </span>
               <span className="ml-auto flex items-center gap-2">
                 {tab.shortcut ? (
-                  <span className="hidden rounded-md border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-[2px] text-[10px] font-medium text-slate-950 dark:text-slate-950 dark:text-white/60 sm:inline">
+                  <span className="hidden rounded-md border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-2 py-[2px] text-[10px] font-medium text-slate-950 dark:text-white/60 sm:inline">
                     {tab.shortcut}
                   </span>
                 ) : null}
@@ -803,7 +803,7 @@ export default function AdminAnalyticsPage() {
               </div>
             ) : null}
 
-            <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 shadow-lg shadow-emerald-500/5 backdrop-blur">
+            <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 shadow-lg shadow-emerald-500/5 backdrop-blur">
               <OpsSnapshot
                 data={opsTelemetry}
                 loading={opsTelemetryLoading}
@@ -822,7 +822,7 @@ export default function AdminAnalyticsPage() {
                 return (
                   <div
                     key={card.key}
-                    className="group relative overflow-hidden rounded-2xl border border-white dark:border-slate-700/12 bg-white dark:bg-slate-900/[0.04] p-4 shadow-[0_18px_40px_-28px_rgba(45,212,191,0.45)] backdrop-blur transition hover:border-emerald-400/40 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5"
+                    className="group relative overflow-hidden rounded-2xl border border-white dark:border-slate-700/12 bg-white dark:bg-slate-900/[0.04] p-4 shadow-[0_18px_40px_-28px_rgba(45,212,191,0.45)] backdrop-blur transition hover:border-emerald-400/40 hover:bg-slate-100/10 dark:bg-white/5"
                     style={{ borderColor: card.accent }}
                   >
                     <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" style={{ background: 'linear-gradient(135deg, rgba(94,234,212,0.12), transparent 60%)' }} aria-hidden />
@@ -845,7 +845,7 @@ export default function AdminAnalyticsPage() {
                 const data = points?.length ? points : FALLBACK_TRENDS[series.key as keyof typeof FALLBACK_TRENDS]
                 const maxValue = data.reduce((acc, val) => (val > acc ? val : acc), 1)
                 return (
-                  <div key={series.key} className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4">
+                  <div key={series.key} className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
                     <div className="mb-2 flex items-center justify-between">
                       <h3 className="pixel-section-title text-base">{series.title}</h3>
                       <span className="pixel-pill text-[10px]">Last 7 days</span>
@@ -874,7 +874,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
-              <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4">
+              <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="pixel-section-title text-base">Recent alerts</h3>
                   <span className="pixel-pill text-[10px]">Telemetry</span>
@@ -902,7 +902,7 @@ export default function AdminAnalyticsPage() {
                 )}
               </div>
 
-              <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4">
+              <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="pixel-section-title text-base">Next steps</h3>
                   <span className="pixel-pill text-[10px]">Phase 2</span>
@@ -916,7 +916,7 @@ export default function AdminAnalyticsPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4">
+            <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
               <TipScoringPanel />
             </div>
           </section>
@@ -948,7 +948,7 @@ export default function AdminAnalyticsPage() {
             </ul>
           </div>
 
-          <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-lg shadow-emerald-500/5">
+          <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5 shadow-lg shadow-emerald-500/5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="pixel-section-title text-base">Leaderboard snapshot</h3>
@@ -999,7 +999,7 @@ export default function AdminAnalyticsPage() {
 
       {activeTab === 'bot' ? (
         <section id="bot-operations" className="space-y-6">
-          <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5">
+          <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="pixel-section-title text-lg">Bot command center</h2>

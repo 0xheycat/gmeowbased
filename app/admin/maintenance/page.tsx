@@ -313,7 +313,7 @@ export default function MaintenanceDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-black dark:bg-slate-950 text-slate-950 dark:text-slate-950 dark:text-white p-4 md:p-8">
+    <div className="min-h-screen bg-black dark:bg-slate-950 text-slate-950 dark:text-white p-4 md:p-8">
       {/* Toast Notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
         {toasts.map((toast) => (
@@ -343,7 +343,7 @@ export default function MaintenanceDashboard() {
       {/* Header */}
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Hero Section */}
-        <div className="border border-white dark:border-slate-700/10 rounded-3xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur p-6 md:p-8">
+        <div className="border border-white dark:border-slate-700/10 rounded-3xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-6 md:p-8">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
@@ -368,7 +368,7 @@ export default function MaintenanceDashboard() {
               >
                 {isScanning ? `Scanning ${scanProgress}%` : '🔍 Run Scan'}
               </button>
-              <button className="px-4 py-2 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 border border-white dark:border-slate-700/10 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold transition-colors">
+              <button className="px-4 py-2 bg-slate-100/5 dark:bg-white/5 hover:bg-slate-100/10 dark:bg-white/5 border border-white dark:border-slate-700/10 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold transition-colors">
                 📊 Export Report
               </button>
             </div>
@@ -377,7 +377,7 @@ export default function MaintenanceDashboard() {
           {/* Scan Progress */}
           {isScanning && (
             <div className="mt-4">
-              <div className="h-2 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 rounded-full overflow-hidden">
+              <div className="h-2 bg-slate-100/5 dark:bg-white/5 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-200"
                   style={{ width: `${scanProgress}%` }}
@@ -389,7 +389,7 @@ export default function MaintenanceDashboard() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur p-4">
+          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60 mb-2">
               Avg Score
             </div>
@@ -398,7 +398,7 @@ export default function MaintenanceDashboard() {
             </div>
           </div>
 
-          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur p-4">
+          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60 mb-2">
               Fixed
             </div>
@@ -407,7 +407,7 @@ export default function MaintenanceDashboard() {
             </div>
           </div>
 
-          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur p-4">
+          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60 mb-2">
               Remaining
             </div>
@@ -416,7 +416,7 @@ export default function MaintenanceDashboard() {
             </div>
           </div>
 
-          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur p-4">
+          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60 mb-2">
               Time Saved
             </div>
@@ -432,7 +432,7 @@ export default function MaintenanceDashboard() {
             onClick={() => setActiveFilter('all')}
             className={`px-6 py-3 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold whitespace-nowrap transition-all ${
               activeFilter === 'all'
-                ? 'bg-slate-100/90 dark:bg-white/5 text-black dark:text-slate-950 dark:text-white'
+                ? 'bg-slate-100/90 dark:bg-white/5 text-black dark:text-white'
                 : 'bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100/90 dark:bg-white/5 border border-slate-200 dark:border-white/10'
             }`}
           >
@@ -442,7 +442,7 @@ export default function MaintenanceDashboard() {
             onClick={() => setActiveFilter('auto')}
             className={`px-6 py-3 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold whitespace-nowrap transition-all ${
               activeFilter === 'auto'
-                ? 'bg-emerald-500 text-black dark:text-slate-950 dark:text-white'
+                ? 'bg-emerald-500 text-black dark:text-white'
                 : 'bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100/90 dark:bg-white/5 border border-slate-200 dark:border-white/10'
             }`}
           >
@@ -452,7 +452,7 @@ export default function MaintenanceDashboard() {
             onClick={() => setActiveFilter('semi-auto')}
             className={`px-6 py-3 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold whitespace-nowrap transition-all ${
               activeFilter === 'semi-auto'
-                ? 'bg-cyan-500 text-black dark:text-slate-950 dark:text-white'
+                ? 'bg-cyan-500 text-black dark:text-white'
                 : 'bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100/90 dark:bg-white/5 border border-slate-200 dark:border-white/10'
             }`}
           >
@@ -462,7 +462,7 @@ export default function MaintenanceDashboard() {
             onClick={() => setActiveFilter('manual')}
             className={`px-6 py-3 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold whitespace-nowrap transition-all ${
               activeFilter === 'manual'
-                ? 'bg-purple-500 text-black dark:text-slate-950 dark:text-white'
+                ? 'bg-purple-500 text-black dark:text-white'
                 : 'bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100/90 dark:bg-white/5 border border-slate-200 dark:border-white/10'
             }`}
           >
@@ -473,7 +473,7 @@ export default function MaintenanceDashboard() {
         {/* Category Cards Grid */}
         <div className="space-y-4">
           {filteredCategories.length === 0 ? (
-            <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur p-8 text-center">
+            <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-8 text-center">
               <div className="text-4xl mb-4">🎉</div>
               <h3 className="text-xl font-bold mb-2">No Tasks Found</h3>
               <p className="text-slate-950 dark:text-white/60">
@@ -514,7 +514,7 @@ export default function MaintenanceDashboard() {
               return (
                 <div
                   key={category.id}
-                  className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur overflow-hidden"
+                  className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur overflow-hidden"
                 >
                   {/* Category Header */}
                   <div className="p-6 border-b border-white dark:border-slate-700/10">
@@ -592,7 +592,7 @@ export default function MaintenanceDashboard() {
                         P1: { text: 'P1', color: 'text-rose-400' },
                         P2: { text: 'P2', color: 'text-amber-400' },
                         P3: { text: 'P3', color: 'text-cyan-400' },
-                        P4: { text: 'P4', color: 'text-slate-950 dark:text-slate-700 dark:text-white/60' },
+                        P4: { text: 'P4', color: 'text-slate-950 dark:text-white/60' },
                       }[task.severity]
 
                       const taskStatus = getTaskStatus(task.id)
@@ -621,7 +621,7 @@ export default function MaintenanceDashboard() {
                                 >
                                   {severityConfig.text}
                                 </span>
-                                <span className="px-2 py-1 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 border border-white dark:border-slate-700/10 rounded text-[10px] uppercase tracking-wider font-bold text-slate-950 dark:text-slate-950 dark:text-white/60">
+                                <span className="px-2 py-1 bg-slate-100/5 dark:bg-white/5 border border-white dark:border-slate-700/10 rounded text-[10px] uppercase tracking-wider font-bold text-slate-950 dark:text-white/60">
                                   {task.estimatedTime}
                                 </span>
                                 <span

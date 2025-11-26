@@ -324,7 +324,7 @@ export function FinalizeStep({
 								type="button"
 								onClick={() => void onVerifyDraft({ force: true })}
 								disabled={verificationStatus === 'pending'}
-								className="rounded-full border border-white dark:border-slate-700/10 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1 text-[11px] text-slate-100 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/20 dark:bg-slate-100/90 dark:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+								className="rounded-full border border-white dark:border-slate-700/10 bg-slate-100/10 dark:bg-white/5 px-3 py-1 text-[11px] text-slate-100 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/20 dark:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
 							>
 								{verifyButtonLabel}
 							</button>
