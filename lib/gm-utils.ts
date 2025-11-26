@@ -23,9 +23,14 @@ import GM_ABI_JSON from '@/lib/abi/gmeowmultichain.json'
 // -------------------------------
 // Chain registry / configuration
 // -------------------------------
-export type ChainKey = 'base' | 'unichain' | 'celo' | 'ink' | 'op'
+// GM Contract chains (have deployed contracts)
+export type GMChainKey = 'base' | 'unichain' | 'celo' | 'ink' | 'op'
 
-export const CHAIN_IDS: Record<ChainKey, number> = {
+// All supported chains (GM contracts + OnchainStats viewing)
+export type ChainKey = GMChainKey | 'optimism' | 'ethereum' | 'arbitrum' | 'avax' | 'berachain' | 'bnb' | 'fraxtal' | 'katana' | 'soneium' | 'taiko' | 'hyperevm'
+
+// GM contract chain IDs
+export const CHAIN_IDS: Record<GMChainKey, number> = {
   base: 8453,
   unichain: 130,
   celo: 42220,
@@ -33,7 +38,27 @@ export const CHAIN_IDS: Record<ChainKey, number> = {
   op: 10,
 }
 
-export const CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
+// All chain IDs (for OnchainStats frame support)
+export const ALL_CHAIN_IDS: Record<ChainKey, number> = {
+  base: 8453,
+  unichain: 130,
+  celo: 42220,
+  ink: 57073,
+  op: 10,
+  optimism: 10, // alias for op
+  ethereum: 1,
+  arbitrum: 42161,
+  avax: 43114,
+  berachain: 80094,
+  bnb: 56,
+  fraxtal: 252,
+  katana: 360,
+  soneium: 1946,
+  taiko: 167000,
+  hyperevm: 999,
+}
+
+export const CONTRACT_ADDRESSES: Record<GMChainKey, `0x${string}`> = {
   base: (process.env.NEXT_PUBLIC_GM_BASE_ADDRESS as `0x${string}`) || '0x3ad420B8C2Be19ff8EBAdB484Ed839Ae9254bf2F',
   unichain: (process.env.NEXT_PUBLIC_GM_UNICHAIN_ADDRESS as `0x${string}`) || '0xD8b4190c87d86E28f6B583984cf0C89FCf9C2a0f',
   celo: (process.env.NEXT_PUBLIC_GM_CELO_ADDRESS as `0x${string}`) || '0xa68BfB4BB6F7D612182A3274E7C555B7b0b27a52',
@@ -42,15 +67,19 @@ export const CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
 }
 
 export const GM_CONTRACT_ADDRESS = CONTRACT_ADDRESSES.base
-export const getContractAddress = (chain: ChainKey = 'base') => CONTRACT_ADDRESSES[chain]
+export const getContractAddress = (chain: GMChainKey = 'base') => CONTRACT_ADDRESSES[chain]
 
 export const GM_CONTRACT_ABI = GM_ABI_JSON as unknown as Abi
 export const ERC721_ABI = erc721Abi as unknown as Abi
 
-const CHAIN_KEY_SET = new Set<ChainKey>(Object.keys(CONTRACT_ADDRESSES) as ChainKey[])
-const CHAIN_ID_LOOKUP = new Map<number, ChainKey>(
-  Object.entries(CHAIN_IDS).map(([key, value]) => [value, key as ChainKey]),
+// GM contract chains only
+const CHAIN_KEY_SET = new Set<GMChainKey>(Object.keys(CONTRACT_ADDRESSES) as GMChainKey[])
+const CHAIN_ID_LOOKUP = new Map<number, GMChainKey>(
+  Object.entries(CHAIN_IDS).map(([key, value]) => [value, key as GMChainKey]),
 )
+
+// All supported chains (for validation)
+export const ALL_CHAIN_KEYS = Object.keys(ALL_CHAIN_IDS) as ChainKey[]
 
 const CHAIN_ALIAS_LOOKUP: Record<string, ChainKey> = {
   base: 'base',
@@ -62,9 +91,26 @@ const CHAIN_ALIAS_LOOKUP: Record<string, ChainKey> = {
   'celo-mainnet': 'celo',
   ink: 'ink',
   'ink-mainnet': 'ink',
-  op: 'op',
-  optimism: 'op',
-  'optimism-mainnet': 'op',
+  op: 'optimism',
+  optimism: 'optimism',
+  'optimism-mainnet': 'optimism',
+  ethereum: 'ethereum',
+  eth: 'ethereum',
+  arbitrum: 'arbitrum',
+  arb: 'arbitrum',
+  avax: 'avax',
+  avalanche: 'avax',
+  berachain: 'berachain',
+  bera: 'berachain',
+  bnb: 'bnb',
+  'bnb-chain': 'bnb',
+  bsc: 'bnb',
+  fraxtal: 'fraxtal',
+  katana: 'katana',
+  soneium: 'soneium',
+  taiko: 'taiko',
+  hyperevm: 'hyperevm',
+  hyper: 'hyperevm',
 }
 
 const HEX_ID_REGEX = /^0x[0-9a-f]+$/i
@@ -87,9 +133,11 @@ export function normalizeChainKey(input: unknown): ChainKey | null {
     const trimmed = input.trim()
     if (!trimmed) return null
     const lower = trimmed.toLowerCase()
-    if (CHAIN_KEY_SET.has(lower as ChainKey)) return lower as ChainKey
+    // Check if it's a direct chain key match
+    if (ALL_CHAIN_KEYS.includes(lower as ChainKey)) return lower as ChainKey
     const alias = CHAIN_ALIAS_LOOKUP[lower]
     if (alias) return alias
+    // Only GM chains have contracts, so only lookup those by numeric ID
     const numId = toNumericChainId(trimmed)
     if (numId != null) {
       const mapped = CHAIN_ID_LOOKUP.get(numId)
@@ -152,7 +200,7 @@ type ContractCall = {
 
 const toBigInt = (value: bigint | number | string): bigint => (typeof value === 'bigint' ? value : BigInt(value))
 
-function buildTx(functionName: string, args: readonly unknown[], chain: ChainKey = 'base'): Tx {
+function buildTx(functionName: string, args: readonly unknown[], chain: GMChainKey = 'base'): Tx {
   assertFunctionInAbi(functionName)
   const data = encodeFunctionData({
     abi: GM_CONTRACT_ABI,
@@ -173,7 +221,7 @@ function buildTxFromCall(call: ContractCall): Tx {
 }
 
 // Helper to create the "viem/wagmi"-style call object (address, abi, functionName, args)
-function buildCallObject(functionName: string, args: readonly unknown[], chain: ChainKey = 'base') {
+function buildCallObject(functionName: string, args: readonly unknown[], chain: GMChainKey = 'base') {
   assertFunctionInAbi(functionName)
   return {
     address: getContractAddress(chain),
@@ -191,10 +239,10 @@ export function isAddress(a: unknown): a is Address {
 // -------------------------------
 // Basic / daily helpers (sendGM)
 // -------------------------------
-export const createSendGMTx = (chain: ChainKey = 'base') =>
+export const createSendGMTx = (chain: GMChainKey = 'base') =>
   buildCallObject('sendGM', [], chain)
 
-export const createGMTransaction = (chain: ChainKey = 'base'): Tx =>
+export const createGMTransaction = (chain: GMChainKey = 'base'): Tx =>
   buildTx('sendGM', [], chain)
 
 export const createGMUniTransaction = (): Tx => createGMTransaction('unichain')
@@ -219,7 +267,7 @@ export const createAddQuestTx = (
   maxCompletions: bigint | number | string,
   expiresAt: bigint | number | string,
   meta: string,
-  chain: ChainKey = 'base',
+  chain: GMChainKey = 'base',
 ) =>
   buildCallObject(
     'addQuest',
@@ -235,7 +283,7 @@ export const createAddQuestTransaction = (
   maxCompletions: bigint | number | string,
   expiresAt: bigint | number | string,
   meta: string,
-  chain: ChainKey = 'base',
+  chain: GMChainKey = 'base',
 ): Tx => buildTxFromCall(createAddQuestTx(name, questType, target, reward, maxCompletions, expiresAt, meta, chain))
 
 /*
@@ -254,7 +302,7 @@ export const createAddQuestWithERC20Tx = (
   meta: string,
   rewardToken: `0x${string}`,
   rewardTokenPerUser: bigint | number | string,
-  chain: ChainKey = 'base',
+  chain: GMChainKey = 'base',
 ) => buildCallObject('addQuestWithERC20', [name, questType, BigInt(target), BigInt(rewardPointsPerUser), BigInt(maxCompletions), BigInt(expiresAt), meta, rewardToken, BigInt(rewardTokenPerUser)], chain)
 
 export const createAddQuestWithERC20Transaction = (
@@ -267,7 +315,7 @@ export const createAddQuestWithERC20Transaction = (
   meta: string,
   rewardToken: `0x${string}`,
   rewardTokenPerUser: bigint | number | string,
-  chain: ChainKey = 'base',
+  chain: GMChainKey = 'base',
 ): Tx =>
   buildTxFromCall(
     createAddQuestWithERC20Tx(
@@ -296,7 +344,7 @@ export const createCompleteQuestWithSigTx = (
   deadline: bigint | number | string,
   nonce: bigint | number | string,
   sig: `0x${string}`,
-  chain: ChainKey = 'base',
+  chain: GMChainKey = 'base',
 ) => buildCallObject('completeQuestWithSig', [BigInt(questId), user, BigInt(fid), action, BigInt(deadline), BigInt(nonce), sig], chain)
 
 export const createCompleteQuestTransaction = (
@@ -307,118 +355,118 @@ export const createCompleteQuestTransaction = (
   deadline: bigint | number | string,
   nonce: bigint | number | string,
   sig: `0x${string}` | string,
-  chain: ChainKey = 'base',
+  chain: GMChainKey = 'base',
 ): Tx =>
   buildTxFromCall(createCompleteQuestWithSigTx(questId, user as `0x${string}`, fid, action, deadline, nonce, sig as `0x${string}`, chain))
 
 // closeQuest, batchRefund, getters
-export const createCloseQuestTx = (questId: bigint | number | string, chain: ChainKey = 'base') =>
+export const createCloseQuestTx = (questId: bigint | number | string, chain: GMChainKey = 'base') =>
   buildCallObject('closeQuest', [BigInt(questId)], chain)
 
-export const createBatchRefundQuestsTx = (questIds: (bigint|number|string)[], chain: ChainKey = 'base') =>
+export const createBatchRefundQuestsTx = (questIds: (bigint|number|string)[], chain: GMChainKey = 'base') =>
   buildCallObject('batchRefundQuests', [questIds.map(id => toBigInt(id))], chain)
 
-export const createGetQuestCall = (questId: bigint | number | string, chain: ChainKey = 'base') =>
+export const createGetQuestCall = (questId: bigint | number | string, chain: GMChainKey = 'base') =>
   buildCallObject('getQuest', [BigInt(questId)], chain)
 
-export const createGetActiveQuestsCall = (chain: ChainKey = 'base') =>
+export const createGetActiveQuestsCall = (chain: GMChainKey = 'base') =>
   buildCallObject('getActiveQuests', [], chain)
 
 // -------------------------------
 // Referral system TX builders
 // -------------------------------
-export const createRegisterReferralCodeTx = (code: string, chain: ChainKey = 'base') =>
+export const createRegisterReferralCodeTx = (code: string, chain: GMChainKey = 'base') =>
   buildCallObject('registerReferralCode', [code], chain)
 
-export const createSetReferrerTx = (code: string, chain: ChainKey = 'base') =>
+export const createSetReferrerTx = (code: string, chain: GMChainKey = 'base') =>
   buildCallObject('setReferrer', [code], chain)
 
-export const createSetFarcasterFidTx = (fid: bigint | number | string, chain: ChainKey = 'base') =>
+export const createSetFarcasterFidTx = (fid: bigint | number | string, chain: GMChainKey = 'base') =>
   buildCallObject('setFarcasterFid', [toBigInt(fid)], chain)
 
 // admin setters for referral
 // -------------------------------
 // Guild system TX builders
 // -------------------------------
-export const createGuildTx = (name: string, chain: ChainKey = 'base') =>
+export const createGuildTx = (name: string, chain: GMChainKey = 'base') =>
   buildCallObject('createGuild', [name], chain)
 
-export const createJoinGuildTx = (guildId: bigint|number|string, chain: ChainKey = 'base') =>
+export const createJoinGuildTx = (guildId: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('joinGuild', [BigInt(guildId)], chain)
 
-export const createLeaveGuildTx = (chain: ChainKey = 'base') =>
+export const createLeaveGuildTx = (chain: GMChainKey = 'base') =>
   buildCallObject('leaveGuild', [], chain)
 
-export const createDepositGuildPointsTx = (guildId: bigint|number|string, points: bigint|number|string, chain: ChainKey = 'base') =>
+export const createDepositGuildPointsTx = (guildId: bigint|number|string, points: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('depositGuildPoints', [toBigInt(guildId), toBigInt(points)], chain)
 
-export const createClaimGuildRewardTx = (guildId: bigint|number|string, points: bigint|number|string, chain: ChainKey = 'base') =>
+export const createClaimGuildRewardTx = (guildId: bigint|number|string, points: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('claimGuildReward', [toBigInt(guildId), toBigInt(points)], chain)
 
-export const createGuildQuestTx = (guildId: bigint|number|string, name: string, rewardPoints: bigint|number|string, chain: ChainKey = 'base') =>
+export const createGuildQuestTx = (guildId: bigint|number|string, name: string, rewardPoints: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('createGuildQuest', [toBigInt(guildId), name, toBigInt(rewardPoints)], chain)
 
-export const createCompleteGuildQuestTx = (guildQuestId: bigint|number|string, chain: ChainKey = 'base') =>
+export const createCompleteGuildQuestTx = (guildQuestId: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('completeGuildQuest', [toBigInt(guildQuestId)], chain)
 
 // -------------------------------
 // Points / tipping / badges / staking builders
 // -------------------------------
-export const createTipUserTx = (to: `0x${string}`, points: bigint|number|string, recipientFid: bigint|number|string, chain: ChainKey = 'base') =>
+export const createTipUserTx = (to: `0x${string}`, points: bigint|number|string, recipientFid: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('tipUser', [to, toBigInt(points), toBigInt(recipientFid)], chain)
 
-export const createMintBadgeFromPointsTx = (pointsToBurn: bigint|number|string, badgeType: string, chain: ChainKey = 'base') =>
+export const createMintBadgeFromPointsTx = (pointsToBurn: bigint|number|string, badgeType: string, chain: GMChainKey = 'base') =>
   buildCallObject('mintBadgeFromPoints', [toBigInt(pointsToBurn), badgeType], chain)
 
-export const createStakeForBadgeTx = (points: bigint|number|string, badgeId: bigint|number|string, chain: ChainKey = 'base') =>
+export const createStakeForBadgeTx = (points: bigint|number|string, badgeId: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('stakeForBadge', [toBigInt(points), toBigInt(badgeId)], chain)
 
-export const createUnstakeForBadgeTx = (points: bigint|number|string, badgeId: bigint|number|string, chain: ChainKey = 'base') =>
+export const createUnstakeForBadgeTx = (points: bigint|number|string, badgeId: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('unstakeForBadge', [toBigInt(points), toBigInt(badgeId)], chain)
 
 // getUserStats, tokenEscrowOf query wrappers
-export const createGetUserStatsCall = (user: `0x${string}`, chain: ChainKey = 'base') =>
+export const createGetUserStatsCall = (user: `0x${string}`, chain: GMChainKey = 'base') =>
   buildCallObject('getUserStats', [user], chain)
 
-export const createTokenEscrowOfCall = (token: `0x${string}`, chain: ChainKey = 'base') =>
+export const createTokenEscrowOfCall = (token: `0x${string}`, chain: GMChainKey = 'base') =>
   buildCallObject('tokenEscrowOf', [token], chain)
 
 // -------------------------------
 // Admin / governance tx builders (owner-only)
 // -------------------------------
-export const createSetOracleSignerTx = (newSigner: `0x${string}`, chain: ChainKey = 'base') =>
+export const createSetOracleSignerTx = (newSigner: `0x${string}`, chain: GMChainKey = 'base') =>
   buildCallObject('setOracleSigner', [newSigner], chain)
 
-export const createSetPowerBadgeForFidTx = (fid: bigint|number|string, val: boolean, chain: ChainKey = 'base') =>
+export const createSetPowerBadgeForFidTx = (fid: bigint|number|string, val: boolean, chain: GMChainKey = 'base') =>
   buildCallObject('setPowerBadgeForFid', [BigInt(fid), val], chain)
 
-export const createSetTokenWhitelistEnabledTx = (enabled: boolean, chain: ChainKey = 'base') =>
+export const createSetTokenWhitelistEnabledTx = (enabled: boolean, chain: GMChainKey = 'base') =>
   buildCallObject('setTokenWhitelistEnabled', [enabled], chain)
 
-export const createAddTokenToWhitelistTx = (token: `0x${string}`, allowed: boolean, chain: ChainKey = 'base') =>
+export const createAddTokenToWhitelistTx = (token: `0x${string}`, allowed: boolean, chain: GMChainKey = 'base') =>
   buildCallObject('addTokenToWhitelist', [token, allowed], chain)
 
-export const createWithdrawContractReserveTx = (to: `0x${string}`, amount: bigint|number|string, chain: ChainKey = 'base') =>
+export const createWithdrawContractReserveTx = (to: `0x${string}`, amount: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('withdrawContractReserve', [to, toBigInt(amount)], chain)
 
-export const createEmergencyWithdrawTokenTx = (token: `0x${string}`, to: `0x${string}`, amount: bigint|number|string, chain: ChainKey = 'base') =>
+export const createEmergencyWithdrawTokenTx = (token: `0x${string}`, to: `0x${string}`, amount: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('emergencyWithdrawToken', [token, to, toBigInt(amount)], chain)
 
-export const createPauseTx = (chain: ChainKey = 'base') => buildCallObject('pause', [], chain)
-export const createUnpauseTx = (chain: ChainKey = 'base') => buildCallObject('unpause', [], chain)
+export const createPauseTx = (chain: GMChainKey = 'base') => buildCallObject('pause', [], chain)
+export const createUnpauseTx = (chain: GMChainKey = 'base') => buildCallObject('unpause', [], chain)
 
 // GM configuration helpers
-export const createSetGMConfigTx = (reward: bigint|number|string, cooldown: bigint|number|string, chain: ChainKey = 'base') =>
+export const createSetGMConfigTx = (reward: bigint|number|string, cooldown: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('setGMConfig', [toBigInt(reward), toBigInt(cooldown)], chain)
 
 export const createSetGMBonusTiersTx = (
   bonus7: number | string | bigint,
   bonus30: number | string | bigint,
   bonus100: number | string | bigint,
-  chain: ChainKey = 'base',
+  chain: GMChainKey = 'base',
 ) => buildCallObject('setGMBonusTiers', [Number(bonus7), Number(bonus30), Number(bonus100)], chain)
 
-export const createDepositToTx = (to: `0x${string}`, amount: bigint|number|string, chain: ChainKey = 'base') =>
+export const createDepositToTx = (to: `0x${string}`, amount: bigint|number|string, chain: GMChainKey = 'base') =>
   buildCallObject('depositTo', [to, toBigInt(amount)], chain)
 
 // -------------------------------
@@ -731,7 +779,8 @@ export function getQuestFieldConfig(key: QuestTypeKey | string | number): QuestF
 // -------------------------------
 // Small convenience exports for front-end usage
 // -------------------------------
-export const CHAIN_KEYS = Object.keys(CONTRACT_ADDRESSES) as ChainKey[]
+// GM contract chains only (for contract interactions)
+export const CHAIN_KEYS = Object.keys(CONTRACT_ADDRESSES) as GMChainKey[]
 
 // Label map for UI (exported for reuse)
 export const CHAIN_LABEL: Record<ChainKey, string> = {
@@ -740,6 +789,17 @@ export const CHAIN_LABEL: Record<ChainKey, string> = {
   celo: 'Celo',
   ink: 'Ink',
   op: 'Optimism',
+  optimism: 'Optimism',
+  ethereum: 'Ethereum',
+  arbitrum: 'Arbitrum',
+  avax: 'Avalanche',
+  berachain: 'Berachain',
+  bnb: 'BNB Chain',
+  fraxtal: 'Fraxtal',
+  katana: 'Katana',
+  soneium: 'Soneium',
+  taiko: 'Taiko',
+  hyperevm: 'HyperEVM',
 }
 
 // Treat tiny/invalid timestamps as "no expiry"

@@ -4,7 +4,7 @@
  * Implements GI-8 security requirements
  */
 
-import { CHAIN_KEYS, type ChainKey } from './gm-utils'
+import { ALL_CHAIN_KEYS, type ChainKey } from './gm-utils'
 
 /**
  * Sanitize and validate Farcaster FID
@@ -50,7 +50,7 @@ export function sanitizeChainKey(chain: unknown): ChainKey | null {
   const str = String(chain).toLowerCase().trim()
   
   if (!str) return null
-  if (!CHAIN_KEYS.includes(str as ChainKey)) return null
+  if (!ALL_CHAIN_KEYS.includes(str as ChainKey)) return null
   
   return str as ChainKey
 }
