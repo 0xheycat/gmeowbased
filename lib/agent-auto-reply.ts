@@ -22,6 +22,63 @@ const DEFAULT_STATS_WINDOW_DAYS = 7
 const DEFAULT_QUEST_WINDOW_DAYS = 14
 const MAX_EVENT_ROWS = 240
 
+// @edit-start 2025-11-25 — Question detection and Neynar score display
+/**
+ * Format Neynar score as inline badge with emoji tier
+ * @param score - Neynar score (0.0 to 1.0+)
+ * @returns Formatted badge like [⭐ 88] or empty string if score too low
+ */
+function formatNeynarScoreBadge(score: number | null | undefined): string {
+  if (score == null || score < 0.3) return ''
+  
+  const percentage = Math.round(score * 100)
+  const badge = score >= 0.8 ? '⭐' : score >= 0.5 ? '✨' : '🌟'
+  
+  return `[${badge} ${percentage}]`
+}
+
+/**
+ * Detect if text is a direct question requiring specific answer
+ * @param text - User's cast text
+ * @returns True if text is a question
+ */
+function isDirectQuestion(text: string): boolean {
+  const lower = text.toLowerCase().trim()
+  
+  // Has question mark
+  if (text.includes('?')) return true
+  
+  // Starts with question word
+  const questionStarters = ['what', 'how', 'why', 'when', 'where', 'who', 'which', 'can', 'could', 'would', 'should']
+  if (questionStarters.some(word => lower.startsWith(word + ' '))) return true
+  
+  // Common question patterns
+  if (/^(show|tell|give)\s+(me|us)\s/i.test(text)) return true
+  
+  return false
+}
+
+/**
+ * Get emoji for intent type
+ * @param intent - Intent type
+ * @returns Emoji representing the intent
+ */
+function getIntentEmoji(intent: AgentIntentType): string {
+  const emojiMap: Record<AgentIntentType, string> = {
+    'stats': '📊',
+    'tips': '💰',
+    'streak': '🔥',
+    'quests': '⚔️',
+    'quest-recommendations': '🎯',
+    'leaderboards': '🏆',
+    'gm': '🌅',
+    'help': '💡',
+    'rate-limited': '🚦',
+  }
+  return emojiMap[intent] || '✨'
+}
+// @edit-end
+
 export type AgentIntentType =
   | 'stats'
   | 'tips'
@@ -247,45 +304,51 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
     cachedResponse: getCachedStats(address) !== undefined,
   }
 
+  // @edit-start 2025-11-25 — Pass neynarScore and question detection to message builders
+  const isQuestion = isDirectQuestion(normalizedText)
+  summaryMeta.isQuestion = isQuestion
+  
   let replyText: string | null = null
   switch (intent.type) {
     case 'tips': {
       const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
       const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['tip'], since: timeframe.since })
       summaryMeta.events = summary
-      replyText = buildTipsMessage(handle, stats, timeframe, summary)
+      replyText = buildTipsMessage(handle, stats, timeframe, summary, neynarScore, isQuestion)
       break
     }
     case 'streak': {
-      replyText = buildStreakMessage(handle, stats)
+      replyText = buildStreakMessage(handle, stats, neynarScore, isQuestion)
       break
     }
     case 'quests': {
       const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_QUEST_WINDOW_DAYS, 'the last 14 days', 'last 14d')
       const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['quest-verify'], since: timeframe.since })
       summaryMeta.events = summary
-      replyText = buildQuestMessage(handle, stats, timeframe, summary)
+      replyText = buildQuestMessage(handle, stats, timeframe, summary, neynarScore, isQuestion)
       break
     }
     case 'quest-recommendations': {
       // 🎯 SMART QUEST RECOMMENDATIONS
       const recommendations = await generateQuestRecommendations(address, 3)
       summaryMeta.recommendations = recommendations
-      replyText = `${t.greeting} ${handle}! ${formatQuestRecommendations(recommendations)}`
+      const scoreBadge = formatNeynarScoreBadge(neynarScore)
+      const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+      replyText = `${t.greeting} ${handle}!${scorePart} ${formatQuestRecommendations(recommendations)}`
       break
     }
     case 'leaderboards': {
       const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
       const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['gm', 'quest-verify', 'tip', 'stake', 'unstake'], since: timeframe.since })
       summaryMeta.events = summary
-      replyText = buildLeaderboardMessage(handle, stats, timeframe, summary)
+      replyText = buildLeaderboardMessage(handle, stats, timeframe, summary, neynarScore, isQuestion)
       break
     }
     case 'gm': {
       const timeframe = buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
       const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['gm'], since: timeframe.since })
       summaryMeta.events = summary
-      replyText = buildGreetingMessage(handle, stats, summary)
+      replyText = buildGreetingMessage(handle, stats, summary, neynarScore)
       break
     }
     case 'help': {
@@ -297,10 +360,11 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
       const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_STATS_WINDOW_DAYS, 'the last 7 days', 'last 7d')
       const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['gm', 'quest-verify', 'tip', 'stake', 'unstake'], since: timeframe.since })
       summaryMeta.events = summary
-      replyText = buildStatsMessage(handle, stats, timeframe, summary)
+      replyText = buildStatsMessage(handle, stats, timeframe, summary, neynarScore, isQuestion)
       break
     }
   }
+  // @edit-end
 
   if (!replyText) {
     return { ok: false, reason: 'unsupported', detail: 'empty-reply' }
@@ -517,48 +581,108 @@ async function summariseUserEvents(options: {
   }
 }
 
-function buildStatsMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents): string {
-  const deltaLabel = summary.totalDelta > 0 ? ` +${formatPoints(summary.totalDelta)} pts ${timeframe.shortLabel}.` : ''
-  const streakLabel = stats.streak > 0 ? ` Streak ${stats.streak}d.` : ''
+function buildStatsMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents, neynarScore?: number | null, isQuestion?: boolean): string {
+  const scoreBadge = formatNeynarScoreBadge(neynarScore)
+  const deltaLabel = summary.totalDelta > 0 ? ` +${formatPoints(summary.totalDelta)} pts ${timeframe.shortLabel}` : ''
+  const streakLabel = stats.streak > 0 ? ` ${stats.streak}d streak` : ''
+  
+  if (isQuestion) {
+    // Direct answer format for questions
+    const emoji = getIntentEmoji('stats')
+    const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+    return `${emoji} Level ${stats.level} ${stats.tierName}${scorePart} | ${formatPoints(stats.totalPoints)} pts${deltaLabel ? `.${deltaLabel}` : ''}${streakLabel ? ` | ${streakLabel}` : ''}.\n\nProfile → https://gmeowhq.art/profile`
+  }
+  
+  // Standard format
   const lastGmLabel = stats.lastGM ? ` Last GM ${formatRelativeTime(stats.lastGM)}.` : ''
-  const core = `gm ${handle} 🐾 Level ${stats.level} ${stats.tierName} on deck with ${formatPoints(stats.totalPoints)} pts.${deltaLabel}${streakLabel}${lastGmLabel}`
+  const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+  const core = `gm ${handle}!${scorePart} Level ${stats.level} ${stats.tierName} with ${formatPoints(stats.totalPoints)} pts.${deltaLabel}${streakLabel ? ` ${streakLabel}.` : ''}${lastGmLabel}`
   return `${core} Profile → https://gmeowhq.art/profile`
 }
 
-function buildTipsMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents): string {
+function buildTipsMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents, neynarScore?: number | null, isQuestion?: boolean): string {
+  const scoreBadge = formatNeynarScoreBadge(neynarScore)
   const windowPoints = summary.totalDelta > 0 ? formatPoints(summary.totalDelta) : '0'
   const windowEvents = summary.totalEvents > 0 ? ` across ${summary.totalEvents} boosts` : ''
   const allTime = stats.tipsAll != null ? formatPoints(stats.tipsAll) : '—'
-  const body = `gm ${handle}! Tips ${timeframe.shortLabel}: ${windowPoints} pts${windowEvents}. All-time tips ${allTime} pts.`
+  
+  if (isQuestion) {
+    // Direct answer format
+    const emoji = getIntentEmoji('tips')
+    const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+    const boostText = summary.totalEvents > 0 ? ` from ${summary.totalEvents} ${summary.totalEvents === 1 ? 'boost' : 'boosts'}` : ''
+    return `${emoji} Tips ${timeframe.shortLabel}: ${windowPoints} pts${boostText}!\n\nNice work ${handle}!${scorePart} All-time: ${allTime} pts\nLeaderboard → https://gmeowhq.art/leaderboard`
+  }
+  
+  // Standard format
+  const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+  const body = `gm ${handle}!${scorePart} Tips ${timeframe.shortLabel}: ${windowPoints} pts${windowEvents}. All-time ${allTime} pts.`
   return `${body} Leaderboard → https://gmeowhq.art/leaderboard`
 }
 
-function buildStreakMessage(handle: string, stats: BotUserStats): string {
+function buildStreakMessage(handle: string, stats: BotUserStats, neynarScore?: number | null, isQuestion?: boolean): string {
+  const scoreBadge = formatNeynarScoreBadge(neynarScore)
+  
   if (stats.streak <= 0) {
-    return `gm ${handle}! No streak detected yet, but your ledger shows ${formatPoints(stats.totalPoints)} pts. Log a GM to ignite it → https://gmeowhq.art/Quest`
+    const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+    return `gm ${handle}!${scorePart} No streak yet, but ${formatPoints(stats.totalPoints)} pts on the ledger. Log your first GM → https://gmeowhq.art/Quest`
   }
 
+  if (isQuestion) {
+    // Direct answer format
+    const emoji = getIntentEmoji('streak')
+    const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+    const lastGm = stats.lastGM ? `Last GM: ${formatRelativeTime(stats.lastGM)}` : ''
+    return `${emoji} Your streak: ${stats.streak} ${stats.streak === 1 ? 'day' : 'days'}!\n\nLooking good ${handle}!${scorePart} ${formatPoints(stats.totalPoints)} pts total${lastGm ? ` | ${lastGm}` : ''}\nKeep it going → https://gmeowhq.art/Quest`
+  }
+  
+  // Standard format
+  const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
   const lastGm = stats.lastGM ? ` Last GM ${formatRelativeTime(stats.lastGM)}.` : ''
-  return `gm ${handle}! ${stats.streak}-day streak active with ${formatPoints(stats.totalPoints)} pts.${lastGm} Keep it rolling → https://gmeowhq.art/Quest`
+  return `gm ${handle}!${scorePart} ${stats.streak}-day streak active with ${formatPoints(stats.totalPoints)} pts.${lastGm} Keep it rolling → https://gmeowhq.art/Quest`
 }
 
-function buildQuestMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents): string {
+function buildQuestMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents, neynarScore?: number | null, isQuestion?: boolean): string {
+  const scoreBadge = formatNeynarScoreBadge(neynarScore)
   const completions = summary.totalEvents > 0
-    ? `${summary.totalEvents} verified quests ${timeframe.shortLabel}`
-    : 'No verified quests in this window'
+    ? `${summary.totalEvents} verified ${summary.totalEvents === 1 ? 'quest' : 'quests'}`
+    : 'No verified quests'
   const delta = summary.totalDelta > 0 ? ` worth ${formatPoints(summary.totalDelta)} pts` : ''
+  
+  if (isQuestion) {
+    // Direct answer format
+    const emoji = getIntentEmoji('quests')
+    const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+    const timeLabel = summary.totalEvents > 0 ? ` ${timeframe.shortLabel}` : ' in this window'
+    return `${emoji} Quests${timeLabel}: ${completions}${delta}!\n\nStrong work ${handle}!${scorePart} Level ${stats.level} ${stats.tierName}\nNext mission → https://gmeowhq.art/Quest`
+  }
+  
+  // Standard format
+  const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
   const tier = `Level ${stats.level} ${stats.tierName}`
-  return `gm ${handle}! ${completions}${delta}. ${tier} is ready for the next contract → https://gmeowhq.art/Quest`
+  return `gm ${handle}!${scorePart} ${completions} ${timeframe.shortLabel}${delta}. ${tier} ready for more → https://gmeowhq.art/Quest`
 }
 
-function buildLeaderboardMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents): string {
+function buildLeaderboardMessage(handle: string, stats: BotUserStats, timeframe: TimeframeSpec, summary: SummarisedEvents, neynarScore?: number | null, isQuestion?: boolean): string {
+  const scoreBadge = formatNeynarScoreBadge(neynarScore)
+  const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
   const delta = summary.totalDelta > 0 ? ` +${formatPoints(summary.totalDelta)} pts ${timeframe.shortLabel}` : ''
-  return `gm ${handle}! ${stats.tierName} shell with ${formatPoints(stats.totalPoints)} pts.${delta} Scope your rank → https://gmeowhq.art/leaderboard`
+  
+  if (isQuestion) {
+    // Direct answer format
+    const emoji = getIntentEmoji('leaderboards')
+    return `${emoji} Your stats: Level ${stats.level} ${stats.tierName}${scorePart} | ${formatPoints(stats.totalPoints)} pts${delta ? `.${delta}` : ''}\n\nCheck your rank → https://gmeowhq.art/leaderboard`
+  }
+  
+  // Standard format
+  return `gm ${handle}!${scorePart} ${stats.tierName} with ${formatPoints(stats.totalPoints)} pts.${delta} Scope your rank → https://gmeowhq.art/leaderboard`
 }
 
-function buildGreetingMessage(handle: string, stats: BotUserStats, summary: SummarisedEvents): string {
-  const gmCount = summary.totalEvents > 0 ? `${summary.totalEvents} GMs logged this week` : 'Let’s log your next GM'
-  return `gm ${handle}! ${gmCount}. Ledger: ${formatPoints(stats.totalPoints)} pts. Dive in → https://gmeowhq.art/Quest`
+function buildGreetingMessage(handle: string, stats: BotUserStats, summary: SummarisedEvents, neynarScore?: number | null): string {
+  const scoreBadge = formatNeynarScoreBadge(neynarScore)
+  const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
+  const gmCount = summary.totalEvents > 0 ? `${summary.totalEvents} GMs this week` : 'Ready for your next GM'
+  return `gm ${handle}!${scorePart} ${gmCount}. ${formatPoints(stats.totalPoints)} pts on the ledger → https://gmeowhq.art/Quest`
 }
 
 function buildHelpMessage(handle: string): string {
