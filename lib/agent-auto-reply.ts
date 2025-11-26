@@ -26,15 +26,14 @@ const MAX_EVENT_ROWS = 240
 /**
  * Format Neynar score as inline badge with emoji tier
  * @param score - Neynar score (0.0 to 1.0+)
- * @returns Formatted badge like [⭐ 88] or empty string if score too low
+ * @returns Formatted badge like [⭐ 0.81] or empty string if score too low
  */
 function formatNeynarScoreBadge(score: number | null | undefined): string {
   if (score == null || score < 0.3) return ''
   
-  const percentage = Math.round(score * 100)
   const badge = score >= 0.8 ? '⭐' : score >= 0.5 ? '✨' : '🌟'
   
-  return `[${badge} ${percentage}]`
+  return `[${badge} ${score.toFixed(2)}]`
 }
 
 /**
