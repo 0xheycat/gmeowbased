@@ -6,7 +6,7 @@ export function StatusPill({ tone, children }: { tone: StatusTone; children: Rea
 	const palette: Record<StatusTone, string> = {
 		ready: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200',
 		warn: 'border-amber-400/40 bg-amber-400/10 text-amber-200',
-		neutral: 'border-slate-400/40 bg-slate-100/90 dark:bg-white/5/10 text-slate-200',
+		neutral: 'border-slate-400/40 bg-slate-100/90 dark:bg-white/5 text-slate-200',
 	}
 
 	return (

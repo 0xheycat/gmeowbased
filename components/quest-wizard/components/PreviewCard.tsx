@@ -91,7 +91,7 @@ export function PreviewCard({
 				<div className="flex justify-end gap-2">
 					<button
 						onClick={() => setViewMode('standard')}
-						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5"
+						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5"
 					>
 						Standard View
 					</button>
@@ -121,13 +121,13 @@ export function PreviewCard({
 				<div className="flex justify-end gap-2">
 					<button
 						onClick={() => setViewMode('standard')}
-						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-xs text-slate-400"
+						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-xs text-slate-400"
 					>
 						Standard View
 					</button>
 					<button
 						onClick={() => setViewMode('card')}
-						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5"
+						className="rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5"
 					>
 						Card View ✨
 					</button>
@@ -212,6 +212,6 @@ export function PreviewCard({
 
 function CardLoadingSkeleton() {
 	return (
-		<div className="h-[440px] w-full max-w-[320px] animate-pulse rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5" />
+		<div className="h-[440px] w-full max-w-[320px] animate-pulse rounded-2xl bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5" />
 	)
 }

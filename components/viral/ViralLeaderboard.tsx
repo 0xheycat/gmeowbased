@@ -93,7 +93,7 @@ export function ViralLeaderboard({
   if (loading) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="status"
         aria-label="Loading leaderboard"
       >
@@ -109,7 +109,7 @@ export function ViralLeaderboard({
   if (error) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="alert"
         aria-live="assertive"
       >
@@ -120,7 +120,7 @@ export function ViralLeaderboard({
             onClick={() => window.location.reload()}
             className="
               px-4 py-2 min-h-[44px] rounded-lg
-              bg-blue-500 hover:bg-blue-600 text-white dark:text-slate-950 dark:text-white font-medium
+              bg-blue-500 hover:bg-blue-600 text-slate-950 dark:text-white font-medium
               transition-colors duration-200
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
             "
@@ -137,7 +137,7 @@ export function ViralLeaderboard({
   if (!data || data.leaderboard.length === 0) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="status"
       >
         <div className="flex flex-col items-center justify-center py-12 gap-4">
@@ -154,7 +154,7 @@ export function ViralLeaderboard({
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg space-y-6 ${className}`}>
+    <div className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg space-y-6 ${className}`}>
       {/* Header with Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -175,7 +175,7 @@ export function ViralLeaderboard({
               onChange={(e) => setSelectedChain(e.target.value)}
               className="
                 px-3 py-2 min-h-[44px] rounded-lg border border-gray-300 dark:border-gray-600
-                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                bg-slate-100/90 dark:bg-white/5 text-gray-900 dark:text-gray-100
                 text-sm font-medium
                 focus:outline-none focus:ring-2 focus:ring-blue-500
               "
@@ -192,7 +192,7 @@ export function ViralLeaderboard({
               onChange={(e) => setSelectedSeason(e.target.value)}
               className="
                 px-3 py-2 min-h-[44px] rounded-lg border border-gray-300 dark:border-gray-600
-                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                bg-slate-100/90 dark:bg-white/5 text-gray-900 dark:text-gray-100
                 text-sm font-medium
                 focus:outline-none focus:ring-2 focus:ring-blue-500
               "

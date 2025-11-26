@@ -67,7 +67,7 @@ export function FinalizeStep({
 		success: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-100',
 		error: 'border-rose-500/40 bg-rose-500/15 text-rose-100',
 		pending: 'border-sky-400/40 bg-sky-500/10 text-sky-100',
-		idle: 'border-slate-200 dark:border-white/10/10 bg-slate-950/60 text-slate-200',
+		idle: 'border-slate-200 dark:border-white/10 bg-slate-950/60 text-slate-200',
 	}[verificationVariant]
 	const requirementEntries = verificationData ? Object.entries(verificationData.requirement || {}) : []
 	const metaEntries = verificationData ? Object.entries(verificationData.meta || {}) : []
@@ -324,7 +324,7 @@ export function FinalizeStep({
 								type="button"
 								onClick={() => void onVerifyDraft({ force: true })}
 								disabled={verificationStatus === 'pending'}
-								className="rounded-full border border-white dark:border-slate-700/10 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1 text-[11px] text-slate-100 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/20 dark:bg-slate-100/90 dark:bg-white/5/5 disabled:cursor-not-allowed disabled:opacity-50"
+								className="rounded-full border border-white dark:border-slate-700/10 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1 text-[11px] text-slate-100 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/20 dark:bg-slate-100/90 dark:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
 							>
 								{verifyButtonLabel}
 							</button>

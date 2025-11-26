@@ -19,28 +19,28 @@ type AdminHeroProps = {
 
 export default function AdminHero({ metrics, refreshing, lastUpdatedLabel, onRefresh }: AdminHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white dark:border-slate-700/15 bg-gradient-to-r from-[#0c1b2f] via-[#081d26] to-[#111533] px-6 py-8 text-white dark:text-slate-950 dark:text-white shadow-[0_0_80px_-40px_rgba(14,212,255,0.8)] sm:px-10 sm:py-10">
+    <section className="relative overflow-hidden rounded-3xl border border-white dark:border-slate-700/15 bg-gradient-to-r from-[#0c1b2f] via-[#081d26] to-[#111533] px-6 py-8 text-slate-950 dark:text-white shadow-[0_0_80px_-40px_rgba(14,212,255,0.8)] sm:px-10 sm:py-10">
       <div className="pointer-events-none absolute -left-24 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-emerald-400/20 blur-3xl" aria-hidden />
       <div className="pointer-events-none absolute -right-28 -top-16 h-72 w-72 rounded-full bg-sky-500/30 blur-3xl" aria-hidden />
       <div className="relative z-10 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-center">
         <div className="space-y-6">
           <div>
-            <span className="pixel-pill border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-[10px] uppercase tracking-[0.22em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
+            <span className="pixel-pill border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-[10px] uppercase tracking-[0.22em] text-slate-950 dark:text-slate-950 dark:text-white/70">
               Gmeow Operations Command Deck
             </span>
-            <h1 className="mt-3 text-3xl font-extrabold leading-tight text-white dark:text-slate-950 dark:text-white sm:text-4xl lg:text-5xl">
+            <h1 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950 dark:text-white sm:text-4xl lg:text-5xl">
               Admin panel fuelled by live telemetry &amp; bot insights
             </h1>
-            <p className="mt-3 max-w-xl text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80 sm:text-base">
+            <p className="mt-3 max-w-xl text-sm text-slate-950 dark:text-white/80 sm:text-base">
               Monitor mission health, orchestrate automation, and keep the Gmeow bot purring. Tap into analytics, run manual ops,
               and review high-signal alerts from a single command surface.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
+          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-950 dark:text-white/70">
             <button
               type="button"
               onClick={onRefresh}
-              className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+              className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
               disabled={refreshing}
             >
               {refreshing ? 'Refreshing…' : 'Refresh analytics'}
@@ -57,7 +57,7 @@ export default function AdminHero({ metrics, refreshing, lastUpdatedLabel, onRef
             >
               Bot operations ↘
             </Link>
-            <span className="block text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60 lg:ml-4">
+            <span className="block text-[11px] text-slate-950 dark:text-white/60 lg:ml-4">
               Updated {lastUpdatedLabel}
             </span>
           </div>
@@ -68,14 +68,14 @@ export default function AdminHero({ metrics, refreshing, lastUpdatedLabel, onRef
             <div
               key={metric.key}
               className={clsx(
-                'group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10/15 bg-slate-100/90 dark:bg-white/5/[0.04] p-4 transition duration-300',
+                'group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5/[0.04] p-4 transition duration-300',
                 'before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-white/5 before:via-transparent before:to-transparent before:opacity-0 before:transition before:duration-300 group-hover:before:opacity-100'
               )}
               style={{ borderColor: metric.accent, boxShadow: `0 20px 40px -32px ${metric.accent}` }}
             >
-              <div className="text-[11px] uppercase tracking-[0.16em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">{metric.label}</div>
-              <div className="mt-3 text-2xl font-bold text-white dark:text-slate-950 dark:text-white sm:text-3xl">{metric.value}</div>
-              <div className="mt-2 text-[12px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
+              <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60">{metric.label}</div>
+              <div className="mt-3 text-2xl font-bold text-slate-950 dark:text-white sm:text-3xl">{metric.value}</div>
+              <div className="mt-2 text-[12px] text-slate-950 dark:text-white/70">
                 <span className={clsx(metric.delta >= 0 ? 'text-emerald-200' : 'text-red-300', 'font-semibold')}>
                   {metric.deltaLabel}
                 </span>{' '}

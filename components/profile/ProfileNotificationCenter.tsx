@@ -86,7 +86,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-4 py-3 text-left transition hover:border-emerald-300/40 hover:bg-slate-100/8 dark:bg-slate-100/90 dark:bg-white/5/5"
+        className="flex w-full items-center justify-between rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-4 py-3 text-left transition hover:border-emerald-300/40 hover:bg-slate-100/8 dark:bg-slate-100/90 dark:bg-white/5"
       >
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -94,13 +94,13 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
               🔔
             </span>
             {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white dark:text-slate-950 dark:text-white shadow-[0_0_12px_rgba(16,185,129,0.6)]">
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-slate-950 dark:text-slate-950 dark:text-white shadow-[0_0_12px_rgba(16,185,129,0.6)]">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Notifications</h3>
+            <h3 className="text-sm font-semibold text-slate-950 dark:text-white">Notifications</h3>
             <p className="text-sm text-[var(--px-sub)]">
               {unreadCount === 0 ? 'No new notifications' : `${unreadCount} unread ${unreadCount === 1 ? 'notification' : 'notifications'}`}
             </p>
@@ -117,13 +117,13 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
       </button>
 
       {isExpanded && (
-        <div className="mt-3 space-y-4 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
+        <div className="mt-3 space-y-4 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4">
           {/* Header with clear all button */}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Activity Feed</h4>
+            <h4 className="text-sm font-semibold text-slate-950 dark:text-white">Activity Feed</h4>
             <button
               type="button"
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition hover:border-rose-300/40 hover:text-white dark:text-slate-950 dark:text-white disabled:opacity-30"
+              className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-slate-950 dark:text-slate-950 dark:text-white/80 transition hover:border-rose-300/40 hover:text-slate-950 dark:text-slate-950 dark:text-white disabled:opacity-30"
               onClick={() => dismissAll()}
               disabled={!notifications.length}
             >
@@ -142,7 +142,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                   'pixel-pill border px-3 py-1 text-[10px] uppercase tracking-[0.22em] transition',
                   activeFilter === option
                     ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.35)]'
-                    : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white',
+                    : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white',
                 )}
               >
                 {FILTER_LABELS[option]}
@@ -159,7 +159,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                 return (
                   <article
                     key={note.id}
-                    className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3 shadow-[0_12px_28px_rgba(8,19,45,0.3)] backdrop-blur transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/8 dark:bg-slate-100/90 dark:bg-white/5/5"
+                    className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3 shadow-[0_12px_28px_rgba(8,19,45,0.3)] backdrop-blur transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/8 dark:bg-slate-100/90 dark:bg-white/5"
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-lg">
@@ -168,7 +168,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <h5 className="text-[13px] font-semibold text-white dark:text-slate-950 dark:text-white">{note.title}</h5>
+                            <h5 className="text-[13px] font-semibold text-slate-950 dark:text-white">{note.title}</h5>
                             {note.description ? (
                               <p className="mt-1 text-sm leading-relaxed text-[var(--px-sub)]">{note.description}</p>
                             ) : null}
@@ -176,7 +176,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                               <span>{formatTimeAgo(note.createdAt)}</span>
                               {note.category && (
                                 <>
-                                  <span className="text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/30">•</span>
+                                  <span className="text-slate-950 dark:text-white/30">•</span>
                                   <span>{FILTER_LABELS[note.category]}</span>
                                 </>
                               )}
@@ -184,7 +184,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                           </div>
                           <button
                             type="button"
-                            className="flex-shrink-0 rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-2 py-1 text-[10px] uppercase tracking-[0.26em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition hover:border-rose-300/40 hover:text-white dark:text-slate-950 dark:text-white"
+                            className="flex-shrink-0 rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.26em] text-slate-950 dark:text-slate-950 dark:text-white/80 transition hover:border-rose-300/40 hover:text-slate-950 dark:text-slate-950 dark:text-white"
                             onClick={() => handleDismiss(note)}
                             aria-label="Dismiss notification"
                           >
@@ -208,7 +208,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                 )
               })
             ) : (
-              <div className="rounded-xl border border-dashed border-white dark:border-slate-700/15 bg-slate-100/3 dark:bg-slate-100/90 dark:bg-white/5/5 p-8 text-center">
+              <div className="rounded-xl border border-dashed border-white dark:border-slate-700/15 bg-slate-100/3 dark:bg-slate-100/90 dark:bg-white/5 p-8 text-center">
                 <div className="mb-2 text-3xl" aria-hidden>
                   🎉
                 </div>
@@ -223,7 +223,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
 
           {/* Show more indicator */}
           {filtered.length > 10 && (
-            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/3 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-2 text-center text-sm text-[var(--px-sub)]">
+            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/3 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-2 text-center text-sm text-[var(--px-sub)]">
               Showing 10 of {filtered.length} notifications
             </div>
           )}

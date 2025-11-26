@@ -48,7 +48,7 @@ export function Field({ label, description, error, children }: FieldProps) {
 			className={`space-y-3 rounded-2xl border p-4 transition-all duration-300 ${
 				error
 					? 'border-rose-500/60 bg-rose-500/5 shadow-[0_0_20px_rgba(244,63,94,0.15)]'
-					: 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/[0.04]'
+					: 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5/[0.04]'
 			}`}
 		>
 			<legend id={legendId} className="text-xs font-semibold uppercase tracking-wide text-slate-100">
