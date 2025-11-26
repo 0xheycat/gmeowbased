@@ -2,11 +2,5 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "cleanUrls": true,
-  "crons": [
-    {
-      "path": "/api/cron/mint-badges",
-      "schedule": "0 0 * * *"
-    }
-  ]
+  "cleanUrls": true
 }

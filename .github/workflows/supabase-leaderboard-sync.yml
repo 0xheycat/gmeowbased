@@ -1,9 +1,9 @@
 name: Supabase Leaderboard Sync
 
 on:
-  # schedule:
-  #   - cron: '0 * * * *'  # Temporarily disabled - uncomment to enable hourly sync
-  workflow_dispatch:  # Manual trigger only
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:  # Manual trigger
 
 permissions:
   contents: read
