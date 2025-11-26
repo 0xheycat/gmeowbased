@@ -57,10 +57,12 @@ export function buildBotFrameEmbed(options: BotFrameOptions): BotFrameEmbed | nu
     }
 
     case 'quest-board': {
+      // For quest board (browsing all quests), use leaderboard frame
+      // which provides access to quests via the Quest page
+      // TODO: Create dedicated /frame/quests route for direct quest browsing
       const frameInput: FrameShareInput = {
-        type: 'quest',
+        type: 'leaderboards',
         chain: chain || 'all',
-        questId: questId || undefined,
         fid: fid || undefined,
         extra: {
           action: 'browse-quests',
