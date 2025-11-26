@@ -29,31 +29,32 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
   // Listen for miniapp ready status
   useEffect(() => {
     let mounted = true
+    console.log('[MiniAppProvider] Setting up miniapp ready listener...')
     
     const handleMiniappReady = (e: CustomEvent) => {
       if (mounted) {
-        console.log('[MiniAppProvider] Miniapp ready event received:', e.detail)
+        console.log('[MiniAppProvider] ✅ Miniapp ready event received:', e.detail)
         setMiniappChecked(true)
       }
     }
     
     window.addEventListener('miniapp:ready', handleMiniappReady as EventListener)
     
-    // Reduce timeout from 3s to 2s for faster loading on mobile
-    // Farcaster mobile SDK should handshake within 2 seconds
+    // Aggressive 1.5s fallback - if SDK doesn't respond quickly, proceed anyway
+    // The app works fine without SDK initialization
     const fallbackTimer = setTimeout(() => {
-      if (mounted) {
-        console.log('[MiniAppProvider] Fallback timeout reached, proceeding without miniapp')
+      if (mounted && !miniappChecked) {
+        console.warn('[MiniAppProvider] ⚠️ Fallback timeout (1.5s) - proceeding without waiting for SDK')
         setMiniappChecked(true)
       }
-    }, 2000)
+    }, 1500)
     
     return () => {
       mounted = false
       window.removeEventListener('miniapp:ready', handleMiniappReady as EventListener)
       clearTimeout(fallbackTimer)
     }
-  }, [])
+  }, [miniappChecked])
 
   // Load miniapp context on mount (for logging/debugging)
   useEffect(() => {

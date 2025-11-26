@@ -2,8 +2,11 @@ const ALLOWED_SUFFIXES = ['farcaster.xyz', 'warpcast.com', 'base.dev', 'gmeowhq.
 
 export function isEmbedded(): boolean {
   try {
-    return typeof window !== 'undefined' && window.self !== window.top
+    const embedded = typeof window !== 'undefined' && window.self !== window.top
+    console.log('[miniappEnv] isEmbedded:', embedded)
+    return embedded
   } catch {
+    console.log('[miniappEnv] isEmbedded: false (error)')
     return false
   }
 }
@@ -11,16 +14,24 @@ export function isEmbedded(): boolean {
 export function referrerHost(): string | null {
   try {
     const ref = typeof document !== 'undefined' ? document.referrer : ''
-    if (!ref) return null
-    return new URL(ref).hostname
-  } catch {
+    if (!ref) {
+      console.log('[miniappEnv] referrerHost: null (no referrer)')
+      return null
+    }
+    const hostname = new URL(ref).hostname
+    console.log('[miniappEnv] referrerHost:', hostname, 'from:', ref)
+    return hostname
+  } catch (err) {
+    console.log('[miniappEnv] referrerHost: null (error parsing)', err)
     return null
   }
 }
 
 export function isAllowedReferrer(): boolean {
   const h = referrerHost()
-  return !!h && ALLOWED_SUFFIXES.some((s) => h === s || h.endsWith(`.${s}`))
+  const allowed = !!h && ALLOWED_SUFFIXES.some((s) => h === s || h.endsWith(`.${s}`))
+  console.log('[miniappEnv] isAllowedReferrer:', allowed, 'host:', h, 'allowedSuffixes:', ALLOWED_SUFFIXES)
+  return allowed
 }
 
 // Probe the miniapp. Only returns true if we’re embedded in an allowed referrer and SDK handshakes.
@@ -101,48 +112,57 @@ function asEmbedTuple(arr?: string[]): EmbedTuple | undefined {
 
 export async function fireMiniappReady(): Promise<void> {
   // Call as early as possible on the client; gate to embedded + allowed referrer
+  console.log('[fireMiniappReady] Starting...')
+  
   try {
-    if (!isEmbedded()) {
-      console.log('[fireMiniappReady] Not embedded, skipping')
+    const embedded = isEmbedded()
+    if (!embedded) {
+      console.log('[fireMiniappReady] ✅ Not embedded, completing successfully (no SDK needed)')
       return
     }
     
-    if (!isAllowedReferrer()) {
-      console.warn('[fireMiniappReady] Not allowed referrer, skipping')
+    const allowedRef = isAllowedReferrer()
+    if (!allowedRef) {
+      console.warn('[fireMiniappReady] ⚠️ Not allowed referrer, completing anyway (will work without SDK)')
       return
     }
 
-    console.log('[fireMiniappReady] Loading Farcaster SDK...')
+    console.log('[fireMiniappReady] 📦 Loading Farcaster SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
+    console.log('[fireMiniappReady] SDK loaded, checking context...')
     
-    // Reduce context timeout from 15s to 5s for faster mobile loading
-    console.log('[fireMiniappReady] Waiting for SDK context...')
-    await Promise.race([
-      sdk.context,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout after 5s')), 5000))
-    ])
+    // Try to get context with timeout
+    try {
+      await Promise.race([
+        sdk.context,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout after 3s')), 3000))
+      ])
+      console.log('[fireMiniappReady] ✅ SDK context ready')
+    } catch (contextError) {
+      console.warn('[fireMiniappReady] ⚠️ Context timeout, proceeding anyway:', contextError)
+      // Don't throw - continue without context
+    }
     
-    console.log('[fireMiniappReady] ✅ SDK context ready')
-    
-    // Call ready action with reduced timeout from 10s to 3s
+    // Try to call ready action if available
     if (sdk.actions?.ready) {
       try {
         console.log('[fireMiniappReady] Calling sdk.actions.ready()...')
         await Promise.race([
           sdk.actions.ready(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout after 3s')), 3000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout after 2s')), 2000))
         ])
         console.log('[fireMiniappReady] ✅ sdk.actions.ready() completed')
       } catch (readyError) {
-        console.warn('[fireMiniappReady] ready() timeout/error (non-critical):', readyError)
-        // Don't throw - allow app to continue even if ready() times out
+        console.warn('[fireMiniappReady] ⚠️ ready() timeout/error (non-critical):', readyError)
+        // Don't throw - app works without this
       }
     } else {
-      console.warn('[fireMiniappReady] sdk.actions.ready not available')
+      console.log('[fireMiniappReady] ℹ️ sdk.actions.ready not available (older SDK?)')
     }
+    
+    console.log('[fireMiniappReady] ✅ Completed successfully')
   } catch (error) {
-    console.error('[miniappEnv] ❌ Error in fireMiniappReady:', error)
-    // Rethrow to trigger retry logic in MiniappReady component
-    throw error
+    console.error('[fireMiniappReady] ❌ Error occurred, but continuing anyway:', error)
+    // NEVER throw - always let the app proceed
   }
 }
