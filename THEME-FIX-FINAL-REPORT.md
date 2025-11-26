@@ -23,9 +23,26 @@ Users reported theme was broken with inconsistent colors everywhere, making text
 - ✅ Applied to text, bg, border, and hover variants
 - **67 files updated**
 
+### Session 3: Comprehensive Border & Cascading Hover Audit (~75 fixes)
+**Commit:** `581eb53`
+- ✅ ~60 border-white instances fixed (invisible in light mode)
+- ✅ ~15 cascading hover/focus patterns fixed
+- ✅ Pattern: `border-white` → `border-slate-200` (light mode visible)
+- ✅ Pattern: `hover:border-white dark:border-X` → `hover:border-slate-300 dark:hover:border-X`
+- ✅ Pattern: `hover:bg-X dark:bg-Y` → `hover:bg-X dark:hover:bg-Y`
+- **28 files updated**
+
+**Fixed Components:**
+- Admin: AdminHero, BotManagerPanel (18), BotStatsConfigPanel (8), CacheManager (2), PartnerSnapshotPanel (3), AdminLoginForm (3), LoginForm (2)
+- Dashboard: TipMentionSummaryCard (6), AnalyticsHighlights (2), DashboardNotificationCenter (3), OpsSnapshot (2), DashboardMobileTabs
+- Quest Wizard: StepPanel (2), FinalizeStep, TemplateSelector, WizardHeader, CatalogStatusBanner
+- Profile: ProfileNotificationCenter
+- UI: live-notifications
+- App Pages: admin/page (8), maintenance/page (9), gm, leaderboard, admin/login, admin/viral, loading, providers, profile badges
+
 ## 📊 Total Impact
 
-**Grand Total: 645 theme issues fixed across 2 commits**
+**Grand Total: 720 theme issues fixed across 3 commits**
 
 ### Files Fixed (Non-exhaustive List)
 **Layout & Navigation:**
@@ -126,6 +143,7 @@ Both modes now properly support glass morphism effects:
 
 ---
 **Status:** ✅ COMPLETE
-**Commits:** 2 commits pushed to main
-**Files Changed:** 141 files total
-**Lines Changed:** +1,775 insertions, -979 deletions
+**Commits:** 3 commits pushed to main (3ed5ec9, a86f195, 581eb53)
+**Files Changed:** 169 files total
+**Lines Changed:** +1,871 insertions, -1,075 deletions
+**Total Fixes:** 720 individual theme issues resolved
