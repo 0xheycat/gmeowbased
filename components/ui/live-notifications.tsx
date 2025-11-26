@@ -316,7 +316,7 @@ function NotificationCard({ note, onDismiss, index }: { note: NotificationItem; 
           ) : null}
 
           {categoryLabel ? (
-            <span className="mt-1.5 inline-flex items-center rounded-full border border-white dark:border-slate-700/10 bg-slate-100/10 dark:bg-white/5 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-slate-900 dark:text-white/80">
+            <span className="mt-1.5 inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700/10 bg-slate-100/10 dark:bg-white/5 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-slate-900 dark:text-white/80">
               {categoryLabel}
             </span>
           ) : null}

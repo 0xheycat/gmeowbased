@@ -113,7 +113,7 @@ export default function OpsSnapshot({ data, loading, error, stale = false, lastU
           {METRIC_DEFINITIONS.map((metric) => {
             const value = totals[metric.key as MetricKey] ?? 0
             return (
-              <div key={metric.key} className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-3 py-3">
+              <div key={metric.key} className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-3 py-3">
                 <div className="text-[11px] text-[var(--px-sub)]">{metric.label}</div>
                 <div className={clsx('mt-1 text-xl font-extrabold', metric.accent)}>
                   {formatNumber(value)}
@@ -130,7 +130,7 @@ export default function OpsSnapshot({ data, loading, error, stale = false, lastU
             <h4 className="pixel-section-title text-base">Chain Breakdown</h4>
             <span className="pixel-pill text-[10px]">{chains.length} chains</span>
           </div>
-          <div className="overflow-hidden rounded-xl border border-white dark:border-slate-700/10">
+          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700/10">
             <table className="w-full text-left text-[11px] sm:text-[12px]">
               <thead className="bg-slate-100/5 dark:bg-white/5 text-[var(--px-sub)]">
                 <tr>

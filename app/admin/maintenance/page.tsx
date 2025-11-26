@@ -331,7 +331,7 @@ export default function MaintenanceDashboard() {
               <p className="text-sm flex-1">{toast.message}</p>
               <button
                 onClick={() => dismissToast(toast.id)}
-                className="text-slate-950 dark:text-white/60 hover:text-slate-950 dark:text-white transition-colors text-xs"
+                className="text-slate-950 dark:text-white/60 hover:text-slate-950 dark:hover:text-white transition-colors text-xs"
               >
                 ✕
               </button>
@@ -343,7 +343,7 @@ export default function MaintenanceDashboard() {
       {/* Header */}
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Hero Section */}
-        <div className="border border-white dark:border-slate-700/10 rounded-3xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-6 md:p-8">
+        <div className="border border-slate-200 dark:border-slate-700/10 rounded-3xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-6 md:p-8">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
@@ -368,7 +368,7 @@ export default function MaintenanceDashboard() {
               >
                 {isScanning ? `Scanning ${scanProgress}%` : '🔍 Run Scan'}
               </button>
-              <button className="px-4 py-2 bg-slate-100/5 dark:bg-white/5 hover:bg-slate-100/10 dark:bg-white/5 border border-white dark:border-slate-700/10 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold transition-colors">
+              <button className="px-4 py-2 bg-slate-100/5 dark:bg-white/5 hover:bg-slate-100/10 dark:hover:bg-white/5 border border-slate-200 dark:border-slate-700/10 rounded-xl text-[11px] uppercase tracking-[0.16em] font-bold transition-colors">
                 📊 Export Report
               </button>
             </div>
@@ -389,7 +389,7 @@ export default function MaintenanceDashboard() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
+          <div className="border border-slate-200 dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60 mb-2">
               Avg Score
             </div>
@@ -398,7 +398,7 @@ export default function MaintenanceDashboard() {
             </div>
           </div>
 
-          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
+          <div className="border border-slate-200 dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60 mb-2">
               Fixed
             </div>
@@ -407,7 +407,7 @@ export default function MaintenanceDashboard() {
             </div>
           </div>
 
-          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
+          <div className="border border-slate-200 dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60 mb-2">
               Remaining
             </div>
@@ -416,7 +416,7 @@ export default function MaintenanceDashboard() {
             </div>
           </div>
 
-          <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
+          <div className="border border-slate-200 dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60 mb-2">
               Time Saved
             </div>
@@ -473,7 +473,7 @@ export default function MaintenanceDashboard() {
         {/* Category Cards Grid */}
         <div className="space-y-4">
           {filteredCategories.length === 0 ? (
-            <div className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-8 text-center">
+            <div className="border border-slate-200 dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur p-8 text-center">
               <div className="text-4xl mb-4">🎉</div>
               <h3 className="text-xl font-bold mb-2">No Tasks Found</h3>
               <p className="text-slate-950 dark:text-white/60">
@@ -514,7 +514,7 @@ export default function MaintenanceDashboard() {
               return (
                 <div
                   key={category.id}
-                  className="border border-white dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur overflow-hidden"
+                  className="border border-slate-200 dark:border-slate-700/10 rounded-2xl bg-slate-100/5 dark:bg-white/5 backdrop-blur overflow-hidden"
                 >
                   {/* Category Header */}
                   <div className="p-6 border-b border-white dark:border-slate-700/10">
@@ -621,7 +621,7 @@ export default function MaintenanceDashboard() {
                                 >
                                   {severityConfig.text}
                                 </span>
-                                <span className="px-2 py-1 bg-slate-100/5 dark:bg-white/5 border border-white dark:border-slate-700/10 rounded text-[10px] uppercase tracking-wider font-bold text-slate-950 dark:text-white/60">
+                                <span className="px-2 py-1 bg-slate-100/5 dark:bg-white/5 border border-slate-200 dark:border-slate-700/10 rounded text-[10px] uppercase tracking-wider font-bold text-slate-950 dark:text-white/60">
                                   {task.estimatedTime}
                                 </span>
                                 <span

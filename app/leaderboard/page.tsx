@@ -322,7 +322,7 @@ export default function MegaLeaderboard() {
                   )}
 
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-black dark:bg-slate-950/60 border border-white dark:border-slate-700/10 overflow-hidden flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-xl bg-black dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700/10 overflow-hidden flex items-center justify-center">
                       {row.pfpUrl ? (
                         <Image src={row.pfpUrl} alt="pfp" width={56} height={56} className="w-full h-full object-cover" unoptimized />
                       ) : (

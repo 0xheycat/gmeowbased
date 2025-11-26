@@ -146,16 +146,16 @@ export function StepPanel({
 				<button
 					type="button"
 					onClick={onPrev}
-					disabled={index === 0}
-					className="rounded-full border border-white dark:border-slate-700/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/5 dark:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+				disabled={index === 0}
+				className="rounded-full border border-slate-200 dark:border-slate-700/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-300 dark:hover:border-slate-700/20 hover:bg-slate-100/5 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
 				>
 					← Back
 				</button>
 				<div className="flex gap-3">
 					<button
 						type="button"
-						onClick={onReset}
-						className="flex-1 sm:flex-none rounded-full border border-white dark:border-slate-700/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/5 dark:bg-white/5 touch-manipulation"
+					onClick={onReset}
+					className="flex-1 sm:flex-none rounded-full border border-slate-200 dark:border-slate-700/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-300 dark:hover:border-slate-700/20 hover:bg-slate-100/5 dark:hover:bg-white/5 touch-manipulation"
 					>
 						Reset draft
 					</button>
