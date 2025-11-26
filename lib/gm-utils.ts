@@ -73,7 +73,6 @@ export const GM_CONTRACT_ABI = GM_ABI_JSON as unknown as Abi
 export const ERC721_ABI = erc721Abi as unknown as Abi
 
 // GM contract chains only
-const CHAIN_KEY_SET = new Set<GMChainKey>(Object.keys(CONTRACT_ADDRESSES) as GMChainKey[])
 const CHAIN_ID_LOOKUP = new Map<number, GMChainKey>(
   Object.entries(CHAIN_IDS).map(([key, value]) => [value, key as GMChainKey]),
 )
