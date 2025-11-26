@@ -590,7 +590,9 @@ function buildStatsMessage(handle: string, stats: BotUserStats, timeframe: Timef
     // Direct answer format for questions
     const emoji = getIntentEmoji('stats')
     const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
-    return `${emoji} Level ${stats.level} ${stats.tierName}${scorePart} | ${formatPoints(stats.totalPoints)} pts${deltaLabel ? `.${deltaLabel}` : ''}${streakLabel ? ` | ${streakLabel}` : ''}.\n\nProfile → https://gmeowhq.art/profile`
+    const streakInfo = streakLabel ? ` • ${streakLabel}` : ''
+    const deltaInfo = deltaLabel ? `\n${deltaLabel.trim()}` : ''
+    return `${emoji} ${handle}, you're Level ${stats.level} ${stats.tierName} with ${formatPoints(stats.totalPoints)} pts${streakInfo}${scorePart}${deltaInfo}\n\nFull profile → https://gmeowhq.art/profile`
   }
   
   // Standard format
@@ -611,7 +613,8 @@ function buildTipsMessage(handle: string, stats: BotUserStats, timeframe: Timefr
     const emoji = getIntentEmoji('tips')
     const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
     const boostText = summary.totalEvents > 0 ? ` from ${summary.totalEvents} ${summary.totalEvents === 1 ? 'boost' : 'boosts'}` : ''
-    return `${emoji} Tips ${timeframe.shortLabel}: ${windowPoints} pts${boostText}!\n\nNice work ${handle}!${scorePart} All-time: ${allTime} pts\nLeaderboard → https://gmeowhq.art/leaderboard`
+    const excitement = summary.totalDelta > 50 ? ' Nice!' : summary.totalDelta > 0 ? ' Keep going!' : ''
+    return `${emoji} You earned ${windowPoints} pts in tips ${timeframe.shortLabel}${boostText}${excitement}\n\nAll-time total: ${allTime} pts${scorePart}\nClimb higher → https://gmeowhq.art/leaderboard`
   }
   
   // Standard format
@@ -632,8 +635,9 @@ function buildStreakMessage(handle: string, stats: BotUserStats, neynarScore?: n
     // Direct answer format
     const emoji = getIntentEmoji('streak')
     const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
-    const lastGm = stats.lastGM ? `Last GM: ${formatRelativeTime(stats.lastGM)}` : ''
-    return `${emoji} Your streak: ${stats.streak} ${stats.streak === 1 ? 'day' : 'days'}!\n\nLooking good ${handle}!${scorePart} ${formatPoints(stats.totalPoints)} pts total${lastGm ? ` | ${lastGm}` : ''}\nKeep it going → https://gmeowhq.art/Quest`
+    const lastGm = stats.lastGM ? ` • Last: ${formatRelativeTime(stats.lastGM)}` : ''
+    const encouragement = stats.streak >= 30 ? ' Legendary!' : stats.streak >= 7 ? ' Strong!' : ' Keep it up!'
+    return `${emoji} ${stats.streak} ${stats.streak === 1 ? 'day' : 'days'} and counting${encouragement}\n\n${formatPoints(stats.totalPoints)} pts total${scorePart}${lastGm}\nDon't break it → https://gmeowhq.art/Quest`
   }
   
   // Standard format
@@ -654,7 +658,8 @@ function buildQuestMessage(handle: string, stats: BotUserStats, timeframe: Timef
     const emoji = getIntentEmoji('quests')
     const scorePart = scoreBadge ? ` ${scoreBadge}` : ''
     const timeLabel = summary.totalEvents > 0 ? ` ${timeframe.shortLabel}` : ' in this window'
-    return `${emoji} Quests${timeLabel}: ${completions}${delta}!\n\nStrong work ${handle}!${scorePart} Level ${stats.level} ${stats.tierName}\nNext mission → https://gmeowhq.art/Quest`
+    const motivation = summary.totalEvents >= 3 ? ' 💪' : summary.totalEvents > 0 ? ' 🎯' : ' Ready?'
+    return `${emoji} You completed ${completions}${timeLabel}${delta}${motivation}\n\nLevel ${stats.level} ${stats.tierName}${scorePart}\nNext adventure → https://gmeowhq.art/Quest`
   }
   
   // Standard format
@@ -671,7 +676,8 @@ function buildLeaderboardMessage(handle: string, stats: BotUserStats, timeframe:
   if (isQuestion) {
     // Direct answer format
     const emoji = getIntentEmoji('leaderboards')
-    return `${emoji} Your stats: Level ${stats.level} ${stats.tierName}${scorePart} | ${formatPoints(stats.totalPoints)} pts${delta ? `.${delta}` : ''}\n\nCheck your rank → https://gmeowhq.art/leaderboard`
+    const trend = summary.totalDelta > 100 ? ' 📈 Climbing!' : summary.totalDelta > 0 ? ' 🎯' : ''
+    return `${emoji} You're at Level ${stats.level} ${stats.tierName} with ${formatPoints(stats.totalPoints)} pts${scorePart}${delta ? ` • ${delta.trim()}` : ''}${trend}\n\nFull rankings → https://gmeowhq.art/leaderboard`
   }
   
   // Standard format
