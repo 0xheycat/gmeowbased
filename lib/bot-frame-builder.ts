@@ -85,9 +85,9 @@ function detectBestFrameRoute(options: {
     case 'guild-invite':
       return { type: 'guild', id: guildId }
 
-    // GM/Streak (not yet migrated) → /api/frame?type=gm
+    // GM/Streak → /frame/gm (MIGRATED!)
     case 'daily-streak':
-      return { type: 'gm' }
+      return { type: 'gm', fid }
 
     default:
       return null

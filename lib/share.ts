@@ -123,9 +123,24 @@ export function buildFrameShareUrl(input: FrameShareInput, originOverride?: stri
     return `${origin}/frame/leaderboard${query ? `?${query}` : ''}`
   }
   
-  // Fallback for other types (referral, guild, points, gm, verify)
+  if (input.type === 'gm') {
+    // Route: /frame/gm?fid=...
+    const params = new URLSearchParams()
+    if (input.fid != null) params.set('fid', String(input.fid))
+    if (input.chain) params.set('chain', String(input.chain))
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/gm${query ? `?${query}` : ''}`
+  }
+  
+  // Fallback for other types (referral, guild, points, verify)
   // These still use /api/frame until specific routes are created
-  // TODO: Create dedicated routes for remaining frame types
+  // TODO: Create dedicated routes for: guild, points, referral, verify
   const params = new URLSearchParams()
   params.set('type', input.type)
   if (input.chain) params.set('chain', String(input.chain))
