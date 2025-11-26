@@ -29,11 +29,13 @@ const gmeowFont = localFont({
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
 // MCP-compliant viewport configuration for miniapp embedding
+// Updated for mobile accessibility: allow zoom for users who need it
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false, // Prevent pinch-zoom in miniapp context
+  minimumScale: 1,
+  maximumScale: 5, // Allow up to 5x zoom for accessibility
+  userScalable: true, // CRITICAL: Enable pinch-zoom for accessibility
   viewportFit: 'cover', // CRITICAL: Enable safe-area-inset-* CSS env() variables
 }
 

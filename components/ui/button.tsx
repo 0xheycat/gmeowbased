@@ -97,10 +97,10 @@ const colors: Record<ColorNames, { text: string; background: string; border: str
 }
 
 const sizes: Record<SizeNames, [string, string]> = {
-  large: ['px-8 py-4 text-[12px] sm:text-xs', 'h-14 w-14 sm:h-16 sm:w-16'],
-  medium: ['px-6 py-3 text-[11px] sm:text-xs', 'h-12 w-12 sm:h-13 sm:w-13'],
-  small: ['px-4 py-2 text-[10px]', 'h-10 w-10'],
-  mini: ['px-3 py-1.5 text-[9px]', 'h-8 w-8'], // 32px - below 44px touch target (Apple HIG). Use only for desktop-only, non-primary actions (tags, badges, compact UI)
+  large: ['px-8 py-4 text-sm sm:text-base', 'h-14 w-14 sm:h-16 sm:w-16'], // Mobile: 56px, Desktop: 64px
+  medium: ['px-6 py-3 text-sm', 'h-12 w-12 sm:h-13 sm:w-13'], // Mobile: 48px (Material Design min)
+  small: ['px-4 py-2.5 text-xs', 'h-11 w-11'], // Mobile: 44px (Apple HIG min)
+  mini: ['px-3 py-2 text-xs', 'h-10 w-10'], // Mobile: 40px - Use sparingly, add sm: classes for responsive boost
 }
 
 const variantBase: Record<VariantNames, string> = {
