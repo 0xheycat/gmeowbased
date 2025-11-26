@@ -1,0 +1,67 @@
+name: Badge Minting
+
+# Automated badge minting from queue
+# Replaces Vercel Cron (requires Pro plan)
+# Runs daily to process pending badge mints
+
+on:
+  schedule:
+    # Daily at 1 AM UTC (after leaderboard sync at midnight)
+    - cron: '0 1 * * *'
+  
+  # Manual trigger for testing
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mint-badges:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Process badge minting queue
+        env:
+          # Supabase
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          
+          # Neynar (for notifications)
+          NEYNAR_API_KEY: ${{ secrets.NEYNAR_API_KEY }}
+          
+          # RPC endpoints for minting
+          RPC_BASE: ${{ secrets.RPC_BASE }}
+          RPC_OP: ${{ secrets.RPC_OP }}
+          RPC_CELO: ${{ secrets.RPC_CELO }}
+          RPC_UNICHAIN: ${{ secrets.RPC_UNICHAIN }}
+          RPC_INK: ${{ secrets.RPC_INK }}
+          
+          # Private key for minting (if needed)
+          MINTER_PRIVATE_KEY: ${{ secrets.MINTER_PRIVATE_KEY }}
+          
+        run: npx tsx scripts/automation/mint-badge-queue.ts
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "✅ Badge minting job completed"
+          echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Schedule: Daily at 1 AM UTC"

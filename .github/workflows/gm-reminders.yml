@@ -1,0 +1,88 @@
+name: GM Reminders
+
+# Send push notifications to users who haven't GM'd today
+# Runs twice daily to remind users to maintain their streak
+
+on:
+  schedule:
+    # 9 AM UTC (afternoon in Asia, morning in Europe)
+    - cron: '0 9 * * *'
+    
+    # 9 PM UTC (afternoon in Americas, evening in Europe)
+    - cron: '0 21 * * *'
+  
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (test without sending)'
+        required: false
+        type: boolean
+        default: true
+      max_notifications:
+        description: 'Max notifications to send'
+        required: false
+        type: number
+        default: 100
+
+permissions:
+  contents: read
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Send GM reminders
+        env:
+          # Neynar for notifications
+          NEYNAR_API_KEY: ${{ secrets.NEYNAR_API_KEY }}
+          
+          # Supabase for user data
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          
+          # RPC endpoints to check GM status
+          RPC_BASE: ${{ secrets.RPC_BASE }}
+          RPC_OP: ${{ secrets.RPC_OP }}
+          RPC_CELO: ${{ secrets.RPC_CELO }}
+          RPC_UNICHAIN: ${{ secrets.RPC_UNICHAIN }}
+          RPC_INK: ${{ secrets.RPC_INK }}
+          
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              npm run notifications:gm-reminders -- --dry-run --max ${{ inputs.max_notifications }}
+            else
+              npm run notifications:gm-reminders -- --max ${{ inputs.max_notifications }}
+            fi
+          else
+            # Scheduled run: send to max 100 users
+            npm run notifications:gm-reminders -- --max 100
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "✅ GM reminders job completed"
+          echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Schedule: Twice daily (9 AM and 9 PM UTC)"
+          echo "Max notifications per run: 100"
