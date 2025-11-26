@@ -138,9 +138,71 @@ export function buildFrameShareUrl(input: FrameShareInput, originOverride?: stri
     return `${origin}/frame/gm${query ? `?${query}` : ''}`
   }
   
-  // Fallback for other types (referral, guild, points, verify)
-  // These still use /api/frame until specific routes are created
-  // TODO: Create dedicated routes for: guild, points, referral, verify
+  if (input.type === 'guild') {
+    // Route: /frame/guild?id=...&fid=...
+    const params = new URLSearchParams()
+    if (input.id != null) params.set('id', String(input.id))
+    if (input.fid != null) params.set('fid', String(input.fid))
+    if (input.chain) params.set('chain', String(input.chain))
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/guild${query ? `?${query}` : ''}`
+  }
+  
+  if (input.type === 'points') {
+    // Route: /frame/points?user=...&fid=...&chain=...
+    const params = new URLSearchParams()
+    if (input.user) params.set('user', input.user)
+    if (input.fid != null) params.set('fid', String(input.fid))
+    if (input.chain) params.set('chain', String(input.chain))
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/points${query ? `?${query}` : ''}`
+  }
+  
+  if (input.type === 'referral') {
+    // Route: /frame/referral?code=...&user=...
+    const params = new URLSearchParams()
+    if (input.referral) params.set('code', input.referral)
+    if (input.user) params.set('user', input.user)
+    if (input.fid != null) params.set('fid', String(input.fid))
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/referral${query ? `?${query}` : ''}`
+  }
+  
+  if (input.type === 'verify') {
+    // Route: /frame/verify?fid=...&questId=...&cast=...
+    const params = new URLSearchParams()
+    if (input.fid != null) params.set('fid', String(input.fid))
+    if (input.questId != null) params.set('questId', String(input.questId))
+    if (input.extra) {
+      for (const [key, value] of Object.entries(input.extra)) {
+        if (value === undefined || value === null) continue
+        params.set(key, String(value))
+      }
+    }
+    const query = params.toString()
+    return `${origin}/frame/verify${query ? `?${query}` : ''}`
+  }
+  
+  // Fallback: No more unmigrated types! All frames use dedicated routes
+  // If we reach here, it's an unknown frame type - return generic frame
   const params = new URLSearchParams()
   params.set('type', input.type)
   if (input.chain) params.set('chain', String(input.chain))
