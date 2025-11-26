@@ -228,7 +228,7 @@ function NotificationBelt({ count, tone }: { count: number; tone: NotificationTo
     <div className={anchorClass}>
       <div
         className={cn(
-          'relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-slate-200 dark:border-white/10/12 bg-[#040f1d]/80 text-base sm:text-lg text-cyan-100 shadow-[0_18px_52px_rgba(4,14,28,0.6)] backdrop-blur-xl',
+          'relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-slate-200 dark:border-white/10 bg-[#040f1d]/80 text-base sm:text-lg text-cyan-100 shadow-[0_18px_52px_rgba(4,14,28,0.6)] backdrop-blur-xl',
           active ? 'animate-[gmeow-beacon_2800ms_ease-in-out_infinite]' : 'opacity-80',
           active ? beacon : '',
         )}
@@ -316,7 +316,7 @@ function NotificationCard({ note, onDismiss, index }: { note: NotificationItem; 
           ) : null}
 
           {categoryLabel ? (
-            <span className="mt-1.5 inline-flex items-center rounded-full border border-white dark:border-slate-700/10 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
+            <span className="mt-1.5 inline-flex items-center rounded-full border border-white dark:border-slate-700/10 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-slate-900 dark:text-slate-700 dark:text-slate-950 dark:text-slate-700 dark:text-slate-950 dark:text-white/80 dark:text-slate-950 dark:text-slate-700 dark:text-slate-950 dark:text-white/80">
               {categoryLabel}
             </span>
           ) : null}
@@ -361,7 +361,7 @@ function NotificationCard({ note, onDismiss, index }: { note: NotificationItem; 
         </button>
       </div>
       {duration > 0 ? (
-        <div className="mt-3 sm:mt-4 h-[2px] sm:h-[3px] w-full overflow-hidden rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5" aria-hidden>
+        <div className="mt-3 sm:mt-4 h-[2px] sm:h-[3px] w-full overflow-hidden rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5" aria-hidden>
           <span
             className={cn('block h-full w-[200%]', progress)}
             style={{ animation: `gmeow-progress ${duration}ms linear forwards` }}

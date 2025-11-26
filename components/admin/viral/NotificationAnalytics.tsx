@@ -103,7 +103,7 @@ export default function NotificationAnalytics() {
     : []
 
   return (
-    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-lg backdrop-blur">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="pixel-section-title text-base">📊 Notification Delivery</h3>
@@ -116,7 +116,7 @@ export default function NotificationAnalytics() {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
-            className="rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-[11px] text-white dark:text-slate-950 dark:text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
+            className="rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-[11px] text-slate-950 dark:text-slate-950 dark:text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
             aria-label="Select timeframe for notification analytics"
           >
             {TIMEFRAME_OPTIONS.map((option) => (
@@ -144,8 +144,8 @@ export default function NotificationAnalytics() {
         </div>
       ) : loading ? (
         <div className="space-y-4">
-          <div className="h-24 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5" />
-          <div className="h-64 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5" />
+          <div className="h-24 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5" />
+          <div className="h-64 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5" />
         </div>
       ) : stats ? (
         <>
@@ -160,8 +160,8 @@ export default function NotificationAnalytics() {
               <div className="mt-1 text-2xl font-bold">{stats.success_rate}%</div>
             </div>
 
-            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-slate-950 dark:text-white/60">
                 Total Sent
               </div>
               <div className="mt-1 text-2xl font-bold text-emerald-300">
@@ -169,8 +169,8 @@ export default function NotificationAnalytics() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-slate-950 dark:text-white/60">
                 Total Failed
               </div>
               <div className="mt-1 text-2xl font-bold text-rose-300">
@@ -178,11 +178,11 @@ export default function NotificationAnalytics() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
+            <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-slate-950 dark:text-white/60">
                 Avg Delivery
               </div>
-              <div className="mt-1 text-2xl font-bold text-white dark:text-slate-950 dark:text-white">
+              <div className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">
                 {stats.avg_delivery_time_ms
                   ? `${stats.avg_delivery_time_ms}ms`
                   : 'N/A'}
@@ -193,7 +193,7 @@ export default function NotificationAnalytics() {
           {/* Daily Trends Line Chart */}
           {stats.daily_trends.length > 0 && (
             <div className="mb-6">
-              <h4 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
+              <h4 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-slate-950 dark:text-white/70">
                 Daily Trends
               </h4>
               <ResponsiveContainer width="100%" height={250}>
@@ -242,7 +242,7 @@ export default function NotificationAnalytics() {
           {/* Failure Breakdown Pie Chart */}
           {pieData.length > 0 && stats.total_failed > 0 && (
             <div>
-              <h4 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
+              <h4 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-slate-950 dark:text-white/70">
                 Failure Breakdown
               </h4>
               <ResponsiveContainer width="100%" height={250}>
@@ -277,7 +277,7 @@ export default function NotificationAnalytics() {
           )}
 
           {stats.total_sent === 0 && stats.total_failed === 0 && (
-            <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+            <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
               No notification data yet for this timeframe.
             </div>
           )}

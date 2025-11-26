@@ -404,7 +404,7 @@ export function TokenSelector({
 													: active
 														? 'bg-sky-500/15 text-sky-100'
 														: selectable
-															? 'hover:bg-slate-100/90 dark:bg-white/5/5'
+															? 'hover:bg-slate-100/90 dark:bg-white/5'
 															: ''
 											}`}
 											>

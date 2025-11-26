@@ -255,7 +255,7 @@ export function BadgeInventory({
 
                 {/* Minted Status */}
                 {badge.minted && (
-                  <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-sm">
+                  <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-slate-900 dark:text-slate-950 dark:text-slate-950 dark:text-white backdrop-blur-sm">
                     <Sparkle size={ICON_SIZES.xs} weight="fill" />
                     Minted
                   </div>

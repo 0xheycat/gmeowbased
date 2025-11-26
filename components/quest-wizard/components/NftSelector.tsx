@@ -199,7 +199,7 @@ export function NftSelector({
 												aria-disabled={!selectable}
 												title={disabledReason}
 													className={`flex w-full items-center gap-3 px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
-														active ? 'bg-sky-500/15 text-sky-100' : selectable ? 'hover:bg-slate-100/90 dark:bg-white/5/5' : 'cursor-not-allowed'
+														active ? 'bg-sky-500/15 text-sky-100' : selectable ? 'hover:bg-slate-100/90 dark:bg-white/5' : 'cursor-not-allowed'
 													}`}
 													role="option"
 													aria-selected={active}

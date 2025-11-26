@@ -416,7 +416,7 @@ export default function PartnerSnapshotPanel() {
   }, [submitting, partnerName, selectedChains, minimum, requirementKind, contractAddress, tokenId, metadataJson, maxAddressesPerChain, snapshotId, notify, fetchHistory])
 
   return (
-    <section className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5 shadow-lg shadow-sky-500/5">
+    <section className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-lg shadow-sky-500/5">
       <form className="space-y-6" onSubmit={handleSubmit} noValidate>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -517,7 +517,7 @@ export default function PartnerSnapshotPanel() {
                         'pixel-pill px-3 py-1 text-[11px] tracking-[0.16em] transition',
                         active
                           ? 'border-sky-400/60 bg-sky-400/15 text-sky-100 shadow-[0_0_16px_rgba(56,189,248,0.35)]'
-                          : 'border-slate-200 dark:border-white/10/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-sky-300/40 hover:text-slate-950 dark:text-white',
+                          : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-sky-300/40 hover:text-slate-950 dark:text-white',
                       )}
                     >
                       {entry.label}
@@ -537,7 +537,7 @@ export default function PartnerSnapshotPanel() {
                 <button
                   type="button"
                   onClick={handleClearChains}
-                  className="pixel-pill border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70 transition hover:border-rose-300/40 hover:text-white dark:text-slate-950 dark:text-white disabled:opacity-50"
+                  className="pixel-pill border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1 text-slate-950 dark:text-slate-950 dark:text-white/70 transition hover:border-rose-300/40 hover:text-slate-950 dark:text-slate-950 dark:text-white disabled:opacity-50"
                   disabled={selectedChains.size === 0}
                 >
                   Clear
@@ -694,13 +694,13 @@ export default function PartnerSnapshotPanel() {
             ) : null}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4 text-sm text-[var(--px-sub)]">
+          <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 text-sm text-[var(--px-sub)]">
             Run a snapshot to preview per-chain eligibility counts and request details.
           </div>
         )}
       </form>
 
-      <div className="mt-6 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
+      <div className="mt-6 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="pixel-section-title text-base">Recent partner snapshots</h3>
@@ -728,38 +728,38 @@ export default function PartnerSnapshotPanel() {
               <div key={entry.snapshotId} className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--px-sub)]">
                   <div>
-                    <div className="text-[10px] uppercase tracking-[0.28em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Snapshot ID</div>
-                    <div className="font-mono text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">{entry.snapshotId}</div>
+                    <div className="text-[10px] uppercase tracking-[0.28em] text-slate-950 dark:text-white/50">Snapshot ID</div>
+                    <div className="font-mono text-sm text-slate-950 dark:text-white/80">{entry.snapshotId}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] uppercase tracking-[0.28em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Computed</div>
-                    <div className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">{formatDateTime(entry.computedAt)}</div>
+                    <div className="text-[10px] uppercase tracking-[0.28em] text-slate-950 dark:text-white/50">Computed</div>
+                    <div className="text-sm text-slate-950 dark:text-white/80">{formatDateTime(entry.computedAt)}</div>
                   </div>
                 </div>
 
-                <dl className="mt-3 grid gap-3 text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80 sm:grid-cols-4">
+                <dl className="mt-3 grid gap-3 text-sm text-slate-950 dark:text-white/80 sm:grid-cols-4">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.24em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Partner</dt>
+                    <dt className="text-[10px] uppercase tracking-[0.24em] text-slate-950 dark:text-white/50">Partner</dt>
                     <dd className="mt-1 font-semibold">{entry.partner}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.24em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Requirement</dt>
+                    <dt className="text-[10px] uppercase tracking-[0.24em] text-slate-950 dark:text-white/50">Requirement</dt>
                     <dd className="mt-1 font-semibold">{formatRequirementDescriptor(entry.requirement)}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.24em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Eligible</dt>
+                    <dt className="text-[10px] uppercase tracking-[0.24em] text-slate-950 dark:text-white/50">Eligible</dt>
                     <dd className="mt-1 font-semibold text-emerald-200">{formatNumber(entry.eligibleCount)}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.24em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Total</dt>
+                    <dt className="text-[10px] uppercase tracking-[0.24em] text-slate-950 dark:text-white/50">Total</dt>
                     <dd className="mt-1 font-semibold">{formatNumber(entry.totalAddresses)}</dd>
                   </div>
                 </dl>
 
                 {entry.chains.length ? (
                   <div className="mt-3 overflow-x-auto rounded-xl border border-white dark:border-slate-700/10">
-                    <table className="min-w-full text-left text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
-                      <thead className="bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 text-[10px] uppercase tracking-[0.24em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/40">
+                    <table className="min-w-full text-left text-[11px] text-slate-950 dark:text-white/70">
+                      <thead className="bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-[10px] uppercase tracking-[0.24em] text-slate-950 dark:text-slate-950 dark:text-white/40">
                         <tr>
                           <th className="px-3 py-2">Chain</th>
                           <th className="px-3 py-2 text-right">Eligible</th>
@@ -769,7 +769,7 @@ export default function PartnerSnapshotPanel() {
                       </thead>
                       <tbody>
                         {entry.chains.map((chain) => (
-                          <tr key={`${entry.snapshotId}-${chain.chain}`} className="odd:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5">
+                          <tr key={`${entry.snapshotId}-${chain.chain}`} className="odd:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5">
                             <td className="px-3 py-2 font-semibold">{formatChainLabel(chain.chain)}</td>
                             <td className="px-3 py-2 text-right text-emerald-200">{formatNumber(chain.eligible)}</td>
                             <td className="px-3 py-2 text-right text-rose-200">{formatNumber(chain.ineligible)}</td>
@@ -782,8 +782,8 @@ export default function PartnerSnapshotPanel() {
                 ) : null}
 
                 {entry.metadata ? (
-                  <details className="mt-3 rounded-xl border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3 text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/75">
-                    <summary className="cursor-pointer text-[10px] uppercase tracking-[0.2em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Metadata</summary>
+                  <details className="mt-3 rounded-xl border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3 text-sm text-slate-950 dark:text-slate-950 dark:text-white/75">
+                    <summary className="cursor-pointer text-[10px] uppercase tracking-[0.2em] text-slate-950 dark:text-white/50">Metadata</summary>
                     <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-xl bg-black dark:bg-slate-950/40 p-3 font-mono text-[11px]">
                       {stringifyJson(entry.metadata) ?? '—'}
                     </pre>

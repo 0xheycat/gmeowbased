@@ -113,7 +113,7 @@ export default function AchievementDistribution() {
     }))
 
   return (
-    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-lg backdrop-blur">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="pixel-section-title text-base">📈 Achievement Distribution</h3>
@@ -123,7 +123,7 @@ export default function AchievementDistribution() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 p-1">
+          <div className="flex rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 p-1">
             <button
               onClick={() => setViewMode('distribution')}
               className={`rounded px-3 py-1 text-[10px] font-medium transition ${
@@ -166,7 +166,7 @@ export default function AchievementDistribution() {
         </div>
       ) : loading ? (
         <div className="space-y-4">
-          <div className="h-64 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5" />
+          <div className="h-64 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5" />
         </div>
       ) : data ? (
         <>
@@ -213,14 +213,14 @@ export default function AchievementDistribution() {
                 {data.achievements.map((achievement) => (
                   <div
                     key={achievement.type}
-                    className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3 transition hover:border-emerald-400/30"
+                    className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3 transition hover:border-emerald-400/30"
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-2xl">
                         {ACHIEVEMENT_ICONS[achievement.type] ?? '🏆'}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[11px] font-semibold text-white dark:text-slate-950 dark:text-white">
+                        <div className="truncate text-[11px] font-semibold text-slate-950 dark:text-white">
                           {ACHIEVEMENT_LABELS[achievement.type] ?? achievement.type}
                         </div>
                         <div className="mt-0.5 text-[13px] font-bold text-emerald-300">
@@ -240,7 +240,7 @@ export default function AchievementDistribution() {
               {/* Timeline Line Chart */}
               {timelineData && timelineData.length > 0 && (
                 <div>
-                  <h4 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
+                  <h4 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-slate-950 dark:text-white/70">
                     Weekly Unlock Timeline (Last 8 Weeks)
                   </h4>
                   <ResponsiveContainer width="100%" height={300}>
@@ -300,7 +300,7 @@ export default function AchievementDistribution() {
           )}
 
           {data.achievements.length === 0 && (
-            <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+            <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
               No achievements unlocked yet. Users will appear here once they start unlocking achievements.
             </div>
           )}

@@ -41,7 +41,7 @@ function QuestTypeGuide({ questType, detail, config }: QuestTypeGuideProps) {
 	const showPanels = requirementHints.length > 0 || tips.length > 0
 
 	return (
-		<section className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-5">
+		<section className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5">
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div>
 					<p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Quest template</p>

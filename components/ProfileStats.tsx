@@ -456,7 +456,7 @@ export function ProfileStats({ address, data, loading, error }: ProfileStatsProp
             {isMobile ? (
               <div className="grid gap-3">
                 {data.chainSummaries.map((summary) => (
-                  <div key={summary.chain} className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3">
+                  <div key={summary.chain} className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold text-sm">{CHAIN_BRAND[summary.chain].title}</span>
                       <span className="pixel-pill text-[10px]">{summary.registered ? 'Registered' : 'Not registered'}</span>

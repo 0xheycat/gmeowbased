@@ -98,7 +98,7 @@ export function ViralBadgeMetrics({
   if (loading) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="status"
         aria-label="Loading badge metrics"
       >
@@ -114,7 +114,7 @@ export function ViralBadgeMetrics({
   if (error) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="alert"
         aria-live="assertive"
       >
@@ -125,7 +125,7 @@ export function ViralBadgeMetrics({
             onClick={() => window.location.reload()}
             className="
               px-4 py-2 min-h-[44px] rounded-lg
-              bg-purple-500 hover:bg-purple-600 text-white dark:text-slate-950 dark:text-white font-medium
+              bg-purple-500 hover:bg-purple-600 text-slate-950 dark:text-white font-medium
               transition-colors duration-200
               focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2
             "
@@ -142,7 +142,7 @@ export function ViralBadgeMetrics({
   if (!data || data.badges.length === 0) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="status"
       >
         <div className="flex flex-col items-center justify-center py-12 gap-4">
@@ -159,7 +159,7 @@ export function ViralBadgeMetrics({
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg space-y-6 ${className}`}>
+    <div className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg space-y-6 ${className}`}>
       {/* Header with Sort Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -286,7 +286,7 @@ export function ViralBadgeMetrics({
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {/* Total Viral XP */}
-                <div className="bg-white dark:bg-gray-750 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div className="bg-slate-100/90 dark:bg-white/5 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total XP</div>
                   <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
                     {badge.totalViralXp.toLocaleString()}
@@ -294,7 +294,7 @@ export function ViralBadgeMetrics({
                 </div>
 
                 {/* Cast Count */}
-                <div className="bg-white dark:bg-gray-750 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div className="bg-slate-100/90 dark:bg-white/5 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Casts</div>
                   <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                     {badge.castCount}
@@ -302,7 +302,7 @@ export function ViralBadgeMetrics({
                 </div>
 
                 {/* Average XP per Cast */}
-                <div className="bg-white dark:bg-gray-750 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div className="bg-slate-100/90 dark:bg-white/5 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg XP/Cast</div>
                   <div className="text-xl font-bold text-green-600 dark:text-green-400">
                     {badge.averageXp.toFixed(1)}
@@ -310,7 +310,7 @@ export function ViralBadgeMetrics({
                 </div>
 
                 {/* Total Engagement */}
-                <div className="bg-white dark:bg-gray-750 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div className="bg-slate-100/90 dark:bg-white/5 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Engagement</div>
                   <div className="text-xl font-bold text-orange-600 dark:text-orange-400">
                     {totalEngagement}

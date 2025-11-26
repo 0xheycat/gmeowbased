@@ -36,7 +36,7 @@ export function AssetListSkeleton({ count = 5 }: { count?: number }) {
 			{[...Array(count)].map((_, i) => (
 				<div
 					key={i}
-					className="flex items-center gap-3 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-3 animate-pulse"
+					className="flex items-center gap-3 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3 animate-pulse"
 				>
 					{/* Asset icon skeleton */}
 					<div className="h-10 w-10 rounded-full bg-slate-800/60" />

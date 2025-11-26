@@ -10,7 +10,7 @@ import type { CommunityEventSummary } from '@/lib/community-event-types'
 
 const dotStyles: Record<CommunityEventSummary['emphasis'], string> = {
   positive: 'bg-emerald-300',
-  neutral: 'bg-slate-100/90 dark:bg-white/5/50',
+  neutral: 'bg-slate-100/90 dark:bg-white/5',
   negative: 'bg-rose-300',
 }
 
@@ -74,7 +74,7 @@ export function AgentEventFeed({ events, emptyHint }: AgentEventFeedProps) {
   if (!items.length) {
     return (
       <EmptyState
-        icon={<Sparkle className="size-8 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60" weight="duotone" />}
+        icon={<Sparkle className="size-8 text-slate-950 dark:text-white/60" weight="duotone" />}
         title="Nothing yet — the agent is listening."
         description={emptyHint ?? 'Live events will stream in as soon as quests finish or streaks post.'}
         tone="muted"
@@ -97,13 +97,13 @@ export function AgentEventFeed({ events, emptyHint }: AgentEventFeedProps) {
             <Card tone={tone} padding="sm" interactive className="group relative overflow-hidden">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-slate-950 dark:text-white/60">
                     <span className="inline-flex items-center gap-2">
                       <span className={clsx('h-1.5 w-1.5 rounded-full', dotStyles[event.emphasis])} aria-hidden="true" />
                       {event.eventType.replace(/-/g, ' ')}
                     </span>
                     {chainLabel ? (
-                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 text-[10px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">{chainLabel}</span>
+                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-[10px] text-slate-950 dark:text-slate-950 dark:text-white/70">{chainLabel}</span>
                     ) : null}
                     {isNew ? (
                       <span className="rounded-full border border-emerald-200/40 bg-emerald-400/10 px-2 py-[2px] text-[10px] text-emerald-100">
@@ -112,35 +112,35 @@ export function AgentEventFeed({ events, emptyHint }: AgentEventFeedProps) {
                     ) : null}
                   </div>
                   <CardTitle asChild>
-                    <h3 className="text-lg font-semibold text-white dark:text-slate-950 dark:text-white sm:text-xl">{event.headline}</h3>
+                    <h3 className="text-lg font-semibold text-slate-950 dark:text-white sm:text-xl">{event.headline}</h3>
                   </CardTitle>
-                  <CardDescription className="text-sm text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
+                  <CardDescription className="text-sm text-slate-950 dark:text-white/80">
                     {event.context ?? 'Telemetry synced.'}
-                    <span className="ml-2 text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60">{actorLabel}</span>
+                    <span className="ml-2 text-xs text-slate-950 dark:text-white/60">{actorLabel}</span>
                   </CardDescription>
-                  <CardFooter className="flex flex-wrap items-center gap-2 text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/65">
+                  <CardFooter className="flex flex-wrap items-center gap-2 text-[11px] text-slate-950 dark:text-white/65">
                     <span className="inline-flex items-center gap-1">
                       <Clock className="size-3.5" weight="bold" />
                       {formatRelativeTime(event.createdAt)}
                     </span>
                     {event.delta != null ? (
-                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
+                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-xs text-slate-950 dark:text-slate-950 dark:text-white/80">
                         Δ {event.delta > 0 ? '+' : ''}{event.delta.toLocaleString()} pts
                       </span>
                     ) : null}
                     {event.totalPoints != null ? (
-                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
+                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-xs text-slate-950 dark:text-slate-950 dark:text-white/80">
                         {event.totalPoints.toLocaleString()} pts total
                       </span>
                     ) : null}
                     {tierLabel ? (
-                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 text-xs text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">{tierLabel}</span>
+                      <span className="pixel-pill border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-xs text-slate-950 dark:text-slate-950 dark:text-white/80">{tierLabel}</span>
                     ) : null}
                   </CardFooter>
                 </div>
                 {event.cta ? (
                   <a
-                    className="inline-flex items-center gap-2 self-start rounded-full border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 px-3 py-1.5 text-xs font-semibold text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/90 transition hover:border-emerald-200/60 hover:bg-emerald-400/10"
+                    className="inline-flex items-center gap-2 self-start rounded-full border border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-950 dark:text-slate-950 dark:text-white/90 transition hover:border-emerald-200/60 hover:bg-emerald-400/10"
                     href={event.cta.href}
                   >
                     {event.cta.label}

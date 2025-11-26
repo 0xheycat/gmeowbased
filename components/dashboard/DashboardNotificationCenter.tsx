@@ -143,7 +143,7 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
         </div>
         <button
           type="button"
-          className="pixel-button btn-sm border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80 hover:border-emerald-300/40 hover:text-white dark:text-slate-950 dark:text-white"
+          className="pixel-button btn-sm border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/80 hover:border-emerald-300/40 hover:text-slate-950 dark:text-slate-950 dark:text-white"
           onClick={() => dismissAll()}
           disabled={!notifications.length}
         >
@@ -161,7 +161,7 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
               'pixel-pill border px-3 py-1 text-[10px] uppercase tracking-[0.22em] transition',
               activeFilter === option
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.35)]'
-                : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white',
+                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white',
             )}
           >
             {FILTER_LABELS[option]}
@@ -177,7 +177,7 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
             return (
               <article
                 key={note.id}
-                className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-4 shadow-[0_18px_40px_rgba(8,19,45,0.35)] backdrop-blur"
+                className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 shadow-[0_18px_40px_rgba(8,19,45,0.35)] backdrop-blur"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-1 gap-3">
@@ -186,9 +186,9 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">{note.title}</h4>
+                        <h4 className="text-sm font-semibold text-slate-950 dark:text-white">{note.title}</h4>
                         {note.category ? (
-                          <span className="pixel-pill bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 text-[9px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
+                          <span className="pixel-pill bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-[9px] text-slate-950 dark:text-slate-950 dark:text-white/70">
                             {FILTER_LABELS[note.category]}
                           </span>
                         ) : null}
@@ -235,16 +235,16 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
             )
           })
         ) : (
-          <div className="rounded-2xl border border-dashed border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 p-8 text-center text-[12px] text-[var(--px-sub)]">
+          <div className="rounded-2xl border border-dashed border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-8 text-center text-[12px] text-[var(--px-sub)]">
             No notifications in this channel yet. Keep playing—alerts land here as soon as quests, guilds, tips, or badges fire.
           </div>
         )}
       </div>
 
-      <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/3 dark:bg-slate-100/90 dark:bg-white/5/5 p-4">
+      <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/3 dark:bg-slate-100/90 dark:bg-white/5 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h4 className="text-sm font-semibold text-white dark:text-slate-950 dark:text-white">Tip Stream</h4>
+            <h4 className="text-sm font-semibold text-slate-950 dark:text-white">Tip Stream</h4>
             <p className="text-[11px] text-[var(--px-sub)]">
               Stay on this page to capture live Warpcast tips. Status: {tipStatusLabel}
             </p>
@@ -263,7 +263,7 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
             {tipFeed.slice(0, 4).map((tip) => {
               const valueLabel = formatTipValue(tip)
               return (
-                <li key={tip.id} className="rounded-xl border border-white dark:border-slate-700/10 bg-dark-bg-panel/70 px-3 py-2 text-[11px] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/80">
+                <li key={tip.id} className="rounded-xl border border-white dark:border-slate-700/10 bg-dark-bg-panel/70 px-3 py-2 text-[11px] text-slate-950 dark:text-slate-950 dark:text-white/80">
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-semibold">
                     {formatTipSender(tip)}
@@ -272,7 +272,7 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
                   {valueLabel ? <span className="text-emerald-200">{valueLabel}</span> : null}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-[var(--px-sub)]">
-                  <span className="pixel-pill bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/70">
+                  <span className="pixel-pill bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-slate-950 dark:text-slate-950 dark:text-white/70">
                     {formatTipKindLabel(tip)}
                   </span>
                   <span>{formatTimeAgo(tip.createdAt)}</span>

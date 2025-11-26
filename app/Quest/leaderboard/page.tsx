@@ -130,7 +130,7 @@ export default function QuestLeaderboardPage() {
         {/* Filters */}
         <div className="flex gap-2 flex-wrap">
           {['all','follow','recast','reply','like','frame','onchain'].map(f => (
-            <button key={f} className={`px-3 py-1 rounded-md text-sm ${filter===f ? 'bg-indigo-600 text-slate-900 dark:text-slate-950 dark:text-white' : 'bg-slate-100/90 dark:bg-white/5/5'}`} onClick={() => setFilter(f)}>{f === 'all' ? 'All Types' : f}</button>
+            <button key={f} className={`px-3 py-1 rounded-md text-sm ${filter===f ? 'bg-indigo-600 text-slate-900 dark:text-slate-950 dark:text-white' : 'bg-slate-100/90 dark:bg-white/5'}`} onClick={() => setFilter(f)}>{f === 'all' ? 'All Types' : f}</button>
           ))}
         </div>
 
@@ -162,7 +162,7 @@ export default function QuestLeaderboardPage() {
                         <div className="text-xs text-gray-500 dark:text-gray-400 ml-2">{r.chain}</div>
                       </div>
                       <div className="text-sm text-gray-400">XP: {r.points} • Quests: {r.completed ?? 0} • Rewards: {r.rewards ?? 0}</div>
-                      <div className="mt-2 w-full bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5/5 h-2 rounded overflow-hidden"><div style={{ width: `${progress}%` }} className={`h-full bg-gradient-to-r from-indigo-400 to-emerald-400`} /></div>
+                      <div className="mt-2 w-full bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 h-2 rounded overflow-hidden"><div style={{ width: `${progress}%` }} className={`h-full bg-gradient-to-r from-indigo-400 to-emerald-400`} /></div>
                     </div>
                   </div>
 

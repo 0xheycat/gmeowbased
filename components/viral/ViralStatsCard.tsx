@@ -95,7 +95,7 @@ export function ViralStatsCard({
   if (loading) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="status"
         aria-label="Loading viral statistics"
       >
@@ -111,7 +111,7 @@ export function ViralStatsCard({
   if (error) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="alert"
         aria-live="assertive"
       >
@@ -122,7 +122,7 @@ export function ViralStatsCard({
             onClick={() => window.location.reload()}
             className="
               px-4 py-2 min-h-[44px] rounded-lg
-              bg-blue-500 hover:bg-blue-600 text-white dark:text-slate-950 dark:text-white font-medium
+              bg-blue-500 hover:bg-blue-600 text-slate-950 dark:text-white font-medium
               transition-colors duration-200
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
             "
@@ -139,7 +139,7 @@ export function ViralStatsCard({
   if (!stats || stats.totalCasts === 0) {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg ${className}`}
+        className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg ${className}`}
         role="status"
       >
         <div className="flex flex-col items-center justify-center py-12 gap-4">
@@ -166,7 +166,7 @@ export function ViralStatsCard({
   )
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg space-y-6 ${className}`}>
+    <div className={`bg-slate-100/90 dark:bg-white/5 rounded-2xl p-6 shadow-lg space-y-6 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -268,7 +268,7 @@ export function ViralStatsCard({
                       {/* Rank Badge */}
                       <div className="flex items-center gap-2 mb-2">
                         <div className="
-                          w-6 h-6 rounded-full bg-blue-500 text-white dark:text-slate-950 dark:text-white
+                          w-6 h-6 rounded-full bg-blue-500 text-slate-950 dark:text-white
                           flex items-center justify-center text-xs font-bold
                         ">
                           #{index + 1}

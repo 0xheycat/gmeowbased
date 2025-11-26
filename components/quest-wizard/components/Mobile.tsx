@@ -69,7 +69,7 @@ export function SwipeableStep({
 			<div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-4 lg:hidden">
 				{canSwipeRight && (
 					<motion.div
-						className={`rounded-full bg-slate-100/90 dark:bg-white/5/10 p-3 backdrop-blur ${
+						className={`rounded-full bg-slate-100/90 dark:bg-white/5 p-3 backdrop-blur ${
 							showTutorial ? 'animate-bounce' : ''
 						}`}
 						initial={{ opacity: 0, x: -20 }}
@@ -81,7 +81,7 @@ export function SwipeableStep({
 				)}
 				{canSwipeLeft && (
 					<motion.div
-						className={`rounded-full bg-slate-100/90 dark:bg-white/5/10 p-3 backdrop-blur ${
+						className={`rounded-full bg-slate-100/90 dark:bg-white/5 p-3 backdrop-blur ${
 							showTutorial ? 'animate-bounce' : ''
 						}`}
 						initial={{ opacity: 0, x: 20 }}
@@ -179,16 +179,16 @@ export function BottomSheet({
 			>
 				{/* Drag handle */}
 				<div className="flex justify-center py-3">
-					<div className="h-1 w-12 rounded-full bg-slate-100/20 dark:bg-slate-100/90 dark:bg-white/5/5" />
+					<div className="h-1 w-12 rounded-full bg-slate-100/20 dark:bg-slate-100/90 dark:bg-white/5" />
 				</div>
 				
 				{/* Header */}
 				<div className="border-b border-white dark:border-slate-700/10 px-6 pb-4">
 					<div className="flex items-center justify-between">
-						<h3 className="text-lg font-semibold text-white dark:text-slate-950 dark:text-white">{title}</h3>
+						<h3 className="text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
 						<button
 							onClick={onClose}
-							className="rounded-full p-2 text-white dark:text-slate-950 dark:text-slate-700 dark:text-white/60 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 hover:text-white dark:text-slate-950 dark:text-white"
+							className="rounded-full p-2 text-slate-950 dark:text-slate-950 dark:text-white/60 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 hover:text-slate-950 dark:text-slate-950 dark:text-white"
 							aria-label="Close"
 						>
 							✕
@@ -234,7 +234,7 @@ export function MobileStepIndicator({
 								? 'bg-sky-500 text-slate-900 dark:text-slate-950 dark:text-white'
 								: isDone
 									? 'bg-emerald-500/20 text-emerald-300'
-									: 'bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/40'
+									: 'bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/40'
 						} ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
 					>
 						<span className="flex items-center gap-1.5">
@@ -285,7 +285,7 @@ export function TouchInput({
 				className={`w-full rounded-xl border px-4 py-3 text-base transition ${
 					isFocused
 						? 'border-sky-500 ring-2 ring-sky-500/20'
-						: 'border-slate-200 dark:border-white/10/10 hover:border-slate-200 dark:border-white/10/20'
+						: 'border-slate-200 dark:border-white/10 hover:border-slate-200 dark:border-white/10'
 				} bg-slate-950/60 text-slate-900 dark:text-slate-950 dark:text-white placeholder:text-slate-500 ${className}`}
 				{...props}
 			/>
@@ -357,7 +357,7 @@ export function PullToRefresh({
 		>
 			{/* Pull indicator */}
 			<motion.div
-				className="absolute left-1/2 -translate-x-1/2 z-10 flex items-center justify-center rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5/5 backdrop-blur"
+				className="absolute left-1/2 -translate-x-1/2 z-10 flex items-center justify-center rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur"
 				style={{
 					top: pullDistance / 2,
 					opacity,
@@ -369,7 +369,7 @@ export function PullToRefresh({
 				{isRefreshing ? (
 					<span className="text-sky-400">⟳</span>
 				) : (
-					<span className="text-white dark:text-slate-950 dark:text-white">↓</span>
+					<span className="text-slate-950 dark:text-white">↓</span>
 				)}
 			</motion.div>
 			
