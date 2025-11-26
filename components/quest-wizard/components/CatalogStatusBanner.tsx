@@ -38,7 +38,7 @@ export function CatalogStatusBanner({
 							type="button"
 							onClick={onRefresh}
 							/* @edit-start 2025-11-12 — Add focus outline to catalog refresh */
-							className="rounded-full border border-white dark:border-slate-700/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-100 transition hover:border-white dark:border-slate-700/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+							className="rounded-full border border-slate-200 dark:border-slate-700/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-100 transition hover:border-slate-300 dark:hover:border-slate-700/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
 						>
 							Refresh
 						</button>

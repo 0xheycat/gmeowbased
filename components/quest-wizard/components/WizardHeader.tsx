@@ -61,7 +61,7 @@ export function WizardHeader({
 						<button
 							type="button"
 							onClick={onToggleCollapsed}
-							className="rounded-full border border-white dark:border-slate-700/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-slate-300 transition hover:border-white dark:border-slate-700/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+							className="rounded-full border border-slate-200 dark:border-slate-700/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-slate-300 transition hover:border-slate-300 dark:hover:border-slate-700/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
 						>
 							{collapsed ? 'Expand header' : 'Collapse header'}
 						</button>

@@ -26,7 +26,7 @@ export default function GMPage() {
         </div>
 
         {/* GM Button Section */}
-        <div className="bg-slate-100/5 dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-white dark:border-slate-700/10 p-8 mb-8">
+        <div className="bg-slate-100/5 dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-slate-700/10 p-8 mb-8">
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-semibold text-slate-950 dark:text-white mb-4">

@@ -114,7 +114,7 @@ export default function UserBadgesPage() {
         {/* Back Button */}
         <Link
           href={`/profile/${fid}`}
-          className="inline-flex items-center gap-2 mb-6 min-h-[44px] py-2 text-sm text-slate-950 dark:text-white/70 hover:text-slate-950 dark:text-white transition-colors"
+          className="inline-flex items-center gap-2 mb-6 min-h-[44px] py-2 text-sm text-slate-950 dark:text-white/70 hover:text-slate-950 dark:hover:text-white transition-colors"
         >
           <ArrowLeft size={16} weight="bold" />
           Back to Profile

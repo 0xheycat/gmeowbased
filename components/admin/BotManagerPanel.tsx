@@ -520,7 +520,7 @@ export default function BotManagerPanel() {
       ) : null}
 
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <h3 className="pixel-section-title text-sm">Signer status</h3>
             {signerStatusDisplay ? (
@@ -580,11 +580,11 @@ export default function BotManagerPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
           <h3 className="pixel-section-title text-sm">Environment overview</h3>
           <ul className="mt-3 space-y-2 text-[12px] text-[var(--px-sub)]">
             {envRows.map((row) => (
-              <li key={row.key} className="flex items-center justify-between gap-4 rounded-lg border border-white dark:border-slate-700/5 bg-slate-100/5 dark:bg-white/5 px-3 py-2">
+              <li key={row.key} className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 dark:border-slate-700/5 bg-slate-100/5 dark:bg-white/5 px-3 py-2">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[11px] uppercase tracking-[0.12em] text-slate-950 dark:text-white/70">{row.key}</span>
                   {row.hint ? (
@@ -613,7 +613,7 @@ export default function BotManagerPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <h3 className="pixel-section-title text-sm">Bot identity &amp; health</h3>
             {insightsLoading ? (
@@ -684,7 +684,7 @@ export default function BotManagerPanel() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
+      <div className="mt-6 rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="pixel-section-title text-sm">Recent Farcaster activity</h3>
@@ -711,7 +711,7 @@ export default function BotManagerPanel() {
             {insights.recentCasts.slice(0, 8).map((cast) => {
               const key = cast.hash || `${cast.timestamp}-${cast.channelId}`
               return (
-                <li key={key} className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-3">
+                <li key={key} className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-3">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-start justify-between gap-3">
                       <p className="text-sm text-slate-950 dark:text-white/90">
@@ -764,7 +764,7 @@ export default function BotManagerPanel() {
         )}
       </div>
 
-      <div className="mt-6 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
+      <div className="mt-6 rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="pixel-section-title text-sm">Community interactions</h3>
@@ -813,7 +813,7 @@ export default function BotManagerPanel() {
 
             <div className="space-y-3">
               {watcherTimelines.map(({ watcher, events }) => (
-                <div key={watcher.label} className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/25 p-3">
+                <div key={watcher.label} className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/25 p-3">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="text-sm font-semibold text-slate-950 dark:text-white">
@@ -846,7 +846,7 @@ export default function BotManagerPanel() {
                         const meta = INTERACTION_TYPE_META[type]
                         const key = `${watcher.label}-${type}-${idx}`
                         return (
-                          <li key={key} className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-3 py-2">
+                          <li key={key} className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-3 py-2">
                             <div className="flex flex-col gap-1">
                               <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-950 dark:text-white/75">
                                 <span>
@@ -891,7 +891,7 @@ export default function BotManagerPanel() {
               ))}
             </div>
 
-            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/15 p-3">
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/15 p-3">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="text-sm font-semibold text-slate-950 dark:text-white">Brand keyword pulse</div>
@@ -903,7 +903,7 @@ export default function BotManagerPanel() {
               {keywordInsights.length ? (
                 <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {keywordInsights.map((insight) => (
-                    <div key={insight.keyword} className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3">
+                    <div key={insight.keyword} className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3">
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/70">
                         <span>{insight.keyword}</span>
                         <span className="pixel-pill border-sky-400/40 bg-sky-500/10 text-[10px] text-sky-200">
@@ -912,7 +912,7 @@ export default function BotManagerPanel() {
                       </div>
                       <ul className="mt-2 space-y-2 text-[12px] text-slate-950 dark:text-white/85">
                         {insight.samples.slice(0, 4).map((sample, idx) => (
-                          <li key={`${insight.keyword}-${idx}`} className="rounded-md border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2">
+                          <li key={`${insight.keyword}-${idx}`} className="rounded-md border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2">
                             <div className="text-[11px] text-[var(--px-sub)]">
                               {formatRelativeTime(sample.timestamp)} • {formatActorName(sample.author)}
                             </div>
@@ -951,7 +951,7 @@ export default function BotManagerPanel() {
           </span>
         </div>
         <textarea
-          className="w-full min-h-[120px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+          className="w-full min-h-[120px] rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
           value={castText}
           onChange={(event) => setCastText(event.target.value.slice(0, MAX_TEXT_LENGTH + 10))}
           placeholder="Compose a manual cast or response…"
@@ -960,7 +960,7 @@ export default function BotManagerPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Channel ID (optional)
             <input
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={channelId}
               onChange={(event) => setChannelId(event.target.value)}
               placeholder="e.g. neynar"
@@ -969,7 +969,7 @@ export default function BotManagerPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Parent hash / URL (optional)
             <input
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={parent}
               onChange={(event) => setParent(event.target.value)}
               placeholder="Reply target hash or URL"
@@ -978,7 +978,7 @@ export default function BotManagerPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Parent author FID (optional)
             <input
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={parentAuthorFid}
               onChange={(event) => setParentAuthorFid(event.target.value.replace(/[^0-9]/g, ''))}
               placeholder="Numeric FID"
@@ -987,7 +987,7 @@ export default function BotManagerPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Idempotency key (optional)
             <input
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={idem}
               onChange={(event) => setIdem(event.target.value)}
               placeholder="Stable key to avoid duplicates"

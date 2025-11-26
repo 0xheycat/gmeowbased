@@ -255,7 +255,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Mention triggers
             <textarea
-              className="min-h-[90px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[90px] rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.mentionMatchers}
               onChange={handleChange('mentionMatchers')}
               placeholder="@gmeowbased\n#gmeowbased"
@@ -266,7 +266,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Signal keywords
             <textarea
-              className="min-h-[90px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[90px] rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.signalKeywords}
               onChange={handleChange('signalKeywords')}
               placeholder="stats\nrank\nlevel"
@@ -279,7 +279,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Question starters
             <textarea
-              className="min-h-[80px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[80px] rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.questionStarters}
               onChange={handleChange('questionStarters')}
               placeholder="what\nhow\nshow"
@@ -290,7 +290,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Response variants
             <textarea
-              className="min-h-[80px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="min-h-[80px] rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={form.responseVariants}
               onChange={handleChange('responseVariants')}
               placeholder="Signal sync complete\nTelemetry uplink secure"
@@ -303,7 +303,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Cooldown minutes
             <input
-              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={1}
               max={240}
@@ -316,7 +316,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Repeat question minutes
             <input
-              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={1}
               max={120}
@@ -329,7 +329,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             XP delta threshold
             <input
-              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={0}
               max={5000}
@@ -342,7 +342,7 @@ export default function BotStatsConfigPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Minimum Neynar score
             <input
-              className="rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               type="number"
               min={0}
               max={1}

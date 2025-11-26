@@ -416,7 +416,7 @@ export default function PartnerSnapshotPanel() {
   }, [submitting, partnerName, selectedChains, minimum, requirementKind, contractAddress, tokenId, metadataJson, maxAddressesPerChain, snapshotId, notify, fetchHistory])
 
   return (
-    <section className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5 shadow-lg shadow-sky-500/5">
+    <section className="rounded-3xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5 shadow-lg shadow-sky-500/5">
       <form className="space-y-6" onSubmit={handleSubmit} noValidate>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -453,7 +453,7 @@ export default function PartnerSnapshotPanel() {
 
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="space-y-5">
-            <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 p-4">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700/10 bg-slate-950/60 p-4">
               <h3 className="pixel-section-title text-base">Partner details</h3>
               <div className="mt-4 grid gap-4">
                 <label className="flex flex-col gap-1 text-sm">
@@ -502,7 +502,7 @@ export default function PartnerSnapshotPanel() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 p-4">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700/10 bg-slate-950/60 p-4">
               <h3 className="pixel-section-title text-base">Eligible chains</h3>
               <p className="mt-1 text-[11px] text-[var(--px-sub)]">Toggle the networks included in the partner snapshot.</p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -537,7 +537,7 @@ export default function PartnerSnapshotPanel() {
                 <button
                   type="button"
                   onClick={handleClearChains}
-                  className="pixel-pill border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-white/5 px-3 py-1 text-slate-950 dark:text-white/70 transition hover:border-rose-300/40 hover:text-slate-950 dark:text-white disabled:opacity-50"
+                  className="pixel-pill border border-slate-200 dark:border-slate-700/12 bg-slate-100/5 dark:bg-white/5 px-3 py-1 text-slate-950 dark:text-white/70 transition hover:border-rose-300/40 hover:text-slate-950 dark:text-white disabled:opacity-50"
                   disabled={selectedChains.size === 0}
                 >
                   Clear
@@ -550,7 +550,7 @@ export default function PartnerSnapshotPanel() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 p-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700/10 bg-slate-950/60 p-4">
             <h3 className="pixel-section-title text-base">Requirement</h3>
             <p className="mt-1 text-[11px] text-[var(--px-sub)]">Configure the gating logic applied across the selected networks.</p>
 
@@ -694,13 +694,13 @@ export default function PartnerSnapshotPanel() {
             ) : null}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 text-sm text-[var(--px-sub)]">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 text-sm text-[var(--px-sub)]">
             Run a snapshot to preview per-chain eligibility counts and request details.
           </div>
         )}
       </form>
 
-      <div className="mt-6 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
+      <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="pixel-section-title text-base">Recent partner snapshots</h3>
@@ -725,7 +725,7 @@ export default function PartnerSnapshotPanel() {
         {history.length ? (
           <div className="mt-4 space-y-4">
             {history.map((entry) => (
-              <div key={entry.snapshotId} className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-950/60 p-4">
+              <div key={entry.snapshotId} className="rounded-2xl border border-slate-200 dark:border-slate-700/10 bg-slate-950/60 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--px-sub)]">
                   <div>
                     <div className="text-[10px] uppercase tracking-[0.28em] text-slate-950 dark:text-white/50">Snapshot ID</div>
@@ -757,7 +757,7 @@ export default function PartnerSnapshotPanel() {
                 </dl>
 
                 {entry.chains.length ? (
-                  <div className="mt-3 overflow-x-auto rounded-xl border border-white dark:border-slate-700/10">
+                  <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700/10">
                     <table className="min-w-full text-left text-[11px] text-slate-950 dark:text-white/70">
                       <thead className="bg-slate-100/5 dark:bg-white/5 text-[10px] uppercase tracking-[0.24em] text-slate-950 dark:text-white/40">
                         <tr>
@@ -782,7 +782,7 @@ export default function PartnerSnapshotPanel() {
                 ) : null}
 
                 {entry.metadata ? (
-                  <details className="mt-3 rounded-xl border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-white/5 p-3 text-sm text-slate-950 dark:text-white/75">
+                  <details className="mt-3 rounded-xl border border-slate-200 dark:border-slate-700/12 bg-slate-100/5 dark:bg-white/5 p-3 text-sm text-slate-950 dark:text-white/75">
                     <summary className="cursor-pointer text-[10px] uppercase tracking-[0.2em] text-slate-950 dark:text-white/50">Metadata</summary>
                     <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-xl bg-black dark:bg-slate-950/40 p-3 font-mono text-[11px]">
                       {stringifyJson(entry.metadata) ?? '—'}

@@ -111,7 +111,7 @@ export default async function ViralAdminPage() {
       </div>
 
       {/* Footer Notes */}
-      <div className="mt-8 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
+      <div className="mt-8 rounded-2xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
         <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-950 dark:text-white/70">
           📝 Admin Notes
         </h4>

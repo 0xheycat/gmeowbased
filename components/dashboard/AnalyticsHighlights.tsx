@@ -93,7 +93,7 @@ export default function AnalyticsHighlights({
       {loading && !totals ? (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {Array.from({ length: HIGHLIGHT_METRICS.length }).map((_, idx) => (
-            <div key={idx} className="h-24 rounded-xl border border-white dark:border-slate-700/8 bg-slate-100/10 dark:bg-white/5">
+            <div key={idx} className="h-24 rounded-xl border border-slate-200 dark:border-slate-700/8 bg-slate-100/10 dark:bg-white/5">
               <div className="h-full w-full animate-pulse rounded-xl bg-slate-100/10 dark:bg-white/5" />
             </div>
           ))}
@@ -105,7 +105,7 @@ export default function AnalyticsHighlights({
           {HIGHLIGHT_METRICS.map((metric) => {
             const value = totals[metric.key] ?? 0
             return (
-              <div key={metric.key} className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3">
+              <div key={metric.key} className="rounded-2xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3">
                 <div className="text-[10px] uppercase tracking-[0.18em] text-slate-950 dark:text-white/60">
                   {metric.label}
                 </div>

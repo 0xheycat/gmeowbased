@@ -159,7 +159,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                 return (
                   <article
                     key={note.id}
-                    className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3 shadow-[0_12px_28px_rgba(8,19,45,0.3)] backdrop-blur transition hover:border-white dark:border-slate-700/20 hover:bg-slate-100/8 dark:bg-white/5"
+                    className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3 shadow-[0_12px_28px_rgba(8,19,45,0.3)] backdrop-blur transition hover:border-slate-300 dark:hover:border-slate-700/20 hover:bg-slate-100/8 dark:hover:bg-white/5"
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-lg">

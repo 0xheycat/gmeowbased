@@ -122,7 +122,7 @@ export function TemplateSelector({
 						<div className="flex justify-center gap-3">
 							<button
 								onClick={() => setSearchQuery('')}
-								className="rounded-full border border-white dark:border-slate-700/10 px-4 py-2 text-sm text-slate-300 hover:border-white dark:border-slate-700/20 hover:bg-slate-100/5 dark:bg-white/5"
+								className="rounded-full border border-slate-200 dark:border-slate-700/10 px-4 py-2 text-sm text-slate-300 hover:border-slate-300 dark:hover:border-slate-700/20 hover:bg-slate-100/5 dark:hover:bg-white/5"
 							>
 								Clear search
 							</button>
