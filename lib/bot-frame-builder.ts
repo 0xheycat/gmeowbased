@@ -81,9 +81,9 @@ function detectBestFrameRoute(options: {
     case 'leaderboards':
       return { type: 'leaderboards' }
 
-    // Guild (not yet migrated) → /api/frame?type=guild
+    // Guild → /frame/guild (MIGRATED!)
     case 'guild-invite':
-      return { type: 'guild', id: guildId }
+      return { type: 'guild', id: guildId, fid }
 
     // GM/Streak → /frame/gm (MIGRATED!)
     case 'daily-streak':
