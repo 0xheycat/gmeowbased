@@ -142,7 +142,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                   'pixel-pill border px-3 py-1 text-[10px] uppercase tracking-[0.22em] transition',
                   activeFilter === option
                     ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.35)]'
-                    : 'border-white/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white',
+                    : 'border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white',
                 )}
               >
                 {FILTER_LABELS[option]}

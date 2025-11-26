@@ -155,7 +155,7 @@ const STATUS_ITEM_CLASSES: Record<StatusTone, string> = {
   ok: 'border-emerald-400/30 bg-emerald-500/10',
   warn: 'border-amber-400/30 bg-amber-500/15',
   error: 'border-rose-400/40 bg-rose-500/20',
-  neutral: 'border-white/12 bg-slate-100/90 dark:bg-white/5/[0.04]',
+  neutral: 'border-slate-200 dark:border-white/10/12 bg-slate-100/90 dark:bg-white/5/[0.04]',
 }
 
 type QuickActionTone = 'primary' | 'neutral' | 'aux'
@@ -174,7 +174,7 @@ type QuickAction = {
 
 const QUICK_ACTION_CLASSES: Record<QuickActionTone, string> = {
   primary: 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100 hover:border-emerald-300/60 hover:bg-emerald-500/20',
-  neutral: 'border-white/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 hover:border-emerald-300/30 hover:text-emerald-100',
+  neutral: 'border-slate-200 dark:border-white/10/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 hover:border-emerald-300/30 hover:text-emerald-100',
   aux: 'border-sky-400/30 bg-sky-500/15 text-sky-100 hover:border-sky-300/50 hover:bg-sky-500/20',
 }
 
@@ -641,7 +641,7 @@ export default function AdminAnalyticsPage() {
                 'pixel-pill group flex items-center gap-3 border px-4 py-2 text-[11px] uppercase tracking-[0.16em] transition',
                 activeTab === tab.id
                   ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.35)]'
-                  : 'border-white/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white'
+                  : 'border-slate-200 dark:border-white/10/12 bg-slate-100/90 dark:bg-white/5/5 text-slate-700 dark:text-slate-500/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 hover:border-emerald-300/40 hover:text-slate-950 dark:text-white'
               )}
             >
               <span className="flex items-center gap-2 text-left">

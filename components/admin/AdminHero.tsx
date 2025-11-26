@@ -68,7 +68,7 @@ export default function AdminHero({ metrics, refreshing, lastUpdatedLabel, onRef
             <div
               key={metric.key}
               className={clsx(
-                'group relative overflow-hidden rounded-2xl border border-white/15 bg-slate-100/90 dark:bg-white/5/[0.04] p-4 transition duration-300',
+                'group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10/15 bg-slate-100/90 dark:bg-white/5/[0.04] p-4 transition duration-300',
                 'before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-white/5 before:via-transparent before:to-transparent before:opacity-0 before:transition before:duration-300 group-hover:before:opacity-100'
               )}
               style={{ borderColor: metric.accent, boxShadow: `0 20px 40px -32px ${metric.accent}` }}

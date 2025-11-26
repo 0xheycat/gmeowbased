@@ -174,7 +174,7 @@ export function EligibilityStep({
 							className={`rounded-full border px-3 py-1 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
 								active
 									? 'border-emerald-400/60 bg-emerald-400/10 text-emerald-200'
-									: 'border-white/10 text-slate-300 hover:border-white/20 disabled:opacity-50'
+									: 'border-slate-200 dark:border-white/10/10 text-slate-300 hover:border-slate-200 dark:border-white/10/20 disabled:opacity-50'
 							}`}
 							aria-pressed={active}
 							title={limitBlocksNew ? `Limited to ${partnerChainLimit} partner chains` : undefined}

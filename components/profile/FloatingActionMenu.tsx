@@ -62,7 +62,7 @@ export function FloatingActionMenu({ actions, className }: FloatingActionMenuPro
           'active:scale-95',
           'shadow-lg shadow-cyan-500/50',
           'transition-all duration-200',
-          'border-2 border-white/20',
+          'border-2 border-slate-200 dark:border-white/10/20',
           isOpen && 'rotate-45'
         )}
         aria-label={isOpen ? 'Close quick actions' : 'Open quick actions'}

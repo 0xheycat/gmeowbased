@@ -285,7 +285,7 @@ export function TouchInput({
 				className={`w-full rounded-xl border px-4 py-3 text-base transition ${
 					isFocused
 						? 'border-sky-500 ring-2 ring-sky-500/20'
-						: 'border-white/10 hover:border-white/20'
+						: 'border-slate-200 dark:border-white/10/10 hover:border-slate-200 dark:border-white/10/20'
 				} bg-slate-950/60 text-slate-900 dark:text-slate-950 dark:text-white placeholder:text-slate-500 ${className}`}
 				{...props}
 			/>

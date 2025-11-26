@@ -93,7 +93,7 @@ export function BadgeShareCard({
   return (
     <div
       className={clsx(
-        'relative overflow-hidden rounded-2xl border border-white/10 bg-slate-100/90 dark:bg-white/5/5 p-5 transition-all hover:border-white/20 hover:bg-slate-100/90 dark:bg-white/5/10',
+        'relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-white/5/5 p-5 transition-all hover:border-slate-200 dark:border-white/10/20 hover:bg-slate-100/90 dark:bg-white/5/10',
         className
       )}
     >
@@ -190,7 +190,7 @@ export function BadgeShareCard({
         disabled={sharing}
         className={clsx(
           'mt-4 w-full rounded-xl px-4 py-2 text-sm font-semibold transition-all',
-          'border border-white/20 bg-slate-100/90 dark:bg-white/5/5 text-slate-950 dark:text-white hover:border-white/30 hover:bg-slate-100/90 dark:bg-white/5/10',
+          'border border-slate-200 dark:border-white/10/20 bg-slate-100/90 dark:bg-white/5/5 text-slate-950 dark:text-white hover:border-slate-200 dark:border-white/10/30 hover:bg-slate-100/90 dark:bg-white/5/10',
           'disabled:cursor-not-allowed disabled:opacity-50'
         )}
       >

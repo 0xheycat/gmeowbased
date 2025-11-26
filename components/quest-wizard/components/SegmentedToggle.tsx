@@ -31,9 +31,9 @@ export function SegmentedToggle<T extends string>({ options, value, onChange, si
 		amber: 'border-amber-400/60 bg-gradient-to-r from-amber-300/80 via-amber-400/80 to-amber-500/80 text-slate-950 shadow-lg shadow-amber-500/25',
 		indigo: 'border-indigo-400/60 bg-gradient-to-r from-indigo-400/80 via-violet-400/80 to-purple-500/80 text-slate-100 shadow-lg shadow-indigo-500/25',
 		purple: 'border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-400/80 via-purple-400/80 to-indigo-500/80 text-slate-100 shadow-lg shadow-fuchsia-500/25',
-		neutral: 'border-white/40 bg-slate-100/90 dark:bg-white/5/90 text-slate-900 dark:text-slate-500 shadow-lg shadow-white/10',
+		neutral: 'border-slate-200 dark:border-white/10/40 bg-slate-100/90 dark:bg-white/5/90 text-slate-900 dark:text-slate-500 shadow-lg shadow-white/10',
 	}
-	const baseInactive = 'border border-white/12 text-slate-300 hover:border-white/20'
+	const baseInactive = 'border border-slate-200 dark:border-white/10/12 text-slate-300 hover:border-slate-200 dark:border-white/10/20'
 	const padding = size === 'sm' ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'
 	const layout = size === 'sm' ? 'gap-1' : 'gap-2'
 	const minWidth = size === 'sm' ? 'min-w-[120px]' : 'min-w-[160px]'
@@ -94,7 +94,7 @@ export function SegmentedToggle<T extends string>({ options, value, onChange, si
 				const baseClass = `group flex ${minWidth} flex-col rounded-2xl transition ${focusRing} ${padding} ${layout}`
 				// @edit-start 2025-11-11 — Style disabled segmented options
 				const stateClass = isDisabled
-					? 'cursor-not-allowed border border-white/12 text-slate-500/70 opacity-60'
+					? 'cursor-not-allowed border border-slate-200 dark:border-white/10/12 text-slate-500/70 opacity-60'
 					: active
 						? toneClass[tone]
 						: baseInactive

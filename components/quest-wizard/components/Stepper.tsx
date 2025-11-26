@@ -17,7 +17,7 @@ export function Stepper({ activeIndex, steps, onSelect }: StepperProps) {
 									? 'border-sky-400/60 bg-sky-400/10 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]'
 									: isDone
 										? 'border-emerald-400/40 bg-emerald-500/5'
-										: 'border-white/5 hover:border-white/15 hover:bg-slate-100/90 dark:bg-white/5/5'
+										: 'border-slate-200 dark:border-white/10/5 hover:border-slate-200 dark:border-white/10/15 hover:bg-slate-100/90 dark:bg-white/5/5'
 							}`}
 							aria-current={isActive ? 'step' : undefined}
 						>
@@ -28,7 +28,7 @@ export function Stepper({ activeIndex, steps, onSelect }: StepperProps) {
 											? 'border-sky-400 bg-sky-400/10 text-sky-200'
 											: isDone
 												? 'border-emerald-400 bg-emerald-400/10 text-emerald-200'
-												: 'border-white/10 bg-slate-900 text-slate-400'
+												: 'border-slate-200 dark:border-white/10/10 bg-slate-900 text-slate-400'
 									}`}
 								>
 									{index + 1}

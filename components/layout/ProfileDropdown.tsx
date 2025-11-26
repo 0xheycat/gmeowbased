@@ -84,7 +84,7 @@ export function ProfileDropdown() {
   // Prevent hydration mismatch - wait for client mount
   if (!mounted) {
     return (
-      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 backdrop-blur-xl backdrop-saturate-150">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 dark:border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 backdrop-blur-xl backdrop-saturate-150">
         <div className="h-4 w-4 animate-pulse rounded-full bg-slate-900/20 dark:bg-slate-100/90 dark:bg-white/5/20 backdrop-blur-xl backdrop-saturate-150" />
       </div>
     )
@@ -94,7 +94,7 @@ export function ProfileDropdown() {
     return (
       <Link
         href="/profile"
-        className="flex h-10 items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 px-4 text-sm font-medium text-slate-950 dark:text-slate-700/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 transition-colors hover:border-accent-green/30 hover:bg-accent-green/10 hover:text-slate-950 dark:hover:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
+        className="flex h-10 items-center gap-2 rounded-full border border-slate-200 dark:border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 px-4 text-sm font-medium text-slate-950 dark:text-slate-700 dark:text-slate-300/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 transition-colors hover:border-accent-green/30 hover:bg-accent-green/10 hover:text-slate-950 dark:hover:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
       >
         <User size={18} weight="bold" />
         <span className="hidden sm:inline">Connect</span>
@@ -104,8 +104,8 @@ export function ProfileDropdown() {
 
   if (loading) {
     return (
-      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 backdrop-blur-xl backdrop-saturate-150">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900/20 dark:border-white/20 border-t-accent-green" />
+      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 dark:border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 backdrop-blur-xl backdrop-saturate-150">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900/20 dark:border-slate-200 dark:border-white/10/20 border-t-accent-green" />
       </div>
     )
   }
@@ -122,7 +122,7 @@ export function ProfileDropdown() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 p-1.5 transition-colors hover:border-accent-green/30 hover:bg-accent-green/10 sm:p-1 sm:pr-3 backdrop-blur-xl backdrop-saturate-150"
+        className="flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-200 dark:border-white/10/10 bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 p-1.5 transition-colors hover:border-accent-green/30 hover:bg-accent-green/10 sm:p-1 sm:pr-3 backdrop-blur-xl backdrop-saturate-150"
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-label={`Profile menu for @${username}`}
@@ -147,23 +147,23 @@ export function ProfileDropdown() {
         <CaretDown
           size={14}
           weight="bold"
-          className={`hidden sm:block text-slate-600 dark:text-slate-700/60 dark:text-slate-950 dark:text-slate-700 dark:text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`hidden sm:block text-slate-600 dark:text-slate-700 dark:text-slate-300/60 dark:text-slate-950 dark:text-slate-700 dark:text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
       {/* Dropdown menu */}
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-72 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/98 dark:bg-slate-900/98 shadow-2xl backdrop-blur-xl">
+          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-200 dark:border-white/10/10 bg-slate-50/98 dark:bg-slate-900/98 shadow-2xl backdrop-blur-xl">
             {/* Profile header */}
-            <div className="border-b border-slate-200 dark:border-white/10 p-4">
+            <div className="border-b border-slate-200 dark:border-slate-200 dark:border-white/10/10 p-4">
               <div className="flex items-center gap-3">
                 <div className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-accent-green/50">
                   <Image src={pfpUrl} alt={username} fill className="object-cover" sizes="48px" />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white">@{username}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-900 dark:text-slate-700/60 dark:text-slate-950 dark:text-slate-700 dark:text-white/60">FID: {profile?.fid ?? '—'}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-900 dark:text-slate-700 dark:text-slate-300/60 dark:text-slate-950 dark:text-slate-700 dark:text-white/60">FID: {profile?.fid ?? '—'}</p>
                 </div>
                 {profile?.powerBadge && (
                   <div className="rounded-full bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-400">
@@ -174,24 +174,24 @@ export function ProfileDropdown() {
             </div>
 
             {/* Mini stats */}
-            <div className="grid grid-cols-3 gap-2 border-b border-slate-200 dark:border-white/10 p-4">
+            <div className="grid grid-cols-3 gap-2 border-b border-slate-200 dark:border-slate-200 dark:border-white/10/10 p-4">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 text-accent-green">
                   <Trophy size={14} weight="fill" />
                   <span className="text-sm font-bold">{formatNumber(points)}</span>
                 </div>
-                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-700 dark:text-slate-900 dark:text-slate-700/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Points</p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-700 dark:text-slate-900 dark:text-slate-700 dark:text-slate-300/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Points</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 text-yellow-400">
                   <Lightning size={14} weight="fill" />
                   <span className="text-sm font-bold">{streak}</span>
                 </div>
-                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-700 dark:text-slate-900 dark:text-slate-700/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Streak</p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-700 dark:text-slate-900 dark:text-slate-700 dark:text-slate-300/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Streak</p>
               </div>
               <div className="text-center">
                 <div className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white">{rank ? `#${rank}` : '—'}</div>
-                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-700 dark:text-slate-900 dark:text-slate-700/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Rank</p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-700 dark:text-slate-900 dark:text-slate-700 dark:text-slate-300/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Rank</p>
               </div>
             </div>
 
@@ -200,7 +200,7 @@ export function ProfileDropdown() {
               <Link
                 href="/profile"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-slate-700/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-slate-700 dark:text-slate-300/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >
                 <User size={18} weight="bold" />
                 View Full Profile
@@ -208,7 +208,7 @@ export function ProfileDropdown() {
               <Link
                 href="/Dashboard"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-slate-700/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-slate-700 dark:text-slate-300/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >
                 <Trophy size={18} weight="bold" />
                 Dashboard
@@ -216,7 +216,7 @@ export function ProfileDropdown() {
               <Link
                 href="/leaderboard"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-slate-700/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-slate-700 dark:text-slate-300/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >
                 <Lightning size={18} weight="bold" />
                 Leaderboard
@@ -227,7 +227,7 @@ export function ProfileDropdown() {
                   setIsOpen(false)
                   // Trigger wallet disconnect - you can add this logic
                 }}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-slate-700/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-slate-700 dark:text-slate-300/80 dark:text-slate-950 dark:text-slate-700 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-slate-900 dark:text-slate-950 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >
                 <SignOut size={18} weight="bold" />
                 Disconnect
@@ -235,10 +235,10 @@ export function ProfileDropdown() {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-slate-200 dark:border-white/10 p-3">
+            <div className="border-t border-slate-200 dark:border-slate-200 dark:border-white/10/10 p-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-700 dark:text-slate-900 dark:text-slate-700/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Wallet</span>
-                <code className="rounded bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 px-2 py-1 text-slate-700 dark:text-slate-900 dark:text-slate-700/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 backdrop-blur-xl backdrop-saturate-150">
+                <span className="text-slate-700 dark:text-slate-900 dark:text-slate-700 dark:text-slate-300/50 dark:text-slate-950 dark:text-slate-700 dark:text-white/50">Wallet</span>
+                <code className="rounded bg-slate-100/90 dark:bg-slate-100/90 dark:bg-white/5/5 px-2 py-1 text-slate-700 dark:text-slate-900 dark:text-slate-700 dark:text-slate-300/70 dark:text-slate-950 dark:text-slate-700 dark:text-white/70 backdrop-blur-xl backdrop-saturate-150">
                   {address.slice(0, 6)}...{address.slice(-4)}
                 </code>
               </div>

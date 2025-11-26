@@ -18,7 +18,7 @@ const Progress = React.forwardRef<
   aria-valuemax={100}
   aria-valuenow={value ?? 0}
   className={cn(
-    "relative h-2 w-full overflow-hidden rounded-full backdrop-blur-md bg-gradient-to-r from-white/10 via-white/5 to-transparent border border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]",
+    "relative h-2 w-full overflow-hidden rounded-full backdrop-blur-md bg-gradient-to-r from-white/10 via-white/5 to-transparent border border-slate-200 dark:border-white/10/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]",
     className
   )}
   {...props}

@@ -228,7 +228,7 @@ function NotificationBelt({ count, tone }: { count: number; tone: NotificationTo
     <div className={anchorClass}>
       <div
         className={cn(
-          'relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-white/12 bg-[#040f1d]/80 text-base sm:text-lg text-cyan-100 shadow-[0_18px_52px_rgba(4,14,28,0.6)] backdrop-blur-xl',
+          'relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-slate-200 dark:border-white/10/12 bg-[#040f1d]/80 text-base sm:text-lg text-cyan-100 shadow-[0_18px_52px_rgba(4,14,28,0.6)] backdrop-blur-xl',
           active ? 'animate-[gmeow-beacon_2800ms_ease-in-out_infinite]' : 'opacity-80',
           active ? beacon : '',
         )}
