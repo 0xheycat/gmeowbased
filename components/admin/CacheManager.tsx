@@ -105,7 +105,7 @@ function CacheBlock({
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded-md border border-white dark:border-slate-700/5 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
+    <div className="rounded-md border border-white dark:border-slate-700/5 bg-slate-100/5 dark:bg-white/5 p-3">
       <div
         className="flex cursor-pointer items-center justify-between"
         onClick={() => setExpanded(!expanded)}

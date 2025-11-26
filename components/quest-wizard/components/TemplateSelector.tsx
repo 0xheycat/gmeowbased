@@ -67,7 +67,7 @@ export function TemplateSelector({
 						placeholder="Search templates..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
-						className="flex-1 rounded-xl border border-white dark:border-slate-700/10 bg-slate-950/60 px-4 py-3 text-slate-950 dark:text-slate-950 dark:text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+						className="flex-1 rounded-xl border border-white dark:border-slate-700/10 bg-slate-950/60 px-4 py-3 text-slate-950 dark:text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
 					/>
 					<button
 						onClick={onStartFromScratch}
@@ -85,7 +85,7 @@ export function TemplateSelector({
 							onClick={() => setSelectedCategory(cat.key)}
 							className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
 								selectedCategory === cat.key
-									? 'bg-sky-500 text-slate-900 dark:text-slate-950 dark:text-white'
+									? 'bg-sky-500 text-slate-900 dark:text-white'
 									: 'bg-slate-100/90 dark:bg-white/5 text-slate-400 hover:bg-slate-100/90 dark:bg-white/5'
 							}`}
 						>
@@ -122,13 +122,13 @@ export function TemplateSelector({
 						<div className="flex justify-center gap-3">
 							<button
 								onClick={() => setSearchQuery('')}
-								className="rounded-full border border-white dark:border-slate-700/10 px-4 py-2 text-sm text-slate-300 hover:border-white dark:border-slate-700/20 hover:bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5"
+								className="rounded-full border border-white dark:border-slate-700/10 px-4 py-2 text-sm text-slate-300 hover:border-white dark:border-slate-700/20 hover:bg-slate-100/5 dark:bg-white/5"
 							>
 								Clear search
 							</button>
 							<button
 								onClick={onStartFromScratch}
-								className="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 dark:text-slate-950 dark:text-white hover:bg-sky-600"
+								className="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 dark:text-white hover:bg-sky-600"
 							>
 								Start from scratch
 							</button>
@@ -142,7 +142,7 @@ export function TemplateSelector({
 						<p className="mb-4 text-sm text-slate-400">Start building your quest from scratch</p>
 						<button
 							onClick={onStartFromScratch}
-							className="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 dark:text-slate-950 dark:text-white hover:bg-sky-600"
+							className="rounded-full bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 dark:text-white hover:bg-sky-600"
 						>
 							Start from scratch
 						</button>
@@ -189,10 +189,10 @@ function TemplateCard({
 					<span className={`rounded-full bg-slate-100/90 dark:bg-white/5 px-2 py-1 ${difficultyColors[template.difficulty]}`}>
 						{template.difficulty}
 					</span>
-					<span className="rounded-full bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-1 text-slate-400">
+					<span className="rounded-full bg-slate-100/5 dark:bg-white/5 px-2 py-1 text-slate-400">
 						⏱️ {template.estimatedTime}
 					</span>
-					<span className="rounded-full bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-1 capitalize text-slate-400">
+					<span className="rounded-full bg-slate-100/5 dark:bg-white/5 px-2 py-1 capitalize text-slate-400">
 						{template.category}
 					</span>
 				</div>

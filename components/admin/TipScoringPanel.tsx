@@ -301,7 +301,7 @@ export default function TipScoringPanel() {
           <button
             type="button"
             onClick={resetConfig}
-            className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+            className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
           >
             Reset defaults
           </button>
@@ -319,7 +319,7 @@ export default function TipScoringPanel() {
         {summaryHighlights.map((item) => (
           <div
             key={item.key}
-            className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 shadow-[0_14px_36px_-24px_rgba(45,212,191,0.45)] backdrop-blur transition hover:border-emerald-400/30 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5"
+            className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 shadow-[0_14px_36px_-24px_rgba(45,212,191,0.45)] backdrop-blur transition hover:border-emerald-400/30 hover:bg-slate-100/10 dark:bg-white/5"
           >
             <div className="text-[10px] uppercase tracking-[0.18em] text-slate-950 dark:text-white/60">{item.label}</div>
             <div className="mt-2 text-2xl font-semibold text-emerald-200">{item.value}</div>

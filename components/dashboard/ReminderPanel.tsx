@@ -34,7 +34,7 @@ export function ReminderPanel({ reminders }: { reminders: DashboardReminder[] })
       {reminders.length ? (
         <ul className="space-y-3">
           {reminders.map((reminder) => {
-            const toneClass = reminder.tone ? toneClasses[reminder.tone] : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/80'
+            const toneClass = reminder.tone ? toneClasses[reminder.tone] : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/80'
             return (
               <li
                 key={reminder.id}
@@ -77,7 +77,7 @@ export function ReminderPanel({ reminders }: { reminders: DashboardReminder[] })
           })}
         </ul>
       ) : (
-        <div className="rounded-2xl border border-dashed border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+        <div className="rounded-2xl border border-dashed border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
           Nothing on your radar right now. Keep momentum going and new reminders will appear here.
         </div>
       )}

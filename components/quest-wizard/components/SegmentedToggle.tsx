@@ -123,7 +123,7 @@ export function SegmentedToggle<T extends string>({ options, value, onChange, si
 							<span className={`text-[11px] ${isDisabled ? 'text-slate-500/80' : active ? 'text-slate-900/80' : 'text-slate-400'}`}>{option.description}</span>
 						) : null}
 						{option.badge ? (
-							<span className={`w-fit rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ${active ? 'bg-black/20 text-black dark:text-slate-950 dark:text-white' : 'bg-slate-100/90 dark:bg-white/5 text-slate-300'}`}>
+							<span className={`w-fit rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ${active ? 'bg-black/20 text-black dark:text-white' : 'bg-slate-100/90 dark:bg-white/5 text-slate-300'}`}>
 								{option.badge}
 							</span>
 						) : null}

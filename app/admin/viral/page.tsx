@@ -20,23 +20,23 @@ import dynamic from 'next/dynamic'
 
 // Client components - dynamically loaded to reduce initial bundle
 const TierUpgradeFeed = dynamic(() => import('@/components/admin/viral/TierUpgradeFeed'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const NotificationAnalytics = dynamic(() => import('@/components/admin/viral/NotificationAnalytics'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const AchievementDistribution = dynamic(() => import('@/components/admin/viral/AchievementDistribution'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const TopViralCasts = dynamic(() => import('@/components/admin/viral/TopViralCasts'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 const WebhookHealthMonitor = dynamic(() => import('@/components/admin/viral/WebhookHealthMonitor'), {
-  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 h-96" />,
+  loading: () => <div className="animate-pulse rounded-lg bg-slate-100/5 dark:bg-white/5 p-6 h-96" />,
 })
 
 export default async function ViralAdminPage() {
@@ -69,7 +69,7 @@ export default async function ViralAdminPage() {
         </div>
 
         <Link
-          className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+          className="pixel-button btn-sm border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
           href="/admin"
         >
           ← Back to Admin
@@ -111,7 +111,7 @@ export default async function ViralAdminPage() {
       </div>
 
       {/* Footer Notes */}
-      <div className="mt-8 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4">
+      <div className="mt-8 rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
         <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-950 dark:text-white/70">
           📝 Admin Notes
         </h4>

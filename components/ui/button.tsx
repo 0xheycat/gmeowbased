@@ -309,12 +309,12 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement>, SharedCardPro
 }
 
 const CARD_TONE_STYLES: Record<CardTone, string> = {
-  neutral: 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90',
-  frosted: 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90',
-  accent: 'border-emerald-400/30 bg-emerald-400/10 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(16,185,129,0.18)]',
-  muted: 'border-slate-200 dark:border-white/10 bg-black/25 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/85',
-  danger: 'border-rose-400/35 bg-rose-500/15 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(244,63,94,0.18)]',
-  info: 'border-sky-400/35 bg-sky-500/15 text-slate-900 dark:text-slate-950 dark:text-white shadow-[0_0_40px_rgba(56,189,248,0.18)]',
+  neutral: 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/90',
+  frosted: 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/90',
+  accent: 'border-emerald-400/30 bg-emerald-400/10 text-slate-900 dark:text-white shadow-[0_0_40px_rgba(16,185,129,0.18)]',
+  muted: 'border-slate-200 dark:border-white/10 bg-black/25 text-slate-900 dark:text-white/85',
+  danger: 'border-rose-400/35 bg-rose-500/15 text-slate-900 dark:text-white shadow-[0_0_40px_rgba(244,63,94,0.18)]',
+  info: 'border-sky-400/35 bg-sky-500/15 text-slate-900 dark:text-white shadow-[0_0_40px_rgba(56,189,248,0.18)]',
 }
 
 const CARD_PADDING_STYLES: Record<CardPadding, string> = {
@@ -381,7 +381,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(function
   ref,
 ) {
   const Comp = asChild ? Slot : 'h2'
-  return <Comp ref={ref} className={cn('text-lg font-semibold text-slate-900 dark:text-slate-950 dark:text-white sm:text-xl', className)} {...props} />
+  return <Comp ref={ref} className={cn('text-lg font-semibold text-slate-900 dark:text-white sm:text-xl', className)} {...props} />
 })
 
 export interface CardDescriptionProps extends HTMLAttributes<HTMLParagraphElement> {
@@ -393,7 +393,7 @@ export const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionP
   ref,
 ) {
   const Comp = asChild ? Slot : 'p'
-  return <Comp ref={ref} className={cn('text-sm text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/70', className)} {...props} />
+  return <Comp ref={ref} className={cn('text-sm text-slate-900 dark:text-white/70', className)} {...props} />
 })
 
 export type CardFooterProps = HTMLAttributes<HTMLDivElement>
@@ -402,7 +402,7 @@ export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(function C
   { className, ...props },
   ref,
 ) {
-  return <div ref={ref} className={cn('flex items-center gap-2 text-xs text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/60', className)} {...props} />
+  return <div ref={ref} className={cn('flex items-center gap-2 text-xs text-slate-900 dark:text-white/60', className)} {...props} />
 })
 
 // @edit-start 2025-02-15 — Align InputProps size with custom tokens
@@ -427,7 +427,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       type={type}
       disabled={disabled}
       className={cn(
-        'pixel-input block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-black/20 text-slate-900 dark:text-slate-950 dark:text-white placeholder:text-slate-950 dark:text-slate-700 dark:text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-0 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50',
+        'pixel-input block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-black/20 text-slate-900 dark:text-white placeholder:text-slate-950 dark:text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-0 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50',
         INPUT_SIZE_STYLES[size],
         className,
       )}

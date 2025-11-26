@@ -520,7 +520,7 @@ export default function BotManagerPanel() {
       ) : null}
 
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 backdrop-blur-sm">
+        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <h3 className="pixel-section-title text-sm">Signer status</h3>
             {signerStatusDisplay ? (
@@ -580,11 +580,11 @@ export default function BotManagerPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 backdrop-blur-sm">
+        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
           <h3 className="pixel-section-title text-sm">Environment overview</h3>
           <ul className="mt-3 space-y-2 text-[12px] text-[var(--px-sub)]">
             {envRows.map((row) => (
-              <li key={row.key} className="flex items-center justify-between gap-4 rounded-lg border border-white dark:border-slate-700/5 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-2">
+              <li key={row.key} className="flex items-center justify-between gap-4 rounded-lg border border-white dark:border-slate-700/5 bg-slate-100/5 dark:bg-white/5 px-3 py-2">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[11px] uppercase tracking-[0.12em] text-slate-950 dark:text-white/70">{row.key}</span>
                   {row.hint ? (
@@ -613,11 +613,11 @@ export default function BotManagerPanel() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 backdrop-blur-sm">
+        <div className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <h3 className="pixel-section-title text-sm">Bot identity &amp; health</h3>
             {insightsLoading ? (
-              <span className="pixel-pill text-[10px] border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/70">Loading…</span>
+              <span className="pixel-pill text-[10px] border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white/70">Loading…</span>
             ) : (
               <span className={clsx('pixel-pill text-[10px]', toneClass(lastCastHealth.tone))}>{lastCastHealth.label}</span>
             )}
@@ -664,10 +664,10 @@ export default function BotManagerPanel() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 text-[10px] text-slate-950 dark:text-white/70">
-                <span className={clsx('pixel-pill', insights.bot.powerBadge ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200' : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-slate-950 dark:text-white/70')}>
+                <span className={clsx('pixel-pill', insights.bot.powerBadge ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200' : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70')}>
                   Power badge {insights.bot.powerBadge ? 'enabled' : 'missing'}
                 </span>
-                <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/70">
+                <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white/70">
                   Likes {formatMetric(insights.bot.aggregates.likes)} • Recasts {formatMetric(insights.bot.aggregates.recasts)} • Replies {formatMetric(insights.bot.aggregates.replies)}
                 </span>
               </div>
@@ -684,7 +684,7 @@ export default function BotManagerPanel() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 backdrop-blur-sm">
+      <div className="mt-6 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="pixel-section-title text-sm">Recent Farcaster activity</h3>
@@ -719,7 +719,7 @@ export default function BotManagerPanel() {
                       </p>
                       {cast.url ? (
                         <a
-                          className="pixel-pill text-[10px] border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/80 hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
+                          className="pixel-pill text-[10px] border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white/80 hover:border-emerald-300/40 hover:bg-emerald-500/10 hover:text-emerald-100"
                           href={cast.url}
                           target="_blank"
                           rel="noreferrer"
@@ -731,25 +731,25 @@ export default function BotManagerPanel() {
                     <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--px-sub)]">
                       <span>{formatRelativeTime(cast.timestamp)}</span>
                       {cast.channelId ? (
-                        <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/70">
+                        <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white/70">
                           #{cast.channelId}
                         </span>
                       ) : null}
                       {cast.parentHash ? (
-                        <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/70">Reply</span>
+                        <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white/70">Reply</span>
                       ) : (
-                        <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/70">Original</span>
+                        <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white/70">Original</span>
                       )}
                       {cast.channelName && cast.channelName !== cast.channelId ? (
                         <span className="text-slate-950 dark:text-white/60">{cast.channelName}</span>
                       ) : null}
                     </div>
                     <div className="flex flex-wrap gap-2 text-[10px] text-slate-950 dark:text-white/80">
-                      <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/80">❤ {cast.metrics.likes}</span>
-                      <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/80">🔁 {cast.metrics.recasts}</span>
-                      <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/80">💬 {cast.metrics.replies}</span>
+                      <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white/80">❤ {cast.metrics.likes}</span>
+                      <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white/80">🔁 {cast.metrics.recasts}</span>
+                      <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white/80">💬 {cast.metrics.replies}</span>
                       {cast.metrics.embeds ? (
-                        <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 text-slate-950 dark:text-slate-950 dark:text-white/80">🖼️ {cast.metrics.embeds}</span>
+                        <span className="pixel-pill border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 text-slate-950 dark:text-white/80">🖼️ {cast.metrics.embeds}</span>
                       ) : null}
                     </div>
                   </div>
@@ -764,7 +764,7 @@ export default function BotManagerPanel() {
         )}
       </div>
 
-      <div className="mt-6 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-4 backdrop-blur-sm">
+      <div className="mt-6 rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="pixel-section-title text-sm">Community interactions</h3>
@@ -798,7 +798,7 @@ export default function BotManagerPanel() {
                 return (
                   <div
                     key={item.type}
-                    className={clsx('rounded-lg border px-3 py-3 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/90 shadow-inner', meta.accent)}
+                    className={clsx('rounded-lg border px-3 py-3 text-slate-900 dark:text-white/90 shadow-inner', meta.accent)}
                   >
                     <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/70">
                       <span>{meta.label}</span>
@@ -828,7 +828,7 @@ export default function BotManagerPanel() {
                         const meta = INTERACTION_TYPE_META[type]
                         const value = watcher.categories[type]?.total ?? 0
                         return (
-                          <span key={type} className={clsx('pixel-pill', value > 0 ? meta.accent : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-slate-950 dark:text-white/60')}>
+                          <span key={type} className={clsx('pixel-pill', value > 0 ? meta.accent : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/60')}>
                             {meta.icon} {formatMetric(value)}
                           </span>
                         )
@@ -846,7 +846,7 @@ export default function BotManagerPanel() {
                         const meta = INTERACTION_TYPE_META[type]
                         const key = `${watcher.label}-${type}-${idx}`
                         return (
-                          <li key={key} className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-2">
+                          <li key={key} className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-3 py-2">
                             <div className="flex flex-col gap-1">
                               <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-950 dark:text-white/75">
                                 <span>
@@ -903,7 +903,7 @@ export default function BotManagerPanel() {
               {keywordInsights.length ? (
                 <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {keywordInsights.map((insight) => (
-                    <div key={insight.keyword} className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-3">
+                    <div key={insight.keyword} className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3">
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/70">
                         <span>{insight.keyword}</span>
                         <span className="pixel-pill border-sky-400/40 bg-sky-500/10 text-[10px] text-sky-200">
@@ -951,7 +951,7 @@ export default function BotManagerPanel() {
           </span>
         </div>
         <textarea
-          className="w-full min-h-[120px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+          className="w-full min-h-[120px] rounded-xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
           value={castText}
           onChange={(event) => setCastText(event.target.value.slice(0, MAX_TEXT_LENGTH + 10))}
           placeholder="Compose a manual cast or response…"
@@ -960,7 +960,7 @@ export default function BotManagerPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Channel ID (optional)
             <input
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={channelId}
               onChange={(event) => setChannelId(event.target.value)}
               placeholder="e.g. neynar"
@@ -969,7 +969,7 @@ export default function BotManagerPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Parent hash / URL (optional)
             <input
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={parent}
               onChange={(event) => setParent(event.target.value)}
               placeholder="Reply target hash or URL"
@@ -978,7 +978,7 @@ export default function BotManagerPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Parent author FID (optional)
             <input
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={parentAuthorFid}
               onChange={(event) => setParentAuthorFid(event.target.value.replace(/[^0-9]/g, ''))}
               placeholder="Numeric FID"
@@ -987,7 +987,7 @@ export default function BotManagerPanel() {
           <label className="flex flex-col gap-1 text-[11px] text-[var(--px-sub)]">
             Idempotency key (optional)
             <input
-              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-lg border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-3 py-2 text-sm text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={idem}
               onChange={(event) => setIdem(event.target.value)}
               placeholder="Stable key to avoid duplicates"

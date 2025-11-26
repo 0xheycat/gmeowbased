@@ -39,7 +39,7 @@ import type { XpEventPayload } from '@/components/XPEventOverlay'
 
 // Heavy components - dynamically loaded
 const PreviewCard = dynamic(() => import('@/components/quest-wizard/components/PreviewCard').then(mod => ({ default: mod.PreviewCard })), {
-	loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 rounded-lg h-96" />,
+	loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96" />,
 })
 
 const DebugPanel = dynamic(() => import('@/components/quest-wizard/components/DebugPanel').then(mod => ({ default: mod.DebugPanel })), {
@@ -197,7 +197,7 @@ export default function QuestWizard() {
 						animate={sectionMotion.animate}
 						exit={sectionMotion.exit}
 						transition={sectionMotion.transition}
-						className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 backdrop-blur-xl xl:p-8"
+						className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-6 backdrop-blur-xl xl:p-8"
 					>
 						<StepPanel
 							index={stepIndex}

@@ -179,7 +179,7 @@ export function BottomSheet({
 			>
 				{/* Drag handle */}
 				<div className="flex justify-center py-3">
-					<div className="h-1 w-12 rounded-full bg-slate-100/20 dark:bg-slate-100/90 dark:bg-white/5" />
+					<div className="h-1 w-12 rounded-full bg-slate-100/20 dark:bg-white/5" />
 				</div>
 				
 				{/* Header */}
@@ -188,7 +188,7 @@ export function BottomSheet({
 						<h3 className="text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
 						<button
 							onClick={onClose}
-							className="rounded-full p-2 text-slate-950 dark:text-slate-950 dark:text-white/60 transition hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 hover:text-slate-950 dark:text-slate-950 dark:text-white"
+							className="rounded-full p-2 text-slate-950 dark:text-white/60 transition hover:bg-slate-100/10 dark:bg-white/5 hover:text-slate-950 dark:text-white"
 							aria-label="Close"
 						>
 							✕
@@ -231,10 +231,10 @@ export function MobileStepIndicator({
 						disabled={!isClickable}
 						className={`flex-shrink-0 rounded-full px-4 py-2 text-xs font-medium transition ${
 							isActive
-								? 'bg-sky-500 text-slate-900 dark:text-slate-950 dark:text-white'
+								? 'bg-sky-500 text-slate-900 dark:text-white'
 								: isDone
 									? 'bg-emerald-500/20 text-emerald-300'
-									: 'bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-slate-950 dark:text-slate-700 dark:text-white/40'
+									: 'bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/40'
 						} ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
 					>
 						<span className="flex items-center gap-1.5">
@@ -286,7 +286,7 @@ export function TouchInput({
 					isFocused
 						? 'border-sky-500 ring-2 ring-sky-500/20'
 						: 'border-slate-200 dark:border-white/10 hover:border-slate-200 dark:border-white/10'
-				} bg-slate-950/60 text-slate-900 dark:text-slate-950 dark:text-white placeholder:text-slate-500 ${className}`}
+				} bg-slate-950/60 text-slate-900 dark:text-white placeholder:text-slate-500 ${className}`}
 				{...props}
 			/>
 			
@@ -357,7 +357,7 @@ export function PullToRefresh({
 		>
 			{/* Pull indicator */}
 			<motion.div
-				className="absolute left-1/2 -translate-x-1/2 z-10 flex items-center justify-center rounded-full bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 backdrop-blur"
+				className="absolute left-1/2 -translate-x-1/2 z-10 flex items-center justify-center rounded-full bg-slate-100/10 dark:bg-white/5 backdrop-blur"
 				style={{
 					top: pullDistance / 2,
 					opacity,

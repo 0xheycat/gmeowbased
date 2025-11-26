@@ -9,27 +9,27 @@ import type { FAQItem, GuildPreview, LeaderboardEntry, QuestPreview } from '@/co
 
 // Below-fold sections - dynamically loaded to improve initial page load
 const HowItWorks = dynamic(() => import('@/components/home/HowItWorks').then(mod => ({ default: mod.HowItWorks })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
 })
 
 const LiveQuests = dynamic(() => import('@/components/home/LiveQuests').then(mod => ({ default: mod.LiveQuests })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
 })
 
 const GuildsShowcase = dynamic(() => import('@/components/home/GuildsShowcase').then(mod => ({ default: mod.GuildsShowcase })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
 })
 
 const LeaderboardSection = dynamic(() => import('@/components/home/LeaderboardSection').then(mod => ({ default: mod.LeaderboardSection })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
 })
 
 const FAQSection = dynamic(() => import('@/components/home/FAQSection').then(mod => ({ default: mod.FAQSection })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
 })
 
 const ConnectWalletSection = dynamic(() => import('@/components/home/ConnectWalletSection').then(mod => ({ default: mod.ConnectWalletSection })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 rounded-lg h-64 mx-auto max-w-6xl my-16" />,
+  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-64 mx-auto max-w-6xl my-16" />,
 })
 
 const QUEST_PREVIEWS: QuestPreview[] = [

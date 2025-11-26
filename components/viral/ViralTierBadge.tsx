@@ -87,7 +87,7 @@ export function ViralTierBadge({
           className="
             absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2
             px-3 py-2 rounded-lg text-sm font-medium
-            bg-gray-900 text-white dark:text-slate-950 dark:text-white shadow-xl
+            bg-gray-900 text-white dark:text-white shadow-xl
             opacity-0 group-hover:opacity-100 group-focus-within:opacity-100
             transition-opacity duration-200 pointer-events-none
             whitespace-nowrap

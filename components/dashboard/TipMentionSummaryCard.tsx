@@ -110,18 +110,18 @@ export function TipMentionSummaryCard({ summary, loading, error, onRefresh }: Ti
       {summary ? (
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-3">
+            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-2 py-3">
               <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--px-sub)]">Points 24h</div>
               <div className="text-lg font-semibold text-slate-950 dark:text-white">{formatCompactNumber(totals?.points24h ?? 0)}</div>
             </div>
-            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-3">
+            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-2 py-3">
               <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--px-sub)]">Mentions</div>
               <div className="text-lg font-semibold text-slate-950 dark:text-white">{totals?.mentions24h ?? 0}</div>
               {totals?.suppressed24h ? (
                 <div className="text-[10px] text-amber-200">{totals.suppressed24h} suppressed</div>
               ) : null}
             </div>
-            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-2 py-3">
+            <div className="rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-2 py-3">
               <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--px-sub)]">Awards</div>
               <div className="text-lg font-semibold text-slate-950 dark:text-white">{totals?.awarded24h ?? 0}</div>
               {limits?.globalCapRemaining != null ? (
@@ -142,7 +142,7 @@ export function TipMentionSummaryCard({ summary, loading, error, onRefresh }: Ti
                 {topActors.map((actor) => (
                   <li
                     key={actor.actorId}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-white dark:border-slate-700/10 bg-dark-bg-surface/70 px-3 py-2 text-[11px] text-slate-950 dark:text-slate-950 dark:text-white/80"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-white dark:border-slate-700/10 bg-dark-bg-surface/70 px-3 py-2 text-[11px] text-slate-950 dark:text-white/80"
                   >
                     <div>
                       <div className="font-semibold text-slate-950 dark:text-white">{actor.actorLabel}</div>
@@ -172,7 +172,7 @@ export function TipMentionSummaryCard({ summary, loading, error, onRefresh }: Ti
                 {recent.map((entry) => (
                   <li
                     key={entry.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-white dark:border-slate-700/10 bg-dark-bg-elevated/70 px-3 py-2 text-[11px] text-slate-950 dark:text-slate-950 dark:text-white/80"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-white dark:border-slate-700/10 bg-dark-bg-elevated/70 px-3 py-2 text-[11px] text-slate-950 dark:text-white/80"
                   >
                     <div>
                       <div className="font-semibold text-slate-950 dark:text-white">{entry.actorLabel}</div>
@@ -204,7 +204,7 @@ export function TipMentionSummaryCard({ summary, loading, error, onRefresh }: Ti
           </div>
 
           {limits ? (
-            <div className="rounded-lg border border-white dark:border-slate-700/5 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-2 text-[10px] text-[var(--px-sub)]">
+            <div className="rounded-lg border border-white dark:border-slate-700/5 bg-slate-100/5 dark:bg-white/5 px-3 py-2 text-[10px] text-[var(--px-sub)]">
               <div>
                 Global cap:{' '}
                 {limits.globalDailyCap > 0

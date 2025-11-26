@@ -115,7 +115,7 @@ export default function TierUpgradeFeed({
   }
 
   return (
-    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-3xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-5 shadow-lg backdrop-blur">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="pixel-section-title text-base">🔄 Viral Tier Upgrades</h3>
@@ -128,7 +128,7 @@ export default function TierUpgradeFeed({
           <select
             value={tierFilter}
             onChange={(e) => setTierFilter(e.target.value)}
-            className="rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5 px-3 py-1.5 text-[11px] text-slate-950 dark:text-slate-950 dark:text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
+            className="rounded-lg border border-white dark:border-slate-700/20 bg-slate-100/10 dark:bg-white/5 px-3 py-1.5 text-[11px] text-slate-950 dark:text-white backdrop-blur focus:border-emerald-400/40 focus:outline-none"
             aria-label="Filter tier upgrades by tier"
           >
             <option value="all">All Tiers</option>
@@ -159,12 +159,12 @@ export default function TierUpgradeFeed({
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="h-16 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5"
+              className="h-16 animate-pulse rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5"
             />
           ))}
         </div>
       ) : upgrades.length === 0 ? (
-        <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-slate-100/90 dark:bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
+        <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-6 text-center text-[12px] text-[var(--px-sub)]">
           No tier upgrades yet. When users reach viral status, they&apos;ll appear here.
         </div>
       ) : (
@@ -172,7 +172,7 @@ export default function TierUpgradeFeed({
           {upgrades.map((upgrade) => (
             <div
               key={upgrade.id}
-              className="group flex items-center gap-3 rounded-xl border border-white dark:border-slate-700/10 bg-white dark:bg-slate-900/[0.04] p-3 transition hover:border-emerald-400/30 hover:bg-slate-100/10 dark:bg-slate-100/90 dark:bg-white/5"
+              className="group flex items-center gap-3 rounded-xl border border-white dark:border-slate-700/10 bg-white dark:bg-slate-900/[0.04] p-3 transition hover:border-emerald-400/30 hover:bg-slate-100/10 dark:bg-white/5"
             >
               {/* User Avatar */}
               <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-white dark:border-slate-700/20">
