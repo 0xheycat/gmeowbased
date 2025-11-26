@@ -116,8 +116,28 @@ const testCases = [
   },
 ]
 
-// Run tests
-console.log('🧪 Testing Bot Reply Improvements (Option A)\n')
+// Example direct answer outputs
+console.log('📝 Example Direct Answers:\n')
+console.log('─'.repeat(60))
+
+console.log('\n💬 STATS Question: "what\'s my stats?"')
+console.log('   📊 @alice, you\'re Level 5 Silver with 1,234 pts • 7d streak [✨ 65]')
+console.log('   +50 pts last 7d\n   Full profile → https://gmeowhq.art/profile')
+
+console.log('\n💬 TIPS Question: "how many tips this week?"')
+console.log('   💰 You earned 150 pts in tips this week from 5 boosts! Keep going!')
+console.log('   All-time total: 2,500 pts [✨ 65]\n   Climb higher → https://gmeowhq.art/leaderboard')
+
+console.log('\n💬 STREAK Question: "what\'s my streak?"')
+console.log('   🔥 7 days and counting! Keep it up!')
+console.log('   1,234 pts total [✨ 65] • Last: 2 hours ago\n   Don\'t break it → https://gmeowhq.art/Quest')
+
+console.log('\n💬 QUEST Question: "show my quests"')
+console.log('   ⚔️ You completed 3 verified quests this week worth 75 pts 💪')
+console.log('   Level 5 Silver [✨ 65]\n   Next adventure → https://gmeowhq.art/Quest')
+
+console.log('\n' + '─'.repeat(60))
+console.log('\n🧪 Testing Bot Reply Improvements (Enhanced)\n')
 console.log('=' .repeat(60))
 
 let passed = 0
