@@ -103,34 +103,46 @@ export async function fireMiniappReady(): Promise<void> {
   // Call as early as possible on the client; gate to embedded + allowed referrer
   try {
     if (!isEmbedded()) {
+      console.log('[fireMiniappReady] Not embedded, skipping')
       return
     }
     
     if (!isAllowedReferrer()) {
+      console.warn('[fireMiniappReady] Not allowed referrer, skipping')
       return
     }
 
+    console.log('[fireMiniappReady] Loading Farcaster SDK...')
     const { sdk } = await import('@farcaster/miniapp-sdk')
     
-    // Wait for context to be available with extended timeout (longer for mobile)
+    // Reduce context timeout from 15s to 5s for faster mobile loading
+    console.log('[fireMiniappReady] Waiting for SDK context...')
     await Promise.race([
       sdk.context,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout')), 15000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Context timeout after 5s')), 5000))
     ])
     
-    // Call ready action with retry logic (longer timeout for mobile)
+    console.log('[fireMiniappReady] ✅ SDK context ready')
+    
+    // Call ready action with reduced timeout from 10s to 3s
     if (sdk.actions?.ready) {
       try {
+        console.log('[fireMiniappReady] Calling sdk.actions.ready()...')
         await Promise.race([
           sdk.actions.ready(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout')), 10000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Ready timeout after 3s')), 3000))
         ])
-      } catch {
+        console.log('[fireMiniappReady] ✅ sdk.actions.ready() completed')
+      } catch (readyError) {
+        console.warn('[fireMiniappReady] ready() timeout/error (non-critical):', readyError)
         // Don't throw - allow app to continue even if ready() times out
       }
+    } else {
+      console.warn('[fireMiniappReady] sdk.actions.ready not available')
     }
   } catch (error) {
     console.error('[miniappEnv] ❌ Error in fireMiniappReady:', error)
-    // Don't throw - allow app to continue even on error
+    // Rethrow to trigger retry logic in MiniappReady component
+    throw error
   }
 }
