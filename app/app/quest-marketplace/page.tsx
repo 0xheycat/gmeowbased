@@ -289,8 +289,8 @@ export default function QuestMarketplacePage() {
               onClick={() => setActiveTab('discover')}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 activeTab === 'discover'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-default-100 text-default-700 hover:bg-default-200'
+                  ? 'theme-bg-primary theme-text-primary-contrast'
+                  : 'theme-surface-subtle theme-text-secondary hover:theme-surface-hover'
               }`}
             >
               🔍 Discover Quests
@@ -299,18 +299,18 @@ export default function QuestMarketplacePage() {
               onClick={() => setActiveTab('my-quests')}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 activeTab === 'my-quests'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-default-100 text-default-700 hover:bg-default-200'
+                  ? 'theme-bg-primary theme-text-primary-contrast'
+                  : 'theme-surface-subtle theme-text-secondary hover:theme-surface-hover'
               }`}
             >
-              ✅ My Completions
+              ✅ My Quests
             </button>
             <button
               onClick={() => setActiveTab('my-created')}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 activeTab === 'my-created'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-default-100 text-default-700 hover:bg-default-200'
+                  ? 'theme-bg-primary theme-text-primary-contrast'
+                  : 'theme-surface-subtle theme-text-secondary hover:theme-surface-hover'
               }`}
             >
               🎨 My Created
@@ -486,7 +486,9 @@ interface QuestCardProps {
 }
 
 function QuestCard({ quest, onComplete }: QuestCardProps) {
-  const categoryColor = quest.category === 'onchain' ? 'bg-purple-500/20 text-purple-400' : 'bg-sky-500/20 text-sky-400'
+  const categoryColor = quest.category === 'onchain' 
+    ? 'bg-purple-500/20 text-purple-300 dark:text-purple-400' 
+    : 'bg-sky-500/20 text-sky-300 dark:text-sky-400'
   
   return (
     <Card className="theme-card-bg-primary hover:scale-105 transition-transform overflow-hidden">
@@ -498,7 +500,7 @@ function QuestCard({ quest, onComplete }: QuestCardProps) {
           className="w-full h-48 object-cover"
         />
       ) : (
-        <div className={`w-full h-48 flex items-center justify-center ${quest.category === 'onchain' ? 'bg-gradient-to-br from-purple-500/20 to-purple-600/20' : 'bg-gradient-to-br from-sky-500/20 to-sky-600/20'}`}>
+        <div className={`w-full h-48 flex items-center justify-center ${quest.category === 'onchain' ? 'bg-gradient-to-br from-purple-500/10 to-purple-600/20 dark:from-purple-500/20 dark:to-purple-600/30' : 'bg-gradient-to-br from-sky-500/10 to-sky-600/20 dark:from-sky-500/20 dark:to-sky-600/30'}`}>
           <QuestIcon type={quest.category} size={64} className="opacity-40" />
         </div>
       )}
