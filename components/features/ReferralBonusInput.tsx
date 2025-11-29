@@ -64,7 +64,7 @@ export function ReferralBonusInput({ chain = 'base', onSuccess, onSkip }: Referr
       // Validate referral code exists
       const referrerAddress = await readContract(wagmiConfig, {
         address: getGuildAddress(gmChain),
-        abi: getGuildABI(gmChain),
+        abi: getGuildABI(),
         functionName: 'referralOwnerOf',
         args: [code]
       }) as string
@@ -78,7 +78,7 @@ export function ReferralBonusInput({ chain = 'base', onSuccess, onSkip }: Referr
       // Check not already referred
       const currentReferrer = await readContract(wagmiConfig, {
         address: getGuildAddress(gmChain),
-        abi: getGuildABI(gmChain),
+        abi: getGuildABI(),
         functionName: 'referrerOf',
         args: [address]
       }) as string

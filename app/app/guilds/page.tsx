@@ -229,7 +229,7 @@ export default function GuildDiscoveryPage() {
               
               const userGuildId = await readContract(wagmiConfig, {
                 address: getGuildAddress(gmChain),
-                abi: getGuildABI(gmChain),
+                abi: getGuildABI(),
                 functionName: 'guildOf',
                 args: [address],
                 chainId
@@ -330,7 +330,7 @@ export default function GuildDiscoveryPage() {
 
       const currentGuildId = await readContract(wagmiConfig, {
         address: getGuildAddress(gmChain),
-        abi: getGuildABI(gmChain),
+        abi: getGuildABI(),
         functionName: 'guildOf',
         args: [address],
         chainId
