@@ -157,8 +157,8 @@ export function preparePostGMTransaction(
   return {
     address: getCoreAddress(chain),
     abi: getCoreABI(),
-    functionName: 'sendGM',
-    args: [],
+    functionName: 'postGM',
+    args: [message],
     account: userAddress,
   }
 }
