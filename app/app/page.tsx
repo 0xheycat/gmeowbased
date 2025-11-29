@@ -5,12 +5,21 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardBody, StatsCard, Button, Badge } from '@/components/ui/tailwick-primitives'
 import { AppLayout } from '@/components/layouts/AppLayout'
-import { useFarcasterFrame } from '@/hooks/useFarcasterFrame'
+import { useMiniapp } from '@/hooks/useMiniapp'
+import { useUnifiedFarcasterAuth } from '@/hooks/useUnifiedFarcasterAuth'
 import { OnchainStatsCard } from '@/components/features/OnchainStatsCard'
 
 export default function AppPage() {
-  // Use official Farcaster Frame SDK
-  const { fid, username, displayName, pfpUrl, isReady, error } = useFarcasterFrame()
+  // Miniapp detection
+  const { isMiniapp, context, isReady: miniappReady } = useMiniapp()
+  
+  // Unified auth with miniapp context
+  const { fid, username, displayName, pfpUrl, isAuthenticated, authSource } = useUnifiedFarcasterAuth({
+    frameContext: context,
+    miniKitContext: context,
+    isFrameReady: miniappReady,
+    isMiniAppSession: isMiniapp,
+  })
   
   const [isFirstTime, setIsFirstTime] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -77,12 +86,30 @@ export default function AppPage() {
           <Card className="mb-4 theme-card-bg-secondary">
             <CardBody>
               <div className="text-xs font-mono theme-text-muted space-y-1">
-                <div>🔐 Farcaster Frame Auth Debug:</div>
+                <div>🔐 Auth Debug:</div>
+                <div>• In Miniapp: {isMiniapp ? 'Yes' : 'No'}</div>
+                <div>• Miniapp Ready: {miniappReady ? 'Yes' : 'No'}</div>
                 <div>• FID: {fid || 'null'}</div>
-                <div>• Username: {username || 'null'}</div>
-                <div>• Display Name: {displayName || 'null'}</div>
-                <div>• Ready: {isReady ? 'Yes' : 'No'}</div>
-                {error && <div>• Error: {error.message}</div>}
+                <div>• Auth Source: {authSource || 'null'}</div>
+                <div>• Authenticated: {isAuthenticated ? 'Yes' : 'No'}</div>
+                <div>• Context FID: {context?.user?.fid || 'null'}</div>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Not authenticated message */}
+        {!isAuthenticated && miniappReady && (
+          <Card className="mb-4 theme-card-bg-secondary">
+            <CardBody>
+              <div className="text-center py-8">
+                <h3 className="text-xl font-bold mb-2">Not signed in</h3>
+                <p className="theme-text-muted mb-4">
+                  Connect with Farcaster to access your profile
+                </p>
+                <p className="text-sm theme-text-muted">
+                  Open in Farcaster frame or miniapp to sign in
+                </p>
               </div>
             </CardBody>
           </Card>
