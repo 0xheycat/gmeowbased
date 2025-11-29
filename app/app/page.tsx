@@ -126,7 +126,7 @@ export default function AppPage() {
               <h3 className="text-2xl font-bold mb-4 text-center">🚀 Quick Start Quests</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link href="/app/daily-gm" className="group">
-                  <div className="theme-bg-subtle rounded-xl p-6 border theme-border-default hover:border-yellow-500/50 hover:theme-bg-hover transition-all">
+                  <div className="theme-bg-subtle rounded-xl p-6 border theme-border-default hover:theme-border-hover hover:theme-bg-hover transition-all">
                     <div className="flex items-center gap-3 mb-3">
                       <Image
                         src="/assets/gmeow-icons/Success Box Icon.svg"
@@ -145,8 +145,8 @@ export default function AppPage() {
                   </div>
                 </Link>
 
-                <Link href="/app/quests" className="group">
-                  <div className="theme-bg-subtle rounded-xl p-6 border theme-border-default hover:border-blue-500/50 hover:theme-bg-hover transition-all">
+                <Link href="/app/quest-marketplace" className="group">
+                  <div className="theme-bg-subtle rounded-xl p-6 border theme-border-default hover:theme-border-hover hover:theme-bg-hover transition-all">
                     <div className="flex items-center gap-3 mb-3">
                       <Image
                         src="/assets/gmeow-icons/Quests Icon.svg"
@@ -166,7 +166,7 @@ export default function AppPage() {
                 </Link>
 
                 <Link href="/app/guilds" className="group">
-                  <div className="theme-bg-subtle rounded-xl p-6 border theme-border-default hover:border-green-500/50 hover:theme-bg-hover transition-all">
+                  <div className="theme-bg-subtle rounded-xl p-6 border theme-border-default hover:theme-border-hover hover:theme-bg-hover transition-all">
                     <div className="flex items-center gap-3 mb-3">
                       <Image
                         src="/assets/gmeow-icons/Groups Icon.svg"
@@ -193,7 +193,7 @@ export default function AppPage() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 font-gmeow">
             Gmeowbased App
           </h1>
-          <p className="text-purple-300 text-lg">
+          <p className="theme-text-secondary text-lg">
             Multi-chain quest game. Choose your adventure and start earning XP.
           </p>
         </div>
@@ -341,9 +341,9 @@ export default function AppPage() {
           </Link>
         </div>
 
-        <div className="mt-8 p-6 rounded-2xl bg-purple-800/30 border border-purple-700/50">
-          <p className="text-center text-purple-300">
-            <span className="inline-block rounded-full bg-green-500/20 px-3 py-1 text-green-400 border border-green-500/50">
+        <div className="mt-8 p-6 rounded-2xl theme-card-bg-secondary theme-border-default border">
+          <p className="text-center theme-text-secondary">
+            <span className="inline-block rounded-full bg-success/20 px-3 py-1 text-success border border-success/50">
               ✅ Week 3-4: All Feature Routes Created with Rich Components
             </span>
           </p>

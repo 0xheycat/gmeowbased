@@ -153,16 +153,16 @@ function GMCountdownTimer({ lastGMTimestamp }: { lastGMTimestamp: number }) {
       {/* Digital Boxes */}
       <div className="flex gap-3">
         <div className="banner-gm-timer">
-          <div className="text-2xl font-bold text-orange-300">{formatNumber(timeLeft.hours)}</div>
-          <div className="text-xs text-orange-400/60">Hours</div>
+          <div className="text-2xl font-bold text-warning">{formatNumber(timeLeft.hours)}</div>
+          <div className="text-xs theme-text-muted">Hours</div>
         </div>
         <div className="banner-gm-timer">
-          <div className="text-2xl font-bold text-orange-300">{formatNumber(timeLeft.minutes)}</div>
-          <div className="text-xs text-orange-400/60">Minutes</div>
+          <div className="text-2xl font-bold text-warning">{formatNumber(timeLeft.minutes)}</div>
+          <div className="text-xs theme-text-muted">Minutes</div>
         </div>
         <div className="banner-gm-timer">
-          <div className="text-2xl font-bold text-orange-300">{formatNumber(timeLeft.seconds)}</div>
-          <div className="text-xs text-orange-400/60">Seconds</div>
+          <div className="text-2xl font-bold text-warning">{formatNumber(timeLeft.seconds)}</div>
+          <div className="text-xs theme-text-muted">Seconds</div>
         </div>
       </div>
     </div>
@@ -266,7 +266,7 @@ function ChainGMCard({ chain, onSuccess }: { chain: GMChainKey; onSuccess: () =>
             {streak > 0 && (
               <div className="flex items-center gap-2 text-sm theme-text-secondary">
                 <span>Streak: {streak}</span>
-                <span className="text-orange-400">🔥</span>
+                <span className="text-warning">🔥</span>
               </div>
             )}
             {!canGM && lastGMTimestamp > 0 && (
@@ -285,7 +285,7 @@ function ChainGMCard({ chain, onSuccess }: { chain: GMChainKey; onSuccess: () =>
         </div>
 
         {successMessage && (
-          <div className="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-300 text-sm">
+          <div className="mb-4 p-3 bg-success/20 border border-success/50 rounded-lg text-success text-sm">
             {successMessage}
           </div>
         )}
