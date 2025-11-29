@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getFarcasterFid } from '@/lib/auth/farcaster'
 
 /**
  * Check onboarding status for current user
- * GET /api/user/onboarding-status
+ * GET /api/user/onboarding-status?fid=123
+ * 
+ * Supports FID from:
+ * 1. Query param (for miniapp context)
+ * 2. Auth session/headers (for standard auth)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -15,13 +20,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get current user (from session or Farcaster context)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get FID from query param or auth
+    const { searchParams } = new URL(request.url)
+    const queryFid = searchParams.get('fid')
+    const authFid = await getFarcasterFid(request)
     
-    if (authError || !user) {
+    const fid = queryFid ? Number(queryFid) : authFid
+    
+    if (!fid || !Number.isFinite(fid) || fid <= 0) {
       return NextResponse.json(
-        { error: 'Unauthorized', onboarded: false },
-        { status: 401 }
+        { error: 'Invalid or missing FID', onboarded: false },
+        { status: 400 }
       )
     }
 
@@ -29,7 +38,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('onboarded_at, fid, username')
-      .eq('fid', user.id)
+      .eq('fid', fid)
       .single()
 
     if (profileError) {

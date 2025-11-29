@@ -6,10 +6,22 @@ import Image from 'next/image'
 import { Card, CardBody, StatsCard, Button, Badge } from '@/components/ui/tailwick-primitives'
 import { AppLayout } from '@/components/layouts/AppLayout'
 import { useMiniapp } from '@/hooks/useMiniapp'
+import { useUnifiedFarcasterAuth } from '@/hooks/useUnifiedFarcasterAuth'
 import { OnchainStatsCard } from '@/components/features/OnchainStatsCard'
 
 export default function AppPage() {
-  const { isMiniapp, isFarcaster, isBase } = useMiniapp()
+  const { isMiniapp, isFarcaster, isBase, context } = useMiniapp()
+  
+  // Unified auth hook with miniapp context
+  const { fid, profile, isAuthenticated, authSource } = useUnifiedFarcasterAuth({
+    miniKitEnabled: isMiniapp,
+    miniKitContext: context,
+    isFrameReady: isMiniapp,
+    isMiniAppSession: isMiniapp,
+    autoSignIn: true,
+    frameContext: context,
+  })
+  
   const [isFirstTime, setIsFirstTime] = useState(false)
   const [loading, setLoading] = useState(true)
   const [userStats, setUserStats] = useState({
@@ -22,7 +34,14 @@ export default function AppPage() {
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       try {
-        const response = await fetch('/api/user/onboarding-status')
+        // Use FID from unified auth
+        if (!fid) {
+          console.log('No FID available yet, waiting for auth...')
+          setLoading(false)
+          return
+        }
+
+        const response = await fetch(`/api/user/onboarding-status?fid=${fid}`)
         const data = await response.json()
         
         // Show first-time experience if just onboarded in last 24 hours
@@ -34,21 +53,19 @@ export default function AppPage() {
           setIsFirstTime(hoursSinceOnboarding < 24)
         }
 
-        // Fetch real user stats if FID available
-        if (data.fid) {
-          const statsResponse = await fetch(`/api/user/stats?fid=${data.fid}`)
-          const statsData = await statsResponse.json()
-          
-          if (!statsResponse.ok) {
-            console.error('Failed to fetch stats:', statsData.error)
-          } else {
-            setUserStats({
-              gmStreak: statsData.gmStreak || 0,
-              totalXP: statsData.totalXP || 0,
-              badgesEarned: statsData.badgesEarned || 0,
-              rank: statsData.rank || 'Unranked'
-            })
-          }
+        // Fetch real user stats
+        const statsResponse = await fetch(`/api/user/stats?fid=${fid}`)
+        const statsData = await statsResponse.json()
+        
+        if (!statsResponse.ok) {
+          console.error('Failed to fetch stats:', statsData.error)
+        } else {
+          setUserStats({
+            gmStreak: statsData.gmStreak || 0,
+            totalXP: statsData.totalXP || 0,
+            badgesEarned: statsData.badgesEarned || 0,
+            rank: statsData.rank || 'Unranked'
+          })
         }
       } catch (error) {
         console.error('Failed to check onboarding:', error)
@@ -58,10 +75,26 @@ export default function AppPage() {
     }
 
     checkOnboardingStatus()
-  }, [])
+  }, [fid]) // Re-run when FID becomes available
   return (
     <AppLayout>
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
+        {/* Auth Debug Info (only in miniapp) */}
+        {isMiniapp && process.env.NODE_ENV === 'development' && (
+          <Card className="mb-4 theme-card-bg-secondary">
+            <CardBody>
+              <div className="text-xs font-mono theme-text-muted space-y-1">
+                <div>🔐 Auth Debug:</div>
+                <div>• FID: {fid || 'null'}</div>
+                <div>• Source: {authSource || 'null'}</div>
+                <div>• Authenticated: {isAuthenticated ? 'Yes' : 'No'}</div>
+                <div>• Profile: {profile?.username || 'null'}</div>
+                <div>• Context: {context?.user?.fid || 'null'}</div>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
         {/* Welcome Banner for First-Time Users */}
         {isFirstTime && (
           <Card gradient="purple" className="mb-8 animate-fade-in">
