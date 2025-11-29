@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation';
 import React, { useEffect } from 'react';
 
 import LayoutProvider from '@/contexts/useLayoutContext';
+import { UserProvider } from '@/contexts/UserContext';
 import { WagmiProvider } from '@/components/providers/WagmiProvider';
 
 // Preline UI type declaration
@@ -44,7 +45,9 @@ const ProvidersWrapper = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <WagmiProvider>
-      <LayoutProvider>{children}</LayoutProvider>
+      <UserProvider>
+        <LayoutProvider>{children}</LayoutProvider>
+      </UserProvider>
     </WagmiProvider>
   );
 };
