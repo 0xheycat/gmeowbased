@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import favicon from '@/assets/images/favicon.ico'
 import ProvidersWrapper from '../components/ProvidersWrapper'
 import { MiniappReady } from '@/components/MiniappReady'
+import './globals.css'
 
 // Import Gmeow font from app/fonts (preserving from original foundation)
 const gmeowFont = localFont({
