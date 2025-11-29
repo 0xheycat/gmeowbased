@@ -5,22 +5,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardBody, StatsCard, Button, Badge } from '@/components/ui/tailwick-primitives'
 import { AppLayout } from '@/components/layouts/AppLayout'
-import { useMiniapp } from '@/hooks/useMiniapp'
-import { useUnifiedFarcasterAuth } from '@/hooks/useUnifiedFarcasterAuth'
+import { useFarcasterFrame } from '@/hooks/useFarcasterFrame'
 import { OnchainStatsCard } from '@/components/features/OnchainStatsCard'
 
 export default function AppPage() {
-  const { isMiniapp, isFarcaster, isBase, context } = useMiniapp()
-  
-  // Unified auth hook with miniapp context
-  const { fid, profile, isAuthenticated, authSource } = useUnifiedFarcasterAuth({
-    miniKitEnabled: isMiniapp,
-    miniKitContext: context,
-    isFrameReady: isMiniapp,
-    isMiniAppSession: isMiniapp,
-    autoSignIn: true,
-    frameContext: context,
-  })
+  // Use official Farcaster Frame SDK
+  const { fid, username, displayName, pfpUrl, isReady, error } = useFarcasterFrame()
   
   const [isFirstTime, setIsFirstTime] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -34,12 +24,14 @@ export default function AppPage() {
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       try {
-        // Use FID from unified auth
+        // Wait for FID to be available
         if (!fid) {
-          console.log('No FID available yet, waiting for auth...')
+          console.log('Waiting for FID from Farcaster frame context...')
           setLoading(false)
           return
         }
+
+        console.log('FID loaded from frame:', fid)
 
         const response = await fetch(`/api/user/onboarding-status?fid=${fid}`)
         const data = await response.json()
@@ -76,20 +68,21 @@ export default function AppPage() {
 
     checkOnboardingStatus()
   }, [fid]) // Re-run when FID becomes available
+
   return (
     <AppLayout>
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
-        {/* Auth Debug Info (only in miniapp) */}
-        {isMiniapp && process.env.NODE_ENV === 'development' && (
+        {/* Auth Debug Info */}
+        {process.env.NODE_ENV === 'development' && (
           <Card className="mb-4 theme-card-bg-secondary">
             <CardBody>
               <div className="text-xs font-mono theme-text-muted space-y-1">
-                <div>🔐 Auth Debug:</div>
+                <div>🔐 Farcaster Frame Auth Debug:</div>
                 <div>• FID: {fid || 'null'}</div>
-                <div>• Source: {authSource || 'null'}</div>
-                <div>• Authenticated: {isAuthenticated ? 'Yes' : 'No'}</div>
-                <div>• Profile: {profile?.username || 'null'}</div>
-                <div>• Context: {context?.user?.fid || 'null'}</div>
+                <div>• Username: {username || 'null'}</div>
+                <div>• Display Name: {displayName || 'null'}</div>
+                <div>• Ready: {isReady ? 'Yes' : 'No'}</div>
+                {error && <div>• Error: {error.message}</div>}
               </div>
             </CardBody>
           </Card>
@@ -107,10 +100,9 @@ export default function AppPage() {
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
                 <Badge variant="success">✓ Tutorial Complete</Badge>
-                {isMiniapp && (
+                {fid && (
                   <Badge variant="primary">
-                    {isFarcaster && '✨ Farcaster Miniapp'}
-                    {isBase && '✨ Base.dev Miniapp'}
+                    ✨ Farcaster User #{fid}
                   </Badge>
                 )}
               </div>
