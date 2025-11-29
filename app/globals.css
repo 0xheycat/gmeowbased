@@ -17,10 +17,5 @@
  * ============================================================================
  */
 
-/* Tailwind Base */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Gmeowbased Foundation Design System (ONLY import needed) */
+/* Gmeowbased Foundation Design System (includes Tailwind) */
 @import '../styles/gmeowbased-foundation.css';
