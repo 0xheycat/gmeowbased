@@ -1,7 +1,7 @@
-/* src/lib/gmeow-utils.ts
-   Full-feature utilities for Gmeowbased (ABI-confirmed)
+/* src/lib/gm-utils.ts
+   Full-feature gm-utils for GmeowMultichain (ABI-confirmed)
    - Requires viem vX (encodeFunctionData, createPublicClient, http, erc20Abi)
-   - ABIs: Core, Guild, NFT modules with proxy architecture
+   - ABI: '@/lib/abi/gmeowmultichain.json'
    - Exported builders return objects suitable for viem/writeContract or wagmi/writeContract
 */
 
@@ -125,16 +125,16 @@ export const NFT_ABI = NFT_ABI_JSON as unknown as Abi
 export const ERC721_ABI = erc721Abi as unknown as Abi
 
 // Helper to get correct ABI based on chain
-// All chains now use standalone architecture with same ABI
-export function getCoreABI(): Abi {
+// All chains now use standalone architecture with separate ABIs
+export function getCoreABI(chain: GMChainKey = 'base'): Abi {
   return CORE_ABI
 }
 
-export function getGuildABI(): Abi {
+export function getGuildABI(chain: GMChainKey = 'base'): Abi {
   return GUILD_ABI
 }
 
-export function getNFTABI(): Abi {
+export function getNFTABI(chain: GMChainKey = 'base'): Abi {
   return NFT_ABI
 }
 
@@ -493,7 +493,7 @@ export const createSetFarcasterFidTx = (fid: bigint | number | string, chain: GM
 // Guild operations route to separate Guild contract on Base, monolithic on other chains
 function buildGuildCallObject(functionName: string, args: readonly unknown[], chain: GMChainKey = 'base') {
   const address = getGuildAddress(chain)
-  const abi = getGuildABI()
+  const abi = getGuildABI(chain)
   return { address, abi, functionName: functionName as any, args }
 }
 
@@ -524,7 +524,7 @@ export const createCompleteGuildQuestTx = (guildQuestId: bigint|number|string, c
 // NFT operations route to separate NFT contract on Base, monolithic on other chains
 function buildNFTCallObject(functionName: string, args: readonly unknown[], chain: GMChainKey = 'base', value: bigint = 0n) {
   const address = getNFTAddress(chain)
-  const abi = getNFTABI()
+  const abi = getNFTABI(chain)
   return { address, abi, functionName: functionName as any, args, value }
 }
 

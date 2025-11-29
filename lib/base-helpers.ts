@@ -156,7 +156,7 @@ export function preparePostGMTransaction(
 ): WriteContractParameters {
   return {
     address: getCoreAddress(chain),
-    abi: getCoreABI(chain),
+    abi: getCoreABI(),
     functionName: 'sendGM',
     args: [],
     account: userAddress,
@@ -178,8 +178,8 @@ export function prepareMintBadgeTransaction(
 ): WriteContractParameters {
   return {
     address: getNFTAddress(chain),
-    abi: getNFTABI(chain),
-    functionName: 'mint',
+    abi: getNFTABI(),
+    functionName: 'mintNFT',
     args: [userAddress, badgeId],
     account: userAddress,
   }
@@ -200,7 +200,7 @@ export function prepareJoinGuildTransaction(
 ): WriteContractParameters {
   return {
     address: getGuildAddress(chain),
-    abi: getGuildABI(chain),
+    abi: getGuildABI(),
     functionName: 'joinGuild',
     args: [guildId],
     account: userAddress,

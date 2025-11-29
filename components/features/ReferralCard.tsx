@@ -68,8 +68,8 @@ export function ReferralCard({ chain = 'base' }: ReferralCardProps) {
       // Read referral code from contract
       const code = await readContract(wagmiConfig, {
         address: getGuildAddress(gmChain),
-        abi: getGuildABI(gmChain),
-        functionName: 'referralCodeOf',
+        abi: getGuildABI(),
+        functionName: 'addReferralCode',
         args: [address]
       }) as string
 
