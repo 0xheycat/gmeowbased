@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
 import { createPublicClient, http, parseAbiItem, type AbiEvent } from 'viem'
-import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, CONTRACT_ADDRESSES, type GMChainKey, type ChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { BADGE_REGISTRY } from '@/lib/badge-registry-data'
@@ -447,7 +447,7 @@ export async function deleteBadgeTemplate(id: string): Promise<void> {
   templateCache.current = null
 }
 
-function getStartBlock(chain: ChainKey): bigint {
+function getStartBlock(chain: GMChainKey): bigint {
   const envKey = `CHAIN_START_BLOCK_${chain.toUpperCase()}`
   const direct = process.env[envKey]
   if (direct) {
@@ -471,7 +471,7 @@ const EVT_BADGE_MINTED = parseAbiItem(
   'event BadgeMinted(address indexed to, uint256 tokenId, string badgeType)'
 ) as AbiEvent
 
-async function fetchMintLogsForChain(chain: ChainKey, address: `0x${string}`): Promise<MintedBadge[]> {
+async function fetchMintLogsForChain(chain: GMChainKey, address: `0x${string}`): Promise<MintedBadge[]> {
   const rpc = getRpcUrl(chain)
   const client = createPublicClient({ transport: http(rpc) })
   
@@ -552,7 +552,7 @@ export async function fetchMintedBadges(address: `0x${string}`, options: { chain
     return cache.value
   }
 
-  const chains = options.chains && options.chains.length ? options.chains : CHAIN_KEYS
+  const chains = options.chains && options.chains.length ? options.chains.filter((c): c is GMChainKey => CHAIN_KEYS.includes(c as GMChainKey)) : CHAIN_KEYS
   const mintsPerChain = await Promise.all(
     chains.map(chain => fetchMintLogsForChain(chain, normalized).catch(() => []))
   )

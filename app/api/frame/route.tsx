@@ -9,7 +9,7 @@ import {
   type Address,
 } from 'viem'
 
-// Import your gm-utils. Adjust path if your gm-utils export is different.
+// Import your gmeow-utils. Adjust path if your gmeow-utils export is different.
 import gm, {
   CONTRACT_ADDRESSES,
   GM_CONTRACT_ABI,
@@ -19,9 +19,11 @@ import gm, {
   CHAIN_LABEL,
   normalizeQuestStruct,
   sanitizeExpiresAt,
+  normalizeToGMChain,
   type NormalizedQuest,
   type ChainKey,
-} from '@/lib/gm-utils'
+  type GMChainKey,
+} from '@/lib/gmeow-utils'
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
 import { buildDynamicFrameImageUrl } from '@/lib/share'
@@ -139,8 +141,9 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const limitParam = params.limit ?? params.top ?? params.size
   const normalizedChain = rawChain ? rawChain.toLowerCase() : ''
   const isGlobal = toBooleanFlag(params.global) || ['all', 'global', 'combined'].includes(normalizedChain) || rawMode.toLowerCase() === 'global'
-  const candidateChain = CHAIN_KEYS.includes(normalizedChain as ChainKey) ? (normalizedChain as ChainKey) : 'base'
-  const chainKey = isGlobal && !CHAIN_KEYS.includes(normalizedChain as ChainKey) ? 'base' : candidateChain
+  // Normalize the chain string to GMChainKey (handles 'optimism' → 'op')
+  const candidateChainKey = normalizeToGMChain(normalizedChain as ChainKey) || 'base'
+  const chainKey = isGlobal ? 'base' : candidateChainKey
   const chainDisplay = isGlobal ? 'All Chains' : getChainDisplayName(chainKey)
   const chainIcon = isGlobal ? null : getChainIconUrl(chainKey)
   const limit = (() => {
@@ -195,7 +198,7 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
         const address = (addressRaw.startsWith('0x') ? addressRaw : '0x0000000000000000000000000000000000000000') as `0x${string}`
         const name = typeof entry?.name === 'string' ? entry.name : ''
         const chainValue = typeof entry?.chain === 'string' ? entry.chain.toLowerCase() : chainKey
-        const chainResolved = CHAIN_KEYS.includes(chainValue as ChainKey) ? (chainValue as ChainKey) : chainKey
+        const chainResolved = normalizeToGMChain(chainValue as ChainKey) || chainKey
         const pointsNumber = Number(entry?.points ?? 0)
         const completedNumber = Number(entry?.completed ?? 0)
         const rewardsNumber = Number(entry?.rewards ?? Math.floor(pointsNumber / 20))
@@ -696,8 +699,8 @@ async function fallbackResolveNeynarProfile(options: { address?: string; fid?: n
 }
 
 /**
- * Fetch quest data from chain using gm-utils' createGetQuestCall wrapper.
- * This expects the gm-utils call object to be an argument for read contract.
+ * Fetch quest data from chain using gmeow-utils' createGetQuestCall wrapper.
+ * This expects the gmeow-utils call object to be an argument for read contract.
  */
 async function fetchQuestOnChain(
   questId: number | string,
@@ -728,7 +731,8 @@ async function fetchQuestOnChain(
       tracePush(traces, 'fetchQuestOnChain-readContract-failed', String(inner))
       // fallback: try directly calling contract via ABI getQuest name
       const client2 = createPublicClient({ transport: http(rpc) })
-      const address = CONTRACT_ADDRESSES[chainKey as keyof typeof CONTRACT_ADDRESSES] || CONTRACT_ADDRESSES.base
+      const gmChain = normalizeToGMChain(chainKey as ChainKey) || 'base'
+      const address = CONTRACT_ADDRESSES[gmChain]
       const res2 = await client2.readContract({ address, abi: GM_CONTRACT_ABI as any, functionName: 'getQuest', args: [BigInt(questId)] })
       const normalized2 = normalizeQuestStruct(res2)
       tracePush(traces, 'fetchQuestOnChain-fallback-ok', normalized2)
@@ -786,7 +790,8 @@ async function fetchReferralCodeForUser(chainKey: ChainKey, userAddr: `0x${strin
   try {
     const rpc = getRpcForChain(chainKey)
     const client = createPublicClient({ transport: http(rpc) })
-    const contract = (CONTRACT_ADDRESSES[chainKey] ?? CONTRACT_ADDRESSES.base) as Address
+    const gmChain = normalizeToGMChain(chainKey) || 'base'
+    const contract = CONTRACT_ADDRESSES[gmChain] as Address
     const code = await client
       .readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referralCodeOf', args: [userAddr] })
       .catch(() => '')
@@ -2983,7 +2988,7 @@ export async function GET(req: Request) {
 - This handler intentionally keeps logic in one place to provide a universal
   frame endpoint. For heavy production usage, split responsibilities into
   smaller files (quest/*, guild/*, points/*).
-- The route uses gm-utils call creators to create call objects suitable for
+- The route uses gmeow-utils call creators to create call objects suitable for
   viem/wagmi writeContract/readContract patterns.
 - If you have a richer Neynar helper library, import it and replace neynarFetchRaw
   with more advanced utilities for better behavior / retries / billing detection.

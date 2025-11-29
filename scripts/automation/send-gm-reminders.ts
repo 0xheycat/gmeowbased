@@ -16,7 +16,7 @@ import {
 } from '@/lib/miniapp-notifications'
 import { fetchUserByFid } from '@/lib/neynar'
 import { fetchChainSnapshot, normalizeAddress, type ChainAggregation } from '@/lib/profile-data'
-import { getTimeUntilNextGM, hasGMToday } from '@/lib/gm-utils'
+import { getTimeUntilNextGM, hasGMToday } from '@/lib/gmeow-utils'
 
 const DEFAULT_REMINDER_WINDOW_MINUTES = 180
 const DEFAULT_MAX_NOTIFICATIONS = 100

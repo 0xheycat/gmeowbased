@@ -47,6 +47,23 @@ e2e/
 tmp/
 tmp_dir/
 README.COPILOT.md
+
+# Backup & Archive Folders
+backups/
+old-foundation/
+src-archived-*/
+cache/
+
+# Documentation (keep essential only)
+Docs/
+docs/
+planning/
+reference/
+screenshots/
+*AUDIT*.md
+*REPORT*.md
+*ANALYSIS*.md
+
 # Database
 *.db
 *.sqlite

@@ -1,0 +1,61 @@
+[
+  {
+    "type": "event",
+    "name": "BadgeMinted",
+    "inputs": [
+      {"name": "user", "type": "address", "indexed": true},
+      {"name": "badgeId", "type": "uint256", "indexed": true},
+      {"name": "badgeType", "type": "string", "indexed": false}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "FIDLinked",
+    "inputs": [
+      {"name": "who", "type": "address", "indexed": true},
+      {"name": "fid", "type": "uint256", "indexed": false}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "GMSent",
+    "inputs": [
+      {"name": "user", "type": "address", "indexed": true},
+      {"name": "streak", "type": "uint256", "indexed": false},
+      {"name": "pointsEarned", "type": "uint256", "indexed": false}
+    ]
+  },
+  {
+    "type": "function",
+    "name": "sendGM",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getUserStats",
+    "inputs": [
+      {"name": "user", "type": "address"}
+    ],
+    "outputs": [
+      {"name": "availablePoints", "type": "uint256"},
+      {"name": "lockedPoints", "type": "uint256"},
+      {"name": "totalEarned", "type": "uint256"}
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "gmhistory",
+    "inputs": [
+      {"name": "user", "type": "address"}
+    ],
+    "outputs": [
+      {"name": "last", "type": "uint256"},
+      {"name": "streak", "type": "uint256"}
+    ],
+    "stateMutability": "view"
+  }
+]
+

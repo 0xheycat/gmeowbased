@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { isAbortError, formatUnknownError } from '@/components/quest-wizard/utils'
-import type { QuestVerificationState, QuestVerificationSuccess } from '@/components/quest-wizard/shared'
+import { isAbortError, formatUnknownError } from '@/lib/quest-wizard/utils'
+import type { QuestVerificationState, QuestVerificationSuccess } from '@/lib/quest-wizard/types'
 
 type UseQuestVerificationOptions = {
 	stepIndex: number
@@ -55,15 +55,24 @@ export function useQuestVerification({
 					const reason = typeof json?.reason === 'string' ? json.reason : `verification_failed_${response.status}`
 					throw new Error(reason)
 				}
-				const result: QuestVerificationSuccess = {
-					questTypeKey: String(json.questTypeKey || verificationPayload.questTypeKey || ''),
-					questTypeCode: Number(json.questTypeCode ?? verificationPayload.actionCode ?? 0),
-					requirement: typeof json.requirement === 'object' && json.requirement ? json.requirement : {},
-					meta: typeof json.meta === 'object' && json.meta ? json.meta : {},
-					castDetails: typeof json.castDetails === 'object' && json.castDetails ? json.castDetails : {},
-					traces: Array.isArray(json.traces) ? json.traces : [],
-					durationMs: Number(json.durationMs ?? 0),
-				}
+			const result: QuestVerificationSuccess = {
+				questId: String(json.questId || ''),
+				questTypeKey: String(json.questTypeKey || verificationPayload.questTypeKey || ''),
+				questTypeCode: Number(json.questTypeCode ?? verificationPayload.actionCode ?? 0),
+				requirement: typeof json.requirement === 'object' && json.requirement ? json.requirement : {},
+				meta: typeof json.meta === 'object' && json.meta ? json.meta : {},
+				castDetails: typeof json.castDetails === 'object' && json.castDetails ? json.castDetails : {},
+				traces: Array.isArray(json.traces) ? json.traces : [],
+				durationMs: Number(json.durationMs ?? 0),
+				metadata: {
+					name: String(json.metadata?.name || ''),
+					description: String(json.metadata?.description || ''),
+					image: String(json.metadata?.image || ''),
+					questType: String(json.metadata?.questType || ''),
+					chain: String(json.metadata?.chain || 'base') as any,
+					expiresAt: String(json.metadata?.expiresAt || ''),
+				},
+			}
 				verificationCacheRef.current.set(verificationCacheKey, result)
 				setVerificationState({ status: 'success', lastKey: verificationCacheKey, data: result, error: null })
 				return result

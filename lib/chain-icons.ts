@@ -1,4 +1,4 @@
-import { CHAIN_LABEL } from './gm-utils'
+import { CHAIN_LABEL } from './gmeow-utils'
 
 export const CHAIN_ICON_URLS: Record<string, string> = {
   base: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/base.svg',

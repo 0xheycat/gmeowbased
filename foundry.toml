@@ -1,0 +1,19 @@
+[profile.default]
+src = "contract"
+out = "out"
+libs = ["node_modules"]
+solc_version = "0.8.23"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+evm_version = "shanghai"
+
+[profile.standalone]
+src = "contract"
+out = "out"
+libs = ["node_modules"]
+solc_version = "0.8.23"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+evm_version = "shanghai"

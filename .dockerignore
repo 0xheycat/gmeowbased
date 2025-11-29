@@ -1,0 +1,78 @@
+# Docker Ignore File
+# Similar to .railwayignore but for Docker builds
+
+# ========================================
+# BACKUP & ARCHIVE FOLDERS
+# ========================================
+backups/
+old-foundation/
+src-archived-20251127-092205/
+cache/
+
+# ========================================
+# DOCUMENTATION
+# ========================================
+Docs/
+docs/
+planning/
+reference/
+screenshots/
+*.md
+!README.md
+
+# ========================================
+# TESTING
+# ========================================
+__tests__/
+e2e/
+playwright-report/
+test-results/
+coverage/
+.nyc_output/
+
+# ========================================
+# NODE MODULES (handled by build)
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================================
+# BUILD OUTPUTS
+# ========================================
+.next/
+out/
+dist/
+build/
+
+# ========================================
+# ENVIRONMENT FILES
+# ========================================
+.env
+.env.local
+.env*.local
+.env.example*
+
+# ========================================
+# GIT
+# ========================================
+.git/
+.gitignore
+.gitattributes
+
+# ========================================
+# IDE
+# ========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ========================================
+# MISCELLANEOUS
+# ========================================
+*.log
+.DS_Store
+Thumbs.db

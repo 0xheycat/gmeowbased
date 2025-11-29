@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { isAssetAllowed, type QuestPolicy } from '@/lib/quest-policy'
-import type { QuestDraft } from '@/components/quest-wizard/shared'
+import type { QuestDraft } from '@/lib/quest-wizard/types'
 
 type NotificationInput = {
 	tone: 'info' | 'success' | 'warning' | 'error'

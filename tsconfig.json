@@ -20,9 +20,16 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/components/*": ["components/*"],
+      "@/lib/*": ["lib/*"],
+      "@/hooks/*": ["hooks/*"],
+      "@/utils/*": ["utils/*"],
+      "@/helpers/*": ["helpers/*"],
+      "@/contexts/*": ["contexts/*"],
+      "@/types/*": ["types/*"],
+      "@/styles/*": ["styles/*"],
+      "@/scripts/*": ["scripts/*"],
+      "@/assets/*": ["assets/*"]
     },
     "allowJs": true,
     "incremental": true,
@@ -42,10 +49,14 @@
   "exclude": [
     "node_modules",
     "Planing/**/*",
-    "planning/templates/gmeow2/**/*",
+    "planning/**/*",
     "scripts/run-migration.ts",
     "scripts/run-migration-pg.ts",
     "scripts/test-notification-history.ts",
-    "backups/**/*"
+    "backups/**/*",
+    "src-archived-*/**/*",
+    "lib/abi/**/*.json",
+    "old-foundation/**/*",
+    "__tests__/**/*"
   ]
 }

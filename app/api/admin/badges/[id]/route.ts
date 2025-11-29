@@ -4,7 +4,7 @@ import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { AdminBadgeUpdateSchema } from '@/lib/validation/api-schemas'
 import { deleteBadgeTemplate, getBadgeTemplateById, invalidateBadgeCaches, updateBadgeTemplate } from '@/lib/badges'
 import { validateAdminRequest } from '@/lib/admin-auth'
-import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
 import type { BadgeTemplateInput } from '@/lib/badges'
 
 export const runtime = 'nodejs'

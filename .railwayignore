@@ -1,0 +1,109 @@
+# Railway Deployment Ignore File
+# Exclude large backup folders, documentation, and development files
+
+# ========================================
+# 1. BACKUP FOLDERS (CRITICAL)
+# ========================================
+backups/
+old-foundation/
+src-archived-20251127-092205/
+cache/
+
+# ========================================
+# 2. DOCUMENTATION FOLDERS
+# ========================================
+Docs/
+docs/
+planning/
+reference/
+screenshots/
+
+# ========================================
+# 3. TESTING & REPORTS
+# ========================================
+__tests__/
+e2e/
+playwright-report/
+test-results/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# ========================================
+# 4. DEVELOPMENT FILES
+# ========================================
+.vscode/
+.idea/
+*.log
+*.md
+!README.md
+!CHANGELOG.md
+
+# Audit reports
+*AUDIT*.md
+*REPORT*.md
+*ANALYSIS*.md
+
+# ========================================
+# 5. BUILD ARTIFACTS (handled by Railway)
+# ========================================
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# ========================================
+# 6. ENVIRONMENT & SECRETS
+# ========================================
+.env
+.env.local
+.env.*.local
+.env.example*
+.env.contracts.example
+.env.vercel.production
+
+# ========================================
+# 7. GIT & VERSION CONTROL
+# ========================================
+.git/
+.gitignore
+.gitattributes
+
+# ========================================
+# 8. MISCELLANEOUS
+# ========================================
+*.txt
+!package.json
+!pnpm-lock.yaml
+foundry.toml
+slither*.json
+slither*.txt
+bundle-comparison.txt
+log.txt
+
+# ========================================
+# 9. MIGRATION SCRIPTS (keep essential)
+# ========================================
+migration-scripts/
+
+# ========================================
+# 10. UNUSED CONFIGS
+# ========================================
+*.config.docs.js
+*.config.mjs.new
+*.config.ts.new
+tsconfig.json.new
+
+# Keep these essential files
+!railway.json
+!RAILWAY-SETUP.md
+!next.config.js
+!next.config.ts
+!package.json
+!pnpm-lock.yaml
+!tsconfig.json
+!tailwind.config.ts
+!postcss.config.js
+!vercel.json

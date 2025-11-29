@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import type { TokenOption, NftOption, AssetSnapshot } from '@/components/quest-wizard/shared'
-import { DEFAULT_TOKEN_QUERY, DEFAULT_NFT_QUERY, DEFAULT_CHAIN_FILTER, ASSET_SNAPSHOT_TTL_MS } from '@/components/quest-wizard/shared'
-import { isAbortError } from '@/components/quest-wizard/utils'
+import type { TokenOption, NftOption, AssetSnapshot } from '@/lib/quest-wizard/types'
+import { DEFAULT_TOKEN_QUERY, DEFAULT_NFT_QUERY, DEFAULT_CHAIN_FILTER, ASSET_SNAPSHOT_TTL_MS } from '@/lib/quest-wizard/types'
+import { isAbortError } from '@/lib/quest-wizard/utils'
 
 type UseAssetCatalogOptions = {
 	isMobile: boolean

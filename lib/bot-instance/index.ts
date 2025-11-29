@@ -2,8 +2,8 @@ import { NeynarAPIClient } from "@neynar/nodejs-sdk"
 import { ethers } from "ethers"
 import { createHash } from "crypto"
 import dotenv from "dotenv"
-import { CHAIN_IDS, CONTRACT_ADDRESSES } from "@/lib/gm-utils"
-import type { ChainKey } from "@/lib/gm-utils"
+import { CHAIN_IDS, CONTRACT_ADDRESSES } from "@/lib/gmeow-utils"
+import type { GMChainKey, ChainKey } from "@/lib/gmeow-utils"
 import { computeBotUserStats, type BotUserStats } from "@/lib/bot-stats"
 import { loadBotStatsConfig } from "@/lib/bot-config"
 import type { BotStatsConfig } from "@/lib/bot-config-types"
@@ -157,7 +157,7 @@ function evaluateStatsTrigger(cast: any, config: BotStatsConfig): StatsTriggerEv
 }
 
 // Contracts and chain IDs are selected dynamically per cast content
-// CONTRACT_ADDRESSES and CHAIN_IDS come from lib/gm-utils
+// CONTRACT_ADDRESSES and CHAIN_IDS come from lib/gmeow-utils
 
 // Listen for new casts (polling or webhook)
 async function checkNewCasts() {
@@ -206,7 +206,15 @@ async function checkNewCasts() {
     }
 
     const { chain, id: questId } = ref
-    const chainId = CHAIN_IDS[chain]
+    
+    // Validate chain is GMChainKey (has GM contracts deployed)
+    if (!(chain in CHAIN_IDS)) {
+      rememberCast(castHash)
+      continue
+    }
+    const gmChain = chain as GMChainKey
+    
+    const chainId = CHAIN_IDS[gmChain]
     if (!chainId) {
       rememberCast(castHash)
       continue
@@ -218,7 +226,7 @@ async function checkNewCasts() {
     })
     const previousTotal = initialStats?.totalPoints ?? null
 
-    const CONTRACT = CONTRACT_ADDRESSES[chain]
+    const CONTRACT = CONTRACT_ADDRESSES[gmChain]
 
     const isValid = await verifyQuestCondition(fid, questId, cast)
     if (!isValid) {
@@ -326,8 +334,8 @@ async function checkNewCasts() {
 
     try {
       await recordRankEvent({
-        event: 'quest-verify',
-        chain,
+        event: 'quest-claim',
+        chain: gmChain,
         walletAddress: address,
         fid: fid > 0 ? fid : null,
         questId: Number(questId) > 0 ? Number(questId) : null,
@@ -461,7 +469,7 @@ async function handleStatsRequest(cast: any, config: BotStatsConfig, trigger: St
   try {
     await recordRankEvent({
       event: 'stats-query',
-      chain: stats.primaryChain,
+      chain: stats.primaryChain as GMChainKey,
       walletAddress: stats.address,
       fid,
       delta: 0,

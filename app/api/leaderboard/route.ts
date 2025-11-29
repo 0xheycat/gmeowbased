@@ -1,7 +1,7 @@
 // /api/leaderboard/route.ts
 import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CONTRACT_ADDRESSES, gmContractHasFunction, type ChainKey } from '@/lib/gm-utils'
+import { CONTRACT_ADDRESSES, gmContractHasFunction, isGMChain, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
 import { computeLeaderboardSlice, PROFILE_SUPPORTED } from '@/lib/leaderboard-aggregator'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { fetchUsersByAddresses } from '@/lib/neynar'
@@ -88,9 +88,129 @@ type SupabaseFetchParams = {
   season: string | null
   limit: number
   offset: number
+  eventType?: string
+  timeframe?: string
 }
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+/**
+ * Fetch event-based leaderboard aggregated from gmeow_rank_events
+ * Supports filtering by event type and timeframe
+ */
+async function fetchEventBasedLeaderboard(
+  params: SupabaseFetchParams
+): Promise<{ total: number; entries: LeaderboardEntry[]; updatedAt: number } | null> {
+  if (!isSupabaseConfigured()) return null
+  const supabase = getSupabaseServerClient()
+  if (!supabase) return null
+
+  try {
+    // Calculate timeframe filter
+    let createdAtFilter: Date | null = null
+    if (params.timeframe && params.timeframe !== 'all-time') {
+      const now = new Date()
+      switch (params.timeframe) {
+        case 'daily':
+          createdAtFilter = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          break
+        case 'weekly':
+          createdAtFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          break
+        case 'monthly':
+          createdAtFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          break
+      }
+    }
+
+    // Build aggregation query
+    let query = supabase.rpc('get_event_leaderboard', {
+      p_chain: params.chain,
+      p_event_type: params.eventType === 'all' ? null : params.eventType,
+      p_created_after: createdAtFilter ? createdAtFilter.toISOString() : null,
+      p_limit: params.limit,
+      p_offset: params.offset,
+    })
+
+    const { data, error } = await query
+
+    if (error) {
+      console.warn('Event-based leaderboard query failed, falling back to snapshot:', error.message)
+      return null
+    }
+
+    if (!data || !Array.isArray(data)) {
+      return null
+    }
+
+    // Transform raw aggregated data to leaderboard entries
+    const entries: LeaderboardEntry[] = await Promise.all(
+      data.map(async (row: any, index: number) => {
+        const address = (row.wallet_address || ZERO_ADDRESS) as `0x${string}`
+        const points = parseSupabaseNumber(row.total_points)
+        const completed = parseSupabaseNumber(row.event_count)
+
+        return {
+          rank: params.offset + index + 1,
+          address,
+          chain: params.chain,
+          points,
+          pfpUrl: '',
+          name: '',
+          farcasterFid: parseSupabaseNumber(row.fid, 0),
+          completed,
+          rewards: Math.floor(points / 20),
+          seasonAlloc: 0,
+        }
+      })
+    )
+
+    // Enrich with user profiles
+    const needsEnrichment = entries.filter(entry => !entry.name.trim() || !entry.pfpUrl)
+    if (needsEnrichment.length > 0) {
+      try {
+        const addressMap = await fetchUsersByAddresses(needsEnrichment.map(entry => entry.address))
+        for (const entry of needsEnrichment) {
+          const user = addressMap[entry.address] ?? addressMap[entry.address.toLowerCase()]
+          if (!user) continue
+
+          const handle = user.username ? `@${user.username}` : ''
+          const display = typeof user.displayName === 'string' ? user.displayName.trim() : ''
+          const resolvedName = display || handle || entry.address.slice(0, 8)
+          const neynarPfp = typeof user.pfpUrl === 'string' ? user.pfpUrl.trim() : ''
+          const resolvedFid =
+            entry.farcasterFid && entry.farcasterFid > 0
+              ? entry.farcasterFid
+              : typeof user.fid === 'number' && user.fid > 0
+              ? user.fid
+              : 0
+
+          entry.name = resolvedName
+          entry.pfpUrl = neynarPfp
+          entry.farcasterFid = resolvedFid
+        }
+      } catch (enrichError) {
+        console.warn('Profile enrichment failed:', enrichError)
+      }
+    }
+
+    // Ensure all entries have names
+    entries.forEach(entry => {
+      if (!entry.name.trim()) {
+        entry.name = entry.address.slice(0, 8) + '...'
+      }
+    })
+
+    return {
+      total: data.length > 0 ? params.offset + data.length : 0,
+      entries,
+      updatedAt: Date.now(),
+    }
+  } catch (error) {
+    console.warn('Event-based leaderboard failed:', formatSupabaseError(error))
+    return null
+  }
+}
 
 function parseSupabaseNumber(value: string | number | null | undefined, fallback = 0): number {
   if (value == null) return fallback
@@ -300,6 +420,8 @@ export const GET = withErrorHandler(async (req: Request) => {
       chain: url.searchParams.get('chain') || undefined,
       limit: url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!) : undefined,
       offset: url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!) : undefined,
+      eventType: url.searchParams.get('eventType') || undefined,
+      timeframe: url.searchParams.get('timeframe') || undefined,
     })
     
     if (!queryValidation.success) {
@@ -312,19 +434,56 @@ export const GET = withErrorHandler(async (req: Request) => {
     const chainParam = queryValidation.data.chain || 'base'
     const limit = Math.min(queryValidation.data.limit ?? 50, 500)
     const offset = queryValidation.data.offset ?? 0
+    const eventType = queryValidation.data.eventType || 'all'
+    const timeframe = queryValidation.data.timeframe || 'all-time'
     const seasonParam = url.searchParams.get('season')
     const global = url.searchParams.get('global') === '1' || url.searchParams.get('global') === 'true'
 
-    if (!global && !isChainKey(chainParam)) {
+    if (!global && !isGMChain(chainParam)) {
       return NextResponse.json({ ok: false, reason: 'unsupported_chain' }, { status: 400 })
     }
 
-    const chain = (isChainKey(chainParam) ? chainParam : 'base') as ChainKey
+    const chain: GMChainKey = global ? 'base' : (isGMChain(chainParam) ? chainParam : 'base')
     const seasonKey = seasonParam ? (SEASONS_SUPPORTED ? seasonParam : 'unsupported') : 'all'
-    const cacheKey = `lb:${chain}:${global ? 'global' : 'chain'}:${seasonKey}:${offset}:${limit}`
+    const cacheKey = `lb:${chain}:${global ? 'global' : 'chain'}:${seasonKey}:${eventType}:${timeframe}:${offset}:${limit}`
 
     if (cache && cache.key === cacheKey && Date.now() - cache.at < CACHE_TTL) {
       return NextResponse.json(cache.data, { headers: CACHE_HEADERS })
+    }
+
+    // Use event-based leaderboard when filtering by event type or timeframe
+    const useEventBasedLeaderboard = eventType !== 'all' || timeframe !== 'all-time'
+    
+    if (useEventBasedLeaderboard) {
+      const eventResult = await fetchEventBasedLeaderboard({ 
+        chain, 
+        global, 
+        season: seasonParam, 
+        limit, 
+        offset,
+        eventType,
+        timeframe,
+      })
+      
+      if (eventResult) {
+        const data: LeaderboardResponse = {
+          ok: true,
+          chain,
+          global,
+          offset,
+          limit,
+          total: eventResult.total,
+          top: eventResult.entries,
+          updatedAt: eventResult.updatedAt,
+          seasonSupported: SEASONS_SUPPORTED,
+          profileSupported: PROFILE_SUPPORTED,
+          seasonWarning: seasonParam && !SEASONS_SUPPORTED ? 'season_data_unavailable' : undefined,
+        }
+
+        cache = { key: cacheKey, at: Date.now(), data }
+        return NextResponse.json(data, { headers: CACHE_HEADERS })
+      }
+      // Fall through to snapshot-based leaderboard if event-based fails
     }
 
     const supabaseResult = await fetchLeaderboardFromSupabase({ chain, global, season: seasonParam, limit, offset })

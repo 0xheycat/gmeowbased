@@ -26,7 +26,7 @@ import {
 } from '@/lib/badges'
 import { mintBadgeOnChain } from '@/lib/contract-mint'
 import { getBadgeFromRegistry } from '@/lib/badges'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { GMChainKey, ChainKey } from '@/lib/gmeow-utils'
 
 const BATCH_SIZE = Number(process.env.MINT_BATCH_SIZE || 5)
 // INTERVAL_MS and MAX_RETRIES removed - only used by commented main() function
@@ -49,16 +49,20 @@ async function sendMintWebhook(mint: MintQueueEntry, txHash: string, tokenId: nu
   try {
     // Get badge metadata from registry
     const badgeDefinition = getBadgeFromRegistry(mint.badgeType)
-    const chain = (badgeDefinition?.chain as ChainKey) || 'base'
+    const chainRaw = (badgeDefinition?.chain as ChainKey) || 'base'
+    
+    // Ensure chain is GMChainKey for contract access
+    const chain: GMChainKey = (chainRaw in { base: 1, unichain: 1, celo: 1, ink: 1, op: 1, arbitrum: 1 }) ? (chainRaw as GMChainKey) : 'base'
     const tier = badgeDefinition?.tier || 'common'
     
     // Get contract address for chain
-    const contractAddresses: Record<ChainKey, string> = {
+    const contractAddresses: Record<GMChainKey, string> = {
       base: process.env.BADGE_CONTRACT_BASE || '',
       unichain: process.env.BADGE_CONTRACT_UNICHAIN || '',
       celo: process.env.BADGE_CONTRACT_CELO || '',
       ink: process.env.BADGE_CONTRACT_INK || '',
       op: process.env.BADGE_CONTRACT_OP || '',
+      arbitrum: process.env.BADGE_CONTRACT_ARBITRUM || '',
     }
     const contractAddress = contractAddresses[chain] || ''
     

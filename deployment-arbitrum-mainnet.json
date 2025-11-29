@@ -1,0 +1,15 @@
+{
+  "network": "Arbitrum Mainnet",
+  "chainId": 42161,
+  "rpcUrl": "https://arb-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg",
+  "deployedAt": "2025-11-28T05:30:38-06:00",
+  "deployer": "0x8870C155666809609176260F2B65a626C000D773",
+  "contracts": {
+    "core": "0xC8c39e1312c4F3775CE1fc35327ed2c719B82eFe",
+    "guild": "0x3030cbD17bc8AB3Fa1CC45964C20A12617a7D42C",
+    "nft": "0x059b474799f8602975E60A789105955CbB61d878",
+    "proxy": "0xa0001886C87a19d49BAC88a5Cbf993f0866110C4"
+  },
+  "oracleSigner": "0x8870C155666809609176260F2B65a626C000D773",
+  "mainContract": "0xC8c39e1312c4F3775CE1fc35327ed2c719B82eFe"
+}

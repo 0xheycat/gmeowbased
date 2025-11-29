@@ -1,0 +1,2 @@
+'/home/heycat/.local/bin/solc --version' running
+'/home/heycat/.local/bin/solc @openzeppelin=node_modules/@openzeppelin contract/GmeowMultiChain.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --base-path . --include-path node_modules --allow-paths .,/home/heycat/Desktop/2025/Gmeowbased/contract' running

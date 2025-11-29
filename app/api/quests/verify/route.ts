@@ -25,8 +25,10 @@ import {
   getQuestFieldConfig,
   normalizeQuestStruct,
   normalizeQuestTypeKey,
+  normalizeToGMChain,
   type ChainKey,
-} from '@/lib/gm-utils'
+  type GMChainKey,
+} from '@/lib/gmeow-utils'
 import { fetchFidByAddress, fetchFidByUsername, fetchUserByUsername } from '@/lib/neynar'
 
 /* -------------------------------------------------------------------------- */
@@ -1133,10 +1135,12 @@ export const POST = withErrorHandler(async (req: Request) => {
     if (!isAddress(user)) return H('Invalid user address', 422)
 
     const chainKey = chain as ChainKey
-    const chainId = CHAIN_IDS[chainKey]
-    const contractAddr = CONTRACT_ADDRESSES[chainKey] as `0x${string}`
+    const gmChain = normalizeToGMChain(chainKey)
+    if (!gmChain) return H('Unsupported chain', 422)
+    
+    const chainId = CHAIN_IDS[gmChain]
+    const contractAddr = CONTRACT_ADDRESSES[gmChain] as `0x${string}`
     const rpcUrl = RPC_URLS[chainKey]
-    if (!chainId || !contractAddr) return H('Unsupported chain', 422)
     if (!rpcUrl) return H('Missing RPC URL for chain', 500)
 
     const client = createPublicClient({ transport: http(rpcUrl) })

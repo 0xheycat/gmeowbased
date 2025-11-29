@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_IDS, normalizeToGMChain, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
 import { withErrorHandler } from '@/lib/error-handler'
 
 const ONCHAINKIT_API_KEY = process.env.ONCHAINKIT_API_KEY ?? process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ?? ''
@@ -165,7 +165,9 @@ async function fetchTokenCatalog(options: TokenCatalogOptions): Promise<{ tokens
   const supportedChainIds = Array.from(
     new Set(
       chains
-        .map((chain) => CHAIN_IDS[chain])
+        .map((chain) => normalizeToGMChain(chain))
+        .filter((gmChain): gmChain is GMChainKey => gmChain !== null)
+        .map((gmChain) => CHAIN_IDS[gmChain])
         .filter((id): id is number => Number.isFinite(id)),
     ),
   )
@@ -189,7 +191,9 @@ async function fetchTokenCatalog(options: TokenCatalogOptions): Promise<{ tokens
   for (const raw of response) {
     const token = mapOnchainKitToken(raw)
     if (!token) continue
-    const chainId = CHAIN_IDS[token.chain]
+    const gmChain = normalizeToGMChain(token.chain)
+    if (!gmChain) continue
+    const chainId = CHAIN_IDS[gmChain]
     if (!supportedChainIds.includes(chainId)) continue
     const key = `${token.chain}:${token.id.toLowerCase()}`
     if (seen.has(key)) continue
@@ -455,7 +459,8 @@ function mapOnchainKitToken(raw: OnchainKitToken): TokenCatalogEntry | null {
   const symbol = typeof raw.symbol === 'string' && raw.symbol.length > 0 ? raw.symbol : name.slice(0, 8).toUpperCase()
   const icon = typeof raw.image === 'string' && raw.image.length > 0 ? raw.image : fallbackTokenIcon(address)
   const decimals = typeof raw.decimals === 'number' && Number.isFinite(raw.decimals) ? raw.decimals : null
-  const chainId = typeof raw.chainId === 'number' && Number.isFinite(raw.chainId) ? raw.chainId : CHAIN_IDS[chainKey]
+  const gmChain = normalizeToGMChain(chainKey)
+  const chainId = typeof raw.chainId === 'number' && Number.isFinite(raw.chainId) ? raw.chainId : (gmChain ? CHAIN_IDS[gmChain] : CHAIN_IDS.base)
 
   return {
     id: address,

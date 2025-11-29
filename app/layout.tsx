@@ -1,14 +1,13 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
-import './globals.css'
-import './styles.css'
-import './styles/quest-card.css'
-import './styles/mobile-miniapp.css'
-import { MiniAppProvider } from './providers'
+import { DM_Sans } from 'next/font/google'
+import NextTopLoader from 'nextjs-toploader'
 import type { ReactNode } from 'react'
-import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
+import favicon from '@/assets/images/favicon.ico'
+import ProvidersWrapper from '../components/ProvidersWrapper'
+import { MiniappReady } from '@/components/MiniappReady'
 
-// Category 11 Frame Fix: Import Gmeow font from app/fonts (deleted from public/fonts in 419276f)
+// Import Gmeow font from app/fonts (preserving from original foundation)
 const gmeowFont = localFont({
   src: [
     {
@@ -26,10 +25,18 @@ const gmeowFont = localFont({
   display: 'swap',
 })
 
+// DM Sans font for body text
+const dmSans = DM_Sans({
+  variable: '--font-dm-sans',
+  subsets: ['latin', 'latin-ext'],
+  style: ['normal', 'italic'],
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  display: 'swap',
+})
+
 const baseUrl = process.env.MAIN_URL || 'https://gmeowhq.art'
 
-// MCP-compliant viewport configuration for miniapp embedding
-// Updated for mobile accessibility: allow zoom for users who need it
+// MCP-compliant viewport configuration for Farcaster miniapp embedding
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -39,6 +46,7 @@ export const viewport: Viewport = {
   viewportFit: 'cover', // CRITICAL: Enable safe-area-inset-* CSS env() variables
 }
 
+// Farcaster embed config
 const gmEmbed = {
   version: '1',
   imageUrl: `${baseUrl}/og-image.png`,
@@ -51,6 +59,7 @@ const gmEmbed = {
   },
 }
 
+// Farcaster frame config
 const gmFrame = {
   version: 'next',
   imageUrl: `${baseUrl}/frame-image.png`,
@@ -68,9 +77,15 @@ const gmFrame = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: 'Gmeowbased — Multi-Chain Quest Game',
+  title: {
+    default: 'Gmeowbased — Multi-Chain Quest Game',
+    template: '%s | Gmeowbased',
+  },
   description:
     'Join the epic Gmeowbased! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
+  icons: {
+    icon: favicon.src,
+  },
   openGraph: {
     title: 'Gmeowbased — Multi-Chain Quest Game',
     description:
@@ -82,6 +97,7 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   other: {
+    // Farcaster card metadata
     'farcaster:card': 'wide',
     'farcaster:title': 'Gmeowbased — Quest & Conquer',
     'farcaster:description':
@@ -89,6 +105,7 @@ export const metadata: Metadata = {
     'farcaster:site': '@0xheycat',
     'farcaster:creator': '@0xheycat',
     'farcaster:image': `${baseUrl}/logo.png`,
+    // Miniapp metadata (CRITICAL for Farcaster embedding)
     'fc:miniapp': JSON.stringify(gmEmbed),
     'fc:miniapp:frame': JSON.stringify(gmFrame),
   },
@@ -96,20 +113,47 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={gmeowFont.variable}>
+    <html lang="en" suppressHydrationWarning className={`${gmeowFont.variable} ${dmSans.variable}`}>
       <head>
+        {/* Farcaster frame metadata (CRITICAL) */}
         <meta name="fc:frame" content={JSON.stringify(gmFrame)} />
+        {/* Tailwick theme initialization (prevents FOUC) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var config = JSON.parse(localStorage.getItem('__GMEOWBASED_LAYOUT_CONFIG__') || '{}');
+                  var theme = config.theme || 'dark';
+                  if (theme === 'system') {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  }
+                  document.documentElement.setAttribute('data-theme', theme);
+                } catch (e) {
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                }
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="min-h-screen pixel-page" style={{ color: 'var(--text-color)' }}>
+      <body className="antialiased">
+        {/* Skip to content link for accessibility */}
         <a
           href="#main-content"
-          className="absolute left-4 top-4 z-50 -translate-y-24 rounded-lg bg-sky-500 px-4 py-2 font-semibold text-slate-950 dark:text-white transition focus:translate-y-0"
+          className="absolute left-4 top-4 z-50 -translate-y-24 rounded-lg bg-primary px-4 py-2 font-semibold text-white transition focus:translate-y-0"
         >
           Skip to main content
         </a>
-        <MiniAppProvider>
-          <GmeowLayout>{children}</GmeowLayout>
-        </MiniAppProvider>
+        
+        {/* Next.js top loader */}
+        <NextTopLoader showSpinner={false} color="var(--color-primary)" />
+        
+        {/* Main content with providers */}
+        <ProvidersWrapper>
+          <MiniappReady />
+          <main id="main-content">{children}</main>
+        </ProvidersWrapper>
       </body>
     </html>
   )

@@ -1,10 +1,10 @@
 import { decodeEventLog } from 'viem'
 import { getPublicClient } from 'wagmi/actions'
 import { wagmiConfig } from '@/lib/wagmi'
-import { CHAIN_IDS, type ChainKey, GM_CONTRACT_ABI, getContractAddress } from '@/lib/gm-utils'
+import { CHAIN_IDS, type GMChainKey, GM_CONTRACT_ABI, getContractAddress } from '@/lib/gmeow-utils'
 
 export type TeamSummary = {
-  chain: ChainKey
+  chain: GMChainKey
   teamId: number // guildId
   name: string
   founder: string // mapped from guild leader
@@ -35,12 +35,13 @@ export function extractTeamIdFromSlug(slug: string | null | undefined): number |
   return id
 }
 
-const DEPLOY_BLOCKS: Partial<Record<ChainKey, bigint>> = {
+const DEPLOY_BLOCKS: Partial<Record<GMChainKey, bigint>> = {
   base: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_BASE'),
   unichain: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_UNICHAIN'),
   celo: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_CELO'),
   ink: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_INK'),
   op: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_OP'),
+  arbitrum: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_ARBITRUM'),
 }
 
 function envBig(k: string): bigint | undefined {
@@ -51,7 +52,7 @@ function envBig(k: string): bigint | undefined {
 type WagmiChainId = (typeof wagmiConfig)['chains'][number]['id']
 
 // get "team" summary using guilds(...) view
-export async function getTeamSummary(chain: ChainKey, teamId: number): Promise<TeamSummary> {
+export async function getTeamSummary(chain: GMChainKey, teamId: number): Promise<TeamSummary> {
   const chainId = CHAIN_IDS[chain] as WagmiChainId
   const client = getPublicClient(wagmiConfig, { chainId })
   const address = getContractAddress(chain)
@@ -96,7 +97,7 @@ export const getTeamSummaryClient = getTeamSummary
 
 // Build member list from GuildJoined/GuildLeft logs
 export async function getTeamMembersClient(
-  chain: ChainKey,
+  chain: GMChainKey,
   teamId: number,
   limit = 50,
   offset = 0,

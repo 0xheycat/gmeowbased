@@ -38,20 +38,20 @@ Replaced the old quest creator intro (`MegaIntro`) with a new **5-stage onboardi
 **Stage 2: Streak Bonuses Unleashed**
 - **Points**: 10 XP base + 5 XP bonus per milestone
 - **Features**:
-  - 7-day streak: +10% bonus (11 XP per GM)
-  - 30-day streak: +25% bonus (12.5 XP per GM)
-  - 100-day streak: +50% bonus (15 XP per GM)
+  - 7-day streak: +15% bonus (11.5 XP per GM)
+  - 30-day streak: +30% bonus (13 XP per GM)
+  - 100-day streak: +60% bonus (16 XP per GM)
   - 48-hour grace period to maintain streak
 - **Contract Reference**: `streak7BonusPct, streak30BonusPct, streak100BonusPct`
 
 **Stage 3: Power Badge & Multipliers**
 - **Points**: 0 XP base + 10 XP bonus
 - **Features**:
-  - Power badge: +10% on all quest rewards
-  - OG Caster badge: FID < 10,000 auto-mint
+  - Power badge: +18.75% on all quest rewards
+  - OG Caster badge: FID < 50,000 auto-mint
   - Access to partner-exclusive quests
   - Higher trust scores for quest creation
-- **Contract Reference**: `powerBadge bonus, OG_THRESHOLD (10k)`
+- **Contract Reference**: `powerBadge bonus, OG_THRESHOLD (50k)`
 
 **Stage 4: Guild System & Team Rewards**
 - **Points**: 100 XP cost + 50 XP bonus rewards

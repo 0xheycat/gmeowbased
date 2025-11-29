@@ -8,8 +8,10 @@ import {
   CONTRACT_ADDRESSES,
   GM_CONTRACT_ABI,
   normalizeChainKey,
+  CHAIN_KEYS,
+  type GMChainKey,
   type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { fetchAggregatedRaw, type RawAggregate } from '@/lib/leaderboard-aggregator'
 import { getRpcUrl } from '@/lib/rpc'
 
@@ -54,7 +56,7 @@ export type PartnerSnapshotOptions = {
 export type PartnerSnapshotRow = {
   snapshot_id: string
   partner: string
-  chain: ChainKey
+  chain: GMChainKey
   address: Address
   eligible: boolean
   balance: string
@@ -73,7 +75,7 @@ export type PartnerSnapshotSummary = {
   totalAddresses: number
   eligibleCount: number
   ineligibleCount: number
-  chains: Record<ChainKey, { total: number; eligible: number; ineligible: number }>
+  chains: Record<GMChainKey, { total: number; eligible: number; ineligible: number }>
   requirement: PartnerSnapshotRequirement
   metadata?: Record<string, unknown>
   durationMs: number
@@ -136,11 +138,11 @@ type BalanceResult = {
   reason: string | null
 }
 
-type ClientCache = Map<ChainKey, ReturnType<typeof createPublicClient>>
+type ClientCache = Map<GMChainKey, ReturnType<typeof createPublicClient>>
 
 const clientCache: ClientCache = new Map()
 
-function getClient(chain: ChainKey) {
+function getClient(chain: GMChainKey) {
   const cached = clientCache.get(chain)
   if (cached) return cached
   const rpcUrl = getRpcUrl(chain)
@@ -168,7 +170,7 @@ async function mapWithConcurrency<T, U>(items: T[], limit: number, iteratee: (it
   return results
 }
 
-async function resolvePointsBalance(chain: ChainKey, address: Address, minimum: bigint): Promise<BalanceResult> {
+async function resolvePointsBalance(chain: GMChainKey, address: Address, minimum: bigint): Promise<BalanceResult> {
   try {
     const client = getClient(chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
@@ -195,7 +197,7 @@ async function resolvePointsBalance(chain: ChainKey, address: Address, minimum: 
   }
 }
 
-async function resolveErc20Balance(chain: ChainKey, token: Address, user: Address, minimum: bigint): Promise<BalanceResult> {
+async function resolveErc20Balance(chain: GMChainKey, token: Address, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
     const client = getClient(chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
@@ -220,7 +222,7 @@ async function resolveErc20Balance(chain: ChainKey, token: Address, user: Addres
   }
 }
 
-async function resolveErc721Balance(chain: ChainKey, token: Address, user: Address, minimum: bigint): Promise<BalanceResult> {
+async function resolveErc721Balance(chain: GMChainKey, token: Address, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
     const client = getClient(chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
@@ -245,7 +247,7 @@ async function resolveErc721Balance(chain: ChainKey, token: Address, user: Addre
   }
 }
 
-async function resolveErc1155Balance(chain: ChainKey, token: Address, tokenId: bigint, user: Address, minimum: bigint): Promise<BalanceResult> {
+async function resolveErc1155Balance(chain: GMChainKey, token: Address, tokenId: bigint, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
     const client = getClient(chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
@@ -271,7 +273,7 @@ async function resolveErc1155Balance(chain: ChainKey, token: Address, tokenId: b
 }
 
 async function evaluateRequirement(
-  chain: ChainKey,
+  chain: GMChainKey,
   address: Address,
   requirement: PartnerSnapshotRequirement,
 ): Promise<BalanceResult> {
@@ -367,16 +369,16 @@ export async function runPartnerSnapshot(options: PartnerSnapshotOptions): Promi
 
   const normalizedChains = options.chains
     .map(item => normalizeChainKey(item))
-    .filter((value): value is ChainKey => value != null)
+    .filter((value): value is GMChainKey => value != null && CHAIN_KEYS.includes(value as GMChainKey))
   if (normalizedChains.length === 0) {
-    throw new Error('At least one valid chain is required')
+    throw new Error('At least one valid GM chain is required')
   }
 
   const requirementConfig = sanitizeRequirementInput(requirement)
-  const perChainMetrics: Record<ChainKey, { total: number; eligible: number; ineligible: number }> = Object.create(null)
+  const perChainMetrics: Record<GMChainKey, { total: number; eligible: number; ineligible: number }> = Object.create(null)
   const computedAt = new Date().toISOString()
 
-  const evaluationInputs: Array<{ chain: ChainKey; addresses: Address[] }> = []
+  const evaluationInputs: Array<{ chain: GMChainKey; addresses: Address[] }> = []
   for (const chain of normalizedChains) {
     const aggregates = await fetchAggregatedRaw({ global: false, chain })
     const addresses = dedupeAddresses(aggregates.rows).slice(0, maxAddressesPerChain)
@@ -384,7 +386,7 @@ export async function runPartnerSnapshot(options: PartnerSnapshotOptions): Promi
     evaluationInputs.push({ chain, addresses })
   }
 
-  const evaluationTasks: Array<Promise<Array<{ chain: ChainKey; address: Address; result: BalanceResult }>>> = []
+  const evaluationTasks: Array<Promise<Array<{ chain: GMChainKey; address: Address; result: BalanceResult }>>> = []
   for (const input of evaluationInputs) {
     const { chain, addresses } = input
     const task = mapWithConcurrency(addresses, 6, async (address) => {

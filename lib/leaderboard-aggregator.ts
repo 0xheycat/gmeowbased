@@ -4,8 +4,9 @@ import {
   CONTRACT_ADDRESSES,
   GM_CONTRACT_ABI,
   gmContractHasFunction,
+  type GMChainKey,
   type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { fetchUsersByAddresses } from '@/lib/neynar'
 import { getRpcUrl } from '@/lib/rpc'
 
@@ -19,7 +20,7 @@ const LOG_FETCH_CONCURRENCY = 4
 
 export const PROFILE_SUPPORTED = gmContractHasFunction('getUserProfile')
 
-function getStartBlock(chain: ChainKey): bigint {
+function getStartBlock(chain: GMChainKey): bigint {
   const envKey = `CHAIN_START_BLOCK_${chain.toUpperCase()}`
   const direct = process.env[envKey]
   if (direct) {
@@ -39,9 +40,9 @@ function getStartBlock(chain: ChainKey): bigint {
   return 0n
 }
 
-const clientCache = new Map<ChainKey, ReturnType<typeof createPublicClient>>()
+const clientCache = new Map<GMChainKey, ReturnType<typeof createPublicClient>>()
 
-function getClient(chain: ChainKey) {
+function getClient(chain: GMChainKey) {
   const cached = clientCache.get(chain)
   if (cached) return cached
   let rpc = ''
@@ -66,12 +67,12 @@ type ChainAggregateState = {
 
 type ProfileCacheEntry = { at: number; name: string; pfpUrl: string; fid: number }
 
-const chainAggregateCache = new Map<ChainKey, ChainAggregateState>()
+const chainAggregateCache = new Map<GMChainKey, ChainAggregateState>()
 const profileCache = new Map<string, ProfileCacheEntry>()
 
 const AGGREGATOR_DEBUG = process.env.DEBUG_LEADERBOARD_AGGREGATOR === '1'
 
-function profileCacheKey(chain: ChainKey, address: `0x${string}`) {
+function profileCacheKey(chain: GMChainKey, address: `0x${string}`) {
   return `${chain}:${address.toLowerCase()}`
 }
 
@@ -88,7 +89,7 @@ type QuestCompletedLog = Log & { args: QuestCompletedArgs }
 
 export type RawAggregate = {
   address: `0x${string}`
-  chain: ChainKey
+  chain: GMChainKey
   points: bigint
   completed: number
   farcasterFid: number
@@ -146,7 +147,7 @@ async function fetchLogsInChunks(
   return logsByRange.flat()
 }
 
-async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState> {
+async function loadChainAggregate(chain: GMChainKey): Promise<ChainAggregateState> {
   const now = Date.now()
   const cached = chainAggregateCache.get(chain)
   if (cached && now - cached.updatedAt < AGGREGATE_CACHE_TTL) {
@@ -222,9 +223,9 @@ async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState>
   return updatedState
 }
 
-export async function fetchAggregatedRaw(options: { global: boolean; chain?: ChainKey }): Promise<{ rows: RawAggregate[]; updatedAt: number }> {
+export async function fetchAggregatedRaw(options: { global: boolean; chain?: GMChainKey }): Promise<{ rows: RawAggregate[]; updatedAt: number }> {
   const { global, chain } = options
-  const chainsToQuery: ChainKey[] = global ? CHAIN_KEYS : [chain ?? 'base']
+  const chainsToQuery: GMChainKey[] = global ? CHAIN_KEYS : [chain ?? 'base']
 
   const states = await Promise.all(chainsToQuery.map(loadChainAggregate))
   const rows = states.flatMap(state => state.rows)
@@ -355,7 +356,7 @@ export async function enrichAggregatedRows(entries: RawAggregate[]): Promise<Enr
 
 export async function computeLeaderboardSlice(options: {
   global: boolean
-  chain?: ChainKey
+  chain?: GMChainKey
   limit: number
   offset: number
 }): Promise<{ total: number; page: RawAggregate[]; enriched: EnrichedRow[]; updatedAt: number }> {

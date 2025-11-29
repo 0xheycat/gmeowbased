@@ -1,6 +1,6 @@
 import { createPublicClient, http, formatEther, parseAbiItem } from 'viem'
 import { base } from 'viem/chains'
-import { CONTRACT_ADDRESSES } from '../lib/gm-utils'
+import { CONTRACT_ADDRESSES } from '../lib/gmeow-utils'
 
 const ORACLE_WALLET = '0x8870C155666809609176260F2B65a626C000D773'
 const GM_ADDRESS = CONTRACT_ADDRESSES.base as `0x${string}`

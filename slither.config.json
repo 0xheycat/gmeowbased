@@ -1,0 +1,9 @@
+{
+  "solc": "0.8.23",
+  "solc_remaps": [
+    "@openzeppelin=node_modules/@openzeppelin"
+  ],
+  "solc_args": "--optimize --optimize-runs 200 --via-ir",
+  "exclude_dependencies": true,
+  "filter_paths": "node_modules"
+}

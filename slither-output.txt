@@ -1,0 +1,63 @@
+'0.8.23 --version' running
+Traceback (most recent call last):
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/crytic_compile/platform/solc.py", line 380, in get_version
+    with subprocess.Popen(
+         ~~~~~~~~~~~~~~~~^
+        cmd,
+        ^^^^
+    ...<3 lines>...
+        executable=shutil.which(cmd[0]),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as process:
+    ^
+  File "/usr/lib/python3.13/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/subprocess.py", line 1972, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: '0.8.23'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/heycat/.local/bin/slither", line 7, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/slither/__main__.py", line 776, in main
+    main_impl(all_detector_classes=detectors, all_printer_classes=printers)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/slither/__main__.py", line 882, in main_impl
+    ) = process_all(filename, args, detector_classes, printer_classes)
+        ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/slither/__main__.py", line 96, in process_all
+    compilations = compile_all(target, **vars(args))
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/crytic_compile/crytic_compile.py", line 722, in compile_all
+    compilations.append(CryticCompile(target, **kwargs))
+                        ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/crytic_compile/crytic_compile.py", line 211, in __init__
+    self._compile(**kwargs)
+    ~~~~~~~~~~~~~^^^^^^^^^^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/crytic_compile/crytic_compile.py", line 633, in _compile
+    self._platform.compile(self, **kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/crytic_compile/platform/solc.py", line 150, in compile
+    targets_json = _get_targets_json(compilation_unit, self._target, **kwargs)
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/crytic_compile/platform/solc.py", line 279, in _get_targets_json
+    return _run_solc(
+        compilation_unit,
+    ...<6 lines>...
+        force_legacy_json=force_legacy_json,
+    )
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/crytic_compile/platform/solc.py", line 496, in _run_solc
+    compiler="solc", version=get_version(solc, env), optimized=is_optimized(solc_arguments)
+                             ~~~~~~~~~~~^^^^^^^^^^^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/slither-analyzer/lib/python3.13/site-packages/crytic_compile/platform/solc.py", line 400, in get_version
+    raise InvalidCompilation(error)
+crytic_compile.platform.exceptions.InvalidCompilation: [Errno 2] No such file or directory: '0.8.23'

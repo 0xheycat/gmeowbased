@@ -76,10 +76,10 @@ export const wagmiConfig = createConfig({
     miniAppConnector(),
     // ...keep your other connectors (injected, walletConnect, etc.)...
   ],
-  // autoConnect: true, // REMOVE: not supported in this wagmi version
+  ssr: true, // Enable SSR support to prevent hydration issues
 })
 
-// Ensure your createConfig(...) is assigned to `config`
+// Alias for backward compatibility
 export const config = wagmiConfig
 
 export function requirePublicClient(config: Config, chainId: number): PublicClient {

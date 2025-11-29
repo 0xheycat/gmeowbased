@@ -1,0 +1,21 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contract/GmeowMultiChain.sol": {
+      "urls": ["contract/GmeowMultiChain.sol"]
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "viaIR": true,
+    "remappings": ["@openzeppelin/=node_modules/@openzeppelin/"],
+    "outputSelection": {
+      "*": {
+        "*": ["abi", "evm.bytecode", "evm.deployedBytecode", "metadata"]
+      }
+    }
+  }
+}

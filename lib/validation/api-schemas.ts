@@ -103,6 +103,8 @@ export const LeaderboardQuerySchema = z.object({
   chain: ChainSchema.optional(),
   limit: z.number().int().min(1).max(100).optional(),
   offset: z.number().int().min(0).optional(),
+  eventType: z.enum(['all', 'gm', 'tip', 'quest-verify', 'badge-mint', 'referral', 'guild-join', 'nft-mint']).optional(),
+  timeframe: z.enum(['daily', 'weekly', 'monthly', 'all-time']).optional(),
 })
 
 // Tips endpoints

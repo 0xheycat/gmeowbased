@@ -1,20 +1,21 @@
 import { createPublicClient, http } from 'viem'
-import { GM_CONTRACT_ABI, getContractAddress, CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { GM_CONTRACT_ABI, getContractAddress, CHAIN_IDS, type GMChainKey, type ChainKey } from '@/lib/gmeow-utils'
 import { buildFrameShareUrl } from '@/lib/share'
 import { calculateRankProgress } from '@/lib/rank'
 import { fetchUserByAddress, fetchFidByAddress, fetchUserByFid } from '@/lib/neynar'
 import type { ProfileOverviewData, ProfileChainSnapshot, TeamOverview } from '@/lib/profile-types'
 
-export const PROFILE_SUPPORTED_CHAINS: ChainKey[] = Object.keys(CHAIN_IDS) as ChainKey[]
+export const PROFILE_SUPPORTED_CHAINS: GMChainKey[] = Object.keys(CHAIN_IDS) as GMChainKey[]
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
-const PUBLIC_RPCS: Record<ChainKey, string> = {
+const PUBLIC_RPCS: Record<GMChainKey, string> = {
   base: process.env.NEXT_PUBLIC_RPC_BASE || 'https://base-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
   unichain: process.env.NEXT_PUBLIC_RPC_UNICHAIN || 'https://unichain-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
   celo: process.env.NEXT_PUBLIC_RPC_CELO || 'https://celo-mainnet.g.alchemy.com/v2/AQYbCkrkuEDaD_hCDse6ezP2W-zUCEFe',
   ink: process.env.NEXT_PUBLIC_RPC_INK || 'https://ink-mainnet.g.alchemy.com/v2/AQYbCkrkuEDaD_hCDse6ezP2W-zUCEFe',
   op: process.env.NEXT_PUBLIC_RPC_OP || 'https://opt-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
+  arbitrum: process.env.NEXT_PUBLIC_RPC_ARBITRUM || 'https://arb-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
 }
 
 const PROFILE_CHAIN_CACHE_TTL = getNumberFromEnv('NEXT_PUBLIC_PROFILE_CHAIN_CACHE_TTL_MS', 30_000)
@@ -171,12 +172,12 @@ export async function fetchChainSnapshot(chain: ChainKey, userAddress: `0x${stri
     chainSnapshotCache,
     cacheKey,
     PROFILE_CHAIN_CACHE_TTL,
-    () => fetchChainSnapshotWithoutCache(chain, userAddress),
+    () => fetchChainSnapshotWithoutCache(chain as GMChainKey, userAddress),
     PROFILE_CHAIN_CACHE_LIMIT,
   )
 }
 
-async function fetchChainSnapshotWithoutCache(chain: ChainKey, userAddress: `0x${string}`): Promise<ChainAggregation | null> {
+async function fetchChainSnapshotWithoutCache(chain: GMChainKey, userAddress: `0x${string}`): Promise<ChainAggregation | null> {
   const rpc = PUBLIC_RPCS[chain]
   if (!rpc) return null
   try {

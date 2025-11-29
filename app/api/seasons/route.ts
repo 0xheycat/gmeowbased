@@ -1,7 +1,7 @@
 // /api/seasons/route.ts
 import { NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
-import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey } from '@/lib/gm-utils'
+import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, normalizeToGMChain, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { SeasonQuerySchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
@@ -49,11 +49,12 @@ export const GET = withTiming(withErrorHandler(async (req: Request) => {
   const chain = (queryValidation.data.chain || 'base') as ChainKey
   
   // Validate chain parameter
-  const contractAddr = CONTRACT_ADDRESSES[chain]
-  const chainId = CHAIN_IDS[chain]
-  if (!contractAddr || !chainId) {
+  const gmChain = normalizeToGMChain(chain)
+  if (!gmChain) {
     return handleValidationError(new Error(`Invalid chain parameter: ${chain}. Supported chains: ${Object.keys(CONTRACT_ADDRESSES).join(', ')}`))
   }
+  const contractAddr = CONTRACT_ADDRESSES[gmChain]
+  const chainId = CHAIN_IDS[gmChain]
 
     const key = `seasons:${chain}`
     if (cache && cache.key === key && Date.now() - cache.at < CACHE_TTL) {

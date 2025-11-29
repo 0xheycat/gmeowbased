@@ -1,164 +1,75 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
-import dynamic from 'next/dynamic'
-import { OnboardingFlow } from '@/components/intro/OnboardingFlow'
-import { OnchainHub } from '@/components/home/OnchainHub'
-import type { FAQItem, GuildPreview, LeaderboardEntry, QuestPreview } from '@/components/home/types'
+import { Suspense } from 'react'
+import { FeedContainer } from '@/components/features/farcaster-feed'
+import { useUser } from '@/contexts/UserContext'
+import { Card, CardBody } from '@/components/ui/tailwick-primitives'
+import Image from 'next/image'
 
-// Below-fold sections - dynamically loaded to improve initial page load
-const HowItWorks = dynamic(() => import('@/components/home/HowItWorks').then(mod => ({ default: mod.HowItWorks })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
-})
+export default function HomePage() {
+  const user = useUser()
 
-const LiveQuests = dynamic(() => import('@/components/home/LiveQuests').then(mod => ({ default: mod.LiveQuests })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
-})
-
-const GuildsShowcase = dynamic(() => import('@/components/home/GuildsShowcase').then(mod => ({ default: mod.GuildsShowcase })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
-})
-
-const LeaderboardSection = dynamic(() => import('@/components/home/LeaderboardSection').then(mod => ({ default: mod.LeaderboardSection })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
-})
-
-const FAQSection = dynamic(() => import('@/components/home/FAQSection').then(mod => ({ default: mod.FAQSection })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
-})
-
-const ConnectWalletSection = dynamic(() => import('@/components/home/ConnectWalletSection').then(mod => ({ default: mod.ConnectWalletSection })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-64 mx-auto max-w-6xl my-16" />,
-})
-
-const QUEST_PREVIEWS: QuestPreview[] = [
-  {
-    questId: 101,
-    title: 'Send your GM from Base',
-    reward: 15,
-    questType: 'FARCASTER_CAST',
-    chain: 'base',
-    href: '/Quest/base/101',
-  },
-  {
-    questId: 202,
-    title: 'Charge your guild vault',
-    reward: 120,
-    questType: 'GENERIC',
-    chain: 'op',
-    href: '/Quest/op/202',
-  },
-  {
-    questId: 305,
-    title: 'Share the Command Deck frame',
-    reward: 40,
-    questType: 'FARCASTER_FRAME_INTERACT',
-    chain: 'unichain',
-    href: '/Quest/unichain/305',
-  },
-]
-
-const GUILD_PREVIEWS: GuildPreview[] = [
-  { id: 'moon-cats', name: 'Moon Cats', members: 420, points: 18200, href: '/Guild' },
-  { id: 'warp-rangers', name: 'Warp Rangers', members: 188, points: 15420, href: '/Guild' },
-  { id: 'base-cadets', name: 'Base Cadets', members: 256, points: 13980, href: '/Guild' },
-  { id: 'optimistic-paws', name: 'Optimistic Paws', members: 98, points: 9600, href: '/Guild' },
-]
-
-const LEADERBOARD_PREVIEW: LeaderboardEntry[] = [
-  { rank: 1, username: 'gmeow', points: 48210, badgeCount: 9 },
-  { rank: 2, username: 'moonshot', points: 43100, badgeCount: 7 },
-  { rank: 3, username: 'warpqueen', points: 39880, badgeCount: 6 },
-  { rank: 4, username: 'ceramic', points: 35220, badgeCount: 4 },
-  { rank: 5, username: 'meowmatrix', points: 31840, badgeCount: 5 },
-]
-
-const FAQ_ITEMS: FAQItem[] = [
-  {
-    question: 'What are Gmeow Points?',
-    answer:
-      'Paw Points are earned by completing quests, daily GM check-ins, and guild boosts. Stack them to unlock badges, raffles, and future drops.',
-  },
-  {
-    question: 'Do I need a wallet to start?',
-    answer:
-      'No wallet required to begin — you can start from Warpcast Frames or the miniapp. Connect later to claim rewards on-chain.',
-  },
-  {
-    question: 'What are Soulbound Badges?',
-    answer:
-      'Soulbound badges memorialize your biggest GM streaks, top referrers, or guild victories. Flex them forever.',
-  },
-  {
-    question: 'How do guilds work?',
-    answer:
-      'Guilds let you pool streaks and boosts. Join or create one, deposit Paw Points, and climb the command leaderboard together.',
-  },
-  {
-    question: 'Is everything free?',
-    answer: 'Yes. Some quests may ask for onchain actions, but there are no platform fees or subscriptions.',
-  },
-]
-
-const INTRO_STORAGE_KEY = 'gmeow:onboarding.v1'
-
-function HomePage() {
-  const { address, isConnected } = useAccount()
-  const [forceIntro, setForceIntro] = useState(false)
-  const [statsLoading, setStatsLoading] = useState(false)
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-
-    try {
-      const stored = window.localStorage.getItem(INTRO_STORAGE_KEY)
-      const shouldShow = !stored
-      setForceIntro(shouldShow)
-      if (shouldShow) {
-        window.localStorage.setItem(INTRO_STORAGE_KEY, '1')
-      }
-    } catch {
-      setForceIntro(false)
-    }
-  }, [hydrated])
-
-  const handleIntroFinish = useCallback(() => {
-    setForceIntro(false)
-    try {
-      window.localStorage.setItem(INTRO_STORAGE_KEY, '1')
-    } catch {
-      // ignore storage write errors
-    }
-  }, [])
-
-  const handleStatsLoading = useCallback((loading: boolean) => {
-    setStatsLoading(loading)
-  }, [])
-
-  const isWalletConnected = Boolean(isConnected && address)
-
-  return (
-    <>
-      <OnboardingFlow forceShow={forceIntro} onComplete={handleIntroFinish} />
-      <div className="page-root">
-        <main>
-          <OnchainHub loading={statsLoading} onLoadingChange={handleStatsLoading} />
-          <HowItWorks />
-          <LiveQuests quests={QUEST_PREVIEWS} />
-          <GuildsShowcase guilds={GUILD_PREVIEWS} />
-          <LeaderboardSection leaders={LEADERBOARD_PREVIEW} />
-          <FAQSection items={FAQ_ITEMS} />
-          {hydrated ? <ConnectWalletSection connected={isWalletConnected} /> : null}
-        </main>
+  // Show login prompt if not authenticated
+  if (!user.isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-black text-white px-4 py-20">
+        <div className="container mx-auto max-w-2xl">
+          <Card className="theme-border-default">
+            <CardBody className="text-center py-16">
+              <div className="flex justify-center mb-6">
+                <Image
+                  src="/assets/icons/User Icon.svg"
+                  alt="Login"
+                  width={80}
+                  height={80}
+                  className="w-20 h-20 opacity-60"
+                />
+              </div>
+              <h2 className="text-3xl font-bold mb-4 theme-text-primary">
+                Welcome to Gmeowbased
+              </h2>
+              <p className="theme-text-secondary mb-8 text-lg">
+                Connect your wallet to see your personalized Farcaster feed and start your adventure
+              </p>
+              <a
+                href="/app"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-500 hover:to-pink-500 transition-all transform hover:scale-105"
+              >
+                <Image
+                  src="/assets/icons/Wallet Icon.svg"
+                  alt="Connect"
+                  width={20}
+                  height={20}
+                  className="w-5 h-5 brightness-0 invert"
+                />
+                Connect Wallet
+              </a>
+            </CardBody>
+          </Card>
+        </div>
       </div>
-    </>
+    )
+  }
+
+  // Show feed for authenticated users
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-black text-white px-4 py-8">
+      <div className="container mx-auto max-w-4xl">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3 font-gmeow bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+            Gmeowbased Feed
+          </h1>
+          <p className="theme-text-secondary text-lg">
+            Stay connected with the Farcaster community
+          </p>
+        </div>
+
+        {/* Feed */}
+        <Suspense fallback={<div className="text-center py-12">Loading feed...</div>}>
+          <FeedContainer defaultType="trending" />
+        </Suspense>
+      </div>
+    </div>
   )
 }
-
-export default HomePage

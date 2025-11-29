@@ -1,5 +1,5 @@
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, CONTRACT_ADDRESSES, type GMChainKey, type ChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { createPublicClient, http, parseAbiItem, type AbiEvent, type Log } from 'viem'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -44,12 +44,16 @@ const LOOKBACK_DAYS = 7
 const LOOKBACK_BUFFER_SECONDS = 6 * 60 * 60
 const DEFAULT_BLOCK_TIME_SEC = 3
 
-const BLOCK_TIME_SEC: Record<ChainKey, number> = {
-  base: 2,
-  unichain: 2,
-  op: 2,
-  celo: 5,
-  ink: 2,
+// Block times for supported chains (fallback to DEFAULT_BLOCK_TIME_SEC)
+function getBlockTimeSec(chain: ChainKey): number {
+  const times: { [key: string]: number } = {
+    base: 2,
+    unichain: 2,
+    op: 2,
+    celo: 5,
+    ink: 2,
+  }
+  return times[chain] ?? DEFAULT_BLOCK_TIME_SEC
 }
 
 type CacheBucket = {
@@ -84,16 +88,19 @@ type EventConfig = {
 
 export type RankTelemetryEventKind =
   | 'quest-create'
-  | 'quest-verify'
+  | 'quest-claim'    // Renamed from quest-verify
   | 'gm'
   | 'tip'
-  | 'stake'
-  | 'unstake'
+  | 'badge-mint'     // Badge earned & minted
+  | 'guild-join'     // Joined a guild
+  | 'referral'       // Used referral code
+  | 'onboard'        // Claimed onboarding bonus
   | 'stats-query'
+  | 'nft-mint'       // NFT minted (planned)
 
 export type RankTelemetryEventInput = {
   event: RankTelemetryEventKind
-  chain: ChainKey
+  chain: GMChainKey
   walletAddress: `0x${string}` | string
   fid?: number | null
   questId?: number | null
@@ -265,7 +272,7 @@ async function computeSeries(configs: EventConfig[]): Promise<TelemetrySeries> {
       const latestBlock = await client.getBlockNumber().catch(() => 0n)
       if (latestBlock === 0n) return
 
-      const blockTime = BLOCK_TIME_SEC[chain] ?? DEFAULT_BLOCK_TIME_SEC
+      const blockTime = getBlockTimeSec(chain)
       const approxBlocks = BigInt(Math.ceil(lookbackSeconds / Math.max(blockTime, 1)))
       const startBlock = getStartBlock(chain)
 
@@ -512,7 +519,7 @@ async function fetchDashboardTelemetryPayload(): Promise<DashboardTelemetryPaylo
       if (latestBlock === 0n) {
         notes.push(`[${chain}] latest block unavailable`)
       } else {
-        const blockTime = BLOCK_TIME_SEC[chain] ?? DEFAULT_BLOCK_TIME_SEC
+        const blockTime = getBlockTimeSec(chain)
         const approxBlocks = BigInt(Math.ceil(lookbackSeconds / Math.max(blockTime, 1)))
         const baseStartBlock = getStartBlock(chain)
 

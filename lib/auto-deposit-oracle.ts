@@ -5,14 +5,15 @@
 
 import { createPublicClient, createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { base, optimism, celo } from 'viem/chains'
-import type { ChainKey } from './gm-utils'
+import { base, optimism, celo, arbitrum } from 'viem/chains'
+import type { GMChainKey } from './gmeow-utils'
 import { getRpcUrl } from './rpc'
 
 const CHAIN_CONFIG = {
   base: base,
   op: optimism,
   celo: celo,
+  arbitrum: arbitrum,
   unichain: {
     id: 130,
     name: 'Unichain',
@@ -33,12 +34,13 @@ const CHAIN_CONFIG = {
   },
 } as const
 
-const GM_CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
+const GM_CONTRACT_ADDRESSES: Record<GMChainKey, `0x${string}`> = {
   base: (process.env.NEXT_PUBLIC_GM_BASE_ADDRESS as `0x${string}`) || '0x3ad420B8C2Be19ff8EBAdB484Ed839Ae9254bf2F',
   unichain: (process.env.NEXT_PUBLIC_GM_UNICHAIN_ADDRESS as `0x${string}`) || '0xD8b4190c87d86E28f6B583984cf0C89FCf9C2a0f',
   celo: (process.env.NEXT_PUBLIC_GM_CELO_ADDRESS as `0x${string}`) || '0xa68BfB4BB6F7D612182A3274E7C555B7b0b27a52',
   ink: (process.env.NEXT_PUBLIC_GM_INK_ADDRESS as `0x${string}`) || '0x6081a70c2F33329E49cD2aC673bF1ae838617d26',
   op: (process.env.NEXT_PUBLIC_GM_OP_ADDRESS as `0x${string}`) || '0xF670d5387DF68f258C4D5aEBE67924D85e3C6db6',
+  arbitrum: (process.env.NEXT_PUBLIC_GM_ARBITRUM_ADDRESS as `0x${string}`) || '0x0000000000000000000000000000000000000000',
 }
 
 const ORACLE_WALLET = '0x8870C155666809609176260F2B65a626C000D773'
@@ -48,7 +50,7 @@ const DEPOSIT_AMOUNT = BigInt(100000) // Deposit 100k when low
  * Check oracle balance and auto-deposit if below threshold
  * Requires OWNER_PRIVATE_KEY env var
  */
-export async function ensureOracleBalance(chain: ChainKey, requiredPoints: bigint): Promise<void> {
+export async function ensureOracleBalance(chain: GMChainKey, requiredPoints: bigint): Promise<void> {
   const ownerKey = process.env.OWNER_PRIVATE_KEY
   if (!ownerKey) {
     throw new Error('OWNER_PRIVATE_KEY not configured - cannot auto-deposit points')

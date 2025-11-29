@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react'
-import type { QuestDraft } from '../components/quest-wizard/shared'
+import type { QuestDraft } from '@/lib/quest-wizard/types'
 
 const AUTOSAVE_KEY = 'quest-wizard-autosave'
 const AUTOSAVE_DELAY_MS = 5000 // Save after 5 seconds of inactivity

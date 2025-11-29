@@ -1,0 +1,42 @@
+/home/heycat/snap/code/214/.local/share/pipx/venvs/mythril/lib/python3.13/site-packages/eth/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+mythril.ethereum.util [ERROR]: Encountered a decode error.
+ stdout:
+ stderr: b'Error: The following options are not supported in the current input mode: --via-ir\n'
+mythril.interfaces.cli [ERROR]: Traceback (most recent call last):
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/mythril/lib/python3.13/site-packages/mythril/interfaces/cli.py", line 975, in parse_args_and_execute
+    address = load_code(disassembler, args)
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/mythril/lib/python3.13/site-packages/mythril/interfaces/cli.py", line 726, in load_code
+    address, _ = disassembler.load_from_solidity(
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        args.solidity_files
+        ^^^^^^^^^^^^^^^^^^^
+    )  # list of files
+    ^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/mythril/lib/python3.13/site-packages/mythril/mythril/mythril_disassembler.py", line 282, in load_from_solidity
+    self.sigs.import_solidity_file(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        file,
+        ^^^^^
+        solc_binary=solc_binary,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+        solc_settings_json=self.solc_settings_json,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/mythril/lib/python3.13/site-packages/mythril/support/signatures.py", line 245, in import_solidity_file
+    solc_json = get_solc_json(file_path, solc_binary, solc_settings_json)
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/mythril/lib/python3.13/site-packages/mythril/ethereum/util.py", line 102, in get_solc_json
+    raise e
+  File "/home/heycat/snap/code/214/.local/share/pipx/venvs/mythril/lib/python3.13/site-packages/mythril/ethereum/util.py", line 99, in get_solc_json
+    result = json.loads(out)
+  File "/usr/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+

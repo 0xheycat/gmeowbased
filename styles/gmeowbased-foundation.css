@@ -1,0 +1,793 @@
+/**
+ * ============================================================================
+ * GMEOWBASED FOUNDATION DESIGN SYSTEM v1.0
+ * ============================================================================
+ * 
+ * Complete unified design system for Gmeowbased
+ * Professional, maintainable, production-ready
+ * 
+ * Features:
+ * ✅ Single source of truth for all styles
+ * ✅ Automatic light/dark mode (data-theme='dark')
+ * ✅ Tailwick v2.0 base architecture
+ * ✅ 55+ Gmeowbased SVG icons support
+ * ✅ CSS custom properties for maximum flexibility
+ * ✅ Zero inline styles needed
+ * ✅ Full TypeScript/Tailwind compatibility
+ * 
+ * Architecture:
+ * 1. Theme Variables (colors, spacing, typography)
+ * 2. Semantic Variables (surface, text, borders)
+ * 3. Component Patterns (cards, buttons, badges)
+ * 4. Utility Classes (quick styling)
+ * 
+ * Migration Date: November 29, 2025
+ * Status: Production Ready
+ * ============================================================================
+ */
+
+/* ============================================================================
+   SECTION 1: THEME FOUNDATION
+   Base colors, typography, spacing - Tailwick v2.0 architecture
+   ============================================================================ */
+
+@theme {
+  /* Typography */
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-tourney: 'Tourney', sans-serif;
+  
+  /* Line Heights (Optimized for headings) */
+  --text-base--line-height: 1.1;
+  --text-xl--line-height: 1.1;
+  --text-2xl--line-height: 1.1;
+  --text-3xl--line-height: 1.1;
+  --text-4xl--line-height: 1.1;
+  --text-5xl--line-height: 1.1;
+  
+  /* Gmeowbased Brand Colors */
+  --color-primary: #8B5CF6;        /* Farcaster Purple */
+  --color-secondary: #6366F1;      /* Indigo */
+  --color-success: #10B981;        /* Green */
+  --color-info: #0EA5E9;           /* Sky */
+  --color-warning: #F59E0B;        /* Amber */
+  --color-danger: #F97316;         /* Orange */
+  
+  /* Base Surface Colors */
+  --color-body-bg: var(--color-zinc-50);
+  --color-body-color: var(--color-zinc-600);
+  --color-card: var(--color-white);
+  
+  /* Neutral Color Scale (Zinc) */
+  --color-default-50: var(--color-zinc-50);
+  --color-default-100: var(--color-zinc-100);
+  --color-default-150: var(--color-zinc-100);
+  --color-default-200: var(--color-zinc-200);
+  --color-default-300: var(--color-zinc-300);
+  --color-default-400: var(--color-zinc-400);
+  --color-default-500: var(--color-zinc-500);
+  --color-default-600: var(--color-zinc-600);
+  --color-default-700: var(--color-zinc-700);
+  --color-default-800: var(--color-zinc-800);
+  --color-default-900: var(--color-zinc-900);
+  --color-default-950: var(--color-zinc-950);
+  
+  /* Layout Spacing */
+  --spacing-sidenav-width: 260px;
+  --spacing-sidenav-width-md: 175px;
+  --spacing-sidenav-width-sm: 70px;
+  --spacing-topbar-height: 70px;
+  
+  /* Sidebar Navigation */
+  --sidenav-link-padding-x: 12px;
+  --sidenav-link-padding-y: 8px;
+  --sidenav-item-icon-size: 18px;
+  --sidenav-item-font-size: 14px;
+  --topbar-background: var(--color-white);
+}
+
+/* Dark Mode Selector */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));
+
+:root {
+  color-scheme: light;
+}
+
+/* ============================================================================
+   DARK MODE THEME
+   Gmeowbased dark palette with inverted neutral scale
+   ============================================================================ */
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  
+  /* Gmeow Dark Palette */
+  --color-body-bg: #06091a;        /* Deep navy background */
+  --color-body-color: var(--color-zinc-400);
+  --color-card: #0a1628;           /* Card surface */
+  
+  /* Inverted Neutral Scale */
+  --color-default-50: var(--color-zinc-950);
+  --color-default-100: var(--color-zinc-900);
+  --color-default-150: var(--color-zinc-800);
+  --color-default-200: var(--color-zinc-800);
+  --color-default-300: var(--color-zinc-700);
+  --color-default-400: var(--color-zinc-600);
+  --color-default-500: var(--color-zinc-500);
+  --color-default-600: var(--color-zinc-400);
+  --color-default-700: var(--color-zinc-300);
+  --color-default-800: var(--color-zinc-200);
+  --color-default-900: var(--color-zinc-100);
+  --color-default-950: var(--color-zinc-50);
+  
+  --topbar-background: var(--color-default-100);
+}
+
+/* ============================================================================
+   SIDEBAR THEMES
+   Light and dark sidebar variants
+   ============================================================================ */
+
+/* Light Sidebar */
+html[data-theme='light'],
+html[data-sidenav-color='light'] {
+  --sidenav-background: var(--color-white);
+  --sidenav-item-color: var(--color-zinc-600);
+  --sidenav-item-active-color: var(--color-primary);
+  --sidenav-item-active-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --sidenav-item-hover-color: var(--color-primary);
+  --sidenav-item-hover-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+/* Dark Sidebar */
+html[data-sidenav-color='dark'],
+html[data-theme='dark'][data-sidenav-color='light'] {
+  --sidenav-background: #08122e;
+  --sidenav-item-color: var(--color-zinc-400);
+  --sidenav-item-active-color: var(--color-zinc-50);
+  --sidenav-item-active-bg: var(--color-zinc-800);
+  --sidenav-item-hover-color: var(--color-zinc-300);
+  --sidenav-item-hover-bg: var(--color-zinc-800);
+}
+
+/* ============================================================================
+   SECTION 2: SEMANTIC VARIABLES
+   Human-readable aliases for common patterns
+   ============================================================================ */
+
+@layer base {
+  :root {
+    /* Surface Colors (Backgrounds) */
+    --theme-surface-base: var(--color-body-bg);
+    --theme-surface-raised: var(--color-card);
+    --theme-surface-overlay: var(--color-default-50);
+    --theme-surface-subtle: var(--color-default-100);
+    --theme-surface-hover: var(--color-default-100);
+    --theme-surface-active: var(--color-default-200);
+    
+    /* Text Colors */
+    --theme-text-primary: var(--color-default-900);
+    --theme-text-secondary: var(--color-default-700);
+    --theme-text-tertiary: var(--color-default-600);
+    --theme-text-muted: var(--color-default-500);
+    --theme-text-subtle: var(--color-default-400);
+    --theme-text-inverse: var(--color-white);
+    --theme-text-primary-contrast: var(--color-white);
+    
+    /* Border Colors */
+    --theme-border-default: var(--color-default-200);
+    --theme-border-subtle: var(--color-default-100);
+    --theme-border-strong: var(--color-default-300);
+    --theme-border-hover: var(--color-default-300);
+    
+    /* Brand Colors (Consistent) */
+    --theme-brand-primary: var(--color-primary);
+    --theme-brand-secondary: var(--color-secondary);
+    --theme-brand-success: var(--color-success);
+    --theme-brand-danger: var(--color-danger);
+    --theme-brand-warning: var(--color-warning);
+    --theme-brand-info: var(--color-info);
+    
+    /* Interactive States */
+    --theme-focus-ring: var(--color-primary);
+    --theme-selection-bg: var(--color-primary);
+    --theme-selection-text: var(--color-white);
+    
+    /* Shadows */
+    --theme-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --theme-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --theme-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --theme-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Page Gradients */
+    --theme-gradient-base: linear-gradient(to bottom right, var(--color-default-50), var(--color-default-100), var(--color-default-50));
+    --theme-gradient-purple: linear-gradient(to bottom right, var(--color-body-bg), color-mix(in srgb, var(--color-body-bg) 90%, var(--color-primary) 10%), var(--color-body-bg));
+    --theme-gradient-blue: linear-gradient(to bottom right, var(--color-body-bg), color-mix(in srgb, var(--color-body-bg) 90%, var(--color-info) 10%), var(--color-body-bg));
+    --theme-gradient-green: linear-gradient(to bottom right, var(--color-body-bg), color-mix(in srgb, var(--color-body-bg) 90%, var(--color-success) 10%), var(--color-body-bg));
+    --theme-gradient-orange: linear-gradient(to bottom, var(--color-body-bg), color-mix(in srgb, var(--color-body-bg) 90%, var(--color-warning) 10%), var(--color-body-bg));
+    --theme-gradient-yellow: linear-gradient(to bottom right, var(--color-body-bg), color-mix(in srgb, var(--color-body-bg) 95%, var(--color-warning) 5%), var(--color-body-bg));
+    
+    /* Layout */
+    --theme-container-max: 80rem;
+    --theme-container-px: 1rem;
+    --theme-section-py: 2rem;
+  }
+  
+  /* Base Styles */
+  body {
+    @apply antialiased;
+  }
+}
+
+/* ============================================================================
+   SECTION 3: COMPONENT PATTERNS
+   Reusable component styles for cards, buttons, badges, etc.
+   ============================================================================ */
+
+@layer components {
+  /* --------------------------------------------------------------------------
+     PAGE BACKGROUNDS - Full-screen gradients
+     -------------------------------------------------------------------------- */
+  
+  .page-bg-dashboard { background: var(--theme-gradient-purple); min-height: 100vh; }
+  .page-bg-notifications { background: var(--theme-gradient-base); min-height: 100vh; }
+  .page-bg-leaderboard { background: var(--theme-gradient-yellow); min-height: 100vh; }
+  .page-bg-badges { background: var(--theme-gradient-purple); min-height: 100vh; }
+  .page-bg-guilds { background: var(--theme-gradient-green); min-height: 100vh; }
+  .page-bg-quests { background: var(--theme-gradient-blue); min-height: 100vh; }
+  .page-bg-daily-gm { background: var(--theme-gradient-orange); min-height: 100vh; }
+  .page-bg-profile { background: var(--theme-gradient-purple); min-height: 100vh; }
+  .page-bg-app-layout { background: var(--theme-gradient-purple); min-height: 100vh; }
+  
+  /* --------------------------------------------------------------------------
+     CARD PATTERNS - Themed card variants
+     -------------------------------------------------------------------------- */
+  
+  .foundation-card {
+    background-color: var(--theme-surface-raised);
+    border: 1px solid var(--theme-border-default);
+    border-radius: 1rem;
+    box-shadow: var(--theme-shadow-sm);
+  }
+  
+  .foundation-card-interactive {
+    background-color: var(--theme-surface-raised);
+    border: 1px solid var(--theme-border-default);
+    border-radius: 1rem;
+    box-shadow: var(--theme-shadow-sm);
+    transition: all 200ms ease-in-out;
+  }
+  
+  .foundation-card-interactive:hover {
+    border-color: var(--theme-border-hover);
+    box-shadow: var(--theme-shadow-md);
+  }
+  
+  .foundation-card-glass {
+    background-color: color-mix(in srgb, var(--theme-surface-raised) 90%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--theme-border-default);
+    border-radius: 1rem;
+    box-shadow: var(--theme-shadow-lg);
+  }
+  
+  .foundation-card-highlight {
+    background: linear-gradient(to bottom right, 
+      color-mix(in srgb, var(--theme-brand-primary) 10%, var(--theme-surface-raised)),
+      color-mix(in srgb, var(--theme-brand-secondary) 10%, var(--theme-surface-raised))
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-primary) 30%, transparent);
+    border-radius: 1rem;
+  }
+  
+  /* --------------------------------------------------------------------------
+     QUEST CARD GRADIENTS - Feature navigation cards
+     -------------------------------------------------------------------------- */
+  
+  .quest-card-gm {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-warning) 80%, black),
+      color-mix(in srgb, var(--theme-brand-warning) 60%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-warning) 50%, transparent);
+    border-radius: 1rem;
+    padding: 2rem;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .quest-card-gm:hover {
+    border-color: color-mix(in srgb, var(--theme-brand-warning) 70%, transparent);
+    transform: scale(1.02);
+  }
+  
+  .quest-card-guild {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-info) 80%, black),
+      color-mix(in srgb, var(--theme-brand-primary) 60%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-info) 50%, transparent);
+    border-radius: 1rem;
+    padding: 2rem;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .quest-card-guild:hover {
+    border-color: color-mix(in srgb, var(--theme-brand-primary) 70%, transparent);
+    transform: scale(1.02);
+  }
+  
+  .quest-card-social {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-success) 80%, black),
+      color-mix(in srgb, var(--theme-brand-success) 60%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-success) 50%, transparent);
+    border-radius: 1rem;
+    padding: 2rem;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .quest-card-social:hover {
+    border-color: color-mix(in srgb, var(--theme-brand-success) 70%, transparent);
+    transform: scale(1.02);
+  }
+  
+  .quest-card-badge {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-primary) 80%, black),
+      color-mix(in srgb, var(--theme-brand-danger) 60%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-primary) 50%, transparent);
+    border-radius: 1rem;
+    padding: 2rem;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .quest-card-badge:hover {
+    border-color: color-mix(in srgb, var(--theme-brand-danger) 70%, transparent);
+    transform: scale(1.02);
+  }
+  
+  .quest-card-leaderboard {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-danger) 80%, black),
+      color-mix(in srgb, var(--theme-brand-danger) 60%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-danger) 50%, transparent);
+    border-radius: 1rem;
+    padding: 2rem;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .quest-card-leaderboard:hover {
+    border-color: color-mix(in srgb, var(--theme-brand-danger) 70%, transparent);
+    transform: scale(1.02);
+  }
+  
+  .quest-card-profile {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-warning) 80%, black),
+      color-mix(in srgb, var(--theme-brand-danger) 60%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-warning) 50%, transparent);
+    border-radius: 1rem;
+    padding: 2rem;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .quest-card-profile:hover {
+    border-color: color-mix(in srgb, var(--theme-brand-warning) 70%, transparent);
+    transform: scale(1.02);
+  }
+  
+  /* --------------------------------------------------------------------------
+     RANK/BADGE PATTERNS - Leaderboard cards
+     -------------------------------------------------------------------------- */
+  
+  .rank-card-gold {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-warning) 20%, var(--theme-surface-raised)),
+      color-mix(in srgb, var(--theme-brand-warning) 15%, var(--theme-surface-raised))
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-warning) 30%, transparent);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .rank-card-silver {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--color-default-400) 20%, var(--theme-surface-raised)),
+      color-mix(in srgb, var(--color-default-500) 15%, var(--theme-surface-raised))
+    );
+    border: 1px solid var(--theme-border-default);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .rank-card-bronze {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-warning) 20%, var(--theme-surface-raised)),
+      color-mix(in srgb, var(--theme-brand-warning) 10%, var(--theme-surface-raised))
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-warning) 30%, transparent);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  
+  /* --------------------------------------------------------------------------
+     FEATURE BANNERS - Highlighted sections
+     -------------------------------------------------------------------------- */
+  
+  .banner-season {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-warning) 20%, var(--theme-surface-raised)),
+      color-mix(in srgb, var(--theme-brand-warning) 10%, var(--theme-surface-raised))
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-warning) 30%, transparent);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .banner-badge-progress {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-info) 20%, var(--theme-surface-raised)),
+      color-mix(in srgb, var(--theme-brand-primary) 20%, var(--theme-surface-raised))
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-info) 30%, transparent);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .banner-gm-timer {
+    background: linear-gradient(to bottom right,
+      color-mix(in srgb, var(--theme-brand-warning) 50%, black),
+      color-mix(in srgb, var(--theme-brand-warning) 30%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--theme-brand-warning) 30%, transparent);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    min-width: 70px;
+    text-align: center;
+  }
+  
+  /* --------------------------------------------------------------------------
+     BUTTON PATTERNS - Consistent button styles
+     -------------------------------------------------------------------------- */
+  
+  .foundation-btn-primary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    background-color: var(--theme-brand-primary);
+    color: var(--theme-text-inverse);
+    font-weight: 600;
+    box-shadow: var(--theme-shadow-sm);
+    transition: all 200ms ease-in-out;
+  }
+  
+  .foundation-btn-primary:hover {
+    opacity: 0.9;
+    box-shadow: var(--theme-shadow-md);
+  }
+  
+  .foundation-btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    background-color: var(--theme-surface-active);
+    color: var(--theme-text-primary);
+    font-weight: 600;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .foundation-btn-secondary:hover {
+    background-color: var(--theme-border-default);
+  }
+  
+  .foundation-btn-ghost {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--theme-border-default);
+    background-color: transparent;
+    color: var(--theme-text-primary);
+    font-weight: 600;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .foundation-btn-ghost:hover {
+    background-color: var(--theme-surface-hover);
+  }
+  
+  .foundation-btn-danger {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    background-color: var(--theme-brand-danger);
+    color: var(--theme-text-inverse);
+    font-weight: 600;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .foundation-btn-danger:hover {
+    opacity: 0.9;
+  }
+  
+  .gradient-btn-primary {
+    background: linear-gradient(to right, var(--theme-brand-primary), var(--theme-brand-danger));
+    color: var(--theme-text-inverse);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 200ms ease-in-out;
+  }
+  
+  .gradient-btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  
+  /* --------------------------------------------------------------------------
+     DIFFICULTY BADGES - Color-coded levels
+     -------------------------------------------------------------------------- */
+  
+  .difficulty-beginner {
+    background-color: color-mix(in srgb, var(--theme-brand-success) 20%, var(--theme-surface-raised));
+    border-color: color-mix(in srgb, var(--theme-brand-success) 30%, transparent);
+    color: var(--theme-brand-success);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  
+  .difficulty-intermediate {
+    background-color: color-mix(in srgb, var(--theme-brand-info) 20%, var(--theme-surface-raised));
+    border-color: color-mix(in srgb, var(--theme-brand-info) 30%, transparent);
+    color: var(--theme-brand-info);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  
+  .difficulty-advanced {
+    background-color: color-mix(in srgb, var(--theme-brand-primary) 20%, var(--theme-surface-raised));
+    border-color: color-mix(in srgb, var(--theme-brand-primary) 30%, transparent);
+    color: var(--theme-brand-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  
+  .difficulty-expert {
+    background-color: color-mix(in srgb, var(--theme-brand-danger) 20%, var(--theme-surface-raised));
+    border-color: color-mix(in srgb, var(--theme-brand-danger) 30%, transparent);
+    color: var(--theme-brand-danger);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  
+  /* --------------------------------------------------------------------------
+     BADGE FILTER BUTTONS
+     -------------------------------------------------------------------------- */
+  
+  .badge-filter-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--theme-border-default);
+    font-weight: 500;
+    transition: all 200ms ease-in-out;
+    background-color: transparent;
+    color: var(--theme-text-secondary);
+  }
+  
+  .badge-filter-btn:hover {
+    background-color: var(--theme-surface-hover);
+  }
+  
+  .badge-filter-active {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--theme-brand-primary) 50%, transparent);
+    font-weight: 500;
+    background-color: color-mix(in srgb, var(--theme-brand-primary) 10%, var(--theme-surface-raised));
+    color: var(--theme-brand-primary);
+  }
+  
+  /* --------------------------------------------------------------------------
+     GRADIENT EFFECTS
+     -------------------------------------------------------------------------- */
+  
+  .text-gradient-gm {
+    background: linear-gradient(to right, var(--theme-brand-warning), var(--theme-brand-danger));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  
+  .gradient-progress-bar {
+    background: linear-gradient(to right, var(--theme-brand-primary), var(--theme-brand-danger));
+    height: 0.5rem;
+    border-radius: 9999px;
+    transition: all 300ms ease-in-out;
+  }
+  
+  /* --------------------------------------------------------------------------
+     LOADING STATES
+     -------------------------------------------------------------------------- */
+  
+  .foundation-spinner {
+    animation: spin 1s linear infinite;
+    border-radius: 9999px;
+    width: 4rem;
+    height: 4rem;
+    border-width: 2px;
+    border-style: solid;
+    border-color: transparent;
+    border-top-color: var(--theme-brand-primary);
+    border-bottom-color: var(--theme-brand-primary);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .foundation-skeleton {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    background-color: var(--theme-surface-active);
+    border-radius: 0.25rem;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  /* --------------------------------------------------------------------------
+     LAYOUT PATTERNS
+     -------------------------------------------------------------------------- */
+  
+  .foundation-container {
+    max-width: var(--theme-container-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  @media (min-width: 768px) {
+    .foundation-container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+  
+  .foundation-section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+  
+  @media (min-width: 768px) {
+    .foundation-section {
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+    }
+  }
+  
+  .foundation-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+  
+  @media (min-width: 768px) {
+    .foundation-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .foundation-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  
+  /* --------------------------------------------------------------------------
+     ERROR/EMPTY STATES
+     -------------------------------------------------------------------------- */
+  
+  .foundation-error {
+    text-align: center;
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+    color: var(--theme-brand-danger);
+  }
+  
+  .foundation-empty {
+    text-align: center;
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+    color: var(--theme-text-tertiary);
+  }
+  
+  .foundation-loading {
+    text-align: center;
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+    color: var(--theme-text-tertiary);
+  }
+  
+  /* --------------------------------------------------------------------------
+     UTILITY PATTERNS
+     -------------------------------------------------------------------------- */
+  
+  .foundation-divider {
+    border-top: 1px solid var(--theme-border-default);
+  }
+  
+  .foundation-focus:focus {
+    outline: 2px solid var(--theme-focus-ring);
+    outline-offset: 2px;
+  }
+  
+  .foundation-transition {
+    transition: all 200ms ease-in-out;
+  }
+  
+  .foundation-transition-fast {
+    transition: all 100ms ease-in-out;
+  }
+  
+  .foundation-transition-slow {
+    transition: all 300ms ease-in-out;
+  }
+}
+
+/* ============================================================================
+   SECTION 4: UTILITY CLASSES
+   Quick styling classes for common patterns
+   ============================================================================ */
+
+@layer utilities {
+  /* Surface Utilities */
+  .theme-bg-base { background-color: var(--theme-surface-base); }
+  .theme-bg-raised { background-color: var(--theme-surface-raised); }
+  .theme-bg-overlay { background-color: var(--theme-surface-overlay); }
+  .theme-bg-subtle { background-color: var(--theme-surface-subtle); }
+  .theme-bg-hover:hover { background-color: var(--theme-surface-hover); }
+  .theme-bg-primary { background-color: var(--theme-brand-primary); }
+  
+  /* Text Utilities */
+  .theme-text-primary { color: var(--theme-text-primary); }
+  .theme-text-secondary { color: var(--theme-text-secondary); }
+  .theme-text-tertiary { color: var(--theme-text-tertiary); }
+  .theme-text-muted { color: var(--theme-text-muted); }
+  .theme-text-subtle { color: var(--theme-text-subtle); }
+  .theme-text-inverse { color: var(--theme-text-inverse); }
+  .theme-text-primary-contrast { color: var(--theme-text-primary-contrast); }
+  
+  /* Border Utilities */
+  .theme-border { border-color: var(--theme-border-default); }
+  .theme-border-subtle { border-color: var(--theme-border-subtle); }
+  .theme-border-strong { border-color: var(--theme-border-strong); }
+  
+  /* Brand Color Utilities */
+  .theme-color-primary { color: var(--theme-brand-primary); }
+  .theme-color-success { color: var(--theme-brand-success); }
+  .theme-color-danger { color: var(--theme-brand-danger); }
+  .theme-color-warning { color: var(--theme-brand-warning); }
+  .theme-color-info { color: var(--theme-brand-info); }
+  
+  /* Safe Area (Mobile) */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}

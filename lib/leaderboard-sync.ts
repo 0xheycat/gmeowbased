@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
 import { fetchAggregatedRaw, enrichAggregatedRows, PROFILE_SUPPORTED } from '@/lib/leaderboard-aggregator'
 
 type SyncLogger = {
@@ -28,7 +28,7 @@ const DEFAULT_TABLE = process.env.SUPABASE_LEADERBOARD_TABLE || 'leaderboard_sna
 const DEFAULT_SEASON_KEY = process.env.SUPABASE_LEADERBOARD_SEASON_KEY || 'all'
 
 async function buildPayload(
-  options: { global: boolean; chain?: ChainKey },
+  options: { global: boolean; chain?: GMChainKey },
   seasonKey: string,
   updatedAtIso: string,
 ): Promise<{

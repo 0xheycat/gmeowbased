@@ -1,5 +1,5 @@
 // @edit-start 2025-02-14 — Shared community event types
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 
 export const COMMUNITY_EVENT_TYPES = [
   'gm',

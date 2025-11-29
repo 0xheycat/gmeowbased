@@ -1,0 +1,189 @@
+#!/bin/bash
+
+echo "🚀 DEPLOYING TO ARBITRUM MAINNET"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Setup environment
+PRIVATE_KEY=$(grep ORACLE_PRIVATE_KEY .env.local | cut -d= -f2)
+ORACLE_ADDRESS=$(cast wallet address $PRIVATE_KEY)
+RPC="https://arb-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg"
+
+echo "Oracle Address: $ORACLE_ADDRESS"
+echo "RPC: $RPC"
+echo ""
+
+# Check balance
+echo "Checking balance..."
+BALANCE=$(cast balance $ORACLE_ADDRESS --rpc-url $RPC)
+echo "Balance: $(cast --from-wei $BALANCE) ETH"
+
+if [ "$BALANCE" = "0" ]; then
+  echo "❌ No ETH balance on Arbitrum!"
+  exit 1
+fi
+
+echo ""
+
+# Step 1: Deploy Core
+echo "📦 Step 1/4: Deploying GmeowCore..."
+forge create contract/GmeowCoreStandalone.sol:GmeowCore \
+  --broadcast \
+  --rpc-url $RPC \
+  --private-key $PRIVATE_KEY \
+  --constructor-args $ORACLE_ADDRESS
+
+echo "✅ Please save the CORE address and press Enter to continue..."
+read -p "CORE_ADDRESS=" CORE_ADDRESS
+
+echo ""
+
+# Step 2: Deploy Guild
+echo "📦 Step 2/4: Deploying GmeowGuild..."
+forge create contract/GmeowGuildStandalone.sol:GmeowGuildStandalone \
+  --broadcast \
+  --rpc-url $RPC \
+  --private-key $PRIVATE_KEY \
+  --constructor-args $CORE_ADDRESS
+
+echo "✅ Please save the GUILD address and press Enter to continue..."
+read -p "GUILD_ADDRESS=" GUILD_ADDRESS
+
+echo ""
+
+# Step 3: Deploy NFT
+echo "📦 Step 3/4: Deploying GmeowNFT..."
+forge create contract/GmeowNFTStandalone.sol:GmeowNFTStandalone \
+  --broadcast \
+  --rpc-url $RPC \
+  --private-key $PRIVATE_KEY \
+  --constructor-args $CORE_ADDRESS "Gmeow Adventure NFT" "GMEOW" "https://api.gmeowhq.art/nft/"
+
+echo "✅ Please save the NFT address and press Enter to continue..."
+read -p "NFT_ADDRESS=" NFT_ADDRESS
+
+echo ""
+
+# Step 4: Deploy Proxy
+echo "📦 Step 4/4: Deploying GmeowProxy..."
+forge create contract/proxy/GmeowProxy.sol:GmeowProxy \
+  --broadcast \
+  --rpc-url $RPC \
+  --private-key $PRIVATE_KEY \
+  --constructor-args $CORE_ADDRESS $GUILD_ADDRESS $NFT_ADDRESS
+
+echo "✅ Please save the PROXY address and press Enter to continue..."
+read -p "PROXY_ADDRESS=" PROXY_ADDRESS
+
+echo ""
+
+# Step 5: Link contracts
+echo "🔗 Step 5/6: Linking Guild to Core..."
+cast send $CORE_ADDRESS \
+  "setGuildContract(address)" \
+  $GUILD_ADDRESS \
+  --rpc-url $RPC \
+  --private-key $PRIVATE_KEY
+
+echo "🔗 Step 6/8: Linking NFT to Core..."
+cast send $CORE_ADDRESS \
+  "setNFTContractAddress(address)" \
+  $NFT_ADDRESS \
+  --rpc-url $RPC \
+  --private-key $PRIVATE_KEY
+
+echo ""
+echo "🚀 Step 7/8: Initializing Proxy..."
+cast send $PROXY_ADDRESS \
+  "initialize()" \
+  --rpc-url $RPC \
+  --private-key $PRIVATE_KEY
+
+echo ""
+echo "🧪 Step 8/9: Testing deployment..."
+echo -n "Oracle Signer: "
+cast call $CORE_ADDRESS "oracleSigner()" --rpc-url $RPC
+echo -n "Guild Contract: "
+cast call $CORE_ADDRESS "guildContract()" --rpc-url $RPC
+echo -n "NFT Contract: "
+cast call $CORE_ADDRESS "nftContractAddress()" --rpc-url $RPC
+echo -n "GM Point Reward: "
+cast call $CORE_ADDRESS "gmPointReward()" --rpc-url $RPC | cast --to-dec
+echo -n "Proxy Core Address: "
+cast call $PROXY_ADDRESS "coreContract()" --rpc-url $RPC
+echo -n "Proxy Guild Address: "
+cast call $PROXY_ADDRESS "guildContract()" --rpc-url $RPC
+echo -n "Proxy NFT Address: "
+cast call $PROXY_ADDRESS "nftContract()" --rpc-url $RPC
+
+echo ""
+echo "✅ All contract links verified!"
+
+echo ""
+echo "🔍 Step 9/9: Contract Verification (optional)..."
+if [ ! -z "$ETHERSCAN_API_KEY" ]; then
+  echo "Verifying contracts on block explorer..."
+  
+  echo "Verifying Core..."
+  forge verify-contract \
+    $CORE_ADDRESS \
+    contract/GmeowCoreStandalone.sol:GmeowCore \
+    --chain-id 42161 \
+    --constructor-args $(cast abi-encode "constructor(address)" $ORACLE_ADDRESS) \
+    --watch || echo "❌ Core verification failed"
+  
+  echo "Verifying Guild..."
+  forge verify-contract \
+    $GUILD_ADDRESS \
+    contract/GmeowGuildStandalone.sol:GmeowGuildStandalone \
+    --chain-id 42161 \
+    --constructor-args $(cast abi-encode "constructor(address)" $CORE_ADDRESS) \
+    --watch || echo "❌ Guild verification failed"
+  
+  echo "Verifying NFT..."
+  forge verify-contract \
+    $NFT_ADDRESS \
+    contract/GmeowNFTStandalone.sol:GmeowNFTStandalone \
+    --chain-id 42161 \
+    --constructor-args $(cast abi-encode "constructor(address,string,string,string)" $CORE_ADDRESS "Gmeow Adventure NFT" "GMEOW" "https://api.gmeowhq.art/nft/") \
+    --watch || echo "❌ NFT verification failed"
+  
+  echo "Verifying Proxy..."
+  forge verify-contract \
+    $PROXY_ADDRESS \
+    contract/proxy/GmeowProxy.sol:GmeowProxy \
+    --chain-id 42161 \
+    --constructor-args $(cast abi-encode "constructor(address,address,address)" $CORE_ADDRESS $GUILD_ADDRESS $NFT_ADDRESS) \
+    --watch || echo "❌ Proxy verification failed"
+else
+  echo "⚠️  ETHERSCAN_API_KEY not set, skipping verification"
+  echo "   To verify contracts later, set ETHERSCAN_API_KEY in your environment"
+fi
+
+# Save deployment record
+cat > deployment-arbitrum-mainnet.json << EOF
+{
+  "network": "Arbitrum Mainnet",
+  "chainId": 42161,
+  "rpcUrl": "$RPC",
+  "deployedAt": "$(date -Iseconds)",
+  "deployer": "$ORACLE_ADDRESS",
+  "contracts": {
+    "core": "$CORE_ADDRESS",
+    "guild": "$GUILD_ADDRESS",
+    "nft": "$NFT_ADDRESS",
+    "proxy": "$PROXY_ADDRESS"
+  },
+  "oracleSigner": "$ORACLE_ADDRESS",
+  "mainContract": "$CORE_ADDRESS"
+}
+EOF
+
+echo ""
+echo "🎉 ARBITRUM DEPLOYMENT COMPLETE!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "CORE_ADDRESS=$CORE_ADDRESS"
+echo "GUILD_ADDRESS=$GUILD_ADDRESS"
+echo "NFT_ADDRESS=$NFT_ADDRESS"
+echo "PROXY_ADDRESS=$PROXY_ADDRESS"
+echo ""
+echo "💾 Saved to: deployment-arbitrum-mainnet.json"

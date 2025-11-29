@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { QuestDraft } from '@/components/quest-wizard/shared'
+import type { QuestDraft } from '@/lib/quest-wizard/types'
 
 type UseWizardEffectsOptions = {
 	isFrameReady: boolean

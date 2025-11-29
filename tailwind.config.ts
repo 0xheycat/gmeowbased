@@ -2,7 +2,7 @@ import type { Config } from 'tailwindcss'
 import tailwindcssAnimate from 'tailwindcss-animate'
 
 const config: Config = {
-    darkMode: ['class'],
+    darkMode: 'class',
     content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -23,29 +23,49 @@ const config: Config = {
   			'tight-custom': '-0.02em', // tight headings
   		},
   		colors: {
-  			'farcaster-purple': '#8B5CF6',
-  			'base-blue': '#0052FF',
+  			// Gmeowbased Brand Colors (from Tailwick v2.0 theme)
+  			'farcaster-purple': 'var(--color-primary, #8B5CF6)',
+  			'base-blue': 'var(--color-secondary, #0052FF)',
+  			
+  			// Tailwick v2.0 Color Scale (default: zinc)
+  			default: {
+  				50: 'var(--color-default-50)',
+  				100: 'var(--color-default-100)',
+  				200: 'var(--color-default-200)',
+  				300: 'var(--color-default-300)',
+  				400: 'var(--color-default-400)',
+  				500: 'var(--color-default-500)',
+  				600: 'var(--color-default-600)',
+  				700: 'var(--color-default-700)',
+  				800: 'var(--color-default-800)',
+  				900: 'var(--color-default-900)',
+  				950: 'var(--color-default-950)',
+  			},
+  			
+  			// Legacy Gmeowbased colors (keep for compatibility)
   			gold: {
-  				DEFAULT: '#ffd700',    // Bright gold
-  				dark: '#d4af37',       // Darker gold variant
+  				DEFAULT: '#ffd700',
+  				dark: '#d4af37',
   			},
 			'accent-green': {
-				DEFAULT: '#7CFF7A',    // Success/active state
-				dark: '#5FE55D',       // Darker variant for better contrast
+				DEFAULT: '#7CFF7A',
+				dark: '#5FE55D',
 			},
   			'dark-bg': {
-  				DEFAULT: '#06091a',    // Dark overlay
-  				'hover': '#0b0f2a',    // Hover state
-  				'card': '#08122e',     // Card backgrounds
-  				'panel': '#081223',    // Panel backgrounds
-  				'surface': '#0a1529',  // Surface backgrounds
-  				'elevated': '#091324', // Elevated surfaces
-  				'alt': '#070f25',      // Alternative dark
-  				'secondary': '#07122d', // Secondary dark
-  				'tertiary': '#060b1d', // Tertiary dark
-  				'quaternary': '#0b132d', // Quaternary dark
-  				'neutral': '#1a1410',  // Neutral dark brown
+  				DEFAULT: '#06091a',
+  				'hover': '#0b0f2a',
+  				'card': '#08122e',
+  				'panel': '#081223',
+  				'surface': '#0a1529',
+  				'elevated': '#091324',
+  				'alt': '#070f25',
+  				'secondary': '#07122d',
+  				'tertiary': '#060b1d',
+  				'quaternary': '#0b132d',
+  				'neutral': '#1a1410',
   			},
+  			
+  			// Tailwind/shadcn colors (from CSS variables)
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -76,6 +96,10 @@ const config: Config = {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
   			},
+  			success: 'var(--color-success, #10B981)',
+  			danger: 'var(--color-danger, #EF4444)',
+  			warning: 'var(--color-warning, #F59E0B)',
+  			info: 'var(--color-info, #3B82F6)',
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
