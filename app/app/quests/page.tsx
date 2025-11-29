@@ -1,506 +1,567 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+/**
+ * Quest Marketplace - Unified On-Chain + Social Quests
+ * Phase 13: User-generated quest marketplace
+ * 
+ * Features:
+ * - Discover quests (on-chain + social)
+ * - Create quests (spend points)
+ * - Track completions
+ * - Creator earnings dashboard
+ * 
+ * Design System:
+ * - Tailwick v2.0 (Card, Button, Badge components)
+ * - Gmeowbased v0.1 (55 SVG icons)
+ * - Mobile-first responsive (1/2/3 columns)
+ */
+
+import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
+import { AppLayout } from '@/components/layouts/AppLayout'
 import { 
   Card, 
   CardBody, 
   CardHeader,
   CardFooter,
   Badge, 
-  Button, 
-  StatsCard,
-  SectionHeading,
-  EmptyState,
-  IconWithBadge
+  Button,
+  StatsCard
 } from '@/components/ui/tailwick-primitives'
-import { AppLayout } from '@/components/layouts/AppLayout'
+import { useAccount } from 'wagmi'
+import { useUnifiedFarcasterAuth } from '@/hooks/useUnifiedFarcasterAuth'
+import { QuestCreationWizard } from '@/components/features/QuestWizard'
+import { QuestIcon, type QuestIconType } from '@/components/ui/QuestIcon'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
+import { calculateRankProgress } from '@/lib/rank'
+import { emitRankTelemetryEvent } from '@/lib/rank-telemetry-client'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 
-type QuestType = 'daily' | 'weekly' | 'event' | 'milestone' | 'achievement'
-type QuestCategory = 'social' | 'engagement' | 'guild' | 'gm' | 'onboarding'
-type QuestDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert'
-type QuestStatus = 'locked' | 'available' | 'in_progress' | 'completed' | 'claimed' | 'expired'
+type QuestCategory = 'onchain' | 'social' | 'all'
+type QuestStatus = 'active' | 'paused' | 'completed' | 'expired'
+type SortBy = 'newest' | 'popular' | 'reward'
+type QuestType = 
+  | 'token_hold' | 'nft_own' | 'transaction_make' | 'multichain_gm' | 'contract_interact' | 'liquidity_provide' // On-chain
+  | 'follow_user' | 'like_cast' | 'recast_cast' | 'reply_cast' | 'join_channel' | 'cast_mention' | 'cast_hashtag' // Social
 
-interface Quest {
+interface UnifiedQuest {
   id: number
-  quest_name: string
-  quest_slug: string
-  quest_type: QuestType
-  category: QuestCategory
+  title: string
   description: string
-  requirements: Record<string, any>
-  reward_xp: number
+  category: 'onchain' | 'social'
+  type: QuestType
+  creator_fid: number
+  creator_address: string
   reward_points: number
-  reward_badges: string[]
-  difficulty: QuestDifficulty
-  is_featured: boolean
-  icon_path: string | null
-  user_status?: QuestStatus
-  user_progress?: Record<string, any> | null
-  started_at?: string | null
-  completed_at?: string | null
-  claimed_at?: string | null
+  reward_mode: 'points' | 'token' | 'nft'
+  reward_token_address: string | null
+  reward_token_amount: number | null
+  reward_nft_address: string | null
+  reward_nft_token_id: number | null
+  creation_cost: number
+  creator_earnings_percent: number
+  total_completions: number
+  total_earned_points: number
+  verification_data: Record<string, any>
+  status: QuestStatus
+  max_completions: number | null
+  expiry_date: string | null
+  created_at: string
+  updated_at: string
+  quest_image_url: string | null
+  quest_image_storage_path: string | null
 }
 
-const difficultyColors = {
-  beginner: 'bg-green-500/20 border-green-500/30 text-green-400',
-  intermediate: 'bg-blue-500/20 border-blue-500/30 text-blue-400',
-  advanced: 'bg-purple-500/20 border-purple-500/30 text-purple-400',
-  expert: 'bg-red-500/20 border-red-500/30 text-red-400',
+const questTypeLabels: Record<QuestType, string> = {
+  // On-chain
+  token_hold: 'Hold Tokens',
+  nft_own: 'Own NFT',
+  transaction_make: 'Make Transaction',
+  multichain_gm: 'Multi-Chain GM',
+  contract_interact: 'Contract Interaction',
+  liquidity_provide: 'Provide Liquidity',
+  // Social
+  follow_user: 'Follow User',
+  like_cast: 'Like Cast',
+  recast_cast: 'Recast Cast',
+  reply_cast: 'Reply to Cast',
+  join_channel: 'Join Channel',
+  cast_mention: 'Mention User',
+  cast_hashtag: 'Use Hashtag',
 }
 
-const statusColors = {
-  locked: 'info',
-  available: 'primary',
-  in_progress: 'warning',
-  completed: 'success',
-  claimed: 'info',
-  expired: 'danger',
-} as const
-
-const categoryIcons = {
-  social: '/assets/gmeow-icons/Friends Icon.svg',
-  engagement: '/assets/gmeow-icons/Thumbs Up Icon.svg',
-  guild: '/assets/gmeow-icons/Groups Icon.svg',
-  gm: '/assets/gmeow-icons/Newsfeed Icon.svg',
-  onboarding: '/assets/gmeow-icons/Login Icon.svg',
-}
-
-export default function QuestsPage() {
-  const [quests, setQuests] = useState<Quest[]>([])
+export default function QuestMarketplacePage() {
+  const { address } = useAccount()
+  const { profile, profileLoading, fid } = useUnifiedFarcasterAuth()
+  
+  const [activeTab, setActiveTab] = useState<'discover' | 'my-quests' | 'my-created'>('discover')
+  const [categoryFilter, setCategoryFilter] = useState<QuestCategory>('all')
+  const [statusFilter, setStatusFilter] = useState<QuestStatus>('active')
+  const [sortBy, setSortBy] = useState<SortBy>('newest')
+  const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 300)
+  
+  const [quests, setQuests] = useState<UnifiedQuest[]>([])
   const [loading, setLoading] = useState(true)
-  const [claimingId, setClaimingId] = useState<number | null>(null)
-  const [filterType, setFilterType] = useState<QuestType | 'all'>('all')
-  const [filterCategory, setFilterCategory] = useState<QuestCategory | 'all'>('all')
-  const [filterDifficulty, setFilterDifficulty] = useState<QuestDifficulty | 'all'>('all')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  
+  // XP celebration overlay
+  const [xpCelebration, setXpCelebration] = useState<XpEventPayload | null>(null)
+  
+  // User stats
+  const [stats, setStats] = useState({
+    quests_completed: 0,
+    quests_created: 0,
+    total_earnings: 0
+  })
 
   useEffect(() => {
     fetchQuests()
-  }, [filterType, filterCategory, filterDifficulty])
+    if (profile?.fid) {
+      fetchStats()
+    }
+  }, [categoryFilter, activeTab, profile?.fid])
+
+  const fetchStats = async () => {
+    if (!profile?.fid) return
+    
+    try {
+      const response = await fetch(`/api/quests/marketplace/my?fid=${profile.fid}`)
+      const data = await response.json()
+
+      if (data.ok) {
+        setStats({
+          quests_completed: data.quests_completed || 0,
+          quests_created: data.quests_created || 0,
+          total_earnings: data.total_earnings || 0
+        })
+      }
+    } catch (error) {
+      console.error('[QuestMarketplace] Failed to fetch stats:', error)
+    }
+  }
 
   const fetchQuests = async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
-      if (filterType !== 'all') params.set('type', filterType)
-      if (filterCategory !== 'all') params.set('category', filterCategory)
-      if (filterDifficulty !== 'all') params.set('difficulty', filterDifficulty)
+      if (categoryFilter !== 'all') params.set('category', categoryFilter)
+      if (activeTab === 'my-quests' && address) params.set('completer', address)
+      if (activeTab === 'my-created' && profile?.fid) params.set('creator_fid', String(profile.fid))
+      params.set('status', statusFilter)
 
-      const response = await fetch(`/api/quests?${params.toString()}`)
+      const response = await fetch(`/api/quests/marketplace/list?${params.toString()}`)
       const data = await response.json()
 
-      if (data.quests) {
+      if (data.ok && data.quests) {
         setQuests(data.quests)
       }
     } catch (error) {
-      console.error('Failed to fetch quests:', error)
+      console.error('[QuestMarketplace] Failed to fetch quests:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleClaimReward = async (questId: number) => {
-    setClaimingId(questId)
+  // Filtered & sorted quests (client-side for search & sort)
+  const filteredQuests = useMemo(() => {
+    let result = quests
+
+    // Search filter
+    if (debouncedSearch.trim()) {
+      const needle = debouncedSearch.toLowerCase()
+      result = result.filter(q =>
+        q.title.toLowerCase().includes(needle) ||
+        q.description.toLowerCase().includes(needle) ||
+        questTypeLabels[q.type].toLowerCase().includes(needle)
+      )
+    }
+
+    // Sort
+    if (sortBy === 'newest') {
+      result = [...result].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    } else if (sortBy === 'popular') {
+      result = [...result].sort((a, b) => b.total_completions - a.total_completions)
+    } else if (sortBy === 'reward') {
+      result = [...result].sort((a, b) => b.reward_points - a.reward_points)
+    }
+
+    return result
+  }, [quests, debouncedSearch, sortBy])
+
+  const handleCompleteQuest = async (questId: number) => {
+    if (!address || !profile?.fid) {
+      alert('Please connect wallet and sign in with Farcaster')
+      return
+    }
+
+    // Find quest for metadata
+    const quest = quests.find(q => q.id === questId)
+    if (!quest) return
+
     try {
-      const response = await fetch('/api/quests/claim-rewards', {
+      const response = await fetch('/api/quests/marketplace/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quest_id: questId })
+        body: JSON.stringify({
+          quest_id: questId,
+          completer_address: address,
+          completer_fid: profile.fid
+        })
       })
 
       const data = await response.json()
 
-      if (data.success) {
-        // Refresh quests to update status
-        await fetchQuests()
-        // TODO: Show success toast with rewards earned
-        console.log('Rewards claimed:', data.rewards)
+      if (data.ok) {
+        // Show XP celebration overlay
+        const progress = calculateRankProgress(data.total_points || stats.total_earnings + data.points_awarded)
+        
+        setXpCelebration({
+          event: 'quest-claim',
+          chainKey: 'base',
+          xpEarned: data.points_awarded,
+          totalPoints: data.total_points || stats.total_earnings + data.points_awarded,
+          progress: progress,
+          headline: `Quest Completed!`,
+          visitUrl: null, // quest-claim has no visit button
+          tierTagline: `+${data.points_awarded} points earned!`
+        })
+
+        // Refresh quest list & stats
+        fetchQuests()
+        if (profile?.fid) {
+          fetchStats()
+        }
       } else {
-        console.error('Failed to claim rewards:', data.error)
+        alert(`Failed: ${data.error}`)
       }
     } catch (error) {
-      console.error('Failed to claim reward:', error)
-    } finally {
-      setClaimingId(null)
+      console.error('[QuestMarketplace] Failed to complete quest:', error)
+      alert('Failed to complete quest')
     }
   }
-
-  const getProgressPercent = (quest: Quest): number => {
-    if (!quest.user_progress) return 0
-    const progress = quest.user_progress as any
-    if (progress.current && progress.target) {
-      return Math.min(100, Math.round((progress.current / progress.target) * 100))
-    }
-    return 0
-  }
-
-  const availableQuests = quests.filter(q => q.user_status === 'available' || q.user_status === 'in_progress')
-  const completedQuests = quests.filter(q => q.user_status === 'completed')
-  const claimedQuests = quests.filter(q => q.user_status === 'claimed')
 
   return (
     <AppLayout fullPage>
-      <div className="page-bg-quests p-4 md:p-8">
+      <div className="page-bg-quests min-h-screen p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <Link 
-            href="/app" 
-            className="inline-flex items-center gap-2 theme-text-secondary hover:theme-text-primary transition-colors mb-4"
-          >
-            <span>←</span> Back to Home
-          </Link>
-          
-          <IconWithBadge
-            icon="/assets/gmeow-icons/Quests Icon.svg"
-            iconAlt="Quest Hub"
-            iconSize={60}
-            badge={quests.length > 0 ? { content: quests.length, variant: 'primary' } : undefined}
-          />
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold theme-text-primary mb-2">Quest Marketplace</h1>
+            <p className="theme-text-secondary text-lg">
+              Discover on-chain & social quests. Create your own and earn from completions! 🚀
+            </p>
+          </div>
 
-          <SectionHeading
-            title="Quest Hub"
-            subtitle="Complete challenges to earn XP, points, and exclusive badges across multiple chains"
-            className="mb-6"
-          />
+          {/* Stats Bar */}
+          {profile && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card className="theme-card-bg-primary">
+                <CardBody>
+                  <div className="text-sm theme-text-secondary mb-1">Your Points</div>
+                  <div className="text-2xl font-bold theme-text-primary">{stats.total_earnings || 0}</div>
+                </CardBody>
+              </Card>
+              <Card className="theme-card-bg-primary">
+                <CardBody>
+                  <div className="text-sm theme-text-secondary mb-1">Quests Completed</div>
+                  <div className="text-2xl font-bold theme-text-primary">{stats.quests_completed}</div>
+                </CardBody>
+              </Card>
+              <Card className="theme-card-bg-primary">
+                <CardBody>
+                  <div className="text-sm theme-text-secondary mb-1">Quests Created</div>
+                  <div className="text-2xl font-bold theme-text-primary">{stats.quests_created}</div>
+                </CardBody>
+              </Card>
+              <Card className="theme-card-bg-primary">
+                <CardBody>
+                  <div className="text-sm theme-text-secondary mb-1">Total Earnings</div>
+                  <div className="text-2xl font-bold theme-text-primary">{stats.total_earnings}</div>
+                </CardBody>
+              </Card>
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            <button
+              onClick={() => setActiveTab('discover')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                activeTab === 'discover'
+                  ? 'theme-bg-primary theme-text-primary-contrast'
+                  : 'theme-surface-subtle theme-text-secondary hover:theme-surface-hover'
+              }`}
+            >
+              🔍 Discover Quests
+            </button>
+            <button
+              onClick={() => setActiveTab('my-quests')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                activeTab === 'my-quests'
+                  ? 'theme-bg-primary theme-text-primary-contrast'
+                  : 'theme-surface-subtle theme-text-secondary hover:theme-surface-hover'
+              }`}
+            >
+              ✅ My Quests
+            </button>
+            <button
+              onClick={() => setActiveTab('my-created')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                activeTab === 'my-created'
+                  ? 'theme-bg-primary theme-text-primary-contrast'
+                  : 'theme-surface-subtle theme-text-secondary hover:theme-surface-hover'
+              }`}
+            >
+              🎨 My Created
+            </button>
+          </div>
+
+          {/* Category Filter (only in Discover tab) */}
+          {activeTab === 'discover' && (
+            <div className="space-y-4 mb-6">
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant={categoryFilter === 'all' ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setCategoryFilter('all')}
+                >
+                  All Quests
+                </Button>
+                <Button
+                  variant={categoryFilter === 'onchain' ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setCategoryFilter('onchain')}
+                >
+                  <QuestIcon type="onchain" size={16} />
+                  On-Chain
+                </Button>
+                <Button
+                  variant={categoryFilter === 'social' ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setCategoryFilter('social')}
+                >
+                  <QuestIcon type="social" size={16} />
+                  Social
+                </Button>
+              </div>
+
+              {/* Search & Sort */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Search */}
+                <input
+                  type="text"
+                  placeholder="Search quests..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 rounded-lg theme-bg-overlay theme-border-default border theme-text-primary placeholder:theme-text-secondary"
+                />
+
+                {/* Sort */}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortBy)}
+                  className="px-4 py-2 rounded-lg theme-bg-overlay theme-border-default border theme-text-primary"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="popular">Most Popular</option>
+                  <option value="reward">Highest Reward</option>
+                </select>
+
+                {/* Status Filter */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as QuestStatus)}
+                  className="px-4 py-2 rounded-lg theme-bg-overlay theme-border-default border theme-text-primary"
+                >
+                  <option value="active">Active Only</option>
+                  <option value="paused">Paused</option>
+                  <option value="completed">Completed</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Create Quest Button */}
+          {activeTab === 'discover' && (
+            <div className="mb-6">
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full md:w-auto"
+                onClick={() => setShowCreateModal(true)}
+                disabled={!profile || (stats.total_earnings || 0) < 100}
+              >
+                ✨ Create Quest (100+ pts required)
+              </Button>
+              {profile && (stats.total_earnings || 0) < 100 && (
+                <p className="text-sm theme-text-danger mt-2">
+                  You need at least 100 points to create a quest
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Quest Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="theme-card-bg-primary">
+                  <div className="h-48 theme-bg-subtle animate-pulse" />
+                  <CardBody className="space-y-3">
+                    <div className="h-6 theme-bg-subtle rounded animate-pulse" />
+                    <div className="h-4 theme-bg-subtle rounded animate-pulse w-3/4" />
+                    <div className="h-4 theme-bg-subtle rounded animate-pulse w-1/2" />
+                    <div className="h-10 theme-bg-subtle rounded animate-pulse" />
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          ) : filteredQuests.length === 0 ? (
+            <Card className="theme-card-bg-primary">
+              <CardBody className="text-center py-12">
+                <div className="text-6xl mb-4">🎯</div>
+                <h3 className="text-xl font-semibold theme-text-primary mb-2">No quests found</h3>
+                <p className="theme-text-secondary mb-4">
+                  {activeTab === 'discover' && searchTerm.trim() && 'Try adjusting your search or filters'}
+                  {activeTab === 'discover' && !searchTerm.trim() && 'Be the first to create a quest!'}
+                  {activeTab === 'my-quests' && 'Complete your first quest to see it here'}
+                  {activeTab === 'my-created' && 'Create your first quest to start earning'}
+                </p>
+                {activeTab === 'discover' && !searchTerm.trim() && (
+                  <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+                    Create Quest
+                  </Button>
+                )}
+              </CardBody>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredQuests.map((quest) => (
+                <QuestCard 
+                  key={quest.id} 
+                  quest={quest}
+                  onComplete={handleCompleteQuest}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quest Creation Wizard */}
+      <QuestCreationWizard
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          // Refresh quest list after creation
+          fetchQuests()
+          if (profile?.fid) {
+            fetchStats()
+          }
+        }}
+        userBalance={stats.total_earnings}
+        userFid={profile?.fid || 0}
+      />
+
+      {/* XP Celebration Overlay */}
+      {xpCelebration && (
+        <XPEventOverlay
+          payload={xpCelebration}
+          open={Boolean(xpCelebration)}
+          onClose={() => setXpCelebration(null)}
+        />
+      )}
+    </AppLayout>
+  )
+}
+
+/**
+ * QuestCard - Unified quest display component
+ */
+interface QuestCardProps {
+  quest: UnifiedQuest
+  onComplete: (questId: number) => void
+}
+
+function QuestCard({ quest, onComplete }: QuestCardProps) {
+  const categoryColor = quest.category === 'onchain' 
+    ? 'bg-purple-500/20 text-purple-300 dark:text-purple-400' 
+    : 'bg-sky-500/20 text-sky-300 dark:text-sky-400'
+  
+  return (
+    <Card className="theme-card-bg-primary hover:scale-105 transition-transform overflow-hidden">
+      {/* Quest Image */}
+      {quest.quest_image_url ? (
+        <img
+          src={quest.quest_image_url}
+          alt={quest.title}
+          className="w-full h-48 object-cover"
+        />
+      ) : (
+        <div className={`w-full h-48 flex items-center justify-center ${quest.category === 'onchain' ? 'bg-gradient-to-br from-purple-500/10 to-purple-600/20 dark:from-purple-500/20 dark:to-purple-600/30' : 'bg-gradient-to-br from-sky-500/10 to-sky-600/20 dark:from-sky-500/20 dark:to-sky-600/30'}`}>
+          <QuestIcon type={quest.category} size={64} className="opacity-40" />
+        </div>
+      )}
+      
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold theme-text-primary truncate mb-1">
+              {quest.title}
+            </h3>
+            <p className="text-sm theme-text-secondary line-clamp-2">
+              {quest.description}
+            </p>
+          </div>
+          <Badge className={categoryColor} size="sm">
+            <QuestIcon type={quest.category} size={14} className="mr-1" />
+            {quest.category === 'onchain' ? 'On-Chain' : 'Social'}
+          </Badge>
+        </div>
+      </CardHeader>
+      
+      <CardBody className="space-y-3">
+        {/* Quest Type */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs theme-text-secondary">Type:</span>
+          <Badge variant="info" size="sm" className="flex items-center gap-1.5">
+            <QuestIcon type={quest.type} size={14} />
+            {questTypeLabels[quest.type]}
+          </Badge>
+        </div>
+
+        {/* Rewards */}
+        <div className="flex items-center justify-between py-2 px-3 rounded-lg theme-card-bg-secondary">
+          <span className="text-sm theme-text-secondary">Reward:</span>
+          <span className="text-lg font-bold theme-text-primary">
+            {quest.reward_points} pts
+          </span>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatsCard
-            icon="/assets/gmeow-icons/Quests Icon.svg"
-            iconAlt="Available"
-            label="Available"
-            value={availableQuests.length}
-            gradient="purple"
-            loading={loading}
-          />
-          <StatsCard
-            icon="/assets/gmeow-icons/Success Box Icon.svg"
-            iconAlt="Completed"
-            label="Completed"
-            value={completedQuests.length}
-            gradient="green"
-            loading={loading}
-          />
-          <StatsCard
-            icon="/assets/gmeow-icons/Trophy Icon.svg"
-            iconAlt="Claimed"
-            label="Claimed"
-            value={claimedQuests.length}
-            gradient="orange"
-            loading={loading}
-          />
-          <StatsCard
-            icon="/assets/gmeow-icons/Rank Icon.svg"
-            iconAlt="Total XP"
-            label="Total XP"
-            value={quests.reduce((sum, q) => sum + (q.user_status === 'claimed' ? q.reward_xp : 0), 0)}
-            gradient="blue"
-            loading={loading}
-          />
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <div className="theme-text-secondary mb-1">Completions</div>
+            <div className="font-semibold theme-text-primary">{quest.total_completions}</div>
+          </div>
+          <div>
+            <div className="theme-text-secondary mb-1">Creator Share</div>
+            <div className="font-semibold theme-text-primary">{quest.creator_earnings_percent}%</div>
+          </div>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardBody>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium theme-text-secondary mb-2">Quest Type</label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as QuestType | 'all')}
-                  className="w-full px-4 py-2 theme-bg-subtle border theme-border-subtle rounded-lg theme-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="all">All Types</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="milestone">Milestone</option>
-                  <option value="achievement">Achievement</option>
-                  <option value="event">Event</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium theme-text-secondary mb-2">Category</label>
-                <select
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value as QuestCategory | 'all')}
-                  className="w-full px-4 py-2 theme-bg-subtle border theme-border-subtle rounded-lg theme-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="gm">Daily GM</option>
-                  <option value="social">Social</option>
-                  <option value="engagement">Engagement</option>
-                  <option value="guild">Guild</option>
-                  <option value="onboarding">Onboarding</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium theme-text-secondary mb-2">Difficulty</label>
-                <select
-                  value={filterDifficulty}
-                  onChange={(e) => setFilterDifficulty(e.target.value as QuestDifficulty | 'all')}
-                  className="w-full px-4 py-2 theme-bg-subtle border theme-border-subtle rounded-lg theme-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="all">All Levels</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
-                  <option value="expert">Expert</option>
-                </select>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && quests.length === 0 && (
-          <EmptyState
-            icon="/assets/gmeow-icons/Quests Icon.svg"
-            iconAlt="No Quests"
-            title="No Quests Available"
-            description="Check back later for new challenges or try adjusting your filters."
-            action={
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => {
-                  setFilterType('all')
-                  setFilterCategory('all')
-                  setFilterDifficulty('all')
-                }}
-              >
-                Clear Filters
-              </Button>
-            }
-          />
-        )}
-
-        {/* Available & In Progress Quests */}
-        {!loading && availableQuests.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold theme-text-primary mb-4">Available Quests</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableQuests.map((quest) => (
-                <Card key={quest.id} hover className={difficultyColors[quest.difficulty]}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      {quest.icon_path && (
-                        <Image
-                          src={quest.icon_path}
-                          alt={quest.quest_name}
-                          width={48}
-                          height={48}
-                          className="rounded-lg"
-                        />
-                      )}
-                      {!quest.icon_path && categoryIcons[quest.category] && (
-                        <Image
-                          src={categoryIcons[quest.category]}
-                          alt={quest.category}
-                          width={48}
-                          height={48}
-                          className="opacity-80"
-                        />
-                      )}
-                      <div className="flex flex-col gap-2">
-                        {quest.is_featured && (
-                          <Badge variant="warning" size="sm">⭐ Featured</Badge>
-                        )}
-                        <Badge variant={statusColors[quest.user_status || 'available']} size="sm">
-                          {quest.user_status === 'in_progress' ? '⏳ In Progress' : '✓ Available'}
-                        </Badge>
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-bold theme-text-primary mb-2">{quest.quest_name}</h3>
-                    <p className="theme-text-secondary text-sm mb-4">{quest.description}</p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="info" size="sm">{quest.quest_type}</Badge>
-                      <Badge variant="info" size="sm">{quest.category}</Badge>
-                      <Badge variant="info" size="sm">{quest.difficulty}</Badge>
-                    </div>
-                  </CardHeader>
-
-                  <CardBody>
-                    {/* Progress Bar */}
-                    {quest.user_status === 'in_progress' && quest.user_progress && (
-                      <div className="mb-4">
-                        <div className="flex justify-between text-sm theme-text-secondary mb-2">
-                          <span>Progress</span>
-                          <span>{getProgressPercent(quest)}%</span>
-                        </div>
-                        <div className="w-full theme-bg-subtle rounded-full h-2">
-                          <div 
-                            className="gradient-progress-bar"
-                            style={{ width: `${getProgressPercent(quest)}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Rewards */}
-                    <div className="flex items-center gap-4 text-sm">
-                      {quest.reward_xp > 0 && (
-                        <div className="flex items-center gap-1 text-yellow-400">
-                          <Image src="/assets/gmeow-icons/Rank Icon.svg" alt="XP" width={16} height={16} />
-                          <span>{quest.reward_xp} XP</span>
-                        </div>
-                      )}
-                      {quest.reward_points > 0 && (
-                        <div className="flex items-center gap-1 text-blue-400">
-                          <Image src="/assets/gmeow-icons/Credits Icon.svg" alt="Points" width={16} height={16} />
-                          <span>{quest.reward_points} pts</span>
-                        </div>
-                      )}
-                      {quest.reward_badges.length > 0 && (
-                        <div className="flex items-center gap-1 text-purple-400">
-                          <Image src="/assets/gmeow-icons/Badges Icon.svg" alt="Badges" width={16} height={16} />
-                          <span>{quest.reward_badges.length} badge{quest.reward_badges.length > 1 ? 's' : ''}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardBody>
-
-                  <CardFooter>
-                    <Button
-                      variant="primary"
-                      size="md"
-                      className="w-full"
-                      disabled={quest.user_status === 'locked'}
-                    >
-                      {quest.user_status === 'in_progress' ? 'Continue Quest' : 'Start Quest'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Completed Quests (Ready to Claim) */}
-        {!loading && completedQuests.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold theme-text-primary mb-4">Ready to Claim</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {completedQuests.map((quest) => (
-                <Card key={quest.id} hover gradient="green">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      {quest.icon_path && (
-                        <Image
-                          src={quest.icon_path}
-                          alt={quest.quest_name}
-                          width={48}
-                          height={48}
-                          className="rounded-lg"
-                        />
-                      )}
-                      {!quest.icon_path && categoryIcons[quest.category] && (
-                        <Image
-                          src={categoryIcons[quest.category]}
-                          alt={quest.category}
-                          width={48}
-                          height={48}
-                          className="opacity-80"
-                        />
-                      )}
-                      <Badge variant="success" size="sm">✓ Completed</Badge>
-                    </div>
-                    <h3 className="text-xl font-bold theme-text-primary mb-2">{quest.quest_name}</h3>
-                    <p className="theme-text-secondary text-sm mb-4">{quest.description}</p>
-                  </CardHeader>
-
-                  <CardBody>
-                    {/* Rewards */}
-                    <div className="flex items-center gap-4 text-sm mb-4">
-                      {quest.reward_xp > 0 && (
-                        <div className="flex items-center gap-1 text-yellow-400">
-                          <Image src="/assets/gmeow-icons/Rank Icon.svg" alt="XP" width={16} height={16} />
-                          <span>{quest.reward_xp} XP</span>
-                        </div>
-                      )}
-                      {quest.reward_points > 0 && (
-                        <div className="flex items-center gap-1 text-blue-400">
-                          <Image src="/assets/gmeow-icons/Credits Icon.svg" alt="Points" width={16} height={16} />
-                          <span>{quest.reward_points} pts</span>
-                        </div>
-                      )}
-                      {quest.reward_badges.length > 0 && (
-                        <div className="flex items-center gap-1 text-purple-400">
-                          <Image src="/assets/gmeow-icons/Badges Icon.svg" alt="Badges" width={16} height={16} />
-                          <span>{quest.reward_badges.length} badge{quest.reward_badges.length > 1 ? 's' : ''}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardBody>
-
-                  <CardFooter>
-                    <Button
-                      variant="success"
-                      size="md"
-                      className="w-full"
-                      loading={claimingId === quest.id}
-                      onClick={() => handleClaimReward(quest.id)}
-                    >
-                      {claimingId === quest.id ? 'Claiming...' : '🎁 Claim Rewards'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Claimed Quests */}
-        {!loading && claimedQuests.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold theme-text-primary mb-4">Claimed Rewards</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {claimedQuests.map((quest) => (
-                <Card key={quest.id} className="opacity-60">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      {quest.icon_path && (
-                        <Image
-                          src={quest.icon_path}
-                          alt={quest.quest_name}
-                          width={48}
-                          height={48}
-                          className="rounded-lg grayscale"
-                        />
-                      )}
-                      {!quest.icon_path && categoryIcons[quest.category] && (
-                        <Image
-                          src={categoryIcons[quest.category]}
-                          alt={quest.category}
-                          width={48}
-                          height={48}
-                          className="opacity-50 grayscale"
-                        />
-                      )}
-                      <Badge variant="info" size="sm">✓ Claimed</Badge>
-                    </div>
-                    <h3 className="text-lg font-bold theme-text-primary mb-2">{quest.quest_name}</h3>
-                    <p className="theme-text-tertiary text-sm">{quest.description}</p>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      </div>
-    </AppLayout>
+        {/* Complete Button */}
+        <Button
+          variant="primary"
+          size="sm"
+          className="w-full"
+          onClick={() => onComplete(quest.id)}
+        >
+          Complete Quest
+        </Button>
+      </CardBody>
+    </Card>
   )
 }

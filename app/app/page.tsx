@@ -145,7 +145,7 @@ export default function AppPage() {
                   </div>
                 </Link>
 
-                <Link href="/app/quest-marketplace" className="group">
+                <Link href="/app/quests" className="group">
                   <div className="theme-bg-subtle rounded-xl p-6 border theme-border-default hover:theme-border-hover hover:theme-bg-hover transition-all">
                     <div className="flex items-center gap-3 mb-3">
                       <Image
