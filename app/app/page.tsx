@@ -8,6 +8,9 @@ import { AppLayout } from '@/components/layouts/AppLayout'
 import { useMiniapp } from '@/hooks/useMiniapp'
 import { useUnifiedFarcasterAuth } from '@/hooks/useUnifiedFarcasterAuth'
 import { OnchainStatsCard } from '@/components/features/OnchainStatsCard'
+import { QuickActionsPanel } from '@/components/features/QuickActionsPanel'
+import { FeaturedQuestCard } from '@/components/features/FeaturedQuestCard'
+import { SocialActivity } from '@/components/features/SocialActivity'
 
 export default function AppPage() {
   // Miniapp detection
@@ -29,6 +32,63 @@ export default function AppPage() {
     badgesEarned: 0,
     rank: 0
   })
+
+  // Quick Actions - Layer3 Style
+  const quickActions = [
+    {
+      id: 'gm',
+      icon: '⚡',
+      label: 'Claim Daily GM',
+      description: 'Keep your streak alive',
+      href: '/app/daily-gm',
+      reward: '+100 🐾',
+      badge: 'Daily',
+    },
+    {
+      id: 'quest',
+      icon: '🎯',
+      label: 'Random Quest',
+      description: 'Try your luck',
+      href: '/app/quests',
+      badge: 'Hot',
+      gradient: 'from-orange-500/20 to-red-500/20',
+    },
+    {
+      id: 'share',
+      icon: '📤',
+      label: 'Share Progress',
+      description: 'Earn bonus XP',
+      onClick: () => {
+        // TODO: Implement Farcaster share
+        alert('Share to Farcaster coming soon!')
+      },
+      reward: '+50 XP',
+    },
+    {
+      id: 'leaderboard',
+      icon: '🏆',
+      label: 'Leaderboard',
+      description: 'Check your rank',
+      href: '/app/leaderboard',
+    },
+  ]
+
+  // Featured Quest - Layer3 Style
+  const featuredQuest = {
+    id: 'daily-challenge',
+    title: "🎯 Complete 3 Quests Today",
+    description: "Finish any 3 quests to earn triple XP bonus and a special badge",
+    reward: {
+      amount: 500,
+      type: 'xp' as const,
+      label: 'Paw Points',
+    },
+    difficulty: 'medium' as const,
+    timeLeft: '18h 45m',
+    participants: 1247,
+    href: '/app/quests',
+    tags: ['Daily', '3x Reward'],
+  }
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -136,6 +196,18 @@ export default function AppPage() {
             </CardBody>
           </Card>
         )}
+
+        {/* Layer3-Inspired Quick Actions */}
+        <QuickActionsPanel actions={quickActions} />
+
+        {/* Featured Quest - Layer3 Style */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 theme-text-primary">⭐ Featured Quest</h2>
+          <FeaturedQuestCard quest={featuredQuest} />
+        </div>
+
+        {/* Social Activity Feed */}
+        <SocialActivity fid={fid} limit={5} />
 
         {/* Stats Overview */}
         {!loading && (
