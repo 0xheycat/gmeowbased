@@ -1,5 +1,7 @@
 // app/api/frame/route.ts
 
+
+
 import { NextResponse } from 'next/server'
 import {
   createPublicClient,
@@ -7,7 +9,7 @@ import {
   type Address,
 } from 'viem'
 
-// Import your gmeow-utils. Adjust path if your gmeow-utils export is different.
+// Import your gm-utils. Adjust path if your gm-utils export is different.
 import gm, {
   CONTRACT_ADDRESSES,
   GM_CONTRACT_ABI,
@@ -21,7 +23,7 @@ import gm, {
   type NormalizedQuest,
   type ChainKey,
   type GMChainKey,
-} from '@/lib/gmeow-utils'
+} from '@/lib/gm-utils'
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
 import { buildDynamicFrameImageUrl } from '@/lib/share'
@@ -697,8 +699,8 @@ async function fallbackResolveNeynarProfile(options: { address?: string; fid?: n
 }
 
 /**
- * Fetch quest data from chain using gmeow-utils' createGetQuestCall wrapper.
- * This expects the gmeow-utils call object to be an argument for read contract.
+ * Fetch quest data from chain using gm-utils' createGetQuestCall wrapper.
+ * This expects the gm-utils call object to be an argument for read contract.
  */
 async function fetchQuestOnChain(
   questId: number | string,
@@ -2986,7 +2988,7 @@ export async function GET(req: Request) {
 - This handler intentionally keeps logic in one place to provide a universal
   frame endpoint. For heavy production usage, split responsibilities into
   smaller files (quest/*, guild/*, points/*).
-- The route uses gmeow-utils call creators to create call objects suitable for
+- The route uses gm-utils call creators to create call objects suitable for
   viem/wagmi writeContract/readContract patterns.
 - If you have a richer Neynar helper library, import it and replace neynarFetchRaw
   with more advanced utilities for better behavior / retries / billing detection.
