@@ -151,38 +151,38 @@ export default function ProfilePage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Link 
             href="/app/quests"
-            className="rounded-xl bg-purple-600/20 border border-purple-600/30 p-6 hover:bg-purple-600/30 transition-all hover:scale-105 cursor-pointer"
+            className="rounded-xl bg-primary/20 border border-primary/30 p-6 hover:bg-primary/30 transition-all hover:scale-105 cursor-pointer"
           >
             <div className="text-3xl mb-2">🎯</div>
             <div className="font-bold theme-text-primary">Quests</div>
-            <div className="text-sm text-purple-300">{profile.questsCompleted} completed</div>
+            <div className="text-sm theme-text-secondary">{profile.questsCompleted} completed</div>
           </Link>
 
           <Link 
             href="/app/badges"
-            className="rounded-xl bg-yellow-600/20 border border-yellow-600/30 p-6 hover:bg-yellow-600/30 transition-all hover:scale-105 cursor-pointer"
+            className="rounded-xl bg-warning/20 border border-warning/30 p-6 hover:bg-warning/30 transition-all hover:scale-105 cursor-pointer"
           >
             <div className="text-3xl mb-2">🏅</div>
             <div className="font-bold theme-text-primary">Badges</div>
-            <div className="text-sm text-yellow-300">{profile.badgesEarned} earned</div>
+            <div className="text-sm theme-text-secondary">{profile.badgesEarned} earned</div>
           </Link>
 
           <Link 
             href="/app/guilds"
-            className="rounded-xl bg-green-600/20 border border-green-600/30 p-6 hover:bg-green-600/30 transition-all hover:scale-105 cursor-pointer"
+            className="rounded-xl bg-success/20 border border-success/30 p-6 hover:bg-success/30 transition-all hover:scale-105 cursor-pointer"
           >
             <div className="text-3xl mb-2">⚔️</div>
             <div className="font-bold theme-text-primary">Guilds</div>
-            <div className="text-sm text-green-300">{profile.guildsJoined} joined</div>
+            <div className="text-sm theme-text-secondary">{profile.guildsJoined} joined</div>
           </Link>
 
           <Link 
             href="/app/leaderboard"
-            className="rounded-xl bg-orange-600/20 border border-orange-600/30 p-6 hover:bg-orange-600/30 transition-all hover:scale-105 cursor-pointer"
+            className="rounded-xl bg-danger/20 border border-danger/30 p-6 hover:bg-danger/30 transition-all hover:scale-105 cursor-pointer"
           >
             <div className="text-3xl mb-2">🏆</div>
             <div className="font-bold theme-text-primary">Rank</div>
-            <div className="text-sm text-orange-300">#{profile.rank}</div>
+            <div className="text-sm theme-text-secondary">#{profile.rank}</div>
           </Link>
         </div>
 

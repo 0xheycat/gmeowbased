@@ -146,7 +146,7 @@ function ChainIcon({ chain, size = 16 }: { chain: ChainKey; size?: number }) {
   return (
     <div 
       className={`${colors[chain] || 'bg-slate-500'} rounded-full`}
-      style={{ width: size, height: size }}
+      style={{ width: `${size}px`, height: `${size}px` }}
     />
   )
 }
