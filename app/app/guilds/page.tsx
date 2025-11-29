@@ -448,7 +448,7 @@ export default function GuildDiscoveryPage() {
             gradient="cyan"
           />
           <StatsCard 
-            icon="/assets/gmeow-icons/Users Icon.svg"
+            icon="/assets/gmeow-icons/Members Icon.svg"
             iconAlt="Total Members"
             label="Total Members" 
             value={formatNumber(guildStats.totalMembers)}
