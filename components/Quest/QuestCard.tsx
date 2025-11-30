@@ -269,179 +269,167 @@ export function QuestCard({ quest, index, featured = false }: QuestCardProps) {
   const questMode = questTypeLabel?.toLowerCase().includes('farcaster') ? 'SOCIAL QUEST' : 'ONCHAIN QUEST'
 
   return (
-    <article className="quest-card-yugioh" data-tier={tier} style={style}>
-      <div className="quest-card-yugioh__body">
-        
-        {/* 1. TITLE BAR (Golden name strip) */}
-        <div className="quest-card-yugioh__title-bar">
-          <h3 className="quest-card-yugioh__name" title={quest.name}>
+    <article className="glass-card relative overflow-hidden hover:shadow-lg transition-shadow" data-tier={tier}>
+      {/* Header: Title + Serial + Bookmark */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-bold truncate" title={quest.name}>
             {quest.name}
           </h3>
-          <button
-            type="button"
-            className="quest-card-yugioh__bookmark"
-            onClick={handleBookmarkToggle}
-            aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
-            title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
-          >
-            {bookmarked ? '🔖' : '🔗'}
-          </button>
-          <span className="quest-card-yugioh__serial">{questSerial}</span>
+          <span className="text-xs text-gray-500">{questSerial}</span>
         </div>
+        <button
+          type="button"
+          onClick={handleBookmarkToggle}
+          className="ml-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+          title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+        >
+          {bookmarked ? '🔖' : '🔗'}
+        </button>
+      </div>
 
-        {/* 2. ATTRIBUTE CORNER (Chain + Tier stars) */}
-        <div className="quest-card-yugioh__attribute-corner">
-          <div className="quest-card-yugioh__chain-icon">
-            <ChainIcon 
-              chain={quest.chain} 
-              label={quest.chainLabel} 
-              size={32}
-            />
-          </div>
-          <div className="quest-card-yugioh__level-stars">
-            {Array.from({ length: Math.min(getTierLevel(tier), 5) }, (_, i) => (
-              <span key={i}>★</span>
-            ))}
-          </div>
+      {/* Chain + Tier */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
+        <div className="flex items-center gap-2">
+          <ChainIcon 
+            chain={quest.chain} 
+            label={quest.chainLabel} 
+            size={24}
+          />
+          <span className="text-sm font-medium">{quest.chainLabel}</span>
         </div>
+        <div className="flex gap-0.5 text-yellow-500">
+          {Array.from({ length: Math.min(getTierLevel(tier), 5) }, (_, i) => (
+            <span key={i} className="text-xs">★</span>
+          ))}
+        </div>
+      </div>
 
-        {/* 3. ARTWORK FRAME (Large visual area) */}
-        <div className="quest-card-yugioh__artwork-frame">
-          {backgroundImage ? (
-            <>
-              {imageLoading && (
-                <div className="quest-card-yugioh__artwork-skeleton" aria-hidden="true">
-                  <div className="quest-card-yugioh__artwork-skeleton-shimmer" />
-                </div>
-              )}
-              {imageError ? (
-                <div className="quest-card-yugioh__artwork-placeholder">
-                  <span className="text-4xl">🎴</span>
-                </div>
-              ) : (
-                <Image 
-                  src={backgroundImage} 
-                  alt={quest.name}
-                  fill
-                  className="quest-card-yugioh__artwork"
-                  sizes="420px"
-                  unoptimized
-                  style={{ opacity: imageLoading ? 0 : 1 }}
-                  onLoad={() => setImageLoading(false)}
-                  onError={() => {
-                    setImageLoading(false)
-                    setImageError(true)
-                  }}
-                />
-              )}
-              <div className="quest-card-yugioh__artwork-overlay" />
-            </>
-          ) : (
-            <div className="quest-card-yugioh__artwork-placeholder">
-              {quest.chainLabel} · {questTypeLabel}
-            </div>
+      {/* Image */}
+      {backgroundImage ? (
+        <div className="relative h-48 bg-gray-100 dark:bg-gray-800">
+          {imageLoading && (
+            <div className="absolute inset-0 animate-pulse bg-gray-200 dark:bg-gray-700" />
           )}
-        </div>
-
-        {/* 4. TYPE BAR (Quest type) */}
-        <div className="quest-card-yugioh__type-bar">
-          <span className="quest-card-yugioh__type-text">
-            [{questMode}] {questTypeLabel || 'QUEST'}
-          </span>
-        </div>
-
-        {/* 5. DESCRIPTION BOX (Parchment effect) */}
-        <div className="quest-card-yugioh__description-box">
-          {primaryNarrative ? (
-            <>
-              {secondaryNarrative ? (
-                <div className="quest-card-yugioh__description-headline">
-                  {primaryNarrative}
-                </div>
-              ) : null}
-              <p className="quest-card-yugioh__description-text">
-                {secondaryNarrative || primaryNarrative}
-              </p>
-            </>
-          ) : (
-            <p className="quest-card-yugioh__description-text">
-              Complete this quest to earn rewards and progress in your adventure.
-            </p>
-          )}
-          
-          <div className="quest-card-yugioh__meta-list">
-            {channel?.name ? (
-              <div className="quest-card-yugioh__meta-item">
-                • Channel: #{channel.name}
-              </div>
-            ) : null}
-            {creatorIdentity?.label ? (
-              <div className="quest-card-yugioh__meta-item">
-                • Creator: {creatorIdentity.label}
-              </div>
-            ) : null}
-            <div className="quest-card-yugioh__meta-item">
-              • Expiry: {expiresLabel}
+          {imageError ? (
+            <div className="absolute inset-0 flex items-center justify-center text-4xl">
+              🎴
             </div>
-            {completionTarget && completionTarget > 0 ? (
-              <div className="quest-card-yugioh__meta-item">
-                • Cap: {formatNumber(completionTarget)} pilots
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        {/* 6. STATS FOOTER (ATK/DEF style) */}
-        <div className="quest-card-yugioh__stats-footer">
-          <div className="quest-card-yugioh__stat quest-card-yugioh__stat--reward">
-            <span className="quest-card-yugioh__stat-label">REWARD</span>
-            <span className="quest-card-yugioh__stat-value">{rewardDisplay}</span>
-          </div>
-          <div className="quest-card-yugioh__expiry">
-            {expiresLabel}
-          </div>
-          <div className="quest-card-yugioh__stat quest-card-yugioh__stat--participants">
-            <span className="quest-card-yugioh__stat-label">PILOTS</span>
-            <span className="quest-card-yugioh__stat-value">{participantsValue}</span>
-          </div>
-        </div>
-
-        {/* 7. ACTION FOOTER (Frame share + Quest link) */}
-        <div className="quest-card-yugioh__action-footer">
-          {shareLink ? (
-            <button
-              onClick={async () => {
-                const questName = quest.name || `Quest #${quest.id}`
-                const composeText = `⚔️ Join me on "${questName}"! @gmeowbased`
-                await openWarpcastComposer(composeText, shareLink)
+          ) : (
+            <Image 
+              src={backgroundImage} 
+              alt={quest.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              unoptimized
+              style={{ opacity: imageLoading ? 0 : 1 }}
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageLoading(false)
+                setImageError(true)
               }}
-              className="quest-card-yugioh__action-link cursor-pointer bg-transparent border-0 p-0"
-              aria-label="Share frame on Warpcast"
-            >
-              <span className="quest-card-yugioh__action-icon">📤</span>
-              <span>Share Frame</span>
-            </button>
-          ) : (
-            <span className="quest-card-yugioh__action-link" style={{ opacity: 0.5 }}>
-              <span className="quest-card-yugioh__action-icon">📤</span>
-              <span>Frame N/A</span>
-            </span>
+            />
           )}
-          
-          <span className="quest-card-yugioh__action-separator" />
-          
-          <Link 
-            href={questUrl} 
-            target="_blank" 
-            rel="noreferrer"
-            className="quest-card-yugioh__action-link"
-            aria-label={`View ${quest.name || 'quest'} details and progress`}
-          >
-            <span>Quest Details</span>
-            <span className="quest-card-yugioh__action-icon">↗</span>
-          </Link>
         </div>
+      ) : (
+        <div className="h-48 flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+          <div className="text-center">
+            <span className="text-4xl">⚔️</span>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {quest.chainLabel} · {questTypeLabel}
+            </p>
+          </div>
+        </div>
+      )}
 
+      {/* Quest Type Badge */}
+      <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50">
+        <span className="badge-base text-xs">
+          [{questMode}] {questTypeLabel || 'QUEST'}
+        </span>
+      </div>
+
+      {/* Description */}
+      <div className="p-4 space-y-3">
+        {primaryNarrative ? (
+          <div>
+            {secondaryNarrative && (
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                {primaryNarrative}
+              </p>
+            )}
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {secondaryNarrative || primaryNarrative}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Complete this quest to earn rewards and progress in your adventure.
+          </p>
+        )}
+        
+        <div className="text-xs text-gray-500 space-y-1">
+          {channel?.name && (
+            <div>• Channel: #{channel.name}</div>
+          )}
+          {creatorIdentity?.label && (
+            <div>• Creator: {creatorIdentity.label}</div>
+          )}
+          <div>• Expiry: {expiresLabel}</div>
+          {completionTarget && completionTarget > 0 && (
+            <div>• Cap: {formatNumber(completionTarget)} pilots</div>
+          )}
+        </div>
+      </div>
+
+      {/* Stats Footer */}
+      <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex-1">
+          <div className="text-xs text-gray-500 uppercase">Reward</div>
+          <div className="badge-success text-sm font-bold">{rewardDisplay}</div>
+        </div>
+        <div className="flex-1 text-right">
+          <div className="text-xs text-gray-500 uppercase">Pilots</div>
+          <div className="text-sm font-semibold">{participantsValue}</div>
+        </div>
+      </div>
+
+      {/* Action Footer */}
+      <div className="flex items-center border-t border-gray-200 dark:border-gray-700">
+        {shareLink ? (
+          <button
+            onClick={async () => {
+              const questName = quest.name || `Quest #${quest.id}`
+              const composeText = `⚔️ Join me on "${questName}"! @gmeowbased`
+              await openWarpcastComposer(composeText, shareLink)
+            }}
+            className="flex-1 flex items-center justify-center gap-2 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            aria-label="Share frame on Warpcast"
+          >
+            <span>📤</span>
+            <span>Share Frame</span>
+          </button>
+        ) : (
+          <div className="flex-1 flex items-center justify-center gap-2 py-3 opacity-50 text-sm">
+            <span>📤</span>
+            <span>Frame N/A</span>
+          </div>
+        )}
+        
+        <div className="w-px h-8 bg-gray-200 dark:bg-gray-700" />
+        
+        <Link 
+          href={questUrl} 
+          target="_blank" 
+          rel="noreferrer"
+          className="flex-1 flex items-center justify-center gap-2 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+          aria-label={`View ${quest.name || 'quest'} details and progress`}
+        >
+          <span>Quest Details</span>
+          <span>↗</span>
+        </Link>
       </div>
     </article>
   )
