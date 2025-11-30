@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
-import './styles/quest-card.css'
-import './styles/mobile-miniapp.css'
 import { MiniAppProvider } from './providers'
 import type { ReactNode } from 'react'
 import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'

@@ -11,10 +11,6 @@ import { fetchFidByAddress } from '@/lib/neynar'
 // GI-10: Confetti loaded dynamically for performance
 import { getBadgeArtworkBackground } from '@/lib/badge-artwork'
 import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
-import '@/app/styles/quest-card-yugioh.css'
-import '@/app/styles/quest-card-glass.css'
-import '@/app/styles/onboarding-mobile.css'
-import '@/app/styles/gacha-animation.css'
 
 type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
 

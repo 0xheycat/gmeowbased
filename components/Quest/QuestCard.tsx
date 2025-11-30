@@ -10,7 +10,6 @@ import type { CSSProperties } from 'react'
 
 import { ChainIcon } from '@/components/Quest/QuestChainBadge'
 import { isBookmarked, toggleBookmark } from '@/lib/quest-bookmarks'
-import '@/app/styles/quest-card-yugioh.css'
 import type { RewardAssetInfo, RewardDetail } from '@/components/Quest/QuestRewardCapsule'
 import type { ChainKey, QuestTypeKey } from '@/lib/gm-utils'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
@@ -21,7 +20,6 @@ import {
   fetchUserByUsername,
   type FarcasterUser,
 } from '@/lib/neynar'
-import '@/app/styles/quest-card-yugioh.css'
 
 type QuestCardStyle = CSSProperties & {
   '--quest-card-index'?: number
