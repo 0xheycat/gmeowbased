@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 import dynamic from 'next/dynamic'
-import { OnboardingFlow } from '@/components/intro/OnboardingFlow'
 import { OnchainHub } from '@/components/home/OnchainHub'
 import type { FAQItem, GuildPreview, LeaderboardEntry, QuestPreview } from '@/components/home/types'
 
@@ -101,40 +100,13 @@ const FAQ_ITEMS: FAQItem[] = [
   },
 ]
 
-const INTRO_STORAGE_KEY = 'gmeow:onboarding.v1'
-
 function HomePage() {
   const { address, isConnected } = useAccount()
-  const [forceIntro, setForceIntro] = useState(false)
   const [statsLoading, setStatsLoading] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-
-    try {
-      const stored = window.localStorage.getItem(INTRO_STORAGE_KEY)
-      const shouldShow = !stored
-      setForceIntro(shouldShow)
-      if (shouldShow) {
-        window.localStorage.setItem(INTRO_STORAGE_KEY, '1')
-      }
-    } catch {
-      setForceIntro(false)
-    }
-  }, [hydrated])
-
-  const handleIntroFinish = useCallback(() => {
-    setForceIntro(false)
-    try {
-      window.localStorage.setItem(INTRO_STORAGE_KEY, '1')
-    } catch {
-      // ignore storage write errors
-    }
   }, [])
 
   const handleStatsLoading = useCallback((loading: boolean) => {
@@ -145,7 +117,6 @@ function HomePage() {
 
   return (
     <>
-      <OnboardingFlow forceShow={forceIntro} onComplete={handleIntroFinish} />
       <div className="page-root">
         <main>
           <OnchainHub loading={statsLoading} onLoadingChange={handleStatsLoading} />
