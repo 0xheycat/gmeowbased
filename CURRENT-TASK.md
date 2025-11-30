@@ -1,103 +1,96 @@
 # 🎯 CURRENT TASK - THE ONLY FILE THAT MATTERS
 
-**Last Updated**: November 30, 2025 - CSS REFRESH ✅  
+**Last Updated**: November 30, 2025 4:29 PM - FOUNDATION FILES RESTORED ✅  
 **Branch**: main  
-**Status**: ✅ FRESH CSS ACTIVATED FROM TEMPLATES
+**Status**: 🔥 PHASE 1 VERIFICATION - New Proxy Contract Imported
 
 ---
 
-## ⚠️ THE BRUTAL TRUTH (UPDATED)
+## ⚠️ CRITICAL UPDATE: Foundation Files Restored
 
-**What We Have**:
-- ✅ 5.7MB of working code (app/ + components/ + lib/)
-- ✅ Production site: https://gmeowhq.art (LIVE)
-- ✅ **Fresh globals.css: 553 lines** (copied from gmeowbased0.6 template, 74% smaller)
-- ✅ **Mobile-first breakpoints**: xs:500px → 4xl:2160px (from template)
-- ✅ **Dark/light theme**: CSS variables, auto-switching
-- ✅ Base contracts deployed (Nov 28, 2025)
-- ✅ Farcaster miniapp registered
-- ✅ **VIRAL-FEATURES-RESEARCH.md** (5 pages, done) ✅
-- ✅ **FOUNDATION-REBUILD-ROADMAP.md** (7-day plan, done) ✅
-- ✅ **PHASE 1 COMPLETE**: Deleted features, CSS consolidated, template selected
-- ✅ **Build successful**: Zero CSS errors
-- 📝 **Need to apply**: Remove inline styles, use component classes
-- ❌ **ZERO active users** on miniapp
-- ❌ **Poor layout** (too many features nobody uses)
+**What Just Happened**:
+- ✅ Imported `lib/gmeow-utils.ts` (36KB) from foundation-rebuild branch
+- ✅ Imported `abi/` folder (5 ABIs: GmeowProxy, Core, Guild, NFT, Combined)
+- ✅ Imported `contract/` folder (7 Solidity files + modules/libraries/proxy/)
+- ⚠️ **NEW PROXY CONTRACT ADDRESSES** (deployed Nov 28, 2025):
+  * Core: `0x9BDD11aA50456572E3Ea5329fcDEb81974137f92`
+  * Guild: `0x967457be45facE07c22c0374dAfBeF7b2f7cd059`
+  * NFT: `0xD99aeE13eA68C1e4e43cfA60E792520Dd06C2c20`
+  * Proxy: `0x6A48B758ed42d7c934D387164E60aa58A92eD206`
 
-**What Actually Works in Farcaster/Base**:
-1. **Simple GM mechanics** (daily streak = dopamine)
-2. **Viral sharing** (if it's easy + rewarding)
-3. **Leaderboards** (people love competition)
-4. **Instant feedback** (XP numbers go up = good)
-5. **Mobile-first** (everyone on phone)
-6. **Direct wallet actions** (mint/claim in 1 click)
-
-**What DOESN'T Work**:
-1. ❌ Complex quest systems (too much friction)
-2. ❌ Multiple dashboards (confusing)
-3. ❌ Nested features (users get lost)
-4. ❌ Too many notifications (annoying)
-5. ❌ Long onboarding (users bail)
+**The Problem**:
+- We have BOTH `lib/gm-utils.ts` (928 lines, multi-chain, OLD addresses)
+- AND `lib/gmeow-utils.ts` (1,021 lines, Base-only, NEW proxy addresses)
+- 20+ files import from `@/lib/gm-utils` (old addresses!)
+- **Phase 1 NOT 100% complete** - utils migration missing
 
 ---
 
 ## 🚨 CURRENT TASK (ONLY 1 ALLOWED)
 
-**Task**: Phase 2 - Fresh CSS + Components from Template  
-**Started**: November 30, 2025  
-**Completed**: November 30, 2025 10:15 AM  
-**Status**: ✅ COMPLETE (Day 2 finished correctly!)
+**Task**: Phase 1 Final Step - Migrate from gm-utils.ts → gmeow-utils.ts  
+**Started**: November 30, 2025 4:29 PM  
+**Status**: ⏳ IN PROGRESS  
+**Blocker**: None
 
-**CSS Foundation**: ✅ Extracted and applied entirely from gmeowbased0.6  
-**Components**: ✅ 13 production-tested components copied and renamed
+### What We Need to Do
 
-### ✅ What We Just Completed
+**1. Update All Imports** (20+ files)
+```bash
+# Find all files importing from gm-utils
+grep -r "from '@/lib/gm-utils'" --include="*.ts" --include="*.tsx"
 
-**Phase 2.1: Fresh CSS System** (4 hours) ✅
-1. ✅ Analyzed templates: gmeowbased0.6 (700 lines), trezoadmin-41 (2,390 lines), music (113 lines)
-2. ✅ **Chose gmeowbased0.6**: Best mobile-first, clean, production-tested
-3. ✅ Created app/globals.css (553 lines, 74% smaller)
-4. ✅ Updated tailwind.config.ts (mobile breakpoints xs:500px → 4xl:2160px)
-5. ✅ Fixed Dashboard + Leaderboard inline styles
-6. ✅ Build successful
+# Replace:
+- from '@/lib/gm-utils'
++ from '@/lib/gmeow-utils'
+```
 
-**Phase 2.2: Components from Template** (2 hours) ✅
-1. ✅ **DELETED** 30 custom components (2,225 lines we built from scratch)
-2. ✅ **COPIED** 13 production-tested components from gmeowbased0.6
-3. ✅ **RENAMED** all with gmeow-*.tsx prefix:
-   - gmeow-alert, gmeow-avatar, gmeow-badge
-   - gmeow-dialog, gmeow-dropdown, gmeow-loader
-   - gmeow-scrollbar, gmeow-switch, gmeow-tab
-   - gmeow-collapse, gmeow-disclosure, gmeow-input-label
-   - gmeow-transition
+**Files to Update** (from grep search):
+- components/Quest/QuestCard.tsx
+- lib/bot-quest-recommendations.ts
+- lib/bot-frame-builder.ts  
+- lib/leaderboard-sync.ts
+- lib/share.ts
+- lib/profile-data.ts
+- lib/partner-snapshot.ts
+- lib/bot-stats.ts
+- lib/rank-telemetry-client.ts
+- lib/badges.ts
+- lib/contract-mint.ts
+- lib/contract-events.ts
+- lib/community-event-types.ts
+- lib/leaderboard-aggregator.ts
+- lib/team.ts
+- lib/profile-types.ts
+- lib/rpc.ts
+- lib/community-events.ts
+- lib/telemetry.ts
+- scripts/automation/mint-badge-queue.ts
+- scripts/automation/send-gm-reminders.ts
+- components/home/HeroSection.tsx
+- (+ more files)
 
-**Total**: 13 production-tested components (not custom built!)
-   - Copy these FROM templates (don't build custom)
-   - Test in production page
-   - Why users keep coming back
-   - Engagement metrics (if public)
+**2. Delete Old gm-utils.ts**
+```bash
+rm lib/gm-utils.ts
+```
 
-2. **Base.dev Patterns That Work**
-   - Successful onchain apps on Base
-   - What wallet actions they use
-   - How they reduce friction
-   - Transaction success rates
+**3. Verify Build**
+```bash
+npm run build
+# Should succeed with new proxy addresses
+```
 
-3. **Our Codebase Analysis**
-   - What features are unused (track analytics if exists)
-   - What's slowing us down
-   - What can be deleted
-   - What's actually good
+**4. Update Documentation**
+- Update FOUNDATION-REBUILD-ROADMAP.md Phase 1 status
+- Mark utils migration complete
+- Document new proxy addresses
 
-### Deliverable:
+---
 
-ONE markdown file: `VIRAL-FEATURES-RESEARCH.md`
+## ✅ PHASE 1 STATUS (Foundation Cleanup)
 
-**Structure**:
-```markdown
-# Viral Features Research
-
-## 1. Successful Examples (5-10 apps)
+**Target**: Day 1 (8 hours)
 [Name] - [What they do] - [Why it works]
 
 ## 2. What We Should Copy
