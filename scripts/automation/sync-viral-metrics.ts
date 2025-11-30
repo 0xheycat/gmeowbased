@@ -31,6 +31,7 @@ config({ path: process.env.DOTENV_PATH || '.env.local', override: true })
 
 import { createClient } from '@supabase/supabase-js'
 import process from 'node:process'
+import type { Database } from '../../types/supabase'
 
 // ============================================================================
 // Types
@@ -162,7 +163,7 @@ async function fetchCastMetrics(castHash: string): Promise<NeynarCastResponse | 
 // Supabase Operations
 // ============================================================================
 
-async function fetchCastsToUpdate(supabase: ReturnType<typeof createClient>) {
+async function fetchCastsToUpdate(supabase: ReturnType<typeof createClient<Database>>) {
   const thresholdDate = new Date()
   thresholdDate.setHours(thresholdDate.getHours() - UPDATE_THRESHOLD_HOURS)
 
@@ -181,7 +182,7 @@ async function fetchCastsToUpdate(supabase: ReturnType<typeof createClient>) {
 }
 
 async function updateCastMetrics(
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient<Database>>,
   cast: BadgeCast,
   metrics: {
     likes: number
@@ -233,7 +234,7 @@ async function updateCastMetrics(
 }
 
 async function awardViralXp(
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient<Database>>,
   fid: number,
   xpAmount: number,
   castHash: string,
@@ -284,7 +285,7 @@ async function syncViralMetrics(options: { dryRun: boolean }): Promise<SyncResul
     throw new Error('NEYNAR_API_KEY not configured')
   }
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
   console.log('📊 Fetching badge casts to update...')
   const casts = await fetchCastsToUpdate(supabase)
@@ -390,7 +391,8 @@ async function main() {
   }
 }
 
-if (require.main === module) {
+// Run if called directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   main()
 }
 
