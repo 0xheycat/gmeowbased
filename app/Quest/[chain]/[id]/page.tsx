@@ -7,7 +7,6 @@ import { format } from 'date-fns'
 import { RankProgress } from '@/components/ui/RankProgress'
 import { ChainIcon, QuestChainChip } from '@/components/Quest/QuestChainBadge'
 import QuestLoadingDeck from '@/components/Quest/QuestLoadingDeck'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 import {
   CHAIN_LABEL,
   CHAIN_KEYS,
