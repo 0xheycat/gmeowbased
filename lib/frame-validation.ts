@@ -4,7 +4,7 @@
  * Implements GI-8 security requirements
  */
 
-import { ALL_CHAIN_KEYS, type ChainKey } from './gm-utils'
+import { ALL_CHAIN_KEYS, type ChainKey } from './gmeow-utils'
 
 /**
  * Sanitize and validate Farcaster FID
