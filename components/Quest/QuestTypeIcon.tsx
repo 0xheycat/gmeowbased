@@ -1,4 +1,4 @@
-import type { QuestTypeKey } from '@/lib/gm-utils'
+import type { QuestTypeKey } from '@/lib/gmeow-utils'
 
 export const QUEST_TYPE_VISUALS: Record<QuestTypeKey, { icon: string; label: string }> = {
   GENERIC: { icon: '🧩', label: 'Quest' },

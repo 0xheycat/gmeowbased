@@ -1,5 +1,5 @@
 import { createPublicClient, http } from 'viem'
-import { GM_CONTRACT_ABI, getContractAddress, CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { GM_CONTRACT_ABI, getContractAddress, CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
 import { buildFrameShareUrl } from '@/lib/share'
 import { calculateRankProgress } from '@/lib/rank'
 import { fetchUserByAddress, fetchFidByAddress, fetchUserByFid } from '@/lib/neynar'

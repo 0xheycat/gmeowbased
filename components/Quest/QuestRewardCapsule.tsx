@@ -1,6 +1,6 @@
 import { useId } from 'react'
 
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 
 const CHAIN_BADGE: Record<ChainKey, { icon: string; label: string }> = {
   base: { icon: '🟦', label: '' },

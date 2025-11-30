@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 import { fetchAggregatedRaw, enrichAggregatedRows, PROFILE_SUPPORTED } from '@/lib/leaderboard-aggregator'
 
 type SyncLogger = {

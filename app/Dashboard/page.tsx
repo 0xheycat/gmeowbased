@@ -23,7 +23,7 @@ import {
   createUnstakeForBadgeTx,
   getTimeBasedGreeting,
   getTimeBasedShareText,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import { calculateRankProgress } from '@/lib/rank'
 import { emitRankTelemetryEvent } from '@/lib/rank-telemetry-client'

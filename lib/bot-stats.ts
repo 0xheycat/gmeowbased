@@ -2,7 +2,7 @@
 import { PROFILE_SUPPORTED_CHAINS, fetchChainSnapshot, normalizeAddress } from '@/lib/profile-data'
 import { calculateRankProgress } from '@/lib/rank'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const DEFAULT_CHAIN: ChainKey = 'base'

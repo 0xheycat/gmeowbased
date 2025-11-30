@@ -10,7 +10,7 @@ import {
 	CHAIN_KEYS,
 	CHAIN_LABEL,
 	type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import {
 	QUEST_TYPE_DETAILS,
 	QUEST_TYPE_OPTIONS,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
 import { withErrorHandler } from '@/lib/error-handler'
 
 const ONCHAINKIT_API_KEY = process.env.ONCHAINKIT_API_KEY ?? process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ?? ''

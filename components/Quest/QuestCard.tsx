@@ -11,7 +11,7 @@ import type { CSSProperties } from 'react'
 import { ChainIcon } from '@/components/Quest/QuestChainBadge'
 import { isBookmarked, toggleBookmark } from '@/lib/quest-bookmarks'
 import type { RewardAssetInfo, RewardDetail } from '@/components/Quest/QuestRewardCapsule'
-import type { ChainKey, QuestTypeKey } from '@/lib/gm-utils'
+import type { ChainKey, QuestTypeKey } from '@/lib/gmeow-utils'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 import {
   fetchCastByIdentifier,

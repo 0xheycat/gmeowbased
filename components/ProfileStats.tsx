@@ -7,7 +7,7 @@ import { RankProgress } from '@/components/ui/RankProgress'
 import { VirtualizedBadgeGrid } from '@/components/profile/VirtualizedBadgeGrid'
 import { copyToClipboardSafe, openWarpcastComposer } from '@/lib/share'
 import { calculateRankProgress, formatXp } from '@/lib/rank'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 import type { ProfileOverviewData } from '@/lib/profile-types'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 

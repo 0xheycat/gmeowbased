@@ -5,7 +5,7 @@ import { SegmentedToggle } from '../components/SegmentedToggle'
 import { TokenSelector } from '../components/TokenSelector'
 import { NftSelector } from '../components/NftSelector'
 import { CatalogStatusBanner } from '../components/CatalogStatusBanner'
-import { CHAIN_KEYS, CHAIN_LABEL } from '@/lib/gm-utils'
+import { CHAIN_KEYS, CHAIN_LABEL } from '@/lib/gmeow-utils'
 import { isAssetAllowed, questTypeRequiresGate, type QuestPolicy } from '@/lib/quest-policy'
 
 export function EligibilityStep({

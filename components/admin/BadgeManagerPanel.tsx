@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import Image from 'next/image'
 
-import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
 import {

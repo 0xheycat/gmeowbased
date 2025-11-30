@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { getTimeUntilMidnight, getTimeUntilNextGM } from '@/lib/gm-utils'
+import { getTimeUntilMidnight, getTimeUntilNextGM } from '@/lib/gmeow-utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 
 interface CountdownProps {

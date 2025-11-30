@@ -12,7 +12,7 @@ import {
   type ChainKey,
   GM_CONTRACT_ABI,
   getContractAddress,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { formatNumber } from '@/lib/formatters'
 import { buildGuildSlug } from '@/lib/team'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'

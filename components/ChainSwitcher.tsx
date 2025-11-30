@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 import { ICON_SIZES } from '@/lib/icon-sizes'
 
 export const CHAIN_BRAND: Record<ChainKey, { bg: string; fg: string; label: string; title: string }> = {

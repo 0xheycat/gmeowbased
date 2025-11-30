@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { ProgressXP } from '@/components/ProgressXP'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 import { calculateRankProgress, type RankProgress } from '@/lib/rank'
 
 export type XpEventKind =

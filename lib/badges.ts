@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
 import { createPublicClient, http, parseAbiItem, type AbiEvent } from 'viem'
-import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { BADGE_REGISTRY } from '@/lib/badge-registry-data'

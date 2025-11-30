@@ -1,4 +1,4 @@
-import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
 
 export function getRpcUrl(chain: ChainKey): string {
   // Prefer env, fallback to public RPCs if any

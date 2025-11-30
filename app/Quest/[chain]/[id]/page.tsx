@@ -22,7 +22,7 @@ import {
   type ChainKey,
   normalizeQuestStruct,
   type NormalizedQuest,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { createPublicClient, encodeFunctionData, http, type Abi } from 'viem'
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
 import { fetchFidByAddress } from '@/lib/neynar'

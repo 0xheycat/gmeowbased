@@ -8,7 +8,7 @@
 import { memo } from 'react'
 import Image from 'next/image'
 import type { TokenOption, NftOption } from '../shared'
-import { CHAIN_LABEL } from '@/lib/gm-utils'
+import { CHAIN_LABEL } from '@/lib/gmeow-utils'
 import { formatUsd, formatEth } from '../shared'
 
 /**

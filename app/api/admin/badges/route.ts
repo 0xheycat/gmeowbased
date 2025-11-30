@@ -5,7 +5,7 @@ import { AdminBadgeCreateSchema } from '@/lib/validation/api-schemas'
 import { createBadgeTemplate, invalidateBadgeCaches, listBadgeTemplates } from '@/lib/badges'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import type { BadgeTemplateInput } from '@/lib/badges'
-import { CHAIN_IDS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
 import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'

@@ -3,7 +3,7 @@
 import { useRef, useMemo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import Image from 'next/image'
-import { CHAIN_LABEL } from '@/lib/gm-utils'
+import { CHAIN_LABEL } from '@/lib/gmeow-utils'
 import type { ProfileBadge } from '@/lib/profile-types'
 
 const BADGE_HEIGHT = 80 // Height per badge card in pixels

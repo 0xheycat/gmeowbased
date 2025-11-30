@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAccount, useSendTransaction } from 'wagmi'
 import { sdk } from '@farcaster/miniapp-sdk'
-import { createGMTransaction, hasGMToday, getTodayDateString, getTimeUntilMidnight } from '@/lib/gm-utils'
+import { createGMTransaction, hasGMToday, getTodayDateString, getTimeUntilMidnight } from '@/lib/gmeow-utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 
 export function GMButton() {

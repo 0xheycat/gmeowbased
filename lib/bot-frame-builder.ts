@@ -1,6 +1,6 @@
 // Bot frame builder for embedding frames in cast replies
 import { buildFrameShareUrl, type FrameShareInput } from '@/lib/share'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 
 /**
  * Available frame routes in app/frame/

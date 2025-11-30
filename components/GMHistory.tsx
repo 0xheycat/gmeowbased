@@ -9,7 +9,7 @@ import {
   getContractAddress,
   CHAIN_IDS,
   type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 import { chainStateCache } from '@/lib/cache-storage'
 

@@ -10,7 +10,7 @@ import {
   GM_CONTRACT_ABI,
   getContractAddress,
   type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { clearStorageCache, readStorageCache, writeStorageCache } from '@/lib/utils'
 
 interface UserProfileProps {

@@ -1,4 +1,4 @@
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 
 type Primitive = string | number | boolean
 

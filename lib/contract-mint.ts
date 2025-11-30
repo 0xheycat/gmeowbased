@@ -6,7 +6,7 @@
 import { createPublicClient, createWalletClient, http, parseAbi, decodeEventLog } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base, optimism, celo } from 'viem/chains'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { getBadgeFromRegistry, type MintQueueEntry } from '@/lib/badges'
 import { ensureOracleBalance } from '@/lib/auto-deposit-oracle'
