@@ -4,6 +4,7 @@ import { useState } from 'react'
 import {
   Button,
   IconButton,
+  ButtonGroup,
   Card,
   CardHeader,
   CardBody,
@@ -13,12 +14,33 @@ import {
   Dialog,
   DialogBody,
   DialogFooter,
+  Badge,
+  Tooltip,
+  Progress,
+  Alert,
+  Spinner,
+  Select,
+  Checkbox,
+  Radio,
+  RadioGroup,
+  Switch,
+  Tabs,
+  TabPanel,
+  Divider,
+  Avatar,
+  AvatarGroup,
 } from '@/components/ui'
 
 export default function ComponentTestPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [textareaValue, setTextareaValue] = useState('')
+  const [selectValue, setSelectValue] = useState('')
+  const [checkboxChecked, setCheckboxChecked] = useState(false)
+  const [radioValue, setRadioValue] = useState('medium')
+  const [switchChecked, setSwitchChecked] = useState(true)
+  const [activeTab, setActiveTab] = useState('overview')
+  const [alertVisible, setAlertVisible] = useState(true)
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-purple-900 via-black to-purple-900">
@@ -171,6 +193,264 @@ export default function ComponentTestPage() {
                   onChange={(e) => setTextareaValue(e.target.value)}
                   helperText="Provide a detailed description"
                 />
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Feedback Components */}
+        <Card>
+          <CardHeader title="Feedback Components" />
+          <CardBody>
+            <div className="space-y-6">
+              {/* Badges */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-white/60">Badges</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="default">Default</Badge>
+                  <Badge variant="primary">Primary</Badge>
+                  <Badge variant="success">Active</Badge>
+                  <Badge variant="warning">Pending</Badge>
+                  <Badge variant="danger">Failed</Badge>
+                  <Badge variant="primary" dot>3</Badge>
+                </div>
+              </div>
+
+              {/* Progress */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-white/60">Progress Bars</h3>
+                <div className="space-y-3">
+                  <Progress value={75} variant="primary" showLabel label="Quest Progress" />
+                  <Progress value={450} max={1000} variant="success" showLabel label="XP to Level 5" />
+                  <Progress value={30} variant="danger" size="sm" />
+                </div>
+              </div>
+
+              {/* Tooltips */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-white/60">Tooltips</h3>
+                <div className="flex gap-4">
+                  <Tooltip content="Hover me!" position="top">
+                    <Button size="sm">Top</Button>
+                  </Tooltip>
+                  <Tooltip content="Click to copy" position="bottom">
+                    <Button size="sm">Bottom</Button>
+                  </Tooltip>
+                  <Tooltip content="More info here" position="left">
+                    <Button size="sm">Left</Button>
+                  </Tooltip>
+                  <Tooltip content="Settings" position="right">
+                    <Button size="sm">Right</Button>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* Spinner */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-white/60">Spinners</h3>
+                <div className="flex items-center gap-4">
+                  <Spinner size="sm" />
+                  <Spinner size="md" />
+                  <Spinner size="lg" variant="primary" />
+                </div>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Alert */}
+        {alertVisible && (
+          <Alert
+            variant="success"
+            title="Success!"
+            onClose={() => setAlertVisible(false)}
+          >
+            Your component library has been successfully extracted!
+          </Alert>
+        )}
+
+        {/* Form Components */}
+        <Card>
+          <CardHeader title="Form Components" />
+          <CardBody>
+            <div className="space-y-6">
+              {/* Select */}
+              <Select
+                label="Select Chain"
+                options={[
+                  { value: 'base', label: 'Base' },
+                  { value: 'ethereum', label: 'Ethereum' },
+                  { value: 'polygon', label: 'Polygon' },
+                  { value: 'optimism', label: 'Optimism' },
+                ]}
+                value={selectValue}
+                onChange={setSelectValue}
+                searchable
+                helperText="Choose a blockchain network"
+              />
+
+              {/* Checkbox */}
+              <Checkbox
+                label="Accept terms and conditions"
+                checked={checkboxChecked}
+                onChange={(e) => setCheckboxChecked(e.target.checked)}
+                helperText="You must accept to continue"
+              />
+
+              {/* Radio Group */}
+              <RadioGroup label="Quest Difficulty" helperText="Choose difficulty level">
+                <Radio
+                  name="difficulty"
+                  value="easy"
+                  label="Easy - For beginners"
+                  checked={radioValue === 'easy'}
+                  onChange={(e) => setRadioValue(e.target.value)}
+                />
+                <Radio
+                  name="difficulty"
+                  value="medium"
+                  label="Medium - Some challenge"
+                  checked={radioValue === 'medium'}
+                  onChange={(e) => setRadioValue(e.target.value)}
+                />
+                <Radio
+                  name="difficulty"
+                  value="hard"
+                  label="Hard - Expert level"
+                  checked={radioValue === 'hard'}
+                  onChange={(e) => setRadioValue(e.target.value)}
+                />
+              </RadioGroup>
+
+              {/* Switch */}
+              <Switch
+                label="Enable notifications"
+                checked={switchChecked}
+                onChange={(e) => setSwitchChecked(e.target.checked)}
+                helperText="Receive updates about your quests"
+              />
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Navigation Components */}
+        <Card>
+          <CardHeader title="Tabs & Navigation" />
+          <CardBody>
+            <div className="space-y-6">
+              {/* Default Tabs */}
+              <div>
+                <Tabs
+                  tabs={[
+                    { id: 'overview', label: 'Overview' },
+                    { id: 'quests', label: 'Quests', badge: 3 },
+                    { id: 'rewards', label: 'Rewards' },
+                  ]}
+                  value={activeTab}
+                  onChange={setActiveTab}
+                />
+                <div className="mt-4">
+                  <TabPanel value="overview" activeValue={activeTab}>
+                    <p className="text-white/60">Overview content goes here</p>
+                  </TabPanel>
+                  <TabPanel value="quests" activeValue={activeTab}>
+                    <p className="text-white/60">You have 3 active quests</p>
+                  </TabPanel>
+                  <TabPanel value="rewards" activeValue={activeTab}>
+                    <p className="text-white/60">Your rewards are listed here</p>
+                  </TabPanel>
+                </div>
+              </div>
+
+              <Divider>Pills Variant</Divider>
+
+              {/* Pills Tabs */}
+              <Tabs
+                tabs={[
+                  { id: 'all', label: 'All' },
+                  { id: 'active', label: 'Active', badge: 5 },
+                  { id: 'completed', label: 'Completed' },
+                ]}
+                value="all"
+                onChange={() => {}}
+                variant="pills"
+              />
+
+              <Divider>Underline Variant</Divider>
+
+              {/* Underline Tabs */}
+              <Tabs
+                tabs={[
+                  { id: 'profile', label: 'Profile' },
+                  { id: 'settings', label: 'Settings' },
+                  { id: 'notifications', label: 'Notifications' },
+                ]}
+                value="profile"
+                onChange={() => {}}
+                variant="underline"
+                fullWidth
+              />
+
+              <Divider>Button Group</Divider>
+
+              {/* Button Group */}
+              <ButtonGroup>
+                <Button variant="outline" size="sm">Left</Button>
+                <Button variant="outline" size="sm">Center</Button>
+                <Button variant="outline" size="sm">Right</Button>
+              </ButtonGroup>
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Avatar Components */}
+        <Card>
+          <CardHeader title="Avatars" />
+          <CardBody>
+            <div className="space-y-6">
+              {/* Single Avatars */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-white/60">Sizes</h3>
+                <div className="flex items-center gap-3">
+                  <Avatar fallback="XS" size="xs" />
+                  <Avatar fallback="SM" size="sm" />
+                  <Avatar fallback="MD" size="md" />
+                  <Avatar fallback="LG" size="lg" />
+                  <Avatar fallback="XL" size="xl" />
+                </div>
+              </div>
+
+              {/* With Status */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-white/60">Status Indicators</h3>
+                <div className="flex items-center gap-3">
+                  <Avatar fallback="ON" status="online" />
+                  <Avatar fallback="AW" status="away" />
+                  <Avatar fallback="BS" status="busy" />
+                  <Avatar fallback="OF" status="offline" />
+                </div>
+              </div>
+
+              {/* Avatar Group */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-white/60">Avatar Group</h3>
+                <AvatarGroup max={3}>
+                  <Avatar fallback="A" />
+                  <Avatar fallback="B" />
+                  <Avatar fallback="C" />
+                  <Avatar fallback="D" />
+                  <Avatar fallback="E" />
+                </AvatarGroup>
+              </div>
+
+              {/* Variants */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-white/60">Shapes</h3>
+                <div className="flex items-center gap-3">
+                  <Avatar fallback="C" variant="circle" />
+                  <Avatar fallback="R" variant="rounded" />
+                  <Avatar fallback="S" variant="square" />
+                </div>
               </div>
             </div>
           </CardBody>
