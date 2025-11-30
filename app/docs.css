@@ -1,0 +1,176 @@
+/* Custom Nextra Theme Styles */
+
+:root {
+  --nextra-primary-hue: 280deg;
+  --nextra-primary-saturation: 80%;
+  --nextra-navbar-height: 4rem;
+  --nextra-menu-height: 3.75rem;
+  
+  /* GMEOW Brand Colors */
+  --gmeow-purple: #a855f7;
+  --gmeow-purple-dark: #7c3aed;
+  --gmeow-gold: #ffd700;
+  --gmeow-gold-light: #ffed4e;
+}
+
+/* Dark mode adjustments */
+.dark {
+  --nextra-primary-hue: 280deg;
+  --nextra-primary-saturation: 85%;
+}
+
+/* Custom logo styling */
+.nextra-nav-container .nextra-nav-container-blur {
+  backdrop-filter: blur(12px);
+}
+
+/* Sidebar scrollbar */
+.nextra-sidebar-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nextra-sidebar-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nextra-sidebar-container::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.3);
+  border-radius: 3px;
+}
+
+.nextra-sidebar-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.5);
+}
+
+/* Code blocks */
+.nextra-code-block {
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+/* Callouts */
+.nextra-callout {
+  border-radius: 0.5rem;
+  border-width: 1px;
+}
+
+/* Cards */
+.nextra-cards {
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.nextra-card {
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.nextra-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fx-elev-2);
+}
+
+/* TOC (Table of Contents) */
+.nextra-toc li a {
+  transition: color 0.2s ease;
+}
+
+.nextra-toc li a:hover {
+  color: var(--gmeow-purple);
+}
+
+/* Search */
+.nextra-search input {
+  border-radius: 0.5rem;
+}
+
+/* Footer */
+.nextra-footer {
+  border-top: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+/* Custom animation for page transitions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nextra-content {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Badge styles */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgba(168, 85, 247, 0.1);
+  color: var(--gmeow-purple);
+}
+
+.dark .badge {
+  background: rgba(168, 85, 247, 0.2);
+}
+
+/* Custom link styles */
+.nextra-content a {
+  color: var(--gmeow-purple);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.nextra-content a:hover {
+  color: var(--gmeow-purple-dark);
+  text-decoration: underline;
+}
+
+/* Headers with anchor links */
+.nextra-content h1,
+.nextra-content h2,
+.nextra-content h3 {
+  scroll-margin-top: 5rem;
+}
+
+/* Copy code button */
+.nextra-code button {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.nextra-code:hover button {
+  opacity: 1;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .nextra-nav-container {
+    --nextra-navbar-height: 3.5rem;
+  }
+  
+  .nextra-sidebar-container {
+    padding-top: 3.5rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .nextra-sidebar-container,
+  .nextra-toc,
+  .nextra-nav-container,
+  .nextra-footer {
+    display: none;
+  }
+  
+  .nextra-content {
+    max-width: 100%;
+    margin: 0;
+  }
+}

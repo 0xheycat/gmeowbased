@@ -1,7 +1,7 @@
-name: Badge Minting
+name: Badge Minting (Base)
 
 # Automated badge minting from queue
-# Replaces Vercel Cron (requires Pro plan)
+# Base mainnet only (redeployed Nov 28, 2025)
 # Runs daily to process pending badge mints
 
 on:

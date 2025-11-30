@@ -1,8 +1,8 @@
 /* src/lib/gmeow-utils.ts
-   Full-feature utilities for Gmeowbased (ABI-confirmed)
-   - Requires viem vX (encodeFunctionData, createPublicClient, http, erc20Abi)
+   Gmeowbased utilities - Base chain only
+   - Simplified for single-chain operation (Base)
+   - Keep multichain types for api/frame OnchainStats compatibility
    - ABIs: Core, Guild, NFT modules with proxy architecture
-   - Exported builders return objects suitable for viem/writeContract or wagmi/writeContract
 */
 
 import {
@@ -26,30 +26,22 @@ import NFT_ABI_JSON from '@/lib/abi/gmeowhq.json'
 // -------------------------------
 // Chain registry / configuration
 // -------------------------------
-// GM Contract chains (have deployed contracts with proxy-based architecture)
-export type GMChainKey = 'base' | 'unichain' | 'celo' | 'ink' | 'op' | 'arbitrum'
+// PRIMARY: Base chain only (for app functionality)
+export type GMChainKey = 'base'
 
-// All supported chains (GM contracts + OnchainStats viewing)
-export type ChainKey = GMChainKey | 'optimism' | 'ethereum' | 'avax' | 'berachain' | 'bnb' | 'fraxtal' | 'katana' | 'soneium' | 'taiko' | 'hyperevm'
+// SECONDARY: All chains (for OnchainStats frame viewing only - api/frame routes)
+export type ChainKey = 'base' | 'optimism' | 'ethereum' | 'avax' | 'berachain' | 'bnb' | 'fraxtal' | 'katana' | 'soneium' | 'taiko' | 'hyperevm' | 'unichain' | 'celo' | 'ink' | 'op' | 'arbitrum'
 
-// GM contract chain IDs
+// Base chain ID (primary)
 export const CHAIN_IDS: Record<GMChainKey, number> = {
   base: 8453,
-  unichain: 130,
-  celo: 42220,
-  ink: 57073,
-  op: 10,
-  arbitrum: 42161,
 }
 
-// All chain IDs (for OnchainStats frame support)
+// All chain IDs (for OnchainStats frame support only)
 export const ALL_CHAIN_IDS: Record<ChainKey, number> = {
   base: 8453,
-  unichain: 130,
-  celo: 42220,
-  ink: 57073,
+  optimism: 10,
   op: 10,
-  optimism: 10, // Alias for 'op'
   ethereum: 1,
   arbitrum: 42161,
   avax: 43114,
@@ -60,57 +52,23 @@ export const ALL_CHAIN_IDS: Record<ChainKey, number> = {
   soneium: 1946,
   taiko: 167000,
   hyperevm: 999,
+  unichain: 130,
+  celo: 42220,
+  ink: 57073,
 }
 
-// Core contract addresses (proxy-based standalone architecture)
-// These are the Core contract addresses for daily GM and points management
+// Base chain contracts only (proxy-based standalone architecture)
 export const CONTRACT_ADDRESSES: Record<GMChainKey, `0x${string}`> = {
   base: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9BDD11aA50456572E3Ea5329fcDEb81974137f92',
-  op: (process.env.NEXT_PUBLIC_GM_OP_CORE as `0x${string}`) || '0x1599e491FaA2F22AA053dD9304308231c0F0E15B',
-  unichain: (process.env.NEXT_PUBLIC_GM_UNICHAIN_CORE as `0x${string}`) || '0x9BDD11aA50456572E3Ea5329fcDEb81974137f92',
-  celo: (process.env.NEXT_PUBLIC_GM_CELO_CORE as `0x${string}`) || '0xC8c39e1312c4F3775CE1fc35327ed2c719B82eFe',
-  ink: (process.env.NEXT_PUBLIC_GM_INK_CORE as `0x${string}`) || '0xC8c39e1312c4F3775CE1fc35327ed2c719B82eFe',
-  arbitrum: (process.env.NEXT_PUBLIC_GM_ARBITRUM_CORE as `0x${string}`) || '0xC8c39e1312c4F3775CE1fc35327ed2c719B82eFe',
 }
 
-// Proxy-based standalone architecture addresses (all chains)
-// Improved security with separate Core, Guild, NFT contracts + Proxy
+// Standalone architecture addresses (Base chain only)
 export const STANDALONE_ADDRESSES = {
   base: {
     core: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9BDD11aA50456572E3Ea5329fcDEb81974137f92',
     guild: (process.env.NEXT_PUBLIC_GM_BASE_GUILD as `0x${string}`) || '0x967457be45facE07c22c0374dAfBeF7b2f7cd059',
     nft: (process.env.NEXT_PUBLIC_GM_BASE_NFT as `0x${string}`) || '0xD99aeE13eA68C1e4e43cfA60E792520Dd06C2c20',
     proxy: (process.env.NEXT_PUBLIC_GM_BASE_PROXY as `0x${string}`) || '0x6A48B758ed42d7c934D387164E60aa58A92eD206',
-  },
-  op: {
-    core: (process.env.NEXT_PUBLIC_GM_OP_CORE as `0x${string}`) || '0x1599e491FaA2F22AA053dD9304308231c0F0E15B',
-    guild: (process.env.NEXT_PUBLIC_GM_OP_GUILD as `0x${string}`) || '0x71EA982A8E2be62191ac7e2A98277c986DEbBc58',
-    nft: (process.env.NEXT_PUBLIC_GM_OP_NFT as `0x${string}`) || '0x9BDD11aA50456572E3Ea5329fcDEb81974137f92',
-    proxy: (process.env.NEXT_PUBLIC_GM_OP_PROXY as `0x${string}`) || '0x9f95383B4AFA0f9633Ef9E3D5eF37A704E26F839',
-  },
-  unichain: {
-    core: (process.env.NEXT_PUBLIC_GM_UNICHAIN_CORE as `0x${string}`) || '0x9BDD11aA50456572E3Ea5329fcDEb81974137f92',
-    guild: (process.env.NEXT_PUBLIC_GM_UNICHAIN_GUILD as `0x${string}`) || '0x967457be45facE07c22c0374dAfBeF7b2f7cd059',
-    nft: (process.env.NEXT_PUBLIC_GM_UNICHAIN_NFT as `0x${string}`) || '0xD99aeE13eA68C1e4e43cfA60E792520Dd06C2c20',
-    proxy: (process.env.NEXT_PUBLIC_GM_UNICHAIN_PROXY as `0x${string}`) || '0x6A48B758ed42d7c934D387164E60aa58A92eD206',
-  },
-  celo: {
-    core: (process.env.NEXT_PUBLIC_GM_CELO_CORE as `0x${string}`) || '0xC8c39e1312c4F3775CE1fc35327ed2c719B82eFe',
-    guild: (process.env.NEXT_PUBLIC_GM_CELO_GUILD as `0x${string}`) || '0x3030cbD17bc8AB3Fa1CC45964C20A12617a7D42C',
-    nft: (process.env.NEXT_PUBLIC_GM_CELO_NFT as `0x${string}`) || '0x059b474799f8602975E60A789105955CbB61d878',
-    proxy: (process.env.NEXT_PUBLIC_GM_CELO_PROXY as `0x${string}`) || '0xa0001886C87a19d49BAC88a5Cbf993f0866110C4',
-  },
-  ink: {
-    core: (process.env.NEXT_PUBLIC_GM_INK_CORE as `0x${string}`) || '0xC8c39e1312c4F3775CE1fc35327ed2c719B82eFe',
-    guild: (process.env.NEXT_PUBLIC_GM_INK_GUILD as `0x${string}`) || '0x3030cbD17bc8AB3Fa1CC45964C20A12617a7D42C',
-    nft: (process.env.NEXT_PUBLIC_GM_INK_NFT as `0x${string}`) || '0x059b474799f8602975E60A789105955CbB61d878',
-    proxy: (process.env.NEXT_PUBLIC_GM_INK_PROXY as `0x${string}`) || '0xa0001886C87a19d49BAC88a5Cbf993f0866110C4',
-  },
-  arbitrum: {
-    core: (process.env.NEXT_PUBLIC_GM_ARBITRUM_CORE as `0x${string}`) || '0xC8c39e1312c4F3775CE1fc35327ed2c719B82eFe',
-    guild: (process.env.NEXT_PUBLIC_GM_ARBITRUM_GUILD as `0x${string}`) || '0x3030cbD17bc8AB3Fa1CC45964C20A12617a7D42C',
-    nft: (process.env.NEXT_PUBLIC_GM_ARBITRUM_NFT as `0x${string}`) || '0x059b474799f8602975E60A789105955CbB61d878',
-    proxy: (process.env.NEXT_PUBLIC_GM_ARBITRUM_PROXY as `0x${string}`) || '0xa0001886C87a19d49BAC88a5Cbf993f0866110C4',
   },
 }
 
@@ -163,16 +121,11 @@ const CHAIN_ID_LOOKUP = new Map<number, GMChainKey>(
 // All supported chains (for validation)
 export const ALL_CHAIN_KEYS = Object.keys(ALL_CHAIN_IDS) as ChainKey[]
 
+// Simplified chain aliases (Base-focused, others for OnchainStats viewing only)
 const CHAIN_ALIAS_LOOKUP: Record<string, ChainKey> = {
   base: 'base',
   'base-mainnet': 'base',
   'coinbase-base': 'base',
-  unichain: 'unichain',
-  uni: 'unichain',
-  celo: 'celo',
-  'celo-mainnet': 'celo',
-  ink: 'ink',
-  'ink-mainnet': 'ink',
   op: 'optimism',
   optimism: 'optimism',
   'optimism-mainnet': 'optimism',
@@ -193,6 +146,12 @@ const CHAIN_ALIAS_LOOKUP: Record<string, ChainKey> = {
   taiko: 'taiko',
   hyperevm: 'hyperevm',
   hyper: 'hyperevm',
+  unichain: 'unichain',
+  uni: 'unichain',
+  celo: 'celo',
+  'celo-mainnet': 'celo',
+  ink: 'ink',
+  'ink-mainnet': 'ink',
 }
 
 const HEX_ID_REGEX = /^0x[0-9a-f]+$/i
@@ -244,14 +203,14 @@ export function isChainKey(value: unknown): value is ChainKey {
 
 // Type guard to check if a chain has deployed GM contracts (vs viewing-only chains)
 export function isGMChain(chain: ChainKey): chain is GMChainKey {
-  return chain in CHAIN_IDS
+  return chain === 'base' // Only Base has GM contracts now
 }
 
-// Normalize ChainKey to GMChainKey (converts aliases like 'optimism' → 'op')
+// Normalize ChainKey to GMChainKey (always returns 'base' for GM operations)
 export function normalizeToGMChain(chain: ChainKey): GMChainKey | null {
-  if (isGMChain(chain)) return chain
-  // Handle aliases
-  if (chain === 'optimism') return 'op'
+  // For app functionality, always use Base
+  if (chain === 'base') return 'base'
+  // Other chains are for OnchainStats viewing only
   return null
 }
 
@@ -339,7 +298,7 @@ export function isAddress(a: unknown): a is Address {
 }
 
 // -------------------------------
-// Basic / daily helpers (sendGM)
+// Basic / daily helpers (sendGM) - Base chain only
 // -------------------------------
 export const createSendGMTx = (chain: GMChainKey = 'base') =>
   buildCallObject('sendGM', [], chain)
@@ -347,10 +306,11 @@ export const createSendGMTx = (chain: GMChainKey = 'base') =>
 export const createGMTransaction = (chain: GMChainKey = 'base'): Tx =>
   buildTx('sendGM', [], chain)
 
-export const createGMUniTransaction = (): Tx => createGMTransaction('unichain')
-export const createGMCeloTransaction = (): Tx => createGMTransaction('celo')
-export const createGMInkTransaction = (): Tx => createGMTransaction('ink')
-export const createGMOpTransaction = (): Tx => createGMTransaction('op')
+// Deprecated multichain helpers - kept for backwards compatibility, all use Base
+export const createGMUniTransaction = (): Tx => createGMTransaction('base')
+export const createGMCeloTransaction = (): Tx => createGMTransaction('base')
+export const createGMInkTransaction = (): Tx => createGMTransaction('base')
+export const createGMOpTransaction = (): Tx => createGMTransaction('base')
 
 // -------------------------------
 // QUESTS - creation, helpers & completions
@@ -911,17 +871,14 @@ export function getQuestFieldConfig(key: QuestTypeKey | string | number): QuestF
 // -------------------------------
 // Small convenience exports for front-end usage
 // -------------------------------
-// GM contract chains only (for contract interactions)
-export const CHAIN_KEYS = Object.keys(CONTRACT_ADDRESSES) as GMChainKey[]
+// GM contract chains - Base only (for contract interactions)
+export const CHAIN_KEYS: GMChainKey[] = ['base']
 
-// Label map for UI (exported for reuse)
+// Label map for UI (all chains for OnchainStats frame viewing)
 export const CHAIN_LABEL: Record<ChainKey, string> = {
   base: 'Base',
-  unichain: 'Unichain',
-  celo: 'Celo',
-  ink: 'Ink',
-  op: 'Optimism',
   optimism: 'Optimism',
+  op: 'Optimism',
   ethereum: 'Ethereum',
   arbitrum: 'Arbitrum',
   avax: 'Avalanche',
@@ -932,6 +889,9 @@ export const CHAIN_LABEL: Record<ChainKey, string> = {
   soneium: 'Soneium',
   taiko: 'Taiko',
   hyperevm: 'HyperEVM',
+  unichain: 'Unichain',
+  celo: 'Celo',
+  ink: 'Ink',
 }
 
 // Treat tiny/invalid timestamps as "no expiry"

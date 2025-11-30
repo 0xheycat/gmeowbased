@@ -19,11 +19,9 @@ import gm, {
   CHAIN_LABEL,
   normalizeQuestStruct,
   sanitizeExpiresAt,
-  normalizeToGMChain,
   type NormalizedQuest,
   type ChainKey,
-  type GMChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
 import { buildDynamicFrameImageUrl } from '@/lib/share'
@@ -141,9 +139,8 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const limitParam = params.limit ?? params.top ?? params.size
   const normalizedChain = rawChain ? rawChain.toLowerCase() : ''
   const isGlobal = toBooleanFlag(params.global) || ['all', 'global', 'combined'].includes(normalizedChain) || rawMode.toLowerCase() === 'global'
-  // Normalize the chain string to GMChainKey (handles 'optimism' → 'op')
-  const candidateChainKey = normalizeToGMChain(normalizedChain as ChainKey) || 'base'
-  const chainKey = isGlobal ? 'base' : candidateChainKey
+  const candidateChain = CHAIN_KEYS.includes(normalizedChain as ChainKey) ? (normalizedChain as ChainKey) : 'base'
+  const chainKey = isGlobal && !CHAIN_KEYS.includes(normalizedChain as ChainKey) ? 'base' : candidateChain
   const chainDisplay = isGlobal ? 'All Chains' : getChainDisplayName(chainKey)
   const chainIcon = isGlobal ? null : getChainIconUrl(chainKey)
   const limit = (() => {
@@ -198,7 +195,7 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
         const address = (addressRaw.startsWith('0x') ? addressRaw : '0x0000000000000000000000000000000000000000') as `0x${string}`
         const name = typeof entry?.name === 'string' ? entry.name : ''
         const chainValue = typeof entry?.chain === 'string' ? entry.chain.toLowerCase() : chainKey
-        const chainResolved = normalizeToGMChain(chainValue as ChainKey) || chainKey
+        const chainResolved = CHAIN_KEYS.includes(chainValue as ChainKey) ? (chainValue as ChainKey) : chainKey
         const pointsNumber = Number(entry?.points ?? 0)
         const completedNumber = Number(entry?.completed ?? 0)
         const rewardsNumber = Number(entry?.rewards ?? Math.floor(pointsNumber / 20))
@@ -731,8 +728,7 @@ async function fetchQuestOnChain(
       tracePush(traces, 'fetchQuestOnChain-readContract-failed', String(inner))
       // fallback: try directly calling contract via ABI getQuest name
       const client2 = createPublicClient({ transport: http(rpc) })
-      const gmChain = normalizeToGMChain(chainKey as ChainKey) || 'base'
-      const address = CONTRACT_ADDRESSES[gmChain]
+      const address = CONTRACT_ADDRESSES[chainKey as keyof typeof CONTRACT_ADDRESSES] || CONTRACT_ADDRESSES.base
       const res2 = await client2.readContract({ address, abi: GM_CONTRACT_ABI as any, functionName: 'getQuest', args: [BigInt(questId)] })
       const normalized2 = normalizeQuestStruct(res2)
       tracePush(traces, 'fetchQuestOnChain-fallback-ok', normalized2)
@@ -790,8 +786,7 @@ async function fetchReferralCodeForUser(chainKey: ChainKey, userAddr: `0x${strin
   try {
     const rpc = getRpcForChain(chainKey)
     const client = createPublicClient({ transport: http(rpc) })
-    const gmChain = normalizeToGMChain(chainKey) || 'base'
-    const contract = CONTRACT_ADDRESSES[gmChain] as Address
+    const contract = (CONTRACT_ADDRESSES[chainKey] ?? CONTRACT_ADDRESSES.base) as Address
     const code = await client
       .readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referralCodeOf', args: [userAddr] })
       .catch(() => '')

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CHAIN_KEYS, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
+import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 import { recordRankEvent, type RankTelemetryEventInput, type RankTelemetryEventKind } from '@/lib/telemetry'
 import { withErrorHandler } from '@/lib/error-handler'
 
@@ -9,15 +9,12 @@ export const runtime = 'nodejs'
 
 const VALID_EVENTS = new Set<RankTelemetryEventKind>([
   'quest-create',
-  'quest-claim',    // Renamed from quest-verify
+  'quest-verify',
   'gm',
   'tip',
-  'badge-mint',     // NEW: Badge earned & minted
-  'guild-join',     // NEW: Joined a guild
-  'referral',       // NEW: Used referral code
-  'onboard',        // NEW: Claimed onboarding bonus
+  'stake',
+  'unstake',
   'stats-query',
-  'nft-mint',       // NEW (planned): NFT minted
 ])
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -46,11 +43,7 @@ function sanitizePayload(input: unknown): RankTelemetryEventInput | null {
   const eventValue = typeof input.event === 'string' ? (input.event.trim() as RankTelemetryEventKind) : null
   if (!eventValue || !VALID_EVENTS.has(eventValue)) return null
 
-  const chainRaw = coerceChain(input.chain)
-  if (!chainRaw) return null
-  
-  // Ensure chain is GMChainKey for telemetry
-  const chain: GMChainKey = (chainRaw as GMChainKey)
+  const chain = coerceChain(input.chain)
   if (!chain) return null
 
   const walletAddress = typeof input.walletAddress === 'string' ? input.walletAddress.trim() : ''

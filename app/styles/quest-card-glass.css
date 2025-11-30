@@ -1,0 +1,442 @@
+/* ======================================================
+   QUEST CARD — macOS BLUE GLASS DESIGN (Stages 1-4)
+   Phase 5.3: Modern glassmorphism with SF Pro aesthetic
+   ====================================================== */
+
+/* Card wrapper with macOS blue glass effect */
+.quest-card-glass {
+  --glass-blue: rgba(0, 122, 255, 0.15);
+  --glass-blue-border: rgba(0, 122, 255, 0.3);
+  --glass-blue-glow: rgba(0, 122, 255, 0.5);
+  --glass-white: rgba(255, 255, 255, 0.08);
+  --glass-white-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
+  --glass-text: rgba(255, 255, 255, 0.95);
+  --glass-text-muted: rgba(255, 255, 255, 0.65);
+  
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border-radius: 24px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 520px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-white-border);
+  padding: 2px;
+  box-shadow: 
+    0 8px 32px var(--glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quest-card-glass:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 
+    0 16px 48px var(--glass-shadow),
+    0 0 0 1px var(--glass-blue-border),
+    0 0 32px var(--glass-blue-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border-color: var(--glass-blue-border);
+}
+
+/* Inner card body with enhanced glassmorphism */
+.quest-card-glass__body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 22px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Stage indicator badge (top-right) */
+.quest-card-glass__stage-badge {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--glass-blue) 0%,
+    rgba(0, 122, 255, 0.08) 100%
+  );
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-blue-border);
+  box-shadow: 
+    0 4px 12px rgba(0, 122, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: var(--glass-text);
+  font-size: 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.quest-card-glass__stage-badge:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 
+    0 6px 16px rgba(0, 122, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Title section with SF Pro typography */
+.quest-card-glass__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--glass-white-border);
+}
+
+.quest-card-glass__title {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--glass-text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.quest-card-glass__subtitle {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--glass-text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* Icon display area */
+.quest-card-glass__icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 32px 0;
+  position: relative;
+}
+
+.quest-card-glass__icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--glass-blue) 0%,
+    rgba(0, 122, 255, 0.05) 100%
+  );
+  backdrop-filter: blur(16px);
+  border: 2px solid var(--glass-blue-border);
+  box-shadow: 
+    0 8px 24px rgba(0, 122, 255, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+  animation: float 3s ease-in-out infinite;
+}
+
+.quest-card-glass__icon-wrapper svg {
+  width: 64px;
+  height: 64px;
+  color: var(--glass-text);
+  filter: drop-shadow(0 4px 12px rgba(0, 122, 255, 0.5));
+}
+
+/* Floating animation for icon */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Description area */
+.quest-card-glass__description {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border: 1px solid var(--glass-white-border);
+  backdrop-filter: blur(8px);
+}
+
+.quest-card-glass__description-text {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--glass-text-muted);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+/* Feature list */
+.quest-card-glass__features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.quest-card-glass__feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.quest-card-glass__feature-item:hover {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: var(--glass-blue-border);
+  transform: translateX(4px);
+}
+
+.quest-card-glass__feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--glass-blue), rgba(0, 122, 255, 0.3));
+  color: var(--glass-text);
+  font-size: 0.75rem;
+}
+
+.quest-card-glass__feature-text {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--glass-text);
+  letter-spacing: 0.01em;
+}
+
+/* Action button area */
+.quest-card-glass__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.quest-card-glass__button {
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 122, 255, 0.8) 0%,
+    rgba(0, 122, 255, 0.6) 100%
+  );
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-blue-border);
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 
+    0 4px 16px rgba(0, 122, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.quest-card-glass__button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(0, 122, 255, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 122, 255, 0.9) 0%,
+    rgba(0, 122, 255, 0.7) 100%
+  );
+}
+
+.quest-card-glass__button:active {
+  transform: translateY(0px);
+  box-shadow: 
+    0 2px 8px rgba(0, 122, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.quest-card-glass__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Progress indicator */
+.quest-card-glass__progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-white-border);
+}
+
+.quest-card-glass__progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.quest-card-glass__progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 122, 255, 0.8) 0%,
+    rgba(0, 122, 255, 1) 100%
+  );
+  box-shadow: 0 0 8px rgba(0, 122, 255, 0.6);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quest-card-glass__progress-text {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--glass-text-muted);
+  white-space: nowrap;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .quest-card-glass {
+    max-width: 100%;
+    border-radius: 18px;
+  }
+  
+  .quest-card-glass__body {
+    padding: 18px;
+    min-height: 400px;
+  }
+  
+  .quest-card-glass__title {
+    font-size: 1.5rem;
+  }
+  
+  .quest-card-glass__subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .quest-card-glass__icon-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .quest-card-glass__icon-wrapper svg {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .quest-card-glass__stage-badge {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  
+  .quest-card-glass:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--glass-shadow);
+  }
+}
+
+@media (max-width: 640px) {
+  .quest-card-glass__body {
+    padding: 16px;
+    min-height: 360px;
+  }
+  
+  .quest-card-glass__title {
+    font-size: 1.35rem;
+  }
+  
+  .quest-card-glass__icon-wrapper {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .quest-card-glass__icon-wrapper svg {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .quest-card-glass {
+    --glass-text: rgba(255, 255, 255, 0.95);
+    --glass-text-muted: rgba(255, 255, 255, 0.65);
+  }
+}
+
+/* Light mode adjustments */
+@media (prefers-color-scheme: light) {
+  .quest-card-glass {
+    --glass-text: rgba(0, 0, 0, 0.9);
+    --glass-text-muted: rgba(0, 0, 0, 0.6);
+    --glass-white: rgba(255, 255, 255, 0.6);
+    --glass-white-border: rgba(0, 0, 0, 0.1);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.8) 0%,
+      rgba(255, 255, 255, 0.6) 100%
+    );
+  }
+  
+  .quest-card-glass__body {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.2) 100%
+    );
+  }
+}

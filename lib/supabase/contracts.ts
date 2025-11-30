@@ -49,20 +49,40 @@ export async function getUserContractCount(
   chainKey?: string
 ): Promise<number> {
   try {
-    const { data, error } = await supabase
-      .rpc('get_user_contract_count', {
-        p_user_address: userAddress.toLowerCase(),
-        p_chain_key: chainKey || null,
-      })
-
-    if (error) {
-      console.error('[getUserContractCount] Supabase error:', error)
+    // First check if table exists with a simple query
+    const { data: tableCheck, error: tableError } = await supabase
+      .from('user_contracts')
+      .select('count', { count: 'exact', head: true })
+      .limit(1)
+    
+    // If table doesn't exist, return 0 silently
+    if (tableError && tableError.code === '42P01') {
       return 0
     }
 
-    return Number(data) || 0
+    // Try direct query instead of RPC function
+    let query = supabase
+      .from('user_contracts')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_address', userAddress.toLowerCase())
+    
+    if (chainKey) {
+      query = query.eq('chain_key', chainKey)
+    }
+
+    const { count, error } = await query
+
+    if (error) {
+      // Only log if it's not a missing table/function error
+      if (error.code !== '42P01' && error.code !== 'PGRST202') {
+        console.error('[getUserContractCount] Supabase error:', error)
+      }
+      return 0
+    }
+
+    return count || 0
   } catch (err) {
-    console.error('[getUserContractCount] Exception:', err)
+    // Silently return 0 for missing functions
     return 0
   }
 }
@@ -75,14 +95,20 @@ export async function getUserFeaturedContract(
   chainKey: string
 ): Promise<FeaturedContract | null> {
   try {
+    // Try direct query instead of RPC function
     const { data, error } = await supabase
-      .rpc('get_user_featured_contract', {
-        p_user_address: userAddress.toLowerCase(),
-        p_chain_key: chainKey,
-      })
+      .from('user_contracts')
+      .select('contract_address, creator_address, deployment_tx, deployed_at, contract_name, is_verified')
+      .eq('user_address', userAddress.toLowerCase())
+      .eq('chain_key', chainKey)
+      .order('deployed_at', { ascending: false })
+      .limit(1)
 
     if (error) {
-      console.error('[getUserFeaturedContract] Supabase error:', error)
+      // Only log if it's not a missing table error
+      if (error.code !== '42P01' && error.code !== 'PGRST202') {
+        console.error('[getUserFeaturedContract] Supabase error:', error)
+      }
       return null
     }
 
@@ -90,7 +116,7 @@ export async function getUserFeaturedContract(
 
     return data[0] as FeaturedContract
   } catch (err) {
-    console.error('[getUserFeaturedContract] Exception:', err)
+    // Silently return null for missing table/function
     return null
   }
 }

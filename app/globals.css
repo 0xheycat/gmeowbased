@@ -1,21 +1,1113 @@
-/**
- * ============================================================================
- * GMEOWBASED GLOBALS
- * ============================================================================
- * 
- * Single import for entire design system
- * All styles consolidated in one professional file
- * 
- * Benefits:
- * ✅ One source of truth
- * ✅ Easier maintenance
- * ✅ Better performance
- * ✅ No duplicate CSS
- * ✅ Professional architecture
- * 
- * Migration Date: November 29, 2025
- * ============================================================================
- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Gmeowbased Foundation Design System (includes Tailwind) */
-@import '../styles/gmeowbased-foundation.css';
+/* ======================================================
+   MOBILE ACCESSIBILITY IMPROVEMENTS
+   Addresses: Mobile Friendliness score 1/3
+   ====================================================== */
+@layer base {
+  /* Ensure minimum readable font sizes on mobile */
+  /* text-[8px], text-[9px], text-[10px] → minimum 12px on mobile */
+  @media (max-width: 640px) {
+    .text-\[8px\],
+    .text-\[9px\],
+    .text-\[10px\] {
+      font-size: 12px !important; /* Minimum readable size */
+    }
+    
+    .text-\[11px\] {
+      font-size: 13px !important;
+    }
+  }
+  
+  /* Ensure minimum touch target sizes (44x44px Apple HIG, 48x48px Material) */
+  @media (max-width: 640px) {
+    button:not(.no-touch-boost),
+    a:not(.no-touch-boost),
+    [role="button"]:not(.no-touch-boost) {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0.75rem 1rem; /* Increase tap area */
+    }
+    
+    /* Specific boost for small buttons/pills */
+    .pixel-pill:not(.no-touch-boost) {
+      min-height: 44px;
+      padding: 0.75rem 1.25rem;
+      font-size: 12px !important;
+    }
+    
+    .pixel-button:not(.no-touch-boost) {
+      min-height: 44px;
+      padding: 0.75rem 1.5rem;
+    }
+  }
+  
+  /* Increase base font size for better readability on mobile */
+  @media (max-width: 640px) {
+    html {
+      font-size: 16px; /* Prevents iOS auto-zoom on input focus */
+    }
+    
+    body {
+      font-size: 1rem; /* 16px base */
+      line-height: 1.6; /* Improved readability */
+    }
+    
+    /* Increase spacing on mobile */
+    .mobile-spacing {
+      padding: 1rem !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Yu-Gi-Oh inspired holographic shine animation */
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
+    }
+    100% {
+      transform: translateX(200%) skewX(-15deg);
+    }
+  }
+  
+  .animate-shine {
+    animation: shine 3s infinite;
+  }
+  
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+  
+  /* Gold shimmer effect for Yu-Gi-Oh! holographic cards */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  /* GI-8: Shimmer animation for skeleton loaders */
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.2) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  /* Error flash animation for validation feedback */
+  @keyframes error-flash {
+    0%, 100% {
+      box-shadow: 0 0 0 rgba(244, 63, 94, 0);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(244, 63, 94, 0.6);
+    }
+  }
+  
+  .error-flash {
+    animation: error-flash 0.6s ease-in-out 3;
+  }
+}
+
+/* Quest Card 3D effects */
+@layer utilities {
+	.perspective-1000 {
+		perspective: 1000px;
+	}
+	
+	.backface-hidden {
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+	}
+	
+	.preserve-3d {
+		transform-style: preserve-3d;
+	}
+}
+
+/* ===== GLOBAL STYLES ===== */
+/* Category 11 Frame Fix: Use Next.js localFont variable instead of @font-face
+   Font files moved from /public/fonts/ to app/fonts/ in commit 419276f
+   Now imported via next/font/local in app/layout.tsx as --font-gmeow variable */
+
+:root {
+  --site-font: var(--font-gmeow), 'Gmeow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ======================================================
+   GLOBAL FROSTED GLASS THEME — macOS ADAPTIVE (v2)
+   Optimized for performance (Option B)
+   ====================================================== */
+
+/* --- Core tokens (shared) --- */
+:root {
+  --frost-radius: 16px;
+
+  /* shadow tokens (tunable) */
+  --fx-inset-1: inset 0 1px 0 rgba(255,255,255,0.04);
+  --fx-inset-2: inset 0 1px 0 rgba(255,255,255,0.12);
+  --fx-elev-1: 0 8px 20px rgba(0,0,0,0.32); /* moderated */
+  --fx-elev-2: 0 14px 36px rgba(0,0,0,0.28); /* hover / elevated */
+
+  /* low-cost shadow used for many static elements */
+  --fx-elev-static: 0 6px 14px rgba(0,0,0,0.18);
+
+  /* lightweight backdrop blur (default) — reduced a bit from original for perf */
+  --glass-blur: 12px;
+  --glass-blur-large: 18px;
+  --glass-saturate: 135%;
+
+  /* Overlay tokens for consistent layering (GI-15 Category 11.2) */
+  --overlay-light-2: rgba(255,255,255,0.02);
+  --overlay-light-4: rgba(255,255,255,0.04);
+  --overlay-light-5: rgba(255,255,255,0.05);
+  --overlay-light-6: rgba(255,255,255,0.06);
+  --overlay-light-8: rgba(255,255,255,0.08);
+  --overlay-light-10: rgba(255,255,255,0.1);
+  --overlay-light-12: rgba(255,255,255,0.12);
+  --overlay-light-18: rgba(255,255,255,0.18);
+  --overlay-light-22: rgba(255,255,255,0.22);
+  --overlay-dark-18: rgba(0,0,0,0.18);
+  --overlay-dark-22: rgba(0,0,0,0.22);
+  --overlay-dark-24: rgba(0,0,0,0.24);
+  --overlay-dark-28: rgba(0,0,0,0.28);
+  --overlay-dark-32: rgba(0,0,0,0.32);
+  --overlay-dark-35: rgba(0,0,0,0.35);
+
+  /* Border tokens for subtle divisions */
+  --border-faint: rgba(255,255,255,0.04);
+  --border-subtle: rgba(255,255,255,0.05);
+  --border-soft: rgba(255,255,255,0.08);
+  --border-medium: rgba(255,255,255,0.12);
+  --border-visible: rgba(255,255,255,0.18);
+
+  /* Text color variations */
+  --text-heading-alt: rgba(205,220,255,0.82);
+  --text-subtle: rgba(255,255,255,0.6);
+  --text-dimmed: rgba(255,255,255,0.5);
+
+  /* Spacing scale tokens (GI-15 Category 11.2) - 8px base grid */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;  /* 4px */
+  --spacing-2: 0.5rem;   /* 8px */
+  --spacing-3: 0.75rem;  /* 12px */
+  --spacing-4: 1rem;     /* 16px */
+  --spacing-5: 1.25rem;  /* 20px */
+  --spacing-6: 1.5rem;   /* 24px */
+  --spacing-7: 1.75rem;  /* 28px */
+  --spacing-8: 2rem;     /* 32px */
+  --spacing-9: 2.25rem;  /* 36px */
+  --spacing-10: 2.5rem;  /* 40px */
+  --spacing-11: 2.75rem; /* 44px */
+  --spacing-12: 3rem;    /* 48px */
+  --spacing-14: 3.5rem;  /* 56px */
+  --spacing-16: 4rem;    /* 64px */
+  --spacing-20: 5rem;    /* 80px */
+  --spacing-24: 6rem;    /* 96px */
+
+  /* Border-radius scale tokens (GI-15 Category 11.3) */
+  --radius-xs: 6px;      /* extra small elements (badges, indicators) */
+  --radius-sm: 8px;      /* small elements (buttons) */
+  --radius-md: 12px;     /* medium cards */
+  --radius-md-plus: 14px; /* between medium and large */
+  --radius-lg: 16px;     /* large cards, default */
+  --radius-xl: 18px;     /* extra large cards */
+  --radius-2xl: 20px;    /* panels */
+  --radius-3xl: 24px;    /* sections */
+  --radius-4xl: 32px;    /* extra large sections */
+  --radius-full: 999px;  /* fully rounded (pills, badges) */
+}
+
+/* Safe area insets for iOS devices */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-bottom {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  }
+}
+
+/* --- Theme tokens (dark baseline and light override) --- */
+html,
+html.dark {
+  --frost-bg: rgba(255, 255, 255, 0.04);
+  --frost-border: rgba(255, 255, 255, 0.1);
+  --frost-shadow: rgba(0, 0, 0, 0.4);
+  --frost-accent: #7ce1ff;
+  --text-color: #eaf6ff;
+  --text-muted: rgba(210, 225, 245, 0.8);
+  --bg-gradient: radial-gradient(1200px 800px at 50% 0%, rgba(124,225,255,0.12), transparent 70%), #0c1018;
+  --page-bg-overlay:
+    radial-gradient(140% 120% at 18% 18%, rgba(18, 165, 255, 0.18), rgba(3, 12, 24, 0.45)),
+    radial-gradient(120% 130% at 82% 12%, rgba(63, 255, 211, 0.14), rgba(3, 11, 20, 0.32)),
+    radial-gradient(120% 150% at 52% 96%, rgba(27, 124, 255, 0.2), rgba(2, 10, 18, 0.66));
+  --shell-border: rgba(29, 38, 71, 0.75);
+  --shell-bg: rgba(11, 16, 34, 0.9);
+  --shell-overlay: rgba(16, 23, 49, 0.8);
+  --shell-heading: #5f74c8;
+  --shell-text: #d5defd;
+  --shell-success: #7afcca;
+  --shell-warning: #ffc27c;
+  --shell-info: #94b2ff;
+  --gmeow-orbit-accent: color-mix(in srgb, var(--frost-accent) 78%, transparent 22%);
+  --gmeow-orbit-info: color-mix(in srgb, var(--shell-info) 82%, transparent 18%);
+  --gmeow-orbit-heading: color-mix(in srgb, var(--shell-heading) 75%, transparent 25%);
+  --gmeow-orbit-mobile: color-mix(in srgb, var(--shell-info) 76%, transparent 24%);
+  --gmeow-shell-shadow: color-mix(in srgb, #000 65%, var(--frost-shadow) 35%);
+}
+
+html.light {
+  /* macOS Glass Transparent Theme - Enhanced with proper backdrop */
+  --frost-bg: rgba(255, 255, 255, 0.72);
+  --frost-border: rgba(0, 0, 0, 0.08);
+  --frost-shadow: rgba(0, 0, 0, 0.12);
+  --frost-accent: #007aff;
+  --text-color: #1d1d1f;
+  --text-muted: rgba(60, 60, 67, 0.6);
+  
+  /* Translucent glass backgrounds with blur */
+  --bg-gradient: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(250, 250, 255, 0.92) 100%
+  );
+  
+  --page-bg-overlay:
+    radial-gradient(140% 120% at 18% 18%, rgba(0, 170, 255, 0.05), rgba(255, 255, 255, 0.3)),
+    radial-gradient(120% 130% at 82% 12%, rgba(255, 200, 120, 0.08), rgba(255, 255, 255, 0.25)),
+    radial-gradient(120% 150% at 52% 96%, rgba(140, 210, 255, 0.1), rgba(255, 255, 255, 0.4));
+  
+  /* Glass morphism surfaces - MORE transparent */
+  --shell-border: rgba(0, 0, 0, 0.08);
+  --shell-bg: rgba(255, 255, 255, 0.68);
+  --shell-overlay: rgba(252, 252, 255, 0.82);
+  
+  /* Text colors for light mode */
+  --shell-heading: #0066cc;
+  --shell-text: #1d1d1f;
+  --shell-success: #28cd41;
+  --shell-warning: #ff9500;
+  --shell-info: #007aff;
+  
+  /* Orbit accents with transparency */
+  --gmeow-orbit-accent: color-mix(in srgb, var(--frost-accent) 70%, transparent 30%);
+  --gmeow-orbit-info: color-mix(in srgb, var(--shell-info) 75%, transparent 25%);
+  --gmeow-orbit-heading: color-mix(in srgb, var(--shell-heading) 68%, transparent 32%);
+  --gmeow-orbit-mobile: color-mix(in srgb, var(--shell-info) 65%, transparent 35%);
+  --gmeow-shell-shadow: rgba(0, 0, 0, 0.08);
+  
+  /* Enhanced glass blur for light mode */
+  --glass-blur: 24px;
+  --glass-blur-large: 32px;
+  --glass-saturate: 180%;
+  
+  /* Light mode specific */
+  color-scheme: light;
+}
+
+/* Light mode body styling */
+html.light body {
+  background: linear-gradient(
+    180deg,
+    rgba(245, 248, 255, 1) 0%,
+    rgba(252, 253, 255, 1) 50%,
+    rgba(248, 250, 255, 1) 100%
+  );
+  background-attachment: fixed;
+}
+
+/* Real mobile breakpoints */
+@media (max-width: 768px) {
+  .layout-mobile-nav {
+    display: flex;
+  }
+
+  .layout-switch {
+    width: 42px;
+    height: 42px;
+  }
+
+  .layout-menu-toggle {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* Lighter visual workload on smaller devices */
+  :root {
+    --glass-blur: 8px;
+    --glass-blur-large: 12px;
+    --fx-elev-1: 0 6px 14px rgba(0,0,0,0.22);
+    --fx-elev-2: 0 10px 26px rgba(0,0,0,0.2);
+  }
+}
+
+/* ======================================================
+   BASE STYLES
+   ====================================================== */
+@layer base {
+  html {
+    @apply antialiased;
+    background: var(--bg-gradient);
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+    color: var(--text-color);
+    font-weight: 500;
+    background: transparent;
+  }
+
+  /* Prevent double-tap zoom on interactive elements (GI-12 Mobile UX) */
+  button,
+  a,
+  [role="button"],
+  [type="button"],
+  [type="submit"] {
+    touch-action: manipulation;
+  }
+
+  /* Removed global border application to avoid accidental overrides.
+     Apply border colors where explicitly needed (see components). */
+}
+
+/* ======================================================
+   GLOBAL REDUCED GLASS (toggleable) — use on low-power devices
+   Add class `reduced-glass` to <html> or <body> to disable heavy effects.
+   ====================================================== */
+html.reduced-glass *,
+body.reduced-glass * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  background-blend-mode: normal !important;
+}
+
+/* Respect user motion / contrast preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --fx-inset-1: inset 0 1px 0 rgba(255,255,255,0.06);
+    --fx-elev-1: 0 10px 26px rgba(0,0,0,0.36);
+  }
+}
+
+/* ======================================================
+   GENERIC FROSTED ELEMENTS
+   ====================================================== */
+.frosted-surface {
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  border-radius: var(--frost-radius);
+
+  /* use tokens to reduce repeated work and allow hardware-friendly stacking */
+  box-shadow: var(--fx-inset-1), var(--fx-elev-1);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+
+  transition: background 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  isolation: isolate; /* prevents paint chaining for better performance */
+}
+
+/* Hover elevation (kept visually similar but uses tokenized shadow) */
+.frosted-surface:hover {
+  box-shadow: var(--fx-inset-1), var(--fx-elev-2);
+}
+
+/* ======================================================
+   QUEST MARQUEE — Frosted Meta Header
+   ====================================================== */
+.quest-marquee__meta {
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.quest-marquee__description {
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.quest-marquee__control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--radius-full);
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  color: var(--text-color);
+
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--fx-inset-1), 0 6px 14px rgba(0,0,0,0.18);
+  transition: all 160ms ease;
+  isolation: isolate;
+}
+.quest-marquee__control:hover {
+  color: var(--frost-accent);
+  border-color: color-mix(in srgb, var(--frost-accent) 50%, white 10%);
+  transform: translateY(-1px);
+}
+
+/* ======================================================
+   QUEST EMPTY STATE — Adaptive Frosted Panel
+   ====================================================== */
+.quest-empty {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2rem;
+  border-radius: var(--frost-radius);
+  border: 1px solid var(--frost-border);
+  background: var(--frost-bg);
+  box-shadow: var(--fx-inset-1), 0 8px 22px rgba(0,0,0,0.26);
+  backdrop-filter: blur(calc(var(--glass-blur) + 4px));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px));
+  isolation: isolate;
+}
+@media (min-width: 768px) {
+  .quest-empty {
+    grid-template-columns: 160px 1fr;
+    align-items: center;
+  }
+}
+
+.quest-empty__icon {
+  font-size: 2.5rem;
+  color: var(--frost-accent);
+}
+.quest-empty__title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.quest-empty__copy {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* === Layout Shells === */
+
+/* ======================================================
+   QUEST ARCHIVE MODAL — Frosted Window
+   ====================================================== */
+.quest-archive__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(10, 14, 24, 0.6);
+  backdrop-filter: blur(var(--glass-blur-large));
+  -webkit-backdrop-filter: blur(var(--glass-blur-large));
+  isolation: isolate;
+}
+
+html.light .quest-archive__overlay {
+  background: rgba(255,255,255,0.6);
+}
+
+.quest-archive {
+  width: min(720px, 100%);
+  /* Use dynamic viewport height for iOS Safari address bar handling */
+  max-height: calc(100dvh - 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.8rem;
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--frost-border);
+  background: var(--frost-bg);
+
+  /* slightly reduced blur and refined shadow for perf */
+  box-shadow: 0 18px 44px rgba(0,0,0,0.28), var(--fx-inset-2);
+  backdrop-filter: blur(calc(var(--glass-blur-large) + 2px)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur-large) + 2px)) saturate(var(--glass-saturate));
+  isolation: isolate;
+}
+
+/* Fallback for browsers without dvh support */
+@supports not (height: 100dvh) {
+  .quest-archive {
+    max-height: calc(100vh - 3rem);
+  }
+}
+
+.quest-archive__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.quest-archive__close {
+  padding: 0.7rem 1.2rem;
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--frost-border);
+  background: var(--frost-bg);
+  color: var(--text-color);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: all 160ms ease;
+  isolation: isolate;
+}
+.quest-archive__close:hover {
+  color: var(--frost-accent);
+  border-color: color-mix(in srgb, var(--frost-accent) 40%, white 6%);
+  transform: translateY(-1px);
+}
+
+.quest-archive__item {
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--frost-bg);
+  backdrop-filter: blur(calc(var(--glass-blur) - 2px));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) - 2px));
+  isolation: isolate;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+.quest-archive__item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quest-archive__item-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ======================================================
+   BUTTONS — Frosted Consistency
+   ====================================================== */
+@layer components {
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--frost-border);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    transition: all 180ms ease;
+    isolation: isolate;
+  }
+
+  .btn-primary {
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.22));
+    color: var(--text-color);
+  }
+  .btn-primary:hover {
+    border-color: color-mix(in srgb, var(--frost-accent) 50%, white 8%);
+    color: var(--frost-accent);
+    transform: translateY(-1px);
+    box-shadow: var(--fx-inset-1), 0 10px 26px color-mix(in srgb, var(--frost-accent) 28%, transparent);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.02);
+    color: var(--text-muted);
+  }
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+  }
+}
+
+/* ======================================================
+   THEME TOGGLE — Frosted Icon Button
+   ====================================================== */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--radius-full);
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  color: var(--text-color);
+  box-shadow: var(--fx-inset-1), 0 6px 16px rgba(0,0,0,0.18);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: transform 160ms ease, color 160ms ease, border-color 160ms ease;
+  isolation: isolate;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  color: var(--frost-accent);
+  border-color: color-mix(in srgb, var(--frost-accent) 50%, white 12%);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--frost-accent) 60%, white 10%);
+  outline-offset: 2px;
+}
+
+.theme-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ======================================================
+   UTILITIES — Gradients / Accents / Glass
+   ====================================================== */
+.text-gradient {
+  background-image: linear-gradient(90deg, var(--frost-accent), #d6a7ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.blur-glass {
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--fx-inset-1), var(--fx-elev-1);
+  isolation: isolate;
+}
+
+/* ======================================================
+   GLOBAL CANVAS DEPTH — macOS Glass Elevation
+   ====================================================== */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 160% at 50% 120%, rgba(0,0,0,0.22), transparent 75%),
+    radial-gradient(140% 140% at 20% -20%, rgba(255,255,255,0.18), transparent 65%);
+  opacity: 0.45;
+  pointer-events: none;
+  filter: blur(60px);
+  transform: translateZ(0);
+  will-change: transform; /* hint to compositor */
+}
+
+html.dark body::before {
+  background:
+    radial-gradient(120% 160% at 50% 120%, rgba(6,14,36,0.65), transparent 75%),
+    radial-gradient(160% 160% at 20% -20%, rgba(72,122,255,0.22), transparent 65%);
+  opacity: 0.55;
+}
+
+.pixel-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(600px 400px at 50% 110%, color-mix(in srgb, var(--frost-accent) 14%, transparent)),
+    radial-gradient(1000px 700px at 0% 0%, color-mix(in srgb, var(--frost-shadow) 18%, transparent));
+  filter: blur(72px);
+  opacity: 0.36;
+  pointer-events: none;
+  will-change: filter;
+}
+
+/* ======================================================
+   SYSTEM GLASS UPGRADE — Headers, Cards, Buttons, Forms
+   ====================================================== */
+
+/* 1. Headers / Shell */
+.theme-shell-header {
+  background: color-mix(in srgb, var(--shell-overlay) 88%, transparent 12%);
+  backdrop-filter: blur(var(--glass-blur-large)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-large)) saturate(var(--glass-saturate));
+  border-bottom: 1px solid color-mix(in srgb, var(--shell-border) 70%, transparent 30%);
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--frost-shadow) 45%, transparent 55%), var(--fx-inset-2);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  isolation: isolate;
+}
+
+/* 2. Cards (mega, theme-shell, etc.) */
+.theme-shell-card,
+.mega-card {
+  background: color-mix(in srgb, var(--shell-overlay) 92%, transparent 8%);
+  border: 1px solid color-mix(in srgb, var(--shell-border) 85%, transparent 15%);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 45px color-mix(in srgb, var(--frost-shadow) 60%, transparent 40%), var(--fx-inset-2);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  transition: box-shadow 240ms ease, transform 240ms ease;
+  isolation: isolate;
+}
+.theme-shell-card:hover,
+.mega-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 26px 60px color-mix(in srgb, var(--frost-shadow) 56%, transparent 44%), var(--fx-inset-2);
+}
+
+/* 3. Buttons (system-style glass buttons) */
+button,
+input[type="submit"],
+input[type="button"],
+.retro-btn,
+.cta-enter {
+  appearance: none;
+  background: color-mix(in srgb, var(--shell-overlay) 88%, transparent 12%);
+  border: 1px solid color-mix(in srgb, var(--shell-border) 70%, transparent 30%);
+  border-radius: var(--radius-full);
+  color: var(--shell-text);
+  box-shadow: var(--fx-inset-2), 0 8px 18px color-mix(in srgb, var(--frost-shadow) 45%, transparent 55%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: all 180ms ease;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.8rem 1.4rem;
+  isolation: isolate;
+}
+
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+.retro-btn:hover,
+.cta-enter:hover {
+  background: color-mix(in srgb, var(--frost-accent) 18%, var(--shell-overlay) 82%);
+  border-color: color-mix(in srgb, var(--frost-accent) 35%, var(--shell-border) 65%);
+  box-shadow: var(--fx-inset-2), 0 10px 28px color-mix(in srgb, var(--frost-accent) 32%, transparent);
+  transform: translateY(-1px);
+}
+
+button:active,
+.retro-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--frost-shadow) 50%, transparent 50%);
+}
+
+/* Primary accent button (uses frost accent) */
+button.primary,
+.retro-btn-primary {
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--frost-accent) 26%, var(--shell-overlay) 74%),
+    color-mix(in srgb, var(--frost-accent) 14%, var(--shell-overlay) 86%)
+  );
+  border-color: color-mix(in srgb, var(--frost-accent) 55%, white 8%);
+  color: #fff;
+}
+
+/* 4. Form Inputs (glass fields) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select,
+.form-control {
+  background: color-mix(in srgb, var(--shell-overlay) 88%, transparent 12%);
+  border: 1px solid color-mix(in srgb, var(--shell-border) 75%, transparent 25%);
+  color: var(--shell-text);
+  border-radius: var(--radius-md);
+
+  padding: 0.75rem 1rem;
+  box-shadow: var(--fx-inset-2), 0 6px 16px color-mix(in srgb, var(--frost-shadow) 40%, transparent 60%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  isolation: isolate;
+  -webkit-text-fill-color: var(--shell-text);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--frost-accent) 60%, white 10%);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--frost-accent) 22%, transparent 78%),
+    0 10px 22px color-mix(in srgb, var(--frost-shadow) 45%, transparent 55%);
+}
+
+/* 5. Subtle macOS footer shadow */
+.theme-shell-footer,
+.pixel-footer {
+  background: color-mix(in srgb, var(--shell-overlay) 92%, transparent 8%);
+  border-top: 1px solid color-mix(in srgb, var(--shell-border) 70%, transparent 30%);
+  box-shadow: 0 -14px 36px color-mix(in srgb, var(--frost-shadow) 40%, transparent 60%);
+  backdrop-filter: blur(var(--glass-blur-large)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-large)) saturate(var(--glass-saturate));
+  isolation: isolate;
+}
+
+/* ======================================================
+   QUEST FAB (Floating Action Button) — Mobile-first
+   ====================================================== */
+
+.quest-fab-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .quest-fab-container {
+    bottom: 32px;
+    right: 32px;
+  }
+}
+
+/* Main FAB button */
+.quest-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--frost-accent) 32%, var(--shell-overlay) 68%),
+    color-mix(in srgb, var(--frost-accent) 18%, var(--shell-overlay) 82%)
+  );
+  border: 1px solid color-mix(in srgb, var(--frost-accent) 65%, white 12%);
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 
+    var(--fx-inset-2),
+    0 8px 24px color-mix(in srgb, var(--frost-accent) 38%, transparent 62%),
+    0 0 0 0 color-mix(in srgb, var(--frost-accent) 32%, transparent 68%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: all 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  isolation: isolate;
+}
+
+.quest-fab:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 
+    var(--fx-inset-2),
+    0 12px 32px color-mix(in srgb, var(--frost-accent) 45%, transparent 55%),
+    0 0 0 8px color-mix(in srgb, var(--frost-accent) 18%, transparent 82%);
+}
+
+.quest-fab:active {
+  transform: scale(0.96);
+}
+
+.quest-fab--expanded {
+  transform: rotate(45deg);
+}
+
+.quest-fab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* FAB action menu */
+.quest-fab-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fabMenuSlideIn 280ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fabMenuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Individual FAB action buttons */
+.quest-fab-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px 12px 14px;
+  background: color-mix(in srgb, var(--shell-overlay) 94%, transparent 6%);
+  border: 1px solid color-mix(in srgb, var(--shell-border) 80%, transparent 20%);
+  border-radius: var(--radius-3xl);
+  color: var(--shell-text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 
+    var(--fx-inset-1),
+    0 6px 18px color-mix(in srgb, var(--frost-shadow) 35%, transparent 65%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  isolation: isolate;
+  min-width: 140px;
+}
+
+.quest-fab-action:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--frost-accent) 14%, var(--shell-overlay) 86%);
+  border-color: color-mix(in srgb, var(--frost-accent) 45%, var(--shell-border) 55%);
+  box-shadow: 
+    var(--fx-inset-2),
+    0 8px 24px color-mix(in srgb, var(--frost-accent) 28%, transparent 72%);
+  transform: translateX(-4px);
+}
+
+.quest-fab-action:active:not(:disabled) {
+  transform: translateX(-2px) scale(0.98);
+}
+
+.quest-fab-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * QUEST WIZARD FORM INPUTS
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* Reusable glass morphism input style */
+.pixel-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(15, 23, 42, 0.6); /* slate-950/60 */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  color: rgb(226, 232, 240); /* slate-200 */
+  font-size: 0.875rem;
+  line-height: 1.5;
+  outline: none;
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pixel-input::placeholder {
+  color: rgb(100, 116, 139); /* slate-500 */
+}
+
+.pixel-input:focus {
+  border-color: rgb(125, 211, 252); /* sky-300 */
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 
+    0 0 0 3px rgba(125, 211, 252, 0.15),
+    0 4px 16px rgba(14, 165, 233, 0.2);
+}
+
+.pixel-input:hover:not(:focus) {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.pixel-input[aria-invalid="true"] {
+  border-color: rgb(251, 113, 133); /* rose-400 */
+  background: rgba(244, 63, 94, 0.05);
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
+}
+
+/* Enhanced focus-visible styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid rgb(125, 211, 252); /* sky-300 */
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid rgb(125, 211, 252);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.2);
+}
+
+.pixel-input:focus-visible {
+  outline: none; /* Already has custom focus style */
+}
+
+.quest-fab-action--active {
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--frost-accent) 22%, var(--shell-overlay) 78%),
+    color-mix(in srgb, var(--frost-accent) 12%, var(--shell-overlay) 88%)
+  );
+  border-color: color-mix(in srgb, var(--frost-accent) 55%, white 8%);
+  color: white;
+}
+
+.quest-fab-action-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.quest-fab-action-label {
+  flex: 1;
+  text-align: left;
+}
+
+/* Note: Quest FAB visible on all screen sizes for accessibility */
+/* To hide on desktop, add: @media (min-width: 1024px) { .quest-fab-container { display: none; } } */
+
+/* ======================================================
+   End of stylesheet
+   ====================================================== */
+

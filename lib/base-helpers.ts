@@ -146,19 +146,17 @@ export async function requestPaymasterSponsorship(
  * 
  * @param chain - GM chain key
  * @param userAddress - User wallet address
- * @param message - GM message content
  * @returns Write contract parameters
  */
 export function preparePostGMTransaction(
   chain: GMChainKey,
-  userAddress: Address,
-  message: string
+  userAddress: Address
 ): WriteContractParameters {
   return {
     address: getCoreAddress(chain),
     abi: getCoreABI(),
-    functionName: 'postGM',
-    args: [message],
+    functionName: 'sendGM',
+    args: [],
     account: userAddress,
   }
 }
@@ -216,16 +214,14 @@ export function prepareJoinGuildTransaction(
  * 
  * @param chain - GM chain key
  * @param userAddress - User wallet address
- * @param message - GM message content
  * @returns Transaction parameters with paymaster data
  */
 export async function prepareSponsoredPostGM(
   chain: GMChainKey,
-  userAddress: Address,
-  message: string
+  userAddress: Address
 ) {
   // Get base transaction params
-  const txParams = preparePostGMTransaction(chain, userAddress, message)
+  const txParams = preparePostGMTransaction(chain, userAddress)
   
   // Encode function data
   const data = encodeFunctionData({

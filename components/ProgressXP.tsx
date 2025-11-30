@@ -1,27 +1,10 @@
 'use client'
 
-/**
- * ProgressXP - XP Celebration Modal
- * Mobile-first design with Tailwick v2.0 patterns
- * Reuses accessibility & animation logic from old foundation
- * Uses Gmeowbased v0.1 icons and modern UI/UX
- * 
- * Features:
- * - Mobile-optimized layout (portrait + landscape)
- * - Smooth animations with prefers-reduced-motion support
- * - Keyboard navigation & focus trap
- * - Screen reader friendly
- * - Rich typography from 5 template references
- * - Chain-specific badge display
- */
-
 import Image from 'next/image'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { CHAIN_LABEL, type ChainKey } from '@/lib/gmeow-utils'
 import { getChainIconUrl } from '@/lib/chain-icons'
-import { Card, CardHeader, CardBody, Button, Badge } from '@/components/ui/tailwick-primitives'
-import { QuestIcon, type QuestIconType } from '@/components/ui/QuestIcon'
 
 export type ProgressXPProps = {
   open: boolean
@@ -36,12 +19,12 @@ export type ProgressXPProps = {
   tierTagline?: string
   shareUrl?: string
   onShare?: () => void
-  visitUrl?: string | null  // null = hide visit button
+  visitUrl?: string
   onVisit?: () => void
   shareLabel?: string
   visitLabel?: string
   headline?: string
-  eventIconType?: QuestIconType  // Changed from eventIcon emoji to QuestIconType
+  eventIcon?: string
   glyph?: string
   badgeLabel?: string
 }
@@ -73,11 +56,11 @@ export function ProgressXP({
   shareLabel = 'Share on Warpcast',
   visitLabel = 'Visit Quest',
   headline,
-  eventIconType,  // Changed from eventIcon emoji
+  eventIcon,
   glyph,
   badgeLabel,
 }: ProgressXPProps) {
-  // Accessibility - modal focus management
+  // @edit-start 2025-11-11 — Modal accessibility upgrades
   const dialogRef = useRef<HTMLDivElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const titleId = useId()
@@ -89,8 +72,8 @@ export function ProgressXP({
     },
     [onClose],
   )
+  // @edit-end
 
-  // Progress bar animation
   const targetPercent = useMemo(() => {
     if (!xpForLevel || xpForLevel <= 0) return 0
     return Math.min(100, Math.max(0, Math.round((xpIntoLevel / xpForLevel) * 100)))
@@ -100,7 +83,6 @@ export function ProgressXP({
   const [animatedXp, setAnimatedXp] = useState(0)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
-  // Detect reduced motion preference
   useEffect(() => {
     if (typeof window === 'undefined') return
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -114,7 +96,6 @@ export function ProgressXP({
     return () => media.removeListener(update)
   }, [])
 
-  // Animate progress bar and XP counter
   useEffect(() => {
     if (!open) {
       setAnimatedPercent(0)
@@ -147,7 +128,6 @@ export function ProgressXP({
     return () => cancelAnimationFrame(rafId)
   }, [open, prefersReducedMotion, targetPercent, xpEarned])
 
-  // Focus trap & keyboard navigation
   useEffect(() => {
     if (!open) return
     const dialogNode = dialogRef.current
@@ -218,151 +198,161 @@ export function ProgressXP({
     if (glyph) return ''
     return getChainIconUrl(typeof chainKey === 'string' ? chainKey : '')
   }, [chainKey, glyph])
-
   const canShare = Boolean(shareUrl) || Boolean(onShare)
 
   if (!open) return null
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-40 flex items-center justify-center p-6"
       role="presentation"
       onMouseDown={handleBackdropMouseDown}
       style={{
-        background: 'rgba(0, 0, 0, 0.85)',
-        backdropFilter: 'blur(12px)',
+        background: 'radial-gradient(ellipse at center, rgba(14, 20, 46, 0.95) 0%, rgba(4, 5, 16, 0.98) 100%)',
+        backdropFilter: 'blur(16px)',
       }}
     >
-      {/* Animated background - subtle */}
+      {/* Animated background effects - Yu-Gi-Oh inspired */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden>
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-cyan-600/10" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(168,85,247,0.12),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_80%,rgba(251,191,36,0.08),transparent_50%)]" />
+        {/* Floating particles */}
+        <div className="absolute top-1/4 left-1/4 h-2 w-2 rounded-full bg-sky-400/40 animate-pulse" />
+        <div className="absolute top-2/3 right-1/3 h-1.5 w-1.5 rounded-full bg-purple-400/30 animate-pulse delay-300" />
+        <div className="absolute bottom-1/3 left-2/3 h-2.5 w-2.5 rounded-full bg-amber-400/25 animate-pulse delay-700" />
       </div>
-
       <div
         ref={dialogRef}
-        className="relative w-full max-w-lg focus:outline-none"
+        className="relative w-full max-w-[calc(100vw-2rem)] sm:max-w-3xl focus:outline-none"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={tierTagline ? descriptionId : undefined}
         tabIndex={-1}
       >
-        {/* Close button */}
-        <div className="absolute -top-12 right-0 z-10">
+        <div className="absolute -top-12 right-0 flex gap-2 text-sm text-gold/70">
           <button
             ref={closeButtonRef}
             type="button"
-            className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="px-3 py-2 min-h-[44px] rounded-full border-2 border-gold/30 bg-dark-bg/90 hover:bg-dark-bg-hover hover:border-gold/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             onClick={onClose}
           >
             Close
           </button>
         </div>
-
-        <Card className="overflow-hidden border-2 border-purple-500/30 shadow-2xl shadow-purple-500/20">
-          <CardBody className="p-0">
-            {/* Header with event icon & headline */}
-            <div className="bg-gradient-to-r from-purple-600 to-cyan-600 p-6 text-center">
-              <div className="flex items-center justify-center gap-3 mb-2">
-                {eventIconType && (
-                  <div className="animate-bounce" aria-hidden style={{ animationDuration: '2s' }}>
-                    <QuestIcon type={eventIconType} size={48} className="drop-shadow-lg" />
+        <div className="relative overflow-hidden rounded-[32px] border shadow-[0_0_80px_rgba(14,165,233,0.3),0_0_40px_rgba(168,85,247,0.2)]"
+          style={{
+            borderColor: 'rgba(148, 163, 184, 0.3)',
+            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 50%, rgba(15, 23, 42, 0.95) 100%)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+          }}
+        >
+          {/* Glass morphism layers - Yu-Gi-Oh card inspired */}
+          <div className="absolute inset-0 opacity-60" aria-hidden>
+            {/* Holographic shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/20 via-transparent to-purple-500/20" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(14,165,233,0.15),transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.12),transparent_50%)]" />
+            {/* Animated shine */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shine" 
+              style={{ animationDuration: '3s', animationIterationCount: 'infinite' }} />
+          </div>
+          
+          {/* Content area with additional glass layer */}
+          <div className="relative px-8 py-10 backdrop-blur-sm"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)',
+            }}
+          >
+          <div className="relative z-10 grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative h-32 w-32">
+                {/* Holographic glow ring */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-sky-400/40 via-purple-400/30 to-amber-400/20 blur-2xl animate-pulse" aria-hidden />
+                <div className="absolute inset-0 rounded-full border-2 border-sky-400/20 animate-spin-slow" aria-hidden 
+                  style={{ animationDuration: '8s' }} />
+                
+                {/* Main badge container with glass effect */}
+                <div className="relative h-full w-full rounded-full border-2 shadow-[inset_0_2px_12px_rgba(255,255,255,0.1),0_8px_32px_rgba(14,165,233,0.4)]"
+                  style={{
+                    borderColor: 'rgba(56, 189, 248, 0.5)',
+                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 100%)',
+                    backdropFilter: 'blur(12px)',
+                  }}
+                >
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-sky-500/10 via-transparent to-purple-500/10" aria-hidden />
+                  <div className="flex h-full w-full items-center justify-center">
+                  {glyph ? (
+                    <span className="text-3xl sm:text-4xl font-black text-gold drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]">{glyph}</span>
+                  ) : chainIcon ? (
+                    <Image src={chainIcon} alt={chainLabel} width={48} height={48} className="drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
+                  ) : (
+                    <span className="text-3xl sm:text-4xl font-black text-gold drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]">{chainLabel?.slice(0, 2) ?? 'XP'}</span>
+                  )}
                   </div>
-                )}
-                <h2 id={titleId} className="text-2xl sm:text-3xl font-bold text-white">
-                  {headline || 'XP Earned!'}
-                </h2>
+                </div>
               </div>
-              <div className="text-5xl sm:text-6xl font-black text-white mt-4">
-                +{formatInt(animatedXp)} XP
+              <div className="text-center">
+                <div className="text-xs uppercase tracking-[0.36em] text-gold/60">Chain</div>
+                <div className="text-xl font-bold text-gold drop-shadow-[0_2px_12px_rgba(255,215,0,0.6)]">{ chainLabel}</div>
+                {badgeLabel ? <div className="text-sm text-gold/50 mt-1">{badgeLabel}</div> : null}
               </div>
             </div>
-
-            {/* Main content */}
-            <div className="p-6 space-y-6">
-              {/* Chain Badge & Level */}
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  {glyph ? (
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500">
-                      <span className="text-2xl font-bold">{glyph}</span>
-                    </div>
-                  ) : chainIcon ? (
-                    <div className="relative w-12 h-12">
-                      <Image src={chainIcon} alt={chainLabel} width={48} height={48} className="rounded-full" />
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500">
-                      <span className="text-xl font-bold text-white">{chainLabel?.slice(0, 2) ?? 'XP'}</span>
-                    </div>
-                  )}
-                  <div>
-                    <div className="text-xs text-slate-400 uppercase tracking-wider">Chain</div>
-                    <div className="text-lg font-bold theme-text-primary">{chainLabel}</div>
-                    {badgeLabel && <div className="text-xs text-slate-500">{badgeLabel}</div>}
-                  </div>
+            <div className="relative flex flex-col gap-6">
+              <div>
+                <div className="flex items-center gap-2 text-xs sm:text-sm uppercase tracking-[0.25em] text-gold/80">
+                  {eventIcon ? <span className="text-xl sm:text-2xl leading-none animate-pulse" aria-hidden style={{animationDuration: '2s'}}>{eventIcon}</span> : null}
+                  <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{headline || 'XP Boost Unlocked'}</span>
                 </div>
-
-                <div>
-                  <Badge variant="primary" size="md" className="px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">Level</span>
-                      <span className="text-2xl font-black">{level}</span>
-                    </div>
-                  </Badge>
+                <div className="text-3xl sm:text-4xl font-black text-gold drop-shadow-[0_0_30px_rgba(255,215,0,0.8),0_4px_20px_rgba(0,0,0,0.9)]">
+                  Level {level} • {tierName || 'Adventurer'}
                 </div>
+                {tierTagline ? (
+                  <div id={descriptionId} className="mt-1 text-sm text-slate-300">{tierTagline}</div>
+                ) : null}
               </div>
 
-              {/* Tier & Rank */}
-              <div className="text-center py-4 px-6 rounded-xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20">
-                <div className="text-sm text-slate-400 uppercase tracking-wider mb-1">Current Tier</div>
-                <div className="text-2xl font-bold theme-text-primary">{tierName || 'Adventurer'}</div>
-                {tierTagline && (
-                  <div id={descriptionId} className="text-sm text-slate-500 mt-2">
-                    {tierTagline}
-                  </div>
-                )}
-              </div>
-
-              {/* XP Progress Bar */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">Progress to Next Level</span>
-                  <span className="font-bold theme-text-primary">{Math.round(animatedPercent)}%</span>
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-gold/70">
+                  <span>Progress to next tier</span>
+                  <span className="font-bold text-gold">{Math.round(animatedPercent)}%</span>
                 </div>
-                
-                <div className="relative h-4 overflow-hidden rounded-full bg-slate-800 border border-slate-700">
+                <div className="relative h-3 sm:h-4 overflow-hidden rounded-full border-2 border-gold/30 bg-dark-bg-card shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-300 ease-out"
-                    style={{ width: `${Math.max(4, animatedPercent)}%` }}
-                  />
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.8),inset_0_1px_2px_rgba(255,255,255,0.5)]"
+                  style={{ width: `${Math.max(8, animatedPercent)}%`, transition: 'width 0.4s ease-out' }}
+                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-gold/30 via-transparent to-transparent mix-blend-screen animate-pulse" aria-hidden style={{animationDuration: '2s'}} />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] animate-[shimmer_2s_ease-in-out_infinite]" aria-hidden />
                 </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>{formatInt(xpIntoLevel)} XP</span>
-                  <span>{formatInt(xpForLevel)} XP</span>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-center py-3 px-4 rounded-lg bg-slate-800/50 border border-slate-700">
-                  <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">XP Earned</div>
-                  <div className="text-lg font-bold text-emerald-400">+{formatInt(xpEarned)}</div>
-                </div>
-                <div className="text-center py-3 px-4 rounded-lg bg-slate-800/50 border border-slate-700">
-                  <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Total Points</div>
-                  <div className="text-lg font-bold theme-text-primary">{formatInt(totalPoints || 0)}</div>
+                <div className="flex items-center justify-between text-xs text-gold/80 font-semibold">
+                  <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{formatInt(animatedXp)} XP earned</span>
+                  <span className="text-gold">
+                    {formatInt(xpIntoLevel)} / {formatInt(xpForLevel)} XP
+                  </span>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                {canShare && (
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="flex-1"
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border-2 border-gold/25 bg-dark-bg-alt/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
+                  <div className="text-sm uppercase tracking-[0.2em] text-gold/50">Current Rank</div>
+                  <div className="mt-1 text-lg font-semibold text-gold">{tierName || 'Adventurer'}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-700/70 bg-dark-bg-secondary/70 p-4 text-center">
+                  <div className="text-sm uppercase tracking-[0.2em] text-slate-400">XP Earned</div>
+                  <div className="mt-1 text-lg font-semibold text-emerald-300">+{formatInt(xpEarned)}</div>
+                </div>
+                <div className="rounded-2xl border-2 border-gold/25 bg-dark-bg-alt/80 p-4 text-center shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
+                  <div className="text-sm uppercase tracking-[0.2em] text-gold/50">Total Points</div>
+                  <div className="mt-1 text-lg font-semibold text-gold">{formatInt(totalPoints || 0)}</div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                {canShare ? (
+                  <button
+                    className="pixel-button flex-1 min-w-[140px] sm:min-w-[180px] justify-center border-2 border-gold/60 bg-gradient-to-r from-gold/30 via-[#ffed4e]/20 to-gold/30 px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold shadow-[0_8px_32px_rgba(255,215,0,0.4),0_0_40px_rgba(255,215,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.3)] transition hover:scale-[1.02] hover:shadow-[0_12px_48px_rgba(255,215,0,0.6),0_0_60px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                     onClick={() => {
                       if (onShare) {
                         onShare()
@@ -372,26 +362,26 @@ export function ProgressXP({
                     }}
                   >
                     {shareLabel}
-                  </Button>
-                )}
-                {visitUrl && (
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="flex-1"
+                  </button>
+                ) : null}
+                {visitUrl ? (
+                  <button
+                    className="pixel-button flex-1 min-w-[120px] sm:min-w-[160px] justify-center border-2 border-gold/30 bg-dark-bg-tertiary px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold/80 transition hover:bg-dark-bg-quaternary hover:border-gold/50 hover:text-gold hover:shadow-[0_4px_16px_rgba(255,215,0,0.3)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
                     onClick={() => {
                       if (onVisit) onVisit()
                       else window.open(visitUrl, '_blank', 'noopener')
                     }}
                   >
                     {visitLabel}
-                  </Button>
-                )}
+                  </button>
+                ) : null}
               </div>
             </div>
-          </CardBody>
-        </Card>
+          </div>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
+// @edit-end

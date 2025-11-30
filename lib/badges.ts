@@ -230,12 +230,20 @@ async function ensureBadgeBucket() {
   assertSupabase()
   const supabase = getSupabaseServerClient()
   if (!supabase) throw new Error('Supabase client unavailable')
+  
   const { data } = await supabase.storage.getBucket(BADGE_BUCKET)
   if (!data) {
-    await supabase.storage.createBucket(BADGE_BUCKET, {
+    // Create bucket with public access and no RLS restrictions
+    const { error } = await supabase.storage.createBucket(BADGE_BUCKET, {
       public: true,
       fileSizeLimit: 10 * 1024 * 1024,
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'],
     })
+    
+    if (error) {
+      console.error('Failed to create badge bucket:', error)
+      // Continue anyway - bucket might already exist
+    }
   }
 }
 
@@ -252,13 +260,23 @@ export async function uploadBadgeArt(file: UploadFile): Promise<{ url: string; p
   const extension = originalName.split('.').pop()?.toLowerCase() || 'png'
   const safeName = originalName.replace(/[^a-zA-Z0-9_.-]/g, '_')
   const path = `templates/${randomUUID()}-${safeName}`
+  
   const { error } = await supabase.storage.from(BADGE_BUCKET).upload(path, arrayBuffer, {
     contentType: file.type || `image/${extension}`,
     upsert: true,
   })
+  
   if (error) {
+    // Check if it's an RLS policy error
+    if (error.message?.includes('row-level security') || error.message?.includes('policy')) {
+      throw new Error(
+        `Storage RLS policy blocking upload. Please disable RLS on the '${BADGE_BUCKET}' bucket in Supabase dashboard, ` +
+        `or add a policy that allows INSERT for service_role. Error: ${error.message}`
+      )
+    }
     throw new Error(`Failed to upload badge art: ${error.message}`)
   }
+  
   const { data } = supabase.storage.from(BADGE_BUCKET).getPublicUrl(path)
   return { url: data.publicUrl, path }
 }
