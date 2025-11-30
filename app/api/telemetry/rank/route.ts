@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 import { recordRankEvent, type RankTelemetryEventInput, type RankTelemetryEventKind } from '@/lib/telemetry'
 import { withErrorHandler } from '@/lib/error-handler'
 

@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useAccount, useChainId, useConfig, useSwitchChain } from 'wagmi'
 import { getPublicClient, writeContract, waitForTransactionReceipt } from 'wagmi/actions'
-import { CHAIN_IDS, type ChainKey, GM_CONTRACT_ABI, getContractAddress } from '@/lib/gm-utils'
+import { CHAIN_IDS, type ChainKey, GM_CONTRACT_ABI, getContractAddress } from '@/lib/gmeow-utils'
 import type { TeamSummary } from '@/lib/team'
 import { getTeamSummaryClient, getTeamMembersClient } from '@/lib/team'
 

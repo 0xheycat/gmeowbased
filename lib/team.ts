@@ -1,7 +1,7 @@
 import { decodeEventLog } from 'viem'
 import { getPublicClient } from 'wagmi/actions'
 import { wagmiConfig } from '@/lib/wagmi'
-import { CHAIN_IDS, type ChainKey, GM_CONTRACT_ABI, getContractAddress } from '@/lib/gm-utils'
+import { CHAIN_IDS, type ChainKey, GM_CONTRACT_ABI, getContractAddress } from '@/lib/gmeow-utils'
 
 export type TeamSummary = {
   chain: ChainKey

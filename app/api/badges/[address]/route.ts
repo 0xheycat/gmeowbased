@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { AddressSchema } from '@/lib/validation/api-schemas'
 import { fetchMintedBadges } from '@/lib/badges'
-import { CHAIN_IDS, type ChainKey, isAddress } from '@/lib/gm-utils'
+import { CHAIN_IDS, type ChainKey, isAddress } from '@/lib/gmeow-utils'
 
 export const runtime = 'nodejs'
 

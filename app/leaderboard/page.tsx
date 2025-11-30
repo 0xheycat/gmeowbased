@@ -4,7 +4,7 @@ import Image from 'next/image'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkle } from '@phosphor-icons/react'
-import { CHAIN_KEYS, CHAIN_LABEL, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, CHAIN_LABEL, type ChainKey } from '@/lib/gmeow-utils'
 import { buildFrameShareUrl, openWarpcastComposer, type FrameShareInput } from '@/lib/share'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 

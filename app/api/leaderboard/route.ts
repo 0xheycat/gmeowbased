@@ -1,7 +1,7 @@
 // /api/leaderboard/route.ts
 import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CONTRACT_ADDRESSES, gmContractHasFunction, type ChainKey } from '@/lib/gm-utils'
+import { CONTRACT_ADDRESSES, gmContractHasFunction, type ChainKey } from '@/lib/gmeow-utils'
 import { computeLeaderboardSlice, PROFILE_SUPPORTED } from '@/lib/leaderboard-aggregator'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { fetchUsersByAddresses } from '@/lib/neynar'

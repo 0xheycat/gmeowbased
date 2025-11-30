@@ -5,7 +5,7 @@ import {
   GM_CONTRACT_ABI,
   gmContractHasFunction,
   type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { fetchUsersByAddresses } from '@/lib/neynar'
 import { getRpcUrl } from '@/lib/rpc'
 

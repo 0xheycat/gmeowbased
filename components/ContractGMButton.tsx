@@ -9,7 +9,7 @@ import {
   type ChainKey,
   formatTimeUntilNextGM,
   canGMBasedOnTimestamp,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import type { Abi } from 'viem' // add
 import { GMCountdown } from './GMCountdown'
 import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'

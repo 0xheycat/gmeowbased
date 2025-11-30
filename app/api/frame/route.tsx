@@ -21,7 +21,7 @@ import gm, {
   sanitizeExpiresAt,
   type NormalizedQuest,
   type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
 import { buildDynamicFrameImageUrl } from '@/lib/share'

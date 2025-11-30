@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import clsx from 'clsx'
 
-import { CHAIN_KEYS, CHAIN_LABEL, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, CHAIN_LABEL, type ChainKey } from '@/lib/gmeow-utils'
 import {
   type PartnerRequirementKind,
   type PartnerSnapshotSummaryPayload,

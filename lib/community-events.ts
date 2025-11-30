@@ -3,7 +3,7 @@ import { COMMUNITY_EVENT_TYPES, type CommunityEventSummary, type CommunityEventT
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { normalizeAddress } from '@/lib/profile-data'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
-import { CHAIN_KEYS, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 
 const RANK_EVENT_TABLE = 'gmeow_rank_events'
 const DEFAULT_LIMIT = 40

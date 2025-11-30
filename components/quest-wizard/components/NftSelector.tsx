@@ -5,7 +5,7 @@ import type { NftOption } from '../shared'
 import type { FieldControlA11yProps } from './a11y'
 import { SelectorState } from './SelectorState'
 import { AssetListSkeleton } from './LoadingSkeleton'
-import { CHAIN_LABEL } from '@/lib/gm-utils'
+import { CHAIN_LABEL } from '@/lib/gmeow-utils'
 import { formatEth } from '../shared'
 
 type NftSelectorProps = {

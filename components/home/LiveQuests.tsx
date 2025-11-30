@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CHAIN_LABEL } from '@/lib/gm-utils'
+import { CHAIN_LABEL } from '@/lib/gmeow-utils'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 import { formatQuestTypeLabel } from '@/lib/formatters'
 import type { QuestFilterKey, QuestPreview } from './types'

@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { getChainIconUrl } from '@/lib/chain-icons'
-import { CHAIN_LABEL, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_LABEL, type ChainKey } from '@/lib/gmeow-utils'
 
 export function QuestChainChip({ chain, label }: { chain: ChainKey; label?: string }) {
   const displayLabel = label || CHAIN_LABEL[chain] || chain

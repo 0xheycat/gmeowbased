@@ -23,7 +23,7 @@ import {
 	toPositiveFloat,
 	toPositiveInt,
 } from '@/components/quest-wizard/shared'
-import { getQuestFieldConfig, CHAIN_LABEL, normalizeQuestTypeKey, QUEST_TYPES } from '@/lib/gm-utils'
+import { getQuestFieldConfig, CHAIN_LABEL, normalizeQuestTypeKey, QUEST_TYPES } from '@/lib/gmeow-utils'
 import { parseTokenAmountToUnits, formatTokenAmountFromUnits } from './utils/tokenMath'
 import { sanitizePositiveNumberInput } from './utils/sanitizers'
 

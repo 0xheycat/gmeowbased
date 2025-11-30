@@ -1,4 +1,4 @@
-import { CHAIN_LABEL, QUEST_TYPES, type ChainKey, type QuestFieldConfig } from '@/lib/gm-utils'
+import { CHAIN_LABEL, QUEST_TYPES, type ChainKey, type QuestFieldConfig } from '@/lib/gmeow-utils'
 
 export type StepKey = 'basics' | 'eligibility' | 'rewards' | 'preview'
 

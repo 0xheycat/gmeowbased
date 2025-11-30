@@ -1,6 +1,6 @@
 import { type Abi, type AbiEvent } from 'viem'
 
-import { GM_CONTRACT_ABI } from '@/lib/gm-utils'
+import { GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
 
 export type ContractEventCategory =
   | 'gm'

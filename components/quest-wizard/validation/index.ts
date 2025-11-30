@@ -14,7 +14,7 @@ import type {
 import {
 	getQuestFieldConfig,
 	normalizeQuestTypeKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import {
 	isCastHash,
 	isUsernameValid,

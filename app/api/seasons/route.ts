@@ -1,7 +1,7 @@
 // /api/seasons/route.ts
 import { NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
-import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey } from '@/lib/gm-utils'
+import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { SeasonQuerySchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'

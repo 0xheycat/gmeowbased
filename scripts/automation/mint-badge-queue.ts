@@ -26,7 +26,7 @@ import {
 } from '@/lib/badges'
 import { mintBadgeOnChain } from '@/lib/contract-mint'
 import { getBadgeFromRegistry } from '@/lib/badges'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 
 const BATCH_SIZE = Number(process.env.MINT_BATCH_SIZE || 5)
 // INTERVAL_MS and MAX_RETRIES removed - only used by commented main() function

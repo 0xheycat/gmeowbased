@@ -26,7 +26,7 @@ import {
   type QuestTypeKey,
   type NormalizedQuest,
   getContractAddress,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { formatNumber, formatExpiryShort, formatRelativeTime, formatRelativeTimeShort } from '@/lib/formatters'
 import { clamp, cn, readStorageCache, writeStorageCache } from '@/lib/utils'
 

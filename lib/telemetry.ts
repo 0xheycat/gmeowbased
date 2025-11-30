@@ -1,5 +1,5 @@
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gm-utils'
+import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { createPublicClient, http, parseAbiItem, type AbiEvent, type Log } from 'viem'
 import type { SupabaseClient } from '@supabase/supabase-js'

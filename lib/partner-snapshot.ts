@@ -9,7 +9,7 @@ import {
   GM_CONTRACT_ABI,
   normalizeChainKey,
   type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { fetchAggregatedRaw, type RawAggregate } from '@/lib/leaderboard-aggregator'
 import { getRpcUrl } from '@/lib/rpc'
 

@@ -1,6 +1,6 @@
 // @edit-start 2025-11-11 — Rank telemetry client helper
 import type { RankTelemetryEventKind } from '@/lib/telemetry'
-import type { ChainKey } from '@/lib/gm-utils'
+import type { ChainKey } from '@/lib/gmeow-utils'
 
 export type RankTelemetryClientPayload = {
   event: RankTelemetryEventKind

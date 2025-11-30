@@ -26,7 +26,7 @@ import {
   normalizeQuestStruct,
   normalizeQuestTypeKey,
   type ChainKey,
-} from '@/lib/gm-utils'
+} from '@/lib/gmeow-utils'
 import { fetchFidByAddress, fetchFidByUsername, fetchUserByUsername } from '@/lib/neynar'
 
 /* -------------------------------------------------------------------------- */
