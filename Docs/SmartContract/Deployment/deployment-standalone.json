@@ -1,0 +1,22 @@
+{
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "deployer": "0x8870C155666809609176260F2B65a626C000D773",
+  "oracle": "0x8870C155666809609176260F2B65a626C000D773",
+  "contracts": {
+    "GmeowCore": "0x059b474799f8602975E60A789105955CbB61d878",
+    "GmeowGuild": "0xa0001886C87a19d49BAC88a5Cbf993f0866110C4",
+    "GmeowNFT": "0xdB6167697Dd0f696d445a35ec823C25b885Ae60c"
+  },
+  "links": {
+    "coreToGuild": "0x5d38ab510ae54e026f182c638c4b29761a03637abff05a700e5232d6a530c309",
+    "coreToNFT": "0x09b904b2b7fbbd39ade54ad38787aae53318dee63b64256c7b0e979e446a2156"
+  },
+  "deployedAt": "2025-11-26T16:30:00Z",
+  "architecture": "hybrid-standalone",
+  "notes": [
+    "Core contract contains Quest, Points, GM, Referral, and Profile features",
+    "Guild and NFT are separate contracts referenced by Core",
+    "All contracts successfully linked via setGuildContract() and setNFTContractAddress()"
+  ]
+}

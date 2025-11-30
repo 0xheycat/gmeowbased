@@ -1,0 +1,37 @@
+{
+  "network": "base-mainnet",
+  "chainId": 8453,
+  "deployer": "0x8870C155666809609176260F2B65a626C000D773",
+  "oracle": "0x8870C155666809609176260F2B65a626C000D773",
+  "contracts": {
+    "GmeowCore": "0x9BDD11aA50456572E3Ea5329fcDEb81974137f92",
+    "GmeowGuild": "0x967457be45facE07c22c0374dAfBeF7b2f7cd059",
+    "GmeowNFT": "0xD99aeE13eA68C1e4e43cfA60E792520Dd06C2c20"
+  },
+  "transactions": {
+    "coreDeploy": "0x8dc6d56da058e5add79fe10ad6669ac8bbee4442cebbd99479f5f4f9a1f728d4",
+    "guildDeploy": "0x976fb38ecbe1ad77b6802c777da7f8c244017edd464addad802c9e538463158a",
+    "nftDeploy": "0xb6f9705cb34433fd49b7de002691bc39858059e6a8d0047ff4f11bb11ec632e3",
+    "guildLink": "0xb3c58690c382b2a73fb2a0acdfa5c7d2c99b1eab1d49e637c5866ec9c9ae81df",
+    "nftLink": "0x4747db26f754d17717fbb6a804186812794ec4c550d4140ac4ae42f3ca65b807"
+  },
+  "deployedAt": "2025-11-26T17:45:00Z",
+  "architecture": "hybrid-standalone",
+  "bonusValues": {
+    "ogThreshold": 50000,
+    "streak7Bonus": 15,
+    "streak30Bonus": 30,
+    "streak100Bonus": 60
+  },
+  "costs": {
+    "initialBalance": "0.000189590826301270 ETH",
+    "finalBalance": "0.000140878784961244 ETH",
+    "totalSpent": "0.000048712041340026 ETH",
+    "estimatedUSD": "$0.13 USD"
+  },
+  "basescanLinks": {
+    "core": "https://basescan.org/address/0x9BDD11aA50456572E3Ea5329fcDEb81974137f92",
+    "guild": "https://basescan.org/address/0x967457be45facE07c22c0374dAfBeF7b2f7cd059",
+    "nft": "https://basescan.org/address/0xD99aeE13eA68C1e4e43cfA60E792520Dd06C2c20"
+  }
+}
