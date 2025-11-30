@@ -19,3 +19,19 @@ export type { TextareaProps, TextareaSize } from './inputs/Textarea'
 // Modal components
 export { Dialog, DialogHeader, DialogBody, DialogFooter } from './modals/Dialog'
 export type { DialogProps, DialogHeaderProps, DialogBodyProps, DialogFooterProps } from './modals/Dialog'
+
+// Feedback components
+export { Badge } from './badge/Badge'
+export type { BadgeProps } from './badge/Badge'
+
+export { Tooltip } from './tooltip/Tooltip'
+export type { TooltipProps } from './tooltip/Tooltip'
+
+export { Progress } from './progress/Progress'
+export type { ProgressProps } from './progress/Progress'
+
+export { Alert } from './alert/Alert'
+export type { AlertProps } from './alert/Alert'
+
+export { Spinner } from './spinner/Spinner'
+export type { SpinnerProps } from './spinner/Spinner'
