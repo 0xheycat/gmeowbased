@@ -78,7 +78,7 @@ type UserStatsSnapshot = {
 
 type MobileDashboardTab = 'overview' | 'missions' | 'social'
 
-const CHAIN_BRAND: Record<ChainKey, { bg: string; fg: string; label: string }> = {
+const CHAIN_BRAND: Record<GMChainKey, { bg: string; fg: string; label: string }> = {
   base: { bg: 'var(--dash-chain-base-bg)', fg: 'var(--dash-chain-base-fg)', label: 'B' },
   unichain: { bg: 'var(--dash-chain-unichain-bg)', fg: 'var(--dash-chain-unichain-fg)', label: 'U' },
   celo: { bg: 'var(--dash-chain-celo-bg)', fg: 'var(--dash-chain-celo-fg)', label: 'C' },
@@ -232,7 +232,7 @@ export default function DashboardPage() {
   useEffect(() => () => { mountedRef.current = false }, [])
 
   // Chain selector for GM and stats card
-  const [selectedChain, setSelectedChain] = useState<ChainKey>('base')
+  const [selectedChain, setSelectedChain] = useState<GMChainKey>('base')
   const targetChainId = CHAIN_IDS[selectedChain]
   const contractAddress = getContractAddress(selectedChain)
 
@@ -246,9 +246,9 @@ export default function DashboardPage() {
   const lastKnownTotalRef = useRef(0)
 
   // Animated network switching state for UI
-  const [switchingFor, setSwitchingFor] = useState<ChainKey | null>(null)
+  const [switchingFor, setSwitchingFor] = useState<GMChainKey | null>(null)
   const ensureChain = useCallback(
-    async (c: ChainKey) => {
+    async (c: GMChainKey) => {
       const id = CHAIN_IDS[c]
       if (walletChainId === id) return true
       try {
@@ -552,12 +552,7 @@ export default function DashboardPage() {
       const prevBucket = Math.floor(prevTips / 1000)
       const nextBucket = Math.floor(nextTips / 1000)
       if (nextBucket > prevBucket) {
-        pushNotification({
-          type: 'info',
-          title: 'Tip surge',
-          message: `Tip volume hit ${nextTips.toLocaleString()} pts in the last 24h.`,
-          category: 'system',
-        })
+        pushNotification.info(`Tip volume hit ${nextTips.toLocaleString()} pts in the last 24h.`)
       }
     }
 
@@ -567,12 +562,7 @@ export default function DashboardPage() {
       const prevBucket = Math.floor(prevMints / 10)
       const nextBucket = Math.floor(nextMints / 10)
       if (nextBucket > prevBucket) {
-        pushNotification({
-          type: 'success',
-          title: 'Badge streak',
-          message: `${nextMints.toLocaleString()} badges minted in the last 24h.`,
-          category: 'system',
-        })
+        pushNotification.success(`${nextMints.toLocaleString()} badges minted in the last 24h.`)
       }
     }
   }, [dashboardTelemetry, pushNotification])
@@ -673,12 +663,8 @@ export default function DashboardPage() {
           return `Received ${amountLabel}.`
         })()
 
-        pushNotification({
-          type: tipKind === 'mention' ? 'info' : 'success',
-          title: tipKind === 'mention' ? `${donorLabel} → ${recipientLabel}` : `Tip from ${donorLabel}`,
-          message: customMessage || defaultMessage,
-          category: 'tip',
-        })
+        const notifyMethod = tipKind === 'mention' ? pushNotification.info : pushNotification.success
+        notifyMethod(customMessage || defaultMessage)
 
         if (tipKind === 'tip') {
           void (async () => {
@@ -1012,7 +998,7 @@ export default function DashboardPage() {
   async function handleCloseQuestRow(r: ExpiredQuestRow, opts: { skipRescan?: boolean } = {}): Promise<boolean> {
     const { skipRescan = false } = opts
     if (!address) {
-      pushNotification({ type: 'warn', title: 'Connect', message: 'Connect wallet.', category: 'system' })
+      pushNotification.warning('Connect wallet.')
       return false
     }
     let success = false
@@ -1028,14 +1014,14 @@ export default function DashboardPage() {
         chainId: CHAIN_IDS[r.chain],
         account: address,
       })
-      pushNotification({ type: 'info', title: 'Closing quest…', message: `${r.name || `Quest #${r.questId}`}`, category: 'quest' })
+      pushNotification.info(`Closing quest: ${r.name || `Quest #${r.questId}`}`)
       const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[r.chain] })
       await client!.waitForTransactionReceipt({ hash: txHash })
-      pushNotification({ type: 'success', title: 'Closed', message: `Quest #${r.questId} closed on ${CHAIN_LABEL[r.chain]}`, category: 'quest' })
+      pushNotification.success(`Quest #${r.questId} closed on ${CHAIN_LABEL[r.chain]}`)
       success = true
       if (!skipRescan) await scanExpiredQuests()
     } catch (e: any) {
-      pushNotification({ type: 'error', title: 'Close failed', message: e?.shortMessage || e?.message || 'Tx failed', category: 'quest' })
+      pushNotification.error(e?.shortMessage || e?.message || 'Tx failed')
     } finally {
       setCloseBusyId(null)
     }
@@ -1043,10 +1029,10 @@ export default function DashboardPage() {
   }
 
   async function handleCloseAllExpired() {
-    if (!address) { pushNotification({ type: 'warn', title: 'Connect', message: 'Connect wallet.', category: 'system' }); return }
+    if (!address) { pushNotification.warning('Connect wallet.'); return }
     const activeRows = expiredQuests.filter((r) => r.isActive)
     if (activeRows.length === 0) {
-      pushNotification({ type: 'info', title: 'Nothing to close', message: 'No active expired quests detected.', category: 'quest' })
+      pushNotification.info('No active expired quests detected.')
       return
     }
     setCloseAllBusy(true)
@@ -1066,15 +1052,15 @@ export default function DashboardPage() {
   }
 
   async function handleRefundQuestRow(r: ExpiredQuestRow) {
-    if (!address) { pushNotification({ type: 'warn', title: 'Connect', message: 'Connect wallet.', category: 'system' }); return }
+    if (!address) { pushNotification.warning('Connect wallet.'); return }
     const hasPointEscrow = (r.escrowedPoints ?? 0) > 0
     const hasTokenEscrow = (r.tokenEscrowRemaining ?? 0) > 0
     if (!hasPointEscrow && !hasTokenEscrow) {
-      pushNotification({ type: 'info', title: 'Nothing to claim', message: `Quest #${r.questId} has no remaining escrow.`, category: 'quest' })
+      pushNotification.info(`Quest #${r.questId} has no remaining escrow.`)
       return
     }
     if (!r.isActive) {
-      pushNotification({ type: 'info', title: 'Already closed', message: 'Quest is already closed—escrow should have been returned on close.', category: 'quest' })
+      pushNotification.info('Quest is already closed—escrow should have been returned on close.')
       return
     }
     try {
@@ -1291,26 +1277,21 @@ export default function DashboardPage() {
   const sharePointsFrame = useCallback(
     async (context: 'stake' | 'unstake', amount: number) => {
       if (!address) {
-        pushNotification({ type: 'warn', title: 'Connect wallet', message: 'Please connect your wallet.', category: 'system' })
+        pushNotification.warning('Please connect your wallet.')
         return
       }
       if (!pointsFrameUrl) {
-        pushNotification({ type: 'error', title: 'Frame unavailable', message: 'Unable to build a points frame right now.', category: 'badge' })
+        pushNotification.error('Unable to build a points frame right now.')
         return
       }
       const safeAmount = Math.max(0, Math.round(amount))
       const amountLabel = safeAmount > 0 ? `${safeAmount.toLocaleString()} pts` : 'points'
       const descriptor = context === 'stake' ? 'Staked' : 'Unstaked'
       try {
-        pushNotification({ type: 'info', title: 'Sharing frame…', message: 'Opening Warpcast composer.', category: 'badge' })
+        pushNotification.info('Opening Warpcast composer.')
         const text = `${descriptor} ${amountLabel} on ${CHAIN_LABEL[selectedChain]} via GMEOW.`
         const mode = await openWarpcastComposer(text, pointsFrameUrl)
-        pushNotification({
-          type: 'success',
-          title: mode === 'miniapp' ? 'Cast shared' : 'Composer ready',
-          message: mode === 'miniapp' ? 'Your cast is live.' : 'Finish your cast in Warpcast.',
-          category: 'badge',
-        })
+        pushNotification.success(mode === 'miniapp' ? 'Your cast is live.' : 'Finish your cast in Warpcast.')
       } catch (e: any) {
         console.error('Share frame failed:', e?.message || String(e))
         pushNotification({ type: 'error', title: 'Share failed', message: e?.message || 'Could not open Warpcast.', category: 'badge' })
@@ -1328,14 +1309,14 @@ export default function DashboardPage() {
   // Stake handlers (ABI: stakeForBadge(points,badgeId) / unstakeForBadge(points,badgeId))
   const handleStakeForBadge = useCallback(async () => {
     if (!address) {
-      pushNotification({ type: 'warn', title: 'Connect wallet', message: 'Please connect your wallet.', category: 'system' })
+      pushNotification.warning('Please connect your wallet.')
       return
     }
     const stakeAmountRaw = Number(stakePoints || '0')
     const pts = BigInt(stakeAmountRaw)
     const bid = BigInt(Number(stakeBadgeId || '0'))
     if (pts <= 0n || bid <= 0n) {
-      pushNotification({ type: 'warn', title: 'Invalid input', message: 'Enter points and badge id.', category: 'badge' })
+      pushNotification.warning('Enter points and badge id.')
       return
     }
     try {
@@ -1347,7 +1328,7 @@ export default function DashboardPage() {
         chainId: targetChainId,
         account: address,
       })
-      pushNotification({ type: 'info', title: 'Staking…', message: 'Transaction sent.', category: 'badge' })
+      pushNotification.info('Transaction sent.')
       const client = getPublicClient(wagmiConfig, { chainId: targetChainId })
       await client!.waitForTransactionReceipt({ hash: txHash })
       pushNotification({ type: 'success', title: 'Staked', message: `Staked ${stakeAmountRaw.toLocaleString()} pts for badge #${stakeBadgeId}`, category: 'badge' })
@@ -1423,14 +1404,14 @@ export default function DashboardPage() {
 
   const handleUnstakeForBadge = useCallback(async () => {
     if (!address) {
-      pushNotification({ type: 'warn', title: 'Connect wallet', message: 'Please connect your wallet.', category: 'system' })
+      pushNotification.warning('Please connect your wallet.')
       return
     }
     const unstakeAmountRaw = Number(stakePoints || '0')
     const pts = BigInt(unstakeAmountRaw)
     const bid = BigInt(Number(stakeBadgeId || '0'))
     if (pts <= 0n || bid <= 0n) {
-      pushNotification({ type: 'warn', title: 'Invalid input', message: 'Enter points and badge id.', category: 'badge' })
+      pushNotification.warning('Enter points and badge id.')
       return
     }
     try {
@@ -1442,7 +1423,7 @@ export default function DashboardPage() {
         chainId: targetChainId,
         account: address,
       })
-      pushNotification({ type: 'info', title: 'Unstaking…', message: 'Transaction sent.', category: 'badge' })
+      pushNotification.info('Transaction sent.')
       const client = getPublicClient(wagmiConfig, { chainId: targetChainId })
       await client!.waitForTransactionReceipt({ hash: txHash })
       pushNotification({ type: 'success', title: 'Unstaked', message: `Unstaked ${unstakeAmountRaw.toLocaleString()} pts from badge #${stakeBadgeId}`, category: 'badge' })
@@ -1572,31 +1553,16 @@ export default function DashboardPage() {
 
   const handleGM = useCallback(async () => {
     if (!isConnected) {
-      pushNotification({
-        type: 'warn',
-        title: 'Connect wallet',
-        message: 'Please connect your wallet.',
-        category: 'system',
-      })
+      pushNotification.warning('Please connect your wallet.')
       return
     }
     if (!canGM) {
-      pushNotification({
-        type: 'info',
-        title: 'Already GM’d',
-        message: 'Come back after the reset window.',
-        category: 'quest',
-      })
+      pushNotification.info('Come back after the reset window.')
       return
     }
     try {
       if (walletChainId !== targetChainId) {
-        pushNotification({
-          type: 'info',
-          title: 'Switching network…',
-          message: `Switching to ${CHAIN_LABEL[selectedChain]}`,
-          category: 'system',
-        })
+        pushNotification.info(`Switching to ${CHAIN_LABEL[selectedChain]}`)
         await switchChainAsync({ chainId: targetChainId })
       }
       writeContract({
@@ -1605,20 +1571,10 @@ export default function DashboardPage() {
         functionName: 'sendGM',
         chainId: targetChainId,
       })
-      pushNotification({
-        type: 'info',
-        title: 'Sending GM…',
-        message: 'Broadcasting transaction.',
-        category: 'quest',
-      })
+      pushNotification.info('Broadcasting transaction.')
     } catch (e: any) {
       console.error('GM failed:', e?.message || String(e))
-      pushNotification({
-        type: 'error',
-        title: 'Transaction failed',
-        message: e?.message || 'Unknown error',
-        category: 'quest',
-      })
+      pushNotification.error(e?.message || 'Unknown error')
     }
   }, [
     isConnected,
@@ -1635,23 +1591,18 @@ export default function DashboardPage() {
 
   const handleShareGMFrame = useCallback(async () => {
     if (!address) {
-      pushNotification({ type: 'warn', title: 'Connect wallet', message: 'Please connect your wallet.', category: 'system' })
+      pushNotification.warning('Please connect your wallet.')
       return
     }
     if (!gmFrameUrl) {
-      pushNotification({ type: 'error', title: 'Frame unavailable', message: 'Unable to build a GM frame right now.', category: 'quest' })
+      pushNotification.error('Unable to build a GM frame right now.')
       return
     }
     try {
-      pushNotification({ type: 'info', title: 'Sharing frame…', message: 'Opening Warpcast composer.', category: 'quest' })
+      pushNotification.info('Opening Warpcast composer.')
       const text = getTimeBasedShareText(CHAIN_LABEL[selectedChain])
       const mode = await openWarpcastComposer(text, gmFrameUrl)
-      pushNotification({
-        type: 'success',
-        title: mode === 'miniapp' ? 'Cast shared' : 'Composer ready',
-        message: mode === 'miniapp' ? 'Your GM cast is live.' : 'Finish your cast in Warpcast.',
-        category: 'quest',
-      })
+      pushNotification.success(mode === 'miniapp' ? 'Your GM cast is live.' : 'Finish your cast in Warpcast.')
     } catch (e: any) {
       console.error('Share frame failed:', e?.message || String(e))
       pushNotification({ type: 'error', title: 'Share failed', message: e?.message || 'Could not open Warpcast.', category: 'quest' })
@@ -1782,12 +1733,7 @@ export default function DashboardPage() {
   // Generate code (for legacy accounts)
   const ensureMyCode = useCallback(async () => {
     if (!address) {
-      pushNotification({
-        type: 'warn',
-        title: 'Connect wallet',
-        message: 'Sign in to set a referral code.',
-        category: 'system',
-      })
+      pushNotification.warning('Sign in to set a referral code.')
       return
     }
     if (typeof window === 'undefined') return
@@ -1795,32 +1741,17 @@ export default function DashboardPage() {
     const suggestion = myRefCode || `gmeow-${address.slice(2, 6)}`
     const input = window.prompt('Pick a referral code (3-32 chars, letters/numbers/-_.).', suggestion)
     if (!input) {
-      pushNotification({
-        type: 'info',
-        title: 'Cancelled',
-        message: 'Referral code unchanged.',
-        category: 'guild',
-      })
+      pushNotification.info('Referral code unchanged.')
       return
     }
     const cleaned = input.trim()
     if (!/^[a-zA-Z0-9._-]{3,32}$/.test(cleaned)) {
-      pushNotification({
-        type: 'warn',
-        title: 'Invalid code',
-        message: 'Use 3-32 characters (letters, numbers, ._-).',
-        category: 'guild',
-      })
+      pushNotification.warning('Use 3-32 characters (letters, numbers, ._-).')
       return
     }
     try {
       if (walletChainId !== targetChainId) {
-        pushNotification({
-          type: 'info',
-          title: 'Switching network…',
-          message: `Switching to ${CHAIN_LABEL[selectedChain]}`,
-          category: 'system',
-        })
+        pushNotification.info(`Switching to ${CHAIN_LABEL[selectedChain]}`)
         await switchChainAsync({ chainId: targetChainId })
       }
       const txHash = await coreWriteContract(wagmiConfig, {
@@ -1831,28 +1762,13 @@ export default function DashboardPage() {
         chainId: targetChainId,
         account: address,
       })
-      pushNotification({
-        type: 'info',
-        title: 'Saving code…',
-        message: 'Transaction sent.',
-        category: 'guild',
-      })
+      pushNotification.info('Transaction sent.')
       const client = getPublicClient(wagmiConfig, { chainId: targetChainId })
       await client!.waitForTransactionReceipt({ hash: txHash })
       setMyRefCode(cleaned)
-      pushNotification({
-        type: 'success',
-        title: 'Referral code set',
-        message: `@${cleaned} is ready to share.`,
-        category: 'guild',
-      })
+      pushNotification.success(`@${cleaned} is ready to share.`)
     } catch (e: any) {
-      pushNotification({
-        type: 'error',
-        title: 'Failed',
-        message: e?.shortMessage || e?.message || 'Could not set code.',
-        category: 'guild',
-      })
+      pushNotification.error(e?.shortMessage || e?.message || 'Could not set code.')
     }
   }, [
     address,
@@ -1952,7 +1868,7 @@ export default function DashboardPage() {
       await navigator.clipboard.writeText(text)
       pushNotification({ type: 'success', title: 'Copied', message: label ? `${label} copied.` : 'Copied.', category: 'system' })
     } catch {
-      pushNotification({ type: 'error', title: 'Copy failed', message: 'Unable to copy to clipboard.', category: 'system' })
+      pushNotification.error('Unable to copy to clipboard.')
     }
   }
   const inviteUrl = useMemo(() => {
