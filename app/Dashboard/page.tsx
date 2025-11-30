@@ -1044,12 +1044,8 @@ export default function DashboardPage() {
     }
     await scanExpiredQuests()
     setCloseAllBusy(false)
-    pushNotification({
-      type: closedCount === activeRows.length ? 'success' : closedCount > 0 ? 'info' : 'warn',
-      title: 'Bulk close complete',
-      message: `Closed ${closedCount}/${activeRows.length} quests. Check notifications for details.`,
-      category: 'quest',
-    })
+    const tone = closedCount === activeRows.length ? 'success' : closedCount > 0 ? 'info' : 'warn'
+    pushNotification.notify(`Bulk close complete: ${closedCount}/${activeRows.length} quests closed`, tone as any)
   }
 
   async function handleRefundQuestRow(r: ExpiredQuestRow) {
@@ -1295,7 +1291,7 @@ export default function DashboardPage() {
         pushNotification.success(mode === 'miniapp' ? 'Your cast is live.' : 'Finish your cast in Warpcast.')
       } catch (e: any) {
         console.error('Share frame failed:', e?.message || String(e))
-        pushNotification({ type: 'error', title: 'Share failed', message: e?.message || 'Could not open Warpcast.', category: 'badge' })
+        pushNotification.error(`Share failed: ${e?.message || 'Could not open Warpcast'}`)
       }
     },
     [address, pointsFrameUrl, selectedChain, pushNotification]
@@ -1332,7 +1328,7 @@ export default function DashboardPage() {
       pushNotification.info('Transaction sent.')
       const client = getPublicClient(wagmiConfig, { chainId: targetChainId })
       await client!.waitForTransactionReceipt({ hash: txHash })
-      pushNotification({ type: 'success', title: 'Staked', message: `Staked ${stakeAmountRaw.toLocaleString()} pts for badge #${stakeBadgeId}`, category: 'badge' })
+      pushNotification.success(`Staked ${stakeAmountRaw.toLocaleString()} pts for badge #${stakeBadgeId}`)
       const before = lastKnownTotalRef.current
       const snapshot = await loadUserStats({ force: true, silent: true })
       const totalAfter = snapshot?.totalPoints ?? before
@@ -1386,7 +1382,7 @@ export default function DashboardPage() {
       setStakePoints('')
       setLastGMTimestamp(Math.floor(Date.now() / 1000))
     } catch (e: any) {
-      pushNotification({ type: 'error', title: 'Stake failed', message: e?.shortMessage || e?.message || 'Transaction failed', category: 'badge' })
+      pushNotification.error(e?.shortMessage || e?.message || 'Stake transaction failed')
     } finally { setStakeBusy(false) }
   }, [
     address,
@@ -1427,7 +1423,7 @@ export default function DashboardPage() {
       pushNotification.info('Transaction sent.')
       const client = getPublicClient(wagmiConfig, { chainId: targetChainId })
       await client!.waitForTransactionReceipt({ hash: txHash })
-      pushNotification({ type: 'success', title: 'Unstaked', message: `Unstaked ${unstakeAmountRaw.toLocaleString()} pts from badge #${stakeBadgeId}`, category: 'badge' })
+      pushNotification.success(`Unstaked ${unstakeAmountRaw.toLocaleString()} pts from badge #${stakeBadgeId}`)
       const before = lastKnownTotalRef.current
       const snapshot = await loadUserStats({ force: true, silent: true })
       const totalAfter = snapshot?.totalPoints ?? before
@@ -1480,7 +1476,7 @@ export default function DashboardPage() {
       }
       setStakePoints('')
     } catch (e: any) {
-      pushNotification({ type: 'error', title: 'Unstake failed', message: e?.shortMessage || e?.message || 'Transaction failed', category: 'badge' })
+      pushNotification.error(e?.shortMessage || e?.message || 'Unstake transaction failed')
     } finally { setStakeBusy(false) }
   }, [
     address,
@@ -1606,23 +1602,14 @@ export default function DashboardPage() {
       pushNotification.success(mode === 'miniapp' ? 'Your GM cast is live.' : 'Finish your cast in Warpcast.')
     } catch (e: any) {
       console.error('Share frame failed:', e?.message || String(e))
-      pushNotification({ type: 'error', title: 'Share failed', message: e?.message || 'Could not open Warpcast.', category: 'quest' })
+      pushNotification.error(`Share failed: ${e?.message || 'Could not open Warpcast'}`)
     }
   }, [address, gmFrameUrl, selectedChain, pushNotification])
 
   // Post-GM success notification
   useEffect(() => {
     if (!isConfirmed || !txHash) return
-    const maker = EXPLORER_TX[selectedChain]
-    const linkHref = maker ? maker(txHash as `0x${string}`) : undefined
-    pushNotification({
-      type: 'success',
-      title: `GM sent on ${CHAIN_LABEL[selectedChain]}!`,
-      message: 'Streak updated.',
-      ...(linkHref ? { linkHref, linkLabel: 'View on Explorer ↗' } : {}),
-      duration: 7000,
-      category: 'quest',
-    })
+    pushNotification.success(`GM sent on ${CHAIN_LABEL[selectedChain]}! Streak updated.`)
 
     const run = async () => {
       const before = lastKnownTotalRef.current
@@ -1867,7 +1854,7 @@ export default function DashboardPage() {
   const copyText = async (text: string, label?: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      pushNotification({ type: 'success', title: 'Copied', message: label ? `${label} copied.` : 'Copied.', category: 'system' })
+      pushNotification.success(label ? `${label} copied.` : 'Copied.')
     } catch {
       pushNotification.error('Unable to copy to clipboard.')
     }

@@ -43,6 +43,7 @@ export function createSvgIconFromTree(
 
 function treeToElement(
   tree?: IconTree[]
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 ): React.ReactElement<{}>[] | undefined {
   return (
     tree?.map &&

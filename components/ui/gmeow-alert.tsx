@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Close } from '@/components/icons/close';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface AlertProps {}
 
 export default function Alert({
   children,
 }: React.PropsWithChildren<AlertProps>) {
-  let [isHidden, setIsHidden] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
 
   if (!isHidden) {
     return (

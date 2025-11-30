@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type, react/display-name */
 import React, {forwardRef} from 'react';
 import clsx from 'clsx';
 

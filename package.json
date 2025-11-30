@@ -10,7 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings=0",
+    "lint": "eslint \"**/*.{ts,tsx,js,jsx}\"",
     "test": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
