@@ -1,8 +1,11 @@
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import type { NotificationCategory, NotificationTone } from '@/components/ui/live-notifications'
+import type { NotificationTone } from '@/components/ui/live-notifications'
 
 const TABLE_NAME = 'user_notification_history'
 const MAX_HISTORY_PER_USER = 100
+
+// NotificationCategory temporarily removed - will be restored in Phase 2
+export type NotificationCategory = 'system' | 'quest' | 'social' | 'achievement'
 
 export type NotificationHistoryItem = {
   id: string

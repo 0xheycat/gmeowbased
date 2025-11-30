@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export function Plus(props: React.SVGAttributes<{}>) {
   return (
     <svg
