@@ -14,6 +14,7 @@ import {
   CHAIN_IDS,
   CHAIN_LABEL,
   type ChainKey,
+  type GMChainKey,
   GM_CONTRACT_ABI,
   getContractAddress,
   canGMBasedOnTimestamp,
@@ -45,7 +46,7 @@ import { useDashboardTelemetry } from '@/lib/dashboard-hooks'
 import type { DashboardTelemetryPayload } from '@/lib/telemetry'
 import { readStorageCache, writeStorageCache } from '@/lib/utils'
 // Supported chains and labels
-const SUPPORTED_CHAINS: ChainKey[] = ['base', 'unichain', 'celo', 'ink', 'op']
+const SUPPORTED_CHAINS: GMChainKey[] = ['base', 'unichain', 'celo', 'ink', 'op']
 const EXPLORER_TX: Partial<Record<ChainKey, (h: `0x${string}`) => string>> = {
   base: (h) => `https://basescan.org/tx/${h}`,
   celo: (h) => `https://celoscan.io/tx/${h}`,
@@ -1075,13 +1076,13 @@ export default function DashboardPage() {
         chainId: CHAIN_IDS[r.chain],
         account: address,
       })
-      pushNotification({ type: 'info', title: 'Claiming escrow…', message: `Refunding remaining escrow for #${r.questId}`, category: 'quest' })
+      pushNotification.info(`Refunding remaining escrow for #${r.questId}`)
       const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[r.chain] })
       await client!.waitForTransactionReceipt({ hash: txHash })
-      pushNotification({ type: 'success', title: 'Escrow claimed', message: `Refunded remaining escrow for #${r.questId}`, category: 'quest' })
+      pushNotification.success(`Refunded remaining escrow for #${r.questId}`)
       await scanExpiredQuests()
     } catch (e: any) {
-      pushNotification({ type: 'error', title: 'Claim failed', message: (e?.shortMessage || e?.message || 'Tx failed') + ' — try Close first, then Claim.', category: 'quest' })
+      pushNotification.error((e?.shortMessage || e?.message || 'Tx failed') + ' — try Close first, then Claim.')
     } finally {
       setRefundBusyId(null)
     }
