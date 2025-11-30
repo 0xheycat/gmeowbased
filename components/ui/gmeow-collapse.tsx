@@ -13,11 +13,11 @@ export default function Collapse({
   children,
   initialOpen = false,
 }: React.PropsWithChildren<CollapseProps>) {
-  let [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [ref, { height }] = useMeasure<HTMLDivElement>();
 
   useEffect(() => {
-    initialOpen && setIsOpen(true);
+    if (initialOpen) setIsOpen(true);
   }, [initialOpen]);
 
   return (

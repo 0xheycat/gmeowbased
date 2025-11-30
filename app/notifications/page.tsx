@@ -17,7 +17,7 @@ export default function NotificationsPage() {
           <Bell size={64} weight="thin" className="mx-auto mb-4 text-gray-400" />
           <h2 className="text-xl font-semibold mb-2">No notifications yet</h2>
           <p className="text-gray-600 dark:text-gray-400">
-            You'll see notifications about quests, rewards, and community updates here.
+            You&apos;ll see notifications about quests, rewards, and community updates here.
           </p>
         </div>
       </div>
