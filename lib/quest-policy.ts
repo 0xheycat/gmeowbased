@@ -1,7 +1,7 @@
 // Quest creation policy helpers shared across desktop and Farcaster Mini App surfaces.
 // Reference: planning/quest-policy.md (updated 2025-11-11)
 
-import { QUEST_TYPES, type ChainKey } from './gm-utils'
+import { QUEST_TYPES, type ChainKey } from './gmeow-utils'
 
 type CreatorTier = 'standard' | 'partner' | 'admin'
 

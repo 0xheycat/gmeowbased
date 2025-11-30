@@ -18,10 +18,10 @@ import {
 } from 'viem'
 
 // ABI imports
-import GM_ABI_JSON from '@/lib/abi/GmeowCombined.abi.json'
-import CORE_ABI_JSON from '@/lib/abi/gmeowcore.json'
-import GUILD_ABI_JSON from '@/lib/abi/gmeowguild.json'
-import NFT_ABI_JSON from '@/lib/abi/gmeowhq.json'
+import GM_ABI_JSON from '@/abi/GmeowCombined.abi.json'
+import CORE_ABI_JSON from '@/abi/GmeowCore.abi.json'
+import GUILD_ABI_JSON from '@/abi/GmeowGuild.abi.json'
+import NFT_ABI_JSON from '@/abi/GmeowNFT.abi.json'
 
 // -------------------------------
 // Chain registry / configuration
