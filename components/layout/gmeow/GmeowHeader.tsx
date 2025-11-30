@@ -1,7 +1,5 @@
 'use client'
 
-import '@/app/styles/gmeow-header.css'   // ← NEW: import your header CSS
-
 import clsx from 'clsx'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
