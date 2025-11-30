@@ -30,25 +30,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Sync Supabase leaderboard snapshot
+      - name: Sync Supabase leaderboard snapshot (Base only)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_LEADERBOARD_TABLE: ${{ secrets.SUPABASE_LEADERBOARD_TABLE }}
-          SUPABASE_LEADERBOARD_VIEW_CURRENT: ${{ secrets.SUPABASE_LEADERBOARD_VIEW_CURRENT }}
-          SUPABASE_LEADERBOARD_SEASON_KEY: ${{ vars.SUPABASE_LEADERBOARD_SEASON_KEY }}
-          SUPABASE_TIMEOUT_MS: ${{ vars.SUPABASE_TIMEOUT_MS }}
-          SUPABASE_MAX_RETRIES: ${{ vars.SUPABASE_MAX_RETRIES }}
+          # Table/view names are configuration, not sensitive - use vars or defaults
+          SUPABASE_LEADERBOARD_TABLE: ${{ vars.SUPABASE_LEADERBOARD_TABLE || 'leaderboard_snapshots' }}
+          SUPABASE_LEADERBOARD_VIEW_CURRENT: ${{ vars.SUPABASE_LEADERBOARD_VIEW_CURRENT || 'leaderboard_current' }}
+          SUPABASE_LEADERBOARD_SEASON_KEY: ${{ vars.SUPABASE_LEADERBOARD_SEASON_KEY || 'all' }}
+          SUPABASE_TIMEOUT_MS: 10000
+          SUPABASE_MAX_RETRIES: 3
+          # Base mainnet only (redeployed Nov 28, 2025)
           RPC_BASE: ${{ secrets.RPC_BASE }}
-          RPC_OP: ${{ secrets.RPC_OP }}
-          RPC_CELO: ${{ secrets.RPC_CELO }}
-          RPC_UNICHAIN: ${{ secrets.RPC_UNICHAIN }}
-          RPC_INK: ${{ secrets.RPC_INK }}
-          CHAIN_START_BLOCK: ${{ vars.CHAIN_START_BLOCK }}
-          CHAIN_START_BLOCK_BASE: ${{ vars.CHAIN_START_BLOCK_BASE }}
-          CHAIN_START_BLOCK_OP: ${{ vars.CHAIN_START_BLOCK_OP }}
-          CHAIN_START_BLOCK_CELO: ${{ vars.CHAIN_START_BLOCK_CELO }}
-          CHAIN_START_BLOCK_UNICHAIN: ${{ vars.CHAIN_START_BLOCK_UNICHAIN }}
-          CHAIN_START_BLOCK_INK: ${{ vars.CHAIN_START_BLOCK_INK }}
+          CHAIN_START_BLOCK_BASE: ${{ vars.CHAIN_START_BLOCK_BASE || '37445375' }}
         run: npx tsx scripts/leaderboard/sync-supabase.ts

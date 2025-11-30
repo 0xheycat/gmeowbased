@@ -45,14 +45,10 @@ import type { TipBroadcast, TipMentionSummary } from '@/lib/tips-types'
 import { useDashboardTelemetry } from '@/lib/dashboard-hooks'
 import type { DashboardTelemetryPayload } from '@/lib/telemetry'
 import { readStorageCache, writeStorageCache } from '@/lib/utils'
-// Supported chains and labels
-const SUPPORTED_CHAINS: GMChainKey[] = ['base', 'unichain', 'celo', 'ink', 'op']
-const EXPLORER_TX: Partial<Record<ChainKey, (h: `0x${string}`) => string>> = {
+// Base chain only (GMChainKey)
+const SUPPORTED_CHAINS: GMChainKey[] = ['base']
+const EXPLORER_TX: Partial<Record<GMChainKey, (h: `0x${string}`) => string>> = {
   base: (h) => `https://basescan.org/tx/${h}`,
-  celo: (h) => `https://celoscan.io/tx/${h}`,
-  unichain: (h) => `https://uniscan.xyz/tx/${h}`,
-  ink: (h) => `https://explorer.inkonchain.com/tx/${h}`,
-  op: (h) => `https://optimistic.etherscan.io/tx/${h}`,
 }
 
 // Minimal ERC721 metadata ABI for tokenURI
@@ -67,8 +63,8 @@ const ERC721_METADATA_ABI = [
 ] as const
 
 type LeaderboardEntry = { address: string; points: number }
-type TeamInfo = { chain: ChainKey; teamId: number; name: string; founder: string; memberCount: number }
-type BadgeView = { chain: ChainKey; badgeId: number; name?: string; image?: string }
+type TeamInfo = { chain: GMChainKey; teamId: number; name: string; founder: string; memberCount: number }
+type BadgeView = { chain: GMChainKey; badgeId: number; name?: string; image?: string }
 type LoadStatsOptions = { force?: boolean; silent?: boolean }
 type UserStatsSnapshot = {
   availablePoints: number
@@ -81,10 +77,6 @@ type MobileDashboardTab = 'overview' | 'missions' | 'social'
 
 const CHAIN_BRAND: Record<GMChainKey, { bg: string; fg: string; label: string }> = {
   base: { bg: 'var(--dash-chain-base-bg)', fg: 'var(--dash-chain-base-fg)', label: 'B' },
-  unichain: { bg: 'var(--dash-chain-unichain-bg)', fg: 'var(--dash-chain-unichain-fg)', label: 'U' },
-  celo: { bg: 'var(--dash-chain-celo-bg)', fg: 'var(--dash-chain-celo-fg)', label: 'C' },
-  ink: { bg: 'var(--dash-chain-ink-bg)', fg: 'var(--dash-chain-ink-fg)', label: 'I' },
-  op: { bg: 'var(--dash-chain-op-bg)', fg: 'var(--dash-chain-op-fg)', label: 'OP' },
 }
 
 const LEADERBOARD_CACHE_KEY = 'gmeowDashboardLeaderboard_v1'
@@ -99,7 +91,7 @@ const MOBILE_TAB_ITEMS: Array<{ id: MobileDashboardTab; label: string; icon: str
   { id: 'social', label: 'Social & Badges', icon: '📣' },
 ]
 
-function ChainIcon({ chain, size = 14, rounded = true }: { chain: ChainKey; size?: number; rounded?: boolean }) {
+function ChainIcon({ chain, size = 14, rounded = true }: { chain: GMChainKey; size?: number; rounded?: boolean }) {
   const brand = CHAIN_BRAND[chain]
   const r = rounded ? size : 3
   const title = CHAIN_LABEL[chain]
@@ -163,12 +155,12 @@ function ChainSwitcher({
   autoSwitch = false,
   ensureChainAsync,
 }: {
-  selected: ChainKey
-  onSelect: (c: ChainKey) => void | Promise<void>
-  busyChain?: ChainKey | null
+  selected: GMChainKey
+  onSelect: (c: GMChainKey) => void | Promise<void>
+  busyChain?: GMChainKey | null
   size?: 'sm' | 'md'
   autoSwitch?: boolean
-  ensureChainAsync?: (c: ChainKey) => Promise<boolean>
+  ensureChainAsync?: (c: GMChainKey) => Promise<boolean>
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement | null>(null)
@@ -180,7 +172,7 @@ function ChainSwitcher({
   const sizeClass = size === 'sm' ? 'dash-switch--sm' : 'dash-switch--md'
   const isBusy = busyChain === selected
   const label = CHAIN_LABEL[selected]
-  const pick = async (c: ChainKey) => {
+  const pick = async (c: GMChainKey) => {
     setOpen(false)
     onSelect(c)
     if (autoSwitch && ensureChainAsync) await ensureChainAsync(c)
@@ -504,9 +496,9 @@ export default function DashboardPage() {
     [address, hasMounted, wagmiConfig, targetChainId, contractAddress, ABI]
   )
 
-  const normalizeChainKey = useCallback((value?: string | null): ChainKey | undefined => {
+  const normalizeChainKey = useCallback((value?: string | null): GMChainKey | undefined => {
     if (!value) return undefined
-    const lower = value.toLowerCase() as ChainKey
+    const lower = value.toLowerCase() as GMChainKey
     return SUPPORTED_CHAINS.includes(lower) ? lower : undefined
   }, [])
 
@@ -819,7 +811,7 @@ export default function DashboardPage() {
 
   // ---------------- Expired quests with remaining escrow (creator view) ----------------
   type ExpiredQuestRow = {
-    chain: ChainKey
+    chain: GMChainKey
     questId: number
     name: string
     questType: number
@@ -1157,7 +1149,7 @@ export default function DashboardPage() {
       }
       if (!disposed) setBadgesLoading(true)
       try {
-      type Raw = { chain: ChainKey; badgeId: number; blockNumber: bigint }
+      type Raw = { chain: GMChainKey; badgeId: number; blockNumber: bigint }
       const raw: Raw[] = []
       const evtBadgeMinted = parseAbiItem('event BadgeMinted(address indexed to, uint256 tokenId, string badgeType)')
       for (const chain of SUPPORTED_CHAINS) {
