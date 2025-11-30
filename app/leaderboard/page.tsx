@@ -341,7 +341,7 @@ export default function MegaLeaderboard() {
                         {row.points.toLocaleString()} XP · {row.completed ?? 0} quests · {row.rewards ?? 0} rewards
                       </div>
                       <div className="roster-progress-track">
-                        <div className="roster-progress-fill" style={{ width: `${progress}%` }} />
+                        <div className="roster-progress-fill transition-all duration-300" style={{ width: `${progress}%` }} />
                       </div>
                     </div>
                   </div>

@@ -103,7 +103,7 @@ function ChainIcon({ chain, size = 14, rounded = true }: { chain: ChainKey; size
   const r = rounded ? size : 3
   const title = CHAIN_LABEL[chain]
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-label={title} role="img" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-label={title} role="img" className="inline-block align-middle">
       <rect x="2" y="2" width="20" height="20" rx={r} ry={r} fill={brand.bg} />
       <text x="12" y="15" textAnchor="middle" fontSize="11" fontWeight="700" fill={brand.fg} fontFamily="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial">
         {brand.label}
@@ -114,7 +114,7 @@ function ChainIcon({ chain, size = 14, rounded = true }: { chain: ChainKey; size
 
 function Spinner({ size = 14 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 50 50" style={{ display: 'inline-block', verticalAlign: 'middle' }} aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 50 50" className="inline-block align-middle" aria-hidden="true">
       <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeDasharray="31.4 31.4" strokeDashoffset="0">
         <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.9s" repeatCount="indefinite" />
       </circle>
@@ -2200,7 +2200,7 @@ export default function DashboardPage() {
             </div>
             <div className="dash-apy-meter" aria-hidden>
               <div
-                className="dash-apy-meter-fill"
+                className="dash-apy-meter-fill transition-all duration-300"
                 style={{ width: `${gmDerivedYields?.apy != null ? Math.min(100, Math.max(0, gmDerivedYields.apy)) : 0}%` }}
               />
             </div>
@@ -2290,7 +2290,7 @@ export default function DashboardPage() {
             <div className="text-sm text-[var(--px-sub)]">{gmQuestProgress}/1</div>
           </div>
           <div className="dash-progress-track mt-1">
-            <div className="dash-progress-fill bg-emerald-400" style={{ width: `${(gmQuestProgress / 1) * 100}%` }} />
+            <div className="dash-progress-fill bg-emerald-400 transition-all duration-300" style={{ width: `${(gmQuestProgress / 1) * 100}%` }} />
           </div>
           <div className="text-sm text-[var(--px-sub)] mt-1">Send GM on {CHAIN_LABEL[selectedChain]}</div>
         </div>
@@ -2302,7 +2302,7 @@ export default function DashboardPage() {
             <div className="text-sm text-[var(--px-sub)]">{team ? '1/1' : '0/1'}</div>
           </div>
           <div className="dash-progress-track mt-1">
-            <div className="dash-progress-fill bg-cyan-400" style={{ width: `${team ? 100 : 0}%` }} />
+            <div className="dash-progress-fill bg-cyan-400 transition-all duration-300" style={{ width: `${team ? 100 : 0}%` }} />
           </div>
           <div className="text-sm text-[var(--px-sub)] mt-1">Join or create a team to unlock bonuses</div>
         </div>
@@ -2447,8 +2447,7 @@ export default function DashboardPage() {
                         alt={b.name || `Badge #${b.badgeId}`}
                         width={68}
                         height={68}
-                        className="pixelated"
-                        style={{ objectFit: 'cover' }}
+                        className="pixelated object-cover"
                         unoptimized
                       />
                     ) : (
