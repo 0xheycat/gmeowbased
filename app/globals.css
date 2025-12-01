@@ -551,3 +551,61 @@ input[type='number'] {
     @apply bg-white text-black;
   }
 }
+
+/* ============================================================================
+   UTILITY CLASSES - Replace Inline Styles
+   ============================================================================ */
+
+/* Object fit utilities */
+.object-contain-right {
+  object-fit: contain;
+  object-position: right center;
+}
+
+/* Progress bar widths (dynamic) */
+.progress-bar {
+  @apply h-full rounded transition-all duration-300;
+}
+
+/* Text shadows for pixel style */
+.text-shadow-pixel {
+  text-shadow: 0 2px 0 var(--px-outer);
+}
+
+/* Loading skeleton colors */
+.skeleton-purple-light {
+  background: rgba(138, 99, 210, 0.2);
+}
+
+.skeleton-purple-lighter {
+  background: rgba(138, 99, 210, 0.15);
+}
+
+.skeleton-purple-lighter-still {
+  background: rgba(138, 99, 210, 0.18);
+}
+
+/* Animation durations */
+.animate-duration-2s {
+  animation-duration: 2s;
+}
+
+.animate-duration-3s {
+  animation-duration: 3s;
+}
+
+.animate-duration-8s {
+  animation-duration: 8s;
+}
+
+/* Display utilities */
+.inline-block-middle {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Gradient overlays */
+.gradient-gold-overlay {
+  @apply absolute inset-0 mix-blend-screen animate-pulse;
+  background: radial-gradient(circle at top, rgba(var(--gold) / 0.3), transparent, transparent);
+}
