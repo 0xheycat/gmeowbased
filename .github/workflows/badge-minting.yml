@@ -47,12 +47,8 @@ jobs:
           # Neynar (for notifications)
           NEYNAR_API_KEY: ${{ secrets.NEYNAR_API_KEY }}
           
-          # RPC endpoints for minting
+          # RPC endpoint for Base mainnet minting
           RPC_BASE: ${{ secrets.RPC_BASE }}
-          RPC_OP: ${{ secrets.RPC_OP }}
-          RPC_CELO: ${{ secrets.RPC_CELO }}
-          RPC_UNICHAIN: ${{ secrets.RPC_UNICHAIN }}
-          RPC_INK: ${{ secrets.RPC_INK }}
           
           # Private key for minting (if needed)
           MINTER_PRIVATE_KEY: ${{ secrets.MINTER_PRIVATE_KEY }}

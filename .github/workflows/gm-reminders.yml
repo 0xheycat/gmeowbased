@@ -60,12 +60,8 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           
-          # RPC endpoints to check GM status
+          # RPC endpoint for Base mainnet (check GM status)
           RPC_BASE: ${{ secrets.RPC_BASE }}
-          RPC_OP: ${{ secrets.RPC_OP }}
-          RPC_CELO: ${{ secrets.RPC_CELO }}
-          RPC_UNICHAIN: ${{ secrets.RPC_UNICHAIN }}
-          RPC_INK: ${{ secrets.RPC_INK }}
           
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
