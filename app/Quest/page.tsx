@@ -16,6 +16,7 @@ import { QuestFAB } from '@/components/Quest/QuestFAB'
 import { getBookmarks, getBookmarkCount, type BookmarkedQuest } from '@/lib/quest-bookmarks'
 import {
   CHAIN_IDS,
+  ALL_CHAIN_IDS,
   CHAIN_KEYS,
   CHAIN_LABEL,
   GM_CONTRACT_ABI,
@@ -23,6 +24,7 @@ import {
   sanitizeExpiresAt,
   normalizeQuestStruct,
   type ChainKey,
+  type GMChainKey,
   type QuestTypeKey,
   type NormalizedQuest,
   getContractAddress,
@@ -30,7 +32,8 @@ import {
 import { formatNumber, formatExpiryShort, formatRelativeTime, formatRelativeTimeShort } from '@/lib/formatters'
 import { clamp, cn, readStorageCache, writeStorageCache } from '@/lib/utils'
 
-const CHAINS: ChainKey[] = CHAIN_KEYS
+// Base-only for app functionality (Quests only deployed on Base)
+const CHAINS: GMChainKey[] = ['base']
 const TYPE_FILTERS = [
   { key: 'all', label: 'All quests' },
   { key: 'social', label: 'Social actions' },
@@ -108,12 +111,12 @@ type FeaturedQuest = {
 
 export default function QuestHubPage() {
   const wagmiConfig = useConfig()
-  const { push } = useNotifications()
+  const { showNotification } = useNotifications()
 
   const sendNotification = useCallback(
     (input: { tone: NotificationTone; title: string; description?: string; href?: string; actionLabel?: string; duration?: number }) =>
-      push(input),
-    [push],
+      showNotification(input.title + (input.description ? `: ${input.description}` : ''), input.tone, input.duration, 'quest'),
+    [showNotification],
   )
 
   const [loading, setLoading] = useState(true)
@@ -226,7 +229,7 @@ export default function QuestHubPage() {
           const chainFailures: string[] = []
           const chainQuests: QuestSummary[] = []
           try {
-            const client = getPublicClient(wagmiConfig, { chainId: CHAIN_IDS[chain] })
+            const client = getPublicClient(wagmiConfig, { chainId: ALL_CHAIN_IDS[chain] })
             if (!client) {
               chainFailures.push(`Missing RPC client for ${CHAIN_LABEL[chain]}`)
               return { chain, quests: chainQuests, failures: chainFailures }
@@ -649,7 +652,7 @@ export default function QuestHubPage() {
               </span>
               <Button
                 type="button"
-                size="small"
+                size="sm"
                 color="primary"
                 className="gap-2"
                 onClick={handleRefresh}
@@ -685,7 +688,7 @@ export default function QuestHubPage() {
             <Link
               href="/Quest/creator"
               className={cn(
-                buttonVariants({ size: 'small', variant: 'solid', color: 'primary' }),
+                buttonVariants({ size: 'sm', variant: 'default' }),
                 'whitespace-nowrap min-h-[44px] px-6 gap-2'
               )}
             >
@@ -703,8 +706,8 @@ export default function QuestHubPage() {
                 <Button
                   key={key}
                   type="button"
-                  size="small"
-                  variant={typeFilter === key ? 'solid' : 'ghost'}
+                  size="sm"
+                  variant={typeFilter === key ? 'default' : 'ghost'}
                   color={typeFilter === key ? 'primary' : 'gray'}
                   className="px-5 min-h-[44px]"
                   onClick={() => setTypeFilter(key)}
@@ -727,8 +730,8 @@ export default function QuestHubPage() {
               <Button
                 key={key}
                 type="button"
-                size="small"
-                variant={rewardFilter === key ? 'solid' : 'ghost'}
+                size="sm"
+                variant={rewardFilter === key ? 'default' : 'ghost'}
                 color={rewardFilter === key ? (key === 'token' ? 'warning' : 'primary') : 'gray'}
                 className="px-5 min-h-[44px]"
                 onClick={() => setRewardFilter(key)}
@@ -782,10 +785,10 @@ export default function QuestHubPage() {
                 Adjust the filters or jump straight into the quest creator to launch a fresh challenge for the community.
               </p>
               <div className="quest-empty__actions">
-                <Button type="button" size="small" variant="ghost" color="gray" onClick={handleResetFilters}>
+                <Button type="button" size="sm" variant="ghost" color="gray" onClick={handleResetFilters}>
                   Reset filters
                 </Button>
-                <Link className={cn(buttonVariants({ size: 'small', color: 'primary' }), 'px-5')} href="/Quest/creator">
+                <Link className={cn(buttonVariants({ size: 'sm' }), 'px-5')} href="/Quest/creator">
                   Open quest builder
                 </Link>
               </div>

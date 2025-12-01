@@ -36,15 +36,15 @@ export function ConnectWallet() {
     })
   }, [connectors])
 
-  const pushNotification = useLegacyNotificationAdapter()
+  const notify = useLegacyNotificationAdapter()
 
   // Toast on connect state changes
   useEffect(() => {
     if (isConnected && address) {
-      pushNotification({ type: 'success', title: 'Wallet connected', message: formatAddress(address) })
+      notify.success(`Wallet connected: ${formatAddress(address)}`, 'system')
       setConnectingId(null)
     }
-  }, [isConnected, address, pushNotification])
+  }, [isConnected, address, notify])
 
   useEffect(() => {
     if (!rawConnectError) return
@@ -56,11 +56,10 @@ export function ConnectWallet() {
   useEffect(() => {
     if (!connectError) return
     const message = getConnectErrorMessage(connectError)
-    console.error('Connect error:', connectErrorRef.current ?? connectError)
-    pushNotification({ type: 'error', title: 'Wallet connection failed', message })
+    notify.error(`Wallet connection failed: ${message}`, 'system')
     setConnectingId(null)
     setConnectError(null)
-  }, [connectError, pushNotification])
+  }, [connectError, notify])
 
   // Auto-connect in Farcaster Mini App (or if a previous session exists)
   useEffect(() => {
@@ -90,10 +89,10 @@ export function ConnectWallet() {
 
   const handleConnect = async (connector: any) => {
     if (!miniappReady) {
-      pushNotification({ type: 'warn', title: 'Open in Warpcast', message: 'Wallet connection works best inside the Warpcast miniapp.' })
+      notify.warning('Wallet connection works best inside the Warpcast miniapp', 'system')
     }
     if (typeof connector?.ready === 'boolean' && !connector.ready) {
-      pushNotification({ type: 'warn', title: 'Wallet unavailable', message: 'Open this miniapp inside Warpcast to connect.' })
+      notify.warning('Open this miniapp inside Warpcast to connect', 'system')
       return
     }
     try {

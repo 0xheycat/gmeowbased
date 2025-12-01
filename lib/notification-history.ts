@@ -4,8 +4,8 @@ import type { NotificationTone } from '@/components/ui/live-notifications'
 const TABLE_NAME = 'user_notification_history'
 const MAX_HISTORY_PER_USER = 100
 
-// NotificationCategory temporarily removed - will be restored in Phase 2
-export type NotificationCategory = 'system' | 'quest' | 'social' | 'achievement'
+// Enhanced notification categories for all event types
+export type NotificationCategory = 'gm' | 'quest' | 'badge' | 'level' | 'streak' | 'tip' | 'achievement' | 'reward' | 'guild' | 'system' | 'social'
 
 export type NotificationHistoryItem = {
   id: string
