@@ -49,18 +49,11 @@ async function sendMintWebhook(mint: MintQueueEntry, txHash: string, tokenId: nu
   try {
     // Get badge metadata from registry
     const badgeDefinition = getBadgeFromRegistry(mint.badgeType)
-    const chain = (badgeDefinition?.chain as ChainKey) || 'base'
+    const chain = 'base' // Base-only architecture (Nov 28, 2025 redeploy)
     const tier = badgeDefinition?.tier || 'common'
     
-    // Get contract address for chain
-    const contractAddresses: Record<ChainKey, string> = {
-      base: process.env.BADGE_CONTRACT_BASE || '',
-      unichain: process.env.BADGE_CONTRACT_UNICHAIN || '',
-      celo: process.env.BADGE_CONTRACT_CELO || '',
-      ink: process.env.BADGE_CONTRACT_INK || '',
-      op: process.env.BADGE_CONTRACT_OP || '',
-    }
-    const contractAddress = contractAddresses[chain] || ''
+    // Get Base contract address
+    const contractAddress = process.env.BADGE_CONTRACT_BASE || ''
     
     const payload = {
       fid: mint.fid,
