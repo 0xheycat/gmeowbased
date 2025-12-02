@@ -3,7 +3,8 @@ import localFont from 'next/font/local'
 import './globals.css'
 import { MiniAppProvider } from './providers'
 import type { ReactNode } from 'react'
-import { GmeowLayout } from '@/components/layout/gmeow/GmeowLayout'
+import { HeaderWrapper } from '@/components/layout/HeaderWrapper'
+import { MobileNav } from '@/components/layout/MobileNav'
 
 // Category 11 Frame Fix: Import Gmeow font from app/fonts (deleted from public/fonts in 419276f)
 const gmeowFont = localFont({
@@ -97,15 +98,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <meta name="fc:frame" content={JSON.stringify(gmFrame)} />
       </head>
-      <body className="min-h-screen pixel-page" style={{ color: 'var(--text-color)' }}>
+      <body className="min-h-screen pixel-page text-body-color">
         <a
           href="#main-content"
-          className="absolute left-4 top-4 z-50 -translate-y-24 rounded-lg bg-sky-500 px-4 py-2 font-semibold text-slate-950 dark:text-white transition focus:translate-y-0"
+          className="absolute left-4 top-4 z-50 -translate-y-24 rounded-lg bg-sky-700 px-4 py-2 font-semibold text-white transition focus:translate-y-0"
         >
           Skip to main content
         </a>
         <MiniAppProvider>
-          <GmeowLayout>{children}</GmeowLayout>
+          <div className="flex min-h-screen flex-col">
+            <HeaderWrapper />
+            <main id="main-content" className="flex-1 pb-20 md:pb-0">
+              {children}
+            </main>
+            <MobileNav />
+          </div>
         </MiniAppProvider>
       </body>
     </html>

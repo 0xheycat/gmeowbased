@@ -10,7 +10,6 @@ import {
   CHAIN_IDS,
   type ChainKey,
 } from '@/lib/gmeow-utils'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 import { chainStateCache } from '@/lib/cache-storage'
 
 type UserStatsTuple = readonly [
@@ -63,7 +62,6 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
   const wagmiConfig = useConfig()
   const [history, setHistory] = useState<GMRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const pushNotification = useLegacyNotificationAdapter()
   const lastAddressRef = useRef<string | null>(null)
   const [autoHydrate, setAutoHydrate] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -163,7 +161,7 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
             })
           }
         } catch (e: any) {
-          console.warn(`GMSent logs failed on ${CHAIN_LABEL[chain]}:`, e?.message || String(e))
+          // Silent fail - try next chain
         }
       }
 
@@ -204,7 +202,7 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
               })
             }
           } catch (e: any) {
-            console.warn(`getUserStats fallback failed on ${CHAIN_LABEL[chain]}:`, e?.message || String(e))
+            // Silent fail
           }
         }
       }
@@ -221,17 +219,12 @@ export function GMHistory({ user, address: propAddress }: GMHistoryProps) {
       chainStateCache.set(cacheKey, combined)
       setHistory(combined)
       setHasLoaded(true)
-
-      if (!combined.length) {
-        pushNotification({ type: 'info', title: 'No GM history yet', message: 'We could not find on-chain GM activity.' })
-      }
     } catch (e: any) {
       console.error('Failed to load GM history:', e?.message || String(e))
-      pushNotification({ type: 'error', title: 'GM history load failed', message: e?.message || 'Unknown error' })
     } finally {
       setIsLoading(false)
     }
-  }, [pushNotification, wagmiConfig])
+  }, [wagmiConfig])
 
   useEffect(() => {
     if (!trackedAddress) {

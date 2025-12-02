@@ -9,7 +9,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce'
 import { TimeEmoji } from '@/components/TimeEmoji'
 import { Button, buttonVariants } from '@/components/ui/button'
 import Loader from '@/components/ui/loader'
-import { useNotifications, type NotificationTone } from '@/components/ui/live-notifications'
+import { useNotifications } from '@/components/ui/live-notifications'
 import QuestLoadingDeck from '@/components/Quest/QuestLoadingDeck'
 import { QuestCard, type QuestCardData } from '@/components/Quest/QuestCard'
 import { QuestFAB } from '@/components/Quest/QuestFAB'
@@ -113,9 +113,10 @@ export default function QuestHubPage() {
   const wagmiConfig = useConfig()
   const { showNotification } = useNotifications()
 
+  // Simple notification wrapper for quest events
   const sendNotification = useCallback(
-    (input: { tone: NotificationTone; title: string; description?: string; href?: string; actionLabel?: string; duration?: number }) =>
-      showNotification(input.title + (input.description ? `: ${input.description}` : ''), input.tone, input.duration, 'quest'),
+    (message: string, event: 'quest_progress' | 'quest_completed' = 'quest_progress', duration?: number) =>
+      showNotification(message, event, duration, 'quest'),
     [showNotification],
   )
 
@@ -215,11 +216,6 @@ export default function QuestHubPage() {
       const loud = !silent
       if (loud) {
         setLoading(true)
-        sendNotification({
-          tone: 'info',
-          title: 'Syncing quests…',
-          description: 'Scanning every active missions.',
-        })
       }
       setIsSyncing(true)
       setError(null)
@@ -348,11 +344,7 @@ export default function QuestHubPage() {
 
       if (failureMessage) {
         if (failureMessage !== lastErrorRef.current) {
-          sendNotification({
-            tone: 'warning',
-            title: 'Partial quest sync',
-            description: failureMessage,
-          })
+          sendNotification(`Partial quest sync: ${failureMessage}`, 'quest_progress')
         }
       } else if (lastErrorRef.current) {
         lastErrorRef.current = null
@@ -363,21 +355,16 @@ export default function QuestHubPage() {
       const shouldAnnounce = loud || prevCount === null || prevCount !== collected.length
       lastResultCountRef.current = collected.length
       if (shouldAnnounce) {
-        const tone: NotificationTone = collected.length && !failureMessage ? 'success' : 'info'
-        sendNotification({
-          tone,
-          title: collected.length ? 'Quest board updated' : 'No quests live yet',
-          description: collected.length ? `${collected.length} missions ready.` : 'Creators have not published missions yet.',
-        })
+        const event = collected.length && !failureMessage ? 'quest_completed' : 'quest_progress'
+        const message = collected.length 
+          ? `Quest board updated: ${collected.length} missions ready.`
+          : 'No quests live yet. Creators have not published missions yet.'
+        sendNotification(message, event)
       }
 
       if (!collected.length) {
         if (!emptyNoticeRef.current) {
-          sendNotification({
-            tone: 'warning',
-            title: 'Empty mission board',
-            description: 'Try again later or launch your own quest.',
-          })
+          sendNotification('Empty mission board. Try again later or launch your own quest.', 'quest_progress')
           emptyNoticeRef.current = true
         }
       } else {
@@ -386,11 +373,10 @@ export default function QuestHubPage() {
 
       const expiringSoon = collected.filter((quest) => quest.expiresAt && quest.expiresAt * 1000 - now < 86_400_000).length
       if (expiringSoon && expiryNoticeRef.current !== expiringSoon) {
-        sendNotification({
-          tone: 'warning',
-          title: 'Quests expiring soon',
-          description: `${expiringSoon} mission${expiringSoon === 1 ? '' : 's'} wrap within 24h.`,
-        })
+        sendNotification(
+          `Quests expiring soon: ${expiringSoon} mission${expiringSoon === 1 ? '' : 's'} wrap within 24h.`,
+          'quest_progress'
+        )
         expiryNoticeRef.current = expiringSoon
       }
       if (!expiringSoon) {
@@ -399,11 +385,10 @@ export default function QuestHubPage() {
 
       const tokenRewards = collected.filter((quest) => quest.rewardToken).length
       if (tokenRewards > 0 && tokenRewards !== tokenNoticeRef.current) {
-        sendNotification({
-          tone: 'success',
-          title: 'Token rewards live',
-          description: `${tokenRewards} mission${tokenRewards === 1 ? '' : 's'} are paying tokens today.`,
-        })
+        sendNotification(
+          `Token rewards live: ${tokenRewards} mission${tokenRewards === 1 ? '' : 's'} are paying tokens today.`,
+          'quest_completed'
+        )
       }
       tokenNoticeRef.current = tokenRewards
     },
@@ -427,23 +412,11 @@ export default function QuestHubPage() {
     setRewardFilter('all')
     setSearchTerm('')
     setShowBookmarksOnly(false)
-    sendNotification({
-      tone: 'info',
-      title: 'Filters reset',
-      description: 'Showing every active mission.',
-    })
-  }, [sendNotification])
+  }, [])
 
   const handleBookmarkToggle = useCallback(() => {
     setShowBookmarksOnly(!showBookmarksOnly)
-    if (!showBookmarksOnly) {
-      sendNotification({
-        tone: 'info',
-        title: 'Bookmarks',
-        description: `Showing ${bookmarkCount} saved ${bookmarkCount === 1 ? 'quest' : 'quests'}.`,
-      })
-    }
-  }, [showBookmarksOnly, bookmarkCount, sendNotification])
+  }, [showBookmarksOnly])
 
   const handleScrollTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -578,11 +551,6 @@ export default function QuestHubPage() {
     if (loading) return
     if (quests.length && !filteredQuests.length) {
       if (!filterNoticeRef.current) {
-        sendNotification({
-          tone: 'info',
-          title: 'No quests match filters',
-          description: 'Adjust the filters or reset to see every mission.',
-        })
         filterNoticeRef.current = true
       }
     } else if (filteredQuests.length) {
@@ -1207,12 +1175,11 @@ function VirtualQuestGrid({
   const items = virtualizer.getVirtualItems()
   
   return (
-    <div ref={parentRef} style={{ height: '50rem', overflow: 'auto' }}>
+    <div ref={parentRef} className="virtual-list-container">
       <div
+        className="relative w-full"
         style={{
           height: `${virtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative',
         }}
       >
         {items.map((virtualRow) => {
@@ -1222,11 +1189,8 @@ function VirtualQuestGrid({
           return (
             <div
               key={virtualRow.key}
+              className="virtual-item"
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
@@ -1296,12 +1260,11 @@ function VirtualArchiveList({ results }: { results: QuestArchiveEntry[] }) {
   const items = virtualizer.getVirtualItems()
   
   return (
-    <div ref={parentRef} className="quest-archive__list" style={{ height: '31.25rem', overflow: 'auto' }}>
+    <div ref={parentRef} className="quest-archive__list">
       <div
+        className="relative w-full"
         style={{
           height: `${virtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative',
         }}
       >
         {items.map((virtualItem) => {
@@ -1309,11 +1272,8 @@ function VirtualArchiveList({ results }: { results: QuestArchiveEntry[] }) {
           return (
             <div
               key={virtualItem.key}
+              className="virtual-item"
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >

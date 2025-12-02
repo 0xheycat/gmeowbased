@@ -677,7 +677,7 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
               try {
                 fid = await fetchFidByAddress(walletAddress)
               } catch (error) {
-                console.warn('Failed to resolve fid via fetchFidByAddress:', error)
+                // Silent fail - fid resolution optional
               }
             }
             if (fid != null) {

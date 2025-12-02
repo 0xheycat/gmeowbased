@@ -15,6 +15,7 @@ import { MiniappReady } from '@/components/MiniappReady'
 import { initWebVitals } from '@/lib/web-vitals'
 import { initPerformanceMonitoring } from '@/lib/performance-monitor'
 import { getMiniappContext } from '@/lib/miniappEnv'
+import { AuthProvider } from '@/lib/contexts/AuthContext'
 
 export function MiniAppProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
@@ -119,10 +120,13 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
                   </div>
                 </div>
               )}
-              <NotificationProvider>
-                <LiveEventBridge />
-                {children}
-              </NotificationProvider>
+              {/* Phase 1.5: Unified auth wraps entire app */}
+              <AuthProvider>
+                <NotificationProvider>
+                  <LiveEventBridge />
+                  {children}
+                </NotificationProvider>
+              </AuthProvider>
             </LayoutModeProvider>
           </OnchainKitProvider>
         </QueryClientProvider>

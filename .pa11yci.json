@@ -1,0 +1,43 @@
+{
+  "defaults": {
+    "standard": "WCAG2AA",
+    "timeout": 10000,
+    "wait": 1000,
+    "chromeLaunchConfig": {
+      "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+    },
+    "viewport": {
+      "width": 1280,
+      "height": 1024
+    },
+    "runners": [
+      "axe"
+    ]
+  },
+  "urls": [
+    {
+      "url": "http://localhost:3000/leaderboard",
+      "screenCapture": ".pa11y/leaderboard-desktop.png",
+      "viewport": {
+        "width": 1280,
+        "height": 1024
+      }
+    },
+    {
+      "url": "http://localhost:3000/leaderboard",
+      "screenCapture": ".pa11y/leaderboard-mobile.png",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      }
+    },
+    {
+      "url": "http://localhost:3000/leaderboard",
+      "screenCapture": ".pa11y/leaderboard-tablet.png",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      }
+    }
+  ]
+}

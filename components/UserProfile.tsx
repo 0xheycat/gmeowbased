@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useAccount, useConfig } from 'wagmi'
 import { getPublicClient } from '@wagmi/core'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 import {
   CHAIN_IDS,
   GM_CONTRACT_ABI,
@@ -60,7 +59,6 @@ export function UserProfile({ user }: UserProfileProps) {
   // Aggregated on-chain profile (best available across chains)
   const [profile, setProfile] = useState<CachedProfilePayload['profile']>(null)
 
-  const pushNotification = useLegacyNotificationAdapter()
   const lastAnnouncementRef = useRef<string | null>(null)
   const hydratedCacheRef = useRef(false)
   const cacheKey = address ? `profile:${address.toLowerCase()}` : null
@@ -137,7 +135,7 @@ export function UserProfile({ user }: UserProfileProps) {
 
             if (best) break
           } catch (err) {
-            console.warn(`getUserProfile failed on ${chain}:`, (err as Error)?.message || String(err))
+            // Silent fail - try next chain
           }
         }
 
@@ -155,10 +153,7 @@ export function UserProfile({ user }: UserProfileProps) {
           setProfile(normalized)
 
           const announceKey = `sync-${chosen.chain}`
-          if (lastAnnouncementRef.current !== announceKey) {
-            pushNotification({ type: 'success', title: 'Profile synced', message: `Loaded on ${CHAIN_LABEL[chosen.chain]}` })
-            lastAnnouncementRef.current = announceKey
-          }
+          lastAnnouncementRef.current = announceKey
 
           if (cacheKey) {
             writeStorageCache(cacheKey, { profile: normalized, lastAnnounce: lastAnnouncementRef.current })
@@ -166,10 +161,7 @@ export function UserProfile({ user }: UserProfileProps) {
         } else {
           setProfile(null)
           const announceKey = 'empty'
-          if (lastAnnouncementRef.current !== announceKey) {
-            pushNotification({ type: 'info', title: 'No on-chain profile', message: 'Update your on-chain profile to sync across chains.' })
-            lastAnnouncementRef.current = announceKey
-          }
+          lastAnnouncementRef.current = announceKey
           if (cacheKey) {
             writeStorageCache(cacheKey, { profile: null, lastAnnounce: lastAnnouncementRef.current })
           }
@@ -177,7 +169,6 @@ export function UserProfile({ user }: UserProfileProps) {
       } catch (err) {
         if (disposed) return
         console.error('Profile fetch failed:', (err as Error)?.message || String(err))
-        pushNotification({ type: 'error', title: 'Profile fetch failed', message: (err as Error)?.message || 'Unknown error' })
         lastAnnouncementRef.current = 'error'
         if (cacheKey) clearStorageCache(cacheKey)
       }
@@ -188,7 +179,7 @@ export function UserProfile({ user }: UserProfileProps) {
     return () => {
       disposed = true
     }
-  }, [address, cacheKey, httpFromIpfs, pushNotification, wagmiConfig])
+  }, [address, cacheKey, httpFromIpfs, wagmiConfig])
 
   const title = profile?.name || user.displayName || user.username || `User #${user.fid}`
   const avatarUrl = profile?.pfpUrl || user.pfpUrl
@@ -200,13 +191,7 @@ export function UserProfile({ user }: UserProfileProps) {
         {/* Avatar with pixel frame */}
         <div className="flex items-center justify-center mb-4">
           <div
-            className="grid place-items-center rounded-md overflow-hidden"
-            style={{
-              width: 64,
-              height: 64,
-              boxShadow: '0 0 0 3px var(--px-outer), inset 0 0 0 3px var(--px-inner)',
-              background: '#032138',
-            }}
+            className="user-avatar-frame"
           >
             {avatarUrl ? (
               <Image
@@ -214,8 +199,7 @@ export function UserProfile({ user }: UserProfileProps) {
                 alt={title}
                 width={60}
                 height={60}
-                className="pixelated"
-                style={{ objectFit: 'cover' }}
+                className="pixelated img-cover-center"
                 unoptimized
                 onError={(e) => {
                   console.error('Image failed to load:', avatarUrl)

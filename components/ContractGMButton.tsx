@@ -12,7 +12,7 @@ import {
 } from '@/lib/gmeow-utils'
 import type { Abi } from 'viem' // add
 import { GMCountdown } from './GMCountdown'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import { useNotifications } from '@/components/ui/live-notifications'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 
 type UserStatsTuple = readonly [
@@ -66,7 +66,7 @@ export function ContractGMButton({ chain }: ContractGMButtonProps) {
   const [canGM, setCanGM] = useState(false)
   const [gmMessage, setGmMessage] = useState('')
   const [lastGMTimestamp, setLastGMTimestamp] = useState(0)
-  const pushNotification = useLegacyNotificationAdapter()
+  const { showNotification } = useNotifications()
 
   // Contract write function
   const {
@@ -148,15 +148,9 @@ export function ContractGMButton({ chain }: ContractGMButtonProps) {
       const maker = EXPLORER_TX[selectedChain]
       const linkHref = maker ? maker(txHash as `0x${string}`) : undefined
       const chainLabel = CHAIN_LABEL[selectedChain]
-      pushNotification({
-        type: 'success',
-        title: `GM sent on ${chainLabel}!`,
-        message: 'Streak updated.',
-        ...(linkHref ? { linkHref, linkLabel: `View on Explorer ↗` } : {}),
-        duration: 7000,
-      })
+      showNotification(`GM sent on ${chainLabel}! Streak updated.`, 'gm_sent', 7000)
     }
-  }, [isConfirmed, refetchUserData, txHash, selectedChain, pushNotification])
+  }, [isConfirmed, refetchUserData, txHash, selectedChain, showNotification])
 
   // Update countdown timer text every second
   useEffect(() => {
@@ -179,22 +173,14 @@ export function ContractGMButton({ chain }: ContractGMButtonProps) {
 
   const handleGM = async () => {
     if (!isConnected || !canGM) {
-      pushNotification({
-        type: 'warn',
-        title: 'Not available',
-        message: !isConnected ? 'Connect your wallet first.' : 'You already sent GM today.',
-      })
       return
     }
     try {
       // Ensure target chain is active before write
       if (walletChainId !== targetChainId) {
-        pushNotification({ type: 'info', title: 'Switching network…', message: `Switching to ${CHAIN_LABEL[selectedChain]}.` })
         await switchChainAsync({ chainId: targetChainId })
-        pushNotification({ type: 'success', title: 'Network switched', message: `${CHAIN_LABEL[selectedChain]} active.` })
       }
 
-      pushNotification({ type: 'info', title: 'Sending GM…', message: 'Broadcasting transaction.' })
       // sendGM()
       writeContract({
         address: contractAddress,
@@ -204,28 +190,19 @@ export function ContractGMButton({ chain }: ContractGMButtonProps) {
       })
     } catch (error: any) {
       console.error('Failed to send GM transaction:', error?.message || String(error))
-      pushNotification({ type: 'error', title: 'Transaction failed', message: error?.message || 'Unknown error' })
     }
   }
 
   const handleShare = async () => {
     try {
       if (!address) {
-        pushNotification({ type: 'warn', title: 'Connect wallet', message: 'You need to connect before sharing.' })
         return
       }
-      pushNotification({ type: 'info', title: 'Sharing…', message: 'Opening Warpcast composer.' })
       const text = `GMEOW! Streak check on ${CHAIN_LABEL[selectedChain]} — let us cook.\nJoin the daily GM.`
       const embed = gmFrameUrl || `${window.location.origin}/api/gm-card/${address}`
-      const mode = await openWarpcastComposer(text, embed)
-      pushNotification({
-        type: 'success',
-        title: mode === 'miniapp' ? 'Cast shared' : 'Composer opened',
-        message: mode === 'miniapp' ? 'Posted to Warpcast.' : 'Finish your cast in the Warpcast composer.',
-      })
+      await openWarpcastComposer(text, embed)
     } catch (error: any) {
       console.error('Failed to share:', error?.message || String(error))
-      pushNotification({ type: 'error', title: 'Share failed', message: error?.message || 'Unknown error' })
     }
   }
 
@@ -334,36 +311,21 @@ export function ContractGMButton({ chain }: ContractGMButtonProps) {
           {isSwitchingNetwork ? (
             <div className="flex items-center justify-center gap-2">
               <span
-                className="rounded-full h-4 w-4 animate-spin"
-                style={{
-                  boxShadow: 'inset 0 0 0 2px var(--px-inner)',
-                  border: '2px solid transparent',
-                  borderBottomColor: 'var(--px-accent)',
-                }}
+                className="rounded-full h-4 w-4 animate-spin gm-spinner"
               />
               Switching…
             </div>
           ) : isWritePending ? (
             <div className="flex items-center justify-center gap-2">
               <span
-                className="rounded-full h-4 w-4 animate-spin"
-                style={{
-                  boxShadow: 'inset 0 0 0 2px var(--px-inner)',
-                  border: '2px solid transparent',
-                  borderBottomColor: 'var(--px-accent)',
-                }}
+                className="rounded-full h-4 w-4 animate-spin gm-spinner"
               />
               Sending GM…
             </div>
           ) : isConfirming ? (
             <div className="flex items-center justify-center gap-2">
               <span
-                className="rounded-full h-4 w-4 animate-spin"
-                style={{
-                  boxShadow: 'inset 0 0 0 2px var(--px-inner)',
-                  border: '2px solid transparent',
-                  borderBottomColor: 'var(--px-accent)',
-                }}
+                className="rounded-full h-4 w-4 animate-spin gm-spinner"
               />
               Confirming…
             </div>

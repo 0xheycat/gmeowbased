@@ -113,10 +113,7 @@ export function ViralTierBadge({
             className="absolute top-full left-1/2 -translate-x-1/2 -mt-px"
             aria-hidden="true"
           >
-            <div
-              className="w-3 h-3 rotate-45 bg-gray-900"
-              style={{ marginTop: '-6px' }}
-            />
+            <div className="w-3 h-3 rotate-45 bg-gray-900 tooltip-arrow" />
           </div>
         </div>
       )}

@@ -224,7 +224,7 @@ export default function TeamPageClient({ chain, teamId, initialSummary }: Props)
           </div>
         </div>
         {loading ? (
-          <div className="space-y-2">{[...Array(6)].map((_, i) => (<div key={i} className="h-8 rounded animate-pulse" style={{ background: 'rgba(138,99,210,0.18)' }} />))}</div>
+          <div className="space-y-2">{[...Array(6)].map((_, i) => (<div key={i} className="h-8 rounded animate-pulse skeleton-team-member" />))}</div>
         ) : members.length ? (
           <div className="divide-y divide-[rgba(138,99,210,0.25)]">
             {members.map((m) => (

@@ -2,11 +2,15 @@
 export { Button, buttonVariants } from './button'
 export { default as Loader } from './loader'
 export { RankProgress } from './RankProgress'
-export { NotificationProvider, useNotifications, useLegacyNotificationAdapter } from './live-notifications'
+export { NotificationProvider, useNotifications } from './live-notifications'
 export { LiveEventBridge } from './LiveEventBridge'
 export { LayoutModeProvider, useLayoutMode } from './layout-mode-context'
 export { LayoutModeSwitch } from './LayoutModeSwitch'
 export { ThemeToggle } from './ThemeToggle'
+
+// Dialog system
+export { default as ErrorDialog } from './error-dialog'
+export type { ErrorDialogProps, DialogType } from './error-dialog'
 
 // Gmeow components
 export { default as GmeowAlert } from './gmeow-alert'

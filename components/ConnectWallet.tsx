@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect } from 'wagmi'
 import { probeMiniappReady } from '@/lib/miniappEnv'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import { useNotifications } from '@/components/ui/live-notifications'
 
 export function ConnectWallet() {
   const { address, isConnected } = useAccount()
@@ -36,15 +36,14 @@ export function ConnectWallet() {
     })
   }, [connectors])
 
-  const notify = useLegacyNotificationAdapter()
+  const { showNotification } = useNotifications()
 
   // Toast on connect state changes
   useEffect(() => {
     if (isConnected && address) {
-      notify.success(`Wallet connected: ${formatAddress(address)}`, 'system')
       setConnectingId(null)
     }
-  }, [isConnected, address, notify])
+  }, [isConnected, address])
 
   useEffect(() => {
     if (!rawConnectError) return
@@ -55,11 +54,9 @@ export function ConnectWallet() {
 
   useEffect(() => {
     if (!connectError) return
-    const message = getConnectErrorMessage(connectError)
-    notify.error(`Wallet connection failed: ${message}`, 'system')
     setConnectingId(null)
     setConnectError(null)
-  }, [connectError, notify])
+  }, [connectError])
 
   // Auto-connect in Farcaster Mini App (or if a previous session exists)
   useEffect(() => {
@@ -88,16 +85,11 @@ export function ConnectWallet() {
   }, [isConnected, availableConnectors, connect, connectAsync])
 
   const handleConnect = async (connector: any) => {
-    if (!miniappReady) {
-      notify.warning('Wallet connection works best inside the Warpcast miniapp', 'system')
-    }
     if (typeof connector?.ready === 'boolean' && !connector.ready) {
-      notify.warning('Open this miniapp inside Warpcast to connect', 'system')
       return
     }
     try {
       setConnectingId(connector?.id || connector?.name || 'wallet')
-      pushNotification({ type: 'info', title: 'Connecting…', message: `Opening ${connector?.name || 'wallet'}.` })
       if (connectAsync) {
         await connectAsync({ connector })
       } else {

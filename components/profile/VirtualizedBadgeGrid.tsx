@@ -77,14 +77,12 @@ export function VirtualizedBadgeGrid({
   return (
     <div
       ref={parentRef}
-      className="relative overflow-auto"
-      style={{ height: '25rem', maxHeight: '60vh' }}
+      className="relative overflow-auto badge-grid-container"
     >
       <div
+        className="relative w-full"
         style={{
           height: `${virtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative',
         }}
       >
         {virtualItems.map((virtualRow) => {
@@ -94,11 +92,8 @@ export function VirtualizedBadgeGrid({
           return (
             <div
               key={virtualRow.key}
+              className="virtual-item"
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
                 height: `${virtualRow.size}px`,
                 transform: `translateY(${virtualRow.start}px)`,
               }}

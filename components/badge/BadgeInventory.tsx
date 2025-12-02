@@ -75,7 +75,7 @@ export function BadgeInventory({
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
   const [claimingBadge, setClaimingBadge] = useState<string | null>(null)
   const { address } = useAccount()
-  const { push } = useNotifications()
+  const { showNotification } = useNotifications()
 
   const displayBadges = useMemo(() => {
     if (maxDisplay) return badges.slice(0, maxDisplay)
@@ -90,22 +90,12 @@ export function BadgeInventory({
     e.stopPropagation() // Don't trigger badge click
 
     if (!address) {
-      push({
-        tone: 'warning',
-        title: 'Wallet Not Connected',
-        description: 'Please connect your wallet to claim badges',
-        category: 'badge',
-      })
+      showNotification('Please connect your wallet to claim badges', 'badge_eligible')
       return
     }
 
     if (badge.minted) {
-      push({
-        tone: 'info',
-        title: 'Badge Already Minted',
-        description: 'This badge has already been minted on-chain',
-        category: 'badge',
-      })
+      showNotification('This badge has already been minted on-chain', 'badge_minted')
       return
     }
 
@@ -133,25 +123,23 @@ export function BadgeInventory({
         throw new Error(result.error || 'Failed to claim badge')
       }
 
-      push({
-        tone: 'success',
-        title: 'Badge Claimed!',
-        description: `Processing mint on ${result.badge.chain}. You'll pay gas, oracle provides points.`,
-        category: 'badge',
-        duration: 5000,
-      })
+      showNotification(
+        `Badge claimed! Processing mint on ${result.badge.chain}. You'll pay gas, oracle provides points.`,
+        'badge_minted',
+        5000,
+        'badge'
+      )
       
       // Refresh page to show updated status
       setTimeout(() => window.location.reload(), 2000)
     } catch (error: any) {
       console.error('Claim failed:', error)
-      push({
-        tone: 'error',
-        title: 'Claim Failed',
-        description: error.message || 'Failed to claim badge',
-        category: 'badge',
-        duration: 5000,
-      })
+      showNotification(
+        error.message || 'Failed to claim badge',
+        'badge_eligible',
+        5000,
+        'badge'
+      )
     } finally {
       setClaimingBadge(null)
     }
@@ -185,38 +173,24 @@ export function BadgeInventory({
               onClick={() => handleBadgeClick(badge)}
               onMouseEnter={() => setHoveredBadge(badge.id)}
               onMouseLeave={() => setHoveredBadge(null)}
-              className="relative group cursor-pointer"
-              style={{
-                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-                transition: 'transform 0.2s ease-out',
-              }}
+              className="relative group cursor-pointer badge-card-hover"
+              style={{ ['--badge-scale' as string]: isHovered ? 'scale(1.05)' : 'scale(1)' } as React.CSSProperties}
             >
               {/* Badge Card Container */}
               <div
-                className="relative aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-black/80 via-black/60 to-black/80 backdrop-blur-sm border-2 transition-all duration-300"
+                className="relative aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-black/80 via-black/60 to-black/80 backdrop-blur-sm border-2 badge-card-border"
                 style={{
-                  borderColor: tierConfig.color,
-                  boxShadow: isHovered ? tierConfig.glow : `0 0 0 rgba(0,0,0,0)`,
-                }}
+                  ['--tier-color' as string]: tierConfig.color,
+                  ['--tier-glow' as string]: isHovered ? tierConfig.glow : '0 0 0 rgba(0,0,0,0)',
+                } as React.CSSProperties}
               >
                 {/* Holographic Foil Effect (Mythic & Legendary only) */}
                 {hasHolographicFoil && (
                   <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none badge-holographic"
                     style={{
-                      background: `
-                        linear-gradient(
-                          135deg, 
-                          transparent 20%,
-                          ${tierConfig.color}40 40%,
-                          ${tierConfig.color}80 50%,
-                          ${tierConfig.color}40 60%,
-                          transparent 80%
-                        )
-                      `,
-                      backgroundSize: '200% 200%',
-                      animation: 'holographic-shift 3s ease-in-out infinite',
-                    }}
+                      ['--holographic-gradient' as string]: `linear-gradient(135deg, transparent 20%, ${tierConfig.color}40 40%, ${tierConfig.color}80 50%, ${tierConfig.color}40 60%, transparent 80%)`,
+                    } as React.CSSProperties}
                   />
                 )}
 
@@ -243,12 +217,11 @@ export function BadgeInventory({
 
                 {/* Tier Badge Overlay */}
                 <div 
-                  className="absolute top-2 right-2 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm"
+                  className="absolute top-2 right-2 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm badge-tier-label"
                   style={{
-                    backgroundColor: `${tierConfig.color}40`,
-                    color: tierConfig.color,
-                    border: `1px solid ${tierConfig.color}`,
-                  }}
+                    ['--tier-color' as string]: tierConfig.color,
+                    ['--tier-color-alpha' as string]: `${tierConfig.color}40`,
+                  } as React.CSSProperties}
                 >
                   {tierConfig.label}
                 </div>
@@ -281,10 +254,10 @@ export function BadgeInventory({
 
                 {/* Bottom Info Bar */}
                 <div 
-                  className="absolute bottom-0 left-0 right-0 px-3 py-2 backdrop-blur-md"
+                  className="absolute bottom-0 left-0 right-0 px-3 py-2 backdrop-blur-md badge-bottom-bar"
                   style={{
-                    background: `linear-gradient(to top, ${tierConfig.color}80, ${tierConfig.color}20)`,
-                  }}
+                    ['--tier-color' as string]: tierConfig.color,
+                  } as React.CSSProperties}
                 >
                   <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
                     {badge.metadata?.name || badge.badgeType}
@@ -298,21 +271,19 @@ export function BadgeInventory({
               {/* Hover Tooltip */}
               {isHovered && (
                 <div 
-                  className="absolute z-50 left-1/2 -translate-x-1/2 -top-2 -translate-y-full w-64 p-4 rounded-xl shadow-2xl pointer-events-none"
+                  className="absolute z-50 left-1/2 -translate-x-1/2 -top-2 -translate-y-full w-64 p-4 rounded-xl shadow-2xl pointer-events-none badge-tooltip"
                   style={{
-                    backgroundColor: '#09090b',
-                    border: `2px solid ${tierConfig.color}`,
-                    boxShadow: tierConfig.glow,
-                  }}
+                    ['--tier-color' as string]: tierConfig.color,
+                    ['--tier-glow' as string]: tierConfig.glow,
+                  } as React.CSSProperties}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span 
-                      className="px-2 py-1 rounded text-[10px] font-bold uppercase"
+                      className="px-2 py-1 rounded text-[10px] font-bold uppercase badge-tier-label"
                       style={{
-                        backgroundColor: `${tierConfig.color}40`,
-                        color: tierConfig.color,
-                        border: `1px solid ${tierConfig.color}`,
-                      }}
+                        ['--tier-color' as string]: tierConfig.color,
+                        ['--tier-color-alpha' as string]: `${tierConfig.color}40`,
+                      } as React.CSSProperties}
                     >
                       {tierConfig.label}
                     </span>

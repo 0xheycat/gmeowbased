@@ -100,8 +100,7 @@ export default function EventMatrixPanel() {
                 key={event.signature}
                 className="group relative overflow-hidden rounded-3xl border border-white dark:border-slate-700/12 bg-slate-100/5 dark:bg-white/5 p-5 shadow-sm shadow-emerald-500/5 transition hover:border-emerald-300/50"
               >
-                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: 'linear-gradient(135deg, rgba(94,234,212,0.12), transparent 60%)' }}
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 admin-event-highlight"
                   aria-hidden
                 />
                 <div className="relative z-10 flex flex-wrap items-start justify-between gap-3">

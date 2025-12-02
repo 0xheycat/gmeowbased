@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getLeaderboard } from '@/lib/leaderboard-scorer'
+
+export const runtime = 'nodejs'
+export const revalidate = 300 // 5 minutes
+
+/**
+ * GET /api/leaderboard-v2
+ * 
+ * Fetch leaderboard data from leaderboard_calculations table
+ * New V2.2 leaderboard with 6-source scoring aggregation
+ * 
+ * Query Parameters:
+ * - period: 'daily' | 'weekly' | 'all_time' (default: 'all_time')
+ * - page: number (default: 1)
+ * - pageSize: number (default: 15, max: 100)
+ * - search: string (optional - search by username or FID)
+ * 
+ * Response:
+ * {
+ *   data: LeaderboardEntry[]
+ *   pagination: {
+ *     currentPage: number
+ *     totalPages: number
+ *     totalCount: number
+ *     pageSize: number
+ *   }
+ * }
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    
+    // Parse query parameters
+    const period = (searchParams.get('period') || 'all_time') as 'daily' | 'weekly' | 'all_time'
+    const page = parseInt(searchParams.get('page') || '1')
+    const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '15'), 100)
+    const search = searchParams.get('search') || undefined
+    
+    // Validate period
+    if (!['daily', 'weekly', 'all_time'].includes(period)) {
+      return NextResponse.json(
+        { error: 'Invalid period. Must be daily, weekly, or all_time' },
+        { status: 400 }
+      )
+    }
+    
+    // Validate pagination
+    if (page < 1 || pageSize < 1) {
+      return NextResponse.json(
+        { error: 'Page and pageSize must be positive integers' },
+        { status: 400 }
+      )
+    }
+    
+    // Fetch leaderboard data
+    const result = await getLeaderboard(period, page, pageSize, search)
+    
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+      },
+    })
+  } catch (error) {
+    console.error('[Leaderboard V2 API] Error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch leaderboard data' },
+      { status: 500 }
+    )
+  }
+}

@@ -16,7 +16,7 @@ export function ChainIcon({ chain, size = 14, rounded = true }: { chain: ChainKe
   const b = CHAIN_BRAND[chain]
   const r = rounded ? size : 3
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-label={b.title} role="img" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-label={b.title} role="img" className="inline-block-middle">
       <rect x="2" y="2" width="20" height="20" rx={r} ry={r} fill={b.bg} />
       <text x="12" y="15" textAnchor="middle" fontSize="11" fontWeight="700" fill={b.fg}
         className="site-font">

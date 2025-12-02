@@ -104,6 +104,125 @@
    ============================================================================ */
 
 @layer utilities {
+  /* ===== PROFESSIONAL SCROLLBARS (from music template) ===== */
+  
+  /* Dark Mode Scrollbars */
+  .dark ::-webkit-scrollbar {
+    max-height: 10px;
+    max-width: 10px;
+    width: auto;
+  }
+
+  .dark ::-webkit-scrollbar-corner,
+  .dark ::-webkit-scrollbar-track {
+    background: #2a2a2a;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #5a5a5a;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+  }
+
+  .dark * {
+    scrollbar-width: thin;
+    scrollbar-color: #5a5a5a #2a2a2a;
+  }
+
+  /* Compact Scrollbar (thinner, more subtle) */
+  .compact-scrollbar::-webkit-scrollbar {
+    max-height: 6px;
+    max-width: 6px;
+    width: auto;
+  }
+
+  .compact-scrollbar::-webkit-scrollbar-corner,
+  .compact-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .compact-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(193 193 193);
+    border: none;
+    border-radius: 10px;
+  }
+
+  .dark .compact-scrollbar::-webkit-scrollbar-thumb {
+    background: #5a5a5a;
+  }
+
+  .compact-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(193 193 193) transparent;
+  }
+
+  /* Hidden Scrollbar (functionality remains) */
+  .hidden-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hidden-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ===== DASHBOARD GRID LAYOUT (from music template) ===== */
+  
+  .dashboard-grid {
+    display: grid;
+    grid-template-areas:
+      "navbar navbar navbar"
+      "sidenav-left header header"
+      "sidenav-left content sidenav-right"
+      "footer footer footer";
+    grid-template-rows: auto auto 1fr;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .dashboard-grid-content {
+    grid-area: content;
+  }
+
+  .dashboard-grid-header {
+    grid-area: header;
+  }
+
+  .dashboard-grid-navbar {
+    grid-area: navbar;
+  }
+
+  .dashboard-grid-sidenav-left {
+    grid-area: sidenav-left;
+  }
+
+  .dashboard-grid-sidenav-right {
+    grid-area: sidenav-right;
+  }
+
+  .dashboard-grid-footer {
+    grid-area: footer;
+  }
+
+  /* ===== SAFE AREA SUPPORT (iOS notch) ===== */
+  
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* ===== ORIGINAL TEXT UTILITIES ===== */
+  
   /* Text utilities */
   .text-case-inherit {
     text-transform: inherit;
@@ -501,11 +620,25 @@ input[type='number'] {
 
 @keyframes shimmer {
   0% {
-    background-position: -1000px 0;
+    background-position: -200% 0;
   }
   100% {
-    background-position: 1000px 0;
+    background-position: 200% 0;
   }
+}
+
+/* ============================================================================
+   NOTIFICATION ANIMATIONS - Removed per user requirement
+   ============================================================================ */
+
+/* Tooltip arrow utility */
+.tooltip-arrow {
+  margin-top: -6px;
+}
+
+/* Admin panel utilities */
+.admin-event-highlight {
+  background: linear-gradient(135deg, rgba(94, 234, 212, 0.12), transparent 60%);
 }
 
 .skeleton {
@@ -608,4 +741,495 @@ input[type='number'] {
 .gradient-gold-overlay {
   @apply absolute inset-0 mix-blend-screen animate-pulse;
   background: radial-gradient(circle at top, rgba(var(--gold) / 0.3), transparent, transparent);
+}
+
+/* Virtualized list containers */
+.virtual-list-container {
+  height: 50rem;
+  overflow: auto;
+}
+
+.quest-archive__list {
+  height: 31.25rem;
+  overflow: auto;
+}
+
+/* Transform utilities */
+.transform-none {
+  transform: none !important;
+}
+
+.virtual-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+/* Width utilities for dynamic content */
+.w-dynamic {
+  width: var(--dynamic-width, auto);
+}
+
+/* Height utilities for dynamic content */
+.h-dynamic {
+  height: var(--dynamic-height, auto);
+}
+
+/* Font family utilities */
+.font-site {
+  font-family: var(--site-font);
+}
+
+/* Image positioning */
+.img-cover-center {
+  object-fit: cover;
+}
+
+/* Progress bars and meters */
+.dash-progress-track {
+  position: relative;
+  height: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.dash-progress-fill {
+  height: 100%;
+  width: var(--fill-width, 0%);
+  border-radius: 9999px;
+  transition: width 0.3s ease-in-out;
+}
+
+.dash-apy-meter {
+  position: relative;
+  height: 0.375rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.dash-apy-meter-fill {
+  height: 100%;
+  width: var(--fill-width, 0%);
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+  border-radius: 9999px;
+  transition: width 0.3s ease-in-out;
+}
+
+/* User profile components */
+.user-avatar-frame {
+  display: grid;
+  place-items: center;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  width: 64px;
+  height: 64px;
+  box-shadow: 0 0 0 3px var(--px-outer), inset 0 0 0 3px var(--px-inner);
+  background: #032138;
+}
+
+/* GM button spinner */
+.gm-spinner {
+  box-shadow: inset 0 0 0 2px var(--px-inner);
+  border: 2px solid transparent;
+  border-bottom-color: var(--px-accent);
+}
+
+/* GM countdown */
+.countdown-circle {
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+.countdown-time {
+  text-shadow: 0 1px 0 var(--px-outer);
+}
+
+/* Skeleton loaders */
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.375rem;
+  box-shadow: 0 0 0 3px var(--px-outer), inset 0 0 0 3px var(--px-inner);
+  background: rgba(138, 99, 210, 0.15);
+}
+
+.skeleton-text {
+  height: 0.75rem;
+  border-radius: 0.25rem;
+  background: rgba(138, 99, 210, 0.2);
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-text:last-child {
+  height: 0.5rem;
+  background: rgba(138, 99, 210, 0.15);
+  margin-bottom: 0;
+}
+
+.skeleton-text-40 {
+  width: 40%;
+}
+
+.skeleton-text-30 {
+  width: 30%;
+}
+
+.skeleton-badge {
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  padding: 0 1rem;
+  background: rgba(138, 99, 210, 0.18);
+  box-shadow: 0 0 0 2px var(--px-outer), inset 0 0 0 2px var(--px-inner);
+}
+
+.skeleton-team-member {
+  background: rgba(138, 99, 210, 0.18);
+}
+
+/* Progress XP modal */
+.progress-xp-backdrop {
+  background: radial-gradient(ellipse at center, rgba(14, 20, 46, 0.95) 0%, rgba(4, 5, 16, 0.98) 100%);
+  backdrop-filter: blur(16px);
+}
+
+.progress-xp-shine {
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+}
+
+.progress-xp-content-bg {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+}
+
+.progress-xp-ring {
+  animation-duration: 8s;
+}
+
+.progress-xp-badge {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 100%);
+  backdrop-filter: blur(12px);
+}
+
+.progress-xp-icon-pulse {
+  animation-duration: 2s;
+}
+
+.progress-xp-bar {
+  width: var(--bar-width, 0%);
+  transition: width 0.4s ease-out;
+}
+
+.progress-xp-overlay {
+  animation-duration: 2s;
+}
+
+.progress-xp-card {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 50%, rgba(15, 23, 42, 0.95) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+/* Viral components */
+.viral-progress-bar {
+  width: var(--fill-width, 0%);
+}
+
+/* Badge components */
+.badge-card-hover {
+  transform: var(--badge-scale, scale(1));
+  transition: transform 0.2s ease-out;
+}
+
+.badge-card-border {
+  border-color: var(--tier-color, rgb(156, 163, 175));
+  box-shadow: var(--tier-glow, 0 0 0 rgba(0,0,0,0));
+  transition: all 0.3s;
+}
+
+.badge-holographic {
+  background: var(--holographic-gradient);
+  background-size: 200% 200%;
+  animation: holographic-shift 3s ease-in-out infinite;
+}
+
+.badge-tier-label {
+  background-color: var(--tier-color-alpha, rgba(156, 163, 175, 0.25));
+  color: var(--tier-color, rgb(156, 163, 175));
+  border: 1px solid var(--tier-color, rgb(156, 163, 175));
+}
+
+.badge-minted-label {
+  background-color: var(--tier-color-alpha, rgba(156, 163, 175, 0.25));
+  color: var(--tier-color, rgb(156, 163, 175));
+  border: 1px solid var(--tier-color, rgb(156, 163, 175));
+  box-shadow: var(--tier-glow, 0 0 0 rgba(0,0,0,0));
+}
+
+.badge-locked-overlay {
+  background-color: var(--tier-color-alpha, rgba(156, 163, 175, 0.15));
+  backdrop-filter: blur(8px);
+}
+
+.badge-locked-overlay {
+  background-color: var(--tier-color-alpha, rgba(156, 163, 175, 0.15));
+  backdrop-filter: blur(8px);
+}
+
+.badge-bottom-bar {
+  background: linear-gradient(to top, var(--tier-color, rgb(156, 163, 175)), transparent);
+  background: linear-gradient(to top, color-mix(in srgb, var(--tier-color, rgb(156, 163, 175)) 50%, transparent), color-mix(in srgb, var(--tier-color, rgb(156, 163, 175)) 13%, transparent));
+}
+
+.badge-tooltip {
+  background-color: #09090b;
+  border: 2px solid var(--tier-color, rgb(156, 163, 175));
+  box-shadow: var(--tier-glow, 0 0 0 rgba(0,0,0,0));
+}
+
+@keyframes holographic-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Button drip animations (from gmeowbased0.6 template) */
+@keyframes drip-expand {
+  0% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(25);
+  }
+}
+
+@keyframes drip-expand-large {
+  0% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(35);
+  }
+}
+
+/* Text shadow utilities */
+.text-shadow-dark {
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.text-shadow-gold-glow {
+  text-shadow: 0 0 8px rgba(252, 211, 77, 0.8);
+}
+
+/* Quest card 3D transforms */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Badge grid container */
+.badge-grid-container {
+  height: 25rem;
+  max-height: 60vh;
+}
+
+/* Profile progress bars */
+.profile-level-progress {
+  width: var(--fill-width, 0%);
+}
+
+/* ==========================================================================
+   ROSTER/LEADERBOARD STYLES (Minimal - Modern components use Tailwind)
+   ========================================================================== */
+
+/* Roster chip (filters, buttons) - Keep for backward compatibility */
+.roster-chip {
+  @apply px-3 py-1.5 rounded-lg;
+  @apply bg-slate-200/90 dark:bg-slate-800/90;
+  @apply border border-slate-300/60 dark:border-slate-700/60;
+  @apply text-gray-900 dark:text-gray-100 font-medium;
+  @apply hover:bg-slate-300 dark:hover:bg-slate-700;
+  @apply transition-all duration-200;
+  @apply cursor-pointer;
+}
+
+.roster-chip.is-active {
+  @apply bg-accent-green border-accent-green text-gray-900;
+  @apply shadow-lg shadow-accent-green/20;
+}
+
+.roster-chip:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Roster backdrop effect */
+.roster-backdrop {
+  @apply absolute inset-0 -z-10;
+  @apply bg-gradient-to-br from-blue-900/10 via-transparent to-purple-900/10;
+  @apply pointer-events-none;
+}
+
+/* Medal colors for top 3 rankings */
+.text-medal-gold {
+  @apply text-[#FFD700];
+}
+
+.text-medal-silver {
+  @apply text-[#C0C0C0];
+}
+
+.text-medal-bronze {
+  @apply text-[#CD7F32];
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  .roster-chip {
+    @apply bg-white/5 border-slate-700/30;
+  }
+  
+  .roster-chip.is-active {
+    @apply bg-accent-green/30 border-accent-green/60;
+  }
+}
+
+/* ==========================================================================
+   END ROSTER STYLES
+   ========================================================================== */
+
+/* Roster Progress Bar (already exists) */
+.roster-progress-track {
+  position: relative;
+  height: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.roster-progress-fill {
+  height: 100%;
+  width: var(--fill-width, 0%);
+  border-radius: 9999px;
+}
+
+/* Text color utility */
+.text-body-color {
+  color: var(--text-color);
+}
+
+
+/* ============================================================================
+   LEADERBOARD STYLES
+   ============================================================================ */
+
+@layer components {
+  /* Leaderboard row styles */
+  .leaderboard-row {
+    @apply transition-colors duration-200;
+  }
+
+  .leaderboard-row:hover {
+    @apply bg-dark-bg-card;
+  }
+
+  .leaderboard-row.active {
+    @apply bg-dark-bg-elevated;
+  }
+
+  /* Rank badge styles - uses Tailwind config colors */
+  .rank-badge {
+    @apply inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium transition-all;
+  }
+
+  .rank-badge.beginner {
+    @apply bg-gray-900/50 text-gray-400 border border-gray-700/50;
+  }
+
+  .rank-badge.intermediate {
+    @apply bg-purple-900/50 text-purple-400 border border-purple-700/50;
+  }
+
+  .rank-badge.advanced {
+    @apply bg-violet-900/50 text-violet-400 border border-violet-700/50;
+  }
+
+  .rank-badge.legendary {
+    @apply bg-orange-900/50 text-orange-400 border border-orange-700/50;
+  }
+
+  .rank-badge.mythic {
+    @apply bg-brand/20 text-brand border border-brand/50;
+  }
+
+  /* Rank change indicators - uses ArrowUp icon */
+  .rank-change {
+    @apply inline-flex items-center gap-1 text-sm font-medium;
+  }
+
+  .rank-change.up {
+    @apply text-accent-green;
+  }
+
+  .rank-change.down {
+    @apply text-red-400;
+  }
+
+  .rank-change.neutral {
+    @apply text-gray-400;
+  }
+
+  /* Trophy icon styles for top 3 */
+  .trophy-gold {
+    @apply text-gold;
+  }
+
+  .trophy-silver {
+    @apply text-gray-300;
+  }
+
+  .trophy-bronze {
+    @apply text-orange-600;
+  }
+
+  /* Leaderboard table responsive wrapper */
+  .leaderboard-table-wrapper {
+    @apply overflow-x-auto;
+  }
+
+  /* Mobile: horizontal scroll */
+  @media (max-width: 768px) {
+    .leaderboard-table-wrapper {
+      @apply -mx-4 px-4;
+    }
+  }
+
+  /* Leaderboard skeleton loader */
+  .leaderboard-skeleton-row {
+    @apply animate-pulse bg-dark-bg-card h-16 rounded-lg mb-2;
+  }
+
+  /* Leaderboard empty state */
+  .leaderboard-empty {
+    @apply flex flex-col items-center justify-center py-12 text-center;
+  }
+
+  .leaderboard-empty-icon {
+    @apply w-16 h-16 mb-4 text-gray-400;
+  }
+
+  .leaderboard-empty-title {
+    @apply text-lg font-semibold text-gray-200 mb-2;
+  }
+
+  .leaderboard-empty-description {
+    @apply text-sm text-gray-400 mb-4;
+  }
 }
