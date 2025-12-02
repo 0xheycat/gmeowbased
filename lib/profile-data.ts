@@ -8,7 +8,7 @@ import type { ProfileOverviewData, ProfileChainSnapshot, TeamOverview } from '@/
 export const PROFILE_SUPPORTED_CHAINS: ChainKey[] = Object.keys(CHAIN_IDS) as ChainKey[]
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-
+//we only support base network for profile data fetching, delete others to reduce code size
 const PUBLIC_RPCS: Record<ChainKey, string> = {
   base: process.env.NEXT_PUBLIC_RPC_BASE || 'https://base-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
   unichain: process.env.NEXT_PUBLIC_RPC_UNICHAIN || 'https://unichain-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
@@ -331,14 +331,14 @@ export async function fetchGlobalRank(address: `0x${string}`): Promise<number | 
 
 async function fetchGlobalRankWithoutCache(address: `0x${string}`): Promise<number | null> {
   try {
-    const res = await fetch('/api/leaderboard?global=1&limit=250', { cache: 'no-store' })
+    const res = await fetch('/api/leaderboard-v2?period=all_time&pageSize=250', { cache: 'no-store' })
     if (!res.ok) return null
-    const data = await res.json().catch(() => null)
-    if (!data?.top) return null
-    const entry = (data.top as Array<{ address?: string; rank?: number }>).find(
+    const result = await res.json().catch(() => null)
+    if (!result?.data) return null
+    const entry = (result.data as Array<{ address?: string; global_rank?: number }>).find(
       (row) => typeof row.address === 'string' && row.address.toLowerCase() === address.toLowerCase(),
     )
-    return typeof entry?.rank === 'number' ? entry.rank : null
+    return typeof entry?.global_rank === 'number' ? entry.global_rank : null
   } catch {
     return null
   }
