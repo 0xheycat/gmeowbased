@@ -13,6 +13,10 @@ import { createPublicClient, http, parseAbiItem } from 'viem'
 import { base } from 'viem/chains'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
 import { fetchUserByFid } from '@/lib/neynar'
+import {
+  getCachedContractData,
+  setCachedContractData,
+} from '@/lib/cache/contract-cache'
 
 export type LeaderboardScore = {
   address: string
@@ -57,8 +61,28 @@ export async function calculateLeaderboardScore(
 
   const fid = userData.farcaster_fid
 
-  // 2. Get on-chain quest points (from contract events)
-  const basePoints = await getQuestPointsFromContract(address)
+  // 2. Check contract data cache first
+  const cachedContract = await getCachedContractData(address)
+  
+  let basePoints: number
+  let streakBonus: number
+  
+  if (cachedContract) {
+    // Use cached contract data
+    basePoints = cachedContract.basePoints
+    streakBonus = cachedContract.streakBonus
+  } else {
+    // Cache miss - fetch from contract
+    basePoints = await getQuestPointsFromContract(address)
+    streakBonus = await getStreakBonusFromContract(address)
+    
+    // Cache the result
+    await setCachedContractData({
+      address,
+      basePoints,
+      streakBonus,
+    })
+  }
 
   // 3. Get viral XP from badge_casts table
   const { data: viralData } = await supabase
@@ -84,9 +108,6 @@ export async function calculateLeaderboardScore(
     .eq('referrer_address', address)
 
   const referralBonus = (referralCount || 0) * 50
-
-  // 6. Get GM streak (streak * 10)
-  const streakBonus = await getStreakBonusFromContract(address)
 
   // 7. Get badge count (count * 25)
   const { count: badgeCount } = await supabase
@@ -330,8 +351,28 @@ export async function getLeaderboard(options: {
     .order('total_score', { ascending: false })
 
   // Apply search filter if provided
+  // Search supports: address, FID, or username (via Neynar)
   if (search) {
-    query = query.or(`address.ilike.%${search}%,farcaster_fid.eq.${parseInt(search) || 0}`)
+    const searchTerm = search.trim()
+    
+    // Check if it's a username search (starts with @ or no 0x prefix)
+    if (searchTerm.startsWith('@') || (!searchTerm.startsWith('0x') && isNaN(parseInt(searchTerm)))) {
+      // Username search - need to resolve FID from Neynar first
+      const username = searchTerm.replace('@', '')
+      const { fetchUserByUsername } = await import('@/lib/neynar')
+      const neynarUser = await fetchUserByUsername(username)
+      
+      if (neynarUser?.fid) {
+        // Found user - search by FID
+        query = query.eq('farcaster_fid', neynarUser.fid)
+      } else {
+        // User not found - return empty results
+        return { data: [], count: 0, page, perPage, totalPages: 0 }
+      }
+    } else {
+      // Address or FID search
+      query = query.or(`address.ilike.%${searchTerm}%,farcaster_fid.eq.${parseInt(searchTerm) || 0}`)
+    }
   }
 
   // Apply pagination

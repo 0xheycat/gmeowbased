@@ -282,17 +282,45 @@ export async function fetchFidByAddress(address: string): Promise<number | null>
 
 // Keep component import compatibility
 
+import {
+  getCachedNeynarUser,
+  setCachedNeynarUser,
+} from '@/lib/cache/neynar-cache'
 
 export async function fetchUserByFid(fid: number | string): Promise<FarcasterUser | null> {
   const f = typeof fid === 'string' ? parseInt(fid, 10) : fid
   if (!Number.isFinite(f) || f <= 0) return null
 
+  // Try cache first
+  const cached = await getCachedNeynarUser(f)
+  if (cached) {
+    return {
+      fid: cached.fid,
+      username: cached.username,
+      displayName: cached.displayName,
+      pfpUrl: cached.pfpUrl,
+    }
+  }
+
+  // Cache miss - fetch from API
   const data = await neynarFetch<{ users?: NeynarUser[] }>(
     '/v2/farcaster/user/bulk',
     { fids: String(f) }
   )
   const u = data?.users?.[0]
-  return mapUser(u)
+  const user = mapUser(u)
+
+  // Cache the result
+  if (user) {
+    await setCachedNeynarUser(f, {
+      fid: user.fid,
+      username: user.username || '',
+      displayName: user.displayName || '',
+      pfpUrl: user.pfpUrl || '',
+    })
+  }
+
+  return user
 }
 
 // Optional helper: fetch a cast by URL or hash (works with server API or SDK API)
