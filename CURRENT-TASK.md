@@ -24,14 +24,25 @@
 - ✅ Usage: `tsx scripts/warmup-leaderboard-cache.ts [--limit 100] [--period all_time]`
 - ✅ Pre-warms both Neynar and contract caches for top users
 
+**GitHub Actions Automation**:
+- ✅ Created `.github/workflows/cache-warmup.yml`
+- ✅ Runs 10 minutes after leaderboard updates (0:10, 6:10, 12:10, 18:10 UTC)
+- ✅ Manual trigger with custom --limit and --period parameters
+- ✅ Installs dependencies and runs warmup script automatically
+- ✅ Uses all required secrets (Supabase, Neynar, Upstash Redis, Base RPC)
+
 **Benefits**:
 - Single source of truth for rate limiting (easier maintenance)
 - Reduced cache staleness (30min vs 1h for profiles)
 - Reduced blockchain RPC load (10min vs 5min for contracts)
-- Faster initial leaderboard loads (cache warmup script)
+- Faster initial leaderboard loads (automated cache warmup via cron)
 - No duplicate code or confusion
+- Automated warmup process (no manual intervention needed)
 
-**Commit**: b6cce4a - Pushed to main branch ✅
+**Commits**: 
+- b6cce4a - Consolidation and TTL optimization
+- b0b0b61 - Documentation updates
+- [pending] - GitHub Actions cache warmup automation
 
 ---
 

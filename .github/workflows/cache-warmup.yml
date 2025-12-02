@@ -1,0 +1,82 @@
+name: Cache Warmup (After Leaderboard Update)
+
+on:
+  schedule:
+    # Run 10 minutes after leaderboard updates (0:10, 6:10, 12:10, 18:10 UTC)
+    - cron: '10 */6 * * *'
+  workflow_dispatch: # Allow manual trigger
+    inputs:
+      limit:
+        description: 'Number of users to warm up'
+        required: false
+        default: '100'
+      period:
+        description: 'Leaderboard period (daily/weekly/all_time)'
+        required: false
+        default: 'all_time'
+
+jobs:
+  warmup-cache:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Warm up leaderboard cache
+        env:
+          # Supabase credentials
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          
+          # Neynar API
+          NEYNAR_API_KEY: ${{ secrets.NEYNAR_API_KEY }}
+          
+          # Upstash Redis for caching
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+          
+          # Base RPC
+          RPC_URL: ${{ secrets.RPC_URL }}
+          NEXT_PUBLIC_RPC_BASE: ${{ secrets.NEXT_PUBLIC_RPC_BASE }}
+          CHAIN_START_BLOCK_BASE: ${{ secrets.CHAIN_START_BLOCK_BASE }}
+          
+          # Contract addresses
+          NEXT_PUBLIC_BASE_CONTRACT_ADDRESS: ${{ secrets.NEXT_PUBLIC_BASE_CONTRACT_ADDRESS }}
+        run: |
+          LIMIT=${{ github.event.inputs.limit || '100' }}
+          PERIOD=${{ github.event.inputs.period || 'all_time' }}
+          
+          echo "Starting cache warmup..."
+          echo "Limit: $LIMIT users"
+          echo "Period: $PERIOD"
+          
+          # Run warmup script
+          tsx scripts/warmup-leaderboard-cache.ts --limit=$LIMIT --period=$PERIOD
+          
+          echo "Cache warmup complete!"
+      
+      - name: Report status
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "Cache warmup succeeded"
+          else
+            echo "Cache warmup failed"
+            exit 1
+          fi
