@@ -24,7 +24,7 @@ export type CachedContractData = {
 }
 
 const CACHE_PREFIX = 'contract:user:'
-const CACHE_TTL = 300 // 5 minutes in seconds
+const CACHE_TTL = 600 // 10 minutes in seconds (optimized from 5 minutes)
 
 /**
  * Get contract data from cache

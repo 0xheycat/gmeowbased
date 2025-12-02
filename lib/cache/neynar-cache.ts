@@ -25,7 +25,7 @@ export type CachedNeynarUser = {
 }
 
 const CACHE_PREFIX = 'neynar:user:'
-const CACHE_TTL = 3600 // 1 hour in seconds
+const CACHE_TTL = 1800 // 30 minutes in seconds (optimized from 1 hour)
 
 /**
  * Get Neynar user from cache
