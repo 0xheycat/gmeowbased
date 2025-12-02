@@ -151,19 +151,26 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
 
   tracePush(traces, 'leaderboard-start', { chain: rawChain || chainKey, global: isGlobal, season: rawSeason, limit })
 
+  // Use v2 API with period and pagination
   const query = new URLSearchParams()
-  query.set('limit', String(limit))
-  query.set('offset', '0')
-  query.set('chain', chainKey)
-  if (isGlobal) query.set('global', '1')
-  if (rawSeason) query.set('season', rawSeason)
+  query.set('period', rawSeason || 'all_time')
+  query.set('page', '1')
+  query.set('pageSize', String(limit))
 
-  const leaderboardUrl = `${origin}/api/leaderboard?${query.toString()}`
+  const leaderboardUrl = `${origin}/api/leaderboard-v2?${query.toString()}`
   let leaderboardPayload: any = null
   try {
     const lbRes = await fetch(leaderboardUrl, { headers: { 'cache-control': 'no-store' } })
     if (lbRes.ok) {
-      leaderboardPayload = await lbRes.json().catch(() => null)
+      const v2Result = await lbRes.json().catch(() => null)
+      // Transform v2 response to match old format for frame compatibility
+      leaderboardPayload = v2Result ? {
+        ok: true,
+        total: v2Result.pagination?.totalCount ?? null,
+        top: v2Result.data ?? [],
+        chain: chainKey,
+        global: isGlobal
+      } : null
       tracePush(traces, 'leaderboard-fetch-ok', {
         status: lbRes.status,
         total: leaderboardPayload?.total ?? null,

@@ -104,9 +104,9 @@ async function runTests() {
   results.push(await testRoute(`/api/profile/${TEST_FID}/stats`, 'GET', {}))
   results.push(await testRoute(`/api/profile/${TEST_FID}/badges`, 'GET', {}))
 
-  // 3. Leaderboard
-  results.push(await testRoute('/api/leaderboard', 'GET', {}))
-  results.push(await testRoute('/api/leaderboard/global', 'GET', {}))
+  // 3. Leaderboard (V2)
+  results.push(await testRoute('/api/leaderboard-v2?period=all_time&page=1&pageSize=15', 'GET', {}))
+  results.push(await testRoute('/api/leaderboard-v2?period=weekly&page=1&pageSize=15', 'GET', {}))
 
   // 4. Viral routes
   results.push(await testRoute(`/api/viral/stats?fid=${TEST_FID}`, 'GET', {}))

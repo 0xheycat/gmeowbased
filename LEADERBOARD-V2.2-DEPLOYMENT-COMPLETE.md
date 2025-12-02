@@ -99,6 +99,18 @@ gh secret list
 
 ---
 
+## ✅ BUILD FIX COMPLETE
+
+**Issue Resolved** (December 2, 2025):
+- ❌ Error: `Module not found: Can't resolve '@/lib/supabase/server'`
+- ✅ Fixed: Changed import to `@/lib/supabase-server` (correct path)
+- ✅ Fixed: Updated all 4 function calls from `createClient()` → `getSupabaseServerClient()`
+- ✅ Added: Null checks with early returns for unconfigured Supabase
+- ✅ Verified: `pnpm next build` succeeds (all routes compiled)
+
+**Files Updated**:
+- `lib/leaderboard-scorer.ts` (4 functions fixed)
+
 ## ⚠️ Remaining Task: Vercel Environment Variable
 
 **Only 1 step left** (2 minutes):
