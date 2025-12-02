@@ -19,40 +19,48 @@
               - /url: /leaderboard
             - link "Dashboard" [ref=e13] [cursor=pointer]:
               - /url: /Dashboard
-        - button "Notifications" [ref=e16] [cursor=pointer]:
-          - img [ref=e17]
-    - main [ref=e21]:
-      - generic [ref=e22]:
-        - generic [ref=e23]:
-          - generic [ref=e24]:
-            - img [ref=e25]
-            - heading "Leaderboard" [level=1] [ref=e28]
-          - paragraph [ref=e29]: Compete for the top spot and unlock exclusive rewards
-        - generic [ref=e30]:
-          - generic [ref=e31]:
-            - generic [ref=e32]:
-              - button "24 Hours" [ref=e33] [cursor=pointer]:
-                - generic [ref=e34]: 24 Hours
-              - button "7 Days" [ref=e35] [cursor=pointer]:
-                - generic [ref=e36]: 7 Days
-              - button "All Time" [ref=e37] [cursor=pointer]:
-                - generic [ref=e38]: All Time
-            - generic [ref=e39]:
-              - textbox "Search by name or FID..." [ref=e40]
-              - button "Search" [ref=e41] [cursor=pointer]:
-                - generic [ref=e42]: Search
-          - generic [ref=e43]: Showing 0 of 0 pilots
-          - paragraph [ref=e47]: Loading...
-        - generic [ref=e48]:
-          - heading "How Rankings Work" [level=2] [ref=e49]
-          - generic [ref=e50]:
-            - paragraph [ref=e51]: Total Score = Quest Points + Viral XP + Guild Bonus + Referrals + Streak + Badges
-            - paragraph [ref=e52]: Rankings update every 6 hours. Complete quests, earn badges, and invite friends to climb the leaderboard!
-            - generic [ref=e53]:
-              - generic [ref=e54]: "Quest Points: Base rewards from contracts"
-              - generic [ref=e55]: "Viral XP: Popular casts & engagement"
-              - generic [ref=e56]: "Guild Bonus: Level × 100 points"
-              - generic [ref=e57]: "Referrals: Count × 50 points"
-              - generic [ref=e58]: "Streak Bonus: GM streak × 10 points"
-              - generic [ref=e59]: "Badge Prestige: Badge count × 25 points"
+        - generic [ref=e14]:
+          - button "Notifications" [ref=e16] [cursor=pointer]:
+            - img [ref=e17]
+          - button "Toggle theme" [ref=e19] [cursor=pointer]:
+            - img [ref=e21]
+          - link "Connect" [ref=e23] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e24]
+            - generic [ref=e26]: Connect
+    - main [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - img [ref=e31]
+            - heading "Leaderboard" [level=1] [ref=e34]
+          - paragraph [ref=e35]: Compete for the top spot and unlock exclusive rewards
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - button "24 Hours" [ref=e39] [cursor=pointer]:
+                - generic [ref=e40]: 24 Hours
+              - button "7 Days" [ref=e41] [cursor=pointer]:
+                - generic [ref=e42]: 7 Days
+              - button "All Time" [ref=e43] [cursor=pointer]:
+                - generic [ref=e44]: All Time
+            - generic [ref=e45]:
+              - textbox "Search by name or FID..." [ref=e46]
+              - button "Search" [ref=e47] [cursor=pointer]:
+                - generic [ref=e48]: Search
+          - generic [ref=e49]: Showing 0 of 0 pilots
+          - paragraph [ref=e53]: Loading...
+        - generic [ref=e54]:
+          - heading "How Rankings Work" [level=2] [ref=e55]
+          - generic [ref=e56]:
+            - paragraph [ref=e57]: Total Score = Quest Points + Viral XP + Guild Bonus + Referrals + Streak + Badges
+            - paragraph [ref=e58]: Rankings update every 6 hours. Complete quests, earn badges, and invite friends to climb the leaderboard!
+            - generic [ref=e59]:
+              - generic [ref=e60]: "Quest Points: Base rewards from contracts"
+              - generic [ref=e61]: "Viral XP: Popular casts & engagement"
+              - generic [ref=e62]: "Guild Bonus: Level × 100 points"
+              - generic [ref=e63]: "Referrals: Count × 50 points"
+              - generic [ref=e64]: "Streak Bonus: GM streak × 10 points"
+              - generic [ref=e65]: "Badge Prestige: Badge count × 25 points"
+  - alert [ref=e66]
 ```
