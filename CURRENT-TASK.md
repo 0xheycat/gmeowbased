@@ -1,8 +1,37 @@
-# 🎯 CURRENT TASK: Leaderboard System V2.2 - ✅ 100% COMPLETE (BUILD VERIFIED)
+# 🎯 CURRENT TASK: Leaderboard System V2.3 - ✅ 100% COMPLETE (OPTIMIZATIONS FINALIZED)
 
 **Date**: December 2, 2025  
-**Status**: 🎉 PRODUCTION READY (10/10 tasks + API integration + BUILD FIX)  
-**Last Update**: December 2, 2025 - Build error fixed, all tests passing
+**Status**: 🎉 PRODUCTION READY (10/10 tasks + optimizations + cleanup)  
+**Last Update**: December 2, 2025 - Consolidation and TTL optimization complete
+
+---
+
+## ✅ CLEANUP & OPTIMIZATION COMPLETE (December 2, 2025)
+
+**Consolidation**:
+- ✅ Merged duplicate rate limiters: `lib/middleware/rate-limit.ts` → `lib/rate-limit.ts`
+- ✅ Unified implementation: SDK approach (20+ routes) + manual approach (leaderboard-v2)
+- ✅ No breaking changes: All existing API routes continue working
+- ✅ Import updated: `app/api/leaderboard-v2/route.ts` now uses `@/lib/rate-limit`
+
+**TTL Optimization**:
+- ✅ Neynar cache: 1 hour → 30 minutes (better freshness for profile changes)
+- ✅ Contract cache: 5 minutes → 10 minutes (reduce RPC load, on-chain data updates slowly)
+
+**Cache Warmup**:
+- ✅ Created `scripts/warmup-leaderboard-cache.ts` (250+ lines)
+- ✅ Features: CLI args (--limit, --period), progress tracking, error reporting
+- ✅ Usage: `tsx scripts/warmup-leaderboard-cache.ts [--limit 100] [--period all_time]`
+- ✅ Pre-warms both Neynar and contract caches for top users
+
+**Benefits**:
+- Single source of truth for rate limiting (easier maintenance)
+- Reduced cache staleness (30min vs 1h for profiles)
+- Reduced blockchain RPC load (10min vs 5min for contracts)
+- Faster initial leaderboard loads (cache warmup script)
+- No duplicate code or confusion
+
+**Commit**: b6cce4a - Pushed to main branch ✅
 
 ---
 
@@ -44,11 +73,12 @@ TypeError: Cannot read properties of undefined (reading 'totalPages')
 - ✅ WCAG AA CONTRAST - Playwright tests passed
 - ✅ DATABASE SCHEMA - leaderboard_calculations table with RLS
 - ✅ MOBILE RESPONSIVE - Card layout + horizontal scroll
-- ✅ PRODUCTION READY - Awaiting CRON_SECRET deployment
+- ✅ PRODUCTION READY - Optimizations deployed
 
 **Full Reports**: 
 - `LEADERBOARD-V2.2-COMPLETE.md` (Implementation)
 - `LEADERBOARD-V2.2-INTEGRATION.md` (Deployment guide)
+- `LEADERBOARD-V2.3-OPTIMIZATIONS-COMPLETE.md` (Performance)
 
 ---
 
@@ -63,16 +93,17 @@ TypeError: Cannot read properties of undefined (reading 'totalPages')
 - Status: Auto-runs every 6 hours (0:00, 6:00, 12:00, 18:00 UTC)
 
 **2. ✅ Performance Optimizations Deployed**:
-- Neynar profile caching (30x improvement) - lib/cache/neynar-cache.ts
-- Contract read caching (5x improvement) - lib/cache/contract-cache.ts
-- Rate limiting (60 req/min per IP) - lib/middleware/rate-limit.ts
+- Neynar profile caching (30x improvement, 30min TTL) - lib/cache/neynar-cache.ts
+- Contract read caching (5x improvement, 10min TTL) - lib/cache/contract-cache.ts
+- Rate limiting (60 req/min per IP) - lib/rate-limit.ts (consolidated)
 - Username search (@username support)
+- Cache warmup script - scripts/warmup-leaderboard-cache.ts
 - All using Upstash Redis (already configured)
 
 **3. ✅ Production Ready**:
 - Build verified: `pnpm next build` succeeds
 - All tests passing
-- Code pushed to main branch
+- Code pushed to main branch (commit b6cce4a)
 - Vercel auto-deployed
 
 ---
