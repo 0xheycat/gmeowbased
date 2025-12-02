@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getTimeUntilMidnight, getTimeUntilNextGM } from '@/lib/gmeow-utils'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
 
 interface CountdownProps {
   className?: string
@@ -13,7 +12,6 @@ interface CountdownProps {
 export function GMCountdown({ className = '', lastGMTimestamp, notifyOnReady = true }: CountdownProps) {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0, total: 0 })
   const notifiedRef = useRef(false)
-  const pushNotification = useLegacyNotificationAdapter()
 
   // Reset notification when reference timestamp changes
   useEffect(() => {
@@ -30,17 +28,12 @@ export function GMCountdown({ className = '', lastGMTimestamp, notifyOnReady = t
       const seconds = Math.floor((totalMs % (1000 * 60)) / 1000)
 
       setTimeLeft({ hours, minutes, seconds, total: totalMs })
-
-      if (notifyOnReady && totalMs === 0 && !notifiedRef.current) {
-        pushNotification({ type: 'success', title: 'It’s GM time!', message: 'You can send your next GM now.' })
-        notifiedRef.current = true
-      }
     }
 
     updateCountdown()
     const interval = setInterval(updateCountdown, 1000)
     return () => clearInterval(interval)
-  }, [lastGMTimestamp, notifyOnReady, pushNotification])
+  }, [lastGMTimestamp, notifyOnReady])
 
   const formatNumber = (num: number) => num.toString().padStart(2, '0')
 
@@ -72,7 +65,7 @@ export function GMCountdown({ className = '', lastGMTimestamp, notifyOnReady = t
             fill="transparent"
             strokeDasharray={`${2 * Math.PI * 45}`}
             strokeDashoffset={`${2 * Math.PI * 45 * (1 - progressPercentage / 100)}`}
-            style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+            className="countdown-circle"
           />
         </svg>
 
@@ -80,7 +73,7 @@ export function GMCountdown({ className = '', lastGMTimestamp, notifyOnReady = t
         <div className="absolute inset-0 flex items-center justify-center text-center">
           <div>
             <div className="text-[10px] text-[var(--px-sub)] mb-1">Next GM</div>
-            <div className="text-lg font-bold" style={{ textShadow: '0 1px 0 var(--px-outer)' }}>
+            <div className="text-lg font-bold countdown-time">
               {timeLeft.hours > 0
                 ? `${formatNumber(timeLeft.hours)}:${formatNumber(timeLeft.minutes)}`
                 : `${formatNumber(timeLeft.minutes)}:${formatNumber(timeLeft.seconds)}`

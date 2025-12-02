@@ -82,8 +82,8 @@ export function ProfileHeroStats({ totalPoints, globalRank, streak }: ProfileHer
         <div className="mt-6 px-2">
           <div className="h-2 rounded-full bg-slate-800/50 overflow-hidden border border-slate-700/50">
             <div 
-              className="h-full bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 transition-all duration-500 ease-out"
-              style={{ width: `${rankProgress.levelPercent}%` }}
+              className="h-full bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 transition-all duration-500 ease-out profile-level-progress"
+              style={{ ['--fill-width' as string]: `${rankProgress.levelPercent}%` } as React.CSSProperties}
             />
           </div>
           <div className="text-[10px] text-slate-500 mt-1.5 text-center">

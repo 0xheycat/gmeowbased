@@ -1,0 +1,138 @@
+'use client'
+
+import { useRouter, usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Moon, Sun } from '@phosphor-icons/react'
+import { useTheme } from 'next-themes'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ProfileDropdown } from '@/components/layout/ProfileDropdown'
+import { NotificationBell } from '@/components/ui/notification-bell'
+import type { NotificationHistoryItem } from '@/lib/notification-history'
+
+interface HeaderProps {
+  notifications?: NotificationHistoryItem[]
+  unreadCount?: number
+}
+
+export function Header({ notifications, unreadCount }: HeaderProps) {
+  const pathname = usePathname()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Scroll effect: Add shadow when scrolled > 100px (pattern from trezoadmin-41)
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100)
+    }
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
+
+  const isActive = (path: string) => pathname === path
+
+  return (
+    <nav
+      className={`sticky top-0 z-30 w-full transition-all duration-300 backdrop-blur-lg ${
+        isScrolled
+          ? 'bg-white/90 dark:bg-gray-900/90 shadow-sm'
+          : 'bg-white/60 dark:bg-gray-900/60'
+      }`}
+    >
+      <div className="flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Left: Logo + Nav Links */}
+        <div className="flex items-center gap-6">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-xl font-bold hover:opacity-80 transition-opacity"
+          >
+            <span className="text-2xl">😺</span>
+            <span className="hidden sm:inline">Gmeowbased</span>
+          </Link>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link
+              href="/Quest"
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/Quest')
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50'
+              }`}
+            >
+              Quests
+            </Link>
+            <Link
+              href="/leaderboard"
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/leaderboard')
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50'
+              }`}
+            >
+              Leaderboard
+            </Link>
+            <Link
+              href="/Dashboard"
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/Dashboard')
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50'
+              }`}
+            >
+              Dashboard
+            </Link>
+          </div>
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Notification Bell with Dropdown */}
+          <NotificationBell 
+            initialNotifications={notifications}
+            unreadCount={unreadCount}
+          />
+
+          {/* Animated Theme Toggle */}
+          {mounted && (
+            <motion.button
+              onClick={toggleTheme}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+              aria-label="Toggle theme"
+              whileTap={{ scale: 0.95 }}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={theme}
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 20, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {theme === 'dark' ? (
+                    <Sun size={18} weight="regular" className="text-yellow-500" />
+                  ) : (
+                    <Moon size={18} weight="regular" className="text-gray-700" />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </motion.button>
+          )}
+
+          {/* Profile Dropdown */}
+          <ProfileDropdown />
+        </div>
+      </div>
+    </nav>
+  )
+}

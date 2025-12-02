@@ -75,8 +75,7 @@ export function QuestCard({ summary, variant = 'rare', showFlip = true, classNam
 		<div className={`perspective-1000 ${className}`}>
 			<motion.div
 				ref={cardRef}
-				className="relative w-full max-w-[320px] cursor-pointer"
-				style={{ transformStyle: 'preserve-3d' }}
+				className="relative w-full max-w-[320px] cursor-pointer preserve-3d"
 				animate={{ rotateY: isFlipped ? 180 : 0 }}
 				transition={{ duration: 0.6, type: 'spring', stiffness: 120 }}
 				onClick={() => showFlip && setIsFlipped(!isFlipped)}
@@ -109,7 +108,7 @@ export function QuestCard({ summary, variant = 'rare', showFlip = true, classNam
 						<div className={`relative ${colors.bg} px-4 py-3`}>
 							<div className="flex items-start justify-between">
 									<div className="flex-1 min-w-0">
-										<h3 className="truncate text-lg font-bold text-slate-950 dark:text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+										<h3 className="truncate text-lg font-bold text-slate-950 dark:text-white text-shadow-dark">
 											{summary.title || 'Untitled Quest'}
 										</h3>
 										<p className="text-xs uppercase tracking-wider text-slate-950 dark:text-white/80">{summary.questTypeLabel}</p>
@@ -196,7 +195,7 @@ function RarityBadge({ variant }: { variant: QuestCardProps['variant'] }) {
 	return (
 		<div className="flex gap-0.5">
 			{Array.from({ length: stars }).map((_, i) => (
-				<span key={i} className="text-amber-300" style={{ textShadow: '0 0 8px rgba(252, 211, 77, 0.8)' }}>
+							<span key={i} className="text-amber-300 text-shadow-gold-glow">
 					★
 				</span>
 			))}
@@ -208,7 +207,7 @@ function StatBadge({ label, value, color }: { label: string; value: number | str
 	return (
 		<div className="flex items-center gap-1.5">
 			<span className="text-[10px] font-bold uppercase tracking-wider text-slate-950 dark:text-white/60">{label}</span>
-			<span className={`text-lg font-black ${color}`} style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+					<span className={`text-lg font-black ${color} text-shadow-dark`}>
 				{value}
 			</span>
 		</div>

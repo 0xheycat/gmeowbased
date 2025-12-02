@@ -1,0 +1,56 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+import { cn } from '@/lib/utils'
+
+interface ButtonDripProps {
+  x: number
+  y: number
+  color: string
+  fullWidth?: boolean
+  onCompleted: () => void
+}
+
+export default function ButtonDrip({
+  x = 0,
+  y = 0,
+  color,
+  fullWidth,
+  onCompleted,
+}: ButtonDripProps) {
+  const dripRef = useRef<HTMLDivElement>(null)
+  const top = Number.isNaN(+y) ? 0 : y - 10
+  const left = Number.isNaN(+x) ? 0 : x - 10
+
+  useEffect(() => {
+    if (!dripRef.current) return
+    const element = dripRef.current
+    element.addEventListener('animationend', onCompleted)
+    return () => {
+      element.removeEventListener('animationend', onCompleted)
+    }
+  }, [onCompleted])
+
+  return (
+    <span ref={dripRef} className="drip absolute inset-0 block">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
+        className={cn(
+          'absolute h-4 w-4',
+          fullWidth ? 'animate-drip-expand-large' : 'animate-drip-expand'
+        )}
+        style={{ top, left }}
+      >
+        <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
+          <g fill={color}>
+            <rect width="100%" height="100%" rx="10" />
+          </g>
+        </g>
+      </svg>
+    </span>
+  )
+}
+
+ButtonDrip.displayName = 'ButtonDrip'

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAccount, useSendTransaction } from 'wagmi'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { createGMTransaction, hasGMToday, getTodayDateString, getTimeUntilMidnight } from '@/lib/gmeow-utils'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import { useNotifications } from '@/components/ui/live-notifications'
 
 export function GMButton() {
   const { address, isConnected } = useAccount()
@@ -13,7 +13,7 @@ export function GMButton() {
   const [streak, setStreak] = useState(0)
   const [timeUntilReset, setTimeUntilReset] = useState('')
 
-  const pushNotification = useLegacyNotificationAdapter()
+  const { showNotification } = useNotifications()
 
   // Check if user already GM'd today (using localStorage for demo)
   useEffect(() => {
@@ -41,15 +41,10 @@ export function GMButton() {
 
   const handleGM = async () => {
     if (!isConnected || gmToday) {
-      pushNotification({
-        type: 'warn',
-        title: 'Not available',
-        message: !isConnected ? 'Connect your wallet first.' : 'You already sent GM today.',
-      })
+      // Silently skip - no action needed
       return
     }
     try {
-      pushNotification({ type: 'info', title: 'Sending GM…', message: 'Broadcasting your GM transaction.' })
       const transaction = createGMTransaction()
       sendTransaction(transaction)
     } catch (error: any) {
@@ -59,12 +54,10 @@ export function GMButton() {
 
   const handleShare = async () => {
     try {
-      pushNotification({ type: 'info', title: 'Sharing…', message: 'Opening Warpcast composer.' })
       await sdk.actions.composeCast({
         text: `GM! ☀️ Just completed day ${streak + 1} of my GM streak on Base! 🔥\n\nJoin me in spreading good vibes daily 💪`,
         embeds: [window.location.origin],
       })
-      pushNotification({ type: 'success', title: 'Shared', message: 'Posted to Warpcast.' })
     } catch (error: any) {
       console.error('Failed to share:', error?.message || String(error))
     }
@@ -84,17 +77,14 @@ export function GMButton() {
       localStorage.setItem(`gm_history_${address}`, JSON.stringify(gmHistory))
       setGmToday(true)
       setStreak((prev) => prev + 1)
-      const href = `https://basescan.org/tx/${txHash}`
-      pushNotification({
-        type: 'success',
-        title: 'GM sent!',
-        message: `Streak day ${streak + 1} recorded.`,
-        linkHref: href,
-        linkLabel: 'View on BaseScan ↗',
-        duration: 7000,
-      })
+      showNotification(
+        `🎉 GM sent! Streak day ${streak + 1} recorded.`,
+        'gm_sent',
+        7000,
+        'achievement'
+      )
     }
-  }, [isSuccess, txHash, address, streak, pushNotification])
+  }, [isSuccess, txHash, address, streak, showNotification])
 
   // UI
   if (gmToday) {
@@ -139,8 +129,7 @@ export function GMButton() {
           {isPending ? (
             <div className="flex items-center justify-center gap-2">
               <span
-                className="rounded-full h-4 w-4 animate-spin"
-                style={{ boxShadow: 'inset 0 0 0 2px var(--px-inner)', border: '2px solid transparent', borderBottomColor: 'var(--px-accent)' }}
+                className="rounded-full h-4 w-4 animate-spin gm-spinner"
               />
               Sending GM…
             </div>

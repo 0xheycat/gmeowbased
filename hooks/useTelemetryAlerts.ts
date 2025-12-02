@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { TelemetryAlert } from '@/lib/telemetry'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+
 
 type TelemetryAlertTone = 'success' | 'info' | 'warn'
 
@@ -31,7 +31,7 @@ export function useTelemetryAlertNotifications(
   alerts: TelemetryAlert[] | null | undefined,
   options: TelemetryAlertOptions = {},
 ) {
-  const notify = useLegacyNotificationAdapter()
+  
   const seenRef = useRef<Set<string>>(new Set())
   const { seenCacheLimit } = { ...DEFAULT_OPTIONS, ...options }
   const enabled = options.enabled ?? true
@@ -52,12 +52,7 @@ export function useTelemetryAlertNotifications(
 
     for (const alert of freshAlerts) {
       const tone = deriveTone(alert.label)
-      notify({
-        type: tone,
-        title: alert.label,
-        message: alert.detail,
-        duration: 6400,
-      })
+      // Notification removed
     }
 
     if (seen.size > seenCacheLimit) {

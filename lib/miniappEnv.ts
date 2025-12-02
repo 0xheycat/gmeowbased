@@ -34,8 +34,9 @@ export function isAllowedReferrer(): boolean {
   return allowed
 }
 
-// Probe the miniapp. Only returns true if we’re embedded in an allowed referrer and SDK handshakes.
-export async function probeMiniappReady(timeoutMs = 2000): Promise<boolean> {
+// Probe the miniapp. Only returns true if we're embedded in an allowed referrer and SDK handshakes.
+// MCP best practice: Use 10s timeout for mobile networks (Dec 2025)
+export async function probeMiniappReady(timeoutMs = 10000): Promise<boolean> {
   if (!isEmbedded() || !isAllowedReferrer()) return false
   try {
     const { sdk } = await import('@farcaster/miniapp-sdk')

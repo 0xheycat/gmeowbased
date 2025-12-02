@@ -1,4 +1,5 @@
-next-env.d.ts
-Planing/**
-planning/templates/gmeow2/**
-planning/templates/gmeow3/**
+node_modules
+.next
+planning/
+*.config.js
+*.config.ts

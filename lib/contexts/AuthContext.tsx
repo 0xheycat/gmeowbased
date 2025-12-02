@@ -1,0 +1,262 @@
+'use client'
+
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import type { ReactNode } from 'react'
+import { useAccount } from 'wagmi'
+import { fetchUserByFid, fetchUserByAddress, type FarcasterUser } from '@/lib/neynar'
+import { getMiniappContext } from '@/lib/miniappEnv'
+
+/**
+ * Unified Authentication Context
+ * 
+ * Combines Farcaster miniapp auth + wallet auth into single source of truth.
+ * Based on Coinbase MCP best practices (Dec 2025).
+ * 
+ * Priority order:
+ * 1. Farcaster miniapp context (if in Warpcast/base.dev)
+ * 2. Wallet address (main app)
+ * 3. Not authenticated
+ * 
+ * @see https://docs.cdp.coinbase.com/x402/miniapps - Miniapp SDK patterns
+ * @see https://docs.cdp.coinbase.com/embedded-wallets/best-practices - State management
+ */
+export interface AuthContextType {
+  // User identity
+  fid: number | null
+  address: `0x${string}` | undefined
+  profile: FarcasterUser | null
+  
+  // Auth state
+  isAuthenticated: boolean
+  authMethod: 'miniapp' | 'wallet' | null
+  
+  // Miniapp context
+  miniappContext: any | null
+  isMiniappSession: boolean
+  
+  // Actions
+  authenticate: () => Promise<void>
+  logout: () => void
+  
+  // Loading states
+  isLoading: boolean
+  error: string | null
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export { AuthContext }
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [fid, setFid] = useState<number | null>(null)
+  const [profile, setProfile] = useState<FarcasterUser | null>(null)
+  const [miniappContext, setMiniappContext] = useState<any>(null)
+  const [isMiniappSession, setIsMiniappSession] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Wagmi wallet state
+  const { address, isConnected } = useAccount()
+  
+  /**
+   * Detect if we're in a miniapp context
+   * Based on MCP best practice: Check referrer + iframe
+   */
+  const checkMiniappContext = useCallback(async () => {
+    try {
+      // Check if embedded in iframe
+      if (typeof window === 'undefined' || window.self === window.top) {
+        return false
+      }
+      
+      // Check if referrer is allowed (Warpcast or base.dev)
+      const referrer = document.referrer
+      if (!referrer) return false
+      
+      const hostname = new URL(referrer).hostname
+      const isAllowed = 
+        hostname.endsWith('.farcaster.xyz') ||
+        hostname.endsWith('.warpcast.com') ||
+        hostname.endsWith('.base.dev') ||
+        hostname === 'farcaster.xyz' ||
+        hostname === 'warpcast.com' ||
+        hostname === 'base.dev'
+      
+      if (!isAllowed) return false
+      
+      // Try to load Farcaster miniapp SDK
+      const { sdk } = await import('@farcaster/miniapp-sdk')
+      
+      // MCP best practice: Always call ready() first
+      await sdk.actions.ready()
+      
+      // Get context with 10s timeout (MCP recommendation for mobile)
+      const contextPromise = sdk.context
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Context timeout after 10s')), 10000)
+      )
+      
+      const context = await Promise.race([contextPromise, timeoutPromise])
+      
+      return context
+    } catch (err) {
+      console.warn('[AuthProvider] Miniapp context check failed:', err)
+      return false
+    }
+  }, [])
+  
+  /**
+   * Auto-authenticate on mount and when dependencies change
+   * MCP best practice: Check auth state before starting flows
+   */
+  useEffect(() => {
+    authenticate()
+  }, [address, isConnected])
+  
+  /**
+   * Initialize miniapp context on mount
+   */
+  useEffect(() => {
+    let mounted = true
+    
+    const initMiniapp = async () => {
+      const context = await checkMiniappContext()
+      
+      if (mounted) {
+        if (context) {
+          setMiniappContext(context)
+          setIsMiniappSession(true)
+          console.log('[AuthProvider] ✅ Miniapp context loaded:', {
+            fid: (context as any)?.user?.fid,
+            username: (context as any)?.user?.username
+          })
+        } else {
+          setIsMiniappSession(false)
+          console.log('[AuthProvider] Not in miniapp context')
+        }
+      }
+    }
+    
+    initMiniapp()
+    
+    return () => {
+      mounted = false
+    }
+  }, [checkMiniappContext])
+  
+  /**
+   * Main authentication flow
+   * Priority: Miniapp FID > Wallet address > Not authenticated
+   */
+  const authenticate = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      // Priority 1: Farcaster miniapp context (if available)
+      if (isMiniappSession && miniappContext?.user?.fid) {
+        const contextFid = Number(miniappContext.user.fid)
+        
+        console.log('[AuthProvider] Authenticating via miniapp FID:', contextFid)
+        
+        setFid(contextFid)
+        
+        // Fetch full profile from Neynar
+        const profileData = await fetchUserByFid(contextFid)
+        setProfile(profileData)
+        
+        setIsLoading(false)
+        return
+      }
+      
+      // Priority 2: Wallet address (main app)
+      if (isConnected && address) {
+        console.log('[AuthProvider] Authenticating via wallet address:', address)
+        
+        // Fetch profile by wallet address
+        const profileData = await fetchUserByAddress(address)
+        
+        if (profileData?.fid) {
+          setFid(profileData.fid)
+          setProfile(profileData)
+        } else {
+          // Wallet connected but no Farcaster profile found
+          setFid(null)
+          setProfile(null)
+          console.warn('[AuthProvider] No Farcaster profile found for address:', address)
+        }
+        
+        setIsLoading(false)
+        return
+      }
+      
+      // Priority 3: Not authenticated
+      console.log('[AuthProvider] No authentication method available')
+      setFid(null)
+      setProfile(null)
+      setIsLoading(false)
+    } catch (err) {
+      console.error('[AuthProvider] Authentication failed:', err)
+      setError(err instanceof Error ? err.message : 'Authentication failed')
+      setFid(null)
+      setProfile(null)
+      setIsLoading(false)
+    }
+  }, [address, isConnected, miniappContext, isMiniappSession])
+  
+  /**
+   * Clear all auth state
+   * MCP best practice: Provide clear sign-out functionality
+   */
+  const logout = useCallback(() => {
+    console.log('[AuthProvider] Logging out')
+    setFid(null)
+    setProfile(null)
+    setError(null)
+    
+    // Note: Don't clear miniappContext (it's read-only from SDK)
+    // Wallet disconnect handled by Wagmi
+  }, [])
+  
+  const value: AuthContextType = {
+    fid,
+    address,
+    profile,
+    isAuthenticated: !!fid || !!address,
+    authMethod: fid && isMiniappSession ? 'miniapp' : isConnected ? 'wallet' : null,
+    miniappContext,
+    isMiniappSession,
+    authenticate,
+    logout,
+    isLoading,
+    error,
+  }
+  
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+/**
+ * Hook to access authentication context
+ * 
+ * @throws {Error} If used outside AuthProvider
+ * 
+ * @example
+ * ```tsx
+ * function Dashboard() {
+ *   const { fid, profile, isAuthenticated } = useAuthContext()
+ *   
+ *   if (!isAuthenticated) {
+ *     return <ConnectWallet />
+ *   }
+ *   
+ *   return <div>Welcome {profile?.displayName}!</div>
+ * }
+ * ```
+ */
+export function useAuthContext() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuthContext must be used within AuthProvider')
+  }
+  return context
+}

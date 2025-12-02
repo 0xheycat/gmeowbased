@@ -1,0 +1,45 @@
+{
+  "extends": [
+    "stylelint-config-standard",
+    "stylelint-config-recommended"
+  ],
+  "customSyntax": "postcss-styled-syntax",
+  "plugins": [
+    "stylelint-high-performance-animation",
+    "stylelint-order"
+  ],
+  "rules": {
+    "selector-class-pattern": null,
+    "color-no-invalid-hex": true,
+    "declaration-block-no-duplicate-properties": true,
+    "no-invalid-position-at-import-rule": null,
+    "no-descending-specificity": null,
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": ["global"]
+      }
+    ],
+    "plugin/no-low-performance-animation-properties": [true, { "severity": "warning" }],
+    "order/properties-order": [
+      "position",
+      "top",
+      "right",
+      "bottom",
+      "left",
+      "z-index",
+      "display",
+      "flex-direction",
+      "justify-content",
+      "align-items",
+      "width",
+      "height",
+      "margin",
+      "padding",
+      "background",
+      "color",
+      "border",
+      "opacity"
+    ]
+  }
+}

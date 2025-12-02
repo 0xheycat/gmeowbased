@@ -4,6 +4,33 @@ import { normalizeFid } from '@/components/quest-wizard/shared'
 import { safeParseSignInMessage, extractFidFromSignIn, formatUnknownError } from '@/components/quest-wizard/utils'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
 
+/**
+ * @deprecated Use `useAuth` from `lib/hooks/use-auth` instead
+ * 
+ * This hook will be removed in Phase 2.
+ * 
+ * Migration guide:
+ * ```tsx
+ * // OLD (useMiniKitAuth - deprecated)
+ * import { useMiniKitAuth } from '@/hooks/useMiniKitAuth'
+ * const auth = useMiniKitAuth({ context, isFrameReady, ... })
+ * 
+ * // NEW (useAuth - unified)
+ * import { useAuth } from '@/lib/hooks/use-auth'
+ * const { fid, profile, isAuthenticated, authMethod } = useAuth()
+ * ```
+ * 
+ * Benefits of unified auth:
+ * - ✅ Works everywhere (not just Quest Wizard)
+ * - ✅ Automatic miniapp detection (no props needed)
+ * - ✅ Combines wallet + miniapp auth
+ * - ✅ No prop drilling
+ * - ✅ Single source of truth
+ * 
+ * @see lib/hooks/use-auth.ts for new API
+ * @see lib/contexts/AuthContext.tsx for implementation
+ */
+
 type NotificationInput = {
 	tone: 'info' | 'success' | 'warning' | 'error'
 	title: string

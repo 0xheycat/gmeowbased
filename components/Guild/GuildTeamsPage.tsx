@@ -19,7 +19,7 @@ import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 import type { FarcasterUser } from '@/lib/neynar'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import { RankProgress } from '@/components/ui/RankProgress'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import { useNotifications } from '@/components/ui/live-notifications'
 import { ICON_SIZES } from '@/lib/icon-sizes'
 import { readStorageCache, writeStorageCache } from '@/lib/utils'
 
@@ -222,7 +222,7 @@ export default function GuildTeamsPage() {
   const currentChainId = useChainId()
   const { switchChainAsync } = useSwitchChain()
 
-  const pushNotification = useLegacyNotificationAdapter()
+  const { showNotification } = useNotifications()
   const membershipCacheKey = useMemo(
     () => (address ? `${GUILD_MEMBERSHIP_CACHE_PREFIX}${address.toLowerCase()}` : null),
     [address],
@@ -597,15 +597,12 @@ export default function GuildTeamsPage() {
       setTeamName('')
       setRefreshKey((key) => key + 1)
       setSelectedGuildChain(chainForCreate)
-      pushNotification({
-        type: 'success',
-        title: 'Guild launched',
-        message: `“${name}” is now live on ${CHAIN_LABEL[chainForCreate]}.`,
-      })
-    } catch (e: any) {
-      const message = e?.shortMessage || e?.message || 'Failed to launch guild.'
+      showNotification(
+        `"${name}" is now live on ${CHAIN_LABEL[chainForCreate]}.`,
+        'guild_created'
+      )
       setCreateError(message)
-      pushNotification({ type: 'error', title: 'Guild launch failed', message })
+      
     } finally {
       setIsCreating(false)
     }
@@ -632,15 +629,13 @@ export default function GuildTeamsPage() {
       setOpMsg(`Joined guild #${teamId} on ${CHAIN_LABEL[chain]}.`)
       setSelectedGuildChain(chain)
       setRefreshKey((prev) => prev + 1)
-      pushNotification({
-        type: 'success',
-        title: 'Guild joined',
-        message: `Guild #${teamId} on ${CHAIN_LABEL[chain]} is now active for you.`,
-      })
+      showNotification(
+        `Guild #${teamId} on ${CHAIN_LABEL[chain]} is now active for you.`,
+        'guild_joined'
+      )
     } catch (e: any) {
       const message = e?.shortMessage || e?.message || 'Failed to join guild.'
       setOpErr(message)
-      pushNotification({ type: 'error', title: 'Join guild failed', message })
     } finally {
       setJoiningKey(null)
     }
@@ -668,15 +663,14 @@ export default function GuildTeamsPage() {
       setRefMsg('Referral code saved.')
       setRegisteredSnapshots((prev) => ({ ...prev, [refChain]: { code, registered: prev[refChain]?.registered ?? false } }))
       setRefreshKey((prev) => prev + 1)
-      pushNotification({
-        type: 'success',
-        title: 'Referral code saved',
-        message: `Code “${code}” active on ${CHAIN_LABEL[refChain]}.`,
-      })
+      showNotification(
+        `Code "${code}" active on ${CHAIN_LABEL[refChain]}.`,
+        'referral_code_registered'
+      )
     } catch (e: any) {
       const message = e?.shortMessage || e?.message || 'Failed to set referral code.'
       setRefErr(message)
-      pushNotification({ type: 'error', title: 'Referral update failed', message })
+      
     } finally {
       setRefLoading(null)
     }
@@ -705,15 +699,13 @@ export default function GuildTeamsPage() {
       setReferralInput('')
       setRegisteredSnapshots((prev) => ({ ...prev, [refChain]: { code: prev[refChain]?.code ?? '', registered: true } }))
       setRefreshKey((prev) => prev + 1)
-      pushNotification({
-        type: 'success',
-        title: 'Friend code linked',
-        message: `Referrer connected on ${CHAIN_LABEL[refChain]}.`,
-      })
+      showNotification(
+        `Referrer connected on ${CHAIN_LABEL[refChain]}.`,
+        'referral_reward'
+      )
     } catch (e: any) {
       const message = e?.shortMessage || e?.message || 'Failed to link friend code.'
       setRefErr(message)
-      pushNotification({ type: 'error', title: 'Friend code failed', message })
     } finally {
       setRefLoading(null)
     }
@@ -726,14 +718,11 @@ export default function GuildTeamsPage() {
       .writeText(value)
       .then(() => {
         setRefMsg(`${label} copied.`)
-        const preview = value.length > 28 ? `${value.slice(0, 24)}…` : value
-        pushNotification({ type: 'info', title: `${label} copied`, message: preview })
       })
       .catch(() => {
         setRefErr('Copy failed.')
-        pushNotification({ type: 'error', title: 'Copy failed', message: `Could not copy ${label.toLowerCase()}.` })
       })
-  }, [pushNotification])
+  }, [])
 
   const filteredTeams = useMemo(() => {
     const query = searchText.trim().toLowerCase()

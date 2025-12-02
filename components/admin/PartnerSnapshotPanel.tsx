@@ -8,7 +8,7 @@ import {
   type PartnerRequirementKind,
   type PartnerSnapshotSummaryPayload,
 } from '@/lib/partner-snapshot'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+
 
 const REQUIREMENT_OPTIONS: Array<{ value: PartnerRequirementKind; label: string; description: string }> = [
   { value: 'points', label: 'GMEOW points', description: 'Validate native points held in-contract on the selected chains.' },
@@ -97,7 +97,7 @@ function stringifyJson(input: Record<string, unknown> | null | undefined) {
 }
 
 export default function PartnerSnapshotPanel() {
-  const notify = useLegacyNotificationAdapter()
+  
   const [partnerName, setPartnerName] = useState('')
   const [snapshotId, setSnapshotId] = useState('')
   const [requirementKind, setRequirementKind] = useState<PartnerRequirementKind>('points')
@@ -343,8 +343,7 @@ export default function PartnerSnapshotPanel() {
     if (Object.keys(errors).length > 0) {
       const firstMessage = Object.values(errors).find(Boolean)
       if (firstMessage) {
-        notify({ type: 'error', title: 'Fix the highlighted fields', message: firstMessage })
-      }
+              }
       return
     }
 
@@ -409,8 +408,7 @@ export default function PartnerSnapshotPanel() {
     } catch (error: any) {
       const message = error?.message || 'Unable to generate partner snapshot.'
       setResponseError(message)
-      notify({ type: 'error', title: 'Snapshot failed', message })
-    } finally {
+          } finally {
       setSubmitting(false)
     }
   }, [submitting, partnerName, selectedChains, minimum, requirementKind, contractAddress, tokenId, metadataJson, maxAddressesPerChain, snapshotId, notify, fetchHistory])

@@ -204,13 +204,9 @@ export function ProgressXP({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center p-6"
+      className="fixed inset-0 z-40 flex items-center justify-center p-6 progress-xp-backdrop"
       role="presentation"
       onMouseDown={handleBackdropMouseDown}
-      style={{
-        background: 'radial-gradient(ellipse at center, rgba(14, 20, 46, 0.95) 0%, rgba(4, 5, 16, 0.98) 100%)',
-        backdropFilter: 'blur(16px)',
-      }}
     >
       {/* Animated background effects - Yu-Gi-Oh inspired */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden>
@@ -241,12 +237,7 @@ export function ProgressXP({
             Close
           </button>
         </div>
-        <div className="relative overflow-hidden rounded-[32px] border shadow-[0_0_80px_rgba(14,165,233,0.3),0_0_40px_rgba(168,85,247,0.2)]"
-          style={{
-            borderColor: 'rgba(148, 163, 184, 0.3)',
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 50%, rgba(15, 23, 42, 0.95) 100%)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-          }}
+        <div className="relative overflow-hidden rounded-[32px] border shadow-[0_0_80px_rgba(14,165,233,0.3),0_0_40px_rgba(168,85,247,0.2)] progress-xp-card"
         >
           {/* Glass morphism layers - Yu-Gi-Oh card inspired */}
           <div className="absolute inset-0 opacity-60" aria-hidden>
@@ -255,31 +246,21 @@ export function ProgressXP({
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(14,165,233,0.15),transparent_50%)]" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.12),transparent_50%)]" />
             {/* Animated shine */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shine" 
-              style={{ animationDuration: '3s', animationIterationCount: 'infinite' }} />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shine progress-xp-shine" />
           </div>
           
           {/* Content area with additional glass layer */}
-          <div className="relative px-8 py-10 backdrop-blur-sm"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)',
-            }}
+          <div className="relative px-8 py-10 backdrop-blur-sm progress-xp-content-bg"
           >
           <div className="relative z-10 grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
             <div className="flex flex-col items-center gap-4">
               <div className="relative h-32 w-32">
                 {/* Holographic glow ring */}
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-sky-400/40 via-purple-400/30 to-amber-400/20 blur-2xl animate-pulse" aria-hidden />
-                <div className="absolute inset-0 rounded-full border-2 border-sky-400/20 animate-spin-slow" aria-hidden 
-                  style={{ animationDuration: '8s' }} />
+                <div className="absolute inset-0 rounded-full border-2 border-sky-400/20 animate-spin-slow progress-xp-ring" aria-hidden />
                 
                 {/* Main badge container with glass effect */}
-                <div className="relative h-full w-full rounded-full border-2 shadow-[inset_0_2px_12px_rgba(255,255,255,0.1),0_8px_32px_rgba(14,165,233,0.4)]"
-                  style={{
-                    borderColor: 'rgba(56, 189, 248, 0.5)',
-                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 100%)',
-                    backdropFilter: 'blur(12px)',
-                  }}
+                <div className="relative h-full w-full rounded-full border-2 shadow-[inset_0_2px_12px_rgba(255,255,255,0.1),0_8px_32px_rgba(14,165,233,0.4)] progress-xp-badge"
                 >
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-sky-500/10 via-transparent to-purple-500/10" aria-hidden />
                   <div className="flex h-full w-full items-center justify-center">
@@ -302,7 +283,7 @@ export function ProgressXP({
             <div className="relative flex flex-col gap-6">
               <div>
                 <div className="flex items-center gap-2 text-xs sm:text-sm uppercase tracking-[0.25em] text-gold/80">
-                  {eventIcon ? <span className="text-xl sm:text-2xl leading-none animate-pulse" aria-hidden style={{animationDuration: '2s'}}>{eventIcon}</span> : null}
+                  {eventIcon ? <span className="text-xl sm:text-2xl leading-none animate-pulse progress-xp-icon-pulse" aria-hidden>{eventIcon}</span> : null}
                   <span className="drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">{headline || 'XP Boost Unlocked'}</span>
                 </div>
                 <div className="text-3xl sm:text-4xl font-black text-gold drop-shadow-[0_0_30px_rgba(255,215,0,0.8),0_4px_20px_rgba(0,0,0,0.9)]">
@@ -320,10 +301,10 @@ export function ProgressXP({
                 </div>
                 <div className="relative h-3 sm:h-4 overflow-hidden rounded-full border-2 border-gold/30 bg-dark-bg-card shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.8),inset_0_1px_2px_rgba(255,255,255,0.5)]"
-                  style={{ width: `${Math.max(8, animatedPercent)}%`, transition: 'width 0.4s ease-out' }}
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.8),inset_0_1px_2px_rgba(255,255,255,0.5)] progress-xp-bar"
+                  style={{ ['--bar-width' as string]: `${Math.max(8, animatedPercent)}%` } as React.CSSProperties}
                 />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-gold/30 via-transparent to-transparent mix-blend-screen animate-pulse" aria-hidden style={{animationDuration: '2s'}} />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-gold/30 via-transparent to-transparent mix-blend-screen animate-pulse progress-xp-overlay" aria-hidden />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] animate-[shimmer_2s_ease-in-out_infinite]" aria-hidden />
                 </div>
                 <div className="flex items-center justify-between text-xs text-gold/80 font-semibold">

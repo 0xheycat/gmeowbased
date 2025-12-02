@@ -20,7 +20,7 @@ import { fireMiniappReady, isAllowedReferrer, isEmbedded } from '@/lib/miniappEn
 import { fetchUserByFid, fetchUserByUsername } from '@/lib/neynar'
 
 export default function ProfilePage() {
-  const { push: pushNotification } = useNotifications()
+  const { showNotification } = useNotifications()
   const { address: wagmiAddress, isConnected: isWagmiConnected } = useAccount()
   const [contextUser, setContextUser] = useState<MiniAppUser | null>(null)
   const [address, setAddress] = useState<`0x${string}` | null>(null)
@@ -76,7 +76,7 @@ export default function ProfilePage() {
     // Floating action button handlers
   const handleQuickShare = useCallback(async () => {
     if (!profileData?.frameUrl) {
-      pushNotification({ tone: 'warning', title: 'No frame URL', description: 'Profile frame is not available yet.' })
+      showNotification('Profile frame is not available yet.', 'frame_action_failed')
       return
     }
     const shareUrl = profileData.frameUrl
@@ -84,33 +84,27 @@ export default function ProfilePage() {
     try {
       const { openWarpcastComposer } = await import('@/lib/share')
       await openWarpcastComposer(shareText, shareUrl)
-      pushNotification({ tone: 'success', title: 'Opening share', description: 'Redirecting to Warpcast composer...' })
+      showNotification('Redirecting to Warpcast composer...', 'frame_share_reward')
     } catch (err) {
       console.error('Share failed:', err)
-      pushNotification({ tone: 'error', title: 'Share failed', description: 'Could not open composer.' })
+      showNotification('Could not open composer.', 'frame_action_failed')
     }
-  }, [profileData?.frameUrl, pushNotification])
+  }, [profileData?.frameUrl, showNotification])
 
   const handleQuickCopy = useCallback(() => {
     if (!address) {
-      pushNotification({ tone: 'warning', title: 'No address', description: 'No wallet address to copy.' })
+      showNotification('No wallet address to copy.', 'profile_updated')
       return
     }
     navigator.clipboard.writeText(address).then(
-      () => pushNotification({ tone: 'success', title: 'Copied!', description: 'Wallet address copied to clipboard.' }),
-      () => pushNotification({ tone: 'error', title: 'Copy failed', description: 'Could not copy address.' })
+      () => showNotification('Wallet address copied to clipboard.', 'profile_updated'),
+      () => showNotification('Could not copy address.', 'frame_action_failed')
     )
-  }, [address, pushNotification])
+  }, [address, showNotification])
 
   const handleQuickGM = useCallback(() => {
-    pushNotification({ 
-      tone: 'info', 
-      title: 'Send GM', 
-      description: 'Navigate to home page to send your daily GM!',
-      href: '/',
-      actionLabel: 'Go to Home'
-    })
-  }, [pushNotification])
+    // Navigate user to homepage via floating action
+  }, [])
 
   const floatingActions = useMemo<FloatingAction[]>(() => [
     { icon: '⚡', label: 'Send GM', onClick: handleQuickGM },
@@ -129,13 +123,7 @@ export default function ProfilePage() {
       const notificationDetails = context?.client?.notificationDetails
 
       if (!notificationDetails?.url || !notificationDetails?.token) {
-        pushNotification({
-          tone: 'warning',
-          category: 'system',
-          title: 'Notifications Unavailable',
-          description: 'Push notifications are not available in this context.',
-          duration: 5000,
-        })
+        showNotification('Push notifications are not available in this context.', 'profile_updated', 5000)
         return false
       }
 
@@ -151,29 +139,17 @@ export default function ProfilePage() {
 
       if (success) {
         setPushTokenRegistered(true)
-        pushNotification({
-          tone: 'success',
-          category: 'system',
-          title: 'Push Notifications Enabled',
-          description: 'You will receive notifications for important events.',
-          duration: 5000,
-        })
+        showNotification('You will receive notifications for important events.', 'profile_updated', 5000)
         return true
       } else {
         throw new Error('Token registration failed')
       }
     } catch (error) {
       console.error('[Push] Registration error:', error)
-      pushNotification({
-        tone: 'error',
-        category: 'system',
-        title: 'Push Registration Failed',
-        description: 'Unable to enable push notifications. Try again later.',
-        duration: 5000,
-      })
+      showNotification('Unable to enable push notifications. Try again later.', 'frame_action_failed', 5000)
       return false
     }
-  }, [contextUser, embeddedApp, address, pushNotification])
+  }, [contextUser, embeddedApp, address, showNotification])
 
   const selectAddress = useCallback(
     async (
@@ -192,33 +168,15 @@ export default function ProfilePage() {
             setProfileData(null)
             setError('This wallet is not linked to Farcaster. Choose a verified address.')
             setManualMessage('Wallet is not linked to Farcaster.')
-            pushNotification({
-              tone: 'warning',
-              category: 'system',
-              title: 'Not Linked',
-              description: 'This wallet is not connected to Farcaster.',
-              duration: 5000,
-            })
+            showNotification('This wallet is not connected to Farcaster.', 'fid_linked', 5000)
             return false
           }
-          pushNotification({
-            tone: 'success',
-            category: 'system',
-            title: 'Wallet Verified',
-            description: 'Farcaster link confirmed.',
-            duration: 2000,
-          })
+          showNotification('Farcaster link confirmed.', 'fid_linked', 2000)
         } catch {
           setProfileData(null)
           setError('Unable to verify Farcaster link. Try again in a moment.')
           setManualMessage('Verification failed—please retry.')
-          pushNotification({
-            tone: 'error',
-            category: 'system',
-            title: 'Verification Error',
-            description: 'Unable to verify Farcaster link. Try again.',
-            duration: 5000,
-          })
+          showNotification('Unable to verify Farcaster link. Try again.', 'frame_action_failed', 5000)
           return false
         }
       }
@@ -232,7 +190,7 @@ export default function ProfilePage() {
       setContextReady(true)
       return true
     },
-    [ensureFarcasterLinked, pushNotification],
+    [ensureFarcasterLinked, showNotification],
   )
 
   useEffect(() => {
@@ -469,40 +427,22 @@ export default function ProfilePage() {
           setProfileData(null)
           setError('This wallet no longer resolves to a Farcaster identity.')
           setManualMessage('Wallet is not currently linked to Farcaster.')
-          pushNotification({
-            tone: 'error',
-            category: 'system',
-            title: 'Profile Not Found',
-            description: 'This wallet is not linked to Farcaster.',
-            duration: 5000,
-          })
+          showNotification('This wallet is not linked to Farcaster.', 'frame_action_failed', 5000)
           return
         }
         setProfileData(overview)
-        pushNotification({
-          tone: 'success',
-          category: 'system',
-          title: 'Profile Loaded',
-          description: `Welcome back, ${overview.displayName || 'user'}!`,
-          duration: 3000,
-        })
+        showNotification(`Welcome back, ${overview.displayName || 'user'}!`, 'profile_updated', 3000)
       } catch (err) {
         if (signal?.aborted) return
         console.error('Profile load failed:', err)
         setError((err as Error)?.message || 'Failed to load profile data.')
         setProfileData(null)
-        pushNotification({
-          tone: 'error',
-          category: 'system',
-          title: 'Load Failed',
-          description: (err as Error)?.message || 'Unable to load profile data.',
-          duration: 5000,
-        })
+        showNotification((err as Error)?.message || 'Unable to load profile data.', 'frame_action_failed', 5000)
       } finally {
         if (!signal?.aborted) setLoading(false)
       }
     },
-    [pushNotification],
+    [showNotification],
   )
 
   useEffect(() => {

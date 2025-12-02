@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import Image from 'next/image'
 
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+
 import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
 import {
   getPendingMints,
@@ -81,7 +81,7 @@ const DEFAULT_FORM: FormState = {
 }
 
 export default function BadgeManagerPanel() {
-  const notify = useLegacyNotificationAdapter()
+  
   const [templates, setTemplates] = useState<TemplateRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -131,12 +131,11 @@ export default function BadgeManagerPanel() {
       } catch (e: any) {
         const message = e?.message || 'Failed to load badge templates'
         setError(message)
-        notify({ type: 'error', title: 'Load failed', message })
-      } finally {
+              } finally {
         setLoading(false)
       }
     },
-    [notify],
+    [],
   )
 
   // Phase 3B: Mint Queue Management
@@ -163,21 +162,18 @@ export default function BadgeManagerPanel() {
       setMintQueue(queue)
       setQueueStats(stats)
     } catch (e: any) {
-      notify({ type: 'error', title: 'Failed to load mint queue', message: e?.message || 'Unknown error' })
-    } finally {
+          } finally {
       setQueueLoading(false)
     }
-  }, [queueFilter, notify])
+  }, [queueFilter])
 
   const handleRetryMint = useCallback(async (queueId: string) => {
     try {
       await retryMint(queueId)
-      notify({ type: 'success', title: 'Mint retry queued', message: 'Badge mint has been reset to pending' })
-      await loadMintQueue()
+            await loadMintQueue()
     } catch (e: any) {
-      notify({ type: 'error', title: 'Retry failed', message: e?.message || 'Unable to retry mint' })
-    }
-  }, [loadMintQueue, notify])
+          }
+  }, [loadMintQueue])
 
   // Phase 3B: Badge Registry Viewer
   const loadBadgeRegistryData = useCallback(async () => {
@@ -186,22 +182,19 @@ export default function BadgeManagerPanel() {
       const registry = loadBadgeRegistry()
       setBadgeRegistry(registry)
     } catch (e: any) {
-      notify({ type: 'error', title: 'Failed to load registry', message: e?.message || 'Unknown error' })
-    } finally {
+          } finally {
       setRegistryLoading(false)
     }
-  }, [notify])
+  }, [])
 
   // Phase 3B: Manual Assignment
   const handleManualAssign = useCallback(async () => {
     const fid = Number(manualAssignFid)
     if (!fid || !Number.isFinite(fid) || fid <= 0) {
-      notify({ type: 'error', title: 'Invalid FID', message: 'Enter a valid Farcaster ID' })
-      return
+            return
     }
     if (!manualAssignBadgeType.trim()) {
-      notify({ type: 'error', title: 'Missing badge type', message: 'Select a badge type to assign' })
-      return
+            return
     }
 
     setManualAssignBusy(true)
@@ -219,11 +212,10 @@ export default function BadgeManagerPanel() {
       setManualAssignFid('')
       setManualAssignBadgeType('')
     } catch (e: any) {
-      notify({ type: 'error', title: 'Assignment failed', message: e?.message || 'Unable to assign badge' })
-    } finally {
+          } finally {
       setManualAssignBusy(false)
     }
-  }, [manualAssignFid, manualAssignBadgeType, notify])
+  }, [manualAssignFid, manualAssignBadgeType])
 
   // Phase 3B: Badge Detail Modal
   const openDetailModal = useCallback(async (template: TemplateRecord) => {
@@ -510,32 +502,27 @@ export default function BadgeManagerPanel() {
           artPath: path,
           metadataJson: syncMetadataImageField(prev.metadataJson, url),
         }))
-        notify({ type: 'success', title: 'Artwork uploaded', message: 'Badge art updated successfully.' })
-      } catch (error: any) {
-        notify({ type: 'error', title: 'Upload failed', message: error?.message || 'Unable to upload badge artwork.' })
-      } finally {
+              } catch (error: any) {
+              } finally {
         setUploadBusy(false)
       }
     },
-    [formState.artPath, notify],
+    [formState.artPath],
   )
 
   const handleSubmit = useCallback(async () => {
     const name = formState.name.trim()
     const badgeType = formState.badgeType.trim()
     if (!name) {
-      notify({ type: 'error', title: 'Missing name', message: 'Provide a badge name.' })
-      return
+            return
     }
     if (!badgeType) {
-      notify({ type: 'error', title: 'Missing badge type', message: 'Badge type is required.' })
-      return
+            return
     }
 
     const points = Number(formState.pointsCost)
     if (!Number.isFinite(points) || points < 0) {
-      notify({ type: 'error', title: 'Invalid cost', message: 'Points cost must be a positive number.' })
-      return
+            return
     }
 
     let metadata: Record<string, unknown> | null = null
@@ -551,16 +538,14 @@ export default function BadgeManagerPanel() {
       } catch (err: any) {
         const message = err?.message || 'Metadata must be valid JSON.'
         setMetadataError(message)
-        notify({ type: 'error', title: 'Invalid metadata', message })
-        return
+                return
       }
     }
 
     const slugBaseInput = formState.slug.trim() || name
     const slugBase = slugify(slugBaseInput)
     if (!slugBase) {
-      notify({ type: 'error', title: 'Missing slug', message: 'Provide a slug or name so we can generate unique templates.' })
-      return
+            return
     }
 
     const selectedChains = isEditing
@@ -575,8 +560,7 @@ export default function BadgeManagerPanel() {
       ),
     )
     if (!uniqueChains.length) {
-      notify({ type: 'error', title: 'Missing chain', message: 'Select at least one chain for this badge template.' })
-      return
+            return
     }
 
     const payloadBase = {
@@ -649,14 +633,12 @@ export default function BadgeManagerPanel() {
       }
 
       if (failureMessages.length) {
-        notify({ type: 'error', title: 'Some templates failed', message: failureMessages.join(' • ') })
-      }
+              }
     } catch (e: any) {
-      notify({ type: 'error', title: 'Save failed', message: e?.message || 'Unable to save badge template.' })
-    } finally {
+          } finally {
       setFormBusy(false)
     }
-  }, [closeForm, editingId, formState, isEditing, loadTemplates, notify])
+  }, [closeForm, editingId, formState, isEditing, loadTemplates])
 
   const handleToggleActive = useCallback(
     async (template: TemplateRecord) => {
@@ -675,10 +657,9 @@ export default function BadgeManagerPanel() {
         })
         await loadTemplates(true)
       } catch (e: any) {
-        notify({ type: 'error', title: 'Update failed', message: e?.message || 'Unable to toggle badge template.' })
-      }
+              }
     },
-    [loadTemplates, notify],
+    [loadTemplates],
   )
 
   const handleDelete = useCallback(
@@ -688,13 +669,11 @@ export default function BadgeManagerPanel() {
         const res = await fetch(`/api/admin/badges/${template.id}`, { method: 'DELETE' })
         const json = await res.json()
         if (!res.ok || !json?.ok) throw new Error(json?.error || 'Unable to delete template')
-        notify({ type: 'success', title: 'Template deleted', message: template.name })
-        await loadTemplates(true)
+                await loadTemplates(true)
       } catch (e: any) {
-        notify({ type: 'error', title: 'Delete failed', message: e?.message || 'Unable to delete badge template.' })
-      }
+              }
     },
-    [loadTemplates, notify],
+    [loadTemplates],
   )
 
   return (

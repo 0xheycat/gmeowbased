@@ -1,8 +1,10 @@
 {
   "extends": [
     "next/core-web-vitals",
-    "next/typescript"
+    "next/typescript",
+    "plugin:tailwindcss/recommended"
   ],
+  "plugins": ["tailwindcss"],
   "ignorePatterns": [
     "__tests__/**/*",
     "*.test.ts",
@@ -25,6 +27,9 @@
     "@typescript-eslint/prefer-readonly": "off",
     "prefer-const": "warn",
     "react-hooks/exhaustive-deps": "warn",
-    "react/jsx-no-comment-textnodes": "off"
+    "react/jsx-no-comment-textnodes": "off",
+    "tailwindcss/classnames-order": "warn",
+    "tailwindcss/no-custom-classname": "off",
+    "tailwindcss/no-contradicting-classname": "error"
   }
 }

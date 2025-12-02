@@ -338,3 +338,66 @@ Signed: ________________
 Date: November 30, 2025
 
 **This is the LAST planning doc. Delete the other 88.**
+
+---
+
+## 📝 AGENT REMINDER (Keep in Every Prompt)
+
+**Copy-paste this reminder in every prompt to avoid forgetting:**
+
+```
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+Reminder for me and my agent friend
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+1. We need to remember any failures from the past:  
+   - Do not move to the next phase until the target is 100% achieved and fully tested.  
+   - If any requirements are missing for a phase (e.g., CSS consolidation, component extraction), address them first.  
+   - Ensure we understand the core of the features from the codebase.
+
+2. Keep the following documents updated with the current status:  
+   - `FOUNDATION-REBUILD-ROADMAP.md` (root)
+   - `CURRENT-TASK.md` (root)
+   - `docs/migration/TEMPLATE-SELECTION.md` (moved from root)
+   - `VIRAL-FEATURES-RESEARCH.md` (root)
+   - Update them if we make improvements or progress after finish any task
+
+3. If we are working on any task from a specific phase, we should not create new documentation. Instead, update the existing documents.  
+   - Example: If we improve the "Responsive Breakpoints" task from Day 3, we update `DAY-3-COMPLETE.md` after finishing the task.
+
+4. Always refer to `FOUNDATION-REBUILD-ROADMAP.md` before starting any task.
+
+5. Read `HONEST-FAILURE-ANALYSIS.md` — we must not repeat any of the mistakes mentioned in it.
+
+6. Documentation Structure (Updated December 1, 2025):
+   - Root docs: Core/active documents only (FOUNDATION-REBUILD-ROADMAP.md, CURRENT-TASK.md, etc.)
+   - `/docs/migration/` - TEMPLATE-SELECTION.md, COMPONENT-MIGRATION-STRATEGY.md
+   - `/docs/audits/` - Historical audits (CSS, notifications, components)
+   - `/docs/phase-reports/` - Daily/phase completion reports (DAY-X, PHASE-X)
+   - `/docs/planning/` - Setup guides, deployment, workflows
+   - See `/DOCS-STRUCTURE.md` for quick reference
+
+7. Migration Strategy (December 1, 2025):
+   - FULL MIGRATION - Replace old UI components completely with template patterns
+   - Keep ONLY: lib/api/utils/auth (core business logic functions)
+   - Delete old UI components after migration complete
+   - No mixing old + new patterns
+   - See `docs/migration/COMPONENT-MIGRATION-STRATEGY.md` for details
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+```
+
+**Why this reminder works:**
+- ✅ Documents exact file paths (including new `/docs/` structure)
+- ✅ States migration strategy clearly (FULL replacement, not partial)
+- ✅ References past failures to avoid repetition
+- ✅ Keeps agents synchronized on current approach
+- ✅ Easy to copy-paste in every prompt
+
+**Update this reminder if:**
+- Documentation structure changes
+- Migration strategy changes
+- New critical principles emerge
+- File locations move
+
+---
+
+**Last Updated**: December 1, 2025 - Added documentation structure + migration strategy

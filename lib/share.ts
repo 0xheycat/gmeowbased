@@ -243,7 +243,15 @@ function isMiniappContext(): boolean {
     if (!inIframe) return false
     const host = getReferrerHost()
     if (!host) return false
-    return host.endsWith('.farcaster.xyz') || host.endsWith('.warpcast.com') || host === 'farcaster.xyz' || host === 'warpcast.com'
+    // MCP best practice: Include base.dev for miniapp detection (Dec 2025)
+    return (
+      host.endsWith('.farcaster.xyz') ||
+      host.endsWith('.warpcast.com') ||
+      host.endsWith('.base.dev') ||
+      host === 'farcaster.xyz' ||
+      host === 'warpcast.com' ||
+      host === 'base.dev'
+    )
   } catch {
     return false
   }

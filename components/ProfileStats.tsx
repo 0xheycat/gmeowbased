@@ -9,7 +9,7 @@ import { copyToClipboardSafe, openWarpcastComposer } from '@/lib/share'
 import { calculateRankProgress, formatXp } from '@/lib/rank'
 import type { ChainKey } from '@/lib/gmeow-utils'
 import type { ProfileOverviewData } from '@/lib/profile-types'
-import { useLegacyNotificationAdapter } from '@/components/ui/live-notifications'
+import { useNotifications } from '@/components/ui/live-notifications'
 
 const CHAIN_LABEL: Record<ChainKey, string> = {
   base: 'Base',
@@ -74,7 +74,7 @@ const formatDateLabel = (timestamp?: number) => {
 export function ProfileStats({ address, data, loading, error }: ProfileStatsProps) {
   const [selectedChain, setSelectedChain] = useState<ChainKey>('base')
   const [isMobile, setIsMobile] = useState(false)
-  const pushNotification = useLegacyNotificationAdapter()
+  const { showNotification } = useNotifications()
   
   // Milestone tracking refs
   const previousLevelRef = useRef<number | null>(null)
@@ -134,19 +134,15 @@ export function ProfileStats({ address, data, loading, error }: ProfileStatsProp
     const previousLevel = previousLevelRef.current
     
     if (previousLevel !== null && currentLevel > previousLevel) {
-      pushNotification({
-        type: 'success',
-        title: `🎉 Level ${currentLevel} Reached!`,
-        message: `You've advanced to Level ${currentLevel}. ${formatXp(rankSnapshot.xpForLevel - rankSnapshot.xpIntoLevel)} XP to next level.`,
-        duration: 8000,
-        linkHref: '/leaderboard',
-        linkLabel: 'View Rank',
-        category: 'level',
-      })
+      showNotification(
+        `Level ${currentLevel} reached! ${formatXp(rankSnapshot.xpForLevel - rankSnapshot.xpIntoLevel)} XP to next level.`,
+        'level_up',
+        8000
+      )
     }
     
     previousLevelRef.current = currentLevel
-  }, [rankSnapshot, data, pushNotification])
+  }, [rankSnapshot, data, showNotification])
   
   // Streak milestone detection
   useEffect(() => {
@@ -160,18 +156,16 @@ export function ProfileStats({ address, data, loading, error }: ProfileStatsProp
       const milestone = MILESTONES.find(m => currentStreak >= m && previousStreak < m)
       
       if (milestone) {
-        pushNotification({
-          type: 'success',
-          title: `🔥 ${milestone} Day Streak!`,
-          message: `Incredible! ${milestone} days of consistent GMing.`,
-          duration: 10000,
-          category: 'streak',
-        })
+        showNotification(
+          `${milestone} day streak! Incredible consistency.`,
+          'gm_streak_milestone',
+          10000
+        )
       }
     }
     
     previousStreakRef.current = currentStreak
-  }, [data?.streak, pushNotification])
+  }, [data?.streak, showNotification])
   
   // Rank improvement detection
   useEffect(() => {
@@ -182,19 +176,15 @@ export function ProfileStats({ address, data, loading, error }: ProfileStatsProp
     
     if (previousRank !== null && currentRank < previousRank) {
       const improvement = previousRank - currentRank
-      pushNotification({
-        type: 'success',
-        title: 'Rank Improved!',
-        message: `You climbed ${improvement} ${improvement === 1 ? 'spot' : 'spots'} to #${currentRank}.`,
-        duration: 6000,
-        linkHref: '/leaderboard',
-        linkLabel: 'View Leaderboard',
-        category: 'reward',
-      })
+      showNotification(
+        `You climbed ${improvement} ${improvement === 1 ? 'spot' : 'spots'} to #${currentRank}.`,
+        'rank_changed',
+        6000
+      )
     }
     
     previousRankRef.current = currentRank
-  }, [data?.globalRank, pushNotification])
+  }, [data?.globalRank, showNotification])
 
   // Points milestone detection
   useEffect(() => {
@@ -209,45 +199,16 @@ export function ProfileStats({ address, data, loading, error }: ProfileStatsProp
       
       if (milestone) {
         const formatted = milestone >= 1000 ? `${(milestone / 1000).toLocaleString()}K` : milestone.toLocaleString()
-        pushNotification({
-          type: 'success',
-          title: `💎 ${formatted} Points!`,
-          message: `Congratulations! You've reached ${formatted} total points.`,
-          duration: 10000,
-          linkHref: '/leaderboard',
-          linkLabel: 'View Rank',
-          category: 'reward',
-        })
+        showNotification(
+          `${formatted} points reached! Congratulations.`,
+          'points_milestone',
+          10000
+        )
       }
     }
     
     previousPointsRef.current = currentPoints
-  }, [data?.totalPoints, pushNotification])
-
-  // GM count milestone detection (using estimatedGMs)
-  useEffect(() => {
-    if (!data?.estimatedGMs) return
-    
-    const MILESTONES = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000]
-    const currentGms = data.estimatedGMs
-    const previousGms = previousGmCountRef.current
-    
-    if (previousGms > 0 && currentGms > previousGms) {
-      const milestone = MILESTONES.find(m => currentGms >= m && previousGms < m)
-      
-      if (milestone) {
-        pushNotification({
-          type: 'success',
-          title: `🌅 ${milestone.toLocaleString()} GMs!`,
-          message: `Amazing! You've said GM ${milestone.toLocaleString()} times.`,
-          duration: 10000,
-          category: 'quest',
-        })
-      }
-    }
-    
-    previousGmCountRef.current = currentGms
-  }, [data?.estimatedGMs, pushNotification])
+  }, [data?.totalPoints, showNotification])
 
   // Badge rarity milestone detection
   useEffect(() => {
@@ -256,69 +217,42 @@ export function ProfileStats({ address, data, loading, error }: ProfileStatsProp
     const currentCount = data.badges.length
     const previousCount = previousBadgeCountRef.current
     
-    // First badge
-    if (previousCount === 0 && currentCount === 1) {
-      pushNotification({
-        type: 'success',
-        title: '🎖️ First Badge!',
-        message: 'You earned your first badge! Keep collecting.',
-        duration: 8000,
-        category: 'badge',
-      })
-    }
-    
     // Badge collection milestones
-    const MILESTONES = [5, 10, 25, 50, 100]
-    if (previousCount > 0 && currentCount > previousCount) {
+    const MILESTONES = [1, 5, 10, 25, 50, 100]
+    if (currentCount > previousCount) {
       const milestone = MILESTONES.find(m => currentCount >= m && previousCount < m)
       
       if (milestone) {
-        pushNotification({
-          type: 'success',
-          title: `🎖️ ${milestone} Badges Collected!`,
-          message: `Impressive collection! You now have ${milestone} badges.`,
-          duration: 10000,
-          category: 'badge',
-        })
-      } else {
-        // New badge notification (only if not a milestone)
-        const newBadges = currentCount - previousCount
-        pushNotification({
-          type: 'success',
-          title: `New Badge${newBadges > 1 ? 's' : ''}!`,
-          message: `You earned ${newBadges} new badge${newBadges > 1 ? 's' : ''}.`,
-          duration: 6000,
-          category: 'badge',
-        })
+        showNotification(
+          milestone === 1 ? 'First badge earned!' : `${milestone} badges collected!`,
+          'badge_minted',
+          8000
+        )
       }
     }
     
     previousBadgeCountRef.current = currentCount
-  }, [data?.badges, pushNotification])
+  }, [data?.badges, showNotification])
 
   const handleShareFrame = async () => {
     if (!data?.frameUrl) {
-      pushNotification({ type: 'error', title: 'No frame available', message: 'Connect wallet or refresh to generate your points frame.' })
       return
     }
     const shareText = rankSnapshot
       ? `${data.displayName} reached Level ${rankSnapshot.level} (${formatXp(rankSnapshot.xpIntoLevel)} / ${formatXp(rankSnapshot.xpForLevel)} XP) on GMEOW.`
       : `${data.displayName} has ${formatNumber(data.totalPoints)} GM points on GMEOW.`
     try {
-      const mode = await openWarpcastComposer(shareText, data.frameUrl)
-      pushNotification({ type: 'success', title: mode === 'miniapp' ? 'Shared in-app' : 'Opened composer', message: 'Your profile frame is ready to cast.' })
+      await openWarpcastComposer(shareText, data.frameUrl)
     } catch (err: any) {
-      pushNotification({ type: 'error', title: 'Share failed', message: err?.message || 'Unable to open Warpcast composer.' })
+      console.error('Share failed:', err?.message || String(err))
     }
   }
 
   const handleCopyFrame = async () => {
     if (!data?.frameUrl) {
-      pushNotification({ type: 'error', title: 'No frame link', message: 'Refresh your profile to regenerate the frame URL.' })
       return
     }
-    const ok = await copyToClipboardSafe(data.frameUrl)
-    pushNotification({ type: ok ? 'success' : 'error', title: ok ? 'Copied frame link' : 'Copy failed', message: ok ? 'Frame URL copied to clipboard.' : 'Clipboard is unavailable in this context.' })
+    await copyToClipboardSafe(data.frameUrl)
   }
 
   const showConnectCard = !address && !loading

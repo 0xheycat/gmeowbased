@@ -1,5 +1,5 @@
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import type { NotificationTone } from '@/components/ui/live-notifications'
+import type { NotificationEvent } from '@/components/ui/live-notifications'
 
 const TABLE_NAME = 'user_notification_history'
 const MAX_HISTORY_PER_USER = 100
@@ -14,7 +14,7 @@ export type NotificationHistoryItem = {
   category: NotificationCategory
   title: string
   description: string | null
-  tone: NotificationTone
+  tone: NotificationEvent  // Changed from NotificationTone to NotificationEvent
   metadata: Record<string, any> | null
   action_label: string | null
   action_href: string | null
@@ -28,7 +28,7 @@ export type SaveNotificationInput = {
   category: NotificationCategory
   title: string
   description?: string | null
-  tone: NotificationTone
+  tone: NotificationEvent  // Changed from NotificationTone
   metadata?: Record<string, unknown> | null
   actionLabel?: string | null
   actionHref?: string | null

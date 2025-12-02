@@ -219,8 +219,8 @@ export function ViralStatsCard({
                   </div>
                   <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                      style={{ width: `${percentage}%` }}
+                      className="h-full bg-blue-500 rounded-full transition-all duration-500 viral-progress-bar"
+                      style={{ ['--fill-width' as string]: `${percentage}%` } as React.CSSProperties}
                       role="progressbar"
                       aria-valuenow={percentage}
                       aria-valuemin={0}

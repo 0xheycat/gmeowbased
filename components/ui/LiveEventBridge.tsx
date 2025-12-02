@@ -4,7 +4,7 @@
 import type { ReactNode } from 'react'
 
 interface LiveEventBridgeProps {
-  children: ReactNode
+  children?: ReactNode
 }
 
 export function LiveEventBridge({ children }: LiveEventBridgeProps) {
