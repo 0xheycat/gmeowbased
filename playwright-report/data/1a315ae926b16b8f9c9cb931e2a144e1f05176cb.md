@@ -1,0 +1,58 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - link "😺 Gmeowbased" [ref=e7] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e8]: 😺
+            - generic [ref=e9]: Gmeowbased
+          - generic [ref=e10]:
+            - link "Quests" [ref=e11] [cursor=pointer]:
+              - /url: /Quest
+            - link "Leaderboard" [ref=e12] [cursor=pointer]:
+              - /url: /leaderboard
+            - link "Dashboard" [ref=e13] [cursor=pointer]:
+              - /url: /Dashboard
+        - button "Notifications" [ref=e16] [cursor=pointer]:
+          - img [ref=e17]
+    - main [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - img [ref=e25]
+            - heading "Leaderboard" [level=1] [ref=e28]
+          - paragraph [ref=e29]: Compete for the top spot and unlock exclusive rewards
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - button "24 Hours" [ref=e33] [cursor=pointer]:
+                - generic [ref=e34]: 24 Hours
+              - button "7 Days" [ref=e35] [cursor=pointer]:
+                - generic [ref=e36]: 7 Days
+              - button "All Time" [ref=e37] [cursor=pointer]:
+                - generic [ref=e38]: All Time
+            - generic [ref=e39]:
+              - textbox "Search by name or FID..." [ref=e40]
+              - button "Search" [ref=e41] [cursor=pointer]:
+                - generic [ref=e42]: Search
+          - generic [ref=e43]: Showing 0 of 0 pilots
+          - paragraph [ref=e47]: Loading...
+        - generic [ref=e48]:
+          - heading "How Rankings Work" [level=2] [ref=e49]
+          - generic [ref=e50]:
+            - paragraph [ref=e51]: Total Score = Quest Points + Viral XP + Guild Bonus + Referrals + Streak + Badges
+            - paragraph [ref=e52]: Rankings update every 6 hours. Complete quests, earn badges, and invite friends to climb the leaderboard!
+            - generic [ref=e53]:
+              - generic [ref=e54]: "Quest Points: Base rewards from contracts"
+              - generic [ref=e55]: "Viral XP: Popular casts & engagement"
+              - generic [ref=e56]: "Guild Bonus: Level × 100 points"
+              - generic [ref=e57]: "Referrals: Count × 50 points"
+              - generic [ref=e58]: "Streak Bonus: GM streak × 10 points"
+              - generic [ref=e59]: "Badge Prestige: Badge count × 25 points"
+```
