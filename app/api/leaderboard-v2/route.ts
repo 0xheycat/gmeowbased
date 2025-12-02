@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getLeaderboard } from '@/lib/leaderboard-scorer'
+import {
+  checkLeaderboardRateLimit,
+  createRateLimitResponse,
+  addRateLimitHeaders,
+} from '@/lib/middleware/rate-limit'
 
 export const runtime = 'nodejs'
 export const revalidate = 300 // 5 minutes
@@ -9,6 +14,8 @@ export const revalidate = 300 // 5 minutes
  * 
  * Fetch leaderboard data from leaderboard_calculations table
  * New V2.2 leaderboard with 6-source scoring aggregation
+ * 
+ * Rate Limit: 60 requests per minute per IP
  * 
  * Query Parameters:
  * - period: 'daily' | 'weekly' | 'all_time' (default: 'all_time')
@@ -29,6 +36,13 @@ export const revalidate = 300 // 5 minutes
  */
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimitResult = await checkLeaderboardRateLimit(request)
+    
+    if (!rateLimitResult.allowed) {
+      return createRateLimitResponse(rateLimitResult)
+    }
+    
     const searchParams = request.nextUrl.searchParams
     
     // Parse query parameters
@@ -54,13 +68,32 @@ export async function GET(request: NextRequest) {
     }
     
     // Fetch leaderboard data
-    const result = await getLeaderboard(period, page, pageSize, search)
+    const result = await getLeaderboard({
+      period,
+      page,
+      perPage: pageSize,
+      search,
+    })
     
-    return NextResponse.json(result, {
+    // Transform response to match expected format
+    const response = {
+      data: result.data,
+      pagination: {
+        currentPage: result.page,
+        totalPages: result.totalPages,
+        totalCount: result.count,
+        pageSize: result.perPage,
+      },
+    }
+    
+    // Return with rate limit headers
+    const nextResponse = NextResponse.json(response, {
+      status: 200,
       headers: {
         'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
       },
     })
+    return addRateLimitHeaders(nextResponse, rateLimitResult)
   } catch (error) {
     console.error('[Leaderboard V2 API] Error:', error)
     return NextResponse.json(
