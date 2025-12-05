@@ -39,77 +39,79 @@ export * from './navigation';
 // UI Icons (Star, Trophy, Verified, Plus, Info, Warning)
 export * from './ui';
 
-// Layout Icons (Grid layouts, alignment icons)
+// Layout Icons (Grid layouts, alignment icons) - ALL USE NAMED EXPORTS
 export { ClassicLayoutIcon } from './layout/classic-layout-icon';
-export { CompactGrid } from './layout/compact-grid';
+export { CompactGridIcon } from './layout/compact-grid';
 export { LeftAlign } from './layout/left-align';
 export { MinimalLayoutIcon } from './layout/minimal-layout-icon';
 export { ModernLayoutIcon } from './layout/modern-layout-icon';
-export { NormalGrid } from './layout/normal-grid';
+export { NormalGridIcon } from './layout/normal-grid';
 export { RetroLayoutIcon } from './layout/retro-layout-icon';
 export { RightAlign } from './layout/right-align';
 
-// Custom SVG Icons (Root level - commonly used)
-export { default as ArrowLinkIcon } from './arrow-link-icon';
-export { default as ArrowRight } from './arrow-right';
-export { default as ArrowUp } from './arrow-up';
-export { default as ArrowUpDown } from './arrow-up-down';
-export { default as BookIcon } from './book';
-export { default as CalendarIcon } from './calendar-icon';
-export { default as Calendar } from './calendar';
+// Custom SVG Icons (Root level) - NAMED EXPORTS (export function/const)
+export { ArrowLinkIcon } from './arrow-link-icon';
+export { ArrowRight } from './arrow-right';
+export { ArrowUp } from './arrow-up';
+export { ArrowUpDownIcon } from './arrow-up-down';  // exports ArrowUpDownIcon
+export { BookIcon } from './book';
+export { CalendarIcon as Calendar } from './calendar';  // calendar.tsx exports CalendarIcon
+export { CalendarIcon } from './calendar-icon';
+export { ChevronDown } from './chevron-down';
+export { ChevronForward } from './chevron-forward';
+export { ChevronRight } from './chevron-right';
+export { ClockIcon } from './clock';
+export { DiskIcon } from './disk';
+export { DocumentIcon } from './document';
+export { DotsIcon } from './dots-icon';
+export { ExchangeIcon } from './exchange';
+export { ExportIcon } from './export-icon';
+export { ExternalLink as ExternalLinkIcon } from './external-link';  // exports ExternalLink
+export { EyeIcon } from './eye';
+export { EyeSlashIcon } from './eyeslash';
+export { FarmIcon } from './farm';
+export { FlashIcon } from './flash';
+export { GasIcon } from './gas-icon';
+export { GuideIcon } from './guide-icon';
+export { HistoryIcon } from './history';
+export { IconUSFlag } from './icon-us-flag';
+export { LevelIcon } from './level-icon';
+export { LinkIcon } from './link-icon';
+export { LivePricing as LivePricingIcon } from './live-pricing';  // exports LivePricing
+export { LockIcon } from './lock-icon';
+export { LongArrowLeft } from './long-arrow-left';
+export { LongArrowRight } from './long-arrow-right';
+export { LongArrowUp } from './long-arrow-up';
+export { LoopIcon } from './loop-icon';
+export { MediaPlayIcon } from './media-play-icon';
+export { Moon as MoonIcon } from './moon';  // exports Moon
+export { MoreIcon } from './more-icon';
+export { OptionIcon } from './option';
+export { PlayIcon } from './play-icon';
+export { PoolIcon } from './pool';
+export { PowerIcon } from './power';
+// export { ProfileIcon } from './profile'; // REMOVED - profile rebuild in progress
+export { RangeIcon } from './range-icon';
+export { SandClock as SandClockIcon } from './sand-clock';  // exports SandClock
+export { ShutdownIcon as ShutDownIcon } from './shut-down-icon';  // exports ShutdownIcon (different casing)
+export { SpikeBarIcon } from './spike-bar';
+export { Sun as SunIcon } from './sun';  // exports Sun
+export { SwapIcon } from './swap-icon';
+export { TagIcon } from './tag-icon';
+export { Tag } from './tag';
+export { TradingBotIcon } from './trading-bot-icon';
+export { TrendArrowDownIcon } from './trend-arrow-down-icon';
+export { TrendArrowUpIcon } from './trend-arrow-up-icon';
+export { Unlocked as UnlockedIcon } from './unlocked';  // exports Unlocked
+export { UsersIcon } from './users';
+export { VoteIcon } from './vote-icon';
+
+// Custom SVG Icons (Root level) - DEFAULT EXPORTS ONLY
 export { default as CheckIcon } from './check-icon';
-export { default as ChevronDown } from './chevron-down';
-export { default as ChevronForward } from './chevron-forward';
-export { default as ChevronRight } from './chevron-right';
-export { default as ClockIcon } from './clock';
-export { default as DiskIcon } from './disk';
-export { default as DocumentIcon } from './document';
-export { default as DotsIcon } from './dots-icon';
-export { default as ExchangeIcon } from './exchange';
-export { default as ExportIcon } from './export-icon';
-export { default as ExternalLinkIcon } from './external-link';
-export { default as EyeIcon } from './eye';
-export { default as EyeSlashIcon } from './eyeslash';
-export { default as FarmIcon } from './farm';
-export { default as FlashIcon } from './flash';
-export { default as GasIcon } from './gas-icon';
-export { default as GuideIcon } from './guide-icon';
-export { default as HistoryIcon } from './history';
 export { default as HorizontalThreeDotsIcon } from './horizontal-three-dots';
-export { default as IconUSFlag } from './icon-us-flag';
 export { default as ImageIcon } from './image-icon';
-export { default as LevelIcon } from './level-icon';
-export { default as LinkIcon } from './link-icon';
-export { default as LivePricingIcon } from './live-pricing';
-export { default as LockIcon } from './lock-icon';
-export { default as LongArrowLeft } from './long-arrow-left';
-export { default as LongArrowRight } from './long-arrow-right';
-export { default as LongArrowUp } from './long-arrow-up';
-export { default as LoopIcon } from './loop-icon';
-export { default as MediaPlayIcon } from './media-play-icon';
-export { default as MoonIcon } from './moon';
-export { default as MoreIcon } from './more-icon';
-export { default as OptionIcon } from './option';
-export { default as PlayIcon } from './play-icon';
-export { default as PoolIcon } from './pool';
-export { default as PowerIcon } from './power';
-export { default as ProfileIcon } from './profile';
-export { default as RangeIcon } from './range-icon';
-export { default as SandClockIcon } from './sand-clock';
-export { default as ShutDownIcon } from './shut-down-icon';
-export { default as SpikeBarIcon } from './spike-bar';
-export { default as SunIcon } from './sun';
-export { default as SwapIcon } from './swap-icon';
-export { default as TagIcon } from './tag-icon';
-export { default as Tag } from './tag';
-export { default as TradingBotIcon } from './trading-bot-icon';
-export { default as TrendArrowDownIcon } from './trend-arrow-down-icon';
-export { default as TrendArrowUpIcon } from './trend-arrow-up-icon';
-export { default as UnlockedIcon } from './unlocked';
 export { default as UploadIcon } from './upload-icon';
-export { default as UsersIcon } from './users';
 export { default as VerticalThreeDotsIcon } from './vertical-three-dots';
-export { default as VoteIcon } from './vote-icon';
 export { default as XIcon } from './x-icon';
 
 // Custom Icon Utilities
