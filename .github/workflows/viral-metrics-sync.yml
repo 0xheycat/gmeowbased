@@ -18,28 +18,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Sync viral metrics from Neynar
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NEYNAR_API_KEY: ${{ secrets.NEYNAR_API_KEY }}
-        run: npx tsx scripts/automation/sync-viral-metrics.ts
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DEPLOYMENT_URL: ${{ secrets.VERCEL_URL || 'https://gmeowhq.art' }}
+        run: |
+          echo "📊 Starting viral metrics sync via API..."
+          
+          # Call secure API endpoint
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "$DEPLOYMENT_URL/api/cron/sync-viral-metrics")
+          
+          # Extract HTTP status code (last line)
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "📊 Response status: $http_code"
+          echo "📄 Response body: $body"
+          
+          # Check if request was successful
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Viral metrics sync completed successfully!"
+            
+            # Parse and display results (if jq is available)
+            if command -v jq &> /dev/null; then
+              echo "📈 Sync summary:"
+              echo "$body" | jq -r '.result // "No detailed results available"'
+            fi
+          else
+            echo "❌ Viral metrics sync failed with status $http_code"
+            echo "$body"
+            exit 1
+          fi
 
-      - name: Report results
+      - name: Summary
         if: always()
         run: |
-          echo "Viral metrics sync completed"
+          echo "⏱️ Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "📅 Schedule: Every 6 hours"
           echo "Check logs for tier upgrades and XP awards"
