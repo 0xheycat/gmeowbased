@@ -3,7 +3,8 @@
 // @edit-start 2025-02-14 — Agent event feed component
 import clsx from 'clsx'
 import { useMemo } from 'react'
-import { Clock, Sparkle } from '@phosphor-icons/react'
+import AccessTimeIcon from '@mui/icons-material/AccessTime'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 
 import { Card, CardDescription, CardFooter, CardTitle, EmptyState, type CardProps } from '@/components/ui/button'
 import type { CommunityEventSummary } from '@/lib/community-event-types'
@@ -74,7 +75,7 @@ export function AgentEventFeed({ events, emptyHint }: AgentEventFeedProps) {
   if (!items.length) {
     return (
       <EmptyState
-        icon={<Sparkle className="size-8 text-slate-950 dark:text-white/60" weight="duotone" />}
+        icon={<AutoAwesomeIcon className="size-8 text-slate-950 dark:text-white/60" />}
         title="Nothing yet — the agent is listening."
         description={emptyHint ?? 'Live events will stream in as soon as quests finish or streaks post.'}
         tone="muted"
@@ -120,7 +121,7 @@ export function AgentEventFeed({ events, emptyHint }: AgentEventFeedProps) {
                   </CardDescription>
                   <CardFooter className="flex flex-wrap items-center gap-2 text-[11px] text-slate-950 dark:text-white/65">
                     <span className="inline-flex items-center gap-1">
-                      <Clock className="size-3.5" weight="bold" />
+                      <AccessTimeIcon className="size-3.5" />
                       {formatRelativeTime(event.createdAt)}
                     </span>
                     {event.delta != null ? (
@@ -144,7 +145,7 @@ export function AgentEventFeed({ events, emptyHint }: AgentEventFeedProps) {
                     href={event.cta.href}
                   >
                     {event.cta.label}
-                    <Sparkle className="size-4 text-emerald-200" weight="bold" />
+                    <AutoAwesomeIcon className="size-4 text-emerald-200" />
                   </a>
                 ) : null}
               </div>

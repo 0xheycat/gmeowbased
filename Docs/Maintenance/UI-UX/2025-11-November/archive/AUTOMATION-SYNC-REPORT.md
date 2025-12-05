@@ -332,7 +332,7 @@ git push origin main
 # Open: https://vercel.com/0xheycat/gmeowbased
 
 # 5. Test production
-https://gmeowbased.com/admin/maintenance
+https://gmeowhq.art/admin/maintenance
 ```
 
 ---

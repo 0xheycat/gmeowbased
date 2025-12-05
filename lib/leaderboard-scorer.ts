@@ -331,6 +331,7 @@ export async function getLeaderboard(options: {
   page?: number
   perPage?: number
   search?: string
+  orderBy?: 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
 }) {
   const supabase = getSupabaseServerClient()
   if (!supabase) {
@@ -342,13 +343,14 @@ export async function getLeaderboard(options: {
     page = 1,
     perPage = 15,
     search = '',
+    orderBy = 'total_score',
   } = options
 
   let query = supabase
     .from('leaderboard_calculations')
     .select('*', { count: 'exact' })
     .eq('period', period)
-    .order('total_score', { ascending: false })
+    .order(orderBy, { ascending: false })
 
   // Apply search filter if provided
   // Search supports: address, FID, or username (via Neynar)

@@ -1,5 +1,5 @@
 // @edit-start 2025-02-14 — Agent hero banner
-import { ArrowRight } from '@phosphor-icons/react/dist/ssr'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
 import { Card, CardDescription, CardSection, CardTitle } from '@/components/ui/button'
 
@@ -54,7 +54,7 @@ export function AgentHero() {
               href="/admin"
             >
               Open ops console
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" weight="bold" />
+              <ArrowForwardIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
             </a>
           </CardSection>
         </div>

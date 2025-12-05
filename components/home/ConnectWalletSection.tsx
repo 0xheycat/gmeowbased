@@ -1,6 +1,6 @@
 'use client'
 
-import { ConnectWallet } from '@/components/ConnectWallet'
+import { WalletButton } from '@/components/WalletButton'
 
 type Props = {
   connected: boolean
@@ -17,7 +17,7 @@ export function ConnectWalletSection({ connected }: Props) {
           <h2>Connect to keep your streak in sync</h2>
           <p>Link a wallet to claim rewards, register referral codes, and deploy guild boosts on-chain.</p>
         </div>
-        <ConnectWallet />
+        <WalletButton />
       </div>
     </section>
   )

@@ -4,15 +4,15 @@ import { useNotifications, type NotificationItem, type NotificationCategory } fr
 type NotificationCenterResult = {
   notifications: NotificationItem[]
   categories: NotificationCategory[]
-  dismiss: (id: number) => void
+  dismiss: (id: string) => void
   dismissAll: () => void
 }
 
 export function useNotificationCenter(): NotificationCenterResult {
-  const { items, dismiss, dismissAll } = useNotifications()
+  const { items, dismiss, clearNotifications } = useNotifications()
 
   const notifications = useMemo(
-    () => [...items].sort((a, b) => b.createdAt - a.createdAt),
+    () => [...items].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)),
     [items],
   )
 
@@ -28,6 +28,6 @@ export function useNotificationCenter(): NotificationCenterResult {
     notifications,
     categories,
     dismiss,
-    dismissAll,
+    dismissAll: clearNotifications,
   }
 }

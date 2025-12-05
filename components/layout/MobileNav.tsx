@@ -2,24 +2,30 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { House, Sword, Trophy, ChartBar } from '@phosphor-icons/react'
+import HomeIcon from '@mui/icons-material/Home'
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import DashboardIcon from '@mui/icons-material/Dashboard'
 import { motion } from 'framer-motion'
 
 const navItems = [
-  { href: '/', label: 'Home', icon: House },
-  { href: '/Quest', label: 'Quests', icon: Sword },
-  { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { href: '/Dashboard', label: 'Dashboard', icon: ChartBar },
+  { href: '/', label: 'Home', icon: HomeIcon },
+  { href: '/Quest', label: 'Quests', icon: SportsEsportsIcon },
+  { href: '/leaderboard', label: 'Leaderboard', icon: EmojiEventsIcon },
+  { href: '/Dashboard', label: 'Dashboard', icon: DashboardIcon },
 ]
 
 export function MobileNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800">
-      {/* Safe area padding for iOS */}
+    <nav 
+      role="navigation"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800"
+    >
+      {/* Safe area padding for iOS home indicator */}
       <div className="pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around px-2 py-2">
+        <div className="flex items-center justify-around px-2 py-2 safe-x">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href
             return (
@@ -36,7 +42,7 @@ export function MobileNav() {
                       : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
-                  <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
+                  <Icon sx={{ fontSize: 24 }} />
                 </motion.div>
                 <span
                   className={`text-xs font-medium ${

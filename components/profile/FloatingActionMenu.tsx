@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import CloseIcon from '@mui/icons-material/Close'
+import BoltIcon from '@mui/icons-material/Bolt'
 import { cn } from '@/lib/utils'
 
 export type FloatingAction = {
@@ -67,9 +69,11 @@ export function FloatingActionMenu({ actions, className }: FloatingActionMenuPro
         )}
         aria-label={isOpen ? 'Close quick actions' : 'Open quick actions'}
       >
-        <span className="text-2xl leading-none transition-transform duration-200">
-          {isOpen ? '✕' : '⚡'}
-        </span>
+        {isOpen ? (
+          <CloseIcon sx={{ fontSize: 24 }} />
+        ) : (
+          <BoltIcon sx={{ fontSize: 24 }} />
+        )}
       </button>
 
       {/* Backdrop - closes menu when clicking outside */}

@@ -6,21 +6,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 2664,
+      "duration": 3574,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:23.517Z"
+      "timestamp": "2025-12-02T23:24:00.961Z"
     },
     {
       "name": "User Profile",
@@ -28,7 +41,7 @@
       "path": "/api/user/profile?fid=3",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 862,
+      "duration": 459,
       "passed": true,
       "data": {
         "fid": 3,
@@ -36,9 +49,9 @@
         "displayName": "Dan Romero",
         "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/bc698287-5adc-4cc5-a503-de16963ed900/original",
         "bio": "Working on Farcaster",
-        "followerCount": 605265,
-        "followingCount": 1449,
-        "powerBadge": true,
+        "followerCount": 608649,
+        "followingCount": 1435,
+        "powerBadge": false,
         "verifiedAddresses": {
           "eth_addresses": [
             "0x187c7b0393ebe86378128f2653d0930e33218899",
@@ -54,7 +67,7 @@
         },
         "custodyAddress": "0x6b0bda3f2ffed5efc83fa8c024acff1dd45793f1"
       },
-      "timestamp": "2025-11-17T20:38:24.381Z"
+      "timestamp": "2025-12-02T23:24:01.422Z"
     },
     {
       "name": "Viral Stats",
@@ -62,23 +75,10 @@
       "path": "/api/viral/stats?fid=3",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 1602,
+      "duration": 1460,
       "passed": true,
-      "data": {
-        "fid": 3,
-        "totalViralXp": 0,
-        "totalCasts": 0,
-        "topCasts": [],
-        "tierBreakdown": {
-          "mega_viral": 0,
-          "viral": 0,
-          "popular": 0,
-          "engaging": 0,
-          "active": 0
-        },
-        "message": "No badge casts found. Share your first badge to start earning viral XP!"
-      },
-      "timestamp": "2025-11-17T20:38:25.985Z"
+      "data": {},
+      "timestamp": "2025-12-02T23:24:02.884Z"
     },
     {
       "name": "Analytics Summary",
@@ -86,10 +86,10 @@
       "path": "/api/analytics/summary",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 988,
+      "duration": 972,
       "passed": true,
       "data": {
-        "refreshedAt": 1763411906831,
+        "refreshedAt": 1764717844201,
         "summary": {
           "tips": {
             "value": 0,
@@ -139,7 +139,7 @@
         },
         "alerts": []
       },
-      "timestamp": "2025-11-17T20:38:26.979Z"
+      "timestamp": "2025-12-02T23:24:03.858Z"
     },
     {
       "name": "Frame Identify",
@@ -147,7 +147,7 @@
       "path": "/api/frame/identify?fid=3",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 651,
+      "duration": 650,
       "passed": true,
       "data": {
         "ok": true,
@@ -157,10 +157,10 @@
           "fid": 3,
           "walletAddress": "0x187c7b0393ebe86378128f2653d0930e33218899",
           "custodyAddress": "0x6b0bda3f2ffed5efc83fa8c024acff1dd45793f1",
-          "powerBadge": true
+          "powerBadge": false
         }
       },
-      "timestamp": "2025-11-17T20:38:27.633Z"
+      "timestamp": "2025-12-02T23:24:04.509Z"
     },
     {
       "name": "Invalid FID (negative)",
@@ -168,13 +168,13 @@
       "path": "/api/user/profile?fid=-1",
       "status": 400,
       "expectedStatus": 400,
-      "duration": 325,
+      "duration": 323,
       "passed": true,
       "data": {
         "error": "Invalid FID format",
         "details": "FID must be a positive integer"
       },
-      "timestamp": "2025-11-17T20:38:27.961Z"
+      "timestamp": "2025-12-02T23:24:04.833Z"
     },
     {
       "name": "Invalid FID (string)",
@@ -182,13 +182,13 @@
       "path": "/api/user/profile?fid=abc",
       "status": 400,
       "expectedStatus": 400,
-      "duration": 751,
+      "duration": 585,
       "passed": true,
       "data": {
         "error": "Invalid FID format",
         "details": "FID must be a positive integer"
       },
-      "timestamp": "2025-11-17T20:38:28.712Z"
+      "timestamp": "2025-12-02T23:24:05.419Z"
     },
     {
       "name": "Invalid FID (zero)",
@@ -196,7 +196,7 @@
       "path": "/api/user/profile?fid=0",
       "status": 400,
       "expectedStatus": 400,
-      "duration": 323,
+      "duration": 341,
       "passed": true,
       "data": {
         "error": "Invalid FID format",
@@ -211,7 +211,7 @@
           }
         ]
       },
-      "timestamp": "2025-11-17T20:38:29.036Z"
+      "timestamp": "2025-12-02T23:24:05.760Z"
     },
     {
       "name": "Admin Webhook Health",
@@ -219,12 +219,12 @@
       "path": "/api/admin/viral/webhook-health",
       "status": 401,
       "expectedStatus": 401,
-      "duration": 79,
+      "duration": 76,
       "passed": true,
       "data": {
         "error": "admin_auth_required"
       },
-      "timestamp": "2025-11-17T20:38:29.116Z"
+      "timestamp": "2025-12-02T23:24:05.849Z"
     },
     {
       "name": "Admin Badges List",
@@ -232,12 +232,12 @@
       "path": "/api/admin/badges",
       "status": 401,
       "expectedStatus": 401,
-      "duration": 68,
+      "duration": 79,
       "passed": true,
       "data": {
         "error": "admin_auth_required"
       },
-      "timestamp": "2025-11-17T20:38:29.184Z"
+      "timestamp": "2025-12-02T23:24:05.928Z"
     },
     {
       "name": "Admin Bot Cast",
@@ -245,12 +245,12 @@
       "path": "/api/admin/bot/cast",
       "status": 401,
       "expectedStatus": 401,
-      "duration": 71,
+      "duration": 91,
       "passed": true,
       "data": {
         "error": "admin_auth_required"
       },
-      "timestamp": "2025-11-17T20:38:29.256Z"
+      "timestamp": "2025-12-02T23:24:06.019Z"
     },
     {
       "name": "Rate Limit Test 1",
@@ -265,14 +265,27 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:29.328Z"
+      "timestamp": "2025-12-02T23:24:06.095Z"
     },
     {
       "name": "Rate Limit Test 2",
@@ -280,21 +293,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 68,
+      "duration": 80,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:29.397Z"
+      "timestamp": "2025-12-02T23:24:06.177Z"
     },
     {
       "name": "Rate Limit Test 3",
@@ -302,90 +328,37 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 66,
+      "duration": 80,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:29.463Z"
+      "timestamp": "2025-12-02T23:24:06.265Z"
     },
     {
       "name": "Rate Limit Test 4",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 77,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:29.547Z"
-    },
-    {
-      "name": "Rate Limit Test 5",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 63,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:29.612Z"
-    },
-    {
-      "name": "Rate Limit Test 6",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 68,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:29.681Z"
-    },
-    {
-      "name": "Rate Limit Test 7",
       "method": "GET",
       "path": "/api/leaderboard",
       "status": 200,
@@ -397,14 +370,132 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:29.762Z"
+      "timestamp": "2025-12-02T23:24:06.348Z"
+    },
+    {
+      "name": "Rate Limit Test 5",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 74,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:06.423Z"
+    },
+    {
+      "name": "Rate Limit Test 6",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 75,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:06.502Z"
+    },
+    {
+      "name": "Rate Limit Test 7",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 76,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:06.579Z"
     },
     {
       "name": "Rate Limit Test 8",
@@ -419,14 +510,27 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:29.838Z"
+      "timestamp": "2025-12-02T23:24:06.655Z"
     },
     {
       "name": "Rate Limit Test 9",
@@ -434,21 +538,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 69,
+      "duration": 77,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:29.912Z"
+      "timestamp": "2025-12-02T23:24:06.732Z"
     },
     {
       "name": "Rate Limit Test 10",
@@ -456,310 +573,37 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 67,
+      "duration": 369,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:29.980Z"
+      "timestamp": "2025-12-02T23:24:07.103Z"
     },
     {
       "name": "Rate Limit Test 11",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 70,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.051Z"
-    },
-    {
-      "name": "Rate Limit Test 12",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 69,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.121Z"
-    },
-    {
-      "name": "Rate Limit Test 13",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 63,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.185Z"
-    },
-    {
-      "name": "Rate Limit Test 14",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 69,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.254Z"
-    },
-    {
-      "name": "Rate Limit Test 15",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 59,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.314Z"
-    },
-    {
-      "name": "Rate Limit Test 16",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 74,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.388Z"
-    },
-    {
-      "name": "Rate Limit Test 17",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 63,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.451Z"
-    },
-    {
-      "name": "Rate Limit Test 18",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 63,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.514Z"
-    },
-    {
-      "name": "Rate Limit Test 19",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 64,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.581Z"
-    },
-    {
-      "name": "Rate Limit Test 20",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 57,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.639Z"
-    },
-    {
-      "name": "Rate Limit Test 21",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 63,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.703Z"
-    },
-    {
-      "name": "Rate Limit Test 22",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 62,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.766Z"
-    },
-    {
-      "name": "Rate Limit Test 23",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 70,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:30.837Z"
-    },
-    {
-      "name": "Rate Limit Test 24",
       "method": "GET",
       "path": "/api/leaderboard",
       "status": 200,
@@ -771,14 +615,482 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:30.933Z"
+      "timestamp": "2025-12-02T23:24:07.198Z"
+    },
+    {
+      "name": "Rate Limit Test 12",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 67,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.266Z"
+    },
+    {
+      "name": "Rate Limit Test 13",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 76,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.344Z"
+    },
+    {
+      "name": "Rate Limit Test 14",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 86,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.432Z"
+    },
+    {
+      "name": "Rate Limit Test 15",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 82,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.516Z"
+    },
+    {
+      "name": "Rate Limit Test 16",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 78,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.598Z"
+    },
+    {
+      "name": "Rate Limit Test 17",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 73,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.673Z"
+    },
+    {
+      "name": "Rate Limit Test 18",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 73,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.748Z"
+    },
+    {
+      "name": "Rate Limit Test 19",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 65,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.814Z"
+    },
+    {
+      "name": "Rate Limit Test 20",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 76,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.891Z"
+    },
+    {
+      "name": "Rate Limit Test 21",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 69,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:07.961Z"
+    },
+    {
+      "name": "Rate Limit Test 22",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 77,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:08.039Z"
+    },
+    {
+      "name": "Rate Limit Test 23",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 76,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:08.115Z"
+    },
+    {
+      "name": "Rate Limit Test 24",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:08.184Z"
     },
     {
       "name": "Rate Limit Test 25",
@@ -786,21 +1098,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 198,
+      "duration": 79,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.133Z"
+      "timestamp": "2025-12-02T23:24:08.266Z"
     },
     {
       "name": "Rate Limit Test 26",
@@ -808,21 +1133,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 72,
+      "duration": 70,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.206Z"
+      "timestamp": "2025-12-02T23:24:08.340Z"
     },
     {
       "name": "Rate Limit Test 27",
@@ -830,21 +1168,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 62,
+      "duration": 68,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.269Z"
+      "timestamp": "2025-12-02T23:24:08.409Z"
     },
     {
       "name": "Rate Limit Test 28",
@@ -859,14 +1210,27 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.336Z"
+      "timestamp": "2025-12-02T23:24:08.477Z"
     },
     {
       "name": "Rate Limit Test 29",
@@ -874,21 +1238,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 77,
+      "duration": 91,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.415Z"
+      "timestamp": "2025-12-02T23:24:08.572Z"
     },
     {
       "name": "Rate Limit Test 30",
@@ -896,21 +1273,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 66,
+      "duration": 81,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.482Z"
+      "timestamp": "2025-12-02T23:24:08.656Z"
     },
     {
       "name": "Rate Limit Test 31",
@@ -918,21 +1308,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 64,
+      "duration": 70,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.547Z"
+      "timestamp": "2025-12-02T23:24:08.731Z"
     },
     {
       "name": "Rate Limit Test 32",
@@ -940,21 +1343,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 63,
+      "duration": 70,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.611Z"
+      "timestamp": "2025-12-02T23:24:08.803Z"
     },
     {
       "name": "Rate Limit Test 33",
@@ -962,21 +1378,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 66,
+      "duration": 68,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.679Z"
+      "timestamp": "2025-12-02T23:24:08.871Z"
     },
     {
       "name": "Rate Limit Test 34",
@@ -984,21 +1413,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 71,
+      "duration": 78,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.752Z"
+      "timestamp": "2025-12-02T23:24:08.950Z"
     },
     {
       "name": "Rate Limit Test 35",
@@ -1013,14 +1455,27 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.820Z"
+      "timestamp": "2025-12-02T23:24:09.018Z"
     },
     {
       "name": "Rate Limit Test 36",
@@ -1028,21 +1483,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 62,
+      "duration": 77,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.884Z"
+      "timestamp": "2025-12-02T23:24:09.096Z"
     },
     {
       "name": "Rate Limit Test 37",
@@ -1057,127 +1525,30 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:31.954Z"
+      "timestamp": "2025-12-02T23:24:09.168Z"
     },
     {
       "name": "Rate Limit Test 38",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 62,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.017Z"
-    },
-    {
-      "name": "Rate Limit Test 39",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 69,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.087Z"
-    },
-    {
-      "name": "Rate Limit Test 40",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 70,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.157Z"
-    },
-    {
-      "name": "Rate Limit Test 41",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 72,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.229Z"
-    },
-    {
-      "name": "Rate Limit Test 42",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 70,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.300Z"
-    },
-    {
-      "name": "Rate Limit Test 43",
       "method": "GET",
       "path": "/api/leaderboard",
       "status": 200,
@@ -1189,303 +1560,65 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:32.386Z"
+      "timestamp": "2025-12-02T23:24:09.256Z"
     },
     {
-      "name": "Rate Limit Test 44",
+      "name": "Rate Limit Test 39",
       "method": "GET",
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 68,
+      "duration": 72,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:32.456Z"
+      "timestamp": "2025-12-02T23:24:09.328Z"
     },
     {
-      "name": "Rate Limit Test 45",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 60,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.517Z"
-    },
-    {
-      "name": "Rate Limit Test 46",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 66,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.583Z"
-    },
-    {
-      "name": "Rate Limit Test 47",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 76,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.660Z"
-    },
-    {
-      "name": "Rate Limit Test 48",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 74,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.739Z"
-    },
-    {
-      "name": "Rate Limit Test 49",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 64,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.804Z"
-    },
-    {
-      "name": "Rate Limit Test 50",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 63,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.869Z"
-    },
-    {
-      "name": "Rate Limit Test 51",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 66,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:32.936Z"
-    },
-    {
-      "name": "Rate Limit Test 52",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 64,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:33.003Z"
-    },
-    {
-      "name": "Rate Limit Test 53",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 91,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:33.095Z"
-    },
-    {
-      "name": "Rate Limit Test 54",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 324,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:33.419Z"
-    },
-    {
-      "name": "Rate Limit Test 55",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 68,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:33.488Z"
-    },
-    {
-      "name": "Rate Limit Test 56",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 200,
-      "duration": 87,
-      "passed": true,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:33.577Z"
-    },
-    {
-      "name": "Rate Limit Test 57",
+      "name": "Rate Limit Test 40",
       "method": "GET",
       "path": "/api/leaderboard",
       "status": 200,
@@ -1497,14 +1630,622 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:33.644Z"
+      "timestamp": "2025-12-02T23:24:09.398Z"
+    },
+    {
+      "name": "Rate Limit Test 41",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 71,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:09.470Z"
+    },
+    {
+      "name": "Rate Limit Test 42",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 69,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:09.539Z"
+    },
+    {
+      "name": "Rate Limit Test 43",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 69,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:09.609Z"
+    },
+    {
+      "name": "Rate Limit Test 44",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 69,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:09.679Z"
+    },
+    {
+      "name": "Rate Limit Test 45",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 75,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:09.755Z"
+    },
+    {
+      "name": "Rate Limit Test 46",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 77,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:09.835Z"
+    },
+    {
+      "name": "Rate Limit Test 47",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 94,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:09.934Z"
+    },
+    {
+      "name": "Rate Limit Test 48",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 103,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.043Z"
+    },
+    {
+      "name": "Rate Limit Test 49",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 77,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.121Z"
+    },
+    {
+      "name": "Rate Limit Test 50",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 88,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.211Z"
+    },
+    {
+      "name": "Rate Limit Test 51",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.280Z"
+    },
+    {
+      "name": "Rate Limit Test 52",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 68,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.349Z"
+    },
+    {
+      "name": "Rate Limit Test 53",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 124,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.474Z"
+    },
+    {
+      "name": "Rate Limit Test 54",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 89,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.563Z"
+    },
+    {
+      "name": "Rate Limit Test 55",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 77,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.641Z"
+    },
+    {
+      "name": "Rate Limit Test 56",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 79,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.720Z"
+    },
+    {
+      "name": "Rate Limit Test 57",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 200,
+      "duration": 75,
+      "passed": true,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:10.797Z"
     },
     {
       "name": "Rate Limit Test 58",
@@ -1512,21 +2253,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 66,
+      "duration": 68,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:33.711Z"
+      "timestamp": "2025-12-02T23:24:10.866Z"
     },
     {
       "name": "Rate Limit Test 59",
@@ -1534,21 +2288,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 63,
+      "duration": 78,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:33.775Z"
+      "timestamp": "2025-12-02T23:24:10.952Z"
     },
     {
       "name": "Rate Limit Test 60",
@@ -1556,21 +2323,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 200,
-      "duration": 66,
+      "duration": 75,
       "passed": true,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:33.842Z"
+      "timestamp": "2025-12-02T23:24:11.030Z"
     },
     {
       "name": "Malformed JSON",
@@ -1578,7 +2358,7 @@
       "path": "/api/onboard/complete",
       "status": 400,
       "expectedStatus": 400,
-      "duration": 794,
+      "duration": 586,
       "passed": true,
       "data": {
         "success": false,
@@ -1592,7 +2372,7 @@
           }
         ]
       },
-      "timestamp": "2025-11-17T20:38:39.995Z"
+      "timestamp": "2025-12-02T23:24:17.007Z"
     }
   ],
   "failed": [
@@ -1602,21 +2382,34 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 429,
-      "duration": 61,
+      "duration": 75,
       "passed": false,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:33.904Z"
+      "timestamp": "2025-12-02T23:24:11.109Z"
     },
     {
       "name": "Rate Limit Test 62",
@@ -1624,24 +2417,107 @@
       "path": "/api/leaderboard",
       "status": 200,
       "expectedStatus": 429,
-      "duration": 63,
+      "duration": 72,
       "passed": false,
       "data": {
         "ok": true,
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:33.968Z"
+      "timestamp": "2025-12-02T23:24:11.182Z"
     },
     {
       "name": "Rate Limit Test 63",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 429,
+      "duration": 72,
+      "passed": false,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:11.255Z"
+    },
+    {
+      "name": "Rate Limit Test 64",
+      "method": "GET",
+      "path": "/api/leaderboard",
+      "status": 200,
+      "expectedStatus": 429,
+      "duration": 82,
+      "passed": false,
+      "data": {
+        "ok": true,
+        "chain": "base",
+        "global": false,
+        "offset": 0,
+        "limit": 50,
+        "total": 1,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
+        "seasonSupported": false,
+        "profileSupported": true
+      },
+      "timestamp": "2025-12-02T23:24:11.338Z"
+    },
+    {
+      "name": "Rate Limit Test 65",
       "method": "GET",
       "path": "/api/leaderboard",
       "status": 200,
@@ -1653,58 +2529,27 @@
         "chain": "base",
         "global": false,
         "offset": 0,
-        "limit": 0,
+        "limit": 50,
         "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
+        "top": [
+          {
+            "rank": 1,
+            "address": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+            "chain": "base",
+            "points": 2,
+            "pfpUrl": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/29d5eb0b-5f6c-4174-33bb-874f655d6d00/original",
+            "name": "heycat.base.eth🐬",
+            "farcasterFid": 18139,
+            "completed": 2,
+            "rewards": 0,
+            "seasonAlloc": 0
+          }
+        ],
+        "updatedAt": 1763577192789,
         "seasonSupported": false,
         "profileSupported": true
       },
-      "timestamp": "2025-11-17T20:38:34.051Z"
-    },
-    {
-      "name": "Rate Limit Test 64",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 429,
-      "duration": 73,
-      "passed": false,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:34.125Z"
-    },
-    {
-      "name": "Rate Limit Test 65",
-      "method": "GET",
-      "path": "/api/leaderboard",
-      "status": 200,
-      "expectedStatus": 429,
-      "duration": 71,
-      "passed": false,
-      "data": {
-        "ok": true,
-        "chain": "base",
-        "global": false,
-        "offset": 0,
-        "limit": 0,
-        "total": 1,
-        "top": [],
-        "updatedAt": 1763411903360,
-        "seasonSupported": false,
-        "profileSupported": true
-      },
-      "timestamp": "2025-11-17T20:38:34.197Z"
+      "timestamp": "2025-12-02T23:24:11.417Z"
     },
     {
       "name": "Rate Limiting",

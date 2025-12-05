@@ -370,7 +370,7 @@ forge verify-contract <ADDRESS> <CONTRACT_PATH> --chain-id <CHAIN_ID>
 
 **Issues**: [GitHub Issues](https://github.com/0xheycat/gmeowbased/issues)  
 **Discord**: [Join our community](https://discord.gg/gmeowbased)  
-**Docs**: [Full Documentation](https://docs.gmeowbased.com)
+**Docs**: [Full Documentation](https://docs.gmeowhq.art)
 
 ---
 

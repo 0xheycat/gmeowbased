@@ -43,6 +43,10 @@ const config: Config = {
   		padding: {
   			'full': '100%',
   		},
+  		zIndex: {
+  			'modal': '50',
+  			'tray': '50',
+  		},
   		width: {
   			'calc-320': 'calc(100% - 320px)',
   			'calc-358': 'calc(100% - 358px)',

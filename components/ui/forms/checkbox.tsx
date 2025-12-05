@@ -5,7 +5,7 @@
  */
 
 import { forwardRef } from 'react'
-import { Check } from '@phosphor-icons/react'
+import CheckIcon from '@mui/icons-material/Check'
 import { cn } from '@/lib/utils'
 
 export interface CheckboxProps
@@ -64,9 +64,8 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               )}
               {...props}
             />
-            <Check
-              size={iconSizes[size]}
-              weight="bold"
+            <CheckIcon
+              sx={{ fontSize: iconSizes[size] }}
               className={cn(
                 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
                 'text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200 pointer-events-none'

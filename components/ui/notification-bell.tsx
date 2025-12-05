@@ -2,19 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { 
-  Bell, 
-  HandWaving, 
-  Sword, 
-  Medal, 
-  TrendUp, 
-  Fire, 
-  CurrencyCircleDollar, 
-  Trophy, 
-  Gift, 
-  Users, 
-  Info 
-} from '@phosphor-icons/react'
+import NotificationsIcon from '@mui/icons-material/Notifications'
+import WavingHandIcon from '@mui/icons-material/WavingHand'
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
+import MilitaryTechIcon from '@mui/icons-material/MilitaryTech'
+import TrendingUpIcon from '@mui/icons-material/TrendingUp'
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard'
+import GroupIcon from '@mui/icons-material/Group'
+import InfoIcon from '@mui/icons-material/Info'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { NotificationHistoryItem } from '@/lib/notification-history'
 
@@ -39,31 +37,31 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString()
 }
 
-// Get Phosphor icon component for notification category
+// Get MUI icon component for notification category
 function getCategoryIcon(category: string) {
   switch (category) {
     case 'gm':
-      return HandWaving
+      return WavingHandIcon
     case 'quest':
-      return Sword
+      return SportsEsportsIcon
     case 'badge':
-      return Medal
+      return MilitaryTechIcon
     case 'level':
-      return TrendUp
+      return TrendingUpIcon
     case 'streak':
-      return Fire
+      return LocalFireDepartmentIcon
     case 'tip':
-      return CurrencyCircleDollar
+      return AttachMoneyIcon
     case 'achievement':
-      return Trophy
+      return EmojiEventsIcon
     case 'reward':
-      return Gift
+      return CardGiftcardIcon
     case 'guild':
-      return Sword
+      return SportsEsportsIcon
     case 'social':
-      return Users
+      return GroupIcon
     default:
-      return Info
+      return InfoIcon
   }
 }
 
@@ -132,7 +130,7 @@ export function NotificationBell({ initialNotifications = [], unreadCount = 0 }:
         aria-label="Notifications"
         aria-expanded={isOpen}
       >
-        <Bell size={18} weight="regular" className="text-gray-700 dark:text-gray-300" />
+        <NotificationsIcon sx={{ fontSize: 18 }} className="text-gray-700 dark:text-gray-300" />
         
         {/* Badge indicator (orange dot from trezoadmin pattern) */}
         {hasUnread && (
@@ -187,7 +185,7 @@ export function NotificationBell({ initialNotifications = [], unreadCount = 0 }:
                         <div className="flex gap-3">
                           {/* Icon */}
                           <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getToneColor(notification.tone)} bg-gray-100 dark:bg-gray-800`}>
-                            <IconComponent size={20} weight="regular" />
+                            <IconComponent sx={{ fontSize: 20 }} />
                           </div>
 
                         {/* Content */}
@@ -216,7 +214,7 @@ export function NotificationBell({ initialNotifications = [], unreadCount = 0 }:
                 </ul>
               ) : (
                 <div className="py-12 text-center">
-                  <Bell size={48} weight="light" className="mx-auto text-gray-300 dark:text-gray-700 mb-3" />
+                  <NotificationsIcon sx={{ fontSize: 48 }} className="mx-auto text-gray-300 dark:text-gray-700 mb-3" />
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     No notifications yet
                   </p>

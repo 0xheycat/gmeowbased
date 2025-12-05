@@ -13,7 +13,8 @@
  */
 
 import { useState, useMemo } from 'react'
-import { CaretUp, CaretDown } from '@phosphor-icons/react'
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -93,12 +94,12 @@ export function DataTable<T>({
 
   const getSortIcon = (columnKey: string) => {
     if (!sortConfig || sortConfig.key !== columnKey) {
-      return <CaretDown size={14} className="opacity-30" />
+      return <KeyboardArrowDownIcon sx={{ fontSize: 14 }} className="opacity-30" />
     }
     return sortConfig.direction === 'asc' ? (
-      <CaretUp size={14} />
+      <KeyboardArrowUpIcon sx={{ fontSize: 14 }} />
     ) : (
-      <CaretDown size={14} />
+      <KeyboardArrowDownIcon sx={{ fontSize: 14 }} />
     )
   }
 

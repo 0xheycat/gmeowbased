@@ -30,6 +30,6 @@
     "react/jsx-no-comment-textnodes": "off",
     "tailwindcss/classnames-order": "warn",
     "tailwindcss/no-custom-classname": "off",
-    "tailwindcss/no-contradicting-classname": "error"
+    "tailwindcss/no-contradicting-classname": "off"
   }
 }

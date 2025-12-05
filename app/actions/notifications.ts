@@ -3,8 +3,8 @@ import { fetchNotifications } from '@/lib/notification-history'
 
 export async function getNotificationData() {
   try {
-    // Get FID from cookies
-    const cookieStore = cookies()
+    // Get FID from cookies (Next.js 15 requires await)
+    const cookieStore = await cookies()
     const fidCookie = cookieStore.get('fid')
     const fid = fidCookie ? parseInt(fidCookie.value, 10) : null
     

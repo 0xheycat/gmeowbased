@@ -1,7 +1,8 @@
 'use client'
 
 // @edit-start 2025-02-14 — Agent stream shell
-import { ArrowClockwise, WarningCircle } from '@phosphor-icons/react'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import WarningIcon from '@mui/icons-material/Warning'
 import clsx from 'clsx'
 
 import { AgentEventFeed } from '@/components/agent/AgentEventFeed'
@@ -72,14 +73,14 @@ export function AgentStreamShell() {
             onClick={() => refresh()}
             className="inline-flex items-center gap-1 rounded-full border border-white dark:border-slate-700/15 bg-slate-100/5 dark:bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-950 dark:text-white/75 transition hover:border-emerald-300/40 hover:bg-emerald-400/10"
           >
-            <ArrowClockwise className={clsx('size-4', status === 'loading' ? 'animate-spin' : undefined)} weight="bold" />
+            <RefreshIcon className={clsx('size-4', status === 'loading' ? 'animate-spin' : undefined)} />
             Refresh
           </button>
         </CardSection>
 
         {errorMessage ? (
           <CardSection tone="danger" padding="sm" className="flex items-start gap-3 text-sm text-slate-950 dark:text-white">
-            <WarningCircle className="size-5 flex-shrink-0" weight="bold" />
+            <WarningIcon className="size-5 flex-shrink-0" />
             <div>
               <p className="font-semibold">Live feed paused</p>
               <p>{errorMessage}</p>

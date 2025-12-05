@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { LeaderboardEntry } from '@/components/leaderboard/LeaderboardTable'
 
 type TimePeriod = 'daily' | 'weekly' | 'all_time'
+type OrderBy = 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
 
 interface LeaderboardResult {
   data: LeaderboardEntry[]
@@ -37,13 +38,15 @@ interface UseLeaderboardReturn {
  * 
  * @param initialPeriod - Initial time period (default: 'all_time')
  * @param pageSize - Number of entries per page (default: 15)
+ * @param orderBy - Column to sort by (default: 'total_score')
  * 
  * @example
- * const { data, loading, currentPage, totalPages, period, setPeriod, setPage, setSearch } = useLeaderboard()
+ * const { data, loading, currentPage, totalPages, period, setPeriod, setPage, setSearch } = useLeaderboard('all_time', 15, 'tip_points')
  */
 export function useLeaderboard(
   initialPeriod: TimePeriod = 'all_time',
-  pageSize: number = 15
+  pageSize: number = 15,
+  orderBy: OrderBy = 'total_score'
 ): UseLeaderboardReturn {
   const [data, setData] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -75,6 +78,7 @@ export function useLeaderboard(
         period,
         page: currentPage.toString(),
         pageSize: pageSize.toString(),
+        orderBy,
       })
       
       if (debouncedSearch) {
@@ -99,7 +103,7 @@ export function useLeaderboard(
     } finally {
       setLoading(false)
     }
-  }, [period, currentPage, pageSize, debouncedSearch])
+  }, [period, currentPage, pageSize, debouncedSearch, orderBy])
   
   // Fetch on mount and when dependencies change
   useEffect(() => {

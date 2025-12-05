@@ -10,7 +10,9 @@
 
 'use client'
 
-import { ShareFat, CheckCircle, Sparkle } from '@phosphor-icons/react'
+import ShareIcon from '@mui/icons-material/Share'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { useState } from 'react'
 import { trackEvent } from '@/lib/analytics'
 
@@ -29,35 +31,35 @@ const TIER_CONFIG = {
   mythic: { 
     color: 'rgb(168 85 247)', 
     label: 'Mythic',
-    emoji: '🌟',
+    icon: 'stars',
     gradient: 'from-purple-500/20 via-violet-500/10 to-purple-500/20',
     borderGradient: 'from-purple-500 via-violet-400 to-purple-500'
   },
   legendary: { 
     color: 'rgb(251 191 36)', 
     label: 'Legendary',
-    emoji: '👑',
+    icon: 'workspace_premium',
     gradient: 'from-yellow-500/20 via-amber-500/10 to-yellow-500/20',
     borderGradient: 'from-yellow-500 via-amber-400 to-yellow-500'
   },
   epic: { 
     color: 'rgb(6 182 212)', 
     label: 'Epic',
-    emoji: '💎',
+    icon: 'diamond',
     gradient: 'from-cyan-500/20 via-blue-500/10 to-cyan-500/20',
     borderGradient: 'from-cyan-500 via-blue-400 to-cyan-500'
   },
   rare: { 
     color: 'rgb(139 92 246)', 
     label: 'Rare',
-    emoji: '⚡',
+    icon: 'bolt',
     gradient: 'from-indigo-500/20 via-purple-500/10 to-indigo-500/20',
     borderGradient: 'from-indigo-500 via-purple-400 to-indigo-500'
   },
   common: { 
     color: 'rgb(156 163 175)', 
     label: 'Common',
-    emoji: '✨',
+    icon: 'auto_awesome',
     gradient: 'from-gray-500/20 via-slate-500/10 to-gray-500/20',
     borderGradient: 'from-gray-500 via-slate-400 to-gray-500'
   }
@@ -78,11 +80,12 @@ export default function ShareButton({
   const tierConfig = TIER_CONFIG[tier]
 
   const generateShareText = () => {
-    const emoji = tierConfig.emoji
     const tierLabel = tierConfig.label
     const badge = badgeName || `${tierLabel} Badge`
     
-    return `${emoji} Just unlocked ${badge} on @gmeowbased! 🎯\n\nFID: ${fid} | Tier: ${tierLabel}\n\nJoin the adventure: gmeowhq.art`
+    // Use text representation for share text since we can't embed icon components
+    const iconText = tierConfig.icon === 'stars' ? '🌟' : tierConfig.icon === 'workspace_premium' ? '👑' : tierConfig.icon === 'diamond' ? '💎' : tierConfig.icon === 'bolt' ? '⚡' : '✨'
+    return `${iconText} Just unlocked ${badge} on @gmeowbased! 🎯\n\nFID: ${fid} | Tier: ${tierLabel}\n\nJoin the adventure: gmeowhq.art`
   }
 
   const handleDeeplinkShare = () => {
@@ -239,9 +242,8 @@ export default function ShareButton({
           </>
         ) : publishing ? (
           <>
-            <Sparkle 
-              size={24} 
-              weight="fill"
+            <AutoAwesomeIcon 
+              sx={{ fontSize: 24 }}
               style={{ color: tierConfig.color }}
               className="animate-spin"
             />
@@ -254,9 +256,8 @@ export default function ShareButton({
           </>
         ) : shared && castUrl ? (
           <>
-            <CheckCircle 
-              size={24} 
-              weight="fill" 
+            <CheckCircleIcon 
+              sx={{ fontSize: 24 }}
               style={{ color: tierConfig.color }}
               className="animate-in zoom-in duration-200"
             />
@@ -273,9 +274,8 @@ export default function ShareButton({
           </>
         ) : shared ? (
           <>
-            <CheckCircle 
-              size={24} 
-              weight="fill" 
+            <CheckCircleIcon 
+              sx={{ fontSize: 24 }}
               style={{ color: tierConfig.color }}
               className="animate-in zoom-in duration-200"
             />
@@ -288,9 +288,8 @@ export default function ShareButton({
           </>
         ) : (
           <>
-            <ShareFat 
-              size={24} 
-              weight="fill"
+            <ShareIcon 
+              sx={{ fontSize: 24 }}
               style={{ color: tierConfig.color }}
               className="
                 transition-transform duration-300

@@ -2,7 +2,9 @@
 
 // @edit-start 2025-02-14 — Agent composer suggestions
 import { useMemo, useState } from 'react'
-import { CheckCircle, Copy, MagnifyingGlass } from '@phosphor-icons/react'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import SearchIcon from '@mui/icons-material/Search'
 
 import { Card, CardDescription, CardSection, Input } from '@/components/ui/button'
 
@@ -79,7 +81,7 @@ export function AgentComposer({ className }: AgentComposerProps) {
             aria-label="Search quick prompts"
             className="pl-9"
           />
-          <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-950 dark:text-white/40" weight="bold" />
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-950 dark:text-white/40" />
         </div>
         <ul className="space-y-3">
           {filteredSuggestions.length ? (
@@ -100,12 +102,12 @@ export function AgentComposer({ className }: AgentComposerProps) {
                     >
                       {isCopied ? (
                         <>
-                          <CheckCircle className="size-4 text-emerald-300" weight="bold" />
+                          <CheckCircleIcon className="size-4 text-emerald-300" />
                           Copied
                         </>
                       ) : (
                         <>
-                          <Copy className="size-4 text-slate-950 dark:text-white/70" weight="bold" />
+                          <ContentCopyIcon className="size-4 text-slate-950 dark:text-white/70" />
                           Copy prompt
                         </>
                       )}

@@ -22,6 +22,7 @@ export const revalidate = 300 // 5 minutes
  * - page: number (default: 1)
  * - pageSize: number (default: 15, max: 100)
  * - search: string (optional - search by username or FID)
+ * - orderBy: 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points' (default: 'total_score')
  * 
  * Response:
  * {
@@ -36,11 +37,17 @@ export const revalidate = 300 // 5 minutes
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check rate limit first
-    const rateLimitResult = await checkLeaderboardRateLimit(request)
+    // Skip rate limiting in development
+    const isDevelopment = process.env.NODE_ENV === 'development'
     
-    if (!rateLimitResult.allowed) {
-      return createRateLimitResponse(rateLimitResult)
+    // Check rate limit first (skip in dev)
+    let rateLimitResult = null
+    if (!isDevelopment) {
+      rateLimitResult = await checkLeaderboardRateLimit(request)
+      
+      if (!rateLimitResult.allowed) {
+        return createRateLimitResponse(rateLimitResult)
+      }
     }
     
     const searchParams = request.nextUrl.searchParams
@@ -50,11 +57,20 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '15'), 100)
     const search = searchParams.get('search') || undefined
+    const orderBy = (searchParams.get('orderBy') || 'total_score') as 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
     
     // Validate period
     if (!['daily', 'weekly', 'all_time'].includes(period)) {
       return NextResponse.json(
         { error: 'Invalid period. Must be daily, weekly, or all_time' },
+        { status: 400 }
+      )
+    }
+    
+    // Validate orderBy
+    if (!['total_score', 'base_points', 'viral_xp', 'guild_bonus', 'referral_bonus', 'streak_bonus', 'badge_prestige', 'tip_points', 'nft_points'].includes(orderBy)) {
+      return NextResponse.json(
+        { error: 'Invalid orderBy parameter' },
         { status: 400 }
       )
     }
@@ -73,6 +89,7 @@ export async function GET(request: NextRequest) {
       page,
       perPage: pageSize,
       search,
+      orderBy,
     })
     
     // Transform response to match expected format
@@ -93,7 +110,13 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
       },
     })
-    return addRateLimitHeaders(nextResponse, rateLimitResult)
+    
+    // Add rate limit headers in production
+    if (rateLimitResult) {
+      return addRateLimitHeaders(nextResponse, rateLimitResult)
+    }
+    
+    return nextResponse
   } catch (error) {
     console.error('[Leaderboard V2 API] Error:', error)
     return NextResponse.json(

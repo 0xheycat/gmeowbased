@@ -1,10 +1,11 @@
 'use client'
-
+// we will rebuild profile page with profesional pattern , this is just temporary implementation with old patterns
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, User } from '@phosphor-icons/react'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import PersonIcon from '@mui/icons-material/Person'
 import { BadgeInventory } from '@/components/badge/BadgeInventory'
 import type { UserBadge } from '@/lib/badges'
 
@@ -116,7 +117,7 @@ export default function UserBadgesPage() {
           href={`/profile/${fid}`}
           className="inline-flex items-center gap-2 mb-6 min-h-[44px] py-2 text-sm text-slate-950 dark:text-white/70 hover:text-slate-950 dark:hover:text-white transition-colors"
         >
-          <ArrowLeft size={16} weight="bold" />
+          <ArrowBackIcon sx={{ fontSize: 16 }} />
           Back to Profile
         </Link>
 
@@ -135,7 +136,7 @@ export default function UserBadgesPage() {
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-purple-900 to-purple-700 flex items-center justify-center">
-                  <User size={32} weight="bold" className="text-slate-950 dark:text-white" />
+                  <PersonIcon sx={{ fontSize: 32 }} className="text-slate-950 dark:text-white" />
                 </div>
               )}
             </div>
@@ -261,3 +262,4 @@ export default function UserBadgesPage() {
     </div>
   )
 }
+// we will rebuild profile page with profesional pattern , this is just temporary implementation with old patterns

@@ -5,6 +5,7 @@ import { MiniAppProvider } from './providers'
 import type { ReactNode } from 'react'
 import { HeaderWrapper } from '@/components/layout/HeaderWrapper'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { Toaster } from 'sonner'
 
 // Category 11 Frame Fix: Import Gmeow font from app/fonts (deleted from public/fonts in 419276f)
 const gmeowFont = localFont({
@@ -113,6 +114,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </main>
             <MobileNav />
           </div>
+          <Toaster position="top-right" richColors closeButton />
         </MiniAppProvider>
       </body>
     </html>

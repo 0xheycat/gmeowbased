@@ -1,4 +1,12 @@
 /** @type {import('next').NextConfig} */
+
+// Bundle analyzer for performance optimization (Task 6)
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig = {
   // TypeScript and ESLint optimizations for faster builds
   typescript: {
@@ -101,6 +109,12 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.arweave.net',
         port: '',
         pathname: '/**',
@@ -119,4 +133,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withBundleAnalyzer(nextConfig)

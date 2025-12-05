@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
-import { Crown, Sparkle, Lock } from '@phosphor-icons/react'
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import LockIcon from '@mui/icons-material/Lock'
 import { useAccount } from 'wagmi'
 import { useNotifications } from '@/components/ui/live-notifications'
 import { ICON_SIZES } from '@/lib/icon-sizes'
@@ -148,7 +150,7 @@ export function BadgeInventory({
   if (badges.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <Lock size={48} weight="duotone" className="text-slate-900 dark:text-white/20 mb-4" />
+        <LockIcon sx={{ fontSize: 48 }} className="text-slate-900 dark:text-white/20 mb-4" />
         <p className="text-lg font-bold text-slate-900 dark:text-white/60 mb-2">No Badges Yet</p>
         <p className="text-sm text-slate-900 dark:text-white/40">
           Complete onboarding or join quests to earn your first badge!
@@ -206,9 +208,8 @@ export function BadgeInventory({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Crown 
-                        size={64} 
-                        weight="duotone" 
+                      <WorkspacePremiumIcon 
+                        sx={{ fontSize: 64 }} 
                         style={{ color: tierConfig.color }}
                       />
                     </div>
@@ -229,7 +230,7 @@ export function BadgeInventory({
                 {/* Minted Status */}
                 {badge.minted && (
                   <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded-md text-[10px] font-bold bg-emerald-500/80 text-slate-900 dark:text-white backdrop-blur-sm">
-                    <Sparkle size={ICON_SIZES.xs} weight="fill" />
+                    <AutoAwesomeIcon sx={{ fontSize: ICON_SIZES.xs }} />
                     Minted
                   </div>
                 )}
@@ -245,7 +246,7 @@ export function BadgeInventory({
                       <>Claiming...</>
                     ) : (
                       <>
-                        <Sparkle size={ICON_SIZES.xs} weight="fill" />
+                        <AutoAwesomeIcon sx={{ fontSize: ICON_SIZES.xs }} />
                         Claim
                       </>
                     )}
@@ -289,7 +290,7 @@ export function BadgeInventory({
                     </span>
                     {badge.minted && (
                       <span className="flex items-center gap-2 px-2 py-1 rounded text-[10px] font-bold bg-emerald-500/80 text-slate-900 dark:text-white">
-                        <Sparkle size={10} weight="fill" />
+                        <AutoAwesomeIcon sx={{ fontSize: 10 }} />
                         Minted
                       </span>
                     )}

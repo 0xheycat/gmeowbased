@@ -13,23 +13,25 @@ const FILTER_LABELS: Record<'all' | NotificationCategory, string> = {
   guild: 'Guilds',
   reward: 'Rewards',
   tip: 'Tips',
-  level: 'Level Ups',
-  reminder: 'Reminders',
-  mention: 'Mentions',
+  level: 'Level Up',
   streak: 'Streaks',
+  gm: 'GM Posts',
+  achievement: 'Achievements',
+  social: 'Social',
 }
 
 const CATEGORY_ICONS: Partial<Record<NotificationCategory, string>> = {
-  system: '🛰️',
-  quest: '🧭',
-  badge: '🎖️',
-  guild: '🏰',
-  reward: '💎',
-  tip: '⚡',
-  level: '🚀',
-  reminder: '⏰',
-  mention: '💬',
-  streak: '🔥',
+  system: 'settings_input_antenna',
+  quest: 'explore',
+  badge: 'military_tech',
+  guild: 'castle',
+  reward: 'diamond',
+  tip: 'bolt',
+  level: 'rocket_launch',
+  streak: 'local_fire_department',
+  gm: 'waving_hand',
+  achievement: 'emoji_events',
+  social: 'people',
 }
 
 function formatTimeAgo(timestamp: number): string {
@@ -66,17 +68,13 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
 
   const unreadCount = notifications.length
 
-  const handleDismiss = (note: NotificationItem) => {
-    dismiss(note.id)
+  const handleDismiss = (noteId: string) => {
+    dismiss(noteId)
   }
 
   const handlePrimaryAction = (note: NotificationItem) => {
-    if (note.onAction) {
-      note.onAction()
-    } else if (note.href) {
-      if (/^https?:/i.test(note.href)) {
-        window.open(note.href, '_blank', 'noopener,noreferrer')
-      }
+    if (note.metadata?.onClick) {
+      note.metadata.onClick()
     }
     dismiss(note.id)
   }
@@ -155,7 +153,7 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
             {filtered.length ? (
               filtered.slice(0, 10).map((note) => {
                 const icon = note.category ? CATEGORY_ICONS[note.category] ?? '✨' : '✨'
-                const primaryActionLabel = note.actionLabel ?? (note.href ? 'View' : null)
+                const hasAction = Boolean(note.metadata?.onClick)
                 return (
                   <article
                     key={note.id}
@@ -168,12 +166,12 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <h5 className="text-[13px] font-semibold text-slate-950 dark:text-white">{note.title}</h5>
-                            {note.description ? (
-                              <p className="mt-1 text-sm leading-relaxed text-[var(--px-sub)]">{note.description}</p>
+                            <h5 className="text-[13px] font-semibold text-slate-950 dark:text-white">{note.title || note.message}</h5>
+                            {note.title && note.message !== note.title ? (
+                              <p className="mt-1 text-sm leading-relaxed text-[var(--px-sub)]">{note.message}</p>
                             ) : null}
                             <div className="mt-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.26em] text-[var(--px-sub)]">
-                              <span>{formatTimeAgo(note.createdAt)}</span>
+                              <span>{formatTimeAgo(note.timestamp || Date.now())}</span>
                               {note.category && (
                                 <>
                                   <span className="text-slate-950 dark:text-white/30">•</span>
@@ -185,20 +183,20 @@ export function ProfileNotificationCenter({ className }: ProfileNotificationCent
                           <button
                             type="button"
                             className="flex-shrink-0 rounded-lg border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.26em] text-slate-950 dark:text-white/80 transition hover:border-rose-300/40 hover:text-slate-950 dark:text-white"
-                            onClick={() => handleDismiss(note)}
+                            onClick={() => handleDismiss(note.id)}
                             aria-label="Dismiss notification"
                           >
                             Dismiss
                           </button>
                         </div>
-                        {primaryActionLabel ? (
+                        {hasAction ? (
                           <div className="mt-3">
                             <button
                               type="button"
                               className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-4 py-2 text-sm uppercase tracking-[0.26em] text-emerald-100 transition hover:bg-emerald-500/25"
                               onClick={() => handlePrimaryAction(note)}
                             >
-                              {primaryActionLabel}
+                              View
                             </button>
                           </div>
                         ) : null}

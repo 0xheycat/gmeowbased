@@ -1,1163 +1,459 @@
 # 🎨 Template Selection - Foundation Rebuild
 
-**Selection Date**: November 30, 2025  
-**Total Templates Reviewed**: 7,973 TSX components  
-**Selected Components**: 28 patterns  
-**Primary Goal**: Mobile-first UI with SVG icons (NO emojis)
+**Last Updated**: December 3, 2025  
+**Review Type**: Comprehensive Deep Audit  
+**Total Templates Available**: 15 templates (24,117 TSX/TS files)  
+**Selection Strategy**: Multi-template hybrid (best pattern wins)  
+**Primary Goal**: Professional Web3 app with production-tested patterns
 
 ---
 
-## 📊 Template Sources Overview
+## 📊 Complete Template Library Inventory
 
-| Folder | TSX Count | Best For | Version |
-|--------|-----------|----------|---------|
-| **trezoadmin-41** | 4,431 | Modern dashboards, Tailwind + Material-UI | Latest |
-| **music** | 2,647 | **SVG icons (1,998!)**,  forms, charts | Production |
-| **gmeowbased0.6** | 406 | Previous patterns, glass morphism | v0.6 |
-| **gmeowbasedv0.3** | 489 | Sidenav patterns, layouts | v0.3 |
-| **TOTAL** | **7,973** | | |
+**ACTUAL COUNT** (December 3, 2025 audit):
 
----
-
-## 🎯 Selection Criteria
-
-1. **Mobile-First** ✅ Bottom nav, large tap targets (44px min)
-2. **SVG Icons** ✅ No emojis, use professional SVG icons
-3. **Modern Design** ✅ Glass morphism, gradients, animations
-4. **Performance** ✅ Lightweight, lazy loading, optimized
-5. **Accessibility** ✅ ARIA labels, keyboard navigation, screen reader
-6. **Tailwind-Compatible** ✅ Works with our CSS system
-
----
-
-## 🧩 Selected Components (28 Total)
-
-### 1️⃣ Navigation Components (6 selected)
-
-#### A. **Bottom Tab Navigation** (Mobile Priority #1)
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/Layout/`
-- **File**: SidebarMenu (adapt to bottom nav)
-- **Why**: Modern Tailwind design, responsive, touch-optimized
-- **Adapt**: Convert vertical sidebar to horizontal bottom nav
-- **Features**: Active state, icon support, badge support
-- **Estimated Effort**: 3 hours
-
-**Backup Source**: `music/common/resources/client/admin/appearance/appearance-listener.tsx`
-- Sidebar toggle patterns can be adapted for mobile
+| Template | Files | Tech Stack | Best For | Priority |
+|----------|-------|------------|----------|----------|
+| **trezoadmin-41** | 10,056 | React + Next.js + Tailwind | Admin dashboards, professional UI | ⭐⭐⭐⭐⭐ |
+| **music** | 3,130 | React + Laravel (backend) | DataTables, forms, charts | ⭐⭐⭐⭐⭐ |
+| **jumbo-7.4** | 3,651 | React + MUI + Next.js/Vite | Featured cards, Material Design | ⭐⭐⭐⭐ |
+| **ecmenextjs-121** | 2,017 | React + Next.js | Ecommerce patterns | ⭐⭐⭐ |
+| **fusereact-1600** | 2,014 | React + MUI | Control panels, advanced UI | ⭐⭐⭐ |
+| **gmeowbasedv0.3** | 1,003 | Next.js + Tailwind | Sidenav, admin layouts | ⭐⭐⭐ |
+| **ubold-710** | 997 | Bootstrap + React | Legacy admin patterns | ⭐⭐ |
+| **gmeowbased0.6** | 476 | Next.js + Tailwind + Framer Motion | **Crypto/gaming UI, Web3 patterns** | ⭐⭐⭐⭐⭐ |
+| **gmeowbased0.1** | 283 | Next.js + Tailwind | Early Web3 patterns | ⭐⭐ |
+| **gmeowbased0.7** | 282 | Next.js + Tailwind | FileUploader, admin UI | ⭐⭐⭐ |
+| **nutonnextjs-10** | 215 | Next.js | Minimal admin | ⭐ |
+| **gmeowbasedv0.1** | 0 | N/A | Empty folder | ❌ |
+| **gmeowbasedv0.2** | 0 | N/A | Empty folder | ❌ |
+| **gmeowbasedv0.4** | 0 | N/A | Empty folder | ❌ |
+| **gmeowbasedv0.5** | 0 | N/A | Empty folder | ❌ |
+| **TOTAL** | **24,117** | | | |
 
 ---
 
-#### B. **Desktop Sidebar Navigation**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/Layout/SidebarMenu/`
-- **File**: SidebarMenu (desktop version)
-- **Why**: Collapsible, modern design, icon + label
-- **Features**: Hover states, nested menus, collapse/expand
-- **Estimated Effort**: 2 hours
+## 🎯 Template Selection Philosophy (Updated December 3, 2025)
+
+### Core Principles
+
+1. **Best Pattern Wins** - Template origin doesn't matter (admin vs crypto vs ecommerce)
+2. **Production-Tested Over Custom** - Components used by 100+ developers beat scratch builds
+3. **Tech Stack Compatibility** - Prefer Tailwind > MUI conversion, Next.js > Laravel adaptation
+4. **Adaptation Investment** - 60% effort acceptable if UI/UX quality is superior
+5. **Crypto Context Bonus** - Web3-native patterns (gmeowbased0.6) require minimal adaptation
+
+### Multi-Template Hybrid Strategy
+
+**Proven by Leaderboard Success** (December 1, 2025):
+- Combined Music (DataTable) + Trezo (analytics) + gmeowbased0.6 (crypto cards) + JUMBO
+- Result: Professional UI with 40% adaptation effort
+- Lesson: Don't limit by template category
+
+**Template Priority Tiers**:
+
+**Tier 1 - Primary Templates** (use first):
+- **gmeowbased0.6** - Web3/crypto patterns (0-10% adaptation)
+- **trezoadmin-41** - Professional admin UI (30-50% adaptation)
+- **music** - DataTables, forms, charts (30-40% adaptation)
+
+**Tier 2 - Secondary Templates** (specific use cases):
+- **gmeowbased0.7** - FileUploader, admin layouts (20% adaptation)
+- **jumbo-7.4** - Featured cards, Material Design (50-60% adaptation)
+- **gmeowbasedv0.3** - Sidenav patterns (15% adaptation)
+
+**Tier 3 - Specialized Templates** (rare use):
+- **fusereact-1600** - Advanced control panels (60-70% adaptation)
+- **ecmenextjs-121** - Ecommerce patterns (40% adaptation)
+- **ubold-710** - Legacy Bootstrap patterns (70% adaptation,)
 
 ---
 
-#### C. **Top Header/Navbar**
-**Source**: `trezoadmin-41/trezo-landing-pages/react-nextjs-tailwindcss/crypto-landing/src/components/Layout/Navbar.tsx`
-- **File**: Navbar
-- **Why**: Mobile-responsive, sticky header, hamburger menu
-- **Features**: Logo, CTA button, mobile menu toggle
-- **Estimated Effort**: 2 hours
+## 📦 Component Category Matrix
+
+### 1. Cards & Display Components
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **Quest Cards** | gmeowbased0.6/collection-card.tsx | 1 | 5% | Standard quest grid |
+| **Featured Cards** | jumbo-7.4/JumboCardFeatured | 1 | 60% | Epic/special quests |
+| **NFT Cards** | gmeowbased0.6/nft-card.tsx | 1 | 0% | Badge/achievement display |
+| **Creator Cards** | trezoadmin-41/Profile/ProfileCard | 1 | 40% | User/creator profiles |
+| **Stat Cards** | trezoadmin-41/Dashboard/Finance/Cards | 1 | 30% | XP, rank, streak stats |
+| **Leaderboard Items** | trezoadmin-41/Crypto/CryptocurrencyWatchlist | 1 | 40% | Ranked user lists |
+
+### 2. Progress & Status Components
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **Progress Bars** | gmeowbased0.6/progressbar.tsx | 1 | 0% | Quest progress, XP bars |
+| **Status Chips** | trezoadmin-41/UIElements/Badges | 1 | 40% | Quest state indicators |
+| **Progress Circles** | music/ui/progress/progress-circle.tsx | 1 | 20% | Completion percentage |
+| **Meters** | music/ui/progress/meter.tsx | 1 | 20% | Resource usage |
+
+### 3. Navigation Components
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **Bottom Tab Nav** | gmeowbasedv0.3 patterns | 1 | 15% | Mobile primary nav |
+| **Sidebar Nav** | trezoadmin-41/Layout/SidebarMenu | 1 | 30% | Desktop navigation |
+| **Top Header** | trezoadmin-41/Layout/Navbar | 1 | 25% | Site header |
+| **Breadcrumbs** | music/ui/breadcrumbs/breadcrumb.tsx | 1 | 10% | Page hierarchy |
+| **Tab Navigation** | trezoadmin-41/UIElements/Tabs | 1 | 30% | Sub-page switching |
+| **Pagination** | music/ui/pagination/pagination.tsx | 1 | 15% | List pagination |
+
+### 4. Form Components
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **Text Input** | music/ui/forms/input-field/text-field.tsx | 1 | 30% | All text inputs |
+| **Search Input** | trezoadmin-41/Layout/Header/SearchForm | 1 | 35% | Search functionality |
+| **Select Dropdown** | music/ui/forms/select/select.tsx | 1 | 30% | Option selection |
+| **Checkbox/Radio** | music/ui/forms/toggle/ | 3 | 25% | Binary/multiple choice |
+| **File Upload** | gmeowbased0.7/TS/src/components/FileUploader | 1 | 20% | Quest image uploads |
+| **Form Validation** | music form validation patterns | 10+ | 30% | All forms |
+
+### 5. Data Display Components
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **DataTable** | music/datatable/ | 20+ | 40% | Quest management |
+| **Leaderboard Table** | music/datatable/ + trezoadmin-41 | 10+ | 40% | Ranked lists |
+| **Charts** | music/charts/ | 10+ | 35% | Analytics, stats |
+| **Empty States** | music/datatable/empty-state-message.tsx | 1 | 15% | No data UI |
+
+### 6. Feedback Components
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **Toast Notifications** | music/ui/overlays/toast/ | 2 | 25% | Success/error messages |
+| **Modal/Dialog** | music/ui/overlays/dialog/dialog.tsx | 1 | 20% | Confirmations, forms |
+| **Loading Spinner** | trezoadmin-41/UIElements/Spinners | 1 | 25% | Loading states |
+| **Skeleton Loaders** | trezoadmin-41/UIElements/Skeleton | 1 | 30% | Content loading |
+
+### 7. Button Components
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **Primary Button** | gmeowbased0.6/button.tsx | 1 | 0% | Main actions |
+| **Secondary/Outline** | trezoadmin-41/UIElements/Buttons/OutlineButtons | 1 | 30% | Secondary actions |
+| **Icon Button** | music/ui/buttons/icon-button.tsx | 1 | 20% | Icon-only actions |
+| **FAB** | trezoadmin-41/UIElements/FloatingActionButton | 1 | 35% | Primary mobile action |
+| **Button Group** | music/ui/buttons/button-group.tsx | 1 | 20% | Segmented controls |
+| **Loading Button** | trezoadmin-41/UIElements/Buttons/LoadingButtons | 1 | 35% | Async actions |
+
+### 8. Layout Components
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **Grid Layout** | trezoadmin-41/Dashboard layouts | 5+ | 35% | Dashboard sections |
+| **Dashboard Layout** | music/ui/layout/dashboard-layout.tsx | 1 | 30% | Admin pages |
+| **Responsive Grid** | gmeowbased0.6/farms/farms.tsx | 1 | 10% | Card grids |
+
+### 9. Icon Systems
+
+| Pattern | Best Template | Files | Adaptation | When to Use |
+|---------|---------------|-------|------------|-------------|
+| **SVG Icons** | gmeowbased0.6/icons/ | 93 | 0% | All UI icons |
+| **Material Icons** | music/icons/ (if needed) | 1,998 | 25% | Professional icon needs |
+| **Phosphor Icons** | Current implementation | N/A | 0% | Already integrated |
 
 ---
 
-#### D. **Breadcrumb Navigation**
-**Source**: `music/common/resources/client/ui/breadcrumbs/breadcrumbs.tsx`
-- **File**: Breadcrumbs
-- **Why**: Accessible, customizable separators
-- **Features**: Current page highlight, truncation for long paths
-- **Estimated Effort**: 1 hour
+## 🎨 Page-by-Page Template Selection
+
+### Profile Page Rebuild
+
+**Primary Template**: trezoadmin-41/MyProfile + gmeowbased0.6/profile  
+**Adaptation**: 25-35%
+
+**Components Needed**:
+- Profile Header Card (trezoadmin-41/MyProfile/) - 40% adaptation
+- Avatar Upload (gmeowbased0.7/FileUploader) - 20% adaptation
+- Stats Grid (gmeowbased0.6/ui stats) - 10% adaptation
+- Badge Collection (gmeowbased0.6/nft-card.tsx) - 5% adaptation
+- Activity Timeline (trezoadmin-41/Timeline/) - 45% adaptation
+- Settings Form (music/forms) - 30% adaptation
+
+**Estimated Effort**: 8 hours
+
+### Notifications Page Rebuild
+
+**Primary Template**: trezoadmin-41/Notifications + music/ui  
+**Adaptation**: 30-40%
+
+**Components Needed**:
+- Notification List (trezoadmin-41/Notifications/) - 40% adaptation
+- Notification Card (gmeowbased0.6/ui patterns) - 15% adaptation
+- Filter UI (trezoadmin-41/filters) - 35% adaptation
+- Empty State (music/datatable/empty-state) - 15% adaptation
+- Mark Read/Unread (music patterns) - 30% adaptation
+
+**Estimated Effort**: 6 hours
+
+### Badges Page Rebuild
+
+**Primary Template**: gmeowbased0.6/nft + trezoadmin-41/NFT  
+**Adaptation**: 20-40%
+
+**Components Needed**:
+- Badge Grid (gmeowbased0.6/nft-card.tsx) - 5% adaptation
+- Badge Detail Modal (trezoadmin-41/NFT/NFTDetails) - 50% adaptation
+- Locked/Unlocked States (gmeowbased0.6 patterns) - 10% adaptation
+- Progress Tracker (gmeowbased0.6/progressbar.tsx) - 0% adaptation
+- Filter/Sort (trezoadmin-41/filters) - 40% adaptation
+
+**Estimated Effort**: 7 hours
+
+### Quest Management Dashboard (Creator Tools)
+
+**Primary Template**: music/admin + trezoadmin-41/Dashboard  
+**Adaptation**: 40-50%
+
+**Components Needed**:
+- DataTable (music/datatable/) - 40% adaptation
+- Quest Analytics (trezoadmin-41/Dashboard/analytics) - 50% adaptation
+- Charts (music/charts/) - 35% adaptation
+- CRUD Forms (music/admin forms) - 35% adaptation
+- File Upload (gmeowbased0.7/FileUploader) - 20% adaptation
+
+**Estimated Effort**: 12 hours
+
+### Leaderboard Enhancements
+
+**Primary Template**: music/datatable + trezoadmin-41/Crypto  
+**Adaptation**: 30-40% (already completed, reference only)
+
+**Components Used**:
+- DataTable System (music/datatable/) - 40% adaptation ✅
+- Crypto Watchlist patterns (trezoadmin-41) - 40% adaptation ✅
+- Profile Cards (gmeowbased0.6) - 10% adaptation ✅
+
+**Status**: ✅ Production (reference implementation)
 
 ---
 
-#### E. **Tab Navigation** (Sub-pages)
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/UIElements/Tabs/`
-- **File**: BasicTabs, IconTabs
-- **Why**: Clean design, icon support, scrollable on mobile
-- **Features**: Underline animation, active state, badge support
-- **Estimated Effort**: 1.5 hours
+## 📋 Selection Decision Tree
+
+### Use gmeowbased0.6 When:
+- ✅ Crypto/Web3/gaming context
+- ✅ Framer Motion animations needed
+- ✅ Gradient overlays, glass morphism
+- ✅ NFT/token card displays
+- ✅ Need 0-10% adaptation (fastest)
+
+### Use trezoadmin-41 When:
+- ✅ Professional admin dashboard needed
+- ✅ Analytics, charts, data visualization
+- ✅ Filters, sorting, advanced UI
+- ✅ Material Design compatible
+- ✅ 30-50% adaptation acceptable
+
+### Use music When:
+- ✅ DataTables with filters/sorting
+- ✅ Form validation systems
+- ✅ Charts (line, bar, polar)
+- ✅ Admin panel patterns
+- ✅ 30-40% adaptation acceptable
+
+### Use gmeowbased0.7 When:
+- ✅ File upload functionality
+- ✅ Admin layout patterns
+- ✅ 20% adaptation acceptable
+
+### Use jumbo-7.4 When:
+- ✅ Featured/hero cards needed
+- ✅ Material-UI aesthetic acceptable
+- ✅ 50-60% adaptation acceptable
+- ✅ No Tailwind equivalent found
+
+### Avoid When:
+- ❌ Template uses Bootstrap (ubold-710) - prefer Tailwind
+- ❌ Template uses Laravel backend (music) - extract UI only
+- ❌ Template uses Vue (trezoadmin-41 Vue versions) - use React versions
+- ❌ Adaptation >70% - build custom component instead
 
 ---
 
-#### F. **Pagination**
-**Source**: `music/common/resources/client/ui/pagination/pagination.tsx`
-- **File**: Pagination
-- **Why**: Accessible, keyboard navigation, mobile-optimized
-- **Features**: First/last buttons, ellipsis for long lists, size variants
-- **Estimated Effort**: 1 hour
+## 🛠️ Adaptation Guidelines
+
+### 0-10% Adaptation (Preferred)
+**Time**: 15-30 min per component  
+**Changes**: Path updates, prop renames, minor styling  
+**Example**: gmeowbased0.6/progressbar.tsx → QuestProgress.tsx
+
+### 20-30% Adaptation (Acceptable)
+**Time**: 1-2 hours per component  
+**Changes**: Tech stack conversion (Bootstrap→Tailwind), prop restructuring  
+**Example**: gmeowbased0.7/FileUploader → QuestImageUpload
+
+### 40-50% Adaptation (Careful)
+**Time**: 2-4 hours per component  
+**Changes**: MUI→Tailwind, Laravel→Next.js, significant logic refactor  
+**Example**: music/DataTable → QuestManagementTable
+
+### 60-70% Adaptation (Rare)
+**Time**: 4-6 hours per component  
+**Changes**: Major rewrite, complex state management, API integration  
+**Example**: jumbo-7.4/JumboCardFeatured → FeaturedQuestCard
+
+### 70%+ Adaptation (Build Custom)
+**Time**: 6+ hours per component  
+**Decision**: Build from scratch, adaptation not worth it  
+**Example**: Complex admin panels with heavy Laravel coupling
 
 ---
 
-### 2️⃣ Button Components (7 selected)
+## 🎯 Selection Criteria Matrix
 
-#### A. **Primary Action Button**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/UIElements/Buttons/BasicButtons.tsx`
-- **File**: BasicButtons
-- **Why**: Modern gradients, Tailwind-based, size variants
-- **Features**: Gradient backgrounds, hover effects, loading state
-- **Variants**: sm, md, lg, xl
-- **Estimated Effort**: 1.5 hours
+### Priority 1: Tech Stack Match
+- ✅ Next.js + Tailwind = Highest priority (gmeowbased0.6, trezoadmin-41 React+Tailwind)
+- ⚠️ Next.js + MUI = Medium priority (jumbo-7.4, fusereact-1600)
+- ⚠️ React + Laravel = UI extraction only (music)
+- ❌ Vue = Skip (use React versions)
+- ❌ Bootstrap = Last resort (ubold-710)
 
----
+### Priority 2: Component Quality
+- ✅ Production-tested with 100+ users (music, trezoadmin-41)
+- ✅ Professional design language (not MVP prototype)
+- ✅ Accessible (ARIA, keyboard nav, screen reader)
+- ✅ Responsive (mobile-first)
+- ✅ Dark mode support
 
-#### B. **Secondary/Outline Button**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/UIElements/Buttons/OutlineButtons.tsx`
-- **File**: OutlineButtons
-- **Why**: Clean outline style, pairs well with primary button
-- **Features**: Border animation on hover, multiple colors
-- **Estimated Effort**: 1 hour
+### Priority 3: Adaptation Cost
+- ✅ 0-30% adaptation = Use freely
+- ⚠️ 30-50% adaptation = Evaluate quality vs time
+- ⚠️ 50-70% adaptation = Only if superior quality
+- ❌ 70%+ adaptation = Build custom
 
----
-
-#### C. **Icon Button**
-**Source**: `music/common/resources/client/ui/buttons/icon-button.tsx`
-- **File**: IconButton
-- **Why**: Lightweight, size-aware, accessible
-- **Features**: Circular/square variants, size inheritance, tooltip support
-- **Props**: `size`, `padding`, `equalWidth`, `variant`
-- **Estimated Effort**: 1 hour
-
----
-
-#### D. **Floating Action Button (FAB)**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-material-ui/src/components/UiKit/FloatingActionButton/FloatingActionButtons.tsx`
-- **File**: FloatingActionButtons
-- **Why**: Material Design, position variants (bottom-right, etc.)
-- **Features**: Shadow elevation, ripple effect, icon support
-- **Estimated Effort**: 1.5 hours
+### Priority 4: Context Relevance
+- ✅ Crypto/Web3 context = Bonus (gmeowbased templates)
+- ✅ Gaming/social context = Bonus
+- ⚠️ Generic admin = Neutral (music, trezoadmin-41)
+- ⚠️ Domain-specific (ecommerce, LMS) = Extract patterns only
 
 ---
 
-#### E. **Button Group**
-**Source**: `music/common/resources/client/ui/buttons/button-group.tsx`
-- **File**: ButtonGroup
-- **Why**: Segmented control pattern, mobile-friendly
-- **Features**: Horizontal/vertical, equal width option, exclusive selection
-- **Estimated Effort**: 1 hour
+## 📝 Documentation Standards
 
----
-
-#### F. **Loading Button**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-material-ui/src/components/UiKit/Buttons/LoadingButtons.tsx`
-- **File**: LoadingButtons
-- **Why**: Built-in loading spinner, disables on load
-- **Features**: Spinner position (start/end), maintains button width
-- **Estimated Effort**: 1 hour
-
----
-
-#### G. **Link Button**
-**Source**: `music/common/resources/client/ui/buttons/button.tsx`
-- **File**: Button (styled as link)
-- **Why**: Accessible, router-aware, external link detection
-- **Features**: `asChild` prop for Next.js Link integration
-- **Estimated Effort**: 30 minutes
-
----
-
-### 3️⃣ Card Components (5 selected)
-
-#### A. **Stats Card** (XP, Rank, Streak)
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/Dashboard/Finance/Cards.tsx`
-- **File**: Cards (Finance Dashboard)
-- **Why**: Perfect for numeric stats, icon + value + label layout
-- **Features**: Icon color variants, trend indicators (up/down), glassmorphism
-- **Layout**: Flex column, centered, 16px padding
-- **Estimated Effort**: 2 hours
-
----
-
-#### B. **Leaderboard Item Card**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/Dashboard/Crypto/CryptocurrencyWatchlist/`
-- **File**: Crypto watchlist items
-- **Why**: Perfect for ranked lists, avatar + name + stats
-- **Features**: Hover effects, highlight current user, rank badge
-- **Layout**: Flex row, space-between, 12px padding
-- **Estimated Effort**: 2 hours
-
----
-
-#### C. **Badge/Achievement Card**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-material-ui/src/components/UiKit/Card/MediaCard.tsx`
-- **File**: MediaCard
-- **Why**: Image + title + description, perfect for badges
-- **Features**: Locked/unlocked states, overlay for locked badges
-- **Layout**: Vertical card, image top, text below
-- **Estimated Effort**: 2 hours
-
----
-
-#### D. **Profile Header Card**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/MyProfile/`
-- **File**: Profile components
-- **Why**: Avatar + username + bio + stats, complete profile layout
-- **Features**: Large avatar (96px), gradient background, stats pills
-- **Estimated Effort**: 2.5 hours
-
----
-
-#### E. **Action Card** (with CTA button)
-**Source**: `trezoadmin-41/trezo-landing-pages/react-nextjs-tailwindcss/analytics-landing/src/components/Features/FeaturesCard.tsx`
-- **File**: FeaturesCard
-- **Why**: Icon + title + description + button, good for CTAs
-- **Features**: Hover lift effect, gradient border, responsive
-- **Estimated Effort**: 1.5 hours
-
----
-
-### 4️⃣ Form Components (4 selected)
-
-#### A. **Text Input Field**
-**Source**: `music/common/resources/client/ui/forms/input-field/text-field/text-field.tsx`
-- **File**: TextField
-- **Why**: Complete input system with label, error, helper text
-- **Features**: Size variants, prefix/suffix icons, character count, error states
-- **Props**: `label`, `error`, `helperText`, `startAdornment`, `endAdornment`
-- **Estimated Effort**: 2 hours
-
----
-
-#### B. **Search Input**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/Layout/Header/SearchForm/`
-- **File**: SearchForm
-- **Why**: Mobile-optimized search, autocomplete ready
-- **Features**: Search icon, clear button, keyboard shortcuts (/)
-- **Estimated Effort**: 1.5 hours
-
----
-
-#### C. **Select Dropdown**
-**Source**: `music/common/resources/client/ui/forms/select/select.tsx`
-- **File**: Select
-- **Why**: Accessible, searchable, mobile-friendly
-- **Features**: Virtual scrolling (large lists), multi-select, custom options
-- **Props**: `options`, `value`, `onChange`, `searchable`, `multiple`
-- **Estimated Effort**: 2.5 hours
-
----
-
-#### D. **Checkbox & Radio**
-**Source**: `music/common/resources/client/ui/forms/toggle/`
-- **File**: Checkbox, Switch, Radio
-- **Why**: Accessible, animated, custom styled
-- **Features**: Indeterminate state (checkbox), size variants, label support
-- **Estimated Effort**: 1.5 hours
-
----
-
-### 5️⃣ Feedback Components (4 selected)
-
-#### A. **Toast Notification System**
-**Source**: `music/common/resources/client/ui/overlays/toast/`
-- **File**: Toast, Toaster
-- **Why**: Complete toast system with queue, animations, types
-- **Features**: Success/error/warning/info variants, auto-dismiss, pauseOnHover
-- **Position**: Top-right, bottom-right, top-center, etc.
-- **Estimated Effort**: 2.5 hours
-
----
-
-#### B. **Modal/Dialog**
-**Source**: `music/common/resources/client/ui/overlays/dialog/dialog.tsx`
-- **File**: Dialog
-- **Why**: Accessible (ARIA), backdrop, esc to close, mobile-optimized
-- **Features**: Size variants, scrollable body, sticky header/footer
-- **Estimated Effort**: 2 hours
-
----
-
-#### C. **Loading Spinner**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/UIElements/Spinners/`
-- **File**: Spinners (multiple variants)
-- **Why**: Multiple styles (circle, dots, bars), size variants
-- **Features**: Centered overlay option, inline option, color variants
-- **Estimated Effort**: 1 hour
-
----
-
-#### D. **Empty State**
-**Source**: `music/common/resources/client/datatable/empty-state-message.tsx`
-- **File**: EmptyStateMessage
-- **Why**: Icon + message + CTA button, good for no-data states
-- **Features**: Customizable icon, action button, multiple sizes
-- **Estimated Effort**: 1 hour
-
----
-
-### 6️⃣ Data Display Components (2 selected)
-
-#### A. **Leaderboard/List Table**
-**Source**: `music/common/resources/client/datatable/`
-- **File**: DataTable components (complete system)
-- **Why**: Virtual scrolling, infinite scroll, sorting, filtering
-- **Features**: Mobile-responsive, sticky header, loading skeletons
-- **Components**: DataTable, DataTableHeader, DataTableRow, DataTablePagination
-- **Estimated Effort**: 4 hours (complex)
-
----
-
-#### B. **Progress Bar**
-**Source**: `trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/src/components/UIElements/Progress/`
-- **File**: Progress components
-- **Why**: XP bars, streak progress, loading progress
-- **Features**: Gradient fill, label (percentage/value), size variants
-- **Variants**: Linear, circular
-- **Estimated Effort**: 1.5 hours
-
----
-
-## 🎨 SVG Icon System (PRIORITY)
-
-### **1,998 Material Design SVG Icons Available!**
-
-**Source**: `music/common/resources/client/icons/`
-
-**Key Files**:
-- `create-svg-icon.tsx` - Icon factory (creates icon components)
-- `svg-icon.tsx` - Base icon component with size/color props
-- `material/` - 1,998 pre-built Material Design icons
-
-**Icons We Need** (20 selected):
-
-| Icon Name | File | Use Case |
-|-----------|------|----------|
-| `Home` | material/Home.tsx | Bottom nav - Home tab |
-| `Leaderboard` | material/Leaderboard.tsx | Bottom nav - Rank tab |
-| `Person` | material/Person.tsx | Bottom nav - You tab |
-| `Share` | material/Share.tsx | FAB share button |
-| `LocalFireDepartment` | material/LocalFireDepartment.tsx | Streak icon (fire) |
-| `Bolt` | material/Bolt.tsx | XP icon (lightning) |
-| `EmojiEvents` | material/EmojiEvents.tsx | Badge/trophy icon |
-| `TrendingUp` | material/TrendingUp.tsx | Stats trending up |
-| `TrendingDown` | material/TrendingDown.tsx | Stats trending down |
-| `Search` | material/Search.tsx | Search input icon |
-| `FilterList` | material/FilterList.tsx | Filter dropdown icon |
-| `Close` | material/Close.tsx | Close modal/drawer |
-| `Menu` | material/Menu.tsx | Mobile hamburger menu |
-| `ChevronLeft` | material/ChevronLeft.tsx | Back navigation |
-| `ChevronRight` | material/ChevronRight.tsx | Forward navigation |
-| `ExpandMore` | material/ExpandMore.tsx | Dropdown arrow |
-| `CheckCircle` | material/CheckCircle.tsx | Success toast icon |
-| `Error` | material/Error.tsx | Error toast icon |
-| `Info` | material/Info.tsx | Info toast icon |
-| `Warning` | material/Warning.tsx | Warning toast icon |
-
-**How to Use**:
-```tsx
-import { HomeIcon } from '@/components/icons/material/Home';
-import { LeaderboardIcon } from '@/components/icons/material/Leaderboard';
-
-<HomeIcon size="md" className="text-primary" />
-<LeaderboardIcon size="lg" className="text-white" />
-```
-
-**Icon Size System** (from `svg-icon.tsx`):
-```tsx
-size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-// xs: 16px
-// sm: 20px
-// md: 24px (default)
-// lg: 32px
-// xl: 40px
-```
-
-**Estimated Effort**: 2 hours (copy icon system + 20 icons)
-
----
-
-## 📦 Implementation Plan
-
-### Phase 1: Core Infrastructure (Day 1 - 2 hours)
-
-1. **Copy Icon System** (30 minutes)
-   - Copy `create-svg-icon.tsx` to `lib/icons/`
-   - Copy `svg-icon.tsx` to `components/icons/`
-   - Copy 20 selected icons to `components/icons/material/`
-
-2. **Set Up Button Base** (30 minutes)
-   - Copy `button-base.tsx` from music template
-   - Adapt to our Tailwind system
-
-3. **Create Utility Hooks** (1 hour)
-   - Copy `use-media-query.ts` (responsive hooks)
-   - Copy `use-previous.ts` (animation helpers)
-   - Copy `use-id.ts` (accessibility IDs)
-
----
-
-### Phase 2: Navigation Components (Day 1 - 4 hours)
-
-1. **Bottom Tab Nav** (2 hours)
-   - Adapt trezoadmin SidebarMenu to horizontal bottom nav
-   - Add active state, badges, mobile-optimized
-   - File: `components/navigation/BottomTabNav.tsx`
-
-2. **FAB Share Button** (1 hour)
-   - Copy FloatingActionButton pattern
-   - Add share icon, bounce animation
-   - File: `components/buttons/ShareFAB.tsx`
-
-3. **Top Header** (1 hour)
-   - Adapt Navbar pattern from trezoadmin landing
-   - Add mobile menu toggle
-   - File: `components/navigation/TopHeader.tsx`
-
----
-
-### Phase 3: Button Components (Day 2 - 3 hours)
-
-1. **Primary Button** (45 minutes)
-   - Copy BasicButtons from trezoadmin
-   - Add gradient variants, loading state
-   - File: `components/buttons/PrimaryButton.tsx`
-
-2. **Secondary Button** (30 minutes)
-   - Copy OutlineButtons pattern
-   - File: `components/buttons/SecondaryButton.tsx`
-
-3. **Icon Button** (45 minutes)
-   - Copy from music template
-   - File: `components/buttons/IconButton.tsx`
-
-4. **Button Group** (1 hour)
-   - Copy from music template
-   - File: `components/buttons/ButtonGroup.tsx`
-
----
-
-### Phase 4: Card Components (Day 2 - 4 hours)
-
-1. **Stats Card** (1 hour)
-   - Adapt Finance Cards from trezoadmin
-   - File: `components/cards/StatsCard.tsx`
-
-2. **Leaderboard Card** (1.5 hours)
-   - Adapt Crypto watchlist pattern
-   - File: `components/cards/LeaderboardCard.tsx`
-
-3. **Badge Card** (1.5 hours)
-   - Adapt MediaCard from trezoadmin
-   - Add locked/unlocked states
-   - File: `components/cards/BadgeCard.tsx`
-
----
-
-### Phase 5: Form Components (Day 3 - 4 hours)
-
-1. **Text Input** (1.5 hours)
-   - Copy TextField from music template
-   - Adapt to Tailwind
-   - File: `components/forms/Input.tsx`
-
-2. **Search Input** (1 hour)
-   - Adapt SearchForm from trezoadmin
-   - File: `components/forms/SearchInput.tsx`
-
-3. **Select Dropdown** (1.5 hours)
-   - Copy Select from music template
-   - File: `components/forms/Select.tsx`
-
----
-
-### Phase 6: Feedback Components (Day 3 - 3 hours)
-
-1. **Toast System** (1.5 hours)
-   - Copy Toast/Toaster from music template
-   - Adapt styling
-   - File: `components/feedback/Toast.tsx`
-
-2. **Modal/Dialog** (1 hour)
-   - Copy Dialog from music template
-   - File: `components/feedback/Modal.tsx`
-
-3. **Loading Spinner** (30 minutes)
-   - Copy from trezoadmin
-   - File: `components/feedback/LoadingSpinner.tsx`
-
----
-
-### Phase 7: Data Display (Day 4 - 3 hours)
-
-1. **Progress Bar** (1 hour)
-   - Copy from trezoadmin
-   - File: `components/data/ProgressBar.tsx`
-
-2. **Simple List Table** (2 hours)
-   - Simplify DataTable from music template
-   - Focus on infinite scroll only
-   - File: `components/data/SimpleTable.tsx`
-
----
-
-## 📊 Effort Summary
-
-| Phase | Components | Hours | Day |
-|-------|------------|-------|-----|
-| **Phase 1: Infrastructure** | Icon system, hooks | 2h | Day 1 |
-| **Phase 2: Navigation** | Bottom nav, FAB, header | 4h | Day 1 |
-| **Phase 3: Buttons** | 4 button variants | 3h | Day 2 |
-| **Phase 4: Cards** | 3 card types | 4h | Day 2 |
-| **Phase 5: Forms** | Input, search, select | 4h | Day 3 |
-| **Phase 6: Feedback** | Toast, modal, spinner | 3h | Day 3 |
-| **Phase 7: Data** | Progress, table | 3h | Day 4 |
-| **TOTAL** | **28 components** | **23 hours** | **4 days** |
-
----
-
-## ✅ Quality Checklist (Per Component)
-
-Before marking a component as "complete", verify:
-
-- [ ] **Mobile-first** - Works at 375px width
-- [ ] **SVG icons** - No emojis, proper icon components
-- [ ] **Accessible** - ARIA labels, keyboard navigation, screen reader
-- [ ] **TypeScript** - Proper types, no `any`
-- [ ] **Responsive** - Adapts to tablet/desktop
-- [ ] **Performance** - <5ms render time, memoized if needed
-- [ ] **Styled** - Uses globals.css classes, no inline styles
-- [ ] **Tested** - Manual testing on iOS + Android Chrome
-
----
-
-## 🚀 Priority Order (If Time Limited)
-
-**Must-Have** (Week 1):
-1. ✅ Icon system (20 SVG icons)
-2. ✅ Bottom Tab Nav
-3. ✅ Primary Button
-4. ✅ Stats Card
-5. ✅ Leaderboard Card
-6. ✅ Text Input
-7. ✅ Toast notification
-8. ✅ Loading Spinner
-
-**Nice-to-Have** (Week 2):
-9. ✅ FAB Share Button
-10. ✅ Badge Card
-11. ✅ Select Dropdown
-12. ✅ Modal/Dialog
-13. ✅ Progress Bar
-14. ✅ Icon Button
-
-**Can Wait** (Week 3+):
-15. Search Input (can use Text Input + icon)
-16. Button Group (can use multiple buttons)
-17. Secondary Button (can style Primary Button)
-18. Simple Table (can use divs for now)
-19. Empty State (can use text placeholder)
-20. Top Header (bottom nav is priority)
-
----
-
-## 📂 File Structure (After Implementation)
-
-```
-components/
-├── icons/
-│   ├── svg-icon.tsx (base component)
-│   └── material/
-│       ├── Home.tsx
-│       ├── Leaderboard.tsx
-│       ├── Person.tsx
-│       ├── Share.tsx
-│       ├── LocalFireDepartment.tsx
-│       ├── Bolt.tsx
-│       ├── EmojiEvents.tsx
-│       ├── TrendingUp.tsx
-│       ├── TrendingDown.tsx
-│       ├── Search.tsx
-│       ├── FilterList.tsx
-│       ├── Close.tsx
-│       ├── Menu.tsx
-│       ├── ChevronLeft.tsx
-│       ├── ChevronRight.tsx
-│       ├── ExpandMore.tsx
-│       ├── CheckCircle.tsx
-│       ├── Error.tsx
-│       ├── Info.tsx
-│       └── Warning.tsx
-├── navigation/
-│   ├── BottomTabNav.tsx
-│   ├── TopHeader.tsx
-│   ├── Breadcrumbs.tsx
-│   └── Tabs.tsx
-├── buttons/
-│   ├── PrimaryButton.tsx
-│   ├── SecondaryButton.tsx
-│   ├── IconButton.tsx
-│   ├── ShareFAB.tsx
-│   ├── ButtonGroup.tsx
-│   └── LoadingButton.tsx
-├── cards/
-│   ├── StatsCard.tsx
-│   ├── LeaderboardCard.tsx
-│   ├── BadgeCard.tsx
-│   ├── ProfileCard.tsx
-│   └── ActionCard.tsx
-├── forms/
-│   ├── Input.tsx
-│   ├── SearchInput.tsx
-│   ├── Select.tsx
-│   ├── Checkbox.tsx
-│   ├── Radio.tsx
-│   └── Switch.tsx
-├── feedback/
-│   ├── Toast.tsx
-│   ├── Toaster.tsx
-│   ├── Modal.tsx
-│   ├── LoadingSpinner.tsx
-│   └── EmptyState.tsx
-├── data/
-│   ├── ProgressBar.tsx
-│   ├── SimpleTable.tsx
-│   └── Pagination.tsx
-└── lib/
-    └── icons/
-        └── create-svg-icon.tsx
-```
-
----
-
-## 🎨 Design Tokens (From Templates)
-
-**Colors** (from trezoadmin):
-```css
---primary: #6366f1; /* Indigo-500 */
---primary-hover: #4f46e5; /* Indigo-600 */
---success: #10b981; /* Green-500 */
---error: #ef4444; /* Red-500 */
---warning: #f59e0b; /* Amber-500 */
---info: #3b82f6; /* Blue-500 */
-```
-
-**Shadows** (from trezoadmin):
-```css
---shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
---shadow-md: 0 4px 6px rgba(0,0,0,0.1);
---shadow-lg: 0 10px 15px rgba(0,0,0,0.15);
---shadow-xl: 0 20px 25px rgba(0,0,0,0.2);
-```
-
-**Border Radius** (from music template):
-```css
---radius-sm: 4px;
---radius-md: 6px;
---radius-lg: 8px;
---radius-xl: 12px;
---radius-2xl: 16px;
---radius-full: 9999px;
-```
-
-**Spacing** (8px base):
-```css
---spacing-1: 4px;
---spacing-2: 8px;
---spacing-3: 12px;
---spacing-4: 16px;
---spacing-5: 20px;
---spacing-6: 24px;
---spacing-8: 32px;
---spacing-10: 40px;
---spacing-12: 48px;
-```
-
----
-
-## 📝 Notes
-
-**Why These Templates?**
-
-1. **trezoadmin-41** (4,431 components):
-   - Modern Tailwind + Material-UI dashboard
-   - Production-ready, responsive, accessible
-   - Perfect for stats cards, finance widgets, dashboards
-   - **Best for**: Cards, buttons, navigation
-
-2. **music** (2,647 components):
-   - **1,998 SVG Material Design icons!** (HUGE WIN)
-   - Complete form system (validation, accessibility)
-   - Advanced data table with virtual scrolling
-   - **Best for**: Icons, forms, tables, utilities
-
-3. **gmeowbased0.6** (406 components):
-   - Previous version patterns (know what worked)
-   - Glass morphism effects (our brand)
-   - **Best for**: Reference, brand consistency
-
-4. **gmeowbasedv0.3** (489 components):
-   - Sidenav patterns (can adapt to bottom nav)
-   - Layout systems
-   - **Best for**: Navigation patterns
-
-**What We're NOT Using**:
-- ❌ gmeowbasedv0.1, v0.2, v0.4, v0.5 (0 TSX files, likely old/incomplete)
-
----
-
-## 🚨 Critical: NO EMOJIS
-
-**Replace ALL emojis with SVG icons**:
-
-| OLD (Emoji) | NEW (SVG Icon) | File |
-|-------------|----------------|------|
-| 🐾 | `<HomeIcon />` | material/Home.tsx |
-| 📊 | `<LeaderboardIcon />` | material/Leaderboard.tsx |
-| 👤 | `<PersonIcon />` | material/Person.tsx |
-| 🎯 | `<ShareIcon />` | material/Share.tsx |
-| 🔥 | `<LocalFireDepartmentIcon />` | material/LocalFireDepartment.tsx |
-| ⚡ | `<BoltIcon />` | material/Bolt.tsx |
-| 🏆 | `<EmojiEventsIcon />` | material/EmojiEvents.tsx |
-| ✅ | `<CheckCircleIcon />` | material/CheckCircle.tsx |
-
-**Why?**
-- Professional appearance
-- Consistent sizing across platforms
-- Color customization
-- Accessibility (screen readers)
-- Better performance
-
----
-
-**Selection Complete**: November 30, 2025  
-**Next Step**: Start Phase 1 (Icon System - 2 hours)  
-**Estimated Completion**: December 3, 2025 (4 days, 23 hours total)
-
----
-
-## 📋 Current Implementation Status (December 1, 2025)
-
-### ✅ Notification Toast System (Complete)
-**Template Source**: `planning/template/gmeowbased0.6/src/components/ui/live-notifications.tsx`  
-**Production File**: `components/ui/live-notifications.tsx` (388 lines)
-
-**Architecture**:
-- Event-based notification system (45 event types)
-- Framer Motion animations (enter/exit, scale, opacity)
-- Queue management (max 3 visible toasts)
-- ToastTimer class with hover pause/resume
-- Auto-dismiss with countdown indicator
-
-**Template Patterns Applied**:
+### Component Attribution
+**Required in every adapted component**:
 ```typescript
-// Animation pattern from template
-const variants = {
-  initial: { opacity: 0, y: 50, scale: 0.3 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } }
-}
-
-// Hover pause pattern
-onMouseEnter={() => timer.pause()}
-onMouseLeave={() => timer.resume()}
+/**
+ * @component QuestCard
+ * @source Adapted from gmeowbased0.6/src/components/ui/collection-card.tsx
+ * @adaptation 5% (props renamed, added quest-specific fields)
+ * @template gmeowbased0.6
+ * @category Cards
+ */
 ```
 
-**Template Features Kept**:
-- ✅ NotificationCard with tone variants (info, success, warning, error)
-- ✅ Action button with href support
-- ✅ Stacked layout with spacing
-- ✅ Mobile-responsive (375px safe area)
-- ✅ Phosphor icons integration
+### Adaptation Tracking
+**Document changes made**:
+- 0-10%: "Minimal (path updates, prop renames)"
+- 20-30%: "Moderate (Bootstrap→Tailwind, restructured props)"
+- 40-50%: "Significant (MUI→Tailwind, Laravel→Next.js)"
+- 60-70%: "Heavy (major rewrite, complex refactor)"
 
 ---
 
-### 🔄 Navigation/Layout (In Progress - CRITICAL)
-**Template Source**: `planning/template/gmeowbased0.6/src/layouts/header/header.tsx` (172 lines)  
-**Production Files**: 
-- `components/layout/gmeow/GmeowHeader.tsx` (125 lines)
-- `components/MobileNavigation.tsx` (73 lines)
+## ⚠️ Common Pitfalls to Avoid
 
-**⚠️ CRITICAL FINDING**: Navigation is foundation work, should have been Phase 1 first priority!
-
-**Current State vs Template**:
-
-| Feature | Template (gmeowbased0.6) | Current Gmeow | Status |
-|---------|-------------------------|---------------|---------|
-| Bell icon with badge | ✅ NotificationButton with unread count | ❌ Basic Bell icon, no badge | Need enhancement |
-| Scroll effects | ✅ backdrop-blur, shadow on scroll > 10px | ❌ No scroll effects | Need enhancement |
-| Theme toggle | ✅ Animated moon/sun icon | ⚠️ Basic theme toggle | Need enhancement |
-| Profile dropdown | ✅ Modern dropdown with avatar | ⚠️ Basic ProfileDropdown | Working but enhance |
-| Mobile navigation | ✅ Modern bottom tabs | ⚠️ 5 tabs, works but basic | Need enhancement |
-
-**Template Patterns to Apply**:
-
-1. **NotificationButton with Badge** (template lines 18-33):
-```typescript
-<button className="relative">
-  <Bell size={24} />
-  {unreadCount > 0 && (
-    <span className="absolute -top-1 -right-1 bg-red-500 text-white 
-                     text-xs rounded-full px-1.5 py-0.5 min-w-[20px]">
-      {unreadCount}
-    </span>
-  )}
-</button>
-```
-
-2. **Scroll Effects** (template lines 45-68):
-```typescript
-const [isScrolled, setIsScrolled] = useState(false);
-
-useEffect(() => {
-  const handleScroll = () => {
-    setIsScrolled(window.scrollY > 10);
-  };
-  window.addEventListener('scroll', handleScroll);
-  return () => window.removeEventListener('scroll', handleScroll);
-}, []);
-
-// className with scroll state
-className={`transition-all duration-200 ${
-  isScrolled 
-    ? 'backdrop-blur-md bg-white/80 shadow-md' 
-    : 'bg-transparent'
-}`}
-```
-
-3. **HeaderRightArea Structure** (template lines 115-145):
-```typescript
-<div className="flex items-center gap-3">
-  <NotificationButton />
-  <ThemeToggle />
-  <ProfileDropdown />
-</div>
-```
-
-**Enhancement Plan**:
-- [ ] Study template header patterns (1 hour)
-- [ ] Enhance GmeowHeader.tsx (3 hours):
-  - Add NotificationBell with unread count badge
-  - Add smooth scroll effects (backdrop-blur, shadow)
-  - Improve theme toggle animation (moon/sun with Framer Motion)
-  - Polish profile dropdown
-- [ ] Enhance MobileNavigation.tsx (2 hours):
-  - Decide bell icon placement (6th tab OR header)
-  - Add smooth transitions between tabs
-  - Test safe-area-inset on real devices
-- [ ] Update this doc with final patterns used
-
-**Why This Matters**:
-Navigation is **foundation infrastructure**. Template has professional, production-tested patterns:
-- Unread badge prevents users missing notifications
-- Scroll effects improve visual hierarchy
-- Smooth animations = premium feel
-- Mobile-first design = 375px perfection
-
-Our current implementation works but feels custom/basic. Template patterns will make it feel professional.
+1. **Template Origin Bias** - Don't assume admin templates can't work for Web3
+2. **Adaptation Underestimation** - MUI→Tailwind conversion is 40-50% effort, not 20%
+3. **Laravel Coupling** - music forms have backend dependencies, extract carefully
+4. **Bootstrap Legacy** - ubold-710 is outdated, avoid unless no alternative
+5. **Empty Folders** - gmeowbasedv0.1/0.2/0.4/0.5 are empty, don't reference them
+6. **Version Confusion** - gmeowbased0.6 ≠ gmeowbasedv0.3 (different templates)
 
 ---
 
-## 🚨 CRITICAL AUDIT FINDINGS (December 1, 2025)
+## 🔄 Future Template Additions
 
-### ⚠️ We're Missing MASSIVE Professional Patterns!
+### When to Add New Templates
+- ✅ Production-tested with 50+ developers
+- ✅ Fills missing component category gap
+- ✅ Next.js + Tailwind preferred
+- ✅ <50% adaptation for most components
 
-**Audit Summary**:
-- ✅ Reviewed: 3 templates partially (only icons + notifications)
-- ❌ **NOT REVIEWED**: 7,970+ TSX components with professional patterns!
-- 🔴 **RISK**: Building custom solutions when tested patterns exist
-
-### Professional Patterns We're Missing:
-
-#### 1️⃣ **Layout System** (CRITICAL - Foundation!)
-**Music Template** has complete dashboard layout system:
-- `dashboard-layout.tsx` (120 lines) - Responsive grid, sidenav control, mobile underlay
-- `dashboard-navbar.tsx` (67 lines) - Toggle button, mobile/desktop modes
-- `dashboard-sidenav.tsx` (95 lines) - Compact mode, position control
-- `dashboard-content.tsx` - Content wrapper with proper spacing
-- **Features**: Framer Motion animations, localStorage persistence, responsive breakpoints, compact mode
-
-**Trezoadmin-41** has 71 header/navbar files:
-- Professional scroll effects (shadow on scroll > 100px)
-- Dropdown menus with outside-click detection
-- Fullscreen toggle, language selector, settings panel
-- **File**: `components/Layout/Header/index.tsx` (82 lines)
-
-**Current Gap**: We built custom `GmeowLayout` + `GmeowHeader` without these patterns!
+### Review Frequency
+- **Monthly**: Quick audit for new releases
+- **Quarterly**: Deep review + documentation update
+- **Annually**: Template library cleanup (remove outdated)
 
 ---
 
-#### 2️⃣ **Notification System** (Professional Dropdown)
-**Trezoadmin-41**: `components/Layout/Header/Notifications.tsx` (162 lines)
-- ✅ Bell icon with **orange dot badge** (unread indicator)
-- ✅ Dropdown with notification list (290-350px width)
-- ✅ **Outside-click detection** (useRef + useEffect)
-- ✅ Each notification: icon + color circle + message + time + link
-- ✅ "Clear All" button
-- ✅ "View All" link to /notifications page
-- ✅ Responsive width (290px mobile, 350px desktop)
+## 📌 Summary: Template Selection Quick Reference
 
-**Template Pattern**:
-```typescript
-// Badge indicator
-<span className="top-[3px] ltr:right-[4px] rtl:left-[4px] w-[6px] h-[6px] 
-               rounded-full absolute bg-orange-500"></span>
+**For Web3/Crypto UI**: gmeowbased0.6 (0-10% adaptation)  
+**For Admin Dashboards**: trezoadmin-41 React+Next.js+Tailwind (30-50%)  
+**For DataTables**: music/datatable (40% adaptation)  
+**For Forms**: music/forms (30% adaptation)  
+**For File Upload**: gmeowbased0.7/FileUploader (20% adaptation)  
+**For Featured Cards**: jumbo-7.4/JumboCardFeatured (60% adaptation)  
+**For Charts**: music/charts (35% adaptation)  
 
-// Outside-click detection
-const dropdownRef = useRef<HTMLDivElement>(null);
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-      setActive(false);
-    }
-  };
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, []);
-```
+**Total Templates**: 15 available, 10 usable (5 empty folders)  
+**Total Files**: 24,117 TSX/TS components  
+**Strategy**: Multi-template hybrid, best pattern wins  
+**Philosophy**: Quality > Origin, Production-tested > Custom
 
-**Our Current State**: Basic bell icon, NO dropdown, NO badge, NO outside-click detection!
+
 
 ---
 
-#### 3️⃣ **Theme Toggle System** (Animated!)
-**Trezoadmin-41**: `components/Layout/Header/DarkMode.tsx` (54 lines)
-- ✅ localStorage persistence (`theme` key)
-- ✅ Updates `<html>` class (add/remove `dark`)
-- ✅ Icon changes (light_mode/dark_mode)
-- ✅ Orange color on toggle (`text-[#fe7a36]`)
-- ✅ Smooth transitions
+## 🧩 Implementation Checklist
 
-**Music Template**: `ui/themes/` folder
-- `theme-selector-context.ts` - React Context for theme state
-- `use-is-dark-mode.ts` - Custom hook
-- `css-theme.ts` - CSS variable management
-- `utils/` - Theme utilities
+### Before Copying Components
+- [ ] Verify template tech stack compatibility (Next.js vs React vs Vue)
+- [ ] Check for backend dependencies (Laravel, PHP)
+- [ ] Identify required npm packages (MUI, Bootstrap, custom libraries)
+- [ ] Estimate adaptation percentage (use decision tree above)
+- [ ] Find alternative if adaptation >70%
 
-**Our Current State**: Basic theme toggle, NO animation, NO context system!
+### During Component Adaptation
+- [ ] Copy component to appropriate folder (components/[category]/)
+- [ ] Update import paths (template paths → app paths)
+- [ ] Convert styling (Bootstrap→Tailwind, MUI→Tailwind if needed)
+- [ ] Add source attribution comment (template name, adaptation %)
+- [ ] Remove backend dependencies (Laravel forms, PHP logic)
+- [ ] Update props to TypeScript types
+- [ ] Test in development environment
 
----
-
-#### 4️⃣ **Data Tables** (Professional + Virtual Scrolling!)
-**Music Template**: `datatable/data-table.tsx` (154 lines)
-- ✅ **Framer Motion** integration (AnimatePresence)
-- ✅ Backend filtering + URL params
-- ✅ Pagination footer
-- ✅ Column configuration
-- ✅ Row selection (checkbox)
-- ✅ Search placeholder
-- ✅ Empty state messages
-- ✅ Actions bar
-- ✅ Selected actions (bulk operations)
-- ✅ Filter list with panels (date, select, boolean, input)
-
-**Components Available** (203 form files!):
-- `data-table-header.tsx` - Search + filters + actions
-- `data-table-pagination-footer.tsx` - Page navigation
-- `selected-state-datatable-header.tsx` - Bulk actions bar
-- `filters/` folder - 20+ filter components
-- `csv-export/` - Export functionality
-
-**Our Current State**: Using basic tables, NO virtual scrolling, NO filters!
+### After Component Integration
+- [ ] Update documentation (CURRENT-TASK.md, FOUNDATION-REBUILD-ROADMAP.md)
+- [ ] Run accessibility audit (WCAG AA compliance)
+- [ ] Test mobile responsiveness (375px → 1920px)
+- [ ] Test dark mode support
+- [ ] Add to component library index file
+- [ ] Document in TEMPLATE-SELECTION.md if new pattern
 
 ---
 
-#### 5️⃣ **Form System** (203 Files!)
-**Music Template**: `ui/forms/` (203 TSX files)
-- ✅ Complete form validation
-- ✅ Date pickers (single + range)
-- ✅ Calendar with month selection
-- ✅ Segmented radio groups
-- ✅ Text fields with validation
-- ✅ Select dropdowns (99 dropdown files!)
-- ✅ Checkboxes, switches, sliders
-- ✅ File uploads
-- ✅ Color pickers
-- ✅ Icon pickers
+## 📚 References
 
-**Our Current State**: Basic HTML forms, NO validation system!
+**Documentation Files**:
+- `FOUNDATION-REBUILD-ROADMAP.md` - Rebuild roadmap with template usage
+- `CURRENT-TASK.md` - Active work tracking
+- `docs/planning/QUEST-PAGE-PROFESSIONAL-PATTERNS.md` - Quest page template strategy
+- `docs/planning/PHASE-2.7-IMPLEMENTATION-REVIEW.md` - Quest page reality check
 
----
+**Template Locations**:
+- `planning/template/gmeowbased0.6/` - Web3 crypto patterns (476 files)
+- `planning/template/trezoadmin-41/trezo-admin-full-version/react-nextjs-tailwindcss/` - Admin UI Tailwind (10,056 files)
+- `planning/template/music/common/resources/client/` - DataTables, forms, charts (3,130 files)
+- `planning/template/gmeowbased0.7/TS/` - FileUploader, admin layouts (282 files)
+- `planning/template/jumbo-7.4/` - Material Design featured cards (3,651 files)
+- `planning/template/gmeowbasedv0.3/` - Sidenav patterns (1,003 files)
 
-#### 6️⃣ **Dialog/Modal System** (86 Files!)
-**Found**: 86 dialog/modal files across templates
-- Professional overlays with backdrop
-- Focus trap (keyboard navigation)
-- Scroll lock (body overflow)
-- Escape key handling
-- Outside-click to close
-- Animated entry/exit
-
-**Our Current State**: Basic modals, NO focus management!
+**Icon Libraries**:
+- `planning/template/gmeowbased0.6/src/components/icons/` - 93 SVG icons
+- `planning/template/music/common/resources/client/icons/material/` - 1,998 Material icons (if needed)
+- Current app: Phosphor Icons (already integrated)
 
 ---
 
-#### 7️⃣ **Button System** (85 Files!)
-**Found**: 85 button files across templates
-- Size variants (xs, sm, md, lg, xl)
-- Color variants (primary, secondary, danger, success)
-- Loading states (spinner)
-- Disabled states
-- Icon support (left/right)
-- Full-width option
-- Radius variants
-
-**Music Template**: `ui/buttons/button.tsx`
-- Complete button system with all variants
-
-**Our Current State**: Basic buttons, NO loading states!
-
----
-
-#### 8️⃣ **Animation System**
-**Music Template**: `ui/animation/opacity-animation.ts`
-- Opacity transitions
-- Framer Motion utilities
-- AnimatePresence patterns
-
-**Current Gap**: We use Framer Motion but NO organized animation system!
-
----
-
-#### 9️⃣ **Scroll Effects** (Professional!)
-**Trezoadmin-41**: Scroll detection pattern (82 lines)
-```typescript
-useEffect(() => {
-  const elementId = document.getElementById("header");
-  const handleScroll = () => {
-    if (window.scrollY > 100) {
-      elementId?.classList.add("shadow-sm");
-    } else {
-      elementId?.classList.remove("shadow-sm");
-    }
-  };
-  document.addEventListener("scroll", handleScroll);
-  return () => document.removeEventListener("scroll", handleScroll);
-}, []);
-```
-
-**Music Template**: Infinite scroll + sticky headers
-- `ui/infinite-scroll/infinite-scroll-sentinel.tsx`
-- Sticky header with backdrop-blur
-
-**Our Current State**: NO scroll effects!
-
----
-
-#### 🔟 **UI Component Library** (Music Template)
-**Available**: 32 component categories!
-- ✅ Accordion (collapsible sections)
-- ✅ Badge (count indicators)
-- ✅ Breadcrumbs (navigation)
-- ✅ Buttons (85 files)
-- ✅ Color picker
-- ✅ Cookie notice
-- ✅ Focus management
-- ✅ Font picker/selector
-- ✅ Footer
-- ✅ Forms (203 files!)
-- ✅ Icon picker
-- ✅ Images (SVG support)
-- ✅ Infinite scroll
-- ✅ Interactions (drag, hover, click)
-- ✅ Keyboard shortcuts
-- ✅ Layout (dashboard system)
-- ✅ List (virtual scrolling)
-- ✅ Navigation (menu + navbar)
-- ✅ Overlays (86 dialog files!)
-- ✅ Progress bars/spinners
-- ✅ Skeleton loaders
-- ✅ Tables (data tables + virtual)
-- ✅ Tabs (switchable content)
-- ✅ Themes (context + hooks)
-- ✅ Toast notifications
-- ✅ Tooltips
-- ✅ Tree (hierarchical data)
-
-**Our Current State**: Using ONLY 93 icons from this 2,647-component library!
-
----
-
-### 📊 Audit Statistics
-
-| Category | Total Files | Currently Used | Gap |
-|----------|------------|----------------|-----|
-| **Headers/Navbars** | 71 | 1 (custom) | **70 professional patterns** |
-| **Layouts** | 50+ | 1 (custom) | **49 tested layouts** |
-| **Dialogs/Modals** | 86 | 0 | **86 missing!** |
-| **Buttons** | 85 | Basic HTML | **85 professional buttons** |
-| **Dropdowns** | 99 | 0 | **99 dropdown patterns** |
-| **Forms** | 203 | Basic HTML | **203 form components** |
-| **Data Tables** | 30+ | Basic HTML | **30 professional tables** |
-| **Animations** | ? | Framer Motion (unorganized) | **Animation system missing** |
-| **Theme System** | 5 files | Basic toggle | **Theme context + hooks** |
-| **Scroll Effects** | 4 files | 0 | **Professional scroll patterns** |
-
-**TOTAL COMPONENTS**: 7,973 TSX files  
-**CURRENTLY USING**: ~100 files (93 icons + 7 custom)  
-**UTILIZATION**: **1.26%** of available professional patterns!
-
----
-
-### 🔴 Critical Risks
-
-1. **Layout Foundation**: Built custom instead of using tested dashboard layout
-2. **Notification System**: Missing dropdown, badge, outside-click detection
-3. **Theme System**: No context, no animation, basic localStorage
-4. **Data Tables**: No filtering, sorting, pagination, virtual scrolling
-5. **Forms**: No validation, no date pickers, no professional inputs
-6. **Dialogs**: No focus trap, no backdrop, no animations
-7. **Buttons**: No loading states, no size variants, no disabled states
-8. **Scroll Effects**: No header shadow, no sticky behavior, no backdrop-blur
-9. **Animation System**: Framer Motion exists but unorganized
-10. **Mobile Patterns**: Missing bottom sheet, swipe gestures, safe-area-inset
-
----
-
-### ✅ What We DID Use (93 icons)
-
-**Icons Copied** (November 30, 2025):
-- 93 Phosphor icons from `planning/template/gmeowbased0.6/src/components/icons/`
-- Placed in `components/icons/`
-- **Status**: ✅ Complete and working
-
-**Notification Toast** (December 1, 2025):
-- Copied `live-notifications.tsx` from gmeowbased0.6
-- 388 lines with Framer Motion animations
-- **Status**: ✅ Complete but NOT connected to notification center
-
----
-
-### 📝 New Phase 1 Sections Needed
-
-Based on audit, we need to add:
-
-**Section 1.10**: Navigation/Layout Enhancement (6 hours) ← ALREADY DOCUMENTED  
-**Section 1.11**: Professional Notification Dropdown (3 hours) ← NEW  
-**Section 1.12**: Theme System with Context (2 hours) ← NEW  
-**Section 1.13**: Scroll Effects System (1 hour) ← NEW  
-**Section 1.14**: Button Component Library (2 hours) ← NEW  
-**Section 1.15**: Dialog/Modal System (3 hours) ← NEW  
-**Section 1.16**: Form Validation System (4 hours) ← NEW  
-
-**NEW PHASE 1 TIME**: 21 additional hours!  
-**NEW PHASE 1 TOTAL**: 7 complete + 9 new = **16 sections, 41 hours**
-
----
-
-### 🎯 Recommended Action Plan
-
-**IMMEDIATE** (Phase 1 Foundation):
-1. ✅ Navigation/Layout (6h) - Use dashboard-layout.tsx pattern
-2. ✅ Notification Dropdown (3h) - Use Trezoadmin dropdown + badge
-3. ✅ Theme System (2h) - Use music template context + hooks
-4. ✅ Scroll Effects (1h) - Use Trezoadmin scroll detection
-5. ✅ Button System (2h) - Use music template button.tsx
-6. ✅ Dialog System (3h) - Use music template overlays
-
-**PHASE 2** (Component Library):
-7. Form Validation (4h)
-8. Data Tables (8h)
-9. Dropdown System (4h)
-10. Advanced Components (10h)
-
-**Why This Matters**:
-- These are **TESTED** patterns used by thousands of developers
-- Professional appearance = higher user trust
-- Accessibility built-in (ARIA, keyboard, screen readers)
-- Mobile-first responsive patterns
-- Performance optimized (virtual scrolling, lazy loading)
-- Consistent design system
-
+**Last Audit**: December 3, 2025  
+**Next Review**: January 3, 2026 (monthly cadence)  
+**Maintainer**: Development team  
+**Status**: ✅ Production-ready template library
