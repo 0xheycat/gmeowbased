@@ -1,0 +1,60 @@
+name: Quest Expiry Check (Hourly)
+
+on:
+  schedule:
+    # Run every hour at minute 0
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  expire-quests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check and expire quests
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DEPLOYMENT_URL: ${{ secrets.VERCEL_URL || 'https://gmeowhq.art' }}
+        run: |
+          echo "🕐 Starting quest expiry check..."
+          
+          # Call cron API endpoint
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "$DEPLOYMENT_URL/api/cron/expire-quests")
+          
+          # Extract HTTP status code (last line)
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "📊 Response status: $http_code"
+          echo "📄 Response body: $body"
+          
+          # Check if request was successful
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Quest expiry check completed successfully!"
+            
+            # Parse and display results (if jq is available)
+            if command -v jq &> /dev/null; then
+              expired_count=$(echo "$body" | jq -r '.expired_count')
+              duration=$(echo "$body" | jq -r '.duration')
+              echo "📈 Expired quests: $expired_count"
+              echo "⏱️ Duration: $duration"
+            fi
+          else
+            echo "❌ Quest expiry check failed with status $http_code"
+            echo "$body"
+            exit 1
+          fi
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Quest expiry check failed. Check logs for details."
+          echo "Schedule: Every hour (0 * * * *)"
+          # Add Slack/Discord notification here if needed
