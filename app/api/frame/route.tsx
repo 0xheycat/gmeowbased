@@ -1998,7 +1998,7 @@ export async function GET(req: Request) {
       if (asJson) {
         return respondJson({ ok: true, type: 'verify', fid, cast, questId, traces })
       }
-      const frameBtnUrl = `${origin}/api/quests/verify?debug=1&fid=${fid}${cast ? `&cast=${encodeURIComponent(String(cast))}` : ''}`
+      const frameBtnUrl = `${origin}/quests/${questId}`
       const fcMeta = { [frameKey('entity')]: 'verify' }
       
       // DEPRECATED: Interactive POST buttons no longer supported (removed Phase 1E)

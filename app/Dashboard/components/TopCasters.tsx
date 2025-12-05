@@ -4,7 +4,7 @@
  */
 
 import { getTopCasters, formatNumber } from '@/lib/api/neynar-dashboard'
-import { Users } from 'lucide-react'
+import PeopleIcon from '@mui/icons-material/People'
 import Image from 'next/image'
 
 export async function TopCasters() {
@@ -14,7 +14,7 @@ export async function TopCasters() {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5" />
+          <PeopleIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Top Casters (7d)</h3>
         </div>
         <p className="text-gray-500 text-sm">No caster data available.</p>
@@ -26,7 +26,7 @@ export async function TopCasters() {
     <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 mb-6">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Users className="w-5 h-5" />
+        <PeopleIcon className="w-5 h-5" />
         <h3 className="text-lg font-semibold">Top Casters (7d)</h3>
       </div>
 

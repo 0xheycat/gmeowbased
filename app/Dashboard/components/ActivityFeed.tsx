@@ -4,7 +4,7 @@
  */
 
 import { getActivityFeed, formatTimeAgo, truncateText } from '@/lib/api/neynar-dashboard'
-import { Activity } from 'lucide-react'
+import TimelineIcon from '@mui/icons-material/Timeline'
 import Image from 'next/image'
 
 export async function ActivityFeed() {
@@ -14,7 +14,7 @@ export async function ActivityFeed() {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-5 h-5" />
+          <TimelineIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Activity Feed</h3>
         </div>
         <p className="text-gray-500 text-sm">No activity available.</p>
@@ -26,7 +26,7 @@ export async function ActivityFeed() {
     <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 mb-6">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Activity className="w-5 h-5" />
+        <TimelineIcon className="w-5 h-5" />
         <h3 className="text-lg font-semibold">Activity Feed</h3>
       </div>
 

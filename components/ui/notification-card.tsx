@@ -5,11 +5,29 @@
 
 'use client'
 
-import { 
-  X, CurrencyCircleDollar, PaperPlaneTilt, Megaphone, HandWaving, Sword, Gift,
-  Medal, Sparkle, ArrowUp, CheckCircle, ChartBar, Confetti, Trophy, HeartBreak,
-  Ranking, Sun, Fire, TrendUp, Target, XCircle, Warning, Info, CircleNotch
-} from '@phosphor-icons/react'
+import CloseIcon from '@mui/icons-material/Close'
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
+import SendIcon from '@mui/icons-material/Send'
+import CampaignIcon from '@mui/icons-material/Campaign'
+import WavingHandIcon from '@mui/icons-material/WavingHand'
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard'
+import MilitaryTechIcon from '@mui/icons-material/MilitaryTech'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import TrendingUpIcon from '@mui/icons-material/TrendingUp'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import BarChartIcon from '@mui/icons-material/BarChart'
+import CelebrationIcon from '@mui/icons-material/Celebration'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import HeartBrokenIcon from '@mui/icons-material/HeartBroken'
+import LeaderboardIcon from '@mui/icons-material/Leaderboard'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
+import TrackChangesIcon from '@mui/icons-material/TrackChanges'
+import CancelIcon from '@mui/icons-material/Cancel'
+import WarningIcon from '@mui/icons-material/Warning'
+import InfoIcon from '@mui/icons-material/Info'
+import LoopIcon from '@mui/icons-material/Loop'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { ICON_SIZES } from '@/lib/icon-sizes'
@@ -36,37 +54,37 @@ export interface NotificationCardProps {
 const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: string; borderClass: string; textClass: string }> = {
   // Social events
   tip_received: {
-    icon: <CurrencyCircleDollar size={24} weight="fill" />,
+    icon: <AttachMoneyIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
   },
   tip_sent: {
-    icon: <PaperPlaneTilt size={24} weight="fill" />,
+    icon: <SendIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-blue-500/10 dark:bg-blue-500/20',
     borderClass: 'border-blue-500/30',
     textClass: 'text-blue-700 dark:text-blue-300',
   },
   mention_received: {
-    icon: <Megaphone size={24} weight="fill" />,
+    icon: <CampaignIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
   },
   friend_joined: {
-    icon: <HandWaving size={24} weight="fill" />,
+    icon: <WavingHandIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-green-500/10 dark:bg-green-500/20',
     borderClass: 'border-green-500/30',
     textClass: 'text-green-700 dark:text-green-300',
   },
   guild_invite: {
-    icon: <Sword size={24} weight="fill" />,
+    icon: <SportsEsportsIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-indigo-500/10 dark:bg-indigo-500/20',
     borderClass: 'border-indigo-500/30',
     textClass: 'text-indigo-700 dark:text-indigo-300',
   },
   referral_reward: {
-    icon: <Gift size={24} weight="fill" />,
+    icon: <CardGiftcardIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
@@ -74,55 +92,55 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // Achievement events
   badge_minted: {
-    icon: <Medal size={24} weight="fill" />,
+    icon: <MilitaryTechIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
   },
   badge_eligible: {
-    icon: <Sparkle size={24} weight="fill" />,
+    icon: <AutoAwesomeIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-yellow-500/10 dark:bg-yellow-500/20',
     borderClass: 'border-yellow-500/30',
     textClass: 'text-yellow-700 dark:text-yellow-300',
   },
   badge_tier_upgrade: {
-    icon: <ArrowUp size={24} weight="bold" />,
+    icon: <TrendingUpIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
   },
   quest_completed: {
-    icon: <CheckCircle size={24} weight="fill" />,
+    icon: <CheckCircleIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-emerald-500/10 dark:bg-emerald-500/20',
     borderClass: 'border-emerald-500/30',
     textClass: 'text-emerald-700 dark:text-emerald-300',
   },
   quest_progress: {
-    icon: <ChartBar size={24} weight="fill" />,
+    icon: <BarChartIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-blue-500/10 dark:bg-blue-500/20',
     borderClass: 'border-blue-500/30',
     textClass: 'text-blue-700 dark:text-blue-300',
   },
   quest_reward_claimed: {
-    icon: <Confetti size={24} weight="fill" />,
+    icon: <CelebrationIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
   },
   level_up: {
-    icon: <ArrowUp size={24} weight="bold" />,
+    icon: <TrendingUpIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
   },
   rank_changed: {
-    icon: <TrendUp size={24} weight="fill" />,
+    icon: <TrendingUpIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-cyan-500/10 dark:bg-cyan-500/20',
     borderClass: 'border-cyan-500/30',
     textClass: 'text-cyan-700 dark:text-cyan-300',
   },
   points_milestone: {
-    icon: <Target size={24} weight="fill" />,
+    icon: <TrackChangesIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-orange-500/10 dark:bg-orange-500/20',
     borderClass: 'border-orange-500/30',
     textClass: 'text-orange-700 dark:text-orange-300',
@@ -130,31 +148,31 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // GM events
   gm_sent: {
-    icon: <Sun size={24} weight="fill" />,
+    icon: <LightModeIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-yellow-500/10 dark:bg-yellow-500/20',
     borderClass: 'border-yellow-500/30',
     textClass: 'text-yellow-700 dark:text-yellow-300',
   },
   gm_streak_continue: {
-    icon: <Fire size={24} weight="fill" />,
+    icon: <LocalFireDepartmentIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-orange-500/10 dark:bg-orange-500/20',
     borderClass: 'border-orange-500/30',
     textClass: 'text-orange-700 dark:text-orange-300',
   },
   gm_streak_milestone: {
-    icon: <Trophy size={24} weight="fill" />,
+    icon: <EmojiEventsIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
   },
   gm_streak_broken: {
-    icon: <HeartBreak size={24} weight="fill" />,
+    icon: <HeartBrokenIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-red-500/10 dark:bg-red-500/20',
     borderClass: 'border-red-500/30',
     textClass: 'text-red-700 dark:text-red-300',
   },
   gm_leaderboard_rank: {
-    icon: <Ranking size={24} weight="fill" />,
+    icon: <LeaderboardIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
@@ -162,19 +180,19 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // Frame events
   frame_action_success: {
-    icon: <CheckCircle size={24} weight="fill" />,
+    icon: <CheckCircleIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-emerald-500/10 dark:bg-emerald-500/20',
     borderClass: 'border-emerald-500/30',
     textClass: 'text-emerald-700 dark:text-emerald-300',
   },
   frame_action_failed: {
-    icon: <XCircle size={24} weight="fill" />,
+    icon: <CancelIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-red-500/10 dark:bg-red-500/20',
     borderClass: 'border-red-500/30',
     textClass: 'text-red-700 dark:text-red-300',
   },
   frame_share_reward: {
-    icon: <Gift size={24} weight="fill" />,
+    icon: <CardGiftcardIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
@@ -182,13 +200,13 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // Legacy (will be removed)
   achievement: {
-    icon: <Trophy size={24} weight="fill" />,
+    icon: <EmojiEventsIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
   },
   reward: {
-    icon: <Gift size={24} weight="fill" />,
+    icon: <CardGiftcardIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
@@ -196,67 +214,103 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // Contract Events (from proxy deployment)
   referral_code_registered: {
-    icon: <Gift size={24} weight="fill" />,
+    icon: <CardGiftcardIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-blue-500/10 dark:bg-blue-500/20',
     borderClass: 'border-blue-500/30',
     textClass: 'text-blue-700 dark:text-blue-300',
   },
   quest_added: {
-    icon: <Target size={24} weight="fill" />,
+    icon: <TrackChangesIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-cyan-500/10 dark:bg-cyan-500/20',
     borderClass: 'border-cyan-500/30',
     textClass: 'text-cyan-700 dark:text-cyan-300',
   },
   quest_closed: {
-    icon: <CheckCircle size={24} weight="fill" />,
+    icon: <CheckCircleIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gray-500/10 dark:bg-gray-500/20',
     borderClass: 'border-gray-500/30',
     textClass: 'text-gray-700 dark:text-gray-300',
   },
+  quest_verification_pending: {
+    icon: <LoopIcon sx={{ fontSize: 24 }} className="animate-spin" />,
+    bgClass: 'bg-blue-500/10 dark:bg-blue-500/20',
+    borderClass: 'border-blue-500/30',
+    textClass: 'text-blue-700 dark:text-blue-300',
+  },
+  quest_verification_success: {
+    icon: <CheckCircleIcon sx={{ fontSize: 24 }} />,
+    bgClass: 'bg-emerald-500/10 dark:bg-emerald-500/20',
+    borderClass: 'border-emerald-500/30',
+    textClass: 'text-emerald-700 dark:text-emerald-300',
+  },
+  quest_verification_failed: {
+    icon: <CancelIcon sx={{ fontSize: 24 }} />,
+    bgClass: 'bg-red-500/10 dark:bg-red-500/20',
+    borderClass: 'border-red-500/30',
+    textClass: 'text-red-700 dark:text-red-300',
+  },
+  quest_task_completed: {
+    icon: <CheckCircleIcon sx={{ fontSize: 24 }} />,
+    bgClass: 'bg-cyan-500/10 dark:bg-cyan-500/20',
+    borderClass: 'border-cyan-500/30',
+    textClass: 'text-cyan-700 dark:text-cyan-300',
+  },
+  quest_claim_failed: {
+    icon: <CancelIcon sx={{ fontSize: 24 }} />,
+    bgClass: 'bg-red-500/10 dark:bg-red-500/20',
+    borderClass: 'border-red-500/30',
+    textClass: 'text-red-700 dark:text-red-300',
+  },
+  fid_linking_failed: {
+    icon: <CancelIcon sx={{ fontSize: 24 }} />,
+    bgClass: 'bg-red-500/10 dark:bg-red-500/20',
+    borderClass: 'border-red-500/30',
+    textClass: 'text-red-700 dark:text-red-300',
+  },
   points_staked: {
-    icon: <ArrowUp size={24} weight="bold" />,
+    icon: <TrendingUpIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
   },
   points_unstaked: {
-    icon: <TrendUp size={24} weight="fill" />,
+    icon: <TrendingUpIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-orange-500/10 dark:bg-orange-500/20',
     borderClass: 'border-orange-500/30',
     textClass: 'text-orange-700 dark:text-orange-300',
   },
   guild_created: {
-    icon: <Sword size={24} weight="fill" />,
+    icon: <SportsEsportsIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-indigo-500/10 dark:bg-indigo-500/20',
     borderClass: 'border-indigo-500/30',
     textClass: 'text-indigo-700 dark:text-indigo-300',
   },
   guild_joined: {
-    icon: <HandWaving size={24} weight="fill" />,
+    icon: <WavingHandIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-green-500/10 dark:bg-green-500/20',
     borderClass: 'border-green-500/30',
     textClass: 'text-green-700 dark:text-green-300',
   },
   guild_left: {
-    icon: <HeartBreak size={24} weight="fill" />,
+    icon: <HeartBrokenIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gray-500/10 dark:bg-gray-500/20',
     borderClass: 'border-gray-500/30',
     textClass: 'text-gray-700 dark:text-gray-300',
   },
   guild_level_up: {
-    icon: <Trophy size={24} weight="fill" />,
+    icon: <EmojiEventsIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
   },
   guild_quest_created: {
-    icon: <Target size={24} weight="fill" />,
+    icon: <TrackChangesIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
   },
   guild_reward_claimed: {
-    icon: <Gift size={24} weight="fill" />,
+    icon: <CardGiftcardIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
@@ -264,13 +318,13 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // Profile & Identity Events
   fid_linked: {
-    icon: <Sparkle size={24} weight="fill" />,
+    icon: <AutoAwesomeIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-blue-500/10 dark:bg-blue-500/20',
     borderClass: 'border-blue-500/30',
     textClass: 'text-blue-700 dark:text-blue-300',
   },
   profile_updated: {
-    icon: <CheckCircle size={24} weight="fill" />,
+    icon: <CheckCircleIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-green-500/10 dark:bg-green-500/20',
     borderClass: 'border-green-500/30',
     textClass: 'text-green-700 dark:text-green-300',
@@ -278,13 +332,13 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // NFT Events
   nft_minted: {
-    icon: <Medal size={24} weight="fill" />,
+    icon: <MilitaryTechIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
   },
   nft_payment_received: {
-    icon: <CurrencyCircleDollar size={24} weight="fill" />,
+    icon: <AttachMoneyIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-emerald-500/10 dark:bg-emerald-500/20',
     borderClass: 'border-emerald-500/30',
     textClass: 'text-emerald-700 dark:text-emerald-300',
@@ -292,13 +346,13 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // Onchain Quest Events
   onchain_quest_completed: {
-    icon: <Trophy size={24} weight="fill" />,
+    icon: <EmojiEventsIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-gold/10 dark:bg-gold/20',
     borderClass: 'border-gold/30',
     textClass: 'text-gold dark:text-gold',
   },
   onchain_quest_added: {
-    icon: <Target size={24} weight="fill" />,
+    icon: <TrackChangesIcon sx={{ fontSize: 24 }} />,
     bgClass: 'bg-cyan-500/10 dark:bg-cyan-500/20',
     borderClass: 'border-cyan-500/30',
     textClass: 'text-cyan-700 dark:text-cyan-300',
@@ -306,22 +360,42 @@ const EVENT_CONFIG: Record<NotificationEvent, { icon: React.ReactNode; bgClass: 
   
   // Loading States (Phase 1.5.2 - Task 6)
   loading_transaction: {
-    icon: <CircleNotch size={24} weight="bold" className="animate-spin" />,
+    icon: <LoopIcon sx={{ fontSize: 24 }} className="animate-spin" />,
     bgClass: 'bg-blue-500/10 dark:bg-blue-500/20',
     borderClass: 'border-blue-500/30',
     textClass: 'text-blue-700 dark:text-blue-300',
   },
   loading_data: {
-    icon: <CircleNotch size={24} weight="bold" className="animate-spin" />,
+    icon: <LoopIcon sx={{ fontSize: 24 }} className="animate-spin" />,
     bgClass: 'bg-cyan-500/10 dark:bg-cyan-500/20',
     borderClass: 'border-cyan-500/30',
     textClass: 'text-cyan-700 dark:text-cyan-300',
   },
   loading_profile: {
-    icon: <CircleNotch size={24} weight="bold" className="animate-spin" />,
+    icon: <LoopIcon sx={{ fontSize: 24 }} className="animate-spin" />,
     bgClass: 'bg-purple-500/10 dark:bg-purple-500/20',
     borderClass: 'border-purple-500/30',
     textClass: 'text-purple-700 dark:text-purple-300',
+  },
+  
+  // Wallet Events
+  wallet_connected: {
+    icon: <CheckCircleIcon sx={{ fontSize: 24 }} />,
+    bgClass: 'bg-emerald-500/10 dark:bg-emerald-500/20',
+    borderClass: 'border-emerald-500/30',
+    textClass: 'text-emerald-700 dark:text-emerald-300',
+  },
+  wallet_disconnected: {
+    icon: <CancelIcon sx={{ fontSize: 24 }} />,
+    bgClass: 'bg-gray-500/10 dark:bg-gray-500/20',
+    borderClass: 'border-gray-500/30',
+    textClass: 'text-gray-700 dark:text-gray-300',
+  },
+  wallet_connection_failed: {
+    icon: <CancelIcon sx={{ fontSize: 24 }} />,
+    bgClass: 'bg-red-500/10 dark:bg-red-500/20',
+    borderClass: 'border-red-500/30',
+    textClass: 'text-red-700 dark:text-red-300',
   },
 }
 
@@ -460,7 +534,7 @@ export default function NotificationCard({
           className="shrink-0 rounded-lg p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
           aria-label="Dismiss notification"
         >
-          <X size={ICON_SIZES.sm} weight="bold" />
+          <CloseIcon sx={{ fontSize: ICON_SIZES.sm }} />
         </button>
       )}
     </div>

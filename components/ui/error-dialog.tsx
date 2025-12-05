@@ -7,7 +7,11 @@
 
 import { Dialog, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
-import { X, Warning, Info, CheckCircle, XCircle } from '@phosphor-icons/react'
+import CloseIcon from '@mui/icons-material/Close'
+import WarningIcon from '@mui/icons-material/Warning'
+import InfoIcon from '@mui/icons-material/Info'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CancelIcon from '@mui/icons-material/Cancel'
 import { ICON_SIZES } from '@/lib/icon-sizes'
 
 export type DialogType = 'error' | 'warning' | 'confirm' | 'info'
@@ -31,22 +35,22 @@ export interface ErrorDialogProps {
 
 const TYPE_CONFIG: Record<DialogType, { icon: React.ReactNode; iconBg: string; iconColor: string }> = {
   error: {
-    icon: <Warning size={ICON_SIZES.xl} weight="fill" />,
+    icon: <WarningIcon sx={{ fontSize: ICON_SIZES.xl }} />,
     iconBg: 'bg-red-500/10 dark:bg-red-500/20',
     iconColor: 'text-red-600 dark:text-red-400',
   },
   warning: {
-    icon: <Warning size={ICON_SIZES.xl} weight="fill" />,
+    icon: <WarningIcon sx={{ fontSize: ICON_SIZES.xl }} />,
     iconBg: 'bg-yellow-500/10 dark:bg-yellow-500/20',
     iconColor: 'text-yellow-600 dark:text-yellow-400',
   },
   confirm: {
-    icon: <Info size={ICON_SIZES.xl} weight="fill" />,
+    icon: <InfoIcon sx={{ fontSize: ICON_SIZES.xl }} />,
     iconBg: 'bg-blue-500/10 dark:bg-blue-500/20',
     iconColor: 'text-blue-600 dark:text-blue-400',
   },
   info: {
-    icon: <CheckCircle size={ICON_SIZES.xl} weight="fill" />,
+    icon: <CheckCircleIcon sx={{ fontSize: ICON_SIZES.xl }} />,
     iconBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
     iconColor: 'text-emerald-600 dark:text-emerald-400',
   },
@@ -107,7 +111,7 @@ export default function ErrorDialog({
                 className="absolute top-4 right-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 aria-label="Close dialog"
               >
-                <X size={ICON_SIZES.md} weight="bold" />
+                <CloseIcon sx={{ fontSize: ICON_SIZES.md }} />
               </button>
 
               {/* Content */}

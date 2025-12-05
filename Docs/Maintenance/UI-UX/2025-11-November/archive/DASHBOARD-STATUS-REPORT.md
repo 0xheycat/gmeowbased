@@ -375,10 +375,10 @@ git push origin main
 # Open: https://vercel.com/0xheycat/gmeowbased
 
 # 5. Test production (wait 5 minutes)
-https://gmeowbased.com/Dashboard
-https://gmeowbased.com/Quest
-https://gmeowbased.com/leaderboard
-https://gmeowbased.com/profile/0x...
+https://gmeowhq.art/Dashboard
+https://gmeowhq.art/Quest
+https://gmeowhq.art/leaderboard
+https://gmeowhq.art/profile/0x...
 ```
 
 ---

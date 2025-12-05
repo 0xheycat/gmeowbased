@@ -51,6 +51,87 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+    
+    /* ========================================================================
+       PHASE 3.1: DESIGN SYSTEM - CSS VARIABLES
+       Centralized design tokens for consistency across all components
+       ======================================================================== */
+    
+    /* Colors - Primary Palette */
+    --primary-color: 139 92 246; /* rgb(139, 92, 246) - Farcaster purple */
+    --primary-hover: 124 58 237; /* rgb(124, 58, 237) - Darker purple */
+    --primary-active: 109 40 217; /* rgb(109, 40, 217) - Even darker */
+    
+    /* Colors - Semantic (Status) */
+    --success: 16 185 129; /* rgb(16, 185, 129) - Green */
+    --warning: 245 158 11; /* rgb(245, 158, 11) - Amber */
+    --error: 239 68 68; /* rgb(239, 68, 68) - Red */
+    --info: 59 130 246; /* rgb(59, 130, 246) - Blue */
+    
+    /* Colors - Text Hierarchy */
+    --text-primary: 17 24 39; /* rgb(17, 24, 39) - Almost black */
+    --text-secondary: 107 114 128; /* rgb(107, 114, 128) - Gray-500 */
+    --text-muted: 156 163 175; /* rgb(156, 163, 175) - Gray-400 */
+    --text-disabled: 209 213 219; /* rgb(209, 213, 219) - Gray-300 */
+    
+    /* Colors - Background Hierarchy */
+    --bg-primary: 255 255 255; /* rgb(255, 255, 255) - White */
+    --bg-secondary: 249 250 251; /* rgb(249, 250, 251) - Gray-50 */
+    --bg-elevated: 243 244 246; /* rgb(243, 244, 246) - Gray-100 */
+    --glass-bg: 255 255 255 / 0.05; /* rgba(255, 255, 255, 0.05) */
+    
+    /* Colors - Borders */
+    --border-color: 229 231 235; /* rgb(229, 231, 235) - Gray-200 */
+    --border-hover: 209 213 219; /* rgb(209, 213, 219) - Gray-300 */
+    --border-focus: 139 92 246; /* rgb(139, 92, 246) - Brand */
+    
+    /* Spacing System (8px base unit) */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    --spacing-3xl: 64px;
+    
+    /* Layout Dimensions */
+    --nav-height: 64px; /* Desktop navigation height */
+    --nav-height-mobile: 56px; /* Mobile navigation height */
+    --tap-target-min: 44px; /* Minimum touch target size (WCAG) */
+    --container-max: 1280px; /* Max content width */
+    --sidebar-width: 280px; /* Desktop sidebar width */
+    
+    /* Border Radius Scale */
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+    
+    /* Shadow System */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+    
+    /* Transition Speeds */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
+    --transition-slower: 500ms ease;
+    
+    /* Z-Index Scale (layering system) */
+    --z-base: 0;
+    --z-dropdown: 1000;
+    --z-sticky: 1100;
+    --z-fixed: 1200;
+    --z-modal-backdrop: 1300;
+    --z-modal: 1400;
+    --z-popover: 1500;
+    --z-tooltip: 1600;
   }
 
   /* Dark Mode */
@@ -73,6 +154,29 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    
+    /* Dark Mode - Design System Overrides */
+    --text-primary: 255 255 255; /* White */
+    --text-secondary: 209 213 219; /* Gray-300 */
+    --text-muted: 156 163 175; /* Gray-400 */
+    --text-disabled: 107 114 128; /* Gray-500 */
+    
+    --bg-primary: 6 9 26; /* #06091a - Dark base */
+    --bg-secondary: 8 18 46; /* #08122e - Dark card */
+    --bg-elevated: 9 19 36; /* #091324 - Slightly elevated */
+    --glass-bg: 0 0 0 / 0.3; /* rgba(0, 0, 0, 0.3) */
+    
+    --border-color: 55 65 81; /* Gray-700 */
+    --border-hover: 75 85 99; /* Gray-600 */
+    --border-focus: 139 92 246; /* Brand (same) */
+    
+    /* Dark shadows - softer, more subtle */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4), 0 10px 10px rgba(0, 0, 0, 0.2);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.5);
   }
 
   /* Base HTML/Body */
@@ -97,6 +201,263 @@
   .dynamic-html p {
     @apply mb-3;
   }
+  
+  /* Safe Area for Mobile (iOS notch support) */
+  .pb-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* ============================================================================
+     ACCESSIBILITY: WCAG 2.1 AA COMPLIANT FOCUS INDICATORS (Task 4)
+     Enhanced keyboard navigation with visible 2px focus rings
+     ============================================================================ */
+  
+  /* Global focus-visible styles (keyboard navigation only) */
+  *:focus-visible {
+    outline: 2px solid rgb(59, 130, 246); /* blue-500 */
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  
+  /* Focus within for interactive containers */
+  .interactive-card:focus-within {
+    box-shadow: 0 0 0 2px rgb(59, 130, 246);
+  }
+  
+  /* Button and link focus (higher priority) */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid rgb(59, 130, 246);
+    outline-offset: 2px;
+  }
+  
+  /* Input focus (use ring instead of outline) */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(59, 130, 246);
+    border-color: rgb(59, 130, 246);
+  }
+  
+  /* Skip to content link (screen reader navigation) */
+  .skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 8px;
+    background: rgb(59, 130, 246);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    z-index: 100;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  .skip-to-content:focus {
+    top: 8px;
+  }
+  
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  .sr-only:focus,
+  .focus\\:not-sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
+
+/* Dark mode focus indicators */
+@layer base {
+  html.dark {
+    /* Dark mode focus styles */
+    *:focus-visible {
+      outline-color: rgb(96, 165, 250); /* blue-400 - lighter for dark mode */
+    }
+    
+    button:focus-visible,
+    a:focus-visible,
+    [role="button"]:focus-visible {
+      outline-color: rgb(96, 165, 250);
+    }
+    
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      box-shadow: 0 0 0 2px rgb(96, 165, 250);
+      border-color: rgb(96, 165, 250);
+    }
+    
+    .interactive-card:focus-within {
+      box-shadow: 0 0 0 2px rgb(96, 165, 250);
+    }
+    
+    .skip-to-content {
+      background: rgb(96, 165, 250);
+      color: rgb(17, 24, 39);
+    }
+  }
+}
+
+/* ============================================================================
+   PHASE 3.2: TYPOGRAPHY SYSTEM
+   Font scale, line heights, and text utility classes
+   ============================================================================ */
+
+@layer base {
+  :root {
+    /* Typography Scale */
+    --font-xs: 12px;
+    --font-sm: 14px;
+    --font-base: 16px;
+    --font-lg: 18px;
+    --font-xl: 20px;
+    --font-2xl: 24px;
+    --font-3xl: 30px;
+    --font-4xl: 36px;
+    --font-5xl: 48px;
+    --font-6xl: 60px;
+    
+    /* Line Heights */
+    --line-height-tight: 1.25;
+    --line-height-snug: 1.375;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+    
+    /* Font Weights */
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+  }
+  
+  /* Typography Utility Classes */
+  .heading-1 {
+    font-size: var(--font-5xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    letter-spacing: -0.02em;
+    color: rgb(var(--text-primary));
+  }
+  
+  .heading-2 {
+    font-size: var(--font-4xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    letter-spacing: -0.01em;
+    color: rgb(var(--text-primary));
+  }
+  
+  .heading-3 {
+    font-size: var(--font-3xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-snug);
+    color: rgb(var(--text-primary));
+  }
+  
+  .heading-4 {
+    font-size: var(--font-2xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-snug);
+    color: rgb(var(--text-primary));
+  }
+  
+  .heading-5 {
+    font-size: var(--font-xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-normal);
+    color: rgb(var(--text-primary));
+  }
+  
+  .heading-6 {
+    font-size: var(--font-lg);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-normal);
+    color: rgb(var(--text-primary));
+  }
+  
+  /* Body Text Variants */
+  .body-lg {
+    font-size: var(--font-lg);
+    line-height: var(--line-height-relaxed);
+    color: rgb(var(--text-primary));
+  }
+  
+  .body {
+    font-size: var(--font-base);
+    line-height: var(--line-height-normal);
+    color: rgb(var(--text-primary));
+  }
+  
+  .body-sm {
+    font-size: var(--font-sm);
+    line-height: var(--line-height-normal);
+    color: rgb(var(--text-secondary));
+  }
+  
+  .body-xs {
+    font-size: var(--font-xs);
+    line-height: var(--line-height-normal);
+    color: rgb(var(--text-secondary));
+  }
+  
+  /* Caption & Helper Text */
+  .caption {
+    font-size: var(--font-xs);
+    line-height: var(--line-height-normal);
+    color: rgb(var(--text-muted));
+    letter-spacing: 0.01em;
+  }
+  
+  .label {
+    font-size: var(--font-sm);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-normal);
+    color: rgb(var(--text-secondary));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  /* Mobile Typography Adjustments */
+  @media (max-width: 640px) {
+    .heading-1 {
+      font-size: var(--font-4xl); /* 48px → 36px on mobile */
+    }
+    
+    .heading-2 {
+      font-size: var(--font-3xl); /* 36px → 30px on mobile */
+    }
+    
+    .heading-3 {
+      font-size: var(--font-2xl); /* 30px → 24px on mobile */
+    }
+    
+    /* Ensure minimum 16px font size on mobile (prevents iOS zoom) */
+    body, .body, input, textarea, select {
+      font-size: max(16px, var(--font-base));
+    }
+  }
 }
 
 /* ============================================================================
@@ -104,6 +465,475 @@
    ============================================================================ */
 
 @layer utilities {
+  /* ========================================================================
+     PHASE 3.3: LAYOUT PRIMITIVES
+     Reusable layout patterns for consistent spacing and structure
+     ======================================================================== */
+  
+  /* Container System */
+  .container-base {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+  }
+  
+  @media (min-width: 768px) {
+    .container-base {
+      padding-left: var(--spacing-lg);
+      padding-right: var(--spacing-lg);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .container-base {
+      padding-left: var(--spacing-xl);
+      padding-right: var(--spacing-xl);
+    }
+  }
+  
+  /* Stack - Vertical Spacing */
+  .stack {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .stack-xs { gap: var(--spacing-xs); }
+  .stack-sm { gap: var(--spacing-sm); }
+  .stack-md { gap: var(--spacing-md); }
+  .stack-lg { gap: var(--spacing-lg); }
+  .stack-xl { gap: var(--spacing-xl); }
+  .stack-2xl { gap: var(--spacing-2xl); }
+  
+  /* Cluster - Horizontal Spacing with Wrap */
+  .cluster {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .cluster-xs { gap: var(--spacing-xs); }
+  .cluster-sm { gap: var(--spacing-sm); }
+  .cluster-md { gap: var(--spacing-md); }
+  .cluster-lg { gap: var(--spacing-lg); }
+  .cluster-xl { gap: var(--spacing-xl); }
+  
+  /* Grid Layouts - Responsive */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+  
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+  }
+  
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+  }
+  
+  /* Mobile: Reduce columns */
+  @media (max-width: 640px) {
+    .grid-3, .grid-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  /* Tablet: 3 columns max */
+  @media (min-width: 641px) and (max-width: 1023px) {
+    .grid-4 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  /* Center Content */
+  .center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .center-x {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .center-y {
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Flexbox Utilities */
+  .flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .flex-start {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  
+  .flex-end {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  
+  /* Section Spacing */
+  .section {
+    padding-top: var(--spacing-2xl);
+    padding-bottom: var(--spacing-2xl);
+  }
+  
+  @media (max-width: 768px) {
+    .section {
+      padding-top: var(--spacing-xl);
+      padding-bottom: var(--spacing-xl);
+    }
+  }
+  
+  /* Card Spacing */
+  .card-padding {
+    padding: var(--spacing-lg);
+  }
+  
+  .card-padding-sm {
+    padding: var(--spacing-md);
+  }
+  
+  @media (max-width: 640px) {
+    .card-padding {
+      padding: var(--spacing-md);
+    }
+    
+    .card-padding-sm {
+      padding: var(--spacing-sm);
+    }
+  }
+  
+  /* ========================================================================
+     PHASE 3.4: ANIMATION LIBRARY
+     Standardized keyframe animations and utility classes
+     ======================================================================== */
+  
+  /* Keyframe Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideInRight {
+    from {
+      transform: translateX(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Animation Utility Classes */
+  .animate-fade-in {
+    animation: fadeIn var(--transition-base);
+  }
+  
+  .animate-fade-out {
+    animation: fadeOut var(--transition-base);
+  }
+  
+  .animate-slide-up {
+    animation: slideUp var(--transition-base);
+  }
+  
+  .animate-slide-down {
+    animation: slideDown var(--transition-base);
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight var(--transition-base);
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInLeft var(--transition-base);
+  }
+  
+  .animate-bounce {
+    animation: bounce 0.5s ease;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  
+  /* Loading Skeleton */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--bg-secondary)) 25%,
+      rgb(var(--bg-elevated)) 50%,
+      rgb(var(--bg-secondary)) 75%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+    border-radius: var(--radius-md);
+  }
+  
+  .skeleton-text {
+    height: 1em;
+    margin-bottom: 0.5em;
+    border-radius: var(--radius-sm);
+  }
+  
+  .skeleton-circle {
+    border-radius: var(--radius-full);
+    aspect-ratio: 1;
+  }
+  
+  /* Reduced Motion Support (Accessibility) */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    
+    .skeleton {
+      animation: none;
+      background: rgb(var(--bg-secondary));
+    }
+  }
+  
+  /* Delay Utilities */
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+  
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+  
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+  
+  /* ========================================================================
+     PHASE 3.5: RESPONSIVE BREAKPOINTS
+     Mobile-first responsive utilities and safe area support
+     ======================================================================== */
+  
+  /* Breakpoint Documentation (reference only - use Tailwind's sm/md/lg/xl)
+     Mobile:  < 640px   (default, no prefix needed)
+     Tablet:  sm: 640px+ (md: 768px+)
+     Desktop: lg: 1024px+ (xl: 1280px+, 2xl: 1536px+)
+     
+     Usage: class="text-base sm:text-lg lg:text-xl"
+  */
+  
+  /* Safe Area Insets (iOS Notch & Android Gesture Bar) */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .safe-area-full {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  /* Mobile Navigation Spacing (accounts for bottom nav) */
+  .pb-nav-mobile {
+    padding-bottom: calc(var(--nav-height-mobile) + env(safe-area-inset-bottom));
+  }
+  
+  /* Touch Target Minimum (WCAG 2.5.5 - Level AAA) */
+  .tap-target {
+    min-width: var(--tap-target-min);
+    min-height: var(--tap-target-min);
+  }
+  
+  /* Viewport-Specific Utilities */
+  .mobile-only {
+    display: block;
+  }
+  
+  @media (min-width: 768px) {
+    .mobile-only {
+      display: none;
+    }
+  }
+  
+  .desktop-only {
+    display: none;
+  }
+  
+  @media (min-width: 768px) {
+    .desktop-only {
+      display: block;
+    }
+  }
+  
+  /* Overflow Scroll with Momentum (iOS Safari) */
+  .scroll-smooth {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Prevent Text Size Adjustment (iOS Safari) */
+  .text-size-adjust-none {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Aspect Ratio Utilities (for responsive images/videos) */
+  .aspect-square {
+    aspect-ratio: 1 / 1;
+  }
+  
+  .aspect-video {
+    aspect-ratio: 16 / 9;
+  }
+  
+  .aspect-portrait {
+    aspect-ratio: 3 / 4;
+  }
+  
+  /* Full Height Viewport (accounts for mobile browser bars) */
+  .h-screen-mobile {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height (newer browsers) */
+  }
+  
+  /* Print Utilities */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    .print-only {
+      display: block !important;
+    }
+  }
+  
+  .print-only {
+    display: none;
+  }
+  
   /* ===== PROFESSIONAL SCROLLBARS (from music template) ===== */
   
   /* Dark Mode Scrollbars */
@@ -1150,23 +1980,53 @@ input[type='number'] {
   }
 
   .rank-badge.beginner {
-    @apply bg-gray-900/50 text-gray-400 border border-gray-700/50;
+    @apply bg-gray-200 text-gray-900 border border-gray-400;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .rank-badge.beginner {
+      @apply bg-gray-900/50 text-gray-400 border-gray-700/50;
+    }
   }
 
   .rank-badge.intermediate {
-    @apply bg-purple-900/50 text-purple-400 border border-purple-700/50;
+    @apply bg-purple-200 text-purple-900 border border-purple-400;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .rank-badge.intermediate {
+      @apply bg-purple-900/50 text-purple-400 border-purple-700/50;
+    }
   }
 
   .rank-badge.advanced {
-    @apply bg-violet-900/50 text-violet-400 border border-violet-700/50;
+    @apply bg-violet-200 text-violet-900 border border-violet-400;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .rank-badge.advanced {
+      @apply bg-violet-900/50 text-violet-400 border-violet-700/50;
+    }
   }
 
   .rank-badge.legendary {
-    @apply bg-orange-900/50 text-orange-400 border border-orange-700/50;
+    @apply bg-orange-200 text-orange-900 border border-orange-400;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .rank-badge.legendary {
+      @apply bg-orange-900/50 text-orange-400 border-orange-700/50;
+    }
   }
 
   .rank-badge.mythic {
-    @apply bg-brand/20 text-brand border border-brand/50;
+    @apply bg-brand/30 text-gray-900 border border-brand;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .rank-badge.mythic {
+      @apply bg-brand/20 text-brand border-brand/50;
+    }
   }
 
   /* Rank change indicators - uses ArrowUp icon */
@@ -1231,5 +2091,113 @@ input[type='number'] {
 
   .leaderboard-empty-description {
     @apply text-sm text-gray-400 mb-4;
+  }
+}
+
+/* ============================================================================
+   TAB SCROLL INDICATORS - Custom Animations
+   ============================================================================ */
+
+/* Subtle pulse for scroll hint (less aggressive than default) */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Slow pulse for compare button (attention without annoyance) */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* Horizontal bounce for chevron indicator */
+@keyframes bounce-horizontal {
+  0%, 100% {
+    transform: translateX(0) translateY(-50%);
+  }
+  50% {
+    transform: translateX(4px) translateY(-50%);
+  }
+}
+
+@layer utilities {
+  .animate-pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-bounce-horizontal {
+    animation: bounce-horizontal 1s ease-in-out infinite;
+  }
+}
+
+/* ============================================================================
+   iOS Safe Area Insets - iPhone Notch/Dynamic Island/Home Indicator Support
+   Task 5 Phase 3: Prevents content overlap on modern iOS devices
+   WCAG 2.5.5: Ensures interactive elements remain accessible on notched devices
+   ============================================================================ */
+
+@supports (padding: env(safe-area-inset-top)) {
+  /* Safe area utility classes */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .safe-y {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Apply to body for full page safe area */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Header safe area (combines base padding with safe area) */
+  header {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  /* Bottom navigation safe area (combines base padding with safe area) */
+  nav[role="navigation"] {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+  
+  /* Fixed positioned elements that need safe area */
+  .fixed-top {
+    top: env(safe-area-inset-top);
+  }
+  
+  .fixed-bottom {
+    bottom: env(safe-area-inset-bottom);
   }
 }

@@ -2,8 +2,8 @@ import { NeynarAPIClient } from "@neynar/nodejs-sdk"
 import { ethers } from "ethers"
 import { createHash } from "crypto"
 import dotenv from "dotenv"
-import { CHAIN_IDS, CONTRACT_ADDRESSES } from "@/lib/gm-utils"
-import type { ChainKey } from "@/lib/gm-utils"
+import { CHAIN_IDS, CONTRACT_ADDRESSES } from "@/lib/gmeow-utils"
+import type { ChainKey } from "@/lib/gmeow-utils"
 import { computeBotUserStats, type BotUserStats } from "@/lib/bot-stats"
 import { loadBotStatsConfig } from "@/lib/bot-config"
 import type { BotStatsConfig } from "@/lib/bot-config-types"
@@ -258,6 +258,12 @@ async function checkNewCasts() {
         fid: Number(fid),
         action: actionU8,
         deadline: Number(deadline),
+        nonce: Number(nonce),
+        sig,
+      }),
+    })
+      }),
+    })
         nonce: Number(nonce),
         sig,
       }),

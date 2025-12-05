@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import BoltIcon from '@mui/icons-material/Bolt'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import { useAccount } from 'wagmi'
 // Reserved for future implementation:
 // import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
@@ -98,9 +101,9 @@ export function ProfileNFTCard({
 
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-3">
-          <StatBox label="Total XP" value={totalXP.toLocaleString()} icon="⚡" />
-          <StatBox label="Badges" value={badges} icon="🏅" />
-          <StatBox label="Streak" value={streakCurrent} icon="🔥" />
+          <StatBox label="Total XP" value={totalXP.toLocaleString()} icon={<BoltIcon />} />
+          <StatBox label="Badges" value={badges} icon={<EmojiEventsIcon />} />
+          <StatBox label="Streak" value={streakCurrent} icon={<LocalFireDepartmentIcon />} />
         </div>
 
         {/* Additional Stats */}
@@ -168,10 +171,10 @@ export function ProfileNFTCard({
   )
 }
 
-function StatBox({ label, value, icon }: { label: string; value: string | number; icon: string }) {
+function StatBox({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
   return (
     <div className="relative overflow-hidden rounded-xl border-2 border-gold/25 bg-gradient-to-br from-gold/10 to-gold-dark/5 p-4 shadow-[0_4px_16px_rgba(255,215,0,0.15)]">
-      <div className="absolute right-2 top-2 text-2xl opacity-20">{icon}</div>
+      <div className="absolute right-2 top-2 opacity-20">{icon}</div>
       <div className="relative">
         <div className="text-xs uppercase tracking-wide text-gold/60">{label}</div>
         <div className="mt-1 text-2xl font-black text-gold drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">

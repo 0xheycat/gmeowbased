@@ -50,6 +50,24 @@ export const QuestClaimSchema = z.object({
   questId: z.string().uuid('Invalid quest ID format'),
 })
 
+// Quest List Query Schema (GET /api/quests)
+export const QuestListQuerySchema = z.object({
+  category: z.enum(['onchain', 'social', 'creative', 'learn']).optional(),
+  difficulty: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  search: z.string().max(100).optional(),
+  limit: z.number().int().min(1).max(100).optional(),
+})
+
+// Quest Details Query Schema (GET /api/quests/[questId])
+export const QuestDetailsQuerySchema = z.object({
+  userFid: FIDSchema,
+})
+
+// Quest Progress Check Schema (POST /api/quests/[questId]/progress)
+export const QuestProgressCheckSchema = z.object({
+  userFid: FIDSchema,
+})
+
 // Analytics endpoints
 export const AnalyticsSummarySchema = z.object({
   fid: FIDSchema.optional(),

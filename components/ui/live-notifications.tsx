@@ -27,6 +27,12 @@ export type NotificationEvent =
   | 'quest_reward_claimed'
   | 'quest_added'
   | 'quest_closed'
+  | 'quest_verification_pending'   // NEW: Verification started
+  | 'quest_verification_success'   // NEW: Verification succeeded
+  | 'quest_verification_failed'    // NEW: Verification failed
+  | 'quest_task_completed'         // NEW: Single task complete (multi-step)
+  | 'quest_claim_failed'           // NEW: Claim transaction failed
+  | 'fid_linking_failed'           // NEW: FID linking failed
   | 'level_up'
   | 'rank_changed'
   | 'points_milestone'
@@ -58,6 +64,10 @@ export type NotificationEvent =
   | 'frame_action_success'
   | 'frame_action_failed'
   | 'frame_share_reward'
+  // Wallet Events
+  | 'wallet_connected'
+  | 'wallet_disconnected'
+  | 'wallet_connection_failed'
   // Loading States (Phase 1.5)
   | 'loading_transaction'
   | 'loading_data'

@@ -29,14 +29,14 @@
 ```typescript
 {
   version: 'next',
-  imageUrl: 'https://gmeowbased.com/api/og/frame-dynamic?type=quest&...',
+  imageUrl: 'https://gmeowhq.art/api/og/frame-dynamic?type=quest&...',
   button: {
     title: 'Open Quest',
     action: {
       type: 'launch_frame',
       name: 'Gmeowbased',
-      url: 'https://gmeowbased.com/Quest',
-      splashImageUrl: 'https://gmeowbased.com/splash.png'
+      url: 'https://gmeowhq.art/Quest',
+      splashImageUrl: 'https://gmeowhq.art/splash.png'
     }
   }
 }
@@ -396,7 +396,7 @@ const mintedCache = new Map<string, { value: MintedBadge[]; expiresAt: number }>
      targetUsername: 'gmeowbased',
      castIdentifier: '0xabcd1234',
      castContains: 'gm',
-     frameUrl: 'https://gmeowbased.com/frame'
+     frameUrl: 'https://gmeowhq.art/frame'
    }
    ```
 
@@ -679,7 +679,7 @@ buttons: [
     title: 'Open [FrameType]',
     action: {
       type: 'launch_frame',
-      url: 'https://gmeowbased.com/[path]'
+      url: 'https://gmeowhq.art/[path]'
     }
   }
 ]
@@ -712,7 +712,7 @@ buttons: [
     title: 'Open Full App',
     action: {
       type: 'launch_frame',
-      url: 'https://gmeowbased.com/gm'
+      url: 'https://gmeowhq.art/gm'
     }
   }
 ]

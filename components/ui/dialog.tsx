@@ -15,7 +15,7 @@
 
 import { createContext, useContext, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X } from '@phosphor-icons/react'
+import CloseIcon from '@mui/icons-material/Close'
 import { cn } from '@/lib/utils'
 
 // Context for dialog state
@@ -189,7 +189,7 @@ export function DialogContent({
           className="absolute right-4 top-4 rounded-md p-1.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           aria-label="Close dialog"
         >
-          <X size={20} weight="bold" />
+          <CloseIcon sx={{ fontSize: 20 }} />
         </button>
       )}
       {children}

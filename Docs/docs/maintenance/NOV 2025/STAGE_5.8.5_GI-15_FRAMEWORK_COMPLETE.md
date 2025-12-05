@@ -82,7 +82,7 @@ Stage 5.8.5 successfully established the complete GI-15 audit framework, includi
 
 **Testing URLs Reference:**
 - Staging: `https://gmeowbased-staging.vercel.app`
-- Production: `https://gmeowbased.com`
+- Production: `https://gmeowhq.art`
 - Frame types: leaderboard, quest, profile, badge
 
 ---

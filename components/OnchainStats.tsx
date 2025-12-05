@@ -6,7 +6,7 @@ import { useAccount } from 'wagmi'
 import { createPublicClient, http, formatEther } from 'viem'
 import type { Address } from 'viem'
 import { chainStateCache } from '@/lib/cache-storage'
-import { ConnectWallet } from '@/components/ConnectWallet'
+import { WalletButton } from '@/components/WalletButton'
 import { probeMiniappReady, getMiniappContext } from '@/lib/miniappEnv'
 import { buildFrameShareUrl, openWarpcastComposer } from '@/lib/share'
 import { fetchFidByAddress } from '@/lib/neynar'
@@ -791,7 +791,7 @@ export function OnchainStats({ onLoadingChange }: { onLoadingChange?: (loading: 
       <div className="text-center">
         <p className="text-[var(--px-sub)] text-sm mb-3">Connect your wallet to view your onchain stats.</p>
         <div className="flex items-center justify-center">
-          <ConnectWallet />
+          <WalletButton />
         </div>
       </div>
     )

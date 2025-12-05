@@ -4,7 +4,7 @@
  */
 
 import { getTrendingTokens, formatVolume } from '@/lib/api/neynar-dashboard'
-import { TrendingUp } from 'lucide-react'
+import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import { cn } from '@/lib/utils'
 
 export async function TrendingTokens() {
@@ -14,7 +14,7 @@ export async function TrendingTokens() {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-5 h-5" />
+          <TrendingUpIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Trending Tokens (24h)</h3>
         </div>
         <p className="text-gray-500 text-sm">No trending tokens available at the moment.</p>
@@ -27,7 +27,7 @@ export async function TrendingTokens() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" />
+          <TrendingUpIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Trending Tokens (24h)</h3>
         </div>
         <span className="text-xs text-gray-500">Base Chain</span>

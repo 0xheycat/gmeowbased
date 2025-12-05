@@ -20,6 +20,7 @@ import type { PublicClient } from 'viem'
 import type { Config } from '@wagmi/core'
 import { getPublicClient } from '@wagmi/core'
 import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector'
+import { injected, coinbaseWallet, walletConnect } from 'wagmi/connectors'
 
 const RPC_BASE = process.env.NEXT_PUBLIC_RPC_BASE ?? process.env.RPC_BASE ?? 'https://mainnet.base.org'
 const RPC_OPTIMISM = process.env.NEXT_PUBLIC_RPC_OPTIMISM ?? process.env.RPC_OPTIMISM ?? 'https://opt-mainnet.g.alchemy.com/v2/_ScddWNDeydEhhrjEHgsNRv6nAoaJpgE'
@@ -72,9 +73,33 @@ export const wagmiConfig = createConfig({
     [ink.id]: http(RPC_INK),
   },
   connectors: [
-    // Prefer Farcaster Mini App in miniapp context
+    // Priority 1: Farcaster Mini App (auto-connect in Warpcast)
     miniAppConnector(),
-    // ...keep your other connectors (injected, walletConnect, etc.)...
+    
+    // Priority 2: Coinbase Wallet (recommended for Base ecosystem)
+    coinbaseWallet({
+      appName: 'Gmeowbased',
+      appLogoUrl: 'https://gmeowhq.art/logo.png',
+      preference: 'all', // Supports both extension and smart wallet
+    }),
+    
+    // Priority 3: Injected providers (MetaMask, Brave Wallet, etc.)
+    injected({
+      shimDisconnect: true,
+    }),
+    
+    // Priority 4: WalletConnect (universal mobile wallet support)
+    // Only initialize on client to avoid SSR indexedDB errors
+    ...(typeof window !== 'undefined' ? [walletConnect({
+      projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
+      metadata: {
+        name: 'Gmeowbased',
+        description: 'Multi-chain gaming platform with quests and rewards',
+        url: 'https://gmeowhq.art',
+        icons: ['https://gmeowhq.art/logo.png'],
+      },
+      showQrModal: true,
+    })] : []),
   ],
   // autoConnect: true, // REMOVE: not supported in this wagmi version
 })

@@ -4,7 +4,7 @@
  */
 
 import { getTrendingChannels, formatNumber, truncateText } from '@/lib/api/neynar-dashboard'
-import { Hash } from 'lucide-react'
+import TagIcon from '@mui/icons-material/Tag'
 import Image from 'next/image'
 
 export async function TrendingChannels() {
@@ -14,7 +14,7 @@ export async function TrendingChannels() {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
-          <Hash className="w-5 h-5" />
+          <TagIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Trending Channels (24h)</h3>
         </div>
         <p className="text-gray-500 text-sm">No trending channels available.</p>
@@ -26,7 +26,7 @@ export async function TrendingChannels() {
     <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 mb-6">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Hash className="w-5 h-5" />
+        <TagIcon className="w-5 h-5" />
         <h3 className="text-lg font-semibold">Trending Channels (24h)</h3>
       </div>
 

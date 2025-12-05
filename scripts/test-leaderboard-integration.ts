@@ -10,6 +10,12 @@
  * 5. Cache performance (Neynar + contract)
  */
 
+import { config } from 'dotenv'
+import { resolve } from 'path'
+
+// Load .env.local explicitly
+config({ path: resolve(process.cwd(), '.env.local') })
+
 import { createPublicClient, http, parseAbiItem } from 'viem'
 import { base } from 'viem/chains'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI } from '../lib/gmeow-utils'
@@ -31,8 +37,8 @@ async function testContractReads() {
       transport: http(rpcUrl),
     })
 
-    const contractAddress = CONTRACT_ADDRESSES.base
-    const testAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0' // Example address (checksum)
+    const contractAddress = CONTRACT_ADDRESSES.base as `0x${string}`
+    const testAddress = '0x1234567890123456789012345678901234567890' as `0x${string}` // Top leaderboard user
 
     console.log(`   Contract: ${contractAddress}`)
     console.log(`   Test address: ${testAddress}`)
@@ -74,8 +80,8 @@ async function testNeynarEnrichment() {
     if (user) {
       console.log(`   ✅ Neynar fetch succeeded (${duration}ms)`)
       console.log(`      Username: ${user.username}`)
-      console.log(`      Display name: ${user.display_name}`)
-      console.log(`      Has PFP: ${!!user.pfp_url}`)
+      console.log(`      Display name: ${user.displayName}`)
+      console.log(`      Has PFP: ${!!user.pfpUrl}`)
       return true
     } else {
       console.log(`   ❌ Neynar returned null`)

@@ -3,7 +3,9 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Moon, Sun } from '@phosphor-icons/react'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import PetsIcon from '@mui/icons-material/Pets'
 import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ProfileDropdown } from '@/components/layout/ProfileDropdown'
@@ -43,20 +45,23 @@ export function Header({ notifications, unreadCount }: HeaderProps) {
 
   return (
     <nav
+      role="navigation"
       className={`sticky top-0 z-30 w-full transition-all duration-300 backdrop-blur-lg ${
         isScrolled
           ? 'bg-white/90 dark:bg-gray-900/90 shadow-sm'
           : 'bg-white/60 dark:bg-gray-900/60'
       }`}
     >
-      <div className="flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Left: Logo + Nav Links */}
-        <div className="flex items-center gap-6">
+      {/* Safe area padding for iOS notch/Dynamic Island */}
+      <div className="pt-[env(safe-area-inset-top)]">
+        <div className="flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6 lg:px-8 safe-x">
+          {/* Left: Logo + Nav Links */}
+          <div className="flex items-center gap-6">
           <Link
             href="/"
             className="flex items-center gap-2 text-xl font-bold hover:opacity-80 transition-opacity"
           >
-            <span className="text-2xl">😺</span>
+            <PetsIcon sx={{ fontSize: 28 }} />
             <span className="hidden sm:inline">Gmeowbased</span>
           </Link>
 
@@ -97,6 +102,9 @@ export function Header({ notifications, unreadCount }: HeaderProps) {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3 sm:gap-4">
+          {/* Wallet Connection Button - Reown AppKit */}
+          <appkit-button />
+
           {/* Notification Bell with Dropdown */}
           <NotificationBell 
             initialNotifications={notifications}
@@ -120,9 +128,9 @@ export function Header({ notifications, unreadCount }: HeaderProps) {
                   transition={{ duration: 0.2 }}
                 >
                   {theme === 'dark' ? (
-                    <Sun size={18} weight="regular" className="text-yellow-500" />
+                    <LightModeIcon sx={{ fontSize: 18 }} className="text-yellow-500" />
                   ) : (
-                    <Moon size={18} weight="regular" className="text-gray-700" />
+                    <DarkModeIcon sx={{ fontSize: 18 }} className="text-gray-700" />
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -132,6 +140,7 @@ export function Header({ notifications, unreadCount }: HeaderProps) {
           {/* Profile Dropdown */}
           <ProfileDropdown />
         </div>
+      </div>
       </div>
     </nav>
   )

@@ -4,7 +4,11 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAccount } from 'wagmi'
-import { CaretDown, Trophy, Lightning, User, SignOut } from '@phosphor-icons/react'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import BoltIcon from '@mui/icons-material/Bolt'
+import PersonIcon from '@mui/icons-material/Person'
+import LogoutIcon from '@mui/icons-material/Logout'
 import { fetchUserByAddress, type FarcasterUser } from '@/lib/neynar'
 import { formatNumber } from '@/lib/formatters'
 
@@ -96,7 +100,7 @@ export function ProfileDropdown() {
         href="/profile"
         className="flex h-10 items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 px-4 text-sm font-medium text-slate-950 dark:text-white/70 transition-colors hover:border-accent-green/30 hover:bg-accent-green/10 hover:text-slate-950 dark:hover:text-slate-900 dark:text-white backdrop-blur-xl backdrop-saturate-150"
       >
-        <User size={18} weight="bold" />
+        <PersonIcon sx={{ fontSize: 18 }} />
         <span className="hidden sm:inline">Connect</span>
       </Link>
     )
@@ -137,16 +141,15 @@ export function ProfileDropdown() {
             sizes="(max-width: 640px) 28px, 32px" 
           />
           {profile?.powerBadge && (
-            <div className="absolute -right-0.5 -top-0.5 sm:-right-1 sm:-top-1 flex h-3 w-3 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-yellow-500 text-[8px] sm:text-[10px]">
-              ⚡
+            <div className="absolute -right-0.5 -top-0.5 sm:-right-1 sm:-top-1 flex h-3 w-3 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-yellow-500">
+              <BoltIcon sx={{ fontSize: 10 }} className="text-white" />
             </div>
           )}
         </div>
         {/* Desktop only: username + caret */}
         <span className="hidden text-sm font-medium text-slate-950 dark:text-white sm:inline">@{username}</span>
-        <CaretDown
-          size={14}
-          weight="bold"
+        <KeyboardArrowDownIcon
+          sx={{ fontSize: 14 }}
           className={`hidden sm:block text-slate-600 dark:text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
@@ -166,8 +169,8 @@ export function ProfileDropdown() {
                   <p className="text-xs text-slate-600 dark:text-white/60">FID: {profile?.fid ?? '—'}</p>
                 </div>
                 {profile?.powerBadge && (
-                  <div className="rounded-full bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-400">
-                    ⚡ Power
+                  <div className="rounded-full bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-400 flex items-center gap-1">
+                    <BoltIcon sx={{ fontSize: 12 }} /> Power
                   </div>
                 )}
               </div>
@@ -177,14 +180,14 @@ export function ProfileDropdown() {
             <div className="grid grid-cols-3 gap-2 border-b border-slate-200 dark:border-white/10 p-4">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 text-accent-green">
-                  <Trophy size={14} weight="fill" />
+                  <EmojiEventsIcon sx={{ fontSize: 14 }} />
                   <span className="text-sm font-bold">{formatNumber(points)}</span>
                 </div>
                 <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-700 dark:text-white/50">Points</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 text-yellow-400">
-                  <Lightning size={14} weight="fill" />
+                  <BoltIcon sx={{ fontSize: 14 }} />
                   <span className="text-sm font-bold">{streak}</span>
                 </div>
                 <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-700 dark:text-white/50">Streak</p>
@@ -202,7 +205,7 @@ export function ProfileDropdown() {
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >
-                <User size={18} weight="bold" />
+                <PersonIcon sx={{ fontSize: 18 }} />
                 View Full Profile
               </Link>
               <Link
@@ -210,7 +213,7 @@ export function ProfileDropdown() {
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >
-                <Trophy size={18} weight="bold" />
+                <EmojiEventsIcon sx={{ fontSize: 18 }} />
                 Dashboard
               </Link>
               <Link
@@ -218,7 +221,7 @@ export function ProfileDropdown() {
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >
-                <Lightning size={18} weight="bold" />
+                <BoltIcon sx={{ fontSize: 18 }} />
                 Leaderboard
               </Link>
               <button
@@ -229,7 +232,7 @@ export function ProfileDropdown() {
                 }}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >
-                <SignOut size={18} weight="bold" />
+                <LogoutIcon sx={{ fontSize: 18 }} />
                 Disconnect
               </button>
             </div>

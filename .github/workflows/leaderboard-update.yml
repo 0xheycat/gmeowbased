@@ -18,7 +18,7 @@ jobs:
       - name: Update leaderboard calculations
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          DEPLOYMENT_URL: ${{ secrets.VERCEL_URL || 'https://gmeowbased.vercel.app' }}
+          DEPLOYMENT_URL: ${{ secrets.VERCEL_URL || 'https://gmeowhq.art' }}
         run: |
           echo "🏆 Starting leaderboard update..."
           

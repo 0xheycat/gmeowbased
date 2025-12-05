@@ -163,7 +163,7 @@ git pull origin main
 
 ## 🔗 External Resources
 
-- **Production**: [gmeowbased.com](https://gmeowbased.com)
+- **Production**: [gmeowhq.art](https://gmeowhq.art)
 - **GitHub**: [github.com/0xheycat/gmeowbased](https://github.com/0xheycat/gmeowbased)
 - **Vercel**: Check deployment logs in Vercel dashboard
 - **Supabase**: Database management console
