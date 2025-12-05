@@ -24,40 +24,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Process badge minting queue
         env:
-          # Supabase
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          
-          # Neynar (for notifications)
-          NEYNAR_API_KEY: ${{ secrets.NEYNAR_API_KEY }}
-          
-          # RPC endpoint for Base mainnet minting
-          RPC_BASE: ${{ secrets.RPC_BASE }}
-          
-          # Private key for minting (if needed)
-          MINTER_PRIVATE_KEY: ${{ secrets.MINTER_PRIVATE_KEY }}
-          
-        run: npx tsx scripts/automation/mint-badge-queue.ts
-
-      - name: Summary
-        if: always()
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DEPLOYMENT_URL: ${{ secrets.VERCEL_URL || 'https://gmeowhq.art' }}
         run: |
-          echo "✅ Badge minting job completed"
-          echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          echo "Schedule: Daily at 1 AM UTC"
+          echo "🎖️ Starting badge minting via API..."
+          
+          # Call secure API endpoint
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "$DEPLOYMENT_URL/api/cron/mint-badges")
+          
+          # Extract HTTP status code (last line)
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "📊 Response status: $http_code"
+          echo "📄 Response body: $body"
+          
+          # Check if request was successful
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Badge minting completed successfully!"
+            
+            # Parse and display results (if jq is available)
+            if command -v jq &> /dev/null; then
+              echo "🎖️ Minting summary:"
+              echo "$body" | jq -r '.result // "No detailed results available"'
+            fi
+          else
+            echo "❌ Badge minting failed with status $http_code"
+            echo "$body"
+            exit 1
+          fi
+          
+          echo "⏱️ Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "📅 Schedule: Daily at 1 AM UTC"
