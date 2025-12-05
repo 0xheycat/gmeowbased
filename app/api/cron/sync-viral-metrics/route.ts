@@ -54,14 +54,14 @@ export async function POST(request: NextRequest) {
           error: 'Too many requests',
           limit,
           remaining,
-          reset: new Date(reset).toISOString()
+          reset: reset ? new Date(reset).toISOString() : new Date(Date.now() + 60000).toISOString()
         },
         { 
           status: 429,
           headers: {
             'X-RateLimit-Limit': String(limit),
             'X-RateLimit-Remaining': String(remaining),
-            'X-RateLimit-Reset': String(reset),
+            'X-RateLimit-Reset': String(reset || Date.now() + 60000),
           }
         }
       )
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     
     // Import and run sync logic
     const { syncViralMetrics } = await import('@/scripts/automation/sync-viral-metrics')
-    const result = await syncViralMetrics()
+    const result = await syncViralMetrics({ dryRun: false })
     
     const duration = Date.now() - startTime
     console.log(`[Viral Metrics] Sync complete in ${duration}ms`)
