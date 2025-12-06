@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
@@ -10,6 +11,8 @@ import { ProfileTabs } from '@/components/profile/ProfileTabs'
 import { QuestActivity } from '@/components/profile/QuestActivity'
 import { BadgeCollection } from '@/components/profile/BadgeCollection'
 import { ActivityTimeline } from '@/components/profile/ActivityTimeline'
+import { ProfileEditModal } from '@/components/profile/ProfileEditModal'
+import { profileSectionVariants, profileSectionTransition } from '@/components/profile/animations'
 import type { ProfileData } from '@/lib/profile/types'
 import type { Badge } from '@/components/profile/BadgeCollection'
 import type { QuestCompletion } from '@/components/profile/QuestActivity'
@@ -50,6 +53,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   // Phase 4: Real data with loading states
   const [badges, setBadges] = useState<Badge[]>([])
@@ -58,6 +62,40 @@ export default function ProfilePage() {
   const [badgesLoading, setBadgesLoading] = useState(false)
   const [questsLoading, setQuestsLoading] = useState(false)
   const [activitiesLoading, setActivitiesLoading] = useState(false)
+
+  // Memoize tab configs for performance (LinkedIn pattern)
+  const tabConfigs = useMemo(() => [
+    { id: 'overview' as const, label: 'Overview', icon: '📊', badge: undefined, key: '1' },
+    { id: 'quests' as const, label: 'Quests', icon: '⚔️', badge: quests.length, key: '2' },
+    { id: 'badges' as const, label: 'Badges', icon: '🏅', badge: badges.length, key: '3' },
+    { id: 'activity' as const, label: 'Activity', icon: '📈', badge: undefined, key: '4' },
+  ], [quests.length, badges.length])
+
+  // Keyboard shortcuts (Twitter/GitHub pattern): Cmd/Ctrl + 1-4 to switch tabs
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '4') {
+        e.preventDefault()
+        const tabIndex = parseInt(e.key) - 1
+        if (tabConfigs[tabIndex]) {
+          setActiveTab(tabConfigs[tabIndex].id)
+        }
+      }
+      // Arrow keys for tab navigation (accessibility)
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        const currentIndex = tabConfigs.findIndex(t => t.id === activeTab)
+        if (e.key === 'ArrowRight' && currentIndex < tabConfigs.length - 1) {
+          e.preventDefault()
+          setActiveTab(tabConfigs[currentIndex + 1].id)
+        } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+          e.preventDefault()
+          setActiveTab(tabConfigs[currentIndex - 1].id)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [activeTab, tabConfigs])
 
   // Fetch profile data
   useEffect(() => {
@@ -214,59 +252,161 @@ export default function ProfilePage() {
     )
   }
 
-  // Render tab content
-  const renderTabContent = () => {
+  // Render tab content with useCallback for performance (LinkedIn pattern)
+  const renderTabContent = useCallback(() => {
+    if (!profile) return null
+
     switch (activeTab) {
       case 'overview':
         return (
-          <div className="space-y-6">
+          <motion.div
+            key="overview"
+            variants={profileSectionVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={profileSectionTransition}
+            className="space-y-6"
+          >
             <ProfileStats stats={profile.stats} />
             <SocialLinks
               socialLinks={profile.social_links}
               wallet={profile.wallet}
             />
-          </div>
+          </motion.div>
         )
 
       case 'quests':
-        return <QuestActivity quests={quests} loading={questsLoading} />
+        return (
+          <motion.div
+            key="quests"
+            variants={profileSectionVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={profileSectionTransition}
+          >
+            <QuestActivity quests={quests} loading={questsLoading} />
+          </motion.div>
+        )
 
       case 'badges':
-        return <BadgeCollection badges={badges} loading={badgesLoading} />
+        return (
+          <motion.div
+            key="badges"
+            variants={profileSectionVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={profileSectionTransition}
+          >
+            <BadgeCollection badges={badges} loading={badgesLoading} />
+          </motion.div>
+        )
 
       case 'activity':
-        return <ActivityTimeline activities={activities} loading={activitiesLoading} />
+        return (
+          <motion.div
+            key="activity"
+            variants={profileSectionVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={profileSectionTransition}
+          >
+            <ActivityTimeline activities={activities} loading={activitiesLoading} />
+          </motion.div>
+        )
 
       default:
         return null
     }
-  }
+  }, [activeTab, profile, quests, questsLoading, badges, badgesLoading, activities, activitiesLoading])
+
+  // Handle profile save from edit modal
+  const handleProfileSave = useCallback(async (data: any) => {
+    try {
+      const response = await fetch(`/api/user/profile/${fid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to update profile')
+      }
+
+      const result = await response.json()
+      // Update local profile state
+      setProfile(result.data)
+      
+      // Show success notification (TODO: integrate with notification system)
+      console.log('Profile updated successfully')
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+      throw error
+    }
+  }, [fid])
 
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 py-8">
+      {/* Skip to content link (Accessibility - WCAG 2.1) */}
+      <a
+        href="#profile-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+      >
+        Skip to profile content
+      </a>
+
       <div className="space-y-6">
         {/* Profile Header */}
         <ProfileHeader
           profile={profile}
           isOwner={currentUserFid === profile.fid}
+          onEditClick={() => setIsEditModalOpen(true)}
         />
 
-        {/* Tab Navigation */}
-        <ProfileTabs
-          tabs={[
-            { id: 'overview', label: 'Overview', icon: '📊' },
-            { id: 'quests', label: 'Quests', icon: '⚔️', badge: quests.length },
-            { id: 'badges', label: 'Badges', icon: '🏅', badge: badges.length },
-            { id: 'activity', label: 'Activity', icon: '📈' },
-          ]}
-          activeTab={activeTab}
-          onTabChange={(id) => setActiveTab(id as TabKey)}
-        />
+        {/* Edit Profile Modal */}
+        {profile && (
+          <ProfileEditModal
+            profile={profile}
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            onSave={handleProfileSave}
+          />
+        )}
 
-        {/* Tab Content */}
-        <div className="min-h-[400px]">
-          {renderTabContent()}
+        {/* Keyboard shortcuts hint (Twitter/GitHub pattern) */}
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-white/40">
+            <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono">⌘</kbd> +{' '}
+            <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono">1-4</kbd> to switch tabs
+          </div>
         </div>
+
+        {/* Tab Navigation with ARIA */}
+        <nav aria-label="Profile sections" role="tablist">
+          <ProfileTabs
+            tabs={tabConfigs}
+            activeTab={activeTab}
+            onTabChange={(id) => setActiveTab(id as TabKey)}
+          />
+        </nav>
+
+        {/* Tab Content with ARIA and AnimatePresence for smooth transitions */}
+        <main
+          id="profile-content"
+          role="tabpanel"
+          aria-label={`${activeTab} content`}
+          className="min-h-[400px]"
+        >
+          <AnimatePresence mode="wait">
+            {renderTabContent()}
+          </AnimatePresence>
+        </main>
       </div>
     </div>
   )
