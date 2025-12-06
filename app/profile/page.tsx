@@ -1,29 +1,35 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+
 /**
- * Profile Page - Under Reconstruction
+ * Profile Page - Redirect to current user's profile
  * 
- * Rebuilding with professional hybrid template strategy:
- * - trezoadmin-41 (admin UI)
- * - gmeowbased0.6 (Web3 patterns)
- * - music (forms, charts)
+ * This page redirects to /profile/[fid] for the current user.
+ * If no user is logged in, redirects to dashboard.
  * 
  * See: docs/planning/TASK-9-PROFILE-REBUILD-PLAN.md
  */
 
-export default function ProfilePage() {
+export default function ProfileRedirectPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    // TODO Phase 4: Get current user FID from auth context
+    // For now, redirect to dashboard
+    router.push('/Dashboard')
+  }, [router])
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="text-center space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Profile Page - Under Reconstruction
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Rebuilding with professional template patterns
-        </p>
-        <p className="text-sm text-gray-500 dark:text-gray-500">
-          See TASK-9-PROFILE-REBUILD-PLAN.md for details
-        </p>
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 mx-auto animate-pulse">
+          <svg className="h-8 w-8 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <p className="text-white/60">Loading profile...</p>
       </div>
     </div>
   )
