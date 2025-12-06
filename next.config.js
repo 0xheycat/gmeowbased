@@ -131,6 +131,18 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.seadn.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.seadn.io',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   webpack: (config) => {

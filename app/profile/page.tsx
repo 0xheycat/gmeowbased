@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuthContext } from '@/lib/contexts/AuthContext'
 
 /**
  * Profile Page - Redirect to current user's profile
@@ -14,12 +15,21 @@ import { useRouter } from 'next/navigation'
 
 export default function ProfileRedirectPage() {
   const router = useRouter()
+  const { fid, isAuthenticated, isLoading } = useAuthContext()
 
   useEffect(() => {
-    // TODO Phase 4: Get current user FID from auth context
-    // For now, redirect to dashboard
+    // Wait for auth to load
+    if (isLoading) return
+
+    // If authenticated with FID, redirect to user's profile
+    if (isAuthenticated && fid) {
+      router.push(`/profile/${fid}`)
+      return
+    }
+
+    // If not authenticated, redirect to dashboard
     router.push('/Dashboard')
-  }, [router])
+  }, [router, fid, isAuthenticated, isLoading])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
