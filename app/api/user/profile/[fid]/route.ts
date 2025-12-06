@@ -117,9 +117,15 @@ function validateOrigin(request: NextRequest): boolean {
     return true;
   }
 
+  // Allow localhost in development
+  if (process.env.NODE_ENV === 'development' && origin.includes('localhost')) {
+    return true;
+  }
+
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,
     `https://${host}`,
+    `http://${host}`,
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   ].filter(Boolean);
 

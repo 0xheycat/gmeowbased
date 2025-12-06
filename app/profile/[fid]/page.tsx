@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/lib/hooks/use-auth'
+import { useDialog } from '@/lib/hooks/use-dialog'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { SocialLinks } from '@/components/profile/SocialLinks'
@@ -12,6 +13,7 @@ import { QuestActivity } from '@/components/profile/QuestActivity'
 import { BadgeCollection } from '@/components/profile/BadgeCollection'
 import { ActivityTimeline } from '@/components/profile/ActivityTimeline'
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal'
+import ErrorDialog from '@/components/ui/error-dialog'
 import { profileSectionVariants, profileSectionTransition } from '@/components/profile/animations'
 import type { ProfileData } from '@/lib/profile/types'
 import type { Badge } from '@/components/profile/BadgeCollection'
@@ -54,6 +56,14 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  
+  // Error dialog state
+  const errorDialog = useDialog()
+  const [errorDialogConfig, setErrorDialogConfig] = useState<{
+    title: string
+    message: string
+    type?: 'error' | 'warning' | 'info'
+  }>({ title: '', message: '' })
 
   // Phase 4: Real data with loading states
   const [badges, setBadges] = useState<Badge[]>([])
@@ -291,19 +301,35 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to update profile')
+        const errorMessage = errorData.message || 'Failed to update profile'
+        
+        setErrorDialogConfig({
+          title: 'Update Failed',
+          message: errorMessage,
+          type: 'error'
+        })
+        errorDialog.open()
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()
       if (result.success && result.data) {
         setProfile(result.data)
         setIsEditModalOpen(false)
+        
+        // Show success message
+        setErrorDialogConfig({
+          title: 'Profile Updated',
+          message: 'Your profile has been successfully updated.',
+          type: 'info'
+        })
+        errorDialog.open()
       }
     } catch (error) {
       console.error('Failed to update profile:', error)
-      alert('Failed to update profile. Please try again.')
+      // Error dialog already shown above
     }
-  }, [fid])
+  }, [fid, errorDialog])
 
   // Loading state
   if (loading) {
@@ -409,6 +435,15 @@ export default function ProfilePage() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Error Dialog */}
+      <ErrorDialog
+        isOpen={errorDialog.isOpen}
+        onClose={errorDialog.close}
+        title={errorDialogConfig.title}
+        message={errorDialogConfig.message}
+        type={errorDialogConfig.type || 'error'}
+      />
     </div>
   )
 }

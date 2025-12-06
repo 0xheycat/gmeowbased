@@ -30,6 +30,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { z } from 'zod'
 import Image from 'next/image'
+import { useDialog } from '@/lib/hooks/use-dialog'
+import ErrorDialog from '@/components/ui/error-dialog'
 import type { ProfileData } from '@/lib/profile/types'
 
 // Validation schema matching API
@@ -69,6 +71,14 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
+  
+  // Error dialog
+  const errorDialog = useDialog()
+  const [errorDialogConfig, setErrorDialogConfig] = useState<{
+    title: string
+    message: string
+    type?: 'error' | 'warning' | 'info'
+  }>({ title: '', message: '' })
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
 
@@ -162,8 +172,9 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
 
       if (!response.ok) {
         const errorMsg = responseData.error || 'Failed to get upload URL'
-        console.error('Upload URL error:', responseData)
-        throw new Error(errorMsg)
+        const detailsMsg = responseData.details ? `\n\nDetails: ${responseData.details}` : ''
+        console.error('[Upload] API error:', responseData)
+        throw new Error(errorMsg + detailsMsg)
       }
 
       const { uploadUrl, publicUrl } = responseData
@@ -201,7 +212,19 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     } catch (error) {
       console.error('Upload error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to upload image'
-      setErrors(prev => ({ ...prev, [field]: errorMessage + '. Please try again.' }))
+      
+      // Show error dialog
+      setErrorDialogConfig({
+        title: 'Upload Failed',
+        message: errorMessage === 'Failed to generate upload URL' 
+          ? 'Storage service is not configured. Please contact support or try again later.'
+          : errorMessage,
+        type: 'error'
+      })
+      errorDialog.open()
+      
+      // Also set inline error
+      setErrors(prev => ({ ...prev, [field]: errorMessage }))
     }
   }
 
@@ -227,6 +250,12 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     e.preventDefault()
 
     if (!validateForm()) {
+      setErrorDialogConfig({
+        title: 'Validation Error',
+        message: 'Please fix the errors in the form before saving.',
+        type: 'warning'
+      })
+      errorDialog.open()
       return
     }
 
@@ -238,7 +267,16 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
       onClose()
     } catch (error) {
       console.error('Failed to save profile:', error)
-      setErrors({ submit: 'Failed to save changes. Please try again.' })
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save changes'
+      
+      setErrorDialogConfig({
+        title: 'Save Failed',
+        message: errorMessage,
+        type: 'error'
+      })
+      errorDialog.open()
+      
+      setErrors({ submit: errorMessage })
     } finally {
       setSaving(false)
     }
@@ -273,24 +311,25 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
   const bioCharsRemaining = 150 - (formData.bio?.length || 0)
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-            onClick={handleCancel}
-          />
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+              onClick={handleCancel}
+            />
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c1427] rounded-xl shadow-2xl">
@@ -532,5 +571,15 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
         </>
       )}
     </AnimatePresence>
+      
+    {/* Error Dialog */}
+    <ErrorDialog
+      isOpen={errorDialog.isOpen}
+      onClose={errorDialog.close}
+      title={errorDialogConfig.title}
+      message={errorDialogConfig.message}
+      type={errorDialogConfig.type || 'error'}
+    />
+  </>
   )
 }
