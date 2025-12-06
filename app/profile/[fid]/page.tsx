@@ -64,11 +64,12 @@ export default function ProfilePage() {
   const [activitiesLoading, setActivitiesLoading] = useState(false)
 
   // Memoize tab configs for performance (LinkedIn pattern)
+  // Using SVG icons instead of emojis for professional appearance
   const tabConfigs = useMemo(() => [
-    { id: 'overview' as const, label: 'Overview', icon: '📊', badge: undefined, key: '1' },
-    { id: 'quests' as const, label: 'Quests', icon: '⚔️', badge: quests.length, key: '2' },
-    { id: 'badges' as const, label: 'Badges', icon: '🏅', badge: badges.length, key: '3' },
-    { id: 'activity' as const, label: 'Activity', icon: '📈', badge: undefined, key: '4' },
+    { id: 'overview' as const, label: 'Overview', icon: 'chart', badge: undefined, key: '1' },
+    { id: 'quests' as const, label: 'Quests', icon: 'sword', badge: quests.length, key: '2' },
+    { id: 'badges' as const, label: 'Badges', icon: 'trophy', badge: badges.length, key: '3' },
+    { id: 'activity' as const, label: 'Activity', icon: 'activity', badge: undefined, key: '4' },
   ], [quests.length, badges.length])
 
   // Keyboard shortcuts (Twitter/GitHub pattern): Cmd/Ctrl + 1-4 to switch tabs

@@ -123,9 +123,9 @@ export default function QuestActivity({
     return (
       <div className={clsx('flex flex-col items-center justify-center py-16 text-center', className)}>
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-          <span className="text-4xl" role="img" aria-label="Quest">
-            ⚔️
-          </span>
+          <svg className="w-10 h-10 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
         </div>
         <h3 className="mb-2 text-xl font-bold text-white">No quests yet</h3>
         <p className="mb-6 max-w-md text-sm text-white/60">
