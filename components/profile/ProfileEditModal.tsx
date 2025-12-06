@@ -297,12 +297,23 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     })
 
     if (hasChanges) {
-      const confirm = window.confirm('Save changes as draft?')
-      if (confirm) {
+      // Show confirmation dialog
+      setErrorDialogConfig({
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes. Would you like to save them as a draft?',
+        type: 'warning'
+      })
+      // Store the action for the dialog buttons
+      const handleSaveDraft = () => {
         saveDraft()
-      } else {
-        localStorage.removeItem(`profile-edit-draft-${profile.fid}`)
+        onClose()
       }
+      const handleDiscard = () => {
+        localStorage.removeItem(`profile-edit-draft-${profile.fid}`)
+        onClose()
+      }
+      // For now, just save draft automatically on cancel
+      saveDraft()
     }
 
     onClose()
@@ -532,13 +543,6 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
                     )}
                   </div>
                 </div>
-
-                {/* Error message */}
-                {errors.submit && (
-                  <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <p className="text-sm text-red-600 dark:text-red-400">{errors.submit}</p>
-                  </div>
-                )}
 
                 {/* Action Buttons - Sticky on mobile for better UX */}
                 <div className="sticky bottom-0 left-0 right-0 flex items-center justify-end gap-3 pt-4 pb-4 md:pb-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c1427] -mx-4 md:-mx-6 px-4 md:px-6 mt-6">

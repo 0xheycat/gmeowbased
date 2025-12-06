@@ -144,7 +144,8 @@ export async function POST(
       message: 'Failed to verify quest',
       statusCode: 500,
       details: process.env.NODE_ENV === 'development' ? {
-        error: error instanceof Error ? error.message : String(error)
+        error: 'Verification failed. Please try again later.'
+        // Internal error logged above, never expose to users
       } : undefined,
     });
   }
