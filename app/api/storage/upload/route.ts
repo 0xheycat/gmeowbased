@@ -24,7 +24,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 // Validation schema
 const UploadRequestSchema = z.object({
-  fid: z.string().min(1),
+  fid: z.union([z.string(), z.number()]).transform(val => String(val)),
   fileName: z.string().min(1),
   fileType: z.string().startsWith('image/'),
   fileSize: z.number().max(10 * 1024 * 1024), // 10MB max
