@@ -57,9 +57,18 @@ const QuerySchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  context?: { params: { fid: string } }
 ) {
   try {
+    // Extract params with null-safety
+    const params = context?.params
+    if (!params?.fid) {
+      return NextResponse.json(
+        { success: false, error: 'FID parameter is required' },
+        { status: 400 }
+      )
+    }
+
     // 1. Rate Limiting
     const ip = getClientIp(request)
     const rateLimitResult = await rateLimit(ip, apiLimiter)

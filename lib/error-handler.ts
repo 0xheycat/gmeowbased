@@ -241,23 +241,31 @@ export function handleInternalError(error: Error, context?: Record<string, any>)
 /**
  * Wrap async handler with error handling
  * 
- * @param handler - Async request handler (supports both Request and NextRequest)
+ * Supports both simple handlers and handlers with route params.
+ * 
+ * @param handler - Async request handler
  * @returns Wrapped handler with error handling
  * 
  * @example
  * ```typescript
+ * // Simple handler
  * export const GET = withErrorHandler(async (request) => {
- *   // Your code here
  *   return NextResponse.json({ success: true })
+ * })
+ * 
+ * // Handler with params
+ * export const GET = withErrorHandler(async (request, { params }) => {
+ *   const { id } = params
+ *   return NextResponse.json({ id })
  * })
  * ```
  */
-export function withErrorHandler<T extends Request = Request>(
-  handler: (request: T) => Promise<NextResponse>
+export function withErrorHandler<T extends Request = Request, P = any>(
+  handler: (request: T, context?: { params: P }) => Promise<NextResponse>
 ) {
-  return async (request: T): Promise<NextResponse> => {
+  return async (request: T, context?: { params: P }): Promise<NextResponse> => {
     try {
-      return await handler(request)
+      return await handler(request, context)
     } catch (error) {
       if (error instanceof Error) {
         return handleInternalError(error, {

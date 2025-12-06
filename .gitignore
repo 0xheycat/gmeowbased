@@ -47,6 +47,13 @@ e2e/
 tmp/
 tmp_dir/
 README.COPILOT.md
+tsconfig.tsbuildinfo
+cache/
+backstop_data/
+playwright-report/
+test-results/
+screenshots/
+*.tsbuildinfo
 # Database
 *.db
 *.sqlite

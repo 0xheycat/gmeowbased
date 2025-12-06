@@ -32,6 +32,9 @@ import type {
   WalletData,
 } from './types'
 
+// Re-export ProfileData for API routes (fixes TS import error)
+export type { ProfileData } from './types'
+
 // ============================================================================
 // NEYNAR INTEGRATION
 // ============================================================================

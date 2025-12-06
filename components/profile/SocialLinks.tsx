@@ -27,9 +27,9 @@ import { copyToClipboardSafe } from '@/lib/share'
 import type { SocialLinks as SocialLinksType, WalletData } from '@/lib/profile/types'
 
 // Icons from components/icons
-import { ExternalLinkIcon } from '@/components/icons/external-link'
-import { CheckIcon } from '@/components/icons/check-icon'
-import { XIcon } from '@/components/icons/x-icon'
+import { ExternalLink } from '@/components/icons/external-link'
+import CheckIcon from '@/components/icons/check-icon'
+import XIcon from '@/components/icons/x-icon'
 
 interface SocialLinksProps {
   socialLinks: SocialLinksType
@@ -145,7 +145,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
                       </p>
                     </div>
                   </div>
-                  <ExternalLinkIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />
                 </Link>
               )}
 
@@ -170,7 +170,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
                       </p>
                     </div>
                   </div>
-                  <ExternalLinkIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />
                 </Link>
               )}
 
@@ -197,7 +197,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
                       </p>
                     </div>
                   </div>
-                  <ExternalLinkIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />
                 </Link>
               )}
 
@@ -226,7 +226,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
                       </p>
                     </div>
                   </div>
-                  <ExternalLinkIcon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />
                 </Link>
               )}
             </div>
