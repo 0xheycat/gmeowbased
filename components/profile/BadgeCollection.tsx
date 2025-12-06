@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import clsx from 'clsx'
+import { TrophyIcon } from '@/components/icons/trophy-icon'
 
 // Badge tier type
 export type BadgeTier = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
@@ -137,9 +138,7 @@ export default function BadgeCollection({
     return (
       <div className={clsx('flex flex-col items-center justify-center py-16 text-center', className)}>
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-          <span className="text-4xl" role="img" aria-label="Badge">
-            🏅
-          </span>
+          <TrophyIcon className="h-10 w-10 text-white/60" strokeWidth={1.5} />
         </div>
         <h3 className="mb-2 text-xl font-bold text-white">No badges yet</h3>
         <p className="mb-6 max-w-md text-sm text-white/60">

@@ -2,6 +2,14 @@
 
 import { useMemo } from 'react'
 import clsx from 'clsx'
+import { TargetIcon } from '@/components/icons/target-icon'
+import { TrophyIcon } from '@/components/icons/trophy-icon'
+import { RocketIcon } from '@/components/icons/rocket-icon'
+import { FlameIcon } from '@/components/icons/flame-icon'
+import { CastleIcon } from '@/components/icons/castle-icon'
+import { FlashIcon } from '@/components/icons/flash'
+import { DiamondIcon } from '@/components/icons/diamond-icon'
+import { ScrollIcon } from '@/components/icons/scroll-icon'
 
 // Activity types
 export type ActivityType = 'quest' | 'badge' | 'level' | 'streak' | 'guild' | 'tip' | 'reward'
@@ -35,39 +43,39 @@ export interface ActivityTimelineProps {
 }
 
 // Activity type configurations
-const ACTIVITY_CONFIG: Record<ActivityType, { icon: string; color: string; bgGradient: string }> = {
+const ACTIVITY_CONFIG: Record<ActivityType, { icon: React.ComponentType<React.SVGAttributes<{}>>; color: string; bgGradient: string }> = {
   quest: {
-    icon: '🎯',
+    icon: TargetIcon,
     color: '#10B981',
     bgGradient: 'from-emerald-500/20 to-green-500/20',
   },
   badge: {
-    icon: '🏅',
+    icon: TrophyIcon,
     color: '#9C27FF',
     bgGradient: 'from-purple-500/20 to-violet-500/20',
   },
   level: {
-    icon: '🚀',
+    icon: RocketIcon,
     color: '#3B82F6',
     bgGradient: 'from-blue-500/20 to-cyan-500/20',
   },
   streak: {
-    icon: '🔥',
+    icon: FlameIcon,
     color: '#F97316',
     bgGradient: 'from-orange-500/20 to-amber-500/20',
   },
   guild: {
-    icon: '🏰',
+    icon: CastleIcon,
     color: '#8B5CF6',
     bgGradient: 'from-violet-500/20 to-purple-500/20',
   },
   tip: {
-    icon: '⚡',
+    icon: FlashIcon,
     color: '#FACC15',
     bgGradient: 'from-yellow-500/20 to-amber-500/20',
   },
   reward: {
-    icon: '💎',
+    icon: DiamondIcon,
     color: '#06B6D4',
     bgGradient: 'from-cyan-500/20 to-teal-500/20',
   },
@@ -191,9 +199,7 @@ export default function ActivityTimeline({
     return (
       <div className={clsx('flex flex-col items-center justify-center py-16 text-center', className)}>
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-          <span className="text-4xl" role="img" aria-label="Activity">
-            📜
-          </span>
+          <ScrollIcon className="h-10 w-10 text-white/60" />
         </div>
         <h3 className="mb-2 text-xl font-bold text-white">No activity yet</h3>
         <p className="mb-6 max-w-md text-sm text-white/60">
@@ -215,6 +221,7 @@ export default function ActivityTimeline({
           const detail = getActivityDetail(activity)
           const relativeTime = formatRelativeTime(activity.timestamp)
           const isLast = index === sortedActivities.length - 1
+          const IconComponent = config.icon
 
           return (
             <div key={activity.id} className="relative flex gap-4">
@@ -230,9 +237,11 @@ export default function ActivityTimeline({
                   boxShadow: `0 0 12px ${config.color}40`,
                 }}
               >
-                <span className="text-lg" role="img" aria-label={activity.type}>
-                  {config.icon}
-                </span>
+                <IconComponent 
+                  className="h-5 w-5"
+                  style={{ color: config.color }}
+                  aria-label={activity.type}
+                />
               </div>
 
               {/* Content */}
