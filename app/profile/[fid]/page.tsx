@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/use-auth'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { SocialLinks } from '@/components/profile/SocialLinks'
@@ -43,16 +44,20 @@ type TabKey = 'overview' | 'quests' | 'badges' | 'activity'
 export default function ProfilePage() {
   const params = useParams()
   const fid = params.fid as string
+  const { fid: currentUserFid } = useAuth()
 
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Mock data (will be replaced with API calls in Phase 4)
-  const [badges] = useState<Badge[]>([])
-  const [quests] = useState<QuestCompletion[]>([])
-  const [activities] = useState<ActivityItem[]>([])
+  // Phase 4: Real data with loading states
+  const [badges, setBadges] = useState<Badge[]>([])
+  const [quests, setQuests] = useState<QuestCompletion[]>([])
+  const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [badgesLoading, setBadgesLoading] = useState(false)
+  const [questsLoading, setQuestsLoading] = useState(false)
+  const [activitiesLoading, setActivitiesLoading] = useState(false)
 
   // Fetch profile data
   useEffect(() => {
@@ -89,6 +94,78 @@ export default function ProfilePage() {
 
     void fetchProfile()
   }, [fid])
+
+  // Fetch quest completions when quests tab is active
+  useEffect(() => {
+    async function fetchQuests() {
+      if (activeTab !== 'quests' || !fid) return
+
+      try {
+        setQuestsLoading(true)
+        const response = await fetch(`/api/user/quests/${fid}?status=all&sort=recent&limit=20`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.quests) {
+            setQuests(data.quests)
+          }
+        }
+      } catch (err) {
+        console.error('Quest fetch error:', err)
+      } finally {
+        setQuestsLoading(false)
+      }
+    }
+
+    void fetchQuests()
+  }, [fid, activeTab])
+
+  // Fetch badges when badges tab is active
+  useEffect(() => {
+    async function fetchBadges() {
+      if (activeTab !== 'badges' || !fid) return
+
+      try {
+        setBadgesLoading(true)
+        const response = await fetch(`/api/user/badges/${fid}?tier=all`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.badges) {
+            setBadges(data.badges)
+          }
+        }
+      } catch (err) {
+        console.error('Badge fetch error:', err)
+      } finally {
+        setBadgesLoading(false)
+      }
+    }
+
+    void fetchBadges()
+  }, [fid, activeTab])
+
+  // Fetch activity when activity tab is active
+  useEffect(() => {
+    async function fetchActivity() {
+      if (activeTab !== 'activity' || !fid) return
+
+      try {
+        setActivitiesLoading(true)
+        const response = await fetch(`/api/user/activity/${fid}?limit=20&offset=0`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.activities) {
+            setActivities(data.activities)
+          }
+        }
+      } catch (err) {
+        console.error('Activity fetch error:', err)
+      } finally {
+        setActivitiesLoading(false)
+      }
+    }
+
+    void fetchActivity()
+  }, [fid, activeTab])
 
   // Loading state
   if (loading) {
@@ -143,23 +220,22 @@ export default function ProfilePage() {
       case 'overview':
         return (
           <div className="space-y-6">
-            <ProfileStats stats={profile.stats} loading={loading} />
+            <ProfileStats stats={profile.stats} />
             <SocialLinks
               socialLinks={profile.social_links}
-              walletData={profile.wallet_data}
-              loading={loading}
+              wallet={profile.wallet}
             />
           </div>
         )
 
       case 'quests':
-        return <QuestActivity quests={quests} loading={loading} />
+        return <QuestActivity quests={quests} loading={questsLoading} />
 
       case 'badges':
-        return <BadgeCollection badges={badges} loading={loading} />
+        return <BadgeCollection badges={badges} loading={badgesLoading} />
 
       case 'activity':
-        return <ActivityTimeline activities={activities} loading={loading} />
+        return <ActivityTimeline activities={activities} loading={activitiesLoading} />
 
       default:
         return null
@@ -172,16 +248,19 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <ProfileHeader
           profile={profile}
-          isOwner={false} // Will check against current user in Phase 4
-          loading={loading}
+          isOwner={currentUserFid === profile.fid}
         />
 
         {/* Tab Navigation */}
         <ProfileTabs
+          tabs={[
+            { id: 'overview', label: 'Overview', icon: '📊' },
+            { id: 'quests', label: 'Quests', icon: '⚔️', badge: quests.length },
+            { id: 'badges', label: 'Badges', icon: '🏅', badge: badges.length },
+            { id: 'activity', label: 'Activity', icon: '📈' },
+          ]}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
-          showBadgeCounts
-          badgeCount={badges.length}
+          onTabChange={(id) => setActiveTab(id as TabKey)}
         />
 
         {/* Tab Content */}
