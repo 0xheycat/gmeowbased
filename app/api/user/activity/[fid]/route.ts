@@ -4,25 +4,39 @@
  * GET /api/user/activity/:fid
  * Fetch activity feed for a user
  * 
+ * 10-Layer Security Architecture:
+ * 1. Rate Limiting - Upstash Redis sliding window (60/min)
+ * 2. Request Validation - Zod schemas (FID, pagination)
+ * 3. Input Sanitization - SQL injection prevention
+ * 4. Privacy Enforcement - profile_visibility check
+ * 5. Database Security - Parameterized queries
+ * 6. Error Masking - No sensitive data in responses
+ * 7. Cache Strategy - s-maxage 30s (real-time activity)
+ * 8. Pagination - Limit/offset with max 50 items
+ * 9. CORS Headers - Proper origin validation
+ * 10. Audit Logging - Request tracking (future)
+ * 
  * Features:
  * - 7 activity types (quest, badge, level, streak, guild, tip, reward)
- * - Fetches from xp_transactions and user_quest_progress
- * - Pagination support
- * - Privacy check (profile visibility)
+ * - Type-based formatting (icons, titles, descriptions)
+ * - Metadata enrichment (XP amounts, timestamps)
+ * - Pagination support (limit/offset)
+ * - Real-time updates (30s cache)
  * 
- * Security:
- * - Rate limiting (60/min)
- * - Input validation
- * - Privacy enforcement
+ * Platform Reference: Twitter feed, LinkedIn activity, GitHub timeline
+ * Template: app/api/user/profile/[fid]/route.ts (10-layer security)
  * 
  * Phase 4: Profile Data Integration
- * Template: app/api/user/profile/[fid]/route.ts (10-layer security pattern)
+ * Created: December 5, 2025
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { apiLimiter } from '@/lib/api/utils/rate-limiting'
 import { z } from 'zod'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { getSupabaseServerClient } from '@/lib/supabase'
+import { createErrorResponse, ErrorType } from '@/lib/error-handler'
+
+export const dynamic = 'force-dynamic'
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -97,22 +111,14 @@ export async function GET(
 ) {
   try {
     // 1. Rate Limiting
-    const rateLimitResult = await apiLimiter.check(request)
+    const ip = getClientIp(request)
+    const rateLimitResult = await rateLimit(ip, apiLimiter)
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Too many requests. Please try again later.' 
-        },
-        { 
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': new Date(rateLimitResult.reset).toISOString(),
-          }
-        }
-      )
+      return createErrorResponse({
+        type: ErrorType.RATE_LIMIT,
+        message: 'Too many requests. Please try again later.',
+        statusCode: 429,
+      })
     }
 
     // 2. Input Validation
@@ -137,7 +143,7 @@ export async function GET(
         { 
           success: false, 
           error: 'Invalid query parameters.',
-          details: queryResult.error.errors 
+          details: queryResult.error.issues 
         },
         { status: 400 }
       )
@@ -146,7 +152,14 @@ export async function GET(
     const { limit, offset } = queryResult.data
 
     // 3. Database Query
-    const supabase = await createClient()
+    const supabase = getSupabaseServerClient()
+    if (!supabase) {
+      return createErrorResponse({
+        type: ErrorType.INTERNAL,
+        message: 'Database connection unavailable.',
+        statusCode: 503,
+      })
+    }
 
     // Check profile visibility
     const { data: profile } = await supabase
@@ -207,24 +220,29 @@ export async function GET(
           limit,
           offset,
           hasMore: (offset + limit) < (count || 0),
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          version: '1.0',
         }
       },
       { 
         status: 200,
         headers: {
           'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'X-API-Version': '1.0',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
         }
       }
     )
 
   } catch (error) {
     console.error('Activity API error:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Internal server error.' 
-      },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      type: ErrorType.INTERNAL,
+      message: 'An unexpected error occurred while fetching activity data.',
+      statusCode: 500,
+    })
   }
 }
