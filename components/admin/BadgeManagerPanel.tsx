@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import Image from 'next/image'
+import { useDialog } from '@/lib/hooks/use-dialog'
+import ErrorDialog from '@/components/ui/error-dialog'
 
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 
@@ -20,10 +22,6 @@ import {
 // @edit-start 2025-02-16 — Rebuilt badge manager panel with metadata autofill and multichain support
 const CHAIN_LABEL: Record<ChainKey, string> = {
   base: 'Base',
-  unichain: 'Unichain',
-  celo: 'Celo',
-  ink: 'Ink',
-  op: 'Optimism',
 }
 
 function isChainKey(value: unknown): value is ChainKey {
@@ -93,6 +91,14 @@ export default function BadgeManagerPanel() {
   const [formState, setFormState] = useState<FormState>({ ...DEFAULT_FORM })
   const [slugLocked, setSlugLocked] = useState(false)
   const [metadataError, setMetadataError] = useState<string | null>(null)
+
+  // Error dialog for professional confirmations
+  const confirmDialog = useDialog()
+  const [confirmDialogConfig, setConfirmDialogConfig] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  }>({ title: '', message: '', onConfirm: () => {} })
 
   const metadataDerivedRef = useRef<MetadataDerived>({})
 
@@ -664,16 +670,24 @@ export default function BadgeManagerPanel() {
 
   const handleDelete = useCallback(
     async (template: TemplateRecord) => {
-      if (!window.confirm(`Delete badge template "${template.name}"? This cannot be undone.`)) return
-      try {
-        const res = await fetch(`/api/admin/badges/${template.id}`, { method: 'DELETE' })
-        const json = await res.json()
-        if (!res.ok || !json?.ok) throw new Error(json?.error || 'Unable to delete template')
-                await loadTemplates(true)
-      } catch (e: any) {
-              }
+      // Show confirmation dialog instead of window.confirm
+      setConfirmDialogConfig({
+        title: 'Delete Badge Template',
+        message: `Delete badge template "${template.name}"? This action cannot be undone.`,
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`/api/admin/badges/${template.id}`, { method: 'DELETE' })
+            const json = await res.json()
+            if (!res.ok || !json?.ok) throw new Error(json?.error || 'Unable to delete template')
+            await loadTemplates(true)
+          } catch (e: any) {
+            console.error('Delete error:', e)
+          }
+        }
+      })
+      confirmDialog.open()
     },
-    [loadTemplates],
+    [loadTemplates, confirmDialog],
   )
 
   return (
@@ -1538,6 +1552,24 @@ export default function BadgeManagerPanel() {
           </div>
         ) : null}
       </div>
+      
+      {/* Professional Confirmation Dialog */}
+      <ErrorDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.close}
+        title={confirmDialogConfig.title}
+        message={confirmDialogConfig.message}
+        type="error"
+        primaryAction={{
+          label: 'Delete',
+          onClick: confirmDialogConfig.onConfirm,
+          variant: 'danger'
+        }}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: confirmDialog.close
+        }}
+      />
     </section>
   )
 }

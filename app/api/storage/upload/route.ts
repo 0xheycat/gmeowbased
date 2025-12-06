@@ -99,13 +99,15 @@ export async function POST(request: NextRequest) {
         message: signedUrlError.message
       })
       
-      // Provide helpful error messages
+      // PRODUCTION SAFE: Never expose internal error details to users
+      const isDev = process.env.NODE_ENV === 'development'
+      
       if (signedUrlError.message?.includes('not found')) {
         return NextResponse.json(
           { 
             success: false,
-            error: `Storage bucket '${bucket}' does not exist. Please create the bucket in Supabase Dashboard.`,
-            details: signedUrlError.message
+            error: 'Storage service is currently unavailable. Please try again later.',
+            ...(isDev && { _devDetails: `Bucket '${bucket}' not found` })
           },
           { status: 503 }
         )
@@ -115,8 +117,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { 
             success: false,
-            error: 'Permission denied. Please check storage policies in Supabase Dashboard.',
-            details: signedUrlError.message
+            error: 'Storage service is currently unavailable. Please try again later.',
+            ...(isDev && { _devDetails: 'Permission denied - check storage policies' })
           },
           { status: 503 }
         )
@@ -125,8 +127,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false,
-          error: 'Failed to generate upload URL. Please contact support.',
-          details: signedUrlError.message
+          error: 'Failed to upload image. Please try again later.',
+          ...(isDev && { _devDetails: signedUrlError.message })
         },
         { status: 500 }
       )

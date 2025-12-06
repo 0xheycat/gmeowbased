@@ -190,7 +190,8 @@ export async function POST(
       message: 'Failed to check quest progress',
       statusCode: 500,
       details: process.env.NODE_ENV === 'development' ? {
-        error: error instanceof Error ? error.message : String(error)
+        error: 'Failed to fetch quest progress. Please try again later.'
+        // Internal error logged above, never expose to users
       } : undefined,
     });
   }

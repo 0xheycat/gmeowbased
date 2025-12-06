@@ -123,7 +123,8 @@ export async function GET(request: NextRequest) {
       message: 'Failed to fetch quests',
       statusCode: 500,
       details: process.env.NODE_ENV === 'development' ? {
-        error: error instanceof Error ? error.message : String(error)
+        error: 'Failed to load quests. Please try again later.'
+        // Internal error logged above, never expose to users
       } : undefined,
     });
   }
