@@ -274,14 +274,29 @@ export const GET = withErrorHandler(async (
 
   // LAYER 10: Error Masking (no sensitive data exposed)
   const responseTime = Date.now() - startTime;
+  
+  // Professional Platform Headers (Twitter, GitHub, LinkedIn, Stripe patterns)
+  const headers = {
+    'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-RateLimit-Limit': '60',
+    'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+    'X-RateLimit-Reset': String(rateLimitResult.reset),
+    'X-Request-ID': `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+    'ETag': Buffer.from(JSON.stringify(profile)).toString('base64').substring(0, 32),
+  }
+  
   return NextResponse.json({
     success: true,
     data: profile,
     meta: {
       responseTime: `${responseTime}ms`,
-      cached: false, // TODO: Add caching
+      cached: false,
+      timestamp: new Date().toISOString(),
+      version: '1.0',
     },
-  });
+  }, { headers });
 });
 
 // ============================================================================
@@ -396,12 +411,25 @@ export const PUT = withErrorHandler(async (
 
   // LAYER 10: Error Masking (success response with clean data)
   const responseTime = Date.now() - startTime;
+  
+  // Professional Platform Headers
+  const headers = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-RateLimit-Limit': '20',
+    'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+    'X-RateLimit-Reset': String(rateLimitResult.reset),
+    'X-Request-ID': `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+  }
+  
   return NextResponse.json({
     success: true,
     data: updatedProfile,
     meta: {
       responseTime: `${responseTime}ms`,
       updated: true,
+      timestamp: new Date().toISOString(),
+      version: '1.0',
     },
-  });
+  }, { headers });
 });
