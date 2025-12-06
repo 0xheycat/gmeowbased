@@ -92,9 +92,42 @@ export async function POST(request: NextRequest) {
       .createSignedUploadUrl(uniqueFileName)
 
     if (signedUrlError) {
-      console.error('Signed URL error:', signedUrlError)
+      console.error('[Upload API] Signed URL error:', {
+        error: signedUrlError,
+        bucket,
+        fileName: uniqueFileName,
+        message: signedUrlError.message
+      })
+      
+      // Provide helpful error messages
+      if (signedUrlError.message?.includes('not found')) {
+        return NextResponse.json(
+          { 
+            success: false,
+            error: `Storage bucket '${bucket}' does not exist. Please create the bucket in Supabase Dashboard.`,
+            details: signedUrlError.message
+          },
+          { status: 503 }
+        )
+      }
+      
+      if (signedUrlError.message?.includes('permission') || signedUrlError.message?.includes('policy')) {
+        return NextResponse.json(
+          { 
+            success: false,
+            error: 'Permission denied. Please check storage policies in Supabase Dashboard.',
+            details: signedUrlError.message
+          },
+          { status: 503 }
+        )
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to generate upload URL' },
+        { 
+          success: false,
+          error: 'Failed to generate upload URL. Please contact support.',
+          details: signedUrlError.message
+        },
         { status: 500 }
       )
     }
