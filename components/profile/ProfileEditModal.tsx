@@ -139,10 +139,48 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     }
     reader.readAsDataURL(file)
 
-    // TODO: Upload to storage (e.g., Supabase Storage, Cloudinary)
-    // For now, just set a placeholder URL
-    const uploadedUrl = `https://placeholder.com/${file.name}`
-    handleInputChange(field, uploadedUrl)
+    // Upload to Supabase Storage
+    try {
+      const type = field === 'avatar_url' ? 'avatar' : 'cover'
+      const response = await fetch('/api/storage/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fid: profile.fid,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          type,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get upload URL')
+      }
+
+      const { uploadUrl, publicUrl } = await response.json()
+
+      // Upload file to Supabase Storage
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      // Set the public URL
+      handleInputChange(field, publicUrl)
+    } catch (error) {
+      console.error('Upload error:', error)
+      setErrors(prev => ({ ...prev, [field]: 'Failed to upload image. Please try again.' }))
+    }
   }
 
   const validateForm = (): boolean => {

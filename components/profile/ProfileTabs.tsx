@@ -63,22 +63,29 @@ export default function ProfileTabs<Id extends string = string>({
 
   return (
     <div
+      role="tablist"
+      aria-label="Profile navigation tabs"
       className={clsx(
         'flex items-center gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-2',
         'scrollbar-hide', // Hide scrollbar for cleaner look
         className
       )}
     >
-      {tabs.map((tab) => {
+      {tabs.map((tab, index) => {
         const active = tab.id === activeTab
         return (
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={active}
+            aria-controls={`tabpanel-${tab.id}`}
+            tabIndex={active ? 0 : -1}
             className={clsx(
               'relative flex min-w-[7.5rem] min-h-[44px] items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[12px] font-medium tracking-wide transition-all duration-200',
               'touch-manipulation', // Optimize for touch
               'whitespace-nowrap', // Prevent text wrapping
+              'focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-black', // Focus styles (WCAG 2.1)
               active
                 ? // Active state: Twitter/GitHub blue accent
                   'bg-blue-500/20 text-blue-100 shadow-[0_0_16px_rgba(59,130,246,0.35)] border border-blue-400/60 scale-105'

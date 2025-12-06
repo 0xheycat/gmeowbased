@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import clsx from 'clsx'
 import { TrophyIcon } from '@/components/icons/trophy-icon'
+import BadgeHoverCard from './BadgeHoverCard'
 
 // Badge tier type
 export type BadgeTier = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
@@ -86,6 +87,9 @@ export default function BadgeCollection({
 }: BadgeCollectionProps) {
   const [selectedTier, setSelectedTier] = useState<BadgeTier | 'all'>('all')
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
+  const [hoverCardVisible, setHoverCardVisible] = useState(false)
+  const [hoverCardPosition, setHoverCardPosition] = useState({ x: 0, y: 0 })
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -212,8 +216,29 @@ export default function BadgeCollection({
               <div
                 key={badge.id}
                 className="group relative cursor-pointer"
-                onMouseEnter={() => setHoveredBadge(badge.id)}
-                onMouseLeave={() => setHoveredBadge(null)}
+                onMouseEnter={(e) => {
+                  setHoveredBadge(badge.id)
+                  // Delay hover card appearance (Twitter pattern: 500ms)
+                  hoverTimeoutRef.current = setTimeout(() => {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    // Position card to the right and slightly below (Twitter pattern)
+                    // Auto-adjust if too close to viewport edges
+                    const x = rect.right + 12 > window.innerWidth - 280
+                      ? rect.left - 280 - 12 // Show on left if no space on right
+                      : rect.right + 12
+                    const y = rect.top
+                    setHoverCardPosition({ x, y })
+                    setHoverCardVisible(true)
+                  }, 500)
+                }}
+                onMouseLeave={() => {
+                  setHoveredBadge(null)
+                  if (hoverTimeoutRef.current) {
+                    clearTimeout(hoverTimeoutRef.current)
+                    hoverTimeoutRef.current = null
+                  }
+                  setHoverCardVisible(false)
+                }}
                 title={badge.earned ? `Earned: ${new Date(badge.earned_at!).toLocaleDateString()}` : badge.requirements || 'Locked'}
               >
                 {/* Badge Card */}
@@ -231,7 +256,7 @@ export default function BadgeCollection({
                     transform: isHovered ? 'scale(1.05)' : 'scale(1)',
                   }}
                 >
-                  {/* Badge Image */}
+                  {/* Badge Image with lazy loading (Performance optimization) */}
                   <div className="relative h-full w-full">
                     <Image
                       src={badge.image_url}
@@ -239,6 +264,9 @@ export default function BadgeCollection({
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                      loading="lazy" // Lazy loading for performance (LinkedIn pattern)
+                      placeholder="blur" // Blur placeholder while loading
+                      blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjwvc3ZnPg=="
                     />
                   </div>
 
@@ -282,6 +310,19 @@ export default function BadgeCollection({
                   <p className="mt-0.5 text-center text-[10px] text-white/40">
                     {new Date(badge.earned_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
+                )}
+
+                {/* Hover Card (Twitter pattern) */}
+                {hoveredBadge === badge.id && (
+                  <BadgeHoverCard
+                    badge={{
+                      ...badge,
+                      criteria: badge.requirements,
+                      points: undefined, // Add points field if available in backend
+                    }}
+                    isVisible={hoverCardVisible}
+                    position={hoverCardPosition}
+                  />
                 )}
               </div>
             )
