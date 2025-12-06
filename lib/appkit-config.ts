@@ -42,10 +42,8 @@ export const appkitConfig = {
   projectId,
   features: {
     analytics: true, // Enable WalletConnect analytics
-    email: true,     // Enable email login
-    socials: [],     // Social logins (Google, etc.) - requires paid plan
-    onramp: false,   // Disable onramp (buy crypto) for now
-    swaps: false,    // Disable swaps for now
+    // Note: email, socials, swaps are managed via dashboard.reown.com
+    // Local config is ignored when remote config is available
   },
   themeMode: 'dark' as const, // Match our app theme
   themeVariables: {
