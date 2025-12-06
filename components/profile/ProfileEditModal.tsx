@@ -139,9 +139,11 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     }
     reader.readAsDataURL(file)
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (Professional Pattern: Stripe/AWS S3)
     try {
       const type = field === 'avatar_url' ? 'avatar' : 'cover'
+      
+      // Step 1: Request signed upload URL
       const response = await fetch('/api/storage/upload', {
         method: 'POST',
         headers: {
@@ -156,30 +158,50 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
         }),
       })
 
+      const responseData = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to get upload URL')
+        const errorMsg = responseData.error || 'Failed to get upload URL'
+        console.error('Upload URL error:', responseData)
+        throw new Error(errorMsg)
       }
 
-      const { uploadUrl, publicUrl } = await response.json()
+      const { uploadUrl, publicUrl } = responseData
 
-      // Upload file to Supabase Storage
+      // Validate response has required fields
+      if (!uploadUrl || !publicUrl) {
+        console.error('Invalid upload response:', responseData)
+        throw new Error('Invalid upload configuration')
+      }
+
+      // Step 2: Upload file to storage
       const uploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': file.type,
+          'Cache-Control': 'public, max-age=31536000',
         },
         body: file,
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image')
+        console.error('Storage upload failed:', uploadResponse.status, uploadResponse.statusText)
+        throw new Error('Failed to upload image to storage')
       }
 
-      // Set the public URL
+      // Step 3: Set the public URL
       handleInputChange(field, publicUrl)
+      
+      // Clear any previous errors
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
     } catch (error) {
       console.error('Upload error:', error)
-      setErrors(prev => ({ ...prev, [field]: 'Failed to upload image. Please try again.' }))
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image'
+      setErrors(prev => ({ ...prev, [field]: errorMessage + '. Please try again.' }))
     }
   }
 
