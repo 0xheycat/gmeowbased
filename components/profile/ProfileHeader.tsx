@@ -30,9 +30,9 @@ import { copyToClipboardSafe } from '@/lib/share'
 import type { ProfileData } from '@/lib/profile/types'
 
 // Icons from components/icons
-import { ExternalLinkIcon } from '@/components/icons/external-link'
-import { CheckIcon } from '@/components/icons/check-icon'
-import { XIcon } from '@/components/icons/x-icon'
+import { ExternalLink } from '@/components/icons/external-link'
+import CheckIcon from '@/components/icons/check-icon'
+import XIcon from '@/components/icons/x-icon'
 
 interface ProfileHeaderProps {
   profile: ProfileData
@@ -191,7 +191,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
                 <path d="M20.1 3H3.9C3.4 3 3 3.4 3 3.9V20.1C3 20.6 3.4 21 3.9 21H20.1C20.6 21 21 20.6 21 20.1V3.9C21 3.4 20.6 3 20.1 3ZM12 17C9.2 17 7 14.8 7 12C7 9.2 9.2 7 12 7C14.8 7 17 9.2 17 12C17 14.8 14.8 17 12 17Z" />
               </svg>
               Warpcast
-              <ExternalLinkIcon className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3" />
             </Link>
           )}
 
@@ -205,7 +205,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
             >
               <XIcon className="w-4 h-4" />
               Twitter
-              <ExternalLinkIcon className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3" />
             </Link>
           )}
 
@@ -221,7 +221,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
                 <path d="M12 2C6.477 2 2 6.477 2 12C2 16.42 4.865 20.17 8.839 21.49C9.339 21.58 9.52 21.27 9.52 21C9.52 20.77 9.511 20.14 9.507 19.31C6.726 19.91 6.139 17.77 6.139 17.77C5.685 16.61 5.029 16.3 5.029 16.3C4.121 15.68 5.098 15.69 5.098 15.69C6.101 15.76 6.629 16.73 6.629 16.73C7.521 18.26 8.97 17.82 9.539 17.56C9.631 16.91 9.889 16.47 10.175 16.22C7.955 15.97 5.62 15.11 5.62 11.19C5.62 10.09 6.01 9.19 6.649 8.49C6.546 8.24 6.203 7.23 6.747 5.85C6.747 5.85 7.586 5.58 9.497 6.87C10.31 6.65 11.16 6.54 12.01 6.54C12.86 6.54 13.71 6.65 14.527 6.87C16.437 5.58 17.274 5.85 17.274 5.85C17.819 7.23 17.476 8.24 17.373 8.49C18.013 9.19 18.4 10.09 18.4 11.19C18.4 15.12 16.061 15.97 13.835 16.22C14.189 16.53 14.515 17.15 14.515 18.09C14.515 19.43 14.505 20.5 14.505 20.84C14.505 21.11 14.683 21.42 15.191 21.31C19.165 20.17 22 16.42 22 12C22 6.477 17.523 2 12 2Z" />
               </svg>
               GitHub
-              <ExternalLinkIcon className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3" />
             </Link>
           )}
 
@@ -239,7 +239,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
                 <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
               </svg>
               Website
-              <ExternalLinkIcon className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3" />
             </Link>
           )}
         </div>

@@ -106,6 +106,7 @@
     "git": "^0.1.5",
     "hls.js": "^1.6.13",
     "html2canvas": "^1.4.1",
+    "isomorphic-dompurify": "^2.33.0",
     "jose": "^5.9.3",
     "next": "^15.0.0",
     "next-themes": "^0.4.6",

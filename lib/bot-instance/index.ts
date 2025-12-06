@@ -262,12 +262,6 @@ async function checkNewCasts() {
         sig,
       }),
     })
-      }),
-    })
-        nonce: Number(nonce),
-        sig,
-      }),
-    })
 
     let responseBody: any = null
     try {
