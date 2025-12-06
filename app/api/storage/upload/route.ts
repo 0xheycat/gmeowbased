@@ -17,10 +17,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+// Lazy initialization of Supabase client with config validation
+let supabase: ReturnType<typeof createClient> | null = null;
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase configuration missing');
+  }
+
+  if (!supabase) {
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+  }
+
+  return supabase;
+}
 
 // Validation schema
 const UploadRequestSchema = z.object({
@@ -36,7 +49,22 @@ const COVER_BUCKET = 'covers'
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse request body
+    // Step 1: Validate Supabase configuration
+    let supabaseClient;
+    try {
+      supabaseClient = getSupabaseClient();
+    } catch (error) {
+      console.error('[Upload API] Supabase not configured:', error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Storage service not configured. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.',
+        },
+        { status: 503 }
+      );
+    }
+
+    // Step 2: Parse and validate request body
     const body = await request.json()
 
     // Validate input
@@ -59,7 +87,7 @@ export async function POST(request: NextRequest) {
     const bucket = type === 'avatar' ? AVATAR_BUCKET : COVER_BUCKET
 
     // Create signed upload URL (expires in 5 minutes)
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+    const { data: signedUrlData, error: signedUrlError } = await supabaseClient.storage
       .from(bucket)
       .createSignedUploadUrl(uniqueFileName)
 
@@ -72,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get public URL
-    const { data: publicUrlData } = supabase.storage
+    const { data: publicUrlData } = supabaseClient.storage
       .from(bucket)
       .getPublicUrl(uniqueFileName)
 

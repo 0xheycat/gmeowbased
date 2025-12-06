@@ -11,10 +11,13 @@
 import { Redis } from '@upstash/redis'
 
 // Initialize Redis client (Vercel KV = Upstash Redis)
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
-})
+// Safe initialization: Falls back to null if env vars missing
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null
 
 export type CachedNeynarUser = {
   fid: number
@@ -35,6 +38,12 @@ const CACHE_TTL = 1800 // 30 minutes in seconds (optimized from 1 hour)
 export async function getCachedNeynarUser(
   fid: number
 ): Promise<CachedNeynarUser | null> {
+  // Skip cache if Redis not configured
+  if (!redis) {
+    console.warn('[Neynar Cache] Redis not configured, skipping cache')
+    return null
+  }
+
   try {
     const key = `${CACHE_PREFIX}${fid}`
     const cached = await redis.get<CachedNeynarUser>(key)
@@ -61,6 +70,11 @@ export async function setCachedNeynarUser(
   fid: number,
   data: Omit<CachedNeynarUser, 'cachedAt'>
 ): Promise<void> {
+  // Skip cache if Redis not configured
+  if (!redis) {
+    return
+  }
+
   try {
     const key = `${CACHE_PREFIX}${fid}`
     const cacheData: CachedNeynarUser = {
@@ -108,6 +122,8 @@ export async function getBatchCachedNeynarUsers(
  * @param fid - Farcaster FID
  */
 export async function invalidateCachedNeynarUser(fid: number): Promise<void> {
+  if (!redis) return
+
   try {
     const key = `${CACHE_PREFIX}${fid}`
     await redis.del(key)
@@ -125,6 +141,10 @@ export async function getNeynarCacheStats(): Promise<{
   totalKeys: number
   sampleKeys: string[]
 }> {
+  if (!redis) {
+    return { totalKeys: 0, sampleKeys: [] }
+  }
+
   try {
     // Get all keys with prefix (limit to 100 for performance)
     const keys = await redis.keys(`${CACHE_PREFIX}*`)
