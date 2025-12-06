@@ -15,7 +15,7 @@ export interface QuestCompletion {
   difficulty: 'easy' | 'medium' | 'hard' | 'legendary'
   xp_earned: number
   points_earned: number
-  completed_at: string // ISO timestamp
+  completed_at: string | null // ISO timestamp, null for in-progress
   status: 'completed' | 'in_progress' | 'failed'
 }
 
@@ -76,14 +76,23 @@ export default function QuestActivity({
       filtered = filtered.filter(q => q.status === filter)
     }
 
-    // Apply sort
+    // Apply sort with null-safe handling
     const sorted = [...filtered]
     if (sort === 'recent') {
-      sorted.sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+      sorted.sort((a, b) => {
+        // Handle null completed_at for in-progress quests
+        const aTime = a.completed_at ? new Date(a.completed_at).getTime() : 0
+        const bTime = b.completed_at ? new Date(b.completed_at).getTime() : 0
+        return bTime - aTime
+      })
     } else if (sort === 'oldest') {
-      sorted.sort((a, b) => new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime())
+      sorted.sort((a, b) => {
+        const aTime = a.completed_at ? new Date(a.completed_at).getTime() : Date.now()
+        const bTime = b.completed_at ? new Date(b.completed_at).getTime() : Date.now()
+        return aTime - bTime
+      })
     } else if (sort === 'xp') {
-      sorted.sort((a, b) => b.xp_earned - a.xp_earned)
+      sorted.sort((a, b) => (b.xp_earned || 0) - (a.xp_earned || 0))
     }
 
     return sorted
@@ -234,9 +243,11 @@ export default function QuestActivity({
                 </div>
 
                 {/* Completed date */}
-                <span className="text-white/40">
-                  {new Date(quest.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
+                {quest.completed_at && (
+                  <span className="text-white/40">
+                    {new Date(quest.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                )}
               </div>
 
               {/* Hover indicator */}

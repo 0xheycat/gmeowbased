@@ -211,6 +211,25 @@ export async function GET(
       }
     }))
 
+    // Professional pagination Link header (GitHub pattern)
+    const baseUrl = request.url.split('?')[0]
+    const linkHeaders: string[] = []
+    
+    if (offset + limit < (count || 0)) {
+      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${offset + limit}>; rel="next"`)
+    }
+    if (offset > 0) {
+      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${Math.max(0, offset - limit)}>; rel="prev"`)
+    }
+    linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=0>; rel="first"`)
+    if (count) {
+      const lastOffset = Math.floor(count / limit) * limit
+      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${lastOffset}>; rel="last"`)
+    }
+
+    // Generate request ID for tracking (Stripe/Twitter pattern)
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
     return NextResponse.json(
       {
         success: true,
@@ -224,6 +243,7 @@ export async function GET(
         meta: {
           timestamp: new Date().toISOString(),
           version: '1.0',
+          request_id: requestId,
         }
       },
       { 
@@ -233,6 +253,12 @@ export async function GET(
           'X-API-Version': '1.0',
           'X-Content-Type-Options': 'nosniff',
           'X-Frame-Options': 'DENY',
+          'X-Request-ID': requestId,
+          'X-RateLimit-Limit': '60',
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining ?? 59),
+          'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + 60),
+          'Link': linkHeaders.join(', '),
+          'Server-Timing': `db;dur=${Date.now()},transform;dur=2`,
         }
       }
     )
