@@ -287,7 +287,7 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 md:space-y-6 pb-24 md:pb-6">
                 {/* Cover Image */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -309,7 +309,8 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
                         const file = e.target.files?.[0]
                         if (file) handleImageUpload('cover_image_url', file)
                       }}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      aria-label="Upload cover image"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition-colors">
                       <div className="text-white text-center">
@@ -348,7 +349,8 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
                           const file = e.target.files?.[0]
                           if (file) handleImageUpload('avatar_url', file)
                         }}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        aria-label="Upload avatar"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition-colors">
                         <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -477,8 +479,8 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {/* Action Buttons - Sticky on mobile for better UX */}
+                <div className="sticky bottom-0 left-0 right-0 flex items-center justify-end gap-3 pt-4 pb-4 md:pb-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c1427] -mx-4 md:-mx-6 px-4 md:px-6 mt-6">
                   <button
                     type="button"
                     onClick={handleCancel}
