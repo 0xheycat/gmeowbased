@@ -138,6 +138,11 @@ async function checkProfilePrivacy(
   requesterFid?: number
 ): Promise<{ allowed: boolean; reason?: string }> {
   const supabase = getSupabaseServerClient();
+  
+  // Null-safety check for Supabase client
+  if (!supabase) {
+    return { allowed: false, reason: 'database_unavailable' };
+  }
 
   // Get profile privacy settings
   const { data: profile, error } = await supabase
@@ -184,6 +189,12 @@ async function auditProfileChange(
   ip?: string
 ) {
   const supabase = getSupabaseServerClient();
+  
+  // Null-safety check for Supabase client
+  if (!supabase) {
+    console.error('Audit log failed: Supabase client unavailable');
+    return;
+  }
 
   try {
     await supabase.from('audit_logs').insert({
@@ -216,9 +227,19 @@ async function auditProfileChange(
  */
 export const GET = withErrorHandler(async (
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  context?: { params: { fid: string } }
 ) => {
   const startTime = Date.now();
+  
+  // Extract params with null-safety
+  const params = context?.params;
+  if (!params?.fid) {
+    return createErrorResponse({
+      type: ErrorType.VALIDATION,
+      message: 'FID parameter is required',
+      statusCode: 400,
+    });
+  }
 
   // LAYER 1: Rate Limiting (60 req/min)
   const ip = getClientIp(request);
@@ -308,9 +329,19 @@ export const GET = withErrorHandler(async (
  */
 export const PUT = withErrorHandler(async (
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  context?: { params: { fid: string } }
 ) => {
   const startTime = Date.now();
+  
+  // Extract params with null-safety
+  const params = context?.params;
+  if (!params?.fid) {
+    return createErrorResponse({
+      type: ErrorType.VALIDATION,
+      message: 'FID parameter is required',
+      statusCode: 400,
+    });
+  }
 
   // LAYER 1: Rate Limiting (stricter for PUT - 20 req/min)
   const ip = getClientIp(request);

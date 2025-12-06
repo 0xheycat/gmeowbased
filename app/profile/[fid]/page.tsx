@@ -117,8 +117,8 @@ export default function ProfilePage() {
         }
 
         const data = await response.json()
-        if (data.success && data.profile) {
-          setProfile(data.profile)
+        if (data.success && data.data) {
+          setProfile(data.data)
         } else {
           setError('Invalid profile data')
         }
@@ -205,54 +205,8 @@ export default function ProfilePage() {
     void fetchActivity()
   }, [fid, activeTab])
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="mx-auto min-h-screen max-w-6xl px-4 py-8">
-        <div className="space-y-6">
-          {/* Header skeleton */}
-          <div className="h-64 w-full animate-pulse rounded-2xl bg-white/5" />
-          {/* Stats skeleton */}
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-24 animate-pulse rounded-xl bg-white/5" />
-            ))}
-          </div>
-          {/* Tabs skeleton */}
-          <div className="h-12 w-full animate-pulse rounded-xl bg-white/5" />
-        </div>
-      </div>
-    )
-  }
-
-  // Error state
-  if (error || !profile) {
-    return (
-      <div className="mx-auto flex min-h-screen max-w-2xl items-center justify-center px-4">
-        <div className="text-center space-y-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 mx-auto">
-            <svg className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-white">
-            {error || 'Profile Not Found'}
-          </h1>
-          <p className="text-sm text-white/60">
-            The profile you're looking for doesn't exist or has been removed.
-          </p>
-          <a
-            href="/Dashboard"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white transition-all hover:bg-white/10"
-          >
-            ← Back to Dashboard
-          </a>
-        </div>
-      </div>
-    )
-  }
-
   // Render tab content with useCallback for performance (LinkedIn pattern)
+  // MUST be before early returns to maintain hook order
   const renderTabContent = useCallback(() => {
     if (!profile) return null
 
@@ -340,16 +294,62 @@ export default function ProfilePage() {
       }
 
       const result = await response.json()
-      // Update local profile state
-      setProfile(result.data)
-      
-      // Show success notification (TODO: integrate with notification system)
-      console.log('Profile updated successfully')
+      if (result.success && result.data) {
+        setProfile(result.data)
+        setIsEditModalOpen(false)
+      }
     } catch (error) {
       console.error('Failed to update profile:', error)
-      throw error
+      alert('Failed to update profile. Please try again.')
     }
   }, [fid])
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="mx-auto min-h-screen max-w-6xl px-4 py-8">
+        <div className="space-y-6">
+          {/* Header skeleton */}
+          <div className="h-64 w-full animate-pulse rounded-2xl bg-white/5" />
+          {/* Stats skeleton */}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-24 animate-pulse rounded-xl bg-white/5" />
+            ))}
+          </div>
+          {/* Tabs skeleton */}
+          <div className="h-12 w-full animate-pulse rounded-xl bg-white/5" />
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error || !profile) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-2xl items-center justify-center px-4">
+        <div className="text-center space-y-4">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 mx-auto">
+            <svg className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-white">
+            {error || 'Profile Not Found'}
+          </h1>
+          <p className="text-sm text-white/60">
+            The profile you're looking for doesn't exist or has been removed.
+          </p>
+          <a
+            href="/Dashboard"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white transition-all hover:bg-white/10"
+          >
+            ← Back to Dashboard
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 py-8">

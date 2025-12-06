@@ -67,7 +67,7 @@ export default function ProfileTabs<Id extends string = string>({
       aria-label="Profile navigation tabs"
       className={clsx(
         'flex items-center gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-2',
-        'scrollbar-hide', // Hide scrollbar for cleaner look
+        'hidden-scrollbar', // Professional pattern: hide scrollbar while keeping functionality
         className
       )}
     >
