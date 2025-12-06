@@ -32,6 +32,7 @@ import { z } from 'zod'
 import Image from 'next/image'
 import { useDialog } from '@/lib/hooks/use-dialog'
 import ErrorDialog from '@/components/ui/error-dialog'
+import ConfirmDialog from '@/components/ui/confirm-dialog'
 import type { ProfileData } from '@/lib/profile/types'
 
 // Validation schema matching API
@@ -79,6 +80,13 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     message: string
     type?: 'error' | 'warning' | 'info'
   }>({ title: '', message: '' })
+  
+  // Confirmation dialog for unsaved changes
+  const confirmDialog = useDialog()
+  const [confirmDialogConfig, setConfirmDialogConfig] = useState<{
+    onConfirm: () => void
+  }>({ onConfirm: () => {} })
+  
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
 
@@ -297,23 +305,16 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     })
 
     if (hasChanges) {
-      // Show confirmation dialog
-      setErrorDialogConfig({
-        title: 'Unsaved Changes',
-        message: 'You have unsaved changes. Would you like to save them as a draft?',
-        type: 'warning'
+      // Show confirmation dialog with new ConfirmDialog component
+      setConfirmDialogConfig({
+        onConfirm: () => {
+          saveDraft()
+          confirmDialog.close()
+          onClose()
+        }
       })
-      // Store the action for the dialog buttons
-      const handleSaveDraft = () => {
-        saveDraft()
-        onClose()
-      }
-      const handleDiscard = () => {
-        localStorage.removeItem(`profile-edit-draft-${profile.fid}`)
-        onClose()
-      }
-      // For now, just save draft automatically on cancel
-      saveDraft()
+      confirmDialog.open()
+      return
     }
 
     onClose()
@@ -583,6 +584,21 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
       title={errorDialogConfig.title}
       message={errorDialogConfig.message}
       type={errorDialogConfig.type || 'error'}
+    />
+    
+    {/* Confirmation Dialog for Unsaved Changes */}
+    <ConfirmDialog
+      isOpen={confirmDialog.isOpen}
+      onClose={() => {
+        confirmDialog.close()
+        onClose()
+      }}
+      onConfirm={confirmDialogConfig.onConfirm}
+      title="Unsaved Changes"
+      message="You have unsaved changes. Would you like to save them as a draft before closing?"
+      variant="warning"
+      confirmLabel="Save Draft"
+      cancelLabel="Discard Changes"
     />
   </>
   )
