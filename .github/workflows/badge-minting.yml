@@ -5,11 +5,11 @@ name: Badge Minting (Base)
 # Runs daily to process pending badge mints
 
 on:
-  schedule:
-    # Daily at 1 AM UTC (after leaderboard sync at midnight)
-    - cron: '0 1 * * *'
+  # DISABLED: Not ready for production yet (still in rebuild progress)
+  # schedule:
+  #   - cron: '0 1 * * *'
   
-  # Manual trigger for testing
+  # Manual trigger for local testing only
   workflow_dispatch:
 
 permissions:
