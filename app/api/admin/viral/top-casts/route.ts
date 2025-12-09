@@ -15,6 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { generateRequestId } from '@/lib/request-id'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { validateAdminRequest } from '@/lib/admin-auth'
@@ -39,13 +40,14 @@ type ViralCast = {
 }
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -59,7 +61,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   if (!queryValidation.success) {
     return NextResponse.json(
       { error: 'validation_error', issues: queryValidation.error.issues },
-      { status: 400 }
+      { status: 400, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -68,7 +70,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
     return NextResponse.json(
       { ok: false, error: 'admin_auth_required', reason: auth.reason },
-      { status: 401 }
+      { status: 401, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -80,7 +82,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     if (!supabase) {
       return NextResponse.json(
         { ok: false, error: 'supabase_not_configured' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -111,7 +113,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
       console.error('[top-casts] Database error:', error)
       return NextResponse.json(
         { ok: false, error: 'database_error', message: error.message },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -176,5 +178,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     casts: enrichedCasts,
     timeframe,
     limit,
+  }, {
+    headers: { 'X-Request-ID': requestId }
   })
 })

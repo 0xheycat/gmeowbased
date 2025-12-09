@@ -269,7 +269,7 @@ import "./GmeowNFT.sol";
 - [ ] Test batch minting
 - [ ] Test onchain quest creation + completion
 - [ ] Test nonce validation
-- [ ] Update frontend (gm-utils.ts, Quest Wizard, frames)
+- [ ] Update frontend (gmeow-utils.ts, Quest Wizard, frames)
 
 ---
 
@@ -370,7 +370,7 @@ const [eligible, message] = await gmeowMultichain.canCompleteOnchainQuest(
 
 ### Frontend: Check Mint Eligibility
 ```typescript
-// lib/gm-utils.ts
+// lib/gmeow-utils.ts
 export async function checkNFTMintEligibility(
   userAddress: string,
   nftTypeId: string

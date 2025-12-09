@@ -7,6 +7,7 @@ import { validateAdminRequest } from '@/lib/admin-auth'
 import type { BadgeTemplateInput } from '@/lib/badges'
 import { CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
@@ -62,40 +63,51 @@ function parseTemplateInput(body: any): BadgeTemplateInput {
 }
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId();
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const force = req.nextUrl.searchParams.get('refresh') === '1'
   const templates = await listBadgeTemplates({ includeInactive: true, force, throwOnMissingTable: true })
-  return NextResponse.json({ ok: true, templates })
+  return NextResponse.json(
+    { ok: true, templates },
+    { headers: { 'X-Request-ID': requestId } }
+  )
 })
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const body = await req.json()
@@ -109,12 +121,15 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
         error: 'Invalid badge data',
         details: validation.error.flatten()
       },
-      { status: 400 }
+      { status: 400, headers: { 'X-Request-ID': requestId } }
     )
   }
   
   const input = parseTemplateInput(body)
   const template = await createBadgeTemplate(input)
   await invalidateBadgeCaches()
-  return NextResponse.json({ ok: true, template }, { status: 201 })
+  return NextResponse.json(
+    { ok: true, template },
+    { status: 201, headers: { 'X-Request-ID': requestId } }
+  )
 })

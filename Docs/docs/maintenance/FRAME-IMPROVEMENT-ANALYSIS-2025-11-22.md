@@ -1105,7 +1105,7 @@ Frame images require LIVE on-chain data from GmeowMultiChain contract. This sect
 
 #### Contract Addresses (by Chain)
 ```typescript
-// Source: lib/gm-utils.ts
+// Source: lib/gmeow-utils.ts
 export const CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
   base: '0x3ad420B8C2Be19ff8EBAdB484Ed839Ae9254bf2F',      // Base Mainnet
   unichain: '0xD8b4190c87d86E28f6B583984cf0C89FCf9C2a0f',  // Unichain Mainnet
@@ -1792,7 +1792,7 @@ When implementing contract data fetching for frames:
 
 | File | Purpose | Key Exports |
 |------|---------|-------------|
-| `lib/gm-utils.ts` | Contract utilities | `CONTRACT_ADDRESSES`, `GM_CONTRACT_ABI`, `createGetUserStatsCall()` |
+| `lib/gmeow-utils.ts` | Contract utilities | `CONTRACT_ADDRESSES`, `GM_CONTRACT_ABI`, `createGetUserStatsCall()` |
 | `lib/abi/gmeowmultichain.json` | Contract ABI | Event definitions, function signatures |
 | `lib/profile-data.ts` | Example implementation | `fetchChainSnapshot()` with timeout pattern |
 | `app/api/frame/route.tsx` | Frame handler | `fetchUserStatsOnChain()`, `fetchQuestOnChain()` |
@@ -1823,7 +1823,7 @@ The Gmeowbased frame system spans multiple directories with clear separation of 
 │       └── leaderboard/         # /frame/leaderboard → 200 OK ✅
 │
 ├── lib/                          # Business logic & utilities
-│   ├── gm-utils.ts              # Contract utilities (769 lines) ✅ CORE
+│   ├── gmeow-utils.ts              # Contract utilities (769 lines) ✅ CORE
 │   ├── share.ts                 # Frame URL builders (291 lines) ✅ CORE
 │   ├── frame-validation.ts      # Input sanitization (GI-8) ✅ CORE
 │   ├── frame-badge.ts           # Badge-specific logic
@@ -1863,7 +1863,7 @@ The Gmeowbased frame system spans multiple directories with clear separation of 
 #### **Contract Integration** (lib/)
 | File | Purpose | Lines | Key Exports |
 |------|---------|-------|-------------|
-| `lib/gm-utils.ts` | Contract utilities | 769 | `CONTRACT_ADDRESSES`, `GM_CONTRACT_ABI`, `createGetUserStatsCall()`, `QUEST_TYPES` |
+| `lib/gmeow-utils.ts` | Contract utilities | 769 | `CONTRACT_ADDRESSES`, `GM_CONTRACT_ABI`, `createGetUserStatsCall()`, `QUEST_TYPES` |
 | `lib/abi/gmeowmultichain.json` | Contract ABI | 2517 | Event definitions, function signatures |
 | `lib/profile-data.ts` | Multi-chain data fetching | 421 | `fetchChainSnapshot()`, `resolveFarcasterProfile()` |
 | `lib/neynar.ts` | Farcaster API client | - | `fetchUserByFid()`, `fetchUserByAddress()` |
@@ -2106,7 +2106,7 @@ Frame system uses inline TypeScript types - no separate `types/` files for frame
 
 - `FrameShareInput` → `lib/share.ts`
 - `FrameType` → `lib/frame-validation.ts` + `app/api/frame/route.tsx`
-- `NormalizedQuest` → `lib/gm-utils.ts`
+- `NormalizedQuest` → `lib/gmeow-utils.ts`
 - `ProfileOverviewData` → `lib/profile-types.ts`
 
 Only external type definitions in `types/`:
@@ -2120,7 +2120,7 @@ Only external type definitions in `types/`:
 ```
 app/api/frame/route.tsx (Main Handler)
   ↓ imports
-  ├─ lib/gm-utils.ts (Contract utilities)
+  ├─ lib/gmeow-utils.ts (Contract utilities)
   │   └─ lib/abi/gmeowmultichain.json
   ├─ lib/share.ts (URL builders)
   ├─ lib/frame-validation.ts (Input sanitization)
@@ -2131,7 +2131,7 @@ app/api/frame/route.tsx (Main Handler)
 app/api/frame/image/route.tsx (Image Generator)
   ↓ imports
   ├─ lib/profile-data.ts (Multi-chain data fetching)
-  │   ├─ lib/gm-utils.ts
+  │   ├─ lib/gmeow-utils.ts
   │   └─ lib/neynar.ts
   ├─ lib/share.ts (URL builders)
   └─ public/og-image.png (Background image)

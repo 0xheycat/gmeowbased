@@ -6,6 +6,7 @@ import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached } from '@/lib/cache'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -45,13 +46,17 @@ type TierBreakdown = {
 }
 
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(request as NextRequest)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { 
+        status: 429,
+        headers: { 'X-Request-ID': requestId }
+      }
     )
   }
 
@@ -62,7 +67,10 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     if (!fidParam) {
       return NextResponse.json(
         { error: 'Bad Request', message: 'Missing fid parameter' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: { 'X-Request-ID': requestId }
+        }
       )
     }
     
@@ -73,7 +81,10 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     if (!fidValidation.success) {
       return NextResponse.json(
         { error: 'Bad Request', message: 'Invalid fid parameter', details: fidValidation.error.flatten() },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: { 'X-Request-ID': requestId }
+        }
       )
     }
     
@@ -100,10 +111,16 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       .limit(50) // GI-11: Limit result size
     
     if (error) {
-      console.error('[Viral Stats] Database error:', error)
+      console.error('[viral/stats] Database error:', error)
       return NextResponse.json(
         { error: 'Internal Error', message: 'Failed to fetch viral statistics' },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: { 
+            'X-Request-ID': requestId,
+            'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240'
+          }
+        }
       )
     }
     
@@ -122,6 +139,11 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
           active: 0,
         },
         message: 'No badge casts found. Share your first badge to start earning viral XP!',
+      }, {
+        headers: { 
+          'X-Request-ID': requestId,
+          'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240'
+        }
       })
     }
     
@@ -196,6 +218,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     )
 
     const response = NextResponse.json(result)
-    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
+    response.headers.set('X-Request-ID', requestId)
+    response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')
     return response
 }))

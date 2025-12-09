@@ -19,8 +19,10 @@ import gm, {
   CHAIN_LABEL,
   normalizeQuestStruct,
   sanitizeExpiresAt,
+  normalizeToGMChain,
   type NormalizedQuest,
   type ChainKey,
+  type GMChainKey,
 } from '@/lib/gmeow-utils'
 import { calculateRankProgress } from '@/lib/rank'
 import { getChainIconUrl } from '@/lib/chain-icons'
@@ -139,10 +141,12 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
   const limitParam = params.limit ?? params.top ?? params.size
   const normalizedChain = rawChain ? rawChain.toLowerCase() : ''
   const isGlobal = toBooleanFlag(params.global) || ['all', 'global', 'combined'].includes(normalizedChain) || rawMode.toLowerCase() === 'global'
-  const candidateChain = CHAIN_KEYS.includes(normalizedChain as ChainKey) ? (normalizedChain as ChainKey) : 'base'
-  const chainKey = isGlobal && !CHAIN_KEYS.includes(normalizedChain as ChainKey) ? 'base' : candidateChain
-  const chainDisplay = isGlobal ? 'All Chains' : getChainDisplayName(chainKey)
-  const chainIcon = isGlobal ? null : getChainIconUrl(chainKey)
+  // Base-only chain (legacy multichain handling for backward compatibility)
+  const candidateChain: 'base' = 'base'
+  const chainKey: 'base' = 'base'
+  const gmChainForDisplay = 'base'
+  const chainDisplay = isGlobal ? 'All Chains' : getChainDisplayName(gmChainForDisplay)
+  const chainIcon = isGlobal ? null : getChainIconUrl(gmChainForDisplay)
   const limit = (() => {
     const num = Number(limitParam)
     if (!Number.isFinite(num)) return 5
@@ -201,8 +205,9 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
         const addressRaw = typeof entry?.address === 'string' ? entry.address : ''
         const address = (addressRaw.startsWith('0x') ? addressRaw : '0x0000000000000000000000000000000000000000') as `0x${string}`
         const name = typeof entry?.name === 'string' ? entry.name : ''
-        const chainValue = typeof entry?.chain === 'string' ? entry.chain.toLowerCase() : chainKey
-        const chainResolved = CHAIN_KEYS.includes(chainValue as ChainKey) ? (chainValue as ChainKey) : chainKey
+        const chainValue = typeof entry?.chain === 'string' ? entry.chain.toLowerCase() : 'base'
+        // Base-only chain (legacy handling for backward compatibility)
+        const chainResolved: 'base' = 'base'
         const pointsNumber = Number(entry?.points ?? 0)
         const completedNumber = Number(entry?.completed ?? 0)
         const rewardsNumber = Number(entry?.rewards ?? Math.floor(pointsNumber / 20))
@@ -259,7 +264,8 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
         const leaderName = formatPilotName(leader)
         const xpText = `${formatInteger(leader.points) ?? leader.points} XP`
         const questText = leader.completed > 0 ? `${formatInteger(leader.completed) ?? leader.completed} ${leader.completed === 1 ? 'quest' : 'quests'}` : 'fresh run'
-        const chainText = isGlobal ? ` on ${getChainDisplayName(leader.chain)}` : ''
+        const leaderGmChain = normalizeToGMChain(leader.chain) || 'base'
+        const chainText = isGlobal ? ` on ${getChainDisplayName(leaderGmChain)}` : ''
         return `${leaderName} holds #${leader.rank} with ${xpText} from ${questText}${chainText}.`
       })()
     : `Roster is open — first pilot to GM here locks the #1 badge.`
@@ -329,7 +335,8 @@ async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Respons
     const primary = `#${entry.rank} ${formatPilotName(entry)} · ${formatInteger(entry.points) ?? entry.points} XP`
     const secondarySegments: string[] = []
     if (entry.completed > 0) secondarySegments.push(`${formatInteger(entry.completed) ?? entry.completed} quests`)
-    if (isGlobal) secondarySegments.push(getChainDisplayName(entry.chain))
+    const entryGmChain = normalizeToGMChain(entry.chain) || 'base'
+    if (isGlobal) secondarySegments.push(getChainDisplayName(entryGmChain))
     if (entry.rewards > 0) secondarySegments.push(`${formatInteger(entry.rewards) ?? entry.rewards} drops`)
     heroListItems.push({
       icon,
@@ -793,7 +800,8 @@ async function fetchReferralCodeForUser(chainKey: ChainKey, userAddr: `0x${strin
   try {
     const rpc = getRpcForChain(chainKey)
     const client = createPublicClient({ transport: http(rpc) })
-    const contract = (CONTRACT_ADDRESSES[chainKey] ?? CONTRACT_ADDRESSES.base) as Address
+    const gmChain = normalizeToGMChain(chainKey) || 'base'
+    const contract = CONTRACT_ADDRESSES[gmChain] as Address
     const code = await client
       .readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referralCodeOf', args: [userAddr] })
       .catch(() => '')

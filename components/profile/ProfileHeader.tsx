@@ -76,7 +76,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
         {isOwner && (
           <button
             onClick={onEditClick}
-            className="absolute top-4 right-4 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+            className="absolute top-4 right-4 px-4 py-2 min-h-[44px] bg-white dark:bg-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors shadow-sm"
           >
             Edit Profile
           </button>
@@ -156,7 +156,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
         <div className="mb-4">
           <button
             onClick={handleCopyAddress}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors group"
+            className="inline-flex items-center gap-2 px-3 py-2 min-h-[44px] bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors group"
           >
             <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
               {formatAddress(profile.wallet.address)}
@@ -201,7 +201,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
               href={profile.social_links.twitter}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/50 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors text-sm font-medium"
             >
               <XIcon className="w-4 h-4" />
               Twitter
@@ -215,7 +215,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
               href={profile.social_links.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors text-sm font-medium"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C6.477 2 2 6.477 2 12C2 16.42 4.865 20.17 8.839 21.49C9.339 21.58 9.52 21.27 9.52 21C9.52 20.77 9.511 20.14 9.507 19.31C6.726 19.91 6.139 17.77 6.139 17.77C5.685 16.61 5.029 16.3 5.029 16.3C4.121 15.68 5.098 15.69 5.098 15.69C6.101 15.76 6.629 16.73 6.629 16.73C7.521 18.26 8.97 17.82 9.539 17.56C9.631 16.91 9.889 16.47 10.175 16.22C7.955 15.97 5.62 15.11 5.62 11.19C5.62 10.09 6.01 9.19 6.649 8.49C6.546 8.24 6.203 7.23 6.747 5.85C6.747 5.85 7.586 5.58 9.497 6.87C10.31 6.65 11.16 6.54 12.01 6.54C12.86 6.54 13.71 6.65 14.527 6.87C16.437 5.58 17.274 5.85 17.274 5.85C17.819 7.23 17.476 8.24 17.373 8.49C18.013 9.19 18.4 10.09 18.4 11.19C18.4 15.12 16.061 15.97 13.835 16.22C14.189 16.53 14.515 17.15 14.515 18.09C14.515 19.43 14.505 20.5 14.505 20.84C14.505 21.11 14.683 21.42 15.191 21.31C19.165 20.17 22 16.42 22 12C22 6.477 17.523 2 12 2Z" />
@@ -231,7 +231,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
               href={profile.social_links.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/50 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors text-sm font-medium"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />

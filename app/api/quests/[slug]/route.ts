@@ -11,6 +11,7 @@ import { getQuestBySlug } from '@/lib/supabase/queries/quests';
 import { QuestDetailsQuerySchema } from '@/lib/validation/api-schemas';
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit';
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
+import { generateRequestId } from '@/lib/request-id';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   const startTime = Date.now();
+  const requestId = generateRequestId();
   const clientIp = getClientIp(request);
   const questSlug = params.slug;
   
@@ -38,6 +40,7 @@ export async function GET(
         type: ErrorType.RATE_LIMIT,
         message: 'Too many requests. Please try again later.',
         statusCode: 429,
+        requestId,
         details: {
           limit: rateLimitResult.limit,
           remaining: 0,
@@ -55,6 +58,7 @@ export async function GET(
         type: ErrorType.VALIDATION,
         message: 'User FID is required',
         statusCode: 400,
+        requestId,
         details: { required: 'userFid query parameter' },
       });
     }
@@ -69,6 +73,7 @@ export async function GET(
         type: ErrorType.VALIDATION,
         message: 'Invalid user FID',
         statusCode: 400,
+        requestId,
         details: validationResult.error.flatten(),
       });
     }
@@ -79,6 +84,7 @@ export async function GET(
         type: ErrorType.VALIDATION,
         message: 'Invalid quest slug format',
         statusCode: 400,
+        requestId,
         details: { expected: 'string slug' },
       });
     }
@@ -118,6 +124,7 @@ export async function GET(
     response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit || 60));
     response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining || 60));
     response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset || Date.now() + 60000));
+    response.headers.set('X-Request-ID', requestId);
     
     return response;
     
@@ -151,6 +158,7 @@ export async function GET(
       type: ErrorType.INTERNAL,
       message: 'Failed to fetch quest details',
       statusCode: 500,
+      requestId,
       details: process.env.NODE_ENV === 'development' ? {
         error: error instanceof Error ? error.message : String(error)
       } : undefined,

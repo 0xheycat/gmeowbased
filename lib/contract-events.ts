@@ -458,8 +458,8 @@ function buildReferences(eventName: string, gmUtilsSymbols: string[] = []): Cont
 
   gmUtilsSymbols.forEach((symbol) => {
     references.push({
-      label: 'gm-utils.ts',
-      path: 'lib/gm-utils.ts',
+      label: 'gmeow-utils.ts',
+      path: 'lib/gmeow-utils.ts',
       symbol,
     })
   })

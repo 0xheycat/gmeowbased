@@ -57,11 +57,11 @@ const QuerySchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  context?: { params: { fid: string } }
+  context?: { params: Promise<{ fid: string }> }
 ) {
   try {
-    // Extract params with null-safety
-    const params = context?.params
+    // Next.js 15: Await params before accessing
+    const params = await context?.params
     if (!params?.fid) {
       return NextResponse.json(
         { success: false, error: 'FID parameter is required' },

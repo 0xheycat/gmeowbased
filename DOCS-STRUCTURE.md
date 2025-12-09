@@ -1,26 +1,28 @@
 # Documentation Structure
 
-**Updated**: December 5, 2025  
-**Status**: Reorganized - Clean root with 5 core documents + archive system
+**Updated**: December 7, 2025 ✨ **RESTRUCTURED**  
+**Status**: Cleaned - 37 → 6 root files, archived 31 completed docs  
+**Change**: Major reorganization - all completed phase docs archived
 
 ---
 
-## 📋 Root Directory (Core Documents Only)
+## 📋 Root Directory (6 Core Documents Only)
 
-These are the **ONLY** documents that should remain in the root:
+**Before**: 37 markdown files (planning overload)  
+**After**: 6 markdown files (clean, focused)
 
 ### 1. FOUNDATION-REBUILD-ROADMAP.md
-- **Purpose**: Master project roadmap tracking all phases
-- **Status**: Always current - update after every phase completion
-- **Sections**: Phases 1-5 with detailed tasks, timelines, and completion status
-- **Size**: ~140KB (comprehensive)
-- **Updates**: After phase completion, milestone achievement, or major testing
+- **Purpose**: Master project roadmap tracking all tasks (Task 9-11 complete)
+- **Status**: ✅ Updated with Task 11 Phase 4 completion (100% WCAG AAA)
+- **Sections**: Tasks 1-11 with phases, statistics, and completion status
+- **Size**: ~200KB (comprehensive master roadmap)
+- **Updates**: After phase completion, milestone achievement
 
 ### 2. CURRENT-TASK.md
-- **Purpose**: Active work status - what we're doing RIGHT NOW
-- **Status**: Updated in real-time during development
-- **Contents**: Current phase summary, recent fixes, testing results
-- **Size**: ~95KB (detailed current state)
+- **Purpose**: Active work status - Task 11 (Polish & Optimization)
+- **Status**: ✅ Phase 4 Complete (Accessibility), Phase 5 Next (Documentation)
+- **Contents**: Current phase summary, 48 accessibility fixes, test results
+- **Size**: ~180KB (detailed current state with all Phase 4 results)
 - **Updates**: Daily during active development
 
 ### 3. VIRAL-FEATURES-RESEARCH.md
@@ -30,26 +32,57 @@ These are the **ONLY** documents that should remain in the root:
 - **Size**: ~24KB
 - **Updates**: When new features researched or viral patterns analyzed
 
-### 4. DOCS-STRUCTURE.md (this file)
+### 4. ENV-VARIABLES-GUIDE.md
+- **Purpose**: Environment setup guide for local development
+- **Status**: Reference document for onboarding
+- **Contents**: Required env vars, API keys, configuration
+- **Updates**: When new environment variables added
+
+### 5. DOCS-STRUCTURE.md (this file)
 - **Purpose**: Documentation organization guide
-- **Status**: Reference document for maintaining clean structure
-- **Contents**: Folder structure, file purposes, organization rules
+- **Status**: ✅ Just updated with restructure (Dec 7, 2025)
+- **Contents**: Folder structure, file purposes, archive locations
 - **Updates**: When documentation structure changes
 
-### 5. .instructions.md
+### 6. .instructions.md (hidden)
 - **Purpose**: AI agent instructions and coding standards
 - **Status**: System configuration document
 - **Contents**: Code style rules, project conventions, agent guidelines
 - **Updates**: When coding standards or project patterns evolve
 
-**Archive Policy**: All completed task reports, historical audits, and superseded documents move to `/docs/archive/`
+**Archive Policy**: All completed task reports (31 files) moved to `/docs-archive/completed-phases/`
 
 ---
 
 ## 📁 /docs Directory Structure
 
+### /docs/api/
+**Purpose**: API documentation and references  
+**New Files** (Dec 7):
+- `ABI-QUICK-REFERENCE.md` - Smart contract ABI reference (moved from root)
+
+---
+
+### /docs/learnings/
+**Purpose**: Key learnings from rebuild phases ✨ NEW (Dec 7, 2025)  
+**Contents**:
+- `REBUILD-KEY-LEARNINGS.md` - Comprehensive lessons from Task 9-11
+  * What worked: Multi-template hybrid, 10-layer security, Supabase MCP
+  * What didn't: Bulk tools, over-planning, test tool bugs
+  * Professional patterns: Component structure, API security, accessibility
+  * Metrics: 95-100 quality scores, 100% WCAG AAA, 4-6x faster dev speed
+
+---
+
+### /docs/setup/
+**Purpose**: Setup and configuration guides  
+**New Files** (Dec 7):
+- `SUPABASE-STORAGE-SETUP.md` - Storage bucket configuration (moved from root)
+
+---
+
 ### /docs/phase-reports/
-**Purpose**: Historical phase completion reports and status updates
+**Purpose**: Historical phase completion reports and status updates (Task 10 referral/guild)
 
 **Contents**:
 - `PHASE-*.md` - Phase completion summaries
@@ -60,8 +93,112 @@ These are the **ONLY** documents that should remain in the root:
 
 ---
 
-### /docs/archive/
-**Purpose**: Historical and completed documentation (Organized Archive System)
+## 📁 /docs-archive Directory Structure ✨ NEW (Dec 7, 2025)
+
+**Purpose**: Archive for completed task documentation (31 files moved from root)
+
+### /docs-archive/completed-phases/
+**Purpose**: Task-specific completion documentation
+
+**Structure**:
+```
+/docs-archive/completed-phases/
+  ├── /task-8-quest/              # Quest system (4 files)
+  ├── /task-9-profile/            # Profile system (2 files)
+  └── /task-10-referral-guild/    # Referral + Guild (13 files)
+```
+
+**Contents**:
+
+#### /task-8-quest/ (4 files)
+- `QUEST-SYSTEM-COMPLETE.md` - Quest system completion summary
+- `QUEST-AUTOMATION-CLARIFICATION.md` - Automation setup clarification
+- `QUEST-AUTOMATION-FINAL-SUMMARY.md` - Final automation summary
+- `QUEST-AUTOMATION-GITHUB-CONFIG.md` - GitHub workflow configuration
+
+#### /task-9-profile/ (2 files)
+- `PROFILE-FIXES-SUMMARY.md` - Profile component fixes summary
+- `PROFILE-KEYBOARD-SHORTCUTS.md` - Keyboard navigation implementation
+
+#### /task-10-referral-guild/ (13 files)
+- `MIGRATION-REFERRAL-GUILD.md` - Referral/guild migration plan
+- `PHASE-1-COMPLETE-SUMMARY.md` - Phase 1 completion
+- `PHASE-4-5-IMPLEMENTATION-COMPLETE.md` - Phases 4-5 completion
+- `PHASE-4-COMPLETE-SUMMARY.md` - Phase 4 summary
+- `PHASE-4-DEPLOYMENT-COMPLETE.md` - Phase 4 deployment
+- `PHASE-4-HISTORICAL-STATS-COMPLETE.md` - Historical stats implementation
+- `PHASE-4-LOCAL-TESTING-COMPLETE.md` - Local testing results
+- `PHASE-5-ADVANCED-ANALYTICS-COMPLETE.md` - Advanced analytics
+- `PHASE-5-API-QUICK-REFERENCE.md` - API quick reference
+- `PHASE-5-API-SECURITY-COMPLETE.md` - API security implementation
+- `STATS-PHASE-1-COMPLETE.md` - Stats Phase 1
+- `STATS-PHASE-2-COMPLETE.md` - Stats Phase 2
+- `STATS-PROFESSIONAL-ANALYSIS.md` - Stats professional analysis
+
+---
+
+### /docs-archive/infrastructure/ (6 files)
+**Purpose**: Infrastructure and build system documentation
+
+**Contents**:
+- `BRIDGE-STATS-COMPLETE.md` - Bridge statistics implementation
+- `CONTRACT-COMPILATION-COMPLETE.md` - Smart contract compilation
+- `CRON-SECURITY-GUIDE.md` - Cron job security setup
+- `ICON-SYSTEM-COMPLETE.md` - Icon system implementation
+- `WORKFLOW-STANDARDIZATION-COMPLETE.md` - Workflow standardization
+- `WORKFLOW-STANDARDIZATION-PLAN.md` - Workflow planning
+
+---
+
+### /docs-archive/migrations/ (3 files)
+**Purpose**: Migration plans and status reports
+
+**Contents**:
+- `FRAME-MIGRATION-PLAN.md` - Frame migration planning
+- `FRAME-MIGRATION-QUICKSTART.md` - Quick start guide
+- `FRAME-MIGRATION-STATUS.md` - Migration status tracking
+
+---
+
+### /docs-archive/security/ (1 file)
+**Purpose**: Security checklists and guidelines
+
+**Contents**:
+- `PRODUCTION-SECURITY-CHECKLIST.md` - Production security checklist
+
+---
+
+### /docs-archive/DOCUMENTATION-RESTRUCTURE-PLAN.md
+**Purpose**: This restructure plan document  
+**Contents**: Migration commands, before/after comparison, verification steps
+
+---
+
+## 📊 Documentation Statistics
+
+**Before Restructure** (Dec 7, 2025 morning):
+- Root directory: 37 markdown files
+- Docs directory: ~50+ files
+- Total: ~90 files
+- **Problem**: Too many docs, hard to find current status
+
+**After Restructure** (Dec 7, 2025 afternoon):
+- Root directory: 6 markdown files (84% reduction ✨)
+- Active docs: ~20 files in /docs/
+- Archived docs: 31 files in /docs-archive/
+- **Result**: Clean, organized, easy to navigate
+
+**Files Moved**:
+- Quest (Task 8): 4 files
+- Profile (Task 9): 2 files
+- Referral/Guild (Task 10): 13 files
+- Infrastructure: 6 files
+- Migrations: 3 files
+- Security: 1 file
+- API/Setup refs: 2 files
+- **Total**: 31 files archived
+
+---
 
 **Structure**:
 ```

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { recalculateGlobalRanks } from '@/lib/leaderboard-scorer'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes
@@ -31,6 +33,8 @@ export const maxDuration = 300 // 5 minutes
  * }
  */
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
+  
   try {
     // Verify cron secret from GitHub Actions
     const authHeader = request.headers.get('authorization')
@@ -40,12 +44,23 @@ export async function POST(request: NextRequest) {
       console.error('[Leaderboard Cron] Unauthorized request')
       return NextResponse.json(
         { error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401, headers: { 'X-Request-ID': requestId } }
       )
     }
     
     console.log('[Leaderboard Cron] Starting leaderboard update...')
     const startTime = Date.now()
+    
+    // Idempotency check (prevents double execution on retry)
+    const now = new Date()
+    const dateKey = now.toISOString().slice(0, 13).replace(/[-:T]/g, '') // YYYYMMDDHH
+    const idempotencyKey = `cron-update-leaderboard-${dateKey}`
+    
+    const idempotencyResult = await checkIdempotency(idempotencyKey)
+    if (idempotencyResult.exists) {
+      console.log(`[Leaderboard Cron] Replaying cached result for key: ${idempotencyKey}`)
+      return returnCachedResponse(idempotencyResult)
+    }
     
     // Update all periods in parallel for performance
     const [dailyResult, weeklyResult, allTimeResult] = await Promise.all([
@@ -70,7 +85,10 @@ export async function POST(request: NextRequest) {
     
     console.log('[Leaderboard Cron] Update complete:', result)
     
-    return NextResponse.json(result)
+    // Store result for idempotency (24h cache TTL)
+    await storeIdempotency(idempotencyKey, result, 200)
+    
+    return NextResponse.json(result, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     console.error('[Leaderboard Cron] Error:', error)
     return NextResponse.json(
@@ -79,7 +97,7 @@ export async function POST(request: NextRequest) {
         message: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }

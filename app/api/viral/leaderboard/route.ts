@@ -5,6 +5,7 @@ import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached } from '@/lib/cache'
 import { LeaderboardQuerySchema } from '@/lib/validation/api-schemas'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -22,11 +23,15 @@ type LeaderboardEntry = {
 }
 
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(request as NextRequest)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { 
+      status: 429,
+      headers: { 'X-Request-ID': requestId }
+    })
   }
 
   const { searchParams } = new URL(request.url)
@@ -38,7 +43,10 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
   })
 
   if (!queryValidation.success) {
-    return NextResponse.json({ error: 'validation_error', issues: queryValidation.error.issues }, { status: 400 })
+    return NextResponse.json({ error: 'validation_error', issues: queryValidation.error.issues }, { 
+      status: 400,
+      headers: { 'X-Request-ID': requestId }
+    })
   }
 
   const validated = queryValidation.data
@@ -109,6 +117,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
   }, { ttl: 180 })
 
   const response = NextResponse.json(result)
-  response.headers.set('Cache-Control', 's-maxage=120, stale-while-revalidate=180')
+  response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')
+  response.headers.set('X-Request-ID', requestId)
   return response
 }))

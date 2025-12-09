@@ -512,7 +512,7 @@ jobs:
 ### Badge & Scoring
 - `/lib/badges.ts` (badge tier calculations)
 - `/lib/rank.ts` (leaderboard ranking)
-- `/lib/gm-utils.ts` (GM contract logic)
+- `/lib/gmeow-utils.ts` (GM contract logic)
 
 ### OG Generation
 - `/app/api/og/*` (OG image generators)

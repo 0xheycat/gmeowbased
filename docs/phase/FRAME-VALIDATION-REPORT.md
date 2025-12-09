@@ -232,7 +232,7 @@ ${buildBadgeShareImageUrl(fid, badgeId, getBaseUrl(request))}
 - title: string (default: "GMEOW Retro Deck")
 - subtitle: string (default: "Daily GM Logistics")
 - chain: string (default: "All Chains")
-- footer: string (default: "Warpcast • GMeow Adventure")
+- footer: string (default: "Warpcast • Gmeowbased Adventure")
 - badgeLabel: string (optional)
 - badgeTone: 'violet'|'blue'|'emerald'|'gold'|'pink'
 - badgeIcon: string (optional emoji)

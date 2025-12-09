@@ -12,7 +12,10 @@
  * 
  * Endpoint: POST /api/cron/sync-leaderboard
  * Schedule: Daily at midnight (via GitHub Actions)
- * Security: CRON_SECRET + rate limiting + IP tracking
+ * Security: CRON_SECRET + rate limiting + IP tracking + idempotency
+ * 
+ * Idempotency: Prevents duplicate snapshots on retry
+ * Key format: cron-sync-leaderboard-YYYYMMDD-HH (24h cache TTL)
  * 
  * @see scripts/leaderboard/sync-supabase.ts for core sync logic
  * @see lib/leaderboard-sync.ts for syncSupabaseLeaderboard function
@@ -21,6 +24,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, strictLimiter } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/rate-limit'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes max execution time
@@ -44,6 +49,7 @@ function verifyCronSecret(request: NextRequest): boolean {
  * POST handler for leaderboard snapshot sync cron job
  */
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
   const startTime = Date.now()
   const ip = getClientIp(request)
   
@@ -58,11 +64,12 @@ export async function POST(request: NextRequest) {
           error: 'Too many requests',
           limit,
           remaining,
-          reset: new Date(reset).toISOString()
+          reset: reset ? new Date(reset).toISOString() : new Date(Date.now() + 60000).toISOString()
         },
         { 
           status: 429,
           headers: {
+            'X-Request-ID': requestId,
             'X-RateLimit-Limit': String(limit),
             'X-RateLimit-Remaining': String(remaining),
             'X-RateLimit-Reset': String(reset),
@@ -76,12 +83,23 @@ export async function POST(request: NextRequest) {
       console.error(`[Leaderboard Sync] Unauthorized request from IP: ${ip}`)
       return NextResponse.json(
         { error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401, headers: { 'X-Request-ID': requestId } }
       )
     }
     
     // Layer 3: Log authorized request with IP tracking
     console.log(`[Leaderboard Sync] Starting snapshot sync from IP: ${ip}`)
+    
+    // Layer 4: Idempotency check (prevents duplicate snapshots)
+    const now = new Date()
+    const dateKey = now.toISOString().slice(0, 13).replace(/[-:T]/g, '') // YYYYMMDDHH
+    const idempotencyKey = `cron-sync-leaderboard-${dateKey}`
+    
+    const idempotencyResult = await checkIdempotency(idempotencyKey)
+    if (idempotencyResult.exists) {
+      console.log(`[Leaderboard Sync] Replaying cached result for key: ${idempotencyKey}`)
+      return returnCachedResponse(idempotencyResult)
+    }
     
     // Import dependencies
     const { getSupabaseServerClient, isSupabaseConfigured } = await import('@/lib/supabase-server')
@@ -111,7 +129,7 @@ export async function POST(request: NextRequest) {
     console.log(`[Leaderboard Sync] Snapshot sync complete in ${duration}ms`)
     console.log(`[Leaderboard Sync] Result:`, result)
     
-    return NextResponse.json({
+    const response = {
       success: true,
       result: {
         globalRows: result.globalRows,
@@ -122,7 +140,12 @@ export async function POST(request: NextRequest) {
       duration: `${duration}ms`,
       timestamp: new Date().toISOString(),
       source_ip: ip, // Audit trail
-    })
+    }
+    
+    // Store result for idempotency (24h cache TTL, prevents duplicate snapshots)
+    await storeIdempotency(idempotencyKey, response, 200)
+
+    return NextResponse.json(response, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     const duration = Date.now() - startTime
     console.error(`❌ [Leaderboard Sync] Snapshot sync failed from IP ${ip}:`, error)
@@ -135,7 +158,7 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         source_ip: ip, // Audit trail
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }
@@ -144,6 +167,7 @@ export async function POST(request: NextRequest) {
  * GET handler for health check (development only)
  */
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
   const ip = getClientIp(request)
   
   // Rate limiting on health check too
@@ -151,14 +175,14 @@ export async function GET(request: NextRequest) {
   if (!rateLimitResult.success) {
     return NextResponse.json(
       { error: 'Too many requests' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
   
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
       { error: 'GET method not allowed in production. Use POST with cron secret.' },
-      { status: 405 }
+      { status: 405, headers: { 'X-Request-ID': requestId } }
     )
   }
   
@@ -171,5 +195,5 @@ export async function GET(request: NextRequest) {
     schedule: 'Daily at midnight UTC',
     note: 'Creates historical snapshots (different from update-leaderboard which recalculates scores)',
     timestamp: new Date().toISOString(),
-  })
+  }, { headers: { 'X-Request-ID': requestId } })
 }

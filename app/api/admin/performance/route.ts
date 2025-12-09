@@ -6,6 +6,7 @@ import {
   getSlowRequests 
 } from '@/lib/middleware/timing'
 import { getCacheStats } from '@/lib/cache'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,10 +21,15 @@ export const dynamic = 'force-dynamic'
  * - Per-route statistics
  */
 export const GET = withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId()
+  
   // TODO: Add admin auth check
   // const isAdmin = await checkAdminAuth(request)
   // if (!isAdmin) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  //   return NextResponse.json(
+  //     { error: 'Unauthorized' },
+  //     { status: 401, headers: { 'X-Request-ID': requestId } }
+  //   )
   // }
 
   const { searchParams } = new URL(request.url)
@@ -81,11 +87,20 @@ export const GET = withErrorHandler(async (request: Request) => {
     // Return HTML dashboard
     const html = generateHtmlDashboard(report)
     return new NextResponse(html, {
-      headers: { 'Content-Type': 'text/html' },
+      headers: {
+        'Content-Type': 'text/html',
+        'X-Request-ID': requestId,
+        'Cache-Control': 's-maxage=180, stale-while-revalidate=360',
+      },
     })
   }
 
-  return NextResponse.json(report)
+  return NextResponse.json(report, {
+    headers: {
+      'X-Request-ID': requestId,
+      'Cache-Control': 's-maxage=180, stale-while-revalidate=360',
+    }
+  })
 })
 
 function generateHtmlDashboard(report: any): string {

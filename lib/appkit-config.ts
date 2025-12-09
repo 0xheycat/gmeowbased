@@ -12,7 +12,7 @@ if (!projectId) {
 
 // App metadata for WalletConnect
 export const metadata = {
-  name: 'Gmeow Adventure',
+  name: 'Gmeowbased Adventure',
   description: 'Community-driven quest platform on Base',
   url: 'https://gmeowhq.art',
   icons: ['https://gmeowhq.art/logo.png'],

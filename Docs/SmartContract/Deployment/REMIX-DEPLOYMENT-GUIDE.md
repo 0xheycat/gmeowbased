@@ -110,7 +110,7 @@ If imports fail, Remix will show red underlines. Wait a few seconds for it to fe
 ### 6.3 Deploy NFT Contract (Optional)
 1. **Contract**: Select `GmeowNFT - contracts/GmeowNFT.sol`
 2. **Constructor Parameters**:
-   - `name`: "Gmeow Adventure NFT"
+   - `name`: "Gmeowbased Adventure NFT"
    - `symbol`: "GMEOW"
    - `baseURI_`: "https://api.gmeowhq.art/nft/"
    - `_gmeowContract`: Address of deployed GmeowMultichain contract

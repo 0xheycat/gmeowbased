@@ -426,7 +426,7 @@ This document addresses three critical questions before proceeding with Phase 4 
 
 **Untested** (27+ files):
 - ❌ `lib/badges.ts` (600+ lines) - Badge management (HIGH PRIORITY)
-- ❌ `lib/gm-utils.ts` - GM claiming logic (HIGH PRIORITY)
+- ❌ `lib/gmeow-utils.ts` - GM claiming logic (HIGH PRIORITY)
 - ❌ `lib/leaderboard-sync.ts` - Leaderboard updates
 - ❌ `lib/neynar.ts` - Neynar API client
 - ❌ `lib/partner-snapshot.ts` - Partnership logic
@@ -441,7 +441,7 @@ This document addresses three critical questions before proceeding with Phase 4 
 1. **`lib/cache.ts`** (HIGH) - NEW Phase 4 code, critical infrastructure
 2. **`lib/middleware/timing.ts`** (HIGH) - NEW Phase 4 code
 3. **`lib/badges.ts`** (HIGH) - Core badge logic
-4. **`lib/gm-utils.ts`** (HIGH) - Core GM logic
+4. **`lib/gmeow-utils.ts`** (HIGH) - Core GM logic
 5. **`lib/neynar.ts`** (MEDIUM) - External API client
 
 ---

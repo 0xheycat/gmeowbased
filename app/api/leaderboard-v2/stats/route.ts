@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const revalidate = 300 // 5 minutes
@@ -24,6 +25,7 @@ export const revalidate = 300 // 5 minutes
  * }
  */
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
   try {
     const searchParams = request.nextUrl.searchParams
     const period = (searchParams.get('period') || 'all_time') as 'daily' | 'weekly' | 'all_time'
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
     if (!['daily', 'weekly', 'all_time'].includes(period)) {
       return NextResponse.json(
         { error: 'Invalid period. Must be daily, weekly, or all_time' },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
       console.error('[Leaderboard Stats API] Supabase not configured')
       return NextResponse.json(
         { error: 'Database not configured' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
       console.error('[Leaderboard Stats API] Error:', statsError)
       return NextResponse.json(
         { error: 'Failed to fetch statistics' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -68,6 +70,11 @@ export async function GET(request: NextRequest) {
         averageScore: 0,
         top1PercentThreshold: 0,
         top10PercentThreshold: 0,
+      }, {
+        headers: { 
+          'X-Request-ID': requestId,
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+        }
       })
     }
     
@@ -108,14 +115,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+        'X-Request-ID': requestId,
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       },
     })
   } catch (error) {
     console.error('[Leaderboard Stats API] Error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch statistics' },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }

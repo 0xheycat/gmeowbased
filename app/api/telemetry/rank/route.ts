@@ -4,6 +4,7 @@ import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 import { recordRankEvent, type RankTelemetryEventInput, type RankTelemetryEventKind } from '@/lib/telemetry'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
@@ -83,13 +84,14 @@ function sanitizePayload(input: unknown): RankTelemetryEventInput | null {
 // @edit-end
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -97,9 +99,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const payload = sanitizePayload(body)
 
     if (!payload) {
-      return NextResponse.json({ error: 'invalid-rank-telemetry' }, { status: 400 })
+      return NextResponse.json({ error: 'invalid-rank-telemetry' }, { 
+        status: 400,
+        headers: { 'X-Request-ID': requestId }
+      })
     }
 
   await recordRankEvent(payload)
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true }, {
+    headers: { 'X-Request-ID': requestId }
+  })
 })

@@ -3,6 +3,7 @@ import { updateBadgeMintStatus } from '@/lib/badges'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { BadgeMintSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,12 +21,13 @@ export const dynamic = 'force-dynamic'
  * }
  */
 export const POST = withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId()
   const supabase = getSupabaseServerClient()
   
   if (!supabase) {
     return NextResponse.json(
       { success: false, error: 'Database not configured' },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -41,7 +43,7 @@ export const POST = withErrorHandler(async (request: Request) => {
         error: 'Invalid input',
         details: validationResult.error.issues
       },
-      { status: 400 }
+      { status: 400, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -64,7 +66,7 @@ export const POST = withErrorHandler(async (request: Request) => {
       txHash: existingBadge.tx_hash,
       tokenId,
       note: 'Badge was already minted',
-    })
+    }, { headers: { 'X-Request-ID': requestId } })
   }
 
   // Update badge mint status (includes cache invalidation)
@@ -99,5 +101,5 @@ export const POST = withErrorHandler(async (request: Request) => {
     badgeType,
     txHash,
     tokenId,
-  })
+  }, { headers: { 'X-Request-ID': requestId } })
 })

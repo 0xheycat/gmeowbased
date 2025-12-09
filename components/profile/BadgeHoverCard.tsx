@@ -88,7 +88,7 @@ export default function BadgeHoverCard({
             </div>
 
             {/* Badge Name */}
-            <h3 className="mb-1 text-base font-bold text-white">{badge.name}</h3>
+            <h2 className="mb-1 text-base font-bold text-white">{badge.name}</h2>
 
             {/* Badge Description */}
             <p className="mb-3 text-sm text-white/70 leading-relaxed">

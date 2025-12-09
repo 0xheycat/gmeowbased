@@ -5,10 +5,10 @@ import clsx from 'clsx'
 import Image from 'next/image'
 import { useDialog } from '@/lib/hooks/use-dialog'
 import ErrorDialog from '@/components/ui/error-dialog'
+import { toast } from 'sonner'
 
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 
-import { useFocusTrap } from '@/components/quest-wizard/components/Accessibility'
 import {
   getPendingMints,
   getFailedMints,
@@ -20,7 +20,8 @@ import {
 } from '@/lib/badges'
 
 // @edit-start 2025-02-16 — Rebuilt badge manager panel with metadata autofill and multichain support
-const CHAIN_LABEL: Record<ChainKey, string> = {
+// Base-only chain (legacy ChainKey type kept for backward compatibility, but only base is used)
+const CHAIN_LABEL: Record<string, string> = {
   base: 'Base',
 }
 
@@ -137,7 +138,8 @@ export default function BadgeManagerPanel() {
       } catch (e: any) {
         const message = e?.message || 'Failed to load badge templates'
         setError(message)
-              } finally {
+        notify({ type: 'error', title: 'Failed to load templates', message })
+      } finally {
         setLoading(false)
       }
     },
@@ -168,7 +170,8 @@ export default function BadgeManagerPanel() {
       setMintQueue(queue)
       setQueueStats(stats)
     } catch (e: any) {
-          } finally {
+      notify({ type: 'error', title: 'Failed to load mint queue', message: e?.message || 'Unknown error' })
+    } finally {
       setQueueLoading(false)
     }
   }, [queueFilter])
@@ -176,9 +179,11 @@ export default function BadgeManagerPanel() {
   const handleRetryMint = useCallback(async (queueId: string) => {
     try {
       await retryMint(queueId)
-            await loadMintQueue()
+      notify({ type: 'success', title: 'Mint retry initiated' })
+      await loadMintQueue()
     } catch (e: any) {
-          }
+      notify({ type: 'error', title: 'Failed to retry mint', message: e?.message || 'Unknown error' })
+    }
   }, [loadMintQueue])
 
   // Phase 3B: Badge Registry Viewer
@@ -188,7 +193,8 @@ export default function BadgeManagerPanel() {
       const registry = loadBadgeRegistry()
       setBadgeRegistry(registry)
     } catch (e: any) {
-          } finally {
+      notify({ type: 'error', title: 'Failed to load badge registry', message: e?.message || 'Unknown error' })
+    } finally {
       setRegistryLoading(false)
     }
   }, [])
@@ -197,10 +203,12 @@ export default function BadgeManagerPanel() {
   const handleManualAssign = useCallback(async () => {
     const fid = Number(manualAssignFid)
     if (!fid || !Number.isFinite(fid) || fid <= 0) {
-            return
+      notify({ type: 'error', title: 'Invalid FID', message: 'Please enter a valid Farcaster ID' })
+      return
     }
     if (!manualAssignBadgeType.trim()) {
-            return
+      notify({ type: 'error', title: 'Missing badge type', message: 'Please enter a badge type' })
+      return
     }
 
     setManualAssignBusy(true)
@@ -218,7 +226,8 @@ export default function BadgeManagerPanel() {
       setManualAssignFid('')
       setManualAssignBadgeType('')
     } catch (e: any) {
-          } finally {
+      notify({ type: 'error', title: 'Assignment failed', message: e?.message || 'Unknown error' })
+    } finally {
       setManualAssignBusy(false)
     }
   }, [manualAssignFid, manualAssignBadgeType])
@@ -508,8 +517,9 @@ export default function BadgeManagerPanel() {
           artPath: path,
           metadataJson: syncMetadataImageField(prev.metadataJson, url),
         }))
-              } catch (error: any) {
-              } finally {
+      } catch (error: any) {
+        notify({ type: 'error', title: 'Upload failed', message: error?.message || 'Failed to upload file' })
+      } finally {
         setUploadBusy(false)
       }
     },
@@ -520,15 +530,18 @@ export default function BadgeManagerPanel() {
     const name = formState.name.trim()
     const badgeType = formState.badgeType.trim()
     if (!name) {
-            return
+      notify({ type: 'error', title: 'Validation error', message: 'Name is required' })
+      return
     }
     if (!badgeType) {
-            return
+      notify({ type: 'error', title: 'Validation error', message: 'Badge type is required' })
+      return
     }
 
     const points = Number(formState.pointsCost)
     if (!Number.isFinite(points) || points < 0) {
-            return
+      notify({ type: 'error', title: 'Validation error', message: 'Points cost must be a valid positive number' })
+      return
     }
 
     let metadata: Record<string, unknown> | null = null
@@ -544,14 +557,16 @@ export default function BadgeManagerPanel() {
       } catch (err: any) {
         const message = err?.message || 'Metadata must be valid JSON.'
         setMetadataError(message)
-                return
+        notify({ type: 'error', title: 'Invalid metadata', message })
+        return
       }
     }
 
     const slugBaseInput = formState.slug.trim() || name
     const slugBase = slugify(slugBaseInput)
     if (!slugBase) {
-            return
+      notify({ type: 'error', title: 'Validation error', message: 'Slug is required' })
+      return
     }
 
     const selectedChains = isEditing
@@ -566,7 +581,8 @@ export default function BadgeManagerPanel() {
       ),
     )
     if (!uniqueChains.length) {
-            return
+      notify({ type: 'error', title: 'Validation error', message: 'At least one chain must be selected' })
+      return
     }
 
     const payloadBase = {
@@ -639,9 +655,11 @@ export default function BadgeManagerPanel() {
       }
 
       if (failureMessages.length) {
-              }
+        notify({ type: 'error', title: 'Some templates failed', message: failureMessages.join(', ') })
+      }
     } catch (e: any) {
-          } finally {
+      notify({ type: 'error', title: 'Failed to save template', message: e?.message || 'Unknown error' })
+    } finally {
       setFormBusy(false)
     }
   }, [closeForm, editingId, formState, isEditing, loadTemplates])
@@ -663,7 +681,8 @@ export default function BadgeManagerPanel() {
         })
         await loadTemplates(true)
       } catch (e: any) {
-              }
+        notify({ type: 'error', title: 'Failed to update status', message: e?.message || 'Unknown error' })
+      }
     },
     [loadTemplates],
   )
@@ -679,9 +698,10 @@ export default function BadgeManagerPanel() {
             const res = await fetch(`/api/admin/badges/${template.id}`, { method: 'DELETE' })
             const json = await res.json()
             if (!res.ok || !json?.ok) throw new Error(json?.error || 'Unable to delete template')
+            notify({ type: 'success', title: 'Template deleted', message: `${template.name} has been deleted` })
             await loadTemplates(true)
           } catch (e: any) {
-            console.error('Delete error:', e)
+            notify({ type: 'error', title: 'Failed to delete template', message: e?.message || 'Unknown error' })
           }
         }
       })
@@ -711,7 +731,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'templates'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-200 dark:border-white/10'
+                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-300 dark:hover:border-white/20'
             )}
           >
             Templates
@@ -723,7 +743,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'queue'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-200 dark:border-white/10'
+                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-300 dark:hover:border-white/20'
             )}
           >
             Mint Queue
@@ -740,7 +760,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'registry'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-200 dark:border-white/10'
+                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-300 dark:hover:border-white/20'
             )}
           >
             Registry
@@ -752,7 +772,7 @@ export default function BadgeManagerPanel() {
               'pixel-button btn-sm transition',
               activeTab === 'assign'
                 ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-200 dark:border-white/10'
+                : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-300 dark:hover:border-white/20'
             )}
           >
             Manual Assign
@@ -931,7 +951,7 @@ export default function BadgeManagerPanel() {
                     'pixel-button btn-xs transition',
                     queueFilter === filter
                       ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-100'
-                      : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-200 dark:border-white/10'
+                      : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-300 dark:hover:border-white/20'
                   )}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -1181,7 +1201,7 @@ export default function BadgeManagerPanel() {
                       key={badge.id}
                       type="button"
                       onClick={() => setManualAssignBadgeType(badge.badgeType)}
-                      className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3 text-left transition hover:border-emerald-400/40 hover:bg-slate-100/10 dark:bg-white/5"
+                      className="rounded-xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-3 text-left transition hover:border-emerald-400/40 hover:bg-slate-100/10 dark:hover:bg-white/10"
                     >
                       <div className="text-sm font-semibold text-slate-950 dark:text-white">{badge.name}</div>
                       <div className="mt-1 font-mono text-[11px] text-[var(--px-sub)]">{badge.badgeType}</div>
@@ -1196,7 +1216,7 @@ export default function BadgeManagerPanel() {
         {/* Phase 3B: Badge Detail Modal */}
         {detailModalOpen && detailModalBadge && (
           <div 
-            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black dark:bg-slate-950/70 p-4"
+            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/80 backdrop-blur-sm p-4"
             onKeyDown={(e) => {
               if (e.key === 'Escape') setDetailModalOpen(false)
             }}
@@ -1206,7 +1226,7 @@ export default function BadgeManagerPanel() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="badge-detail-title"
-              className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/80 p-4 sm:p-6 shadow-xl"
+              className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950 p-4 sm:p-6 shadow-xl"
             >
               <div className="mb-4 flex items-center justify-between">
                 <h3 id="badge-detail-title" className="pixel-section-title text-lg">Badge Details</h3>
@@ -1223,7 +1243,7 @@ export default function BadgeManagerPanel() {
                 {/* Badge Preview */}
                 <div className="flex items-start gap-4">
                   {detailModalBadge.imageUrl && (
-                    <div className="h-24 w-24 overflow-hidden rounded-xl border border-white dark:border-slate-700/10">
+                    <div className="h-24 w-24 overflow-hidden rounded-xl border border-white/10 bg-slate-900">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={detailModalBadge.imageUrl}
@@ -1233,40 +1253,40 @@ export default function BadgeManagerPanel() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <h4 className="text-lg font-semibold text-slate-950 dark:text-white">{detailModalBadge.name}</h4>
-                    <div className="mt-1 text-[12px] text-[var(--px-sub)]">{detailModalBadge.description}</div>
+                    <h4 className="text-lg font-semibold text-white">{detailModalBadge.name}</h4>
+                    <div className="mt-1 text-[12px] text-white/60">{detailModalBadge.description}</div>
                   </div>
                 </div>
 
                 {/* Badge Info */}
-                <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
-                  <h5 className="mb-3 text-sm font-semibold text-slate-950 dark:text-white">Information</h5>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <h5 className="mb-3 text-sm font-semibold text-white">Information</h5>
                   <dl className="grid gap-2 text-[12px]">
                     <div className="flex justify-between">
-                      <dt className="text-[var(--px-sub)]">Badge Type:</dt>
-                      <dd className="font-mono text-slate-950 dark:text-white">{detailModalBadge.badgeType}</dd>
+                      <dt className="text-white/60">Badge Type:</dt>
+                      <dd className="font-mono text-white">{detailModalBadge.badgeType}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[var(--px-sub)]">Slug:</dt>
-                      <dd className="font-mono text-slate-950 dark:text-white">{detailModalBadge.slug}</dd>
+                      <dt className="text-white/60">Slug:</dt>
+                      <dd className="font-mono text-white">{detailModalBadge.slug}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[var(--px-sub)]">Chain:</dt>
-                      <dd className="text-slate-950 dark:text-white">{CHAIN_LABEL[detailModalBadge.chain]}</dd>
+                      <dt className="text-white/60">Chain:</dt>
+                      <dd className="text-white">{CHAIN_LABEL[detailModalBadge.chain]}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[var(--px-sub)]">Points Cost:</dt>
-                      <dd className="text-slate-950 dark:text-white">{detailModalBadge.pointsCost.toLocaleString()}</dd>
+                      <dt className="text-white/60">Points Cost:</dt>
+                      <dd className="text-white">{detailModalBadge.pointsCost.toLocaleString()}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[var(--px-sub)]">Status:</dt>
+                      <dt className="text-white/60">Status:</dt>
                       <dd>
                         <span
                           className={clsx(
                             'pixel-pill text-[10px]',
                             detailModalBadge.active
                               ? 'bg-emerald-500/20 text-emerald-200'
-                              : 'bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/60'
+                              : 'bg-white/5 text-white/60'
                           )}
                         >
                           {detailModalBadge.active ? 'Active' : 'Inactive'}
@@ -1278,18 +1298,18 @@ export default function BadgeManagerPanel() {
 
                 {/* Metadata */}
                 {detailModalBadge.metadata && (
-                  <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
-                    <h5 className="mb-3 text-sm font-semibold text-slate-950 dark:text-white">Metadata</h5>
-                    <pre className="max-h-60 overflow-auto rounded border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/40 p-3 font-mono text-[11px] text-slate-950 dark:text-white/80">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <h5 className="mb-3 text-sm font-semibold text-white">Metadata</h5>
+                    <pre className="max-h-60 overflow-auto rounded border border-white/10 bg-slate-900 p-3 font-mono text-[11px] text-white/80">
                       {JSON.stringify(detailModalBadge.metadata, null, 2)}
                     </pre>
                   </div>
                 )}
 
                 {/* Assignment History Placeholder */}
-                <div className="rounded-2xl border border-white dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4">
-                  <h5 className="mb-3 text-sm font-semibold text-slate-950 dark:text-white">Assignment History</h5>
-                  <div className="text-[12px] text-[var(--px-sub)]">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <h5 className="mb-3 text-sm font-semibold text-white">Assignment History</h5>
+                  <div className="text-[12px] text-white/60">
                     Assignment history tracking coming soon...
                   </div>
                 </div>
@@ -1300,7 +1320,7 @@ export default function BadgeManagerPanel() {
 
         {formOpen ? (
           <div 
-            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black dark:bg-slate-950/70 p-4"
+            className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/80 backdrop-blur-sm p-4"
             onKeyDown={(e) => {
               if (e.key === 'Escape' && !formBusy) closeForm()
             }}
@@ -1310,7 +1330,7 @@ export default function BadgeManagerPanel() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="badge-form-title"
-              className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white dark:border-slate-700/10 bg-black dark:bg-slate-950/80 p-4 sm:p-6 shadow-xl"
+              className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-950 p-4 sm:p-6 shadow-xl"
             >
               <div className="mb-4 flex items-center justify-between">
                 <h3 id="badge-form-title" className="pixel-section-title text-lg">
@@ -1431,7 +1451,7 @@ export default function BadgeManagerPanel() {
                                 'pixel-button btn-xs transition-colors',
                                 selected
                                   ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-100'
-                                  : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-200 dark:border-white/10',
+                                  : 'border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 text-slate-900 dark:text-white/70 hover:border-slate-300 dark:hover:border-white/20',
                               )}
                               onClick={() => handleChainToggle(option.value)}
                               disabled={formBusy || uploadBusy}
@@ -1444,7 +1464,7 @@ export default function BadgeManagerPanel() {
                       <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
                         <button
                           type="button"
-                          className="pixel-button btn-xs border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white/70 hover:border-white dark:border-slate-700/25"
+                          className="pixel-button btn-xs border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white/70 hover:border-white/80 dark:hover:border-slate-700/25"
                           onClick={handleSelectAllChains}
                           disabled={formBusy || uploadBusy}
                         >
@@ -1452,7 +1472,7 @@ export default function BadgeManagerPanel() {
                         </button>
                         <button
                           type="button"
-                          className="pixel-button btn-xs border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white/70 hover:border-white dark:border-slate-700/25"
+                          className="pixel-button btn-xs border-white dark:border-slate-700/15 bg-slate-100/10 dark:bg-white/5 text-slate-950 dark:text-white/70 hover:border-white/80 dark:hover:border-slate-700/25"
                           onClick={handleClearChains}
                           disabled={formBusy || uploadBusy}
                         >
@@ -1661,6 +1681,56 @@ function deriveMetadataFields(raw: unknown): MetadataDerived {
   }
 
   return derived
+}
+
+// Notification helper
+function notify(options: { type: 'success' | 'error'; title: string; message?: string }) {
+  if (options.type === 'success') {
+    toast.success(options.title, { description: options.message })
+  } else {
+    toast.error(options.title, { description: options.message })
+  }
+}
+
+// Focus trap hook for accessibility
+function useFocusTrap(isActive: boolean) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isActive || !ref.current) return
+
+    const element = ref.current
+    const focusableElements = element.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement?.focus()
+          e.preventDefault()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement?.focus()
+          e.preventDefault()
+        }
+      }
+    }
+
+    element.addEventListener('keydown', handleTabKey)
+    firstElement?.focus()
+
+    return () => {
+      element.removeEventListener('keydown', handleTabKey)
+    }
+  }, [isActive])
+
+  return ref
 }
 
 // @edit-end

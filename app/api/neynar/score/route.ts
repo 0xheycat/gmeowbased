@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { withErrorHandler, handleValidationError, handleNotFoundError, handleExternalApiError } from '@/lib/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +36,7 @@ function getTierFromScore(score: number): TierType {
  * - Common: <0.3
  */
 export const GET = withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId()
   const { searchParams } = new URL(request.url)
   const fidParam = searchParams.get('fid')
 
@@ -119,24 +121,31 @@ export const GET = withErrorHandler(async (request: Request) => {
     // Calculate tier
     const tier = getTierFromScore(finalScore)
 
-    return NextResponse.json({
-      fid: fidNumber,
-      score: finalScore,
-      tier,
-      metrics: {
-        followerCount,
-        followingCount,
-        powerBadge: hasPowerBadge,
-        verifications: verifications.length,
-        activeStatus,
-        engagementRatio: followingCount > 0 
-          ? Math.round((followerCount / followingCount) * 100) / 100 
-          : null,
+    return NextResponse.json(
+      {
+        fid: fidNumber,
+        score: finalScore,
+        tier,
+        metrics: {
+          followerCount,
+          followingCount,
+          powerBadge: hasPowerBadge,
+          verifications: verifications.length,
+          activeStatus,
+          engagementRatio: followingCount > 0 
+            ? Math.round((followerCount / followingCount) * 100) / 100 
+            : null,
+        },
+        breakdown: {
+          baseScore: Math.min(followerCount / 2000, 0.5),
+          powerBadgeBonus: hasPowerBadge ? 0.3 : 0,
+          engagementBonus: finalScore - Math.min(followerCount / 2000, 0.5) - (hasPowerBadge ? 0.3 : 0),
+        },
       },
-    breakdown: {
-      baseScore: Math.min(followerCount / 2000, 0.5),
-      powerBadgeBonus: hasPowerBadge ? 0.3 : 0,
-      engagementBonus: finalScore - Math.min(followerCount / 2000, 0.5) - (hasPowerBadge ? 0.3 : 0),
-    },
-  })
+      {
+        headers: {
+          'X-Request-ID': requestId,
+        },
+      }
+    )
 })

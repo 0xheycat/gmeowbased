@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const revalidate = 0
@@ -30,13 +31,14 @@ type IdentifyResponse = {
  * 3. Session cookies
  */
 export const GET = withErrorHandler(async (req: NextRequest): Promise<NextResponse<IdentifyResponse>> => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { ok: false, error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -60,7 +62,7 @@ export const GET = withErrorHandler(async (req: NextRequest): Promise<NextRespon
         return NextResponse.json({
           ok: false,
           error: 'Invalid FID format'
-        }, { status: 400 })
+        }, { status: 400, headers: { 'X-Request-ID': requestId } })
       }
       
       try {
@@ -98,6 +100,7 @@ export const GET = withErrorHandler(async (req: NextRequest): Promise<NextRespon
                   'access-control-allow-origin': '*',
                   'access-control-allow-methods': 'GET, OPTIONS',
                   'cache-control': 'public, max-age=60',
+                  'X-Request-ID': requestId,
                 },
               })
             }
@@ -126,6 +129,7 @@ export const GET = withErrorHandler(async (req: NextRequest): Promise<NextRespon
           'access-control-allow-origin': '*',
           'access-control-allow-methods': 'GET, OPTIONS',
           'cache-control': 'public, max-age=30',
+          'X-Request-ID': requestId,
         },
       })
     }
@@ -140,6 +144,7 @@ export const GET = withErrorHandler(async (req: NextRequest): Promise<NextRespon
         'access-control-allow-origin': '*',
         'access-control-allow-methods': 'GET, OPTIONS',
         'cache-control': 'no-store',
+        'X-Request-ID': requestId,
       },
     })
 })

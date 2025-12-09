@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserBadges } from '@/lib/badges'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,7 @@ const MAX_BADGES_PER_USER = 5
 const MAX_USERS_PER_REQUEST = 50
 
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
   try {
     const { searchParams } = new URL(request.url)
     const fidsParam = searchParams.get('fids')
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (!fidsParam) {
       return NextResponse.json(
         { error: 'Missing required parameter: fids' },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -38,7 +40,7 @@ export async function GET(request: NextRequest) {
     if (fids.length === 0) {
       return NextResponse.json(
         { error: 'No valid FIDs provided' },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -82,6 +84,7 @@ export async function GET(request: NextRequest) {
       {
         status: 200,
         headers: {
+          'X-Request-ID': requestId,
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600', // 5min cache
         },
       }
@@ -90,7 +93,7 @@ export async function GET(request: NextRequest) {
     console.error('[BadgesAPI] Unexpected error:', error)
     return NextResponse.json(
       { error: 'Internal server error', success: false },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }

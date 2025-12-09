@@ -490,6 +490,8 @@ async function fetchMintLogsForChain(chain: ChainKey, address: `0x${string}`): P
   if (chainStart > fromBlock) fromBlock = chainStart
   if (fromBlock > latest) return []
 
+  // Only Base chain is supported for badges (standalone architecture)
+  if (chain !== 'base') return []
   const contract = CONTRACT_ADDRESSES[chain]
   const logs = await rpcTimeout(
     client.getLogs({

@@ -18,7 +18,7 @@ You've spent **4 days on foundation-rebuild** and created **28 commits** with **
 
 ### Your Current Code Says:
 ```typescript
-// lib/gm-utils.ts line 33
+// lib/gmeow-utils.ts line 33
 export type ChainKey = 
   | 'base' 
   | 'optimism' 

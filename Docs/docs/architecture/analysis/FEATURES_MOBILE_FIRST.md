@@ -26,7 +26,7 @@ Replaced the old quest creator intro (`MegaIntro`) with a new **5-stage onboardi
 
 #### Onboarding Stages
 
-**Stage 1: Welcome to Gmeow Adventure**
+**Stage 1: Welcome to Gmeowbased Adventure**
 - **Points**: 10 XP base + 5 XP bonus
 - **Features**:
   - Send daily GM to earn base reward

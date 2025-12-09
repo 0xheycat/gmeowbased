@@ -2,78 +2,21 @@
 pragma solidity 0.8.23;
 
 import "./BaseModule.sol";
+import "../libraries/CoreLogicLib.sol";
 
 /**
  * @title CoreModule
- * @notice Core quest, points, and profile management functionality
- * @dev Contains quest creation, completion, points system, profiles, FID linking, and GM system
+ * @notice Optimized Core with essential features (<24KB)
+ * @dev Removed non-essential functions to fit EVM size limit
  */
 abstract contract CoreModule is BaseModule {
 
-  // ============ ADMIN FUNCTIONS ============
-
-  function scheduleOracleChange(address newSigner) external onlyOwner {
-    if (newSigner == address(0)) revert ZeroAddressNotAllowed();
-    if (newSigner == oracleSigner) revert ValueOutOfRange();
-    pendingOracleSigner = newSigner;
-    oracleChangeTime = block.timestamp + ADMIN_TIMELOCK;
-    emit OracleChangeScheduled(newSigner, oracleChangeTime);
-  }
-
-  function executeOracleChange() external onlyOwner {
-    if (pendingOracleSigner == address(0)) revert NoPendingOracleChange();
-    if (block.timestamp < oracleChangeTime) revert TimelockActive();
-    
-    oracleSigner = pendingOracleSigner;
-    authorizedOracles[oracleSigner] = true;
-    emit OracleSignerUpdated(oracleSigner);
-    emit OracleAuthorized(oracleSigner, true);
-    
-    pendingOracleSigner = address(0);
-    oracleChangeTime = 0;
-  }
+  // ============ ADMIN FUNCTIONS (Essential Only) ============
 
   function setAuthorizedOracle(address oracle, bool authorized) external onlyOwner {
     if (oracle == address(0)) revert ZeroAddressNotAllowed();
-    if (authorizedOracles[oracle] == authorized) revert ValueOutOfRange();
     authorizedOracles[oracle] = authorized;
     emit OracleAuthorized(oracle, authorized);
-  }
-
-  function setPowerBadgeForFid(uint256 fid, bool val) external onlyOwner {
-    if (fid == 0) revert ZeroAmountNotAllowed();
-    if (powerBadge[fid] == val) revert ValueOutOfRange();
-    powerBadge[fid] = val;
-    emit PowerBadgeSet(fid, val);
-  }
-
-  function setTokenWhitelistEnabled(bool enabled) external onlyOwner {
-    if (tokenWhitelistEnabled == enabled) revert ValueOutOfRange();
-    tokenWhitelistEnabled = enabled;
-  }
-
-  function addTokenToWhitelist(address token, bool allowed) external onlyOwner {
-    if (token == address(0)) revert ZeroAddressNotAllowed();
-    if (tokenWhitelist[token] == allowed) revert ValueOutOfRange();
-    tokenWhitelist[token] = allowed;
-    emit TokenWhitelisted(token, allowed);
-  }
-
-  function withdrawContractReserve(address to, uint256 amount) external onlyOwner {
-    if (to == address(0)) revert ZeroAddressNotAllowed();
-    if (amount == 0) revert ZeroAmountNotAllowed();
-    if (amount > contractPointsReserve) revert InsufficientReserve();
-    
-    contractPointsReserve -= amount;
-    pointsBalance[to] += amount;
-    emit PointsWithdrawn(to, amount);
-  }
-
-  function emergencyWithdrawToken(address token, address to, uint256 amount) external onlyOwner {
-    if (token == address(0)) revert ZeroAddressNotAllowed();
-    if (to == address(0)) revert ZeroAddressNotAllowed();
-    if (amount == 0) revert ZeroAmountNotAllowed();
-    IERC20(token).transfer(to, amount);
   }
 
   function setGMConfig(uint256 reward, uint256 cooldown) external onlyOwner {
@@ -82,14 +25,27 @@ abstract contract CoreModule is BaseModule {
     gmCooldown = cooldown;
   }
 
-  function setGMBonusTiers(uint16 bonus7, uint16 bonus30, uint16 bonus100) external onlyOwner {
-    if (bonus7 > 1000 || bonus30 > 1000 || bonus100 > 2000) revert ValueOutOfRange();
-    streak7BonusPct = bonus7;
-    streak30BonusPct = bonus30;
-    streak100BonusPct = bonus100;
-  }
-
   // ============ POINTS MANAGEMENT ============
+
+  mapping(address => bool) public authorizedContracts;
+  event ContractAuthorized(address indexed contractAddr, bool status);
+  
+  function authorizeContract(address contractAddr, bool status) external onlyOwner {
+    if (contractAddr == address(0)) revert ZeroAddressNotAllowed();
+    authorizedContracts[contractAddr] = status;
+    emit ContractAuthorized(contractAddr, status);
+  }
+  
+  function deductPoints(address from, uint256 amount) external {
+    require(authorizedContracts[msg.sender], "Unauthorized contract");
+    if (pointsBalance[from] < amount) revert InsufficientPoints();
+    pointsBalance[from] -= amount;
+  }
+  
+  function addPoints(address to, uint256 amount) external {
+    require(authorizedContracts[msg.sender], "Unauthorized contract");
+    pointsBalance[to] += amount;
+  }
 
   function depositTo(address to, uint256 amount) external onlyOwner {
     if (to == address(0)) revert ZeroAddressNotAllowed();
@@ -100,44 +56,13 @@ abstract contract CoreModule is BaseModule {
 
   // ============ PROFILE & FID ============
 
-  function updateUserProfile(
-    string calldata name_,
-    string calldata bio_,
-    string calldata twitter_,
-    string calldata pfpUrl_
-  ) external {
-    UserProfile storage p = userProfiles[msg.sender];
-    p.name = name_;
-    p.bio = bio_;
-    p.twitter = twitter_;
-    p.pfpUrl = pfpUrl_;
-    p.hasCustomProfile = true;
-    p.joinDate = block.timestamp;
-  }
-
-  function getUserProfile(address user) external view returns (
-    string memory name,
-    string memory bio,
-    string memory twitter,
-    string memory pfpUrl,
-    uint256 joinDate,
-    bool hasCustomProfile,
-    uint256 farcasterFid
-  ) {
-    UserProfile storage p = userProfiles[user];
-    return (p.name, p.bio, p.twitter, p.pfpUrl, p.joinDate, p.hasCustomProfile, p.farcasterFid);
-  }
-
   function setFarcasterFid(uint256 fid) external whenNotPaused nonReentrant {
     if (fid == 0) revert ZeroAmountNotAllowed();
-    
     farcasterFidOf[msg.sender] = fid;
-    
     if (fid < OG_THRESHOLD) {
       uint256 tokenId = badgeContract.mint(msg.sender, "OG-Caster");
       emit BadgeMinted(msg.sender, tokenId, "OG-Caster");
     }
-    
     emit FIDLinked(msg.sender, fid);
   }
 
@@ -147,432 +72,132 @@ abstract contract CoreModule is BaseModule {
     string calldata name,
     uint8 questType,
     uint256 target,
-    uint256 rewardPointsPerUser,
+    uint256 rewardPoints,
     uint256 maxCompletions,
     uint256 expiresAt,
     string calldata meta
   ) external whenNotPaused returns (uint256) {
     require(bytes(name).length > 0, "Name required");
-    require(rewardPointsPerUser > 0, "Reward must be > 0");
+    require(rewardPoints > 0, "Reward must be > 0");
     require(
       expiresAt == 0 || (expiresAt > block.timestamp && expiresAt <= block.timestamp + 365 days),
-      "Invalid expiration: must be 0 or within 365 days"
+      "Invalid expiration"
     );
 
-    uint256 totalEscrow = rewardPointsPerUser * maxCompletions;
-    require(pointsBalance[msg.sender] >= totalEscrow, "Insufficient points to fund quest");
+    uint256 totalEscrow = rewardPoints * maxCompletions;
+    require(pointsBalance[msg.sender] >= totalEscrow, "Insufficient points");
 
     pointsBalance[msg.sender] -= totalEscrow;
     contractPointsReserve += totalEscrow;
 
-    _nextQuestId += 1;
-    uint256 qid = _nextQuestId;
-
+    uint256 qid = _nextQuestId++;
     Quest storage q = quests[qid];
+    q.creator = msg.sender;
     q.name = name;
     q.questType = questType;
     q.target = target;
-    q.rewardPoints = rewardPointsPerUser;
-    q.creator = msg.sender;
+    q.rewardPoints = rewardPoints;
     q.maxCompletions = maxCompletions;
     q.expiresAt = expiresAt;
-    q.meta = meta;
     q.isActive = true;
-    q.escrowedPoints = totalEscrow;
-    q.claimedCount = 0;
-    q.rewardToken = address(0); // Slither fix: initialize
-    q.rewardTokenPerUser = 0; // Slither fix: initialize
-    q.tokenEscrowRemaining = 0; // Slither fix: initialize
-
+    
     activeQuestIds.push(qid);
-
-    emit QuestAdded(qid, msg.sender, questType, rewardPointsPerUser, maxCompletions);
+    emit QuestAdded(qid, msg.sender, questType, rewardPoints, maxCompletions);
     return qid;
   }
 
-  function addQuestWithERC20(
-    string calldata name,
-    uint8 questType,
-    uint256 target,
-    uint256 rewardPointsPerUser,
-    uint256 maxCompletions,
-    uint256 expiresAt,
-    string calldata meta,
-    address rewardToken,
-    uint256 rewardTokenPerUser
-  ) external whenNotPaused returns (uint256) {
-    require(bytes(name).length > 0, "Name required");
-    require(rewardToken != address(0), "Token required");
-    require(rewardTokenPerUser > 0, "Token reward > 0");
-    require(maxCompletions > 0, "maxCompletions > 0");
-    require(
-      expiresAt == 0 || (expiresAt > block.timestamp && expiresAt <= block.timestamp + 365 days),
-      "Invalid expiration: must be 0 or within 365 days"
+  // ============ QUEST COMPLETION ============
+
+  function completeQuest(uint256 questId, bytes calldata oracleSignature) 
+    external 
+    whenNotPaused 
+    nonReentrant 
+  {
+    Quest storage q = quests[questId];
+    require(q.isActive, "Quest not active");
+    require(q.claimedCount < q.maxCompletions, "Max claims reached");
+    if (q.expiresAt > 0) require(block.timestamp <= q.expiresAt, "Quest expired");
+
+    bytes32 hash = keccak256(
+      abi.encodePacked(
+        questId,
+        msg.sender,
+        q.target,
+        userNonce[msg.sender]++
+      )
     );
-    if (tokenWhitelistEnabled) require(tokenWhitelist[rewardToken], "Token not whitelisted");
+    
+    bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(hash);
+    address signer = ECDSA.recover(ethSignedHash, oracleSignature);
+    require(authorizedOracles[signer], "Invalid oracle signature");
 
-    uint256 totalTokenEscrow = rewardTokenPerUser * maxCompletions;
+    q.claimedCount++;
 
-    uint256 currentBal = IERC20(rewardToken).balanceOf(msg.sender);
-    require(currentBal >= totalTokenEscrow, "Insufficient token balance");
-    uint256 allowance = IERC20(rewardToken).allowance(msg.sender, address(this));
-    require(allowance >= totalTokenEscrow, "Approve escrow first");
+    uint256 reward = q.rewardPoints;
+    contractPointsReserve -= reward;
+    pointsBalance[msg.sender] += reward;
+    userTotalEarned[msg.sender] += reward;
 
-    uint256 beforeBal = IERC20(rewardToken).balanceOf(address(this));
-    IERC20(rewardToken).transferFrom(msg.sender, address(this), totalTokenEscrow);
-    uint256 afterBal = IERC20(rewardToken).balanceOf(address(this));
-    uint256 received = afterBal - beforeBal;
-    require(received > 0, "Token transfer failed");
-
-    tokenBalances[rewardToken] += received;
-
-    _nextQuestId += 1;
-    uint256 qid = _nextQuestId;
-
-    Quest storage q = quests[qid];
-    q.name = name;
-    q.questType = questType;
-    q.target = target;
-    q.rewardPoints = rewardPointsPerUser;
-    q.creator = msg.sender;
-    q.maxCompletions = maxCompletions;
-    q.expiresAt = expiresAt;
-    q.meta = meta;
-    q.isActive = true;
-    q.escrowedPoints = rewardPointsPerUser * maxCompletions;
-    q.claimedCount = 0;
-    q.rewardToken = rewardToken;
-    q.rewardTokenPerUser = rewardTokenPerUser;
-    q.tokenEscrowRemaining = received;
-
-    activeQuestIds.push(qid);
-
-    emit QuestAddedERC20(qid, msg.sender, rewardToken, rewardTokenPerUser, maxCompletions);
-    emit ERC20EscrowDeposited(qid, rewardToken, received);
-    return qid;
+    emit QuestCompleted(questId, msg.sender, reward, farcasterFidOf[msg.sender], address(0), 0);
   }
 
-  // ============ QUEST READS ============
+  // ============ QUEST VIEWS ============
 
   function getQuest(uint256 questId) external view returns (
-    string memory, uint8, uint256, uint256, address, uint256, uint256, string memory, bool, address, uint256, uint256
+    address creator,
+    string memory name,
+    uint8 questType,
+    uint256 target,
+    uint256 rewardPoints,
+    uint256 maxCompletions,
+    uint256 claimedCount,
+    uint256 expiresAt,
+    bool isActive,
+    string memory metadata
   ) {
     Quest storage q = quests[questId];
     return (
-      q.name,
-      q.questType,
-      q.target,
-      q.rewardPoints,
-      q.creator,
-      q.maxCompletions,
-      q.expiresAt,
-      q.meta,
-      q.isActive,
-      q.rewardToken,
-      q.rewardTokenPerUser,
-      q.tokenEscrowRemaining
+      q.creator, q.name, q.questType, q.target,
+      q.rewardPoints, q.maxCompletions, q.claimedCount,
+      q.expiresAt, q.isActive, q.meta
     );
-  }
-
-  function getActiveQuests(uint256 offset, uint256 limit) 
-    external 
-    view 
-    returns (uint256[] memory quests_, uint256 total) 
-  {
-    require(limit > 0 && limit <= 100, "Limit must be 1-100");
-    
-    total = activeQuestIds.length;
-    uint256 end = offset + limit;
-    if (end > total) end = total;
-    if (offset >= total) return (new uint256[](0), total);
-    
-    quests_ = new uint256[](end - offset);
-    for (uint256 i = offset; i < end; i++) {
-      quests_[i - offset] = activeQuestIds[i];
-    }
   }
 
   function getAllActiveQuests() external view returns (uint256[] memory) {
     return activeQuestIds;
   }
 
-  function getUserEligibleQuests(address user, uint256 offset, uint256 limit) 
-    external 
-    view 
-    returns (uint256[] memory eligibleQuestIds, uint256 totalEligible) 
-  {
-    require(limit > 0 && limit <= 50, "Limit must be 1-50");
-    
-    uint256 count = 0;
-    for (uint256 i = 0; i < activeQuestIds.length; i++) {
-      uint256 qid = activeQuestIds[i];
-      Quest storage q = quests[qid];
-      
-      if (q.isActive && q.claimedCount < q.maxCompletions) {
-        if (q.expiresAt == 0 || block.timestamp <= q.expiresAt) {
-          count++;
-        }
-      }
-    }
-    
-    totalEligible = count;
-    if (offset >= count) return (new uint256[](0), totalEligible);
-    
-    uint256 end = offset + limit > count ? count : offset + limit;
-    eligibleQuestIds = new uint256[](end - offset);
-    
-    uint256 index = 0;
-    uint256 resultIndex = 0;
-    for (uint256 i = 0; i < activeQuestIds.length && resultIndex < end - offset; i++) {
-      uint256 qid = activeQuestIds[i];
-      Quest storage q = quests[qid];
-      
-      if (q.isActive && q.claimedCount < q.maxCompletions) {
-        if (q.expiresAt == 0 || block.timestamp <= q.expiresAt) {
-          if (index >= offset) {
-            eligibleQuestIds[resultIndex] = qid;
-            resultIndex++;
-          }
-          index++;
-        }
-      }
-    }
-  }
-
-  // ============ QUEST COMPLETION ============
-
-  function completeQuestWithSig(
-    uint256 questId,
-    address user,
-    uint256 fid,
-    uint8 action,
-    uint256 deadline,
-    uint256 nonce,
-    bytes calldata sig
-  ) external nonReentrant whenNotPaused {
-    if (user == address(0)) revert ZeroAddressNotAllowed();
-    if (hasMigrated[user]) revert AlreadyMigrated();
-    
-    Quest storage q = quests[questId];
-    
-    if (!q.isActive) revert QuestNotActive();
-    if (q.claimedCount >= q.maxCompletions) revert MaxCompletionsReached();
-    if (q.expiresAt != 0 && block.timestamp > q.expiresAt) revert QuestExpired();
-    
-    if (block.timestamp > deadline) revert SignatureExpired();
-    if (userNonce[user] != nonce) revert InvalidNonce();
-    
-    bytes32 hash = keccak256(
-      abi.encodePacked(
-        questId,
-        user,
-        fid,
-        action,
-        deadline,
-        nonce
-      )
-    );
-    bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(hash);
-    address recoveredSigner = ECDSA.recover(ethSignedHash, sig);
-    
-    bool validOracle = (recoveredSigner == oracleSigner) || authorizedOracles[recoveredSigner];
-    if (!validOracle) revert InvalidOracleSignature();
-    
-    userNonce[user] += 1;
-    emit NonceIncremented(user, userNonce[user]);
-    
-    q.claimedCount += 1;
-    
-    uint256 basePoints = q.rewardPoints;
-    bool hasPower = powerBadge[fid];
-    uint256 bonusPoints = 0;
-    if (hasPower) {
-      bonusPoints = (basePoints * 1875) / 10000;
-    }
-    
-    uint256 totalPoints = basePoints + bonusPoints;
-    
-    if (q.escrowedPoints < basePoints) revert InsufficientEscrow();
-    q.escrowedPoints -= basePoints;
-    
-    pointsBalance[user] += totalPoints;
-    userTotalEarned[user] += totalPoints;
-    contractPointsReserve -= basePoints;
-    
-    address tokenAddr = q.rewardToken;
-    uint256 tokenAmt = q.rewardTokenPerUser;
-    
-    if (tokenAddr != address(0) && tokenAmt > 0) {
-      if (q.tokenEscrowRemaining < tokenAmt) revert InsufficientEscrow();
-      q.tokenEscrowRemaining -= tokenAmt;
-      SafeERC20.safeTransfer(IERC20(tokenAddr), user, tokenAmt);
-      emit ERC20Payout(questId, user, tokenAddr, tokenAmt);
-    }
-    
-    emit QuestCompleted(questId, user, totalPoints, fid, tokenAddr, tokenAmt);
-  }
-
-  // ============ QUEST CLOSURE ============
+  // ============ QUEST MANAGEMENT ============
 
   function closeQuest(uint256 questId) external nonReentrant {
     Quest storage q = quests[questId];
-    
-    if (q.creator != msg.sender && owner() != msg.sender) revert InvalidOracleSignature();
-    if (!q.isActive) revert QuestNotActive();
-    
-    bytes32 actionId = keccak256(abi.encodePacked("CLOSE_QUEST", questId, msg.sender));
-    
-    if (timelockActions[actionId] == 0) {
-      timelockActions[actionId] = block.timestamp + QUEST_CLOSURE_TIMELOCK;
-      emit TimelockActionScheduled(actionId, timelockActions[actionId]);
-      return;
-    }
-    
-    if (block.timestamp < timelockActions[actionId]) revert TimelockActive();
-    
+    require(msg.sender == q.creator || msg.sender == owner(), "Not authorized");
+    require(q.isActive, "Quest not active");
+
     q.isActive = false;
-    delete timelockActions[actionId];
-    emit TimelockActionExecuted(actionId);
 
-    uint256 remainingPoints = q.escrowedPoints;
-    if (remainingPoints != 0) {
-      unchecked {
-        contractPointsReserve -= remainingPoints;
-        pointsBalance[q.creator] += remainingPoints;
-      }
-      q.escrowedPoints = 0;
+    uint256 unclaimedReward = (q.maxCompletions - q.claimedCount) * q.rewardPoints;
+    if (unclaimedReward > 0) {
+      contractPointsReserve -= unclaimedReward;
+      pointsBalance[q.creator] += unclaimedReward;
     }
 
-    address rToken = q.rewardToken;
-    uint256 tokenRefund = 0; // Slither fix: explicit initialization
-    
-    if (rToken != address(0) && q.tokenEscrowRemaining != 0) {
-      tokenRefund = q.tokenEscrowRemaining;
-      q.tokenEscrowRemaining = 0;
-      
-      unchecked {
-        tokenBalances[rToken] -= tokenRefund;
-      }
-    }
-    
+    _removeFromActiveQuests(questId);
     emit QuestClosed(questId);
-    
-    if (tokenRefund != 0) {
-      IERC20(rToken).transfer(q.creator, tokenRefund);
-      emit ERC20Refund(questId, q.creator, rToken, tokenRefund);
+  }
+
+  function _removeFromActiveQuests(uint256 questId) internal {
+    uint256 len = activeQuestIds.length;
+    for (uint256 i = 0; i < len; i++) {
+      if (activeQuestIds[i] == questId) {
+        activeQuestIds[i] = activeQuestIds[len - 1];
+        activeQuestIds.pop();
+        break;
+      }
     }
   }
 
-  function batchRefundQuests(uint256[] calldata questIds) external nonReentrant {
-    uint256 len = questIds.length;
-    if (len == 0) revert EmptyArray();
-    if (len > 50) revert ValueOutOfRange();
-    
-    for (uint256 i; i < len;) {
-      uint256 qid = questIds[i];
-      Quest storage q = quests[qid];
-      
-      if (q.creator != msg.sender && owner() != msg.sender) revert InvalidOracleSignature();
-      
-      if (!q.isActive) {
-        unchecked { ++i; }
-        continue;
-      }
-      
-      q.isActive = false;
-
-      uint256 remainingPoints = q.escrowedPoints;
-      if (remainingPoints != 0) {
-        unchecked {
-          contractPointsReserve -= remainingPoints;
-          pointsBalance[q.creator] += remainingPoints;
-        }
-        q.escrowedPoints = 0;
-      }
-
-      address rToken = q.rewardToken;
-      uint256 tokenRefund = 0; // Slither fix: explicit initialization
-      
-      if (rToken != address(0) && q.tokenEscrowRemaining != 0) {
-        tokenRefund = q.tokenEscrowRemaining;
-        q.tokenEscrowRemaining = 0;
-        
-        unchecked {
-          tokenBalances[rToken] -= tokenRefund;
-        }
-      }
-
-      emit QuestClosed(qid);
-      
-      if (tokenRefund != 0) {
-        IERC20(rToken).transfer(q.creator, tokenRefund);
-        emit ERC20Refund(qid, q.creator, rToken, tokenRefund);
-      }
-      
-      unchecked { ++i; }
-    }
-  }
-
-  function cleanupExpiredQuests(uint256[] calldata questIds) external nonReentrant {
-    uint256 len = questIds.length;
-    if (len == 0 || len > 50) revert ValueOutOfRange();
-    
-    for (uint256 i; i < len;) {
-      Quest storage q = quests[questIds[i]];
-      
-      if (q.isActive && q.expiresAt != 0 && block.timestamp > q.expiresAt) {
-        q.isActive = false;
-        
-        if (q.escrowedPoints != 0) {
-          unchecked {
-            contractPointsReserve -= q.escrowedPoints;
-            pointsBalance[q.creator] += q.escrowedPoints;
-          }
-          q.escrowedPoints = 0;
-        }
-        
-        address rToken = q.rewardToken;
-        uint256 tokenRefund = 0; // Slither fix: explicit initialization
-        
-        if (rToken != address(0) && q.tokenEscrowRemaining != 0) {
-          tokenRefund = q.tokenEscrowRemaining;
-          q.tokenEscrowRemaining = 0;
-          
-          unchecked {
-            tokenBalances[rToken] -= tokenRefund;
-          }
-        }
-        
-        emit QuestClosed(questIds[i]);
-        
-        if (tokenRefund != 0) {
-          IERC20(rToken).transfer(q.creator, tokenRefund);
-          emit ERC20Refund(questIds[i], q.creator, rToken, tokenRefund);
-        }
-      }
-      
-      unchecked { ++i; }
-    }
-  }
-
-  // ============ TIPPING & BADGES ============
-
-  function tipUser(address to, uint256 points, uint256 recipientFid) external whenNotPaused {
-    require(points > 0, "Points > 0");
-    require(pointsBalance[msg.sender] >= points, "Insufficient points");
-    pointsBalance[msg.sender] -= points;
-    pointsBalance[to] += points;
-    userTotalEarned[to] += points;
-    emit PointsTipped(msg.sender, to, points, recipientFid);
-  }
-
-  function mintBadgeFromPoints(uint256 pointsToBurn, string calldata badgeType) external whenNotPaused returns (uint256) {
-    require(pointsToBurn > 0, "Points > 0");
-    burnPoints(msg.sender, pointsToBurn);
-    uint256 tokenId = badgeContract.mint(msg.sender, badgeType);
-    emit BadgeMinted(msg.sender, tokenId, badgeType);
-    return tokenId;
-  }
+  // ============ STAKING ============
 
   function stakeForBadge(uint256 points, uint256 badgeId) external whenNotPaused {
     require(points > 0, "Points > 0");
@@ -601,47 +226,48 @@ abstract contract CoreModule is BaseModule {
 
   function sendGM() external nonReentrant whenNotPaused {
     uint256 last = lastGMTime[msg.sender];
-    if (block.timestamp < last + gmCooldown) revert GMCooldownActive();
+    require(block.timestamp >= last + gmCooldown, "Cooldown not met");
 
-    if (last > 0 && block.timestamp - last <= 2 days) {
-      gmStreak[msg.sender] += 1;
-    } else {
-      gmStreak[msg.sender] = 1;
-    }
     lastGMTime[msg.sender] = block.timestamp;
+    
+    uint256 currentStreak = gmStreak[msg.sender];
+    uint256 newStreak;
+    
+    if (last > 0 && block.timestamp <= last + gmCooldown + 1 days) {
+      newStreak = currentStreak + 1;
+    } else {
+      newStreak = 1;
+    }
+    
+    gmStreak[msg.sender] = newStreak;
 
-    uint256 reward = _computeGMReward(gmPointReward, gmStreak[msg.sender]);
+    uint256 reward = _computeGMReward(gmPointReward, newStreak);
     pointsBalance[msg.sender] += reward;
     userTotalEarned[msg.sender] += reward;
 
-    emit GMEvent(msg.sender, reward, gmStreak[msg.sender]);
-    emit GMSent(msg.sender, gmStreak[msg.sender], reward);
+    emit GMSent(msg.sender, reward, newStreak);
+    // emit PointsEarned(msg.sender, reward);
+  }
+
+  function _computeGMReward(uint256 base, uint256 streak) internal view returns (uint256) {
+    uint256 bonusPct = 0;
+    if (streak >= 100) bonusPct = streak100BonusPct;
+    else if (streak >= 30) bonusPct = streak30BonusPct;
+    else if (streak >= 7) bonusPct = streak7BonusPct;
+    
+    unchecked {
+      return base + ((base * bonusPct) / 100);
+    }
   }
 
   function gmhistory(address user) external view returns (uint256 last, uint256 streak) {
     return (lastGMTime[user], gmStreak[user]);
   }
 
-  function _computeGMReward(uint256 base, uint256 streak) internal view returns (uint256) {
-    if (base == 0) return 0;
-    uint256 bonusPct = 0;
-    if (streak >= 100) bonusPct = streak100BonusPct;
-    else if (streak >= 30) bonusPct = streak30BonusPct;
-    else if (streak >= 7) bonusPct = streak7BonusPct;
-    
-    uint256 bonus = (base * bonusPct) / 100;
-    require(base + bonus >= base, "Reward overflow");
-    return base + bonus;
-  }
-
-  // ============ UTILITY FUNCTIONS ============
+  // ============ VIEWS ============
 
   function getUserStats(address user) external view returns (uint256 availablePoints, uint256 lockedPoints, uint256 totalEarned) {
     return (pointsBalance[user], pointsLocked[user], userTotalEarned[user]);
-  }
-
-  function tokenEscrowOf(address token) external view returns (uint256) {
-    return tokenBalances[token];
   }
 
   function pause() external onlyOwner { _pause(); }

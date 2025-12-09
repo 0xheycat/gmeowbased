@@ -13,6 +13,11 @@ export function ConnectWallet() {
   const [connectingId, setConnectingId] = useState<string | null>(null)
   const triedAutoRef = useRef(false)
   const [miniappReady, setMiniappReady] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -58,10 +63,12 @@ export function ConnectWallet() {
     setConnectError(null)
   }, [connectError])
 
-  // Auto-connect in Farcaster Mini App (or if a previous session exists)
+  // Auto-connect in Farcaster Mini App ONLY (not on web refresh)
   useEffect(() => {
     if (triedAutoRef.current) return
     if (isConnected || !availableConnectors.length) return
+    // CRITICAL: Only auto-connect when in miniapp context
+    if (!miniappReady) return
     const farcaster =
       availableConnectors.find(
         (c: any) =>
@@ -82,7 +89,7 @@ export function ConnectWallet() {
         setConnectingId(null)
       }
     }, 0)
-  }, [isConnected, availableConnectors, connect, connectAsync])
+  }, [isConnected, availableConnectors, connect, connectAsync, miniappReady])
 
   const handleConnect = async (connector: any) => {
     if (typeof connector?.ready === 'boolean' && !connector.ready) {
@@ -112,31 +119,45 @@ export function ConnectWallet() {
   // Simple fallback button (keeps your list, but the first is usually Farcaster in miniapps)
   return (
     <div className="relative w-full site-font">
-      <div className="grid grid-cols-1 gap-2 w-full">
-        {availableConnectors.map((c) => (
+      {!mounted ? (
+        // Server/initial render - show loading state
+        <div className="grid grid-cols-1 gap-2 w-full">
           <button
-            key={c.id}
             type="button"
-            onClick={() => handleConnect(c)}
-            disabled={!!connectingId}
+            disabled
             className="pixel-button w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {connectingId === c.id || connectingId === 'auto'
-              ? `Connecting ${c.name}…`
-              : `Connect ${c.name}`}
+            Loading...
           </button>
-        ))}
-        {!miniappReady && (
-          <p className="text-[11px] text-[var(--px-sub)] text-center">
-            Wallet connection is available when this experience runs inside Warpcast.
-          </p>
-        )}
-        {miniappReady && !availableConnectors.length && (
-          <p className="text-[11px] text-[var(--px-sub)] text-center">
-            No compatible wallets detected in this environment.
-          </p>
-        )}
-      </div>
+        </div>
+      ) : (
+        // Client render - show actual connectors
+        <div className="grid grid-cols-1 gap-2 w-full">
+          {availableConnectors.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => handleConnect(c)}
+              disabled={!!connectingId}
+              className="pixel-button w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {connectingId === c.id || connectingId === 'auto'
+                ? `Connecting ${c.name}…`
+                : `Connect ${c.name}`}
+            </button>
+          ))}
+          {!miniappReady && (
+            <p className="text-[11px] text-[var(--px-sub)] text-center">
+              Wallet connection is available when this experience runs inside Warpcast.
+            </p>
+          )}
+          {miniappReady && !availableConnectors.length && (
+            <p className="text-[11px] text-[var(--px-sub)] text-center">
+              No compatible wallets detected in this environment.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

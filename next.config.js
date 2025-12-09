@@ -79,6 +79,12 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'warpcast.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.warpcast.com',
         port: '',
         pathname: '/**',
@@ -140,6 +146,18 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '*.seadn.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ipfs.decentralized-content.com',
         port: '',
         pathname: '/**',
       },

@@ -15,6 +15,7 @@ import { resolveBotSignerUuid } from '@/lib/neynar-bot'
 import { getUserBadges } from '@/lib/badges'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
@@ -55,11 +56,15 @@ function generateCastText(params: { fid: string; tier: TierType; badgeName?: str
 }
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   let body: BadgeShareRequest
   try {
     body = (await req.json()) as BadgeShareRequest
   } catch {
-    return NextResponse.json({ ok: false, error: 'Invalid JSON payload' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'Invalid JSON payload' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   // Validate required fields
@@ -67,19 +72,25 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   if (!fid || !badgeId || !tier) {
     return NextResponse.json(
       { ok: false, error: 'Missing required fields: fid, badgeId, tier' },
-      { status: 400 }
+      { status: 400, headers: { 'X-Request-ID': requestId } }
     )
   }
 
   const fidNumber = parseInt(fid, 10)
   if (isNaN(fidNumber) || fidNumber <= 0) {
-    return NextResponse.json({ ok: false, error: 'Invalid fid' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'Invalid fid' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   // Validate tier
   const validTiers: TierType[] = ['mythic', 'legendary', 'epic', 'rare', 'common']
   if (!validTiers.includes(tier)) {
-    return NextResponse.json({ ok: false, error: 'Invalid tier' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'Invalid tier' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   // Verify bot signer configured
@@ -87,7 +98,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   if (!signerUuid) {
     return NextResponse.json(
       { ok: false, error: 'Bot signer UUID not configured on server' },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -98,7 +109,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   if (!ownsBadge) {
     return NextResponse.json(
       { ok: false, error: 'User does not own this badge' },
-      { status: 403 }
+      { status: 403, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -140,14 +151,21 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     console.error('[badge-share] Failed to log cast to database:', logError)
   }
 
-  return NextResponse.json({
-    ok: true,
-    cast: {
-      hash: castHash,
-      url: castUrl,
-      text,
-      embedUrl: ogImageUrl,
+  return NextResponse.json(
+    {
+      ok: true,
+      cast: {
+        hash: castHash,
+        url: castUrl,
+        text,
+        embedUrl: ogImageUrl,
+      },
+      publishedAt: new Date().toISOString(),
     },
-    publishedAt: new Date().toISOString(),
-  })
+    {
+      headers: {
+        'X-Request-ID': requestId,
+      },
+    }
+  )
 })

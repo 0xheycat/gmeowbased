@@ -47,26 +47,34 @@ abstract contract ReferralModule is BaseModule {
     require(referrer != address(0) && referrer != msg.sender, "E016");
     referrerOf[msg.sender] = referrer;
 
-    pointsBalance[referrer] += referralPointReward;
-    pointsBalance[msg.sender] += referralPointReward / 2;
+    // Add points using unified helper (works in both architectures)
+    uint256 referrerReward = referralPointReward;
+    uint256 refereeReward = referralPointReward / 2;
+    _addPoints(referrer, referrerReward);
+    _addPoints(msg.sender, refereeReward);
+    
     referralStats[referrer].totalReferred += 1;
-    referralStats[referrer].totalPointsEarned += referralPointReward;
+    referralStats[referrer].totalPointsEarned += referrerReward;
 
+    // Cache storage variable to save gas
     uint256 total = referralStats[referrer].totalReferred;
-    if (total == 1 && referralTierClaimed[referrer] < 1) {
+    uint8 currentTier = referralTierClaimed[referrer];
+    
+    if (total == 1 && currentTier < 1) {
       uint256 tid = badgeContract.mint(referrer, "Bronze Recruiter");
       emit BadgeMinted(referrer, tid, "Bronze Recruiter");
       referralTierClaimed[referrer] = 1;
-    } else if (total == 5 && referralTierClaimed[referrer] < 2) {
+    } else if (total == 5 && currentTier < 2) {
       uint256 tid = badgeContract.mint(referrer, "Silver Recruiter");
       emit BadgeMinted(referrer, tid, "Silver Recruiter");
       referralTierClaimed[referrer] = 2;
-    } else if (total == 10 && referralTierClaimed[referrer] < 3) {
+    } else if (total == 10 && currentTier < 3) {
       uint256 tid = badgeContract.mint(referrer, "Gold Recruiter");
       emit BadgeMinted(referrer, tid, "Gold Recruiter");
       referralTierClaimed[referrer] = 3;
     }
 
     emit ReferrerSet(msg.sender, referrer);
+    emit ReferralRewardClaimed(referrer, msg.sender, referrerReward, 0);
   }
 }

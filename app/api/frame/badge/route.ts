@@ -14,6 +14,7 @@ import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
 import { buildDynamicFrameImageUrl } from '@/lib/share'
+import { generateRequestId } from '@/lib/request-id'
 
 /**
  * Farcaster Frame: Badge Showcase
@@ -24,11 +25,15 @@ import { buildDynamicFrameImageUrl } from '@/lib/share'
  * - If badgeId omitted: Shows latest badge
  */
 export const GET = withErrorHandler(async (request: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
-    return new NextResponse('Rate limit exceeded', { status: 429 })
+    return new NextResponse('Rate limit exceeded', { 
+      status: 429,
+      headers: { 'X-Request-ID': requestId }
+    })
   }
 
   const { searchParams } = new URL(request.url)

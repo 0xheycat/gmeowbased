@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+import { generateRequestId } from '@/lib/request-id'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { loadBotStatsConfig, saveBotStatsConfig, sanitiseBotStatsConfigInput } from '@/lib/bot-config'
@@ -21,13 +22,14 @@ function toErrorMessage(error: unknown, fallback: string): string {
 }
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -38,21 +40,22 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   try {
     const config = await loadBotStatsConfig({ refresh: true })
-    return NextResponse.json({ ok: true, config })
+    return NextResponse.json({ ok: true, config }, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     console.warn('[bot-config] Failed to load config for admin panel:', (error as Error)?.message || error)
-    return NextResponse.json({ ok: true, config: { ...DEFAULT_BOT_STATS_CONFIG }, warning: toErrorMessage(error, 'Falling back to defaults.') })
+    return NextResponse.json({ ok: true, config: { ...DEFAULT_BOT_STATS_CONFIG }, warning: toErrorMessage(error, 'Falling back to defaults.') }, { headers: { 'X-Request-ID': requestId } })
   }
 })
 
 export const PUT = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -65,7 +68,7 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
   try {
     payload = await req.json()
   } catch {
-    return NextResponse.json({ ok: false, error: 'invalid_json', message: 'Request body must be valid JSON.' }, { status: 400 })
+    return NextResponse.json({ ok: false, error: 'invalid_json', message: 'Request body must be valid JSON.' }, { status: 400, headers: { 'X-Request-ID': requestId } })
   }
 
   // Validate input with Zod
@@ -73,7 +76,7 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
   if (!validation.success) {
     return NextResponse.json(
       { ok: false, error: 'validation_error', issues: validation.error.issues },
-      { status: 400 }
+      { status: 400, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -81,9 +84,9 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
 
   try {
     await saveBotStatsConfig(config)
-    return NextResponse.json({ ok: true, config })
+    return NextResponse.json({ ok: true, config }, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     const message = toErrorMessage(error, 'Unable to persist bot stats configuration.')
-    return NextResponse.json({ ok: false, error: 'save_failed', message }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'save_failed', message }, { status: 500, headers: { 'X-Request-ID': requestId } })
   }
 })

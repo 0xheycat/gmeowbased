@@ -55,6 +55,13 @@
     "test:cache": "tsx ./scripts/test-frame-cache.ts",
     "warmup": "./scripts/warmup-frames.sh",
     "warmup:local": "./scripts/warmup-frames.sh http://localhost:3002",
+    "badges:generate": "tsx ./scripts/badges/generate-badges.ts",
+    "badges:convert": "tsx ./scripts/badges/convert-to-png.ts",
+    "badges:all": "npm run badges:generate && npm run badges:convert",
+    "contracts:verify": "./scripts/verify-contracts.sh",
+    "contracts:verify:all": "./scripts/verify-all-contracts.sh",
+    "contracts:validate": "npx tsx ./scripts/validate-bytecode.ts",
+    "contracts:test": "tsx ./scripts/test-contracts-professional.ts",
     "prebuild": "npm run clean && npm run lint",
     "clean": "rimraf .next"
   },

@@ -4,19 +4,21 @@ import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { AddressSchema } from '@/lib/validation/api-schemas'
 import { fetchMintedBadges } from '@/lib/badges'
 import { CHAIN_IDS, type ChainKey, isAddress } from '@/lib/gmeow-utils'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
 type RouteContext = { params: Promise<{ address?: string | string[] }> }
 
 export async function GET(req: NextRequest, context: RouteContext) {
+  const requestId = generateRequestId();
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -27,7 +29,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
   // Validate address format
   const addressValidation = AddressSchema.safeParse(addressParam)
   if (!addressValidation.success || !isAddress(addressParam)) {
-    return NextResponse.json({ ok: false, error: 'invalid_address' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'invalid_address' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   try {
@@ -61,11 +66,17 @@ export async function GET(req: NextRequest, context: RouteContext) {
     return NextResponse.json(
       { ok: true, address: addressParam.toLowerCase(), badges: payload },
       {
-        headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' },
+        headers: {
+          'cache-control': 's-maxage=30, stale-while-revalidate=60',
+          'X-Request-ID': requestId,
+        },
       }
     )
   } catch (error) {
     const message = (error as Error)?.message || 'Failed to load badge history'
-    return NextResponse.json({ ok: false, error: message }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: message },
+      { status: 500, headers: { 'X-Request-ID': requestId } }
+    )
   }
 }

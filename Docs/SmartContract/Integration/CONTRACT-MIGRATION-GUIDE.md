@@ -58,7 +58,7 @@ contract GmeowNFT {
 
 ### 🔄 Files That Need Updating
 
-#### 1. **`lib/gm-utils.ts`**
+#### 1. **`lib/gmeow-utils.ts`**
 
 **Current:**
 ```typescript
@@ -155,7 +155,7 @@ vercel env add NEXT_PUBLIC_GM_BASE_GUILD production
 vercel env add NEXT_PUBLIC_GM_BASE_NFT production
 ```
 
-### Step 2: Update `lib/gm-utils.ts`
+### Step 2: Update `lib/gmeow-utils.ts`
 
 ```typescript
 // Option A: Import from contract-config (recommended)

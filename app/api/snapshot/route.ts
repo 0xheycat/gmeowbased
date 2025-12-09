@@ -5,6 +5,7 @@ import { validateAdminRequest } from '@/lib/admin-auth'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { extractHttpErrorMessage } from '@/lib/http-error'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 import {
   buildRequirement,
   runPartnerSnapshot,
@@ -54,15 +55,19 @@ type SnapshotPayload = {
 }
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
       { ok: false, error: 'supabase_not_configured', message: 'Supabase environment variables are not configured.' },
-      { status: 500 },
+      { status: 500, headers: { 'X-Request-ID': requestId } },
     )
   }
 
@@ -70,7 +75,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   if (!supabase) {
     return NextResponse.json(
       { ok: false, error: 'supabase_client_unavailable', message: 'Failed to initialise Supabase client.' },
-      { status: 500 },
+      { status: 500, headers: { 'X-Request-ID': requestId } },
     )
   }
 
@@ -78,36 +83,54 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   try {
     json = await req.json()
   } catch {
-    return NextResponse.json({ ok: false, error: 'invalid_json' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'invalid_json' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const partnerName = (json.partnerName || '').trim()
   if (!partnerName) {
-    return NextResponse.json({ ok: false, error: 'partner_name_required' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'partner_name_required' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const chains = Array.isArray(json.chains) ? json.chains.map(chain => `${chain}`.trim()).filter(Boolean) : []
   if (!chains.length) {
-    return NextResponse.json({ ok: false, error: 'chains_required' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'chains_required' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const requirementInput = json.requirement || {}
   const kind = requirementInput.kind as PartnerRequirementKind | undefined
   if (!kind) {
-    return NextResponse.json({ ok: false, error: 'requirement_kind_required' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'requirement_kind_required' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   let requirement
   try {
     requirement = buildRequirement(kind, requirementInput)
   } catch (error) {
-    return NextResponse.json({ ok: false, error: 'invalid_requirement', message: (error as Error)?.message }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'invalid_requirement', message: (error as Error)?.message },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const maxCount =
     json.maxAddressesPerChain == null ? undefined : Number(json.maxAddressesPerChain)
   if (maxCount !== undefined && (!Number.isFinite(maxCount) || maxCount <= 0)) {
-    return NextResponse.json({ ok: false, error: 'invalid_max_addresses_per_chain' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: 'invalid_max_addresses_per_chain' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   try {
@@ -123,23 +146,33 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
     const serializedSummary: PartnerSnapshotSummaryPayload = serializePartnerSnapshotSummary(summary)
 
-    return NextResponse.json({ ok: true, summary: serializedSummary })
+    return NextResponse.json(
+      { ok: true, summary: serializedSummary },
+      { headers: { 'X-Request-ID': requestId } }
+    )
   } catch (error) {
     const message = extractHttpErrorMessage(error, 'Failed to generate partner snapshot')
-    return NextResponse.json({ ok: false, error: 'snapshot_failed', message }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: 'snapshot_failed', message },
+      { status: 500, headers: { 'X-Request-ID': requestId } }
+    )
   }
 })
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
       { ok: false, error: 'supabase_not_configured', message: 'Supabase environment variables are not configured.' },
-      { status: 500 },
+      { status: 500, headers: { 'X-Request-ID': requestId } },
     )
   }
 
@@ -147,7 +180,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   if (!supabase) {
     return NextResponse.json(
       { ok: false, error: 'supabase_client_unavailable', message: 'Failed to initialise Supabase client.' },
-      { status: 500 },
+      { status: 500, headers: { 'X-Request-ID': requestId } },
     )
   }
 
@@ -164,7 +197,10 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     .limit(seedLimit)
 
   if (seedError) {
-    return NextResponse.json({ ok: false, error: 'history_fetch_failed', message: seedError.message }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: 'history_fetch_failed', message: seedError.message },
+      { status: 500, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const distinctSnapshots = new Map<string, {
@@ -203,7 +239,10 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   }
 
   if (!distinctSnapshots.size) {
-    return NextResponse.json({ ok: true, history: [] })
+    return NextResponse.json(
+      { ok: true, history: [] },
+      { headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const snapshotSummaries = Array.from(distinctSnapshots.values())
@@ -219,7 +258,10 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     .limit(Math.max(snapshotIds.length * 2_000, 1_000))
 
   if (detailError) {
-    return NextResponse.json({ ok: false, error: 'history_detail_failed', message: detailError.message }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: 'history_detail_failed', message: detailError.message },
+      { status: 500, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const statsMap = new Map<string, SnapshotHistorySummary>()
@@ -282,5 +324,8 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     return snapshot
   })
 
-  return NextResponse.json({ ok: true, history })
+  return NextResponse.json(
+    { ok: true, history },
+    { headers: { 'X-Request-ID': requestId } }
+  )
 })

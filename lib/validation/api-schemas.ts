@@ -219,11 +219,6 @@ export const AdminLoginSchema = z.object({
   remember: z.boolean().optional(),
 })
 
-// Maintenance auth schema
-export const MaintenanceAuthSchema = z.object({
-  password: z.string().min(1, 'Password is required'),
-})
-
 // Season query schema
 export const SeasonQuerySchema = z.object({
   chain: ChainSchema.optional(),

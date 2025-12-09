@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 // @edit-start 2025-02-14 — Agent community events API
 import { COMMUNITY_EVENT_TYPES, type CommunityEventType } from '@/lib/community-event-types'
@@ -26,6 +27,7 @@ function parseTypes(value: string | null): CommunityEventType[] | null {
 }
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
+  const requestId = generateRequestId()
   const url = new URL(request.url)
   const limitParam = parseLimit(url.searchParams.get('limit'))
   const sinceParam = url.searchParams.get('since')
@@ -37,12 +39,19 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     types: typesParam,
   })
 
-  return NextResponse.json({
-    ok: true,
-    events: result.events,
-    meta: result.meta,
-    fetchedAt: result.fetchedAt,
-    nextCursor: result.nextCursor,
-  })
+  return NextResponse.json(
+    {
+      ok: true,
+      events: result.events,
+      meta: result.meta,
+      fetchedAt: result.fetchedAt,
+      nextCursor: result.nextCursor,
+    },
+    {
+      headers: {
+        'X-Request-ID': requestId,
+      },
+    }
+  )
 })
 // @edit-end

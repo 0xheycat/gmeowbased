@@ -78,7 +78,7 @@
 **Results**:
 - **5 chains supported**: Base, Optimism, Celo, Unichain, Ink
 - **Consistent chain keys**: `base`, `op`, `celo`, `unichain`, `ink`
-- **Centralized config** in `lib/gm-utils.ts`:
+- **Centralized config** in `lib/gmeow-utils.ts`:
   - `CHAIN_IDS`: Numeric chain IDs (8453, 10, 42220, 130, 57073)
   - `CONTRACT_ADDRESSES`: GM contract per chain (from env vars with fallbacks)
   - `CHAIN_LABEL`: Display names for UI

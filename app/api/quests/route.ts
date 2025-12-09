@@ -12,6 +12,7 @@ import { QuestListQuerySchema } from '@/lib/validation/api-schemas';
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit';
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
 import { ZodError } from 'zod';
+import { generateRequestId } from '@/lib/request-id';
 
 interface QuestFilters {
   category?: 'onchain' | 'social';
@@ -24,6 +25,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+  const requestId = generateRequestId();
   const clientIp = getClientIp(request);
   
   try {
@@ -102,10 +104,11 @@ export async function GET(request: NextRequest) {
       count: quests.length,
     });
     
-    // Add rate limit headers
+    // Add rate limit and request ID headers
     response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit || 60));
     response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining || 60));
     response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset || Date.now() + 60000));
+    response.headers.set('X-Request-ID', requestId);
     
     return response;
     

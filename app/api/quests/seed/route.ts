@@ -9,11 +9,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit';
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
+import { generateRequestId } from '@/lib/request-id';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  const requestId = generateRequestId();
   const clientIp = getClientIp(request);
   
   try {
@@ -29,6 +31,7 @@ export async function POST(request: NextRequest) {
         type: ErrorType.AUTHORIZATION,
         message: 'Seeding is only available in development mode',
         statusCode: 403,
+        requestId,
       });
     }
     
@@ -48,6 +51,7 @@ export async function POST(request: NextRequest) {
         type: ErrorType.RATE_LIMIT,
         message: 'Too many seed requests. Please try again later.',
         statusCode: 429,
+        requestId,
         details: {
           limit: rateLimitResult.limit,
           remaining: 0,
@@ -83,10 +87,11 @@ export async function POST(request: NextRequest) {
       },
     });
     
-    // Add rate limit headers
+    // Add rate limit and request ID headers
     response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit || 10));
     response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining || 10));
     response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset || Date.now() + 60000));
+    response.headers.set('X-Request-ID', requestId);
     
     return response;
     
@@ -104,6 +109,7 @@ export async function POST(request: NextRequest) {
       type: ErrorType.INTERNAL,
       message: 'Failed to seed quests',
       statusCode: 500,
+      requestId,
       details: process.env.NODE_ENV === 'development' ? {
         error: error instanceof Error ? error.message : String(error)
       } : undefined,

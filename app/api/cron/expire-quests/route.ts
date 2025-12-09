@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit, strictLimiter } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/rate-limit';
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency';
+import { generateRequestId } from '@/lib/request-id';
 
 /**
  * Quest Expiry Cron Job
@@ -59,6 +61,7 @@ function verifyGitHubActionsIP(request: NextRequest): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId();
   const startTime = Date.now();
   const ip = getClientIp(request);
   
@@ -77,6 +80,7 @@ export async function POST(request: NextRequest) {
         { 
           status: 429,
           headers: {
+            'X-Request-ID': requestId,
             'X-RateLimit-Limit': String(rateLimitResult.limit),
             'X-RateLimit-Remaining': String(rateLimitResult.remaining),
             'X-RateLimit-Reset': String(rateLimitResult.reset),
@@ -90,7 +94,7 @@ export async function POST(request: NextRequest) {
       console.error(`[Quest Expiry] Unauthorized request from IP: ${ip}`);
       return NextResponse.json(
         { error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401, headers: { 'X-Request-ID': requestId } }
       );
     }
     
@@ -99,11 +103,22 @@ export async function POST(request: NextRequest) {
       console.error(`[Quest Expiry] Request from non-whitelisted IP: ${ip}`);
       return NextResponse.json(
         { error: 'Forbidden - Invalid source IP' },
-        { status: 403 }
+        { status: 403, headers: { 'X-Request-ID': requestId } }
       );
     }
     
-    console.log(`[Quest Expiry] Authorized request from IP: ${ip}`);
+    // Security Layer 4: Idempotency check (CRITICAL - prevents double point refunds)
+    const now = new Date();
+    const dateKey = now.toISOString().slice(0, 13).replace(/[-:T]/g, ''); // YYYYMMDDHH
+    const idempotencyKey = `cron-expire-quests-${dateKey}`;
+    
+    const idempotencyResult = await checkIdempotency(idempotencyKey);
+    if (idempotencyResult.exists) {
+      console.log(`[Quest Expiry] Replaying cached result for key: ${idempotencyKey} (prevented double refund)`);
+      return returnCachedResponse(idempotencyResult);
+    }
+    
+    console.log(`[Quest Expiry] Authorized request from IP: ${ip} - processing quest expirations`);
 
     // Initialize Supabase client with service role
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -133,7 +148,7 @@ export async function POST(request: NextRequest) {
           error: error.message,
           duration: `${Date.now() - startTime}ms`
         },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       );
     }
 
@@ -148,13 +163,18 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [Quest Expiry] Complete: ${expiredCount || 0} quests expired in ${duration}ms from IP: ${ip}`);
 
-    return NextResponse.json({
+    const response = {
       success: true,
       expired_count: expiredCount || 0,
       duration: `${duration}ms`,
       timestamp: new Date().toISOString(),
       source_ip: ip // Include for audit trail
-    });
+    };
+    
+    // Store result for idempotency (24h cache TTL, prevents double refunds)
+    await storeIdempotency(idempotencyKey, response, 200);
+
+    return NextResponse.json(response, { headers: { 'X-Request-ID': requestId } });
 
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -167,13 +187,14 @@ export async function POST(request: NextRequest) {
         duration: `${duration}ms`,
         timestamp: new Date().toISOString()
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     );
   }
 }
 
 // Allow GET for health check
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId();
   const ip = getClientIp(request);
   
   // Rate limit health checks too
@@ -181,7 +202,7 @@ export async function GET(request: NextRequest) {
   if (!rateLimitResult.success) {
     return NextResponse.json(
       { error: 'Too many requests' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     );
   }
   
@@ -190,7 +211,7 @@ export async function GET(request: NextRequest) {
     console.error(`[Quest Expiry Health] Unauthorized from IP: ${ip}`);
     return NextResponse.json(
       { error: 'Unauthorized' },
-      { status: 401 }
+      { status: 401, headers: { 'X-Request-ID': requestId } }
     );
   }
 
@@ -204,7 +225,7 @@ export async function GET(request: NextRequest) {
         status: 'error',
         message: 'Supabase configuration missing'
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     );
   }
 
@@ -222,7 +243,7 @@ export async function GET(request: NextRequest) {
         message: 'Database connection failed',
         error: error.message
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     );
   }
 
@@ -231,7 +252,7 @@ export async function GET(request: NextRequest) {
     message: 'Quest expiry cron endpoint ready',
     total_quests: count,
     timestamp: new Date().toISOString()
-  });
+  }, { headers: { 'X-Request-ID': requestId } });
 }
 
 export const runtime = 'nodejs';

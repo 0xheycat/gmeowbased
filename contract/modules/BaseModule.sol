@@ -11,11 +11,13 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../SoulboundBadge.sol";
 import "../GmeowNFT.sol";
+import "../interfaces/ICoreContract.sol";
 
 /**
  * @title BaseModule
  * @notice Shared errors, events, structs, and state variables for all modules
  * @dev All modules inherit from this to share common data structures
+ * @dev ENHANCED: Supports both proxy and standalone architectures via cross-contract helpers
  */
 abstract contract BaseModule is Ownable2Step, Pausable, ReentrancyGuard {
   using ECDSA for bytes32;
@@ -164,6 +166,11 @@ abstract contract BaseModule is Ownable2Step, Pausable, ReentrancyGuard {
   SoulboundBadge public badgeContract;
   GmeowNFT public nftContract;
 
+  function setBadgeContract(address _badge) external onlyOwner {
+    require(_badge != address(0), "Invalid address");
+    badgeContract = SoulboundBadge(_badge);
+  }
+
   mapping(address => mapping(uint256 => uint256)) public stakedForBadge;
   mapping(address => uint256) public userNonce;
 
@@ -211,6 +218,78 @@ abstract contract BaseModule is Ownable2Step, Pausable, ReentrancyGuard {
   }
 
   // ============ INTERNAL HELPERS ============
+
+  /**
+   * @notice Get core contract address for standalone deployments
+   * @dev Override this in standalone contracts (Guild, NFT, etc.)
+   * @return Core contract address, or address(0) for proxy deployments
+   */
+  function _getCoreContract() internal view virtual returns (address) {
+    return address(0); // Default: proxy deployment (no external core)
+  }
+  
+  /**
+   * @notice Check if this is a standalone deployment
+   * @return True if standalone, false if proxy
+   */
+  function _isStandalone() internal view returns (bool) {
+    address core = _getCoreContract();
+    return core != address(0) && core != address(this);
+  }
+  
+  /**
+   * @notice Get user's point balance (works in both architectures)
+   * @param user Address to check
+   * @return Point balance
+   */
+  function _getUserPoints(address user) internal view returns (uint256) {
+    if (_isStandalone()) {
+      // Standalone: Read from Core contract
+      address core = _getCoreContract();
+      try ICoreContract(core).pointsBalance(user) returns (uint256 balance) {
+        return balance;
+      } catch {
+        // Fallback to local storage if call fails
+        return pointsBalance[user];
+      }
+    }
+    // Proxy: Use local storage
+    return pointsBalance[user];
+  }
+  
+  /**
+   * @notice Deduct points from user (works in both architectures)
+   * @param from Address to deduct from
+   * @param amount Amount to deduct
+   */
+  function _deductPoints(address from, uint256 amount) internal {
+    if (_isStandalone()) {
+      // Standalone: Deduct from Core contract
+      address core = _getCoreContract();
+      ICoreContract(core).deductPoints(from, amount);
+    } else {
+      // Proxy: Deduct from local storage
+      if (pointsBalance[from] < amount) revert InsufficientPoints();
+      pointsBalance[from] -= amount;
+    }
+  }
+  
+  /**
+   * @notice Add points to user (works in both architectures)
+   * @param to Address to add to
+   * @param amount Amount to add
+   */
+  function _addPoints(address to, uint256 amount) internal {
+    if (_isStandalone()) {
+      // Standalone: Add to Core contract
+      address core = _getCoreContract();
+      ICoreContract(core).addPoints(to, amount);
+    } else {
+      // Proxy: Add to local storage
+      pointsBalance[to] += amount;
+    }
+  }
+
   function burnPoints(address from, uint256 amount) internal {
     if (pointsBalance[from] < amount) revert InsufficientPoints();
     pointsBalance[from] -= amount;

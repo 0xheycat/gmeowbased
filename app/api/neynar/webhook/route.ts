@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { parseWebhookEvent, verifyAppKeyWithNeynar } from '@farcaster/miniapp-node'
 import { rateLimit, getClientIp, webhookLimiter } from '@/lib/rate-limit'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 import { loadBotStatsConfig } from '@/lib/bot-config'
 import { buildAgentAutoReply } from '@/lib/agent-auto-reply'
@@ -217,7 +218,7 @@ async function handleMiniAppNotificationEvent(
   return null
 }
 
-async function tryHandleMiniAppEvent(parsedBody: unknown): Promise<NextResponse | null> {
+async function tryHandleMiniAppEvent(parsedBody: unknown, requestId: string): Promise<NextResponse | null> {
   try {
     const hasDirectEvent =
       parsedBody &&
@@ -239,7 +240,7 @@ async function tryHandleMiniAppEvent(parsedBody: unknown): Promise<NextResponse 
         console.warn('[neynar-webhook] Received encoded miniapp event but NEYNAR_API_KEY is not set')
         return NextResponse.json(
           { ok: false, error: 'miniapp-event-unverified', reason: 'missing-api-key' },
-          { status: 500 },
+          { status: 500, headers: { 'X-Request-ID': requestId } },
         )
       }
 
@@ -260,10 +261,10 @@ async function tryHandleMiniAppEvent(parsedBody: unknown): Promise<NextResponse 
     const result = await handleMiniAppNotificationEvent(payload, fid, appFid)
     if (!result) return null
 
-    return NextResponse.json({ ok: true, handled: result.type, meta: result.meta })
+    return NextResponse.json({ ok: true, handled: result.type, meta: result.meta }, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     console.error('[neynar-webhook] miniapp event handling failed', error)
-    return NextResponse.json({ ok: false, error: 'miniapp-event-failed' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'miniapp-event-failed' }, { status: 500, headers: { 'X-Request-ID': requestId } })
   }
 }
 
@@ -457,32 +458,33 @@ async function handleViralEngagementSync(
 // ============================================================================
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, webhookLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
   const secret = resolveWebhookSecret()
   if (!secret) {
     console.error('[neynar-webhook] Missing NEYNAR_WEBHOOK_SECRET')
-    return NextResponse.json({ ok: false, error: 'server not configured' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'server not configured' }, { status: 500, headers: { 'X-Request-ID': requestId } })
   }
 
   const signature = req.headers.get(SIGNATURE_HEADER)
   if (!signature) {
-    return NextResponse.json({ ok: false, error: 'missing signature header' }, { status: 400 })
+    return NextResponse.json({ ok: false, error: 'missing signature header' }, { status: 400, headers: { 'X-Request-ID': requestId } })
   }
 
   const rawBody = await req.text()
   const expectedSignature = computeSignature(rawBody, secret)
   const signatureValid = safeCompareHex(signature, expectedSignature)
   if (!signatureValid) {
-    return NextResponse.json({ ok: false, error: 'invalid signature' }, { status: 401 })
+    return NextResponse.json({ ok: false, error: 'invalid signature' }, { status: 401, headers: { 'X-Request-ID': requestId } })
   }
 
   let parsedBody: unknown
@@ -490,28 +492,28 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     parsedBody = JSON.parse(rawBody)
   } catch (error) {
     console.warn('[neynar-webhook] Failed to parse payload', error)
-    return NextResponse.json({ ok: false, error: 'invalid payload' }, { status: 400 })
+    return NextResponse.json({ ok: false, error: 'invalid payload' }, { status: 400, headers: { 'X-Request-ID': requestId } })
   }
 
-  const miniAppResponse = await tryHandleMiniAppEvent(parsedBody)
+  const miniAppResponse = await tryHandleMiniAppEvent(parsedBody, requestId)
   if (miniAppResponse) {
     return miniAppResponse
   }
 
   if (!parsedBody || typeof parsedBody !== 'object') {
-    return NextResponse.json({ ok: false, error: 'unsupported body' }, { status: 400 })
+    return NextResponse.json({ ok: false, error: 'unsupported body' }, { status: 400, headers: { 'X-Request-ID': requestId } })
   }
 
   const event = parsedBody as NeynarWebhookEvent
 
   const eventType = event.type || event.event_type
   if (eventType !== 'cast.created') {
-    return NextResponse.json({ ok: true, skipped: `ignored:${eventType || 'unknown'}` })
+    return NextResponse.json({ ok: true, skipped: `ignored:${eventType || 'unknown'}` }, { headers: { 'X-Request-ID': requestId } })
   }
 
   const data = event.data
   if (!data || !data.hash) {
-    return NextResponse.json({ ok: false, error: 'missing cast data' }, { status: 400 })
+    return NextResponse.json({ ok: false, error: 'missing cast data' }, { status: 400, headers: { 'X-Request-ID': requestId } })
   }
 
   // ========================================================================
@@ -533,18 +535,18 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const botFid = resolveBotFid()
   if (!botFid) {
     console.warn('[neynar-webhook] Missing bot FID; skipping reply')
-    return NextResponse.json({ ok: true, skipped: 'missing-bot-fid' })
+    return NextResponse.json({ ok: true, skipped: 'missing-bot-fid' }, { headers: { 'X-Request-ID': requestId } })
   }
 
   if (authorIsBot(data, botFid)) {
     console.log('[bot-webhook] Skipping self-cast from bot FID:', botFid)
-    return NextResponse.json({ ok: true, skipped: 'self-cast' })
+    return NextResponse.json({ ok: true, skipped: 'self-cast' }, { headers: { 'X-Request-ID': requestId } })
   }
 
   const signerUuid = resolveBotSignerUuid()
   if (!signerUuid) {
     console.warn('[neynar-webhook] Missing signer UUID; skipping reply')
-    return NextResponse.json({ ok: true, skipped: 'missing-signer-uuid' })
+    return NextResponse.json({ ok: true, skipped: 'missing-signer-uuid' }, { headers: { 'X-Request-ID': requestId } })
   }
 
   // Load config early - needed for targeting check
@@ -559,7 +561,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       botFid,
       mentions: data.mentioned_profiles?.map(p => p.fid),
     })
-    return NextResponse.json({ ok: true, skipped: 'bot-not-targeted' })
+    return NextResponse.json({ ok: true, skipped: 'bot-not-targeted' }, { headers: { 'X-Request-ID': requestId } })
   }
   
   console.log('[bot-webhook] Cast IS targeted to bot:', {
@@ -613,7 +615,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
         ok: true,
         skipped: autoReply.reason,
         detail: autoReply.detail ?? null,
-      })
+      }, { headers: { 'X-Request-ID': requestId } })
     }
   } catch (error) {
     console.warn('[neynar-webhook] auto reply pipeline failed, falling back', (error as Error)?.message || error)
@@ -634,7 +636,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   }
 
   if (!replyText) {
-    return NextResponse.json({ ok: true, skipped: 'empty-reply' })
+    return NextResponse.json({ ok: true, skipped: 'empty-reply' }, { headers: { 'X-Request-ID': requestId } })
   }
 
   try {
@@ -662,7 +664,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       hash: response.cast?.hash ?? null, 
       meta: replyMeta,
       frameEmbedded: frameEmbeds.length > 0
-    })
+    }, { headers: { 'X-Request-ID': requestId } })
   } catch (error: any) {
     const isDuplicate = error?.status === 409 || error?.response?.status === 409
     console.error('[neynar-webhook] Failed to publish reply', {
@@ -681,7 +683,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
         text: replyText,
         frameEmbeds: frameEmbeds.length > 0 ? frameEmbeds : undefined,
       }, 
-      { status: isDuplicate ? 200 : 502 }
+      { status: isDuplicate ? 200 : 502, headers: { 'X-Request-ID': requestId } }
     )
   }
 })

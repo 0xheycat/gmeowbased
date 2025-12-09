@@ -5,6 +5,7 @@ import { BadgeAssignSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { invalidateCache, buildUserBadgesKey, getCached, buildUserProfileKey } from '@/lib/cache'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +27,7 @@ type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
  * - Cache invalidation on assignment
  */
 export const POST = withTiming(withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId();
   const body = await request.json()
   
   // Validate input with Zod
@@ -38,7 +40,7 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
           error: 'Invalid input',
           details: validationResult.error.issues
         },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -48,7 +50,7 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
     if (!supabase) {
       return NextResponse.json(
         { success: false, error: 'Database not configured' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -58,7 +60,7 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
     if (!badgeDef) {
       return NextResponse.json(
         { success: false, error: `Badge ${badgeId} not found in registry` },
-        { status: 404 }
+        { status: 404, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -108,5 +110,7 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
     return NextResponse.json({
       success: true,
       badge,
+    }, {
+      headers: { 'X-Request-ID': requestId }
     })
 }))

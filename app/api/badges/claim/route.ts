@@ -5,6 +5,7 @@ import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { mintBadgeOnChain } from '@/lib/contract-mint'
 import { z } from 'zod'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -34,6 +35,7 @@ const ClaimBadgeSchema = z.object({
  * }
  */
 export const POST = withTiming(withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId();
   const body = await request.json()
   
   // Validate input
@@ -46,7 +48,7 @@ export const POST = withTiming(withErrorHandler(async (request: Request) => {
         error: 'Invalid input',
         details: validationResult.error.issues
       },
-      { status: 400 }
+      { status: 400, headers: { 'X-Request-ID': requestId } }
     )
   }
 

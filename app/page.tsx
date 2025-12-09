@@ -1,12 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
 import dynamic from 'next/dynamic'
-import { OnchainHub } from '@/components/home/OnchainHub'
-import type { FAQItem, GuildPreview, LeaderboardEntry, QuestPreview } from '@/components/home/types'
+import { HeroWalletFirst } from '@/components/home/HeroWalletFirst'
+import { PlatformStats } from '@/components/home/PlatformStats'
 
 // Below-fold sections - dynamically loaded to improve initial page load
+const OnchainHub = dynamic(() => import('@/components/home/OnchainHub').then(mod => ({ default: mod.OnchainHub })), {
+  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
+})
+
 const HowItWorks = dynamic(() => import('@/components/home/HowItWorks').then(mod => ({ default: mod.HowItWorks })), {
   loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
 })
@@ -27,53 +29,7 @@ const FAQSection = dynamic(() => import('@/components/home/FAQSection').then(mod
   loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-96 mx-auto max-w-6xl my-16" />,
 })
 
-const ConnectWalletSection = dynamic(() => import('@/components/home/ConnectWalletSection').then(mod => ({ default: mod.ConnectWalletSection })), {
-  loading: () => <div className="animate-pulse bg-slate-100/5 dark:bg-white/5 rounded-lg h-64 mx-auto max-w-6xl my-16" />,
-})
-
-const QUEST_PREVIEWS: QuestPreview[] = [
-  {
-    questId: 101,
-    title: 'Send your GM from Base',
-    reward: 15,
-    questType: 'FARCASTER_CAST',
-    chain: 'base',
-    href: '/Quest/base/101',
-  },
-  {
-    questId: 202,
-    title: 'Charge your guild vault',
-    reward: 120,
-    questType: 'GENERIC',
-    chain: 'op',
-    href: '/Quest/op/202',
-  },
-  {
-    questId: 305,
-    title: 'Share the Command Deck frame',
-    reward: 40,
-    questType: 'FARCASTER_FRAME_INTERACT',
-    chain: 'unichain',
-    href: '/Quest/unichain/305',
-  },
-]
-
-const GUILD_PREVIEWS: GuildPreview[] = [
-  { id: 'moon-cats', name: 'Moon Cats', members: 420, points: 18200, href: '/Guild' },
-  { id: 'warp-rangers', name: 'Warp Rangers', members: 188, points: 15420, href: '/Guild' },
-  { id: 'base-cadets', name: 'Base Cadets', members: 256, points: 13980, href: '/Guild' },
-  { id: 'optimistic-paws', name: 'Optimistic Paws', members: 98, points: 9600, href: '/Guild' },
-]
-
-const LEADERBOARD_PREVIEW: LeaderboardEntry[] = [
-  { rank: 1, username: 'gmeow', points: 48210, badgeCount: 9 },
-  { rank: 2, username: 'moonshot', points: 43100, badgeCount: 7 },
-  { rank: 3, username: 'warpqueen', points: 39880, badgeCount: 6 },
-  { rank: 4, username: 'ceramic', points: 35220, badgeCount: 4 },
-  { rank: 5, username: 'meowmatrix', points: 31840, badgeCount: 5 },
-]
-
-const FAQ_ITEMS: FAQItem[] = [
+const FAQ_ITEMS = [
   {
     question: 'What are Gmeow Points?',
     answer:
@@ -101,35 +57,36 @@ const FAQ_ITEMS: FAQItem[] = [
 ]
 
 function HomePage() {
-  const { address, isConnected } = useAccount()
-  const [statsLoading, setStatsLoading] = useState(false)
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    setHydrated(true)
-  }, [])
-
-  const handleStatsLoading = useCallback((loading: boolean) => {
-    setStatsLoading(loading)
-  }, [])
-
-  const isWalletConnected = Boolean(isConnected && address)
-
   return (
-    <>
-      <div className="page-root">
-        <main>
-          <OnchainHub loading={statsLoading} onLoadingChange={handleStatsLoading} />
-          <HowItWorks />
-          <LiveQuests quests={QUEST_PREVIEWS} />
-          <GuildsShowcase guilds={GUILD_PREVIEWS} />
-          <LeaderboardSection leaders={LEADERBOARD_PREVIEW} />
-          <FAQSection items={FAQ_ITEMS} />
-          {hydrated ? <ConnectWalletSection connected={isWalletConnected} /> : null}
-        </main>
-      </div>
-    </>
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      <main>
+        {/* Hero - Wallet-first with dual CTAs */}
+        <HeroWalletFirst />
+
+        {/* Platform Stats - Live data with animated counters */}
+        <PlatformStats />
+
+        {/* OnchainHub - Multi-chain wallet analytics */}
+        <OnchainHub />
+
+        {/* How It Works - 3 steps with SVG icons */}
+        <HowItWorks />
+
+        {/* Live Quests - Featured quests with filters */}
+        <LiveQuests />
+
+        {/* Top Guilds - Live guild leaderboard */}
+        <GuildsShowcase />
+
+        {/* Leaderboard - Top 5 users preview */}
+        <LeaderboardSection />
+
+        {/* FAQ - Common questions */}
+        <FAQSection items={FAQ_ITEMS} />
+      </main>
+    </div>
   )
 }
 
 export default HomePage
+

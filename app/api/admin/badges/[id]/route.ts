@@ -6,6 +6,8 @@ import { deleteBadgeTemplate, getBadgeTemplateById, invalidateBadgeCaches, updat
 import { validateAdminRequest } from '@/lib/admin-auth'
 import { CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
 import type { BadgeTemplateInput } from '@/lib/badges'
+import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/idempotency'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
@@ -75,51 +77,80 @@ async function resolveId(context: RouteContext): Promise<string> {
 }
 
 export async function GET(req: NextRequest, context: RouteContext) {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   try {
     const id = await resolveId(context)
     const template = await getBadgeTemplateById(id)
     if (!template) {
-      return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 })
+      return NextResponse.json(
+        { ok: false, error: 'not_found' },
+        { status: 404, headers: { 'X-Request-ID': requestId } }
+      )
     }
-    return NextResponse.json({ ok: true, template })
+    return NextResponse.json(
+      { ok: true, template },
+      { headers: { 'X-Request-ID': requestId } }
+    )
   } catch (error) {
     const message = (error as Error)?.message || 'Failed to load badge template'
-    return NextResponse.json({ ok: false, error: message }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: message },
+      { status: 500, headers: { 'X-Request-ID': requestId } }
+    )
   }
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   try {
+    const id = await resolveId(context)
+    
+    // Idempotency check (prevents double updates on retry)
+    const baseKey = getIdempotencyKey(req)
+    const idempotencyKey = baseKey || `admin-badge-patch-${id}-${Date.now()}`
+    
+    const idempotencyResult = await checkIdempotency(idempotencyKey)
+    if (idempotencyResult.exists) {
+      console.log(`[Admin Badges PATCH] Replaying cached response for key: ${idempotencyKey}`)
+      return returnCachedResponse(idempotencyResult)
+    }
+    
     const body = await req.json()
     
     // Zod validation
@@ -131,43 +162,72 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
           error: 'Invalid badge update data',
           details: validation.error.flatten()
         },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
     
     const updates = normalizeInput(body, true)
-    const id = await resolveId(context)
     const template = await updateBadgeTemplate(id, updates)
     await invalidateBadgeCaches()
-    return NextResponse.json({ ok: true, template })
+    
+    const response = { ok: true, template }
+    
+    // Store result for idempotency (24h cache TTL)
+    await storeIdempotency(idempotencyKey, response, 200)
+    
+    return NextResponse.json(response, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     const message = (error as Error)?.message || 'Failed to update badge template'
     const status = /must|Unsupported|exists/i.test(message) ? 400 : 500
-    return NextResponse.json({ ok: false, error: message }, { status })
+    return NextResponse.json(
+      { ok: false, error: message },
+      { status, headers: { 'X-Request-ID': requestId } }
+    )
   }
 }
 
 export async function DELETE(req: NextRequest, context: RouteContext) {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, error: 'admin_auth_required', reason: auth.reason },
+      { status: 401, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   try {
     const id = await resolveId(context)
+    
+    // Idempotency check (prevents double deletion on retry)
+    const baseKey = getIdempotencyKey(req)
+    const idempotencyKey = baseKey || `admin-badge-delete-${id}-${Date.now()}`
+    
+    const idempotencyResult = await checkIdempotency(idempotencyKey)
+    if (idempotencyResult.exists) {
+      console.log(`[Admin Badges DELETE] Replaying cached response for key: ${idempotencyKey}`)
+      return returnCachedResponse(idempotencyResult)
+    }
+    
     await deleteBadgeTemplate(id)
     await invalidateBadgeCaches()
-    return NextResponse.json({ ok: true })
+    
+    const response = { ok: true }
+    
+    // Store result for idempotency (24h cache TTL)
+    await storeIdempotency(idempotencyKey, response, 200)
+    
+    return NextResponse.json(response)
   } catch (error) {
     const message = (error as Error)?.message || 'Failed to delete badge template'
     return NextResponse.json({ ok: false, error: message }, { status: 500 })

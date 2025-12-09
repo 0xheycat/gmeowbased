@@ -11,6 +11,7 @@ import { getQuestBySlug } from '@/lib/supabase/queries/quests';
 import { QuestProgressCheckSchema } from '@/lib/validation/api-schemas';
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit';
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
+import { generateRequestId } from '@/lib/request-id';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   const startTime = Date.now();
+  const requestId = generateRequestId();
   const clientIp = getClientIp(request);
   const slug = params.slug;
   
@@ -39,6 +41,7 @@ export async function POST(
         type: ErrorType.RATE_LIMIT,
         message: 'Too many requests. Please try again later.',
         statusCode: 429,
+        requestId,
         details: {
           limit: rateLimitResult.limit,
           remaining: 0,
@@ -56,6 +59,7 @@ export async function POST(
         type: ErrorType.VALIDATION,
         message: 'Invalid JSON body',
         statusCode: 400,
+        requestId,
       });
     }
     
@@ -67,6 +71,7 @@ export async function POST(
         type: ErrorType.VALIDATION,
         message: 'Invalid request body',
         statusCode: 400,
+        requestId,
         details: validationResult.error.flatten(),
       });
     }
@@ -77,6 +82,7 @@ export async function POST(
         type: ErrorType.VALIDATION,
         message: 'Invalid quest slug format',
         statusCode: 400,
+        requestId,
         details: { expected: 'quest-{number}' },
       });
     }
@@ -131,10 +137,11 @@ export async function POST(
       message: statusMessage,
     });
     
-    // Add rate limit headers
+    // Add rate limit and request ID headers
     response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit || 60));
     response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining || 60));
     response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset || Date.now() + 60000));
+    response.headers.set('X-Request-ID', requestId);
     
     return response;
     

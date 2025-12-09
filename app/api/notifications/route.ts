@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseEdgeClient } from '@/lib/supabase'
+import { generateRequestId } from '@/lib/request-id'
 
 /**
  * GET /api/notifications
@@ -11,8 +12,12 @@ import { getSupabaseEdgeClient } from '@/lib/supabase'
  * - category: Filter by category (quest, badge, guild, reward, tip, streak, level)
  * - limit: Max results (default 50, max 100)
  * - includeDismissed: Include dismissed notifications (default false)
+ * 
+ * Performance: 30s cache TTL (notifications update frequently, user-specific)
  */
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
+  
   try {
     const searchParams = request.nextUrl.searchParams
     const fid = searchParams.get('fid')
@@ -61,7 +66,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { error: 'Failed to fetch notifications', details: error.message },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -85,6 +90,11 @@ export async function GET(request: NextRequest) {
       notifications,
       count: notifications.length,
       limit,
+    }, {
+      headers: {
+        'X-Request-ID': requestId,
+        'Cache-Control': 's-maxage=30, stale-while-revalidate=60'
+      }
     })
   } catch (err) {
     return NextResponse.json(
@@ -92,7 +102,7 @@ export async function GET(request: NextRequest) {
         error: 'Internal server error',
         message: err instanceof Error ? err.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }
@@ -102,6 +112,8 @@ export async function GET(request: NextRequest) {
  * Create a new notification (for server-side events)
  */
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
+  
   try {
     const body = await request.json()
     const { fid, walletAddress, category, title, description, tone, metadata, actionLabel, actionHref } = body
@@ -110,7 +122,7 @@ export async function POST(request: NextRequest) {
     if (!category || !title || !tone) {
       return NextResponse.json(
         { error: 'Missing required fields: category, title, tone' },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -118,7 +130,7 @@ export async function POST(request: NextRequest) {
     if (!fid && !walletAddress) {
       return NextResponse.json(
         { error: 'Must provide fid or walletAddress' },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -126,7 +138,7 @@ export async function POST(request: NextRequest) {
     if (!supabase) {
       return NextResponse.json(
         { error: 'Database connection unavailable' },
-        { status: 503 }
+        { status: 503, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -150,21 +162,21 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { error: 'Failed to create notification', details: error.message },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
     return NextResponse.json({ 
       success: true, 
       notification: data 
-    }, { status: 201 })
+    }, { status: 201, headers: { 'X-Request-ID': requestId } })
   } catch (err) {
     return NextResponse.json(
       { 
         error: 'Internal server error',
         message: err instanceof Error ? err.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }
@@ -174,6 +186,8 @@ export async function POST(request: NextRequest) {
  * Dismiss a notification
  */
 export async function PATCH(request: NextRequest) {
+  const requestId = generateRequestId()
+  
   try {
     const searchParams = request.nextUrl.searchParams
     const id = searchParams.get('id')
@@ -181,7 +195,7 @@ export async function PATCH(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: 'Missing notification ID' },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -189,7 +203,7 @@ export async function PATCH(request: NextRequest) {
     if (!supabase) {
       return NextResponse.json(
         { error: 'Database connection unavailable' },
-        { status: 503 }
+        { status: 503, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -201,18 +215,18 @@ export async function PATCH(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { error: 'Failed to dismiss notification', details: error.message },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true }, { headers: { 'X-Request-ID': requestId } })
   } catch (err) {
     return NextResponse.json(
       { 
         error: 'Internal server error',
         message: err instanceof Error ? err.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }

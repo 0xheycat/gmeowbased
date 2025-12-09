@@ -2,6 +2,10 @@
  * Quest Creation API Endpoint
  * POST /api/quests/create
  * 
+ * Enterprise Enhancement: Idempotency Keys (CRITICAL)
+ * Prevents duplicate quest creation and double-charging points on network retry.
+ * Pattern: Stripe API idempotency (24h cache, X-Idempotency-Replayed header)
+ * 
  * Phase 3: Business Logic - Quest Creation System
  * Task 8.5: Quest Creation UI
  * 
@@ -24,6 +28,8 @@ import { escrowPoints } from '@/lib/quests/points-escrow-service';
 import { getSupabaseServerClient } from '@/lib/supabase';
 import type { QuestCategory, QuestDifficulty } from '@/lib/supabase/types/quest';
 import type { QuestDraft } from '@/lib/quests/types';
+import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/idempotency';
+import { generateRequestId } from '@/lib/request-id';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,6 +96,7 @@ function generateQuestSlug(title: string): string {
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  const requestId = generateRequestId();
   const clientIp = getClientIp(request);
   
   try {
@@ -107,6 +114,7 @@ export async function POST(request: NextRequest) {
         type: ErrorType.RATE_LIMIT,
         message: 'Too many quest creation requests. Please try again later.',
         statusCode: 429,
+        requestId,
       });
     }
     
@@ -124,6 +132,15 @@ export async function POST(request: NextRequest) {
         statusCode: 400,
         details: parseError instanceof z.ZodError ? parseError.flatten() : undefined,
       });
+    }
+    
+    // Enterprise Enhancement: Check Idempotency Key (CRITICAL - prevents double-charging)
+    const idempotencyKey = getIdempotencyKey(request);
+    if (idempotencyKey) {
+      const cachedResponse = await checkIdempotency(idempotencyKey);
+      if (cachedResponse) {
+        return cachedResponse; // Returns cached response with X-Idempotency-Replayed header
+      }
     }
     
     // 3. CALCULATE COST
@@ -340,7 +357,7 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    return NextResponse.json({
+    const responsePayload = {
       success: true,
       data: {
         quest: {
@@ -359,7 +376,16 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         duration_ms: duration,
       },
-    }, { status: 201 });
+    };
+
+    // Store idempotency key for 24h (CRITICAL - prevents duplicate quest creation and double-charging)
+    if (idempotencyKey) {
+      await storeIdempotency(idempotencyKey, responsePayload);
+    }
+
+    const response = NextResponse.json(responsePayload, { status: 201 });
+    response.headers.set('X-Request-ID', requestId);
+    return response;
     
   } catch (error) {
     logError('Quest creation error', {
@@ -371,6 +397,7 @@ export async function POST(request: NextRequest) {
       type: ErrorType.INTERNAL,
       message: 'Internal server error',
       statusCode: 500,
+      requestId,
     });
   }
 }

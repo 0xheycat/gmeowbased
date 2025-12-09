@@ -127,7 +127,7 @@ This directory contains guides for integrating Gmeow smart contracts with fronte
 │  └────────────────────────────────────────┘ │
 │                                              │
 │  ┌────────────────────────────────────────┐ │
-│  │  Contract Utils (lib/gm-utils.ts)      │ │
+│  │  Contract Utils (lib/gmeow-utils.ts)      │ │
 │  │  ├─ getContractAddress(chain)          │ │
 │  │  ├─ getContractABI(chain)              │ │
 │  │  ├─ createAddQuestTx(params)           │ │

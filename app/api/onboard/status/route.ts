@@ -3,6 +3,7 @@ import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,13 +13,14 @@ export const dynamic = 'force-dynamic'
  * Query param: fid (required)
  */
 export const GET = withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -29,7 +31,7 @@ export const GET = withErrorHandler(async (request: Request) => {
       return NextResponse.json({
         onboarded: false,
         message: 'FID required'
-      })
+      }, { headers: { 'X-Request-ID': requestId } })
     }
 
     // Validate FID
@@ -38,14 +40,14 @@ export const GET = withErrorHandler(async (request: Request) => {
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid FID format', details: validation.error.issues },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
-      return NextResponse.json({ onboarded: false })
+      return NextResponse.json({ onboarded: false }, { headers: { 'X-Request-ID': requestId } })
     }
 
     // Check if user has onboarding record
@@ -56,12 +58,17 @@ export const GET = withErrorHandler(async (request: Request) => {
       .single()
 
     if (profileError || !profile) {
-      return NextResponse.json({ onboarded: false })
+      return NextResponse.json({ onboarded: false }, { headers: { 'X-Request-ID': requestId } })
     }
 
     return NextResponse.json({
       onboarded: !!profile.onboarded_at,
       tier: profile.neynar_tier || 'common',
       onboardedAt: profile.onboarded_at,
+    }, {
+      headers: { 
+        'X-Request-ID': requestId,
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+      }
     })
 })

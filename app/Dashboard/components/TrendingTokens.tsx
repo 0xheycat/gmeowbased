@@ -1,14 +1,25 @@
 /**
  * Trending Tokens Component
  * Professional table with name/price/24h change (GainersLosers pattern)
+ * 
+ * ✅ Data Caching: Shows "Updated X ago" with 30s TTL
+ * ✅ Retry Logic: 3 attempts with exponential backoff (1s, 2s, 4s)
+ * ✅ Professional Patterns: Twitter trending badges, GitHub activity dots, LinkedIn context
  */
 
-import { getTrendingTokens, formatVolume } from '@/lib/api/neynar-dashboard'
-import TrendingUpIcon from '@mui/icons-material/TrendingUp'
+import { getTrendingTokens, formatNumber, formatTimeAgo } from '@/lib/api/neynar-dashboard'
+import { withRetry, RetryStrategies } from '@/lib/retry'
+import { TrendingBadge, ActivityIndicator, ContextBadge } from '@/components/dashboard-patterns'
+import { TrendingUpIcon } from '@/components/icons/trending-up-icon'
 import { cn } from '@/lib/utils'
 
 export async function TrendingTokens() {
-  const tokens = await getTrendingTokens()
+  const response = await withRetry(
+    () => getTrendingTokens(),
+    RetryStrategies.standard
+  )
+  const tokens = response.data
+  const lastUpdated = formatTimeAgo(response.cached_at)
 
   if (tokens.length === 0) {
     return (
@@ -17,7 +28,25 @@ export async function TrendingTokens() {
           <TrendingUpIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Trending Tokens (24h)</h3>
         </div>
-        <p className="text-gray-500 text-sm">No trending tokens available at the moment.</p>
+        
+        {/* Enhanced Empty State */}
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-4">
+            <TrendingUpIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h4 className="text-lg font-semibold mb-2">No Trending Tokens Yet</h4>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 max-w-sm">
+            Be the first to discover and trade trending tokens on Base!
+          </p>
+          <a
+            href="https://www.base.org/ecosystem"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
+          >
+            Explore Base Tokens
+          </a>
+        </div>
       </div>
     )
   }
@@ -27,10 +56,13 @@ export async function TrendingTokens() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
+          <ActivityIndicator pulse />
           <TrendingUpIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Trending Tokens (24h)</h3>
         </div>
-        <span className="text-xs text-gray-500">Base Chain</span>
+        <div className="flex items-center gap-2">
+          <ContextBadge>Base Chain</ContextBadge>
+        </div>
       </div>
 
       {/* Table */}
@@ -43,36 +75,49 @@ export async function TrendingTokens() {
             </tr>
           </thead>
           <tbody>
-            {tokens.map((token) => (
-              <tr
-                key={token.address}
-                className="border-b last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                {/* Name & Symbol */}
-                <td className="py-3">
-                  <div className="font-semibold">{token.name}</div>
-                  <div className="text-xs text-gray-500">{token.symbol}</div>
-                </td>
+            {tokens.map((token, index) => {
+              // Twitter-style trending logic (top 3 get badges)
+              const trendingBadge = index === 0 ? 'hot' : index === 1 ? 'rising' : index === 2 ? 'new' : null
+              
+              return (
+                <tr
+                  key={token.address}
+                  className="border-b last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  {/* Name & Symbol */}
+                  <td className="py-3">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <div className="font-semibold flex items-center gap-2">
+                          {token.name}
+                          {trendingBadge && <TrendingBadge variant={trendingBadge as 'hot' | 'rising' | 'new'} />}
+                        </div>
+                        <div className="text-xs text-gray-500">{token.symbol}</div>
+                      </div>
+                    </div>
+                  </td>
 
-                {/* Price */}
-                <td className="text-right">
-                  <div className="font-mono">
-                    ${token.price < 0.01 
-                      ? token.price.toFixed(8) 
-                      : token.price < 1 
-                      ? token.price.toFixed(6)
-                      : token.price.toFixed(2)}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  {/* Price */}
+                  <td className="text-right">
+                    <div className="font-mono">
+                      ${token.price < 0.01 
+                        ? token.price.toFixed(8) 
+                        : token.price < 1 
+                        ? token.price.toFixed(6)
+                        : token.price.toFixed(2)}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 text-xs text-gray-500">
-        Powered by Neynar Trending Fungibles API • Updated every 5 minutes
+      {/* Footer with Cache Info */}
+      <div className="mt-4 flex justify-between items-center text-xs text-gray-500">
+        <span>Powered by Neynar Trending Fungibles API</span>
+        <span className="font-medium">Updated {lastUpdated}</span>
       </div>
     </div>
   )

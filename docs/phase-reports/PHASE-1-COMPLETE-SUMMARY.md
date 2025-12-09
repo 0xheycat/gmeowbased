@@ -37,11 +37,11 @@ proxy: '0x6A48B758ed42d7c934D387164E60aa58A92eD206'
 ---
 
 ### 2. Utils Migration ✅
-**Problem**: 66 files importing from old `gm-utils.ts` (multi-chain, old addresses)
+**Problem**: 66 files importing from old `gmeow-utils.ts` (multi-chain, old addresses)
 
 **Solution**:
 - ✅ Automated migration: `gm-utils` → `gmeow-utils` (66 files)
-- ✅ Deleted old `lib/gm-utils.ts` (928 lines)
+- ✅ Deleted old `lib/gmeow-utils.ts` (928 lines)
 - ✅ All imports now use Base-only foundation
 
 **Architecture Change**:
@@ -189,7 +189,7 @@ export type ChainKey = 'base' | 'optimism' | ... // OnchainStats frame viewing o
 ### Before Phase 1
 - ❌ Multi-chain (base, optimism, celo, unichain, ink)
 - ❌ Old contract addresses (pre-Nov 28, 2025)
-- ❌ Old gm-utils.ts (928 lines)
+- ❌ Old gmeow-utils.ts (928 lines)
 - ❌ Scattered CSS (2,144 lines)
 - ❌ Missing template components
 - ❌ Unused features (Agent, Guild, admin)

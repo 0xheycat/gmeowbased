@@ -1,22 +1,21 @@
 import { CHAIN_LABEL } from './gmeow-utils'
 
+// BLOCKSCOUT-SUPPORTED CHAINS ONLY (12 chains)
+// Icons hosted on GitHub: https://github.com/0xheycat/image-
 export const CHAIN_ICON_URLS: Record<string, string> = {
   base: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/base.svg',
-  celo: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/celo.png',
-  op: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/op.svg',
-  optimism: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/op.svg',
   ethereum: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/eth.svg',
+  optimism: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/op.svg',
+  op: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/op.svg',
   arbitrum: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/arbitrum.svg',
-  avax: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/avax.svg',
-  berachain: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/berachain.svg',
-  bnb: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/bnb.svg',
-  fraxtal: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/fraxtal.svg',
-  katana: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/katana.svg',
-  soneium: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/soneium.png',
-  taiko: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/taiko.svg',
+  polygon: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/polygon.svg',
+  gnosis: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/gnosis.svg',
+  celo: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/celo.png',
+  scroll: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/scroll.svg',
   unichain: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/unichain.png',
-  ink: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/ink.png',
-  hyperevm: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/hyper.png',
+  soneium: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/soneium.png',
+  zksync: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/zksync.svg',
+  zora: 'https://raw.githubusercontent.com/0xheycat/image-/refs/heads/main/zora.svg',
 }
 
 export function getChainIconUrl(chainKey?: string | null): string {

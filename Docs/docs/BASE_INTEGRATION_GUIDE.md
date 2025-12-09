@@ -375,7 +375,7 @@ export const wagmiConfig = createConfig({
 
 ### Contract Addresses
 
-Configured in `lib/gm-utils.ts`:
+Configured in `lib/gmeow-utils.ts`:
 
 ```typescript
 export const STANDALONE_ADDRESSES = {

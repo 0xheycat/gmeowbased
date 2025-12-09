@@ -34,7 +34,7 @@ Successfully migrated the Gmeow codebase from monolithic contract architecture t
 - `lib/abi/gmeowhq.json` - NFT contract ABI (NFT minting)
 - `lib/abi/gmeowmultichain.json` - Legacy monolithic ABI (other chains)
 
-### 2. lib/gm-utils.ts ✅
+### 2. lib/gmeow-utils.ts ✅
 **Added:**
 - `CORE_ABI`, `GUILD_ABI`, `NFT_ABI` exports
 - `STANDALONE_ADDRESSES` object with Base addresses
@@ -107,7 +107,7 @@ Will route to NFT contract (`0xD99aeE13e...`) on Base:
 **Current**: ✅ Fully functional UI sandbox  
 **On-Chain**: ⏳ Ready for integration (see `QUEST-WIZARD-CONTRACT-INTEGRATION.md`)
 
-The Quest Wizard is production-ready as a quest design tool. All transaction builders exist in `gm-utils.ts` and can be wired up in ~100 lines of code.
+The Quest Wizard is production-ready as a quest design tool. All transaction builders exist in `gmeow-utils.ts` and can be wired up in ~100 lines of code.
 
 ## Testing Status
 
