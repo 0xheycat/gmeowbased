@@ -91,8 +91,9 @@ contract Deploy10K is Script {
             '}'
         ));
         
-        vm.writeFile("deployments/latest.json", json);
+        // Note: vm.writeFile disabled for permissioning - save output manually
         console.log("");
-        console.log("Deployment info saved to deployments/latest.json");
+        console.log("=== Deployment JSON ===");
+        console.log(json);
     }
 }
