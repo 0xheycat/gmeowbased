@@ -4,16 +4,17 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import type { ChainKey } from '@/lib/gmeow-utils'
 import { ICON_SIZES } from '@/lib/icon-sizes'
 
-export const CHAIN_BRAND: Record<ChainKey, { bg: string; fg: string; label: string; title: string }> = {
+// Only Blockscout-supported chains (legacy quest system)
+export const CHAIN_BRAND: Partial<Record<ChainKey, { bg: string; fg: string; label: string; title: string }>> = {
   base: { bg: '#0052ff', fg: '#ffffff', label: 'B', title: 'Base' },
   unichain: { bg: '#8247e5', fg: '#ffffff', label: 'U', title: 'Unichain' },
   celo: { bg: '#35d07f', fg: '#0a0a0a', label: 'C', title: 'Celo' },
-  ink: { bg: '#111111', fg: '#ffffff', label: 'I', title: 'Ink' },
   op: { bg: '#ff0420', fg: '#ffffff', label: 'OP', title: 'Optimism' },
 } as const
 
 export function ChainIcon({ chain, size = 14, rounded = true }: { chain: ChainKey; size?: number; rounded?: boolean }) {
   const b = CHAIN_BRAND[chain]
+  if (!b) return null // Return null if chain not supported
   const r = rounded ? size : 3
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-label={b.title} role="img" className="inline-block-middle">
@@ -47,8 +48,8 @@ export function ChainSwitcher({
   const buttonRef = useRef<HTMLButtonElement>(null)
   const announcementRef = useRef<HTMLDivElement>(null)
 
-  // Static chains array to avoid dependency issues
-  const chains = useMemo<ChainKey[]>(() => ['base', 'unichain', 'celo', 'ink', 'op'], [])
+  // Static chains array to avoid dependency issues (only Blockscout-supported)
+  const chains = useMemo<(keyof typeof CHAIN_BRAND)[]>(() => ['base', 'unichain', 'celo', 'op'], [])
 
   // Screen reader announcements
   const announce = useCallback((message: string) => {
@@ -62,7 +63,8 @@ export function ChainSwitcher({
 
   const pick = useCallback(async (c: ChainKey) => {
     setOpen(false)
-    announce(`${CHAIN_BRAND[c].title} selected`)
+    const brand = CHAIN_BRAND[c]
+    if (brand) announce(`${brand.title} selected`)
     onSelect(c)
     if (autoSwitch && ensureChainAsync) await ensureChainAsync(c)
     buttonRef.current?.focus()
@@ -128,7 +130,7 @@ export function ChainSwitcher({
   }, [open, selected, chains, announce])
 
   const isBusy = busyChain === selected
-  const label = CHAIN_BRAND[selected].title
+  const label = CHAIN_BRAND[selected]?.title || selected.toUpperCase()
 
   return (
     <div className={`px-switch ${size}`} ref={ref}>
@@ -150,16 +152,20 @@ export function ChainSwitcher({
 
       {open && (
         <div className="px-menu px-menu-enter" role="listbox" aria-label="Select chain">
-          {chains.map((c, index) => (
-            <button key={c} role="option" aria-selected={c === selected}
-              data-chain-index={index}
-              className={`px-menu-item ${c === selected ? 'active' : ''} ${index === focusedIndex ? 'focused' : ''}`}
-              onClick={() => pick(c)}>
-              <ChainIcon chain={c} size={ICON_SIZES.xs} />
-              <span className="px-item-label">{CHAIN_BRAND[c].title}</span>
-              {c === selected ? <span className="px-check">✓</span> : null}
-            </button>
-          ))}
+          {chains.map((c, index) => {
+            const brand = CHAIN_BRAND[c]
+            if (!brand) return null // Skip unsupported chains
+            return (
+              <button key={c} role="option" aria-selected={c === selected}
+                data-chain-index={index}
+                className={`px-menu-item ${c === selected ? 'active' : ''} ${index === focusedIndex ? 'focused' : ''}`}
+                onClick={() => pick(c)}>
+                <ChainIcon chain={c} size={ICON_SIZES.xs} />
+                <span className="px-item-label">{brand.title}</span>
+                {c === selected ? <span className="px-check">✓</span> : null}
+              </button>
+            )
+          })}
         </div>
       )}
 

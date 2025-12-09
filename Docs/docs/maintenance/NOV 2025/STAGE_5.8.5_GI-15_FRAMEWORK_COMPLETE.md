@@ -146,7 +146,7 @@ const { buttons, truncated, originalCount, invalidTitles } = sanitizeButtons(raw
 **Server-Side Dependencies (Allowed):**
 ```
 app/api/frame/route.tsx
-├─ lib/gm-utils.ts (contract calls, quest fetching)
+├─ lib/gmeow-utils.ts (contract calls, quest fetching)
 ├─ lib/frame-validation.ts (input sanitization)
 ├─ lib/miniapp-validation.ts (embed validation)
 ├─ lib/share.ts (URL generation)
@@ -297,7 +297,7 @@ useState, useEffect (React client hooks)
 
 **Files Requiring GI-15 Audit:**
 - `/app/api/frame/*`, `/lib/frame-*.ts`, `/lib/miniapp-validation.ts`
-- `/lib/badges.ts`, `/lib/rank.ts`, `/lib/gm-utils.ts`
+- `/lib/badges.ts`, `/lib/rank.ts`, `/lib/gmeow-utils.ts`
 - `/app/api/og/*`, `/lib/share.ts`, `/lib/neynar*.ts`
 
 ---

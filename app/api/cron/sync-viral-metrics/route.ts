@@ -9,7 +9,10 @@
  * 
  * Endpoint: POST /api/cron/sync-viral-metrics
  * Schedule: Every 6 hours (via GitHub Actions)
- * Security: CRON_SECRET + rate limiting + IP tracking
+ * Security: CRON_SECRET + rate limiting + IP tracking + idempotency
+ * 
+ * Idempotency: Prevents double execution if cron retries
+ * Key format: cron-sync-viral-metrics-YYYYMMDD-HH (24h cache TTL)
  * 
  * @see scripts/automation/sync-viral-metrics.ts for core sync logic
  */
@@ -17,6 +20,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, strictLimiter } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/rate-limit'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes max execution time
@@ -40,6 +45,7 @@ function verifyCronSecret(request: NextRequest): boolean {
  * POST handler for viral metrics sync cron job
  */
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
   const startTime = Date.now()
   const ip = getClientIp(request)
   
@@ -59,6 +65,7 @@ export async function POST(request: NextRequest) {
         { 
           status: 429,
           headers: {
+            'X-Request-ID': requestId,
             'X-RateLimit-Limit': String(limit),
             'X-RateLimit-Remaining': String(remaining),
             'X-RateLimit-Reset': String(reset || Date.now() + 60000),
@@ -72,11 +79,22 @@ export async function POST(request: NextRequest) {
       console.error(`[Viral Metrics] Unauthorized request from IP: ${ip}`)
       return NextResponse.json(
         { error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401, headers: { 'X-Request-ID': requestId } }
       )
     }
     
-    // Layer 3: Log authorized request with IP tracking
+    // Layer 3: Idempotency check (prevents double execution on retry)
+    const now = new Date()
+    const dateKey = now.toISOString().slice(0, 13).replace(/[-:T]/g, '') // YYYYMMDDHH
+    const idempotencyKey = `cron-sync-viral-metrics-${dateKey}`
+    
+    const idempotencyResult = await checkIdempotency(idempotencyKey)
+    if (idempotencyResult.exists) {
+      console.log(`[Viral Metrics] Replaying cached result for key: ${idempotencyKey}`)
+      return returnCachedResponse(idempotencyResult)
+    }
+    
+    // Layer 4: Log authorized request with IP tracking
     console.log(`[Viral Metrics] Starting sync from IP: ${ip}`)
     
     // Import and run sync logic
@@ -87,13 +105,18 @@ export async function POST(request: NextRequest) {
     console.log(`[Viral Metrics] Sync complete in ${duration}ms`)
     console.log(`[Viral Metrics] Result:`, result)
     
-    return NextResponse.json({
+    const response = {
       success: true,
       result,
       duration: `${duration}ms`,
       timestamp: new Date().toISOString(),
       source_ip: ip, // Audit trail
-    })
+    }
+    
+    // Store result for idempotency (24h cache TTL)
+    await storeIdempotency(idempotencyKey, response, 200)
+    
+    return NextResponse.json(response, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     const duration = Date.now() - startTime
     console.error(`❌ [Viral Metrics] Sync failed from IP ${ip}:`, error)
@@ -106,7 +129,7 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         source_ip: ip, // Audit trail
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }
@@ -115,6 +138,7 @@ export async function POST(request: NextRequest) {
  * GET handler for health check (development only)
  */
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
   const ip = getClientIp(request)
   
   // Rate limiting on health check too
@@ -122,14 +146,14 @@ export async function GET(request: NextRequest) {
   if (!rateLimitResult.success) {
     return NextResponse.json(
       { error: 'Too many requests' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
   
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
       { error: 'GET method not allowed in production. Use POST with cron secret.' },
-      { status: 405 }
+      { status: 405, headers: { 'X-Request-ID': requestId } }
     )
   }
   
@@ -141,5 +165,5 @@ export async function GET(request: NextRequest) {
     authentication: 'Bearer CRON_SECRET',
     schedule: 'Every 6 hours',
     timestamp: new Date().toISOString(),
-  })
+  }, { headers: { 'X-Request-ID': requestId } })
 }

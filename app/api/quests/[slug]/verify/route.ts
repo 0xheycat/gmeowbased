@@ -14,6 +14,7 @@ import { verifyQuest } from '@/lib/quests/verification-orchestrator';
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit';
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
 import { z } from 'zod';
+import { generateRequestId } from '@/lib/request-id';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,7 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   const startTime = Date.now();
+  const requestId = generateRequestId();
   const clientIp = getClientIp(request);
   const questSlug = params.slug;
   
@@ -122,10 +124,11 @@ export async function POST(
     // 6. RESPONSE
     const response = NextResponse.json(verificationResult);
     
-    // Add rate limit headers
+    // Add rate limit and request ID headers
     response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit || 60));
     response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining || 60));
     response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset || Date.now() + 60000));
+    response.headers.set('X-Request-ID', requestId);
     
     return response;
     

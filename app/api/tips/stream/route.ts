@@ -3,6 +3,7 @@ import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { FIDSchema, AddressSchema } from '@/lib/validation/api-schemas'
 import type { TipBroadcast } from '@/lib/tips-types'
 import { subscribeToTips } from '@/lib/tips-broker'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
@@ -14,11 +15,12 @@ function formatEvent(event: string, data: unknown) {
 
 // Note: Streaming SSE response doesn't use withErrorHandler due to Response type
 export async function GET(req: NextRequest) {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
-    return new Response('Rate limit exceeded', { status: 429 })
+    return new Response('Rate limit exceeded', { status: 429, headers: { 'X-Request-ID': requestId } })
   }
 
   const { searchParams } = new URL(req.url)
@@ -27,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   // Validate query parameters
   if (!addressRaw && !fidParam) {
-    return new Response('missing address or fid', { status: 400 })
+    return new Response('missing address or fid', { status: 400, headers: { 'X-Request-ID': requestId } })
   }
 
   let address: string | undefined
@@ -36,7 +38,7 @@ export async function GET(req: NextRequest) {
   if (addressRaw) {
     const addressValidation = AddressSchema.safeParse(addressRaw.toLowerCase())
     if (!addressValidation.success) {
-      return new Response('invalid address format', { status: 400 })
+      return new Response('invalid address format', { status: 400, headers: { 'X-Request-ID': requestId } })
     }
     address = addressValidation.data
   }
@@ -44,7 +46,7 @@ export async function GET(req: NextRequest) {
   if (fidParam) {
     const fidValidation = FIDSchema.safeParse(Number(fidParam))
     if (!fidValidation.success) {
-      return new Response('invalid fid format', { status: 400 })
+      return new Response('invalid fid format', { status: 400, headers: { 'X-Request-ID': requestId } })
     }
     fid = fidValidation.data
   }
@@ -92,6 +94,7 @@ export async function GET(req: NextRequest) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      'X-Request-ID': requestId,
     },
   })
 }

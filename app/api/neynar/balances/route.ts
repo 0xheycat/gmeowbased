@@ -3,14 +3,19 @@ export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
 import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
+import { generateRequestId } from '@/lib/request-id'
 
 export const GET = withErrorHandler(async (req: Request) => {
+  const requestId = generateRequestId()
   const { searchParams } = new URL(req.url)
   const fidParam = searchParams.get('fid')
   const networks = (searchParams.get('networks') || 'base').trim()
 
   if (!fidParam) {
-    return handleValidationError(new Error('Missing fid parameter'))
+    return NextResponse.json(
+      { error: 'validation_error', message: 'Missing fid parameter' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const fid = parseInt(fidParam, 10)
@@ -18,7 +23,10 @@ export const GET = withErrorHandler(async (req: Request) => {
   // GI-8: Validate FID with Zod
   const fidValidation = FIDSchema.safeParse(fid)
   if (!fidValidation.success) {
-    return handleValidationError(new Error('Invalid fid parameter: must be a positive integer'))
+    return NextResponse.json(
+      { error: 'validation_error', message: 'Invalid fid parameter: must be a positive integer' },
+      { status: 400, headers: { 'X-Request-ID': requestId } }
+    )
   }
 
   const key = process.env.NEYNAR_API_KEY || process.env.NEXT_PUBLIC_NEYNAR_API_KEY
@@ -44,11 +52,14 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   if (!res.ok) {
-    throw handleExternalApiError(
-      new Error(`Neynar API returned ${res.status}: ${JSON.stringify(json)}`),
-      'Neynar'
+    return NextResponse.json(
+      { error: 'external_api_error', message: `Neynar API returned ${res.status}`, details: json },
+      { status: 502, headers: { 'X-Request-ID': requestId } }
     )
   }
   
-  return NextResponse.json({ ok: true, data: json }, { status: 200 })
+  return NextResponse.json({ ok: true, data: json }, { 
+    status: 200,
+    headers: { 'X-Request-ID': requestId }
+  })
 })

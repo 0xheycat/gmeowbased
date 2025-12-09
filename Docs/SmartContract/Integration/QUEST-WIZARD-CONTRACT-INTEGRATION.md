@@ -228,7 +228,7 @@ Before enabling on-chain publishing:
 ## Next Steps
 
 1. ✅ Contract ABIs updated (Core, Guild, NFT)
-2. ✅ Transaction builders added to gm-utils.ts
+2. ✅ Transaction builders added to gmeow-utils.ts
 3. ✅ Guild operations migrated
 4. ⏳ Add publish button to FinalizeStep
 5. ⏳ Test on Base testnet

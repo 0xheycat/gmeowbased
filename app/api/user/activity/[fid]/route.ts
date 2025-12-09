@@ -107,9 +107,21 @@ function formatActivityDescription(transaction: any): string | undefined {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  context?: { params: Promise<{ fid: string }> }
 ) {
   try {
+    // Next.js 15: Await params before accessing
+    const params = await context?.params
+    const fid = params?.fid
+    
+    if (!fid) {
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: 'FID parameter is required.',
+        statusCode: 400,
+      })
+    }
+    
     // 1. Rate Limiting
     const ip = getClientIp(request)
     const rateLimitResult = await rateLimit(ip, apiLimiter)
@@ -133,7 +145,7 @@ export async function GET(
       )
     }
 
-    const fid = fidResult.data
+    const validatedFid = fidResult.data
 
     // Parse query parameters
     const searchParams = Object.fromEntries(request.nextUrl.searchParams)
@@ -165,7 +177,7 @@ export async function GET(
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('profile_visibility')
-      .eq('fid', fid)
+      .eq('fid', validatedFid)
       .single()
 
     if (!profile || profile.profile_visibility === 'private') {
@@ -182,7 +194,7 @@ export async function GET(
     const { data: transactions, error, count } = await supabase
       .from('xp_transactions')
       .select('*', { count: 'exact' })
-      .eq('user_fid', fid)
+      .eq('user_fid', validatedFid)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 

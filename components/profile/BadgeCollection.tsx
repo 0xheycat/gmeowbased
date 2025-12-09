@@ -121,7 +121,8 @@ export default function BadgeCollection({
   // Loading skeleton
   if (loading) {
     return (
-      <div className={clsx('space-y-6', className)}>
+      <div className={clsx(
+              'rounded-lg px-3 py-1.5 min-h-[44px] text-xs font-medium uppercase tracking-wider transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none','space-y-6', className)}>
         {/* Stats skeleton */}
         <div className="flex items-center gap-4">
           <div className="h-16 w-32 rounded-lg bg-white/5 animate-pulse" />
@@ -140,11 +141,12 @@ export default function BadgeCollection({
   // Empty state
   if (badges.length === 0) {
     return (
-      <div className={clsx('flex flex-col items-center justify-center py-16 text-center', className)}>
+      <div className={clsx(
+              'rounded-lg px-3 py-1.5 min-h-[44px] text-xs font-medium uppercase tracking-wider transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none','flex flex-col items-center justify-center py-16 text-center', className)}>
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
           <TrophyIcon className="h-10 w-10 text-white/60" strokeWidth={1.5} />
         </div>
-        <h3 className="mb-2 text-xl font-bold text-white">No badges yet</h3>
+        <h2 className="mb-2 text-xl font-bold text-white">No badges yet</h2>
         <p className="mb-6 max-w-md text-sm text-white/60">
           Complete quests and earn achievements to collect badges!
         </p>
@@ -153,7 +155,8 @@ export default function BadgeCollection({
   }
 
   return (
-    <div className={clsx('space-y-6', className)}>
+    <div className={clsx(
+              'rounded-lg px-3 py-1.5 min-h-[44px] text-xs font-medium uppercase tracking-wider transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none','space-y-6', className)}>
       {/* Stats & Tier Filters */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Total count */}
@@ -170,6 +173,7 @@ export default function BadgeCollection({
             type="button"
             onClick={() => setSelectedTier('all')}
             className={clsx(
+              'rounded-lg px-3 py-1.5 min-h-[44px] text-xs font-medium uppercase tracking-wider transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none',
               'rounded-lg px-3 py-1.5 text-xs font-medium uppercase tracking-wider transition-all',
               selectedTier === 'all'
                 ? 'bg-white/20 text-white shadow-lg'
@@ -187,6 +191,7 @@ export default function BadgeCollection({
                 type="button"
                 onClick={() => setSelectedTier(tier)}
                 className={clsx(
+              'rounded-lg px-3 py-1.5 min-h-[44px] text-xs font-medium uppercase tracking-wider transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none',
                   'rounded-lg px-3 py-1.5 text-xs font-medium uppercase tracking-wider transition-all',
                   selectedTier === tier
                     ? 'text-white shadow-lg'
@@ -244,6 +249,7 @@ export default function BadgeCollection({
                 {/* Badge Card */}
                 <div
                   className={clsx(
+              'rounded-lg px-3 py-1.5 min-h-[44px] text-xs font-medium uppercase tracking-wider transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none',
                     'relative aspect-square overflow-hidden rounded-2xl transition-all duration-300',
                     badge.earned
                       ? 'bg-gradient-to-br from-black/80 via-black/60 to-black/80'

@@ -28,7 +28,7 @@
 - `/app/layout.tsx`
 
 **New Themes**:
-- Subtitle: "Embark on the Gmeow Adventure"
+- Subtitle: "Embark on the Gmeowbased Adventure"
 - Tagline: "Adventure Awaits Daily"
 - Tags: Added "adventure"
 - Titles: Emphasize "Quest & Conquer" theme

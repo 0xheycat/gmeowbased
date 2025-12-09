@@ -17,13 +17,14 @@ export const dynamic = 'force-dynamic'
  * - Request timing tracking
  */
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
+  const requestId = require('@/lib/request-id').generateRequestId();
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -33,7 +34,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     if (!fid) {
       return NextResponse.json(
         { success: false, error: 'Missing fid parameter' },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -42,7 +43,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     if (!validation.success) {
       return NextResponse.json(
         { success: false, error: 'Invalid fid parameter', details: validation.error.issues },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -61,8 +62,9 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       count: badges.length,
     })
 
-    // Add cache headers for CDN/browser caching
-    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
+    // Add cache headers for CDN/browser caching (2 minutes)
+    response.headers.set('Cache-Control', 's-maxage=120, stale-while-revalidate=240')
+    response.headers.set('X-Request-ID', requestId)
 
     return response
 }))

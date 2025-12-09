@@ -1,0 +1,191 @@
+# ============================================================================
+# Daily On-Chain Stats Snapshots - GitHub Actions Workflow
+# ============================================================================
+# Purpose: Populate daily portfolio snapshots for all tracked addresses
+# Schedule: Runs at 00:05 UTC (5 minutes after pg_cron creates placeholder rows)
+# ============================================================================
+
+name: Daily On-Chain Stats Snapshots
+
+on:
+  # DISABLED: Not ready for production yet (testing locally first)
+  # schedule:
+  #   - cron: '5 0 * * *'
+  
+  # Manual trigger for local testing only
+  workflow_dispatch:
+    inputs:
+      chain:
+        description: 'Chain to snapshot (base, ethereum, optimism, arbitrum)'
+        required: false
+        default: 'base'
+      test_mode:
+        description: 'Test mode (only process 5 addresses)'
+        required: false
+        default: 'false'
+
+jobs:
+  create-snapshots:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch tracked addresses from Supabase
+        id: fetch-addresses
+        run: |
+          # Query Supabase for all verified addresses using RPC function
+          ADDRESSES=$(curl -s -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/get_tracked_addresses" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            | jq -r 'map(.verified_address) | @json')
+          
+          # If RPC fails, query user_profiles table directly (unnest verified_addresses array)
+          if [ "$ADDRESSES" == "null" ] || [ -z "$ADDRESSES" ]; then
+            echo "RPC function failed, querying user_profiles table directly..."
+            ADDRESSES=$(curl -s -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/user_profiles?select=verified_addresses" \
+              -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              | jq -r '[.[].verified_addresses // [] | .[]] | unique | @json')
+          fi
+          
+          echo "addresses=$ADDRESSES" >> $GITHUB_OUTPUT
+          
+          # Count addresses
+          ADDRESS_COUNT=$(echo "$ADDRESSES" | jq '. | length')
+          echo "Found $ADDRESS_COUNT tracked addresses"
+          
+          # Fail if no addresses found
+          if [ "$ADDRESS_COUNT" -eq 0 ]; then
+            echo "ERROR: No tracked addresses found!"
+            exit 1
+          fi
+
+      - name: Process snapshots (test mode)
+        if: github.event.inputs.test_mode == 'true'
+        run: |
+          echo "TEST MODE: Processing only 5 addresses"
+          ADDRESSES=$(echo '${{ steps.fetch-addresses.outputs.addresses }}' | jq '.[0:5] | @json')
+          echo "Test addresses: $ADDRESSES"
+          
+          # Call batch snapshot API
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT "${{ secrets.NEXT_PUBLIC_BASE_URL }}/api/onchain-stats/snapshot" \
+            -H "Content-Type: application/json" \
+            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+            -d "{\"addresses\": $ADDRESSES, \"chain\": \"${{ github.event.inputs.chain || 'base' }}\"}")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "ERROR: Snapshot API failed with status $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Create snapshots (production)
+        if: github.event.inputs.test_mode != 'true'
+        run: |
+          ADDRESSES='${{ steps.fetch-addresses.outputs.addresses }}'
+          ADDRESS_COUNT=$(echo "$ADDRESSES" | jq '. | length')
+          CHAIN="${{ github.event.inputs.chain || 'base' }}"
+          
+          echo "Creating snapshots for $ADDRESS_COUNT addresses on $CHAIN chain"
+          
+          # Batch size (max 100 per API call)
+          BATCH_SIZE=100
+          TOTAL_BATCHES=$(( (ADDRESS_COUNT + BATCH_SIZE - 1) / BATCH_SIZE ))
+          
+          echo "Total batches: $TOTAL_BATCHES"
+          
+          SUCCESS_COUNT=0
+          FAIL_COUNT=0
+          
+          # Process in batches
+          for i in $(seq 0 $((TOTAL_BATCHES - 1))); do
+            START=$((i * BATCH_SIZE))
+            BATCH=$(echo "$ADDRESSES" | jq -c ".[$START:$START+$BATCH_SIZE]")
+            BATCH_NUM=$((i + 1))
+            
+            echo "Processing batch $BATCH_NUM/$TOTAL_BATCHES..."
+            
+            # Call batch snapshot API
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT "${{ secrets.NEXT_PUBLIC_BASE_URL }}/api/onchain-stats/snapshot" \
+              -H "Content-Type: application/json" \
+              -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+              -d "{\"addresses\": $BATCH, \"chain\": \"$CHAIN\"}")
+            
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | head -n-1)
+            
+            if [ "$HTTP_CODE" -eq 200 ]; then
+              BATCH_SUCCESS=$(echo "$BODY" | jq -r '.succeeded // 0')
+              BATCH_FAIL=$(echo "$BODY" | jq -r '.failed // 0')
+              SUCCESS_COUNT=$((SUCCESS_COUNT + BATCH_SUCCESS))
+              FAIL_COUNT=$((FAIL_COUNT + BATCH_FAIL))
+              echo "✓ Batch $BATCH_NUM: $BATCH_SUCCESS succeeded, $BATCH_FAIL failed"
+            else
+              echo "✗ Batch $BATCH_NUM failed with HTTP $HTTP_CODE"
+              echo "Response: $BODY"
+              FAIL_COUNT=$((FAIL_COUNT + $(echo "$BATCH" | jq '. | length')))
+            fi
+            
+            # Rate limit: wait 2 seconds between batches
+            if [ $i -lt $((TOTAL_BATCHES - 1)) ]; then
+              sleep 2
+            fi
+          done
+          
+          echo "============================================"
+          echo "Snapshot creation complete"
+          echo "Total addresses: $ADDRESS_COUNT"
+          echo "Succeeded: $SUCCESS_COUNT"
+          echo "Failed: $FAIL_COUNT"
+          echo "============================================"
+          
+          # Exit with error if more than 10% failed
+          FAIL_PERCENT=$(( (FAIL_COUNT * 100) / ADDRESS_COUNT ))
+          if [ $FAIL_PERCENT -gt 10 ]; then
+            echo "ERROR: $FAIL_PERCENT% of snapshots failed (threshold: 10%)"
+            exit 1
+          fi
+
+      - name: Verify snapshots created
+        run: |
+          # Query Supabase to verify snapshots were created today
+          TODAY=$(date -u +%Y-%m-%d)
+          
+          COUNT=$(curl -s -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/onchain_stats_snapshots?select=id&snapshot_date=eq.$TODAY" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            | jq '. | length')
+          
+          echo "Snapshots created today ($TODAY): $COUNT"
+          
+          if [ "$COUNT" -eq 0 ]; then
+            echo "WARNING: No snapshots found in database for today!"
+            exit 1
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Daily snapshot workflow failed!"
+          echo "Check logs at: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # TODO: Add Discord/Slack notification here
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ Daily on-chain stats snapshots completed successfully!"
+          echo "Next run: Tomorrow at 00:05 UTC"

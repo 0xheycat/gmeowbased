@@ -147,7 +147,7 @@ forge create contract/GmeowGuildStandalone.sol:GmeowGuildStandalone \
 forge create contract/GmeowNFTStandalone.sol:GmeowNFTStandalone \
   --private-key $ORACLE_PRIVATE_KEY \
   --rpc-url $BASE_RPC_URL \
-  --constructor-args $CORE_ADDRESS "Gmeow Adventure NFT" "GMEOW" "https://api.gmeowhq.art/nft/"
+  --constructor-args $CORE_ADDRESS "Gmeowbased Adventure NFT" "GMEOW" "https://api.gmeowhq.art/nft/"
 
 # 4. Link contracts
 cast send $CORE_ADDRESS "setGuildContract(address)" $GUILD_ADDRESS \

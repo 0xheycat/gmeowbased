@@ -106,7 +106,13 @@ export function createErrorResponse(errorDetails: ErrorDetails): NextResponse {
     ...(requestId ? { requestId } : {}),
   }
 
-  return NextResponse.json(response, { status: statusCode })
+  const nextResponse = NextResponse.json(response, { status: statusCode })
+  
+  if (requestId) {
+    nextResponse.headers.set('X-Request-ID', requestId)
+  }
+
+  return nextResponse
 }
 
 /**

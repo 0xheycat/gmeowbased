@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+import { generateRequestId } from '@/lib/request-id'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotFid } from '@/lib/neynar-bot'
 import { fetchFidByUsername, fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
@@ -571,11 +572,12 @@ function buildCastDigest(raw: any): CastDigest | null {
 }
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
   if (!success) {
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'X-Request-ID': requestId } })
   }
 
   // Validate query parameters
@@ -589,13 +591,13 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   if (!queryValidation.success) {
     return NextResponse.json(
       { error: 'validation_error', issues: queryValidation.error.issues },
-      { status: 400 }
+      { status: 400, headers: { 'X-Request-ID': requestId } }
     )
   }
 
   const auth = await validateAdminRequest(req)
   if (!auth.ok && auth.reason !== 'admin_security_disabled') {
-    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401 })
+    return NextResponse.json({ ok: false, error: 'admin_auth_required', reason: auth.reason }, { status: 401, headers: { 'X-Request-ID': requestId } })
   }
 
   const fetchedAt = new Date().toISOString()
@@ -625,7 +627,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
       userError: 'Missing bot FID',
       feedError: null,
     }
-    return NextResponse.json(payload, { status: 200 })
+    return NextResponse.json(payload, { status: 200, headers: { 'X-Request-ID': requestId } })
   }
 
   let user = null
@@ -725,5 +727,5 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     feedError,
   }
 
-  return NextResponse.json(payload, { status: 200 })
+  return NextResponse.json(payload, { status: 200, headers: { 'X-Request-ID': requestId } })
 })

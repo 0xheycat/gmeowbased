@@ -1217,7 +1217,7 @@ const { success: userLimit } = await rateLimit(userKey, {
 if (!userLimit) return H('User verification rate limit', 429);
 ```
 
-**2. GM Utilities** (`lib/gm-utils.ts`)
+**2. GM Utilities** (`lib/gmeow-utils.ts`)
 - **Status**: ✅ **WELL-DESIGNED** (929 lines, comprehensive)
 - **Used Functions** (confirmed via grep):
   - `createSendGMTx` - Used in frame routes and GM button components
@@ -1449,7 +1449,7 @@ if (isDraftMode === false) {
 
 **Safe to Mark @deprecated (but keep exported)**:
 
-**lib/gm-utils.ts**:
+**lib/gmeow-utils.ts**:
 ```typescript
 // Chain-specific GM helpers (use generic createGMTransaction instead)
 createGMUniTransaction()
@@ -2603,10 +2603,10 @@ interface IMigrationReceiver {
 #### **Phase 3: Update Frontend** (3 days)
 1. Add new quest creation UI in Quest Wizard
 2. Add "Onchain" toggle switch
-3. Update `lib/gm-utils.ts` with new function builders:
+3. Update `lib/gmeow-utils.ts` with new function builders:
 
 ```typescript
-// ADD TO lib/gm-utils.ts
+// ADD TO lib/gmeow-utils.ts
 
 export const createAddQuestERC20BalanceTx = (
   name: string,

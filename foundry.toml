@@ -1,0 +1,31 @@
+[profile.default]
+src = "contract"
+out = "out"
+libs = ["lib"]
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"
+]
+solc_version = "0.8.23"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+evm_version = "paris"
+
+[profile.verify]
+src = "contract"
+out = "out-verify"
+libs = ["lib"]
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"
+]
+solc_version = "0.8.23"
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+evm_version = "paris"
+
+[rpc_endpoints]
+base = "https://mainnet.base.org"
+
+[etherscan]
+base = { key = "${BASESCAN_API_KEY}", url = "https://api.basescan.org/api" }

@@ -9,6 +9,8 @@ import {
   type EngagementMetrics,
 } from '@/lib/viral-bonus'
 import { trackEvent } from '@/lib/analytics'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -212,6 +214,7 @@ async function updateCastMetrics(
  * GI-13: Clear response messages
  */
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
   try {
     // GI-11: Rate limiting check
     const ip = request.headers.get('x-forwarded-for') || 
@@ -222,7 +225,7 @@ export async function POST(request: NextRequest) {
       console.warn(`[Webhook] Rate limit exceeded for IP: ${ip}`)
       return NextResponse.json(
         { error: 'Rate limit exceeded', message: 'Too many requests. Please try again later.' },
-        { status: 429 }
+        { status: 429, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -233,7 +236,7 @@ export async function POST(request: NextRequest) {
       console.warn('[Webhook] Missing signature header')
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Missing webhook signature' },
-        { status: 401 }
+        { status: 401, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -244,7 +247,7 @@ export async function POST(request: NextRequest) {
       console.warn('[Webhook] Invalid signature')
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Invalid webhook signature' },
-        { status: 401 }
+        { status: 401, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -256,14 +259,16 @@ export async function POST(request: NextRequest) {
       console.error('[Webhook] Invalid payload structure:', validation.error.issues)
       return NextResponse.json(
         { error: 'Bad Request', message: 'Invalid payload structure', issues: validation.error.issues },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
     
     // GI-7: Validate webhook event type
     if (payload.type !== 'cast.engagement.updated') {
       console.log(`[Webhook] Ignoring event type: ${payload.type}`)
-      return NextResponse.json({ success: true, message: 'Event type ignored' })
+      return NextResponse.json({ success: true, message: 'Event type ignored' }, {
+        headers: { 'X-Request-ID': requestId }
+      })
     }
     
     // GI-7: Extract engagement data
@@ -273,8 +278,17 @@ export async function POST(request: NextRequest) {
       console.error('[Webhook] Missing cast_hash in payload')
       return NextResponse.json(
         { error: 'Bad Request', message: 'Missing cast_hash' },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
+    }
+    
+    // Idempotency check (CRITICAL - prevents duplicate XP on Neynar retry)
+    // Use event data as key since Neynar can retry webhooks on 5xx errors
+    const idempotencyKey = `webhook-cast-engagement-${cast_hash}-${likes}-${recasts}-${replies}`
+    const idempotencyResult = await checkIdempotency(idempotencyKey)
+    if (idempotencyResult.exists) {
+      console.log(`[Webhook] Replaying cached response for key: ${idempotencyKey} (prevented duplicate XP)`)
+      return returnCachedResponse(idempotencyResult)
     }
     
     // GI-11: Get existing cast record
@@ -284,7 +298,7 @@ export async function POST(request: NextRequest) {
       console.error('[Webhook] Database connection failed')
       return NextResponse.json(
         { error: 'Internal Error', message: 'Database connection failed' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -298,7 +312,7 @@ export async function POST(request: NextRequest) {
       console.warn(`[Webhook] Cast not found: ${cast_hash}`)
       return NextResponse.json(
         { error: 'Not Found', message: 'Cast not found in database' },
-        { status: 404 }
+        { status: 404, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -321,6 +335,8 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Metrics unchanged',
         viralBonusAwarded: 0,
+      }, {
+        headers: { 'X-Request-ID': requestId }
       })
     }
     
@@ -340,7 +356,7 @@ export async function POST(request: NextRequest) {
     if (!updatedCast) {
       return NextResponse.json(
         { error: 'Internal Error', message: 'Failed to update cast metrics' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -354,7 +370,7 @@ export async function POST(request: NextRequest) {
     if (!awarded) {
       return NextResponse.json(
         { error: 'Internal Error', message: 'Failed to award viral bonus' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -371,7 +387,7 @@ export async function POST(request: NextRequest) {
     }
     
     // GI-13: Return clear success response
-    return NextResponse.json({
+    const response = {
       success: true,
       viralBonusAwarded: incrementalXP,
       totalViralXp: viralBonus.xp,
@@ -382,34 +398,44 @@ export async function POST(request: NextRequest) {
         recasts: currentMetrics.recasts,
         replies: currentMetrics.replies,
       },
+    }
+    
+    // Store result for idempotency (24h cache TTL, prevents duplicate XP on retry)
+    await storeIdempotency(idempotencyKey, response, 200)
+    
+    return NextResponse.json(response, {
+      headers: { 'X-Request-ID': requestId }
     })
   } catch (error) {
     console.error('[Webhook] Unexpected error:', error)
     return NextResponse.json(
       { error: 'Internal Error', message: 'Failed to process webhook' },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }
 
 // GI-12: Reject non-POST requests
 export async function GET() {
+  const requestId = generateRequestId()
   return NextResponse.json(
     { error: 'Method Not Allowed', message: 'Use POST to send webhook events' },
-    { status: 405 }
+    { status: 405, headers: { 'X-Request-ID': requestId } }
   )
 }
 
 export async function PUT() {
+  const requestId = generateRequestId()
   return NextResponse.json(
     { error: 'Method Not Allowed', message: 'Use POST to send webhook events' },
-    { status: 405 }
+    { status: 405, headers: { 'X-Request-ID': requestId } }
   )
 }
 
 export async function DELETE() {
+  const requestId = generateRequestId()
   return NextResponse.json(
     { error: 'Method Not Allowed', message: 'Use POST to send webhook events' },
-    { status: 405 }
+    { status: 405, headers: { 'X-Request-ID': requestId } }
   )
 }

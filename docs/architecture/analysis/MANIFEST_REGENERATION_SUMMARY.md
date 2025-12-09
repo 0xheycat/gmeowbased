@@ -6,7 +6,7 @@
 ---
 
 ## 🎯 Objective
-Regenerate the Farcaster miniapp manifest to replace the old externally-hosted configuration with a new self-hosted manifest that properly reflects the current Gmeow Adventure project setup and domain.
+Regenerate the Farcaster miniapp manifest to replace the old externally-hosted configuration with a new self-hosted manifest that properly reflects the current Gmeowbased Adventure project setup and domain.
 
 ---
 
@@ -24,7 +24,7 @@ Created `/public/.well-known/farcaster.json` with:
 
 **Required Fields (Fully Configured)**:
 - `version`: "1"
-- `name`: "Gmeow Adventure"
+- `name`: "Gmeowbased Adventure"
 - `iconUrl`: https://gmeowhq.art/icon.png
 - `homeUrl`: https://gmeowhq.art
 
@@ -151,7 +151,7 @@ Running `node scripts/validate-manifest.js`:
 ⚠️  accountAssociation contains placeholder values (expected - needs signing)
 ✅ All required miniapp fields configured
 ✅ version: 1
-✅ name: Gmeow Adventure
+✅ name: Gmeowbased Adventure
 ✅ iconUrl: https://gmeowhq.art/icon.png
 ✅ homeUrl: https://gmeowhq.art
 ✅ primaryCategory: games

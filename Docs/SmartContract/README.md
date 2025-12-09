@@ -140,7 +140,7 @@ pnpm install
 
 **Key Files:**
 - Contract ABIs: `lib/abi/gmeowcore.json`, `lib/abi/gmeowguild.json`, `lib/abi/gmeowhq.json`
-- Contract Utils: `lib/gm-utils.ts`
+- Contract Utils: `lib/gmeow-utils.ts`
 - Contract Config: `lib/contract-config.ts`
 
 **Helper Functions:**

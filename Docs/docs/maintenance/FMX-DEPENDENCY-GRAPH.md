@@ -13,7 +13,7 @@ This document maps all dependencies for frame endpoints, OG image generators, an
 
 ```
 app/api/frame/route.tsx
-├─ lib/gm-utils.ts
+├─ lib/gmeow-utils.ts
 │  ├─ Contract interaction logic
 │  ├─ Quest fetching
 │  └─ Badge calculations

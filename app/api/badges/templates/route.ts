@@ -5,17 +5,19 @@ import { listBadgeTemplates } from '@/lib/badges'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached, buildBadgeTemplatesKey } from '@/lib/cache'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId();
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -27,6 +29,9 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
   )
   
   return NextResponse.json({ ok: true, templates }, {
-    headers: { 'cache-control': 's-maxage=180, stale-while-revalidate=300' },
+    headers: {
+      'cache-control': 's-maxage=300, stale-while-revalidate=600',
+      'X-Request-ID': requestId,
+    },
   })
 }))

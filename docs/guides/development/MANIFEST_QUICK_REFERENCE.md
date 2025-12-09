@@ -58,7 +58,7 @@ curl http://localhost:3000/.well-known/farcaster.json
 ## 🎯 Configured Features
 
 ### Core
-- ✅ App name: "Gmeow Adventure"
+- ✅ App name: "Gmeowbased Adventure"
 - ✅ Domain: gmeowhq.art
 - ✅ Icon: 1024x1024px PNG
 - ✅ Splash screen with custom color

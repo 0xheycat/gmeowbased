@@ -75,7 +75,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
           </label>
           <button
             onClick={handleCopyAddress}
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+            className="w-full flex items-center justify-between px-4 py-3 min-h-[44px] bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none group"
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
@@ -128,7 +128,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
                   href={socialLinks.warpcast}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between px-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors group"
+                  className="flex items-center justify-between px-4 py-3 min-h-[44px] bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors focus:ring-2 focus:ring-purple-500 focus:outline-none group"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center">
@@ -155,7 +155,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
                   href={socialLinks.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group"
+                  className="flex items-center justify-between px-4 py-3 min-h-[44px] bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none group"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-black dark:bg-white flex items-center justify-center">
@@ -180,7 +180,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
                   href={socialLinks.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+                  className="flex items-center justify-between px-4 py-3 min-h-[44px] bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-gray-500 focus:outline-none group"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gray-900 dark:bg-gray-700 flex items-center justify-center">
@@ -207,7 +207,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
                   href={socialLinks.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between px-4 py-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors group"
+                  className="flex items-center justify-between px-4 py-3 min-h-[44px] bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors focus:ring-2 focus:ring-green-500 focus:outline-none group"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">

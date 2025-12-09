@@ -5,6 +5,7 @@ import {
   createRateLimitResponse,
   addRateLimitHeaders,
 } from '@/lib/rate-limit'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const revalidate = 300 // 5 minutes
@@ -36,6 +37,8 @@ export const revalidate = 300 // 5 minutes
  * }
  */
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
+  
   try {
     // Skip rate limiting in development
     const isDevelopment = process.env.NODE_ENV === 'development'
@@ -107,7 +110,8 @@ export async function GET(request: NextRequest) {
     const nextResponse = NextResponse.json(response, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+        'X-Request-ID': requestId,
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       },
     })
     
@@ -121,7 +125,10 @@ export async function GET(request: NextRequest) {
     console.error('[Leaderboard V2 API] Error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch leaderboard data' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'X-Request-ID': requestId }
+      }
     )
   }
 }

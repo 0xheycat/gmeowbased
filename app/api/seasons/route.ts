@@ -1,11 +1,12 @@
 // /api/seasons/route.ts
 import { NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
-import { CONTRACT_ADDRESSES, CHAIN_IDS, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey } from '@/lib/gmeow-utils'
+import { CONTRACT_ADDRESSES, CHAIN_IDS, ALL_CHAIN_IDS, normalizeToGMChain, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
 import { SeasonQuerySchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
+import { generateRequestId } from '@/lib/request-id'
 
 type SeasonTuple = readonly [bigint, bigint, bigint, boolean, string, boolean]
 type SeasonInfo = {
@@ -32,6 +33,7 @@ let cache: { key: string; at: number; data: SeasonsResponse } | null = null
 const HAS_SEASON_ABI = gmContractHasFunction('getAllSeasons') && gmContractHasFunction('getSeason')
 
 export const GET = withTiming(withErrorHandler(async (req: Request) => {
+  const requestId = generateRequestId()
   const url = new URL(req.url)
   
   // Validate query parameters with Zod
@@ -48,22 +50,23 @@ export const GET = withTiming(withErrorHandler(async (req: Request) => {
   
   const chain = (queryValidation.data.chain || 'base') as ChainKey
   
-  // Validate chain parameter
-  const contractAddr = CONTRACT_ADDRESSES[chain]
-  const chainId = CHAIN_IDS[chain]
+  // Validate chain parameter and convert to GMChainKey for contract access
+  const gmChain = normalizeToGMChain(chain) || 'base'
+  const contractAddr = CONTRACT_ADDRESSES[gmChain]
+  const chainId = ALL_CHAIN_IDS[chain]
   if (!contractAddr || !chainId) {
     return handleValidationError(new Error(`Invalid chain parameter: ${chain}. Supported chains: ${Object.keys(CONTRACT_ADDRESSES).join(', ')}`))
   }
 
     const key = `seasons:${chain}`
     if (cache && cache.key === key && Date.now() - cache.at < CACHE_TTL) {
-      return NextResponse.json(cache.data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
+      return NextResponse.json(cache.data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60', 'X-Request-ID': requestId } })
     }
 
     if (!HAS_SEASON_ABI) {
       const data: SeasonsResponse = { ok: true, chain, seasons: [], reason: 'season_contract_functions_unavailable' }
       cache = { key, at: Date.now(), data }
-      return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
+      return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60', 'X-Request-ID': requestId } })
     }
 
   let rpc = ''
@@ -123,5 +126,5 @@ export const GET = withTiming(withErrorHandler(async (req: Request) => {
   // mark "current" explicitly
   const data: SeasonsResponse = { ok: true, chain, seasons: out.sort((a, b) => b.id - a.id) }
   cache = { key, at: Date.now(), data }
-  return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60' } })
+  return NextResponse.json(data, { headers: { 'cache-control': 's-maxage=30, stale-while-revalidate=60', 'X-Request-ID': requestId } })
 }))

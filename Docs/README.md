@@ -1,7 +1,7 @@
 <!-- @edit-start 2025-11-13 — README comprehensive update -->
-# Gmeow Adventure 🐾
+# Gmeowbased Adventure 🐾
 
-> A multi-chain quest platform for Farcaster. Gmeow Adventure blends onchain rituals (GM streaks, quest verification, guild coordination) with real-time telemetry, autonomous agent responses, and desktop-first UX powered by Next.js 15, multi-chain smart contracts, and Neynar's social graph.
+> A multi-chain quest platform for Farcaster. Gmeowbased Adventure blends onchain rituals (GM streaks, quest verification, guild coordination) with real-time telemetry, autonomous agent responses, and desktop-first UX powered by Next.js 15, multi-chain smart contracts, and Neynar's social graph.
 
 ![Gmeow Command Deck](./screenshots/frame-gm.png)
 
@@ -29,7 +29,7 @@
 
 ## Overview
 
-Gmeow Adventure is a production-grade Farcaster mini-app that transforms social engagement into onchain achievements. Built for launch pilots, guild leaders, and crypto-native communities, it features:
+Gmeowbased Adventure is a production-grade Farcaster mini-app that transforms social engagement into onchain achievements. Built for launch pilots, guild leaders, and crypto-native communities, it features:
 
 - **Multi-chain GM Streaks**: Daily check-ins tracked across Base, Optimism, Celo, Ink, and Unichain
 - **Quest System**: Autonomous verification of social + onchain activities with oracle-signed proofs
@@ -443,7 +443,7 @@ NEXT_PUBLIC_GM_INK_ADDRESS=0x6081a70c2F33329E49cD2aC673bF1ae838617d26
 
 # OnchainKit (Coinbase SDK)
 NEXT_PUBLIC_ONCHAINKIT_API_KEY=your-onchainkit-key
-NEXT_PUBLIC_ONCHAINKIT_APP_NAME=Gmeow Adventure
+NEXT_PUBLIC_ONCHAINKIT_APP_NAME=Gmeowbased Adventure
 NEXT_PUBLIC_ONCHAINKIT_LOGO=https://gmeowhq.art/logo.png
 
 # Agent Stream Configuration

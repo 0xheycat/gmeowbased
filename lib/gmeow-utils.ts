@@ -30,7 +30,22 @@ import NFT_ABI_JSON from '@/abi/GmeowNFT.abi.json'
 export type GMChainKey = 'base'
 
 // SECONDARY: All chains (for OnchainStats frame viewing only - api/frame routes)
-export type ChainKey = 'base' | 'optimism' | 'ethereum' | 'avax' | 'berachain' | 'bnb' | 'fraxtal' | 'katana' | 'soneium' | 'taiko' | 'hyperevm' | 'unichain' | 'celo' | 'ink' | 'op' | 'arbitrum'
+// BLOCKSCOUT-ONLY: Using Blockscout API for FREE access to 12 chains
+// See: docs/migration/BLOCKSCOUT-CHAIN-SUPPORT-COMPLETE.md
+export type ChainKey = 
+  | 'base'       // Base (8453)
+  | 'ethereum'   // Ethereum (1)
+  | 'optimism'   // OP Mainnet (10)
+  | 'arbitrum'   // Arbitrum One (42161)
+  | 'polygon'    // Polygon PoS (137)
+  | 'gnosis'     // Gnosis (100)
+  | 'celo'       // Celo (42220)
+  | 'scroll'     // Scroll (534352)
+  | 'unichain'   // Unichain (130)
+  | 'soneium'    // Soneium (1868)
+  | 'zksync'     // zkSync Era (324)
+  | 'zora'       // Zora (7777777)
+  | 'op'         // Alias for optimism
 
 // Base chain ID (primary)
 export const CHAIN_IDS: Record<GMChainKey, number> = {
@@ -38,36 +53,36 @@ export const CHAIN_IDS: Record<GMChainKey, number> = {
 }
 
 // All chain IDs (for OnchainStats frame support only)
+// BLOCKSCOUT-ONLY: Free API access via Blockscout MCP
+// Cost: $0/month | Coverage: 12 chains | Quality: Perfect
 export const ALL_CHAIN_IDS: Record<ChainKey, number> = {
   base: 8453,
-  optimism: 10,
-  op: 10,
   ethereum: 1,
+  optimism: 10,
+  op: 10, // Alias for optimism
   arbitrum: 42161,
-  avax: 43114,
-  berachain: 80094,
-  bnb: 56,
-  fraxtal: 252,
-  katana: 360,
-  soneium: 1946,
-  taiko: 167000,
-  hyperevm: 999,
-  unichain: 130,
+  polygon: 137,
+  gnosis: 100,
   celo: 42220,
-  ink: 57073,
+  scroll: 534352,
+  unichain: 130,
+  soneium: 1868,
+  zksync: 324,
+  zora: 7777777,
 }
 
 // Base chain contracts only (proxy-based standalone architecture)
 export const CONTRACT_ADDRESSES: Record<GMChainKey, `0x${string}`> = {
-  base: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9BDD11aA50456572E3Ea5329fcDEb81974137f92',
+  base: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x0cf22803Bfac7C5Da849DdCC736A338b37163d99',
 }
 
 // Standalone architecture addresses (Base chain only)
 export const STANDALONE_ADDRESSES = {
   base: {
-    core: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9BDD11aA50456572E3Ea5329fcDEb81974137f92',
-    guild: (process.env.NEXT_PUBLIC_GM_BASE_GUILD as `0x${string}`) || '0x967457be45facE07c22c0374dAfBeF7b2f7cd059',
-    nft: (process.env.NEXT_PUBLIC_GM_BASE_NFT as `0x${string}`) || '0xD99aeE13eA68C1e4e43cfA60E792520Dd06C2c20',
+    core: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x0cf22803Bfac7C5Da849DdCC736A338b37163d99',
+    guild: (process.env.NEXT_PUBLIC_GM_BASE_GUILD as `0x${string}`) || '0x1c86E848B01f02d478e5A10A0b51011B0160c39c',
+    nft: (process.env.NEXT_PUBLIC_GM_BASE_NFT as `0x${string}`) || '0xf79AC5AcaceC133081aEAB8896BE25B126c634e5',
+    badge: (process.env.NEXT_PUBLIC_GM_BASE_BADGE as `0x${string}`) || '0x30C125Bc40c46483Dd1F444C6985702a0c18b43E',
     proxy: (process.env.NEXT_PUBLIC_GM_BASE_PROXY as `0x${string}`) || '0x6A48B758ed42d7c934D387164E60aa58A92eD206',
   },
 }
@@ -122,36 +137,47 @@ const CHAIN_ID_LOOKUP = new Map<number, GMChainKey>(
 export const ALL_CHAIN_KEYS = Object.keys(ALL_CHAIN_IDS) as ChainKey[]
 
 // Simplified chain aliases (Base-focused, others for OnchainStats viewing only)
+// BLOCKSCOUT-ONLY: All aliases map to Blockscout-supported chains
 const CHAIN_ALIAS_LOOKUP: Record<string, ChainKey> = {
+  // Base
   base: 'base',
   'base-mainnet': 'base',
   'coinbase-base': 'base',
+  // Ethereum
+  ethereum: 'ethereum',
+  eth: 'ethereum',
+  'ethereum-mainnet': 'ethereum',
+  // Optimism
   op: 'optimism',
   optimism: 'optimism',
   'optimism-mainnet': 'optimism',
-  ethereum: 'ethereum',
-  eth: 'ethereum',
+  'op-mainnet': 'optimism',
+  // Arbitrum
   arbitrum: 'arbitrum',
   arb: 'arbitrum',
-  avax: 'avax',
-  avalanche: 'avax',
-  berachain: 'berachain',
-  bera: 'berachain',
-  bnb: 'bnb',
-  'bnb-chain': 'bnb',
-  bsc: 'bnb',
-  fraxtal: 'fraxtal',
-  katana: 'katana',
-  soneium: 'soneium',
-  taiko: 'taiko',
-  hyperevm: 'hyperevm',
-  hyper: 'hyperevm',
-  unichain: 'unichain',
-  uni: 'unichain',
+  'arbitrum-one': 'arbitrum',
+  // Polygon
+  polygon: 'polygon',
+  pol: 'polygon',
+  matic: 'polygon',
+  // Gnosis
+  gnosis: 'gnosis',
+  xdai: 'gnosis',
+  // Celo
   celo: 'celo',
   'celo-mainnet': 'celo',
-  ink: 'ink',
-  'ink-mainnet': 'ink',
+  // Scroll
+  scroll: 'scroll',
+  // Unichain
+  unichain: 'unichain',
+  uni: 'unichain',
+  // Soneium
+  soneium: 'soneium',
+  // zkSync
+  zksync: 'zksync',
+  'zksync-era': 'zksync',
+  // Zora
+  zora: 'zora',
 }
 
 const HEX_ID_REGEX = /^0x[0-9a-f]+$/i
@@ -874,24 +900,21 @@ export function getQuestFieldConfig(key: QuestTypeKey | string | number): QuestF
 // GM contract chains - Base only (for contract interactions)
 export const CHAIN_KEYS: GMChainKey[] = ['base']
 
-// Label map for UI (all chains for OnchainStats frame viewing)
+// Label map for UI (Blockscout-supported chains for OnchainStats frame viewing)
 export const CHAIN_LABEL: Record<ChainKey, string> = {
   base: 'Base',
-  optimism: 'Optimism',
-  op: 'Optimism',
   ethereum: 'Ethereum',
+  optimism: 'OP Mainnet',
+  op: 'OP Mainnet',
   arbitrum: 'Arbitrum',
-  avax: 'Avalanche',
-  berachain: 'Berachain',
-  bnb: 'BNB Chain',
-  fraxtal: 'Fraxtal',
-  katana: 'Katana',
-  soneium: 'Soneium',
-  taiko: 'Taiko',
-  hyperevm: 'HyperEVM',
-  unichain: 'Unichain',
+  polygon: 'Polygon',
+  gnosis: 'Gnosis',
   celo: 'Celo',
-  ink: 'Ink',
+  scroll: 'Scroll',
+  unichain: 'Unichain',
+  soneium: 'Soneium',
+  zksync: 'zkSync Era',
+  zora: 'Zora',
 }
 
 // Treat tiny/invalid timestamps as "no expiry"

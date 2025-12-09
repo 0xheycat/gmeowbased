@@ -1,9 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const COOKIE_NAME = 'm_auth'
-const ENABLED = process.env.MAINTENANCE_ENABLED === '1'
-const TOKEN = process.env.MAINTENANCE_TOKEN || ''
 const ADMIN_SESSION_COOKIE = 'gmeow_admin_session'
 const ADMIN_SCOPE = 'gmeow.admin'
 
@@ -76,40 +73,7 @@ export async function middleware(req: NextRequest) {
     const adminEnforcement = await enforceAdminSecurity(req)
     if (adminEnforcement) return adminEnforcement
 
-    if (!ENABLED) return NextResponse.next()
-
-    const { href } = req.nextUrl
-
-    // Allow the maintenance page, auth API, and common public assets
-    const allow = [
-      /^\/maintenance(?:\/|$)/,
-      /^\/api\/maintenance\/auth(?:\/|$)/,
-      /^\/admin\/login(?:\/|$)/,
-      /^\/api\/admin\/auth\//,
-      /^\/_next\//,
-      /^\/favicon\.ico$/,
-      /^\/robots\.txt$/,
-      /^\/sitemap\.xml$/,
-      /^\/images\//,
-      /^\/assets\//,
-      /^\/public\//,
-      /^\/.well-known\//,
-      /^\/api\/manifest(?:\/|$)/,
-      /^\/icon\.png$/,
-      /^\/splash\.png$/,
-      /^\/hero\.png$/,
-      /^\/og-image\.png$/,
-    ].some((re) => re.test(pathname))
-
-    if (allow) return NextResponse.next()
-
-    const hasToken = req.cookies.get(COOKIE_NAME)?.value === TOKEN
-    if (hasToken) return NextResponse.next()
-
-    const url = req.nextUrl.clone()
-    url.pathname = '/maintenance'
-    url.search = `?next=${encodeURIComponent(href)}`
-    return NextResponse.redirect(url)
+    return NextResponse.next()
   } catch (error) {
     console.error('Middleware error:', error)
     // On error, allow the request through to avoid blocking the entire site

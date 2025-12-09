@@ -11,6 +11,7 @@ import {
   sendBadgeAwardNotification,
 } from '@/lib/badges'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
@@ -43,6 +44,7 @@ const BASELINE_REWARDS = {
  * 5. Queue badge mint + OG NFT mint (Mythic only)
  */
 export const POST = withErrorHandler(async (request: Request) => {
+  const requestId = generateRequestId()
   // 1. Validate input with Zod
   const body = await request.json()
     const validationResult = OnboardCompleteSchema.safeParse(body)
@@ -55,7 +57,7 @@ export const POST = withErrorHandler(async (request: Request) => {
           error: 'Invalid input',
           details: validationResult.error.issues
         },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -66,7 +68,7 @@ export const POST = withErrorHandler(async (request: Request) => {
       console.error('[Onboard Complete] Neynar API key not configured')
       return NextResponse.json(
         { success: false, error: 'Service configuration error' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -78,7 +80,7 @@ export const POST = withErrorHandler(async (request: Request) => {
         console.warn('[Onboard Complete] FID not found in Neynar:', fid)
         return NextResponse.json(
           { success: false, error: 'Invalid Farcaster ID' },
-          { status: 400 }
+          { status: 400, headers: { 'X-Request-ID': requestId } }
       )
       }
       neynarUser = userResult.users[0]
@@ -87,7 +89,7 @@ export const POST = withErrorHandler(async (request: Request) => {
       console.error('[Onboard Complete] Neynar verification failed:', neynarError)
       return NextResponse.json(
         { success: false, error: 'Failed to verify Farcaster account' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -96,7 +98,7 @@ export const POST = withErrorHandler(async (request: Request) => {
     if (!supabase) {
       return NextResponse.json(
         { success: false, error: 'Database not configured' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -113,7 +115,7 @@ export const POST = withErrorHandler(async (request: Request) => {
         success: false,
         error: 'Already completed onboarding',
         alreadyOnboarded: true,
-      })
+      }, { headers: { 'X-Request-ID': requestId } })
     }
 
     // 5. Extract addresses from Neynar data
@@ -191,7 +193,7 @@ export const POST = withErrorHandler(async (request: Request) => {
       console.error('[Onboard Complete] Error updating profile:', updateError)
       return NextResponse.json(
         { success: false, error: 'Failed to update profile' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -302,6 +304,6 @@ export const POST = withErrorHandler(async (request: Request) => {
         instantMinting: isMythic && mintResult?.success,
         notificationSent: true, // Attempted notification
       },
-    })
+    }, { headers: { 'X-Request-ID': requestId } })
 })
 

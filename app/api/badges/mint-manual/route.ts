@@ -9,10 +9,15 @@
  * Security:
  * - Requires ADMIN_ACCESS_CODE for authorization
  * - Rate limited via strictLimiter (10 req/min)
+ * - Idempotency prevents double gas costs on retry
+ * 
+ * Idempotency: CRITICAL - Prevents double minting (2x gas costs)
+ * Header-based (Idempotency-Key) or timestamp-based fallback
  * 
  * Usage:
  * curl -X POST https://gmeowhq.art/api/badges/mint-manual \
  *   -H "Authorization: Bearer YOUR_ADMIN_ACCESS_CODE" \
+ *   -H "Idempotency-Key: unique-request-id" \
  *   -H "Content-Type: application/json" \
  *   -d '{"limit": 10}'
  */
@@ -21,6 +26,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { processBatch } from '@/scripts/automation/mint-badge-queue'
 import { rateLimit, strictLimiter } from '@/lib/rate-limit'
 import { z } from 'zod'
+import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/idempotency'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes max execution time
@@ -37,6 +44,7 @@ const ManualMintSchema = z.object({
  * POST handler for manual badge minting
  */
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
   const startTime = Date.now()
   
   try {
@@ -47,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (!rateLimitSuccess) {
       return NextResponse.json(
         { error: 'Rate limit exceeded' },
-        { status: 429 }
+        { status: 429, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -59,7 +67,7 @@ export async function POST(request: NextRequest) {
       console.error('[Manual Mint] ADMIN_ACCESS_CODE not configured')
       return NextResponse.json(
         { error: 'Server configuration error' },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -67,13 +75,23 @@ export async function POST(request: NextRequest) {
       console.error('[Manual Mint] Unauthorized request from IP:', ip)
       return NextResponse.json(
         { error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401, headers: { 'X-Request-ID': requestId } }
       )
     }
     
     // Parse and validate request body
     const body = await request.json().catch(() => ({}))
     const { limit, dryRun } = ManualMintSchema.parse(body)
+    
+    // Idempotency check (CRITICAL - prevents double gas costs)
+    const baseKey = getIdempotencyKey(request)
+    const idempotencyKey = baseKey || `mint-manual-${Date.now()}`
+    
+    const idempotencyResult = await checkIdempotency(idempotencyKey)
+    if (idempotencyResult.exists) {
+      console.log(`[Manual Mint] Replaying cached response for key: ${idempotencyKey} (prevented double mint)`);
+      return returnCachedResponse(idempotencyResult);
+    }
     
     console.log('[Manual Mint] Starting manual mint batch processing...')
     console.log('[Manual Mint] Limit:', limit)
@@ -85,7 +103,7 @@ export async function POST(request: NextRequest) {
         message: 'Dry run - no mints processed',
         limit,
         timestamp: new Date().toISOString(),
-      })
+      }, { headers: { 'X-Request-ID': requestId } })
     }
     
     // Process the batch
@@ -95,12 +113,18 @@ export async function POST(request: NextRequest) {
     console.log(`[Manual Mint] Batch processing complete in ${duration}ms`)
     console.log(`[Manual Mint] Result:`, result)
     
-    return NextResponse.json({
+    const response = {
       success: true,
       result,
       duration,
+      limit,
       timestamp: new Date().toISOString(),
-    })
+    }
+    
+    // Store result for idempotency (24h cache TTL, prevents double gas costs)
+    await storeIdempotency(idempotencyKey, response, 200)
+    
+    return NextResponse.json(response, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     const duration = Date.now() - startTime
     console.error('[Manual Mint] Batch processing error:', error)
@@ -114,7 +138,7 @@ export async function POST(request: NextRequest) {
           duration,
           timestamp: new Date().toISOString(),
         },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
     
@@ -125,7 +149,7 @@ export async function POST(request: NextRequest) {
         duration,
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }
@@ -134,6 +158,7 @@ export async function POST(request: NextRequest) {
  * GET handler for status check
  */
 export async function GET() {
+  const requestId = generateRequestId()
   return NextResponse.json({
     status: 'active',
     endpoint: '/api/badges/mint-manual',
@@ -145,5 +170,5 @@ export async function GET() {
       dryRun: 'boolean (optional, default: false)',
     },
     rateLimit: '10 requests per minute (strictLimiter)',
-  })
+  }, { headers: { 'X-Request-ID': requestId } })
 }

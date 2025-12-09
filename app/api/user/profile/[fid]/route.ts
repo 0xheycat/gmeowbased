@@ -27,6 +27,7 @@ import { validateAdminRequest } from '@/lib/admin-auth';
 import { getSupabaseServerClient } from '@/lib/supabase';
 import { fetchProfileData, updateProfileData, type ProfileData } from '@/lib/profile/profile-service';
 import DOMPurify from 'isomorphic-dompurify';
+import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/idempotency';
 
 export const dynamic = 'force-dynamic';
 
@@ -233,18 +234,17 @@ async function auditProfileChange(
  */
 export const GET = withErrorHandler(async (
   request: NextRequest,
-  context?: { params: { fid: string } }
+  context?: { params: Promise<{ fid: string }> }
 ) => {
   const startTime = Date.now();
   
-  // Extract params with null-safety
-  const params = context?.params;
+  // Next.js 15: Await params before accessing
+  const params = await context?.params;
   if (!params?.fid) {
-    return createErrorResponse({
-      type: ErrorType.VALIDATION,
-      message: 'FID parameter is required',
-      statusCode: 400,
-    });
+    return NextResponse.json(
+      { success: false, error: 'FID parameter is required' },
+      { status: 400 }
+    );
   }
 
   // LAYER 1: Rate Limiting (60 req/min)
@@ -331,6 +331,12 @@ export const GET = withErrorHandler(async (
 // ============================================================================
 
 /**
+ * Enterprise Enhancement: Idempotency Keys (CRITICAL)
+ * Prevents duplicate profile updates on network retry.
+ * Pattern: Stripe API idempotency (24h cache, X-Idempotency-Replayed header)
+ */
+
+/**
  * PUT handler with 10-layer security (owner-only)
  */
 export const PUT = withErrorHandler(async (
@@ -372,6 +378,18 @@ export const PUT = withErrorHandler(async (
   }
 
   const { fid } = fidValidation.data;
+
+  // Enterprise Enhancement: Check Idempotency Key
+  const idempotencyKey = getIdempotencyKey(request);
+  if (idempotencyKey) {
+    const cachedResult = await checkIdempotency(idempotencyKey);
+    if (cachedResult.exists && cachedResult.response) {
+      return NextResponse.json(cachedResult.response, {
+        status: cachedResult.status || 200,
+        headers: { 'X-Idempotency-Replayed': 'true' }
+      });
+    }
+  }
 
   // LAYER 3: Authentication (simplified for development)
   // TODO: Add proper JWT authentication in production
@@ -452,7 +470,7 @@ export const PUT = withErrorHandler(async (
     'X-Request-ID': `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
   }
   
-  return NextResponse.json({
+  const responseData = {
     success: true,
     data: updatedProfile,
     meta: {
@@ -461,5 +479,12 @@ export const PUT = withErrorHandler(async (
       timestamp: new Date().toISOString(),
       version: '1.0',
     },
-  }, { headers });
+  };
+
+  // Store idempotency key for 24h (prevents duplicate updates)
+  if (idempotencyKey) {
+    await storeIdempotency(idempotencyKey, responseData);
+  }
+  
+  return NextResponse.json(responseData, { headers });
 });

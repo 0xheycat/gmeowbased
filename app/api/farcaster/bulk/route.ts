@@ -4,15 +4,20 @@ import { fetchUsersByAddresses } from '@/lib/neynar'
 import { AddressSchema } from '@/lib/validation/api-schemas'
 import { z } from 'zod'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { 
+      status: 429,
+      headers: { 'X-Request-ID': requestId }
+    })
   }
 
   const body = (await req.json()) as { addresses?: string[] }
@@ -26,13 +31,16 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   if (!validation.success) {
     return NextResponse.json(
       { error: 'Invalid addresses format', details: validation.error.flatten() },
-      { status: 400 }
+      { status: 400, headers: { 'X-Request-ID': requestId } }
     )
   }
   
   const { addresses } = validation.data
   if (!Array.isArray(addresses) || addresses.length === 0) {
-    return NextResponse.json({}, { status: 200 })
+    return NextResponse.json({}, { 
+      status: 200,
+      headers: { 'X-Request-ID': requestId }
+    })
   }
 
   // Hard cap to avoid abuse; client can send again if needed
@@ -41,6 +49,9 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const result = await fetchUsersByAddresses(unique)
   return NextResponse.json(result || {}, { 
     status: 200,
-    headers: { 'Cache-Control': 'no-store' }
+    headers: { 
+      'X-Request-ID': requestId,
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+    }
   })
 })

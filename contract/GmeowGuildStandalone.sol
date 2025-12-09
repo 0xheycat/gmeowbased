@@ -7,6 +7,7 @@ import "./modules/GuildModule.sol";
  * @title GmeowGuildStandalone
  * @notice Standalone Guild contract that references core contract
  * @dev Works with GmeowCore - shares users via cross-contract calls
+ * @dev ENHANCED: Uses _getCoreContract() override for proper integration
  */
 contract GmeowGuildStandalone is GuildModule {
   
@@ -28,5 +29,13 @@ contract GmeowGuildStandalone is GuildModule {
   function setCoreContract(address _coreContract) external onlyOwner {
     require(_coreContract != address(0), "Invalid address");
     coreContract = _coreContract;
+  }
+  
+  /**
+   * @notice Override to return core contract address for standalone deployment
+   * @dev This enables _getUserPoints(), _deductPoints(), _addPoints() to work
+   */
+  function _getCoreContract() internal view override returns (address) {
+    return coreContract;
   }
 }

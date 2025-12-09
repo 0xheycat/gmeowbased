@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 /**
  * Badge Analytics Endpoint
@@ -9,6 +10,8 @@ import { withErrorHandler } from '@/lib/error-handler'
  * Returns: new badges in last 24h, badge distribution by tier, top 20 users by tier
  */
 export const GET = withErrorHandler(async (request: NextRequest) => {
+  const requestId = generateRequestId()
+  
   // Apply rate limiting
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
@@ -16,7 +19,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -24,7 +27,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   if (!supabase) {
     return NextResponse.json(
       { error: 'Database unavailable' },
-      { status: 503 }
+      { status: 503, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -219,7 +222,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       {
         status: 200,
         headers: {
-          'Cache-Control': 'public, max-age=300, s-maxage=300',
+          'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
+          'X-Request-ID': requestId,
         },
       }
     )

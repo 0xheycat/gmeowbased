@@ -9,6 +9,7 @@ import {
   isValidBadgeId,
   isValidFid,
 } from '@/lib/frame-badge'
+import { generateRequestId } from '@/lib/request-id'
 
 function getBaseUrl(request: NextRequest): string {
   const protocol = request.headers.get('x-forwarded-proto') || 'https'
@@ -23,11 +24,15 @@ function getBaseUrl(request: NextRequest): string {
  * Route: /api/frame/badgeShare?fid=xxx&badgeId=yyy
  */
 export const GET = withErrorHandler(async (request: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
-    return new NextResponse('Rate limit exceeded', { status: 429 })
+    return new NextResponse('Rate limit exceeded', { 
+      status: 429,
+      headers: { 'X-Request-ID': requestId }
+    })
   }
     const { searchParams } = new URL(request.url)
     const fidParam = searchParams.get('fid')
@@ -35,7 +40,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     // Validate FID
     if (!fidParam) {
-      return new NextResponse('Missing fid parameter', { status: 400 })
+      return new NextResponse('Missing fid parameter', { 
+        status: 400,
+        headers: { 'X-Request-ID': requestId }
+      })
     }
 
     const fid = parseInt(fidParam, 10)
@@ -43,16 +51,25 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     // Zod validation
     const fidValidation = FIDSchema.safeParse(fid)
     if (!fidValidation.success || !isValidFid(fid)) {
-      return new NextResponse('Invalid fid parameter', { status: 400 })
+      return new NextResponse('Invalid fid parameter', { 
+        status: 400,
+        headers: { 'X-Request-ID': requestId }
+      })
     }
 
     // Validate badge ID
     if (!badgeIdParam) {
-      return new NextResponse('Missing badgeId parameter', { status: 400 })
+      return new NextResponse('Missing badgeId parameter', { 
+        status: 400,
+        headers: { 'X-Request-ID': requestId }
+      })
     }
 
     if (!isValidBadgeId(badgeIdParam)) {
-      return new NextResponse('Invalid badgeId parameter', { status: 400 })
+      return new NextResponse('Invalid badgeId parameter', { 
+        status: 400,
+        headers: { 'X-Request-ID': requestId }
+      })
     }
 
     // Fetch user badges
@@ -95,7 +112,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 </html>`,
         {
           status: 200,
-          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          headers: { 
+            'Content-Type': 'text/html; charset=utf-8',
+            'X-Request-ID': requestId
+          },
         }
       )
     }
@@ -206,6 +226,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       headers: {
         'Content-Type': 'text/html',
         'Cache-Control': 'public, max-age=300, s-maxage=300',
+        'X-Request-ID': requestId
       },
     })
 })

@@ -1,6 +1,7 @@
 import { domainManifestSchema } from '@farcaster/miniapp-core'
 import { NextResponse } from 'next/server'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 const DEFAULT_BASE_URL = 'https://gmeowhq.art'
 const PLACEHOLDER_PATTERN = /^(?:REPLACE|PLACEHOLDER|TODO|FILL_ME)/i
@@ -67,6 +68,7 @@ const toAbsoluteUrl = (pathname: string, baseUrl: URL) =>
   new URL(pathname, baseUrl).toString()
 
 export const GET = withErrorHandler(async () => {
+  const requestId = generateRequestId()
   const baseUrl = buildBaseUrl()
   const accountAssociation = resolveAccountAssociation()
   const baseBuilder = resolveBaseBuilder()
@@ -85,14 +87,14 @@ export const GET = withErrorHandler(async () => {
       webhookUrl: toAbsoluteUrl('/api/neynar/webhook', baseUrl),
       subtitle: 'Daily GM Quest Hub',
       description:
-        'Join the epic Gmeow Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
+        'Join the epic Gmeowbased Adventure! Daily GM rituals, cross-chain quests, guild battles, and prestige rewards across Base, Celo, Optimism, Unichain, and Ink.',
       primaryCategory: 'social',
       tags: ['gm', 'streak', 'base', 'social', 'daily'],
       heroImageUrl: toAbsoluteUrl('/hero.png', baseUrl),
       tagline: 'Keep your GM streak alive',
       ogTitle: 'Gmeowbased Quest Game',
       ogDescription:
-        'Daily GM quests, onchain streaks, and leaderboard rewards with GMEOW Adventure.',
+        'Daily GM quests, onchain streaks, and leaderboard rewards with Gmeowbased Adventure.',
       ogImageUrl: toAbsoluteUrl('/og-image.png', baseUrl),
       screenshotUrls: [
         toAbsoluteUrl('/screenshots/gm-streak.png', baseUrl),
@@ -122,6 +124,7 @@ export const GET = withErrorHandler(async () => {
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'public, max-age=3600',
+      'X-Request-ID': requestId,
     },
   })
 })

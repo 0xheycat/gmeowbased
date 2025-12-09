@@ -1,10 +1,11 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { useState } from 'react'
 
 type Props = {
-  loading: boolean
-  onLoadingChange: (loading: boolean) => void
+  loading?: boolean
+  onLoadingChange?: (loading: boolean) => void
 }
 
 type OnchainStatsComponentProps = {
@@ -12,11 +13,22 @@ type OnchainStatsComponentProps = {
 }
 
 const OnchainStats = dynamic<OnchainStatsComponentProps>(
-  () => import('@/components/OnchainStats').then((mod) => mod.OnchainStats),
+  () => import('@/components/OnchainStatsV2').then((mod) => mod.OnchainStatsV2),
   { ssr: false },
 )
 
-export function OnchainHub({ loading, onLoadingChange }: Props) {
+export function OnchainHub({ loading: externalLoading, onLoadingChange }: Props) {
+  const [internalLoading, setInternalLoading] = useState(false)
+  const loading = externalLoading !== undefined ? externalLoading : internalLoading
+
+  const handleLoadingChange = (isLoading: boolean) => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading)
+    } else {
+      setInternalLoading(isLoading)
+    }
+  }
+
   return (
     <section id="onchain-hub" className="hub">
       <div className="hub-header">
@@ -28,7 +40,7 @@ export function OnchainHub({ loading, onLoadingChange }: Props) {
         </p>
       </div>
       <div className="hub-card">
-        <OnchainStats onLoadingChange={onLoadingChange} />
+        <OnchainStats onLoadingChange={handleLoadingChange} />
         {loading ? <span className="hub-loading">Syncing onchain data…</span> : null}
       </div>
     </section>

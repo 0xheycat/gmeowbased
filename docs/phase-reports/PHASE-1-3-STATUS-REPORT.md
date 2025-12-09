@@ -447,7 +447,7 @@ components/Quest/: QuestCard (1,956 lines, fresh CSS)
 components/layout/gmeow/: GmeowHeader (130 lines, fresh CSS)
 
 # Library
-lib/gm-utils.ts: 929 lines (multi-chain support)
+lib/gmeow-utils.ts: 929 lines (multi-chain support)
 lib/gmeow-utils.ts: DOES NOT EXIST on main (Base-only on foundation-rebuild)
 
 # Styles

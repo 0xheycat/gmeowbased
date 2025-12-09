@@ -2,6 +2,8 @@
  * Neynar Dashboard API
  * All 5 data-fetching functions for 100% automated dashboard
  * NO manual token/NFT addresses required!
+ * 
+ * ✅ Data Caching: 30s TTL with cache metadata
  */
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY!
@@ -9,8 +11,26 @@ const NEXT_PUBLIC_NEYNAR_API_KEY = process.env.NEXT_PUBLIC_NEYNAR_API_KEY!
 
 const BASE_URL = 'https://api.neynar.com/v2'
 
-// Cache for 5 minutes (300 seconds)
-const CACHE_TTL = 300
+// Cache for 30 seconds (per audit requirements)
+const CACHE_TTL = 30
+
+// ===========================
+// CACHE METADATA
+// ===========================
+
+export interface CachedResponse<T> {
+  data: T
+  cached_at: string // ISO timestamp
+  ttl: number // seconds
+}
+
+function createCachedResponse<T>(data: T): CachedResponse<T> {
+  return {
+    data,
+    cached_at: new Date().toISOString(),
+    ttl: CACHE_TTL,
+  }
+}
 
 // ===========================
 // 1. TRENDING TOKENS (24h) ✅ TESTED
@@ -27,7 +47,7 @@ export interface TrendingToken {
   volume24h?: number // USD (calculated if available)
 }
 
-export async function getTrendingTokens(): Promise<TrendingToken[]> {
+export async function getTrendingTokens(): Promise<CachedResponse<TrendingToken[]>> {
   try {
     const response = await fetch(
       `${BASE_URL}/farcaster/fungible/trending?network=base&time_window=24h&limit=10`,
@@ -48,7 +68,7 @@ export async function getTrendingTokens(): Promise<TrendingToken[]> {
     const data = await response.json()
 
     // Transform Neynar response to our interface
-    return data.trending.map((item: any) => ({
+    const tokens = data.trending.map((item: any) => ({
       address: item.fungible.address,
       name: item.fungible.name,
       symbol: item.fungible.symbol,
@@ -59,9 +79,11 @@ export async function getTrendingTokens(): Promise<TrendingToken[]> {
       change24h: 0,
       volume24h: 0,
     }))
+
+    return createCachedResponse(tokens)
   } catch (error) {
     console.error('Error fetching trending tokens:', error)
-    return []
+    return createCachedResponse([])
   }
 }
 
@@ -79,7 +101,7 @@ export interface TopCaster {
   powerBadge: boolean
 }
 
-export async function getTopCasters(limit: number = 12): Promise<TopCaster[]> {
+export async function getTopCasters(limit: number = 12): Promise<CachedResponse<TopCaster[]>> {
   try {
     const response = await fetch(
       `${BASE_URL}/farcaster/user/power?limit=${limit}`,
@@ -99,7 +121,7 @@ export async function getTopCasters(limit: number = 12): Promise<TopCaster[]> {
 
     const data = await response.json()
 
-    return data.users.map((user: any) => ({
+    const casters = data.users.map((user: any) => ({
       fid: user.fid,
       username: user.username,
       displayName: user.display_name || user.username,
@@ -108,9 +130,11 @@ export async function getTopCasters(limit: number = 12): Promise<TopCaster[]> {
       followingCount: user.following_count,
       powerBadge: user.power_badge || false,
     }))
+
+    return createCachedResponse(casters)
   } catch (error) {
     console.error('Error fetching top casters:', error)
-    return []
+    return createCachedResponse([])
   }
 }
 
@@ -128,7 +152,7 @@ export interface TrendingChannel {
   leadFid: number
 }
 
-export async function getTrendingChannels(limit: number = 12): Promise<TrendingChannel[]> {
+export async function getTrendingChannels(limit: number = 12): Promise<CachedResponse<TrendingChannel[]>> {
   try {
     const response = await fetch(
       `${BASE_URL}/farcaster/channel/trending?time_window=7d&limit=${limit}`,
@@ -148,7 +172,7 @@ export async function getTrendingChannels(limit: number = 12): Promise<TrendingC
 
     const data = await response.json()
 
-    return data.channels.map((item: any) => ({
+    const channels = data.channels.map((item: any) => ({
       id: item.channel.id,
       name: item.channel.name,
       description: item.channel.description || '',
@@ -157,9 +181,11 @@ export async function getTrendingChannels(limit: number = 12): Promise<TrendingC
       memberCount: item.channel.follower_count || 0,
       leadFid: item.channel.lead?.fid,
     }))
+
+    return createCachedResponse(channels)
   } catch (error) {
     console.error('Error fetching trending channels:', error)
-    return []
+    return createCachedResponse([])
   }
 }
 
@@ -188,7 +214,7 @@ export interface ActivityCast {
   }>
 }
 
-export async function getActivityFeed(limit: number = 10): Promise<ActivityCast[]> {
+export async function getActivityFeed(limit: number = 10): Promise<CachedResponse<ActivityCast[]>> {
   try {
     const response = await fetch(
       `${BASE_URL}/farcaster/feed?feed_type=filter&filter_type=global_trending&limit=${limit}`,
@@ -208,7 +234,7 @@ export async function getActivityFeed(limit: number = 10): Promise<ActivityCast[
 
     const data = await response.json()
 
-    return data.casts.map((cast: any) => ({
+    const casts = data.casts.map((cast: any) => ({
       hash: cast.hash,
       text: cast.text,
       timestamp: cast.timestamp,
@@ -224,9 +250,11 @@ export async function getActivityFeed(limit: number = 10): Promise<ActivityCast[
       recasts: cast.reactions?.recasts_count || 0,
       embeds: cast.embeds || [],
     }))
+
+    return createCachedResponse(casts)
   } catch (error) {
     console.error('Error fetching activity feed:', error)
-    return []
+    return createCachedResponse([])
   }
 }
 

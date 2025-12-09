@@ -48,13 +48,17 @@ abstract contract GuildModule is BaseModule {
 
   // ============ FUNCTIONS ============
 
-  function createGuild(string calldata name) external whenNotPaused {
+  function createGuild(string calldata name) external nonReentrant whenNotPaused {
     require(bytes(name).length > 2, "E001");
+    require(bytes(name).length <= 64, "Name too long");
     require(guildOf[msg.sender] == 0, "E002");
-    require(pointsBalance[msg.sender] >= guildCreationCost, "E003");
     
-    if (pointsBalance[msg.sender] < guildCreationCost) revert InsufficientPoints();
-    pointsBalance[msg.sender] -= guildCreationCost;
+    // Check points using unified helper (works in both architectures)
+    uint256 userPoints = _getUserPoints(msg.sender);
+    require(userPoints >= guildCreationCost, "E003");
+    
+    // Deduct points using unified helper (works in both architectures)
+    _deductPoints(msg.sender, guildCreationCost);
 
     nextGuildId += 1;
     uint256 gid = nextGuildId;
@@ -106,17 +110,19 @@ abstract contract GuildModule is BaseModule {
   }
 
   function _computeGuildLevel(uint256 totalPoints) internal pure returns (uint8) {
-    if (totalPoints >= 10000) return 5;
-    if (totalPoints >= 5000) return 4;
-    if (totalPoints >= 2000) return 3;
-    if (totalPoints >= 1000) return 2;
-    return 1;
+    unchecked {
+      if (totalPoints >= 10000) return 5;
+      if (totalPoints >= 5000) return 4;
+      if (totalPoints >= 2000) return 3;
+      if (totalPoints >= 1000) return 2;
+      return 1;
+    }
   }
 
   function depositGuildPoints(uint256 guildId, uint256 points) external whenNotPaused {
     _validateGuildId(guildId, nextGuildId);
-    require(pointsBalance[msg.sender] >= points, "E003");
-    pointsBalance[msg.sender] -= points;
+    require(_getUserPoints(msg.sender) >= points, "E003");
+    _deductPoints(msg.sender, points);
     guildTreasuryPoints[guildId] += points;
     addGuildPoints(guildId, points / 10);
     emit GuildPointsDeposited(guildId, msg.sender, points);
@@ -131,7 +137,7 @@ abstract contract GuildModule is BaseModule {
     );
     require(guildTreasuryPoints[guildId] >= points, "E009");
     guildTreasuryPoints[guildId] -= points;
-    pointsBalance[msg.sender] += points;
+    _addPoints(msg.sender, points);
     emit GuildRewardClaimed(guildId, msg.sender, points);
   }
 
@@ -188,7 +194,7 @@ abstract contract GuildModule is BaseModule {
     require(gq.active, "E005");
     uint256 gid = gq.guildId;
     require(guildOf[msg.sender] == gid, "E006");
-    pointsBalance[msg.sender] += gq.rewardPoints;
+    _addPoints(msg.sender, gq.rewardPoints);
     addGuildPoints(gid, gq.rewardPoints);
     emit GuildRewardClaimed(gid, msg.sender, gq.rewardPoints);
   }

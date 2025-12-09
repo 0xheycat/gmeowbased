@@ -9,6 +9,10 @@
  * - Authenticated users only
  * - File validation (type, size)
  * - Owner-only access
+ * - Idempotency prevents duplicate uploads on network retry
+ * 
+ * Idempotency: Header-based (Idempotency-Key), Stripe pattern
+ * Key format: Client-provided UUID or auto-generated from file metadata
  * 
  * @module app/api/storage/upload
  */
@@ -16,6 +20,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
+import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/idempotency'
+import { generateRequestId } from '@/lib/request-id'
 
 // Lazy initialization of Supabase client with config validation
 let supabase: ReturnType<typeof createClient> | null = null;
@@ -48,6 +54,8 @@ const AVATAR_BUCKET = 'avatars'
 const COVER_BUCKET = 'covers'
 
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
+  
   try {
     // Step 1: Validate Supabase configuration
     let supabaseClient;
@@ -60,7 +68,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: 'Storage service not configured. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.',
         },
-        { status: 503 }
+        { status: 503, headers: { 'X-Request-ID': requestId } }
       );
     }
 
@@ -72,11 +80,21 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid request', details: validation.error.issues },
-        { status: 400 }
+        { status: 400, headers: { 'X-Request-ID': requestId } }
       )
     }
 
     const { fid, fileName, fileType, type } = validation.data
+
+    // Idempotency check (prevents duplicate uploads on retry)
+    const baseKey = getIdempotencyKey(request)
+    const idempotencyKey = baseKey || `storage-upload-${fid}-${type}-${fileName}`
+    
+    const idempotencyResult = await checkIdempotency(idempotencyKey)
+    if (idempotencyResult.exists) {
+      console.log(`[Upload API] Replaying cached response for key: ${idempotencyKey}`);
+      return returnCachedResponse(idempotencyResult);
+    }
 
     // Generate unique filename
     const extension = fileName.split('.').pop() || 'jpg'
@@ -109,7 +127,7 @@ export async function POST(request: NextRequest) {
             error: 'Storage service is currently unavailable. Please try again later.',
             ...(isDev && { _devDetails: `Bucket '${bucket}' not found` })
           },
-          { status: 503 }
+          { status: 503, headers: { 'X-Request-ID': requestId } }
         )
       }
       
@@ -120,7 +138,7 @@ export async function POST(request: NextRequest) {
             error: 'Storage service is currently unavailable. Please try again later.',
             ...(isDev && { _devDetails: 'Permission denied - check storage policies' })
           },
-          { status: 503 }
+          { status: 503, headers: { 'X-Request-ID': requestId } }
         )
       }
       
@@ -130,7 +148,7 @@ export async function POST(request: NextRequest) {
           error: 'Failed to upload image. Please try again later.',
           ...(isDev && { _devDetails: signedUrlError.message })
         },
-        { status: 500 }
+        { status: 500, headers: { 'X-Request-ID': requestId } }
       )
     }
 
@@ -139,16 +157,21 @@ export async function POST(request: NextRequest) {
       .from(bucket)
       .getPublicUrl(uniqueFileName)
 
-    return NextResponse.json({
+    const response = {
       uploadUrl: signedUrlData.signedUrl,
       publicUrl: publicUrlData.publicUrl,
       path: uniqueFileName,
-    })
+    }
+    
+    // Store result for idempotency (24h cache TTL, prevents duplicate uploads)
+    await storeIdempotency(idempotencyKey, response, 200)
+
+    return NextResponse.json(response, { headers: { 'X-Request-ID': requestId } })
   } catch (error) {
     console.error('Upload API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: { 'X-Request-ID': requestId } }
     )
   }
 }

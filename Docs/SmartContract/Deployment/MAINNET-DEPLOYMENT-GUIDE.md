@@ -159,7 +159,7 @@ forge create contract/GmeowNFTStandalone.sol:GmeowNFTStandalone \
   --broadcast \
   --rpc-url $RPC \
   --private-key $PRIVATE_KEY \
-  --constructor-args $CORE_ADDRESS "Gmeow Adventure NFT" "GMEOW" "https://api.gmeowhq.art/nft/"
+  --constructor-args $CORE_ADDRESS "Gmeowbased Adventure NFT" "GMEOW" "https://api.gmeowhq.art/nft/"
 
 # SAVE THE ADDRESS!
 NFT_ADDRESS="0x9BDD11aA50456572E3Ea5329fcDEb81974137f92"
@@ -240,7 +240,7 @@ forge verify-contract \
   $NFT_ADDRESS \
   contract/GmeowNFTStandalone.sol:GmeowNFTStandalone \
   --chain-id 8453 \
-  --constructor-args $(cast abi-encode "constructor(address,string,string,string)" $CORE_ADDRESS "Gmeow Adventure NFT" "GMEOW" "https://api.gmeowhq.art/nft/") \
+  --constructor-args $(cast abi-encode "constructor(address,string,string,string)" $CORE_ADDRESS "Gmeowbased Adventure NFT" "GMEOW" "https://api.gmeowhq.art/nft/") \
   --watch
 ```
 

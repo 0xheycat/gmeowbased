@@ -1,7 +1,7 @@
 # Farcaster Miniapp Manifest Setup Guide
 
 ## Overview
-This guide explains how to configure and sign the Farcaster miniapp manifest for Gmeow Adventure at `gmeowhq.art`.
+This guide explains how to configure and sign the Farcaster miniapp manifest for Gmeowbased Adventure at `gmeowhq.art`.
 
 ## Manifest Location
 - **File**: `/public/.well-known/farcaster.json`
@@ -18,11 +18,11 @@ Verifies ownership of the domain to a Farcaster account using JSON Farcaster Sig
 **Current Status**: Contains placeholder values that MUST be replaced with real signatures.
 
 ### 2. `miniapp` (Configured)
-Contains all metadata about the Gmeow Adventure miniapp.
+Contains all metadata about the Gmeowbased Adventure miniapp.
 
 ## Required Fields (Already Configured)
 - ✅ `version`: "1" (Manifest version)
-- ✅ `name`: "Gmeow Adventure"
+- ✅ `name`: "Gmeowbased Adventure"
 - ✅ `iconUrl`: Icon image (1024x1024px PNG, no alpha)
 - ✅ `homeUrl`: Default launch URL
 - ✅ `splashImageUrl`: Loading screen image (200x200px)

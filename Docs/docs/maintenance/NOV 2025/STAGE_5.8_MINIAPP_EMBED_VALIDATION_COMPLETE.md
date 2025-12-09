@@ -490,7 +490,7 @@ Status: ✅ Maintained (no regressions)
 lib/
   ├── frame-validation.ts        (Stage 5.7.4 & 5.7.6)
   ├── miniapp-validation.ts      (Stage 5.8 - NEW)
-  └── gm-utils.ts
+  └── gmeow-utils.ts
 
 public/
   ├── splash.png                 (200x200, compliant ✅)

@@ -1,198 +1,220 @@
-# Supabase Storage Setup - Profile Images
+# Supabase Storage Setup Guide
 
-**Created**: December 5, 2025  
-**Purpose**: Avatar and cover image upload for Edit Profile feature
+## Required Storage Buckets
 
-## Storage Buckets Required
+The application requires three storage buckets to be created in your Supabase project:
 
-### 1. Avatars Bucket
-- **Name**: `avatars`
-- **Public**: Yes (read-only)
-- **Max file size**: 10MB
-- **Allowed types**: image/*
-- **Path structure**: `{fid}/avatar-{timestamp}.{ext}`
+### 1. `avatars` Bucket
+**Purpose:** Store user profile avatar images
 
-### 2. Covers Bucket
-- **Name**: `covers`
-- **Public**: Yes (read-only)
-- **Max file size**: 10MB
-- **Allowed types**: image/*
-- **Path structure**: `{fid}/cover-{timestamp}.{ext}`
+**Setup:**
+1. Go to Supabase Dashboard → Storage
+2. Click "Create a new bucket"
+3. Name: `avatars`
+4. Public bucket: ✅ Yes
+5. File size limit: 10 MB
+6. Allowed MIME types: `image/*`
 
-## Setup Instructions
-
-### Via Supabase Dashboard
-
-1. Navigate to **Storage** in Supabase Dashboard
-2. Click **New Bucket**
-3. Create `avatars` bucket:
-   - Name: `avatars`
-   - Public bucket: ✅ Enabled
-   - File size limit: 10485760 bytes (10MB)
-   - Allowed MIME types: `image/*`
-4. Create `covers` bucket with same settings
-
-### Via SQL (Alternative)
-
+**Policies:**
 ```sql
--- Create avatars bucket
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('avatars', 'avatars', true);
-
--- Create covers bucket
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('covers', 'covers', true);
-
--- Set up RLS policies for avatars
-CREATE POLICY "Avatar images are publicly accessible"
+-- Allow public read access
+CREATE POLICY "Public Access"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'avatars');
 
-CREATE POLICY "Authenticated users can upload avatars"
+-- Allow authenticated users to upload
+CREATE POLICY "Authenticated Upload"
 ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'avatars' 
-  AND auth.role() = 'authenticated'
-);
+WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Users can update own avatars"
+-- Allow users to update their own files
+CREATE POLICY "User Update Own Files"
 ON storage.objects FOR UPDATE
-USING (
-  bucket_id = 'avatars'
-  AND auth.role() = 'authenticated'
-);
+USING (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+```
 
--- Repeat for covers bucket
-CREATE POLICY "Cover images are publicly accessible"
+### 2. `covers` Bucket
+**Purpose:** Store user profile cover images
+
+**Setup:**
+1. Go to Supabase Dashboard → Storage
+2. Click "Create a new bucket"
+3. Name: `covers`
+4. Public bucket: ✅ Yes
+5. File size limit: 10 MB
+6. Allowed MIME types: `image/*`
+
+**Policies:**
+```sql
+-- Allow public read access
+CREATE POLICY "Public Access"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'covers');
 
-CREATE POLICY "Authenticated users can upload covers"
+-- Allow authenticated users to upload
+CREATE POLICY "Authenticated Upload"
 ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'covers' 
-  AND auth.role() = 'authenticated'
-);
+WITH CHECK (bucket_id = 'covers' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Users can update own covers"
+-- Allow users to update their own files
+CREATE POLICY "User Update Own Files"
 ON storage.objects FOR UPDATE
-USING (
-  bucket_id = 'covers'
-  AND auth.role() = 'authenticated'
-);
+USING (bucket_id = 'covers' AND auth.role() = 'authenticated');
 ```
 
-## Current Implementation
+### 3. `badges` Bucket
+**Purpose:** Store badge images and templates
 
-### Files Created
-1. **lib/storage/image-upload-service.ts** (165 lines)
-   - `uploadImage()` - Upload to Supabase Storage
-   - `deleteImage()` - Remove old images
-   - `getImageUrl()` - Get public URL
-   - Validation: file type, size (10MB max)
+**Setup:**
+1. Go to Supabase Dashboard → Storage
+2. Click "Create a new bucket"
+3. Name: `badges`
+4. Public bucket: ✅ Yes
+5. File size limit: 10 MB
+6. Allowed MIME types: `image/*`
 
-2. **app/api/storage/upload/route.ts** (100 lines)
-   - POST endpoint for signed upload URLs
-   - Rate limiting: 20/min
-   - Authentication required
-   - File validation (type, size)
-
-3. **components/profile/ProfileEditModal.tsx** (UPDATED)
-   - Replaced `https://placeholder.com` with real upload
-   - Flow: Get signed URL → Upload file → Get public URL
-   - Preview: Local preview + Supabase URL on success
-
-### Environment Variables Required
-
-```env
-# Already configured in .env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-```
-
-## Upload Flow
-
-1. User selects image in ProfileEditModal
-2. Client creates local preview (FileReader)
-3. Client calls `/api/storage/upload` with metadata
-4. Server generates signed upload URL (5min expiry)
-5. Client uploads file directly to Supabase Storage
-6. Server returns public URL
-7. Public URL saved in profile (avatar_url or cover_image_url)
-
-## Security Features
-
-✅ **Client-side**:
-- File type validation (image/* only)
-- File size validation (10MB max)
-- Preview before upload
-- Error handling
-
-✅ **Server-side**:
-- Rate limiting (20 uploads/min)
-- Authentication required
-- Signed URLs (5min expiry)
-- Unique filenames (FID + timestamp)
-
-✅ **Storage-level**:
-- Public read (anyone can view)
-- Authenticated write (logged-in users only)
-- Automatic overwrite (upsert: true)
-- Cache-Control: 3600s (1 hour)
-
-## Testing
-
-### Manual Test
-1. Go to `/profile/your-fid`
-2. Click "Edit Profile" (owner only)
-3. Upload avatar or cover image
-4. Check preview appears immediately
-5. Click "Save Changes"
-6. Verify image updates in profile
-
-### Check Storage
+**Policies:**
 ```sql
--- List all avatars
-SELECT * FROM storage.objects WHERE bucket_id = 'avatars';
+-- Allow public read access
+CREATE POLICY "Public Access"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'badges');
 
--- List all covers
-SELECT * FROM storage.objects WHERE bucket_id = 'covers';
+-- Allow service role to upload (for badge creation)
+CREATE POLICY "Service Role Upload"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'badges');
+```
 
--- Check storage usage
-SELECT 
-  bucket_id,
-  COUNT(*) as file_count,
-  SUM(LENGTH(metadata->>'size')::int) as total_bytes
-FROM storage.objects
-GROUP BY bucket_id;
+## Quick Setup via SQL
+
+Run this in your Supabase SQL Editor to create all policies at once:
+
+```sql
+-- Avatars bucket policies
+CREATE POLICY "avatars_public_read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+CREATE POLICY "avatars_authenticated_upload" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'avatars');
+
+CREATE POLICY "avatars_authenticated_update" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'avatars');
+
+-- Covers bucket policies
+CREATE POLICY "covers_public_read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'covers');
+
+CREATE POLICY "covers_authenticated_upload" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'covers');
+
+CREATE POLICY "covers_authenticated_update" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'covers');
+
+-- Badges bucket policies
+CREATE POLICY "badges_public_read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'badges');
+
+CREATE POLICY "badges_service_upload" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'badges');
+```
+
+## Testing Storage
+
+After creating the buckets, test them with this cURL command:
+
+```bash
+# Replace with your actual Supabase URL and service key
+SUPABASE_URL="https://your-project.supabase.co"
+SERVICE_KEY="your-service-role-key"
+
+# Test creating a signed upload URL
+curl -X POST "$SUPABASE_URL/storage/v1/object/avatars/test.jpg/sign" \
+  -H "Authorization: Bearer $SERVICE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"expiresIn": 300}'
+```
+
+Expected response:
+```json
+{
+  "signedURL": "https://your-project.supabase.co/storage/v1/object/sign/avatars/test.jpg?token=..."
+}
 ```
 
 ## Troubleshooting
 
-### Issue: Upload fails with 403
-**Cause**: RLS policies not configured  
-**Fix**: Run SQL policies above or enable in Dashboard
+### Error: "Storage bucket does not exist"
+**Solution:** Create the bucket in Supabase Dashboard → Storage
 
-### Issue: Images not loading
-**Cause**: Bucket not public  
-**Fix**: Set `public: true` in bucket settings
+### Error: "Permission denied"
+**Solution:** 
+1. Check that the bucket is set to "Public"
+2. Verify storage policies are created (see SQL above)
+3. Check that `SUPABASE_SERVICE_ROLE_KEY` is set in `.env.local`
 
-### Issue: Upload URL expired
-**Cause**: 5min expiry exceeded  
-**Fix**: Request new signed URL, uploads are time-sensitive
+### Error: "Failed to generate upload URL"
+**Possible causes:**
+1. Bucket doesn't exist
+2. Invalid Supabase credentials
+3. Storage policies not configured
+4. Network/firewall issues
 
-## Future Enhancements
+**Debug steps:**
+1. Check Supabase Dashboard → Storage → Verify buckets exist
+2. Check `.env.local` → Verify `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+3. Test with cURL command above
+4. Check Supabase logs for detailed errors
 
-- [ ] Image transformation (resize, crop, optimize)
-- [ ] CDN integration for faster loading
-- [ ] Old image cleanup (delete previous avatar/cover)
-- [ ] Direct upload from URL (paste image URL)
-- [ ] Image moderation (NSFW detection)
-- [ ] Storage quota per user (100MB limit)
+## Environment Variables Required
 
-## References
+```bash
+# In .env.local
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+```
 
-- [Supabase Storage Docs](https://supabase.com/docs/guides/storage)
-- [Signed Upload URLs](https://supabase.com/docs/guides/storage/uploads/signed-upload-urls)
-- [RLS Policies](https://supabase.com/docs/guides/storage/security/access-control)
+## File Organization
+
+Files are stored with this structure:
+```
+avatars/
+  └── {fid}/
+      └── avatar-{timestamp}.{ext}
+
+covers/
+  └── {fid}/
+      └── cover-{timestamp}.{ext}
+
+badges/
+  └── {badge_id}/
+      └── badge-{tier}-{timestamp}.{ext}
+```
+
+This organization:
+- Keeps user files isolated by FID
+- Prevents filename collisions with timestamps
+- Makes it easy to find/delete user files
+- Supports multiple file versions
+
+## Security Notes
+
+1. **Public Access**: Buckets are public because profile images need to be viewable by anyone
+2. **Size Limits**: 10MB enforced at API level to prevent abuse
+3. **File Types**: Only images allowed (`image/*`)
+4. **Authentication**: Upload requires service role key (server-side only)
+5. **Rate Limiting**: Upload endpoint is rate-limited to prevent spam
+
+## Monitoring
+
+Check storage usage in Supabase Dashboard:
+- **Storage** → View total storage used
+- **Logs** → Filter by "storage" to see upload/access logs
+- **Settings** → Configure storage limits and billing alerts
+
+## Backup Strategy
+
+Consider setting up automated backups:
+1. Use Supabase's built-in backup feature
+2. Or sync to external storage (S3, Cloudflare R2, etc.)
+3. Set retention policy based on legal requirements

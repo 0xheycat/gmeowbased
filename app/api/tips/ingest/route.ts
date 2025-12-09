@@ -4,6 +4,7 @@ import { publishTip } from '@/lib/tips-broker'
 import { scoreTipMentionBroadcast } from '@/lib/tips-scoreboard'
 import type { MutableTipBroadcast, TipMentionContext } from '@/lib/tips-types'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
@@ -39,13 +40,14 @@ function parseActorIdentifier(value: unknown): string | number | null | undefine
 }
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, webhookLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -139,5 +141,5 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   publishTip(event)
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true }, { headers: { 'X-Request-ID': requestId } })
 })

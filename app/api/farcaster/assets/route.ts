@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
+import { CHAIN_IDS, ALL_CHAIN_IDS, normalizeToGMChain, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 const ONCHAINKIT_API_KEY = process.env.ONCHAINKIT_API_KEY ?? process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ?? ''
 const ONCHAINKIT_RPC_BASE_URL = 'https://api.developer.coinbase.com/rpc/v1'
@@ -45,7 +46,6 @@ const ALCHEMY_HOSTS: Partial<Record<ChainKey, string>> = {
   op: process.env.ALCHEMY_OP_URL ?? 'https://opt-mainnet.g.alchemy.com',
   celo: process.env.ALCHEMY_CELO_URL ?? '',
   unichain: process.env.ALCHEMY_UNICHAIN_URL ?? '',
-  ink: process.env.ALCHEMY_INK_URL ?? '',
 }
 
 type OnchainKitToken = {
@@ -94,13 +94,14 @@ export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -114,12 +115,24 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   if (section === 'tokens') {
     const { tokens, warnings } = await fetchTokenCatalog({ chains, tokenTerm, limit, includePrice })
-    return NextResponse.json({ ok: true, tokens, tokenWarnings: warnings }, { status: 200 })
+    return NextResponse.json({ ok: true, tokens, tokenWarnings: warnings }, { 
+      status: 200,
+      headers: { 
+        'X-Request-ID': requestId,
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+      }
+    })
   }
 
   if (section === 'nfts') {
     const { nfts, warnings } = await fetchAlchemyCatalog({ chains, query: nftQuery, limit })
-    return NextResponse.json({ ok: true, nfts, nftWarnings: warnings }, { status: 200 })
+    return NextResponse.json({ ok: true, nfts, nftWarnings: warnings }, { 
+      status: 200,
+      headers: { 
+        'X-Request-ID': requestId,
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+      }
+    })
   }
 
   const [tokenResult, nftResult] = await Promise.allSettled([
@@ -137,7 +150,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const ok = tokenResult.status === 'fulfilled' || nftResult.status === 'fulfilled'
 
-  return NextResponse.json({ ok, tokens, nfts, tokenWarnings, nftWarnings }, { status: ok ? 200 : 500 })
+  return NextResponse.json({ ok, tokens, nfts, tokenWarnings, nftWarnings }, { 
+    status: ok ? 200 : 500,
+    headers: { 
+      'X-Request-ID': requestId,
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+    }
+  })
 })
 
 type TokenCatalogOptions = {
@@ -165,7 +184,7 @@ async function fetchTokenCatalog(options: TokenCatalogOptions): Promise<{ tokens
   const supportedChainIds = Array.from(
     new Set(
       chains
-        .map((chain) => CHAIN_IDS[chain])
+        .map((chain) => ALL_CHAIN_IDS[chain])
         .filter((id): id is number => Number.isFinite(id)),
     ),
   )
@@ -189,7 +208,7 @@ async function fetchTokenCatalog(options: TokenCatalogOptions): Promise<{ tokens
   for (const raw of response) {
     const token = mapOnchainKitToken(raw)
     if (!token) continue
-    const chainId = CHAIN_IDS[token.chain]
+    const chainId = ALL_CHAIN_IDS[token.chain]
     if (!supportedChainIds.includes(chainId)) continue
     const key = `${token.chain}:${token.id.toLowerCase()}`
     if (seen.has(key)) continue
@@ -455,7 +474,7 @@ function mapOnchainKitToken(raw: OnchainKitToken): TokenCatalogEntry | null {
   const symbol = typeof raw.symbol === 'string' && raw.symbol.length > 0 ? raw.symbol : name.slice(0, 8).toUpperCase()
   const icon = typeof raw.image === 'string' && raw.image.length > 0 ? raw.image : fallbackTokenIcon(address)
   const decimals = typeof raw.decimals === 'number' && Number.isFinite(raw.decimals) ? raw.decimals : null
-  const chainId = typeof raw.chainId === 'number' && Number.isFinite(raw.chainId) ? raw.chainId : CHAIN_IDS[chainKey]
+  const chainId = typeof raw.chainId === 'number' && Number.isFinite(raw.chainId) ? raw.chainId : ALL_CHAIN_IDS[chainKey]
 
   return {
     id: address,
@@ -740,10 +759,6 @@ function parseChains(value: string | null): ChainKey[] {
       case 'unichain':
       case 'unichain-mainnet':
         chains.push('unichain')
-        break
-      case 'ink':
-      case 'ink-mainnet':
-        chains.push('ink')
         break
     }
   }

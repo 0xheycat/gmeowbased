@@ -350,7 +350,7 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Profile</h2>
                 <button
                   onClick={handleCancel}
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="p-2 text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   aria-label="Close"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -550,7 +550,7 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+                    className="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
                     disabled={saving}
                   >
                     Cancel

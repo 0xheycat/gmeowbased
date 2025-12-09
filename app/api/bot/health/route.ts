@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server'
 import { rateLimit, getClientIp, webhookLimiter } from '@/lib/rate-limit'
 import { resolveBotFid, resolveBotSignerUuid } from '@/lib/neynar-bot'
 import { withErrorHandler } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
@@ -12,13 +13,14 @@ export const runtime = 'nodejs'
  * No authentication required - provides basic operational status
  */
 export const GET = withErrorHandler(async (req: NextRequest) => {
+  const requestId = generateRequestId()
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, webhookLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429 }
+      { status: 429, headers: { 'X-Request-ID': requestId } }
     )
   }
 
@@ -63,9 +65,9 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
           signer: !signerUuid,
         },
       },
-      { status: 503 }
+      { status: 503, headers: { 'X-Request-ID': requestId } }
     )
   }
 
-  return NextResponse.json(health)
+  return NextResponse.json(health, { headers: { 'X-Request-ID': requestId } })
 })

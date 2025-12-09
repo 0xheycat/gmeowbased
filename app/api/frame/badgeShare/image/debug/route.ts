@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
   const { searchParams } = new URL(request.url)
   const fidParam = searchParams.get('fid')
   const badgeIdParam = searchParams.get('badgeId')
 
   try {
     if (!fidParam) {
-      return NextResponse.json({ error: 'Missing fid parameter' }, { status: 400 })
+      return NextResponse.json({ error: 'Missing fid parameter' }, { 
+        status: 400,
+        headers: { 'X-Request-ID': requestId }
+      })
     }
 
     const fid = parseInt(fidParam)
@@ -34,6 +39,8 @@ export async function GET(request: NextRequest) {
       badge: targetBadge,
       registry: registryEntry,
       totalBadges: badges.length,
+    }, {
+      headers: { 'X-Request-ID': requestId }
     })
   } catch (error: any) {
     return NextResponse.json({
@@ -41,6 +48,9 @@ export async function GET(request: NextRequest) {
       error: error.message,
       stack: error.stack,
       name: error.name,
-    }, { status: 500 })
+    }, { 
+      status: 500,
+      headers: { 'X-Request-ID': requestId }
+    })
   }
 }

@@ -1,7 +1,7 @@
 # Admin Authentication System Guide
 
 ## Overview
-Your Gmeow Adventure app has a **3-layer admin authentication system** for protecting admin routes (`/admin/*` and `/api/admin/*`).
+Your Gmeowbased Adventure app has a **3-layer admin authentication system** for protecting admin routes (`/admin/*` and `/api/admin/*`).
 
 ---
 
