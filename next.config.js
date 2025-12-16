@@ -55,6 +55,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'bgnerptdanbgvcjentbt.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'imagedelivery.net',
         port: '',
         pathname: '/**',
@@ -68,6 +73,24 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '*.farcaster.xyz',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.farcaster.phaver.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imagedelivery.net',
         port: '',
         pathname: '/**',
       },
@@ -163,7 +186,7 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve = config.resolve || {};
     config.resolve.fallback = { ...(config.resolve.fallback ?? {}), fs: false, net: false, tls: false };
     config.resolve.alias = {
@@ -171,6 +194,31 @@ const nextConfig = {
       '@react-native-async-storage/async-storage': false,
       'pino-pretty': false,
     };
+    
+    // Fix Satori WASM imports for Frog frames
+    // Satori uses WASM for font rendering, need to handle it properly
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+      layers: true,
+    };
+    
+    // Handle .wasm files
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push({
+      test: /\.wasm$/,
+      type: 'asset/resource',
+    });
+    
+    // Externalize satori on server-side to avoid bundling WASM
+    if (isServer) {
+      config.externals = config.externals || [];
+      if (Array.isArray(config.externals)) {
+        config.externals.push('satori');
+      }
+    }
+    
     return config;
   },
 }

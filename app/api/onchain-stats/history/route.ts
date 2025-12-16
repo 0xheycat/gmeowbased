@@ -33,6 +33,7 @@ import {
 } from '@/lib/api-security'
 import { getRequestId } from '@/lib/request-id'
 import { z } from 'zod'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -46,7 +47,7 @@ const historyQuerySchema = z.object({
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
-  const requestId = getRequestId()
+  const requestId = generateRequestId()
   
   try {
     // Security Layers 1-10: Apply all security layers (60 req/min)

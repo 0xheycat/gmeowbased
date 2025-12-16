@@ -5,6 +5,10 @@
  * Template: music/DataTable patterns (40% adaptation)
  * Features: Sortable table, bulk actions, status management, responsive design
  * 
+ * Dialog Usage:
+ * - useConfirmDialog: Promise-based confirmation for quest deletion (destructive variant)
+ * - Async/await pattern for better error handling
+ * 
  * Adaptation:
  * - Laravel/PHP → React/TypeScript
  * - Server pagination → Client-side sorting/filtering
@@ -28,11 +32,11 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import StarIcon from '@mui/icons-material/Star';
+import { useConfirmDialog } from '@/components/dialogs';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { cn } from '@/lib/utils';
 import { ManagementTableSkeleton } from './skeletons';
 import { ManagementTableEmptyState, NoSearchResultsEmptyState, ErrorState } from './empty-states';
-import { questToasts } from '@/lib/utils/toast';
 
 interface QuestData {
   id: string | number;
@@ -68,6 +72,7 @@ export default function QuestManagementTable({
   onCreateQuest,
   className,
 }: QuestManagementTableProps) {
+  const { confirm, Dialog: ConfirmDialog } = useConfirmDialog();
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -154,18 +159,33 @@ export default function QuestManagementTable({
   };
 
   // Bulk action handler
-  const handleBulkActionClick = (action: string) => {
-    if (selectedIds.size > 0) {
-      onBulkAction?.(action, Array.from(selectedIds));
-      setSelectedIds(new Set());
+  const handleBulkActionClick = async (action: string) => {
+    if (selectedIds.size === 0) return;
+
+    // Destructive actions need confirmation
+    if (action === 'delete') {
+      const confirmed = await confirm({
+        title: 'Delete Quests?',
+        description: `Delete ${selectedIds.size} quest${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone. All quest data will be permanently deleted.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        variant: 'destructive',
+      });
+
+      if (!confirmed) return;
     }
+
+    onBulkAction?.(action, Array.from(selectedIds));
+    setSelectedIds(new Set());
   };
 
   const allSelected = sortedAndFilteredQuests.length > 0 && selectedIds.size === sortedAndFilteredQuests.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < sortedAndFilteredQuests.length;
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <>
+      {ConfirmDialog}
+      <div className={cn('space-y-4', className)}>
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {/* Status Filter */}
@@ -360,8 +380,21 @@ export default function QuestManagementTable({
                       <EditIcon className="w-4 h-4" />
                     </button>
                     <button
+                      onClick={async () => {
+                        const confirmed = await confirm({
+                          title: 'Delete Quest?',
+                          description: `Delete "${quest.title}"? This action cannot be undone. All quest data will be permanently deleted.`,
+                          confirmText: 'Delete',
+                          cancelText: 'Cancel',
+                          variant: 'destructive',
+                        });
+                        if (confirmed) {
+                          onBulkAction?.('delete', [quest.id]);
+                        }
+                      }}
                       className="p-1.5 rounded-lg text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors"
                       title="Delete"
+                      aria-label={`Delete quest: ${quest.title}`}
                     >
                       <DeleteIcon className="w-4 h-4" />
                     </button>
@@ -385,6 +418,7 @@ export default function QuestManagementTable({
         Showing {sortedAndFilteredQuests.length} of {quests.length} quests
       </div>
     </div>
+    </>
   );
 }
 

@@ -24,7 +24,6 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { QuestFiltersSkeleton } from './skeletons';
 import { ErrorState } from './empty-states';
-import { questToasts } from '@/lib/utils/toast';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';

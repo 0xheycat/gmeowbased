@@ -9,15 +9,9 @@ import PetsIcon from '@mui/icons-material/Pets'
 import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ProfileDropdown } from '@/components/layout/ProfileDropdown'
-import { NotificationBell } from '@/components/ui/notification-bell'
-import type { NotificationHistoryItem } from '@/lib/notification-history'
+import { NotificationBell } from '@/components/notifications'
 
-interface HeaderProps {
-  notifications?: NotificationHistoryItem[]
-  unreadCount?: number
-}
-
-export function Header({ notifications, unreadCount }: HeaderProps) {
+export function Header() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -106,10 +100,7 @@ export function Header({ notifications, unreadCount }: HeaderProps) {
           <appkit-button />
 
           {/* Notification Bell with Dropdown */}
-          <NotificationBell 
-            initialNotifications={notifications}
-            unreadCount={unreadCount}
-          />
+          <NotificationBell />
 
           {/* Animated Theme Toggle */}
           {mounted && (

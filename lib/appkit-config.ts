@@ -2,12 +2,13 @@
 
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { base, mainnet, optimism, arbitrum, type AppKitNetwork } from '@reown/appkit/networks'
+import { trackWarning } from '@/lib/notifications/error-tracking'
 
 // Get WalletConnect project ID from environment
 export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
 
 if (!projectId) {
-  console.warn('⚠️ Missing NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID - wallet connection may not work')
+  trackWarning('appkit_missing_project_id', { message: 'Missing NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID - wallet connection may not work' })
 }
 
 // App metadata for WalletConnect

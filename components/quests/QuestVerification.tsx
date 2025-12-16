@@ -33,7 +33,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
 import { WalletButton } from '@/components/WalletButton'
-import { useNotifications } from '@/components/ui/live-notifications'
+import { useDialog, ErrorDialog } from '@/components/dialogs'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import type { QuestWithProgress, QuestTask } from '@/lib/supabase/types/quest'
 
 interface QuestVerificationProps {
@@ -61,7 +62,10 @@ export function QuestVerification({
   onQuestComplete 
 }: QuestVerificationProps) {
   const { address, isConnected } = useAccount()
-  const { showNotification } = useNotifications()
+  const { isOpen: errorOpen, open: openError, close: closeError } = useDialog()
+  const [errorMessage, setErrorMessage] = useState('')
+  const [xpOverlayOpen, setXpOverlayOpen] = useState(false)
+  const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
   
   const [verificationState, setVerificationState] = useState<VerificationState>({
     taskIndex: quest.user_progress?.current_task_index || 0,
@@ -83,21 +87,15 @@ export function QuestVerification({
   const handleVerify = useCallback(async () => {
     // Validation
     if (isOnchain && (!isConnected || !address)) {
-      showNotification(
-        'Connect your wallet to verify onchain quests',
-        'wallet_connection_failed',
-        5000
-      )
+      setErrorMessage('Connect your wallet to verify onchain quests')
+      openError()
       return
     }
 
     const currentFid = parseInt(fidInput)
     if (isSocial && (!currentFid || currentFid <= 0)) {
-      showNotification(
-        'Enter your Farcaster ID to verify social quests',
-        'fid_linking_failed',
-        5000
-      )
+      setErrorMessage('Enter your Farcaster ID to verify social quests')
+      openError()
       return
     }
 
@@ -107,11 +105,7 @@ export function QuestVerification({
       message: 'Verifying your action...'
     }))
 
-    showNotification(
-      `Verifying task ${verificationState.taskIndex + 1} of ${tasks.length}`,
-      'quest_verification_pending',
-      0 // Don't auto-dismiss during verification
-    )
+    // Verification status shown in UI state (verificationState.status = 'verifying')
 
     try {
       // Call NEW verification API (uses verification-orchestrator.ts)
@@ -143,30 +137,45 @@ export function QuestVerification({
       const xp = result.rewards?.xp_earned || quest.reward_points || 0
       const points = result.rewards?.points_earned || 0
 
-      showNotification(
-        `Task ${verificationState.taskIndex + 1} complete! +${xp} XP, +${points} Points`,
-        'quest_verification_success',
-        5000
-      )
+      // Show XPEventOverlay celebration for task or quest completion
+      if (result.quest_completed) {
+        // Quest fully completed - big celebration
+        setXpPayload({
+          event: 'quest-verify',
+          chainKey: 'base',
+          xpEarned: xp,
+          totalPoints: points,
+          headline: `${quest.title} completed!`,
+          shareLabel: 'Share quest completion',
+          visitUrl: `/quests/${quest.id}`,
+          visitLabel: 'View quest details',
+        })
+        setXpOverlayOpen(true)
+        onQuestComplete?.()
+      } else if (result.task_completed) {
+        // Individual task completed - smaller celebration
+        setXpPayload({
+          event: 'task-complete',
+          chainKey: 'base',
+          xpEarned: xp,
+          totalPoints: points,
+          headline: `Task ${verificationState.taskIndex + 1} complete!`,
+          tierTagline: `+${xp} XP, +${points} Points`,
+          visitLabel: 'Continue quest',
+        })
+        setXpOverlayOpen(true)
+      }
 
       onVerificationComplete?.(verificationState.taskIndex)
 
-      // Check if quest is fully completed
-      if (result.quest_completed) {
-        showNotification(
-          `"${quest.title}" completed!`,
-          'quest_completed',
-          5000
-        )
-        onQuestComplete?.()
-      } else if (result.task_completed && result.next_task_index !== undefined) {
-        // Move to next task
+      // Move to next task after celebration
+      if (result.task_completed && result.next_task_index !== undefined && !result.quest_completed) {
         setTimeout(() => {
           setVerificationState(prev => ({
             taskIndex: result.next_task_index,
             status: 'idle'
           }))
-        }, 2000)
+        }, 3000) // Wait for overlay
       }
 
     } catch (error) {
@@ -179,11 +188,8 @@ export function QuestVerification({
         message: errorMessage
       }))
 
-      showNotification(
-        errorMessage,
-        'quest_verification_failed',
-        8000 // Errors need more time to read
-      )
+      setErrorMessage(errorMessage)
+      openError()
     }
   }, [
     isOnchain, 
@@ -197,7 +203,6 @@ export function QuestVerification({
     currentTask, 
     verificationState.taskIndex, 
     tasks.length,
-    showNotification,
     onVerificationComplete,
     onQuestComplete
   ])
@@ -456,11 +461,7 @@ export function QuestVerification({
             <button
               onClick={() => {
                 console.log('Verification Proof:', verificationState.proof)
-                showNotification(
-                  'Check browser console for verification details',
-                  'quest_progress',
-                  3000
-                )
+                // Debug info logged to console only
               }}
               className="px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors flex items-center gap-2"
             >
@@ -488,6 +489,25 @@ export function QuestVerification({
           </div>
         </div>
       )}
+
+      <ErrorDialog
+        isOpen={errorOpen}
+        onClose={closeError}
+        title="Verification Error"
+        message={errorMessage}
+      />
+
+      <XPEventOverlay
+        open={xpOverlayOpen}
+        payload={xpPayload}
+        onClose={() => {
+          setXpOverlayOpen(false)
+          // Reload quest data after overlay closes
+          if (xpPayload?.event === 'quest-verify') {
+            window.location.reload()
+          }
+        }}
+      />
     </div>
   )
 }

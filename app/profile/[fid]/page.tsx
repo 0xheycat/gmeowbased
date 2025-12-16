@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/lib/hooks/use-auth'
-import { useDialog } from '@/lib/hooks/use-dialog'
+import { useDialog } from '@/components/dialogs'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { SocialLinks } from '@/components/profile/SocialLinks'
@@ -13,7 +13,7 @@ import { QuestActivity } from '@/components/profile/QuestActivity'
 import { BadgeCollection } from '@/components/profile/BadgeCollection'
 import { ActivityTimeline } from '@/components/profile/ActivityTimeline'
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal'
-import ErrorDialog from '@/components/ui/error-dialog'
+import { ErrorDialog } from '@/components/dialogs'
 import { profileSectionVariants, profileSectionTransition } from '@/components/profile/animations'
 import type { ProfileData } from '@/lib/profile/types'
 import type { Badge } from '@/components/profile/BadgeCollection'
@@ -27,6 +27,11 @@ type TabKey = 'overview' | 'quests' | 'badges' | 'activity'
  * 
  * Dynamic profile page for viewing user profiles
  * Route: /profile/[fid]
+ * 
+ * Dialog Usage:
+ * - ErrorDialog: Displays profile fetch errors with retry functionality
+ * - useDialog: State management for error dialog (open/close)
+ * - ProfileEditModal: Contains nested ConfirmDialog for unsaved changes (via child component)
  * 
  * Phase 3 Integration:
  * - Fetches profile data from API

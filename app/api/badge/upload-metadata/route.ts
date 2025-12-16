@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { generateRequestId } from '@/lib/request-id'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -16,13 +17,18 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
+
   try {
     const { metadata, tokenId } = await request.json()
 
     if (!metadata || typeof tokenId !== 'number') {
       return NextResponse.json(
         { error: 'Invalid request body' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: { 'X-Request-ID': requestId }
+        }
       )
     }
 
@@ -43,7 +49,10 @@ export async function POST(request: NextRequest) {
       console.error('Supabase upload error:', error)
       return NextResponse.json(
         { error: 'Failed to upload metadata' },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: { 'X-Request-ID': requestId }
+        }
       )
     }
 
@@ -56,12 +65,17 @@ export async function POST(request: NextRequest) {
       success: true,
       url: publicUrl.publicUrl,
       path: metadataPath,
+    }, {
+      headers: { 'X-Request-ID': requestId }
     })
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'X-Request-ID': requestId }
+      }
     )
   }
 }

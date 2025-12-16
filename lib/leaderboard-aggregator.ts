@@ -8,6 +8,7 @@ import {
 } from '@/lib/gmeow-utils'
 import { fetchUsersByAddresses } from '@/lib/neynar'
 import { getRpcUrl } from '@/lib/rpc'
+import { trackWarning } from '@/lib/notifications/error-tracking'
 
 const EVT_QUEST_COMPLETED = parseAbiItem(
   'event QuestCompleted(uint256 indexed questId, address indexed user, uint256 pointsAwarded, uint256 fid, address rewardToken, uint256 tokenAmount)',
@@ -136,7 +137,7 @@ async function fetchLogsInChunks(
       []
     ).catch(error => {
         if (AGGREGATOR_DEBUG) {
-          console.warn('[aggregator] log fetch failed chain range', address, range.from.toString(), range.to.toString(), error)
+          trackWarning('leaderboard_log_fetch_failed', { function: 'fetchLogsInRanges', address, from: range.from.toString(), to: range.to.toString(), error: String(error) })
         }
         return []
       })
@@ -159,7 +160,7 @@ async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState>
   try {
     client = getClient(chain)
   } catch (error) {
-    console.warn(`[aggregator] failed to create client for ${chain}:`, error)
+    trackWarning('leaderboard_client_creation_failed', { function: 'getOrCreateClient', chain, error: String(error) })
     throw error
   }
   const contractAddr = CONTRACT_ADDRESSES[chain]
@@ -346,7 +347,7 @@ export async function enrichAggregatedRows(entries: RawAggregate[]): Promise<Enr
     }
   } catch (err) {
     if (AGGREGATOR_DEBUG) {
-      console.warn('[aggregator] neynar enrichment failed', err)
+      trackWarning('leaderboard_neynar_enrichment_failed', { function: 'getTopUsers', error: String(err) })
     }
   }
 

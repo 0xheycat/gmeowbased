@@ -13,6 +13,8 @@
  * - Invalidation: Automatic TTL expiry
  */
 
+import { trackError } from '@/lib/notifications/error-tracking'
+
 import { Redis } from '@upstash/redis'
 import { createHash } from 'crypto'
 
@@ -33,7 +35,7 @@ function getRedisClient(): Redis | null {
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
       })
     } catch (err) {
-      console.error('[FRAME_CACHE] Failed to initialize Redis:', err)
+      trackError('frame_cache_init_failed', err, { function: 'getRedis' })
       return null
     }
   }
@@ -103,7 +105,7 @@ export async function getCachedFrame(key: FrameCacheKey): Promise<Buffer | null>
 
     return null
   } catch (err) {
-    console.error('[FRAME_CACHE] Get error:', err)
+    trackError('frame_cache_get_error', err, { function: 'get', key })
     return null
   }
 }
@@ -127,7 +129,7 @@ export async function setCachedFrame(
     await redis.setex(cacheKey, ttl, base64Image)
     return true
   } catch (err) {
-    console.error('[FRAME_CACHE] Set error:', err)
+    trackError('frame_cache_set_error', err, { function: 'set', key, ttl })
     return false
   }
 }
@@ -145,7 +147,7 @@ export async function invalidateFrame(key: FrameCacheKey): Promise<boolean> {
     await redis.del(cacheKey)
     return true
   } catch (err) {
-    console.error('[FRAME_CACHE] Invalidate error:', err)
+    trackError('frame_cache_invalidate_error', err, { function: 'invalidate', key })
     return false
   }
 }
@@ -170,7 +172,7 @@ export async function invalidateUserFrames(fid: number): Promise<number> {
     await redis.del(...keys)
     return keys.length
   } catch (err) {
-    console.error('[FRAME_CACHE] Invalidate user frames error:', err)
+    trackError('frame_cache_invalidate_user_error', err, { function: 'invalidateUserFrames', fid })
     return 0
   }
 }
@@ -219,7 +221,7 @@ export async function clearAllFrameCache(): Promise<number> {
     await redis.del(...keys)
     return keys.length
   } catch (err) {
-    console.error('[FRAME_CACHE] Clear all error:', err)
+    trackError('frame_cache_clear_all_error', err, { function: 'clearAll' })
     return 0
   }
 }
@@ -239,7 +241,7 @@ export async function testRedisConnection(): Promise<boolean> {
     await redis.del(testKey)
     return result === 'ok'
   } catch (err) {
-    console.error('[FRAME_CACHE] Connection test failed:', err)
+    trackError('frame_cache_connection_test_failed', err, { function: 'testConnection' })
     return false
   }
 }

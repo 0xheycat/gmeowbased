@@ -45,7 +45,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { strictLimiter } from '@/lib/rate-limit'
 import { getGuild, getUserGuild } from '@/lib/guild-contract'
-import { getContractAddress } from '@/lib/gmeow-utils'
+import { getContractAddress, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
 import type { Address } from 'viem'
 import { 
   checkIdempotency, 
@@ -55,6 +55,7 @@ import {
   returnCachedResponse 
 } from '@/lib/idempotency'
 import { generateRequestId } from '@/lib/request-id'
+import { logGuildEvent } from '@/lib/guild/event-logger'
 
 // ==========================================
 // Validation Schema
@@ -137,12 +138,15 @@ function createErrorResponse(message: string, requestId: string, status: number 
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
   const startTime = Date.now()
   const requestId = generateRequestId()
   
   try {
+    // Await params in Next.js 15
+    const { guildId: guildIdParam } = await params
+    
     // IDEMPOTENCY CHECK - Prevent duplicate guild joins
     const idempotencyKey = getIdempotencyKey(req)
     
@@ -163,8 +167,6 @@ export async function POST(
         return returnCachedResponse(cachedResult)
       }
     }
-    
-    const { guildId: guildIdParam } = params
 
     // Parse request body
     let body: JoinGuildRequest
@@ -247,9 +249,9 @@ export async function POST(
       message: `Ready to join guild "${guild.name}"`,
       guildId: guildId.toString(),
       guildName: guild.name,
-      contractAddress: getContractAddress('base'),
+      contractAddress: STANDALONE_ADDRESSES.base.guild as Address,
       functionName: 'joinGuild',
-      args: [guildId],
+      args: [guildId.toString()],
     }
 
     // 7. CSRF PROTECTION - Origin validation
@@ -270,6 +272,19 @@ export async function POST(
       guildId: guildId.toString(),
       guildName: guild.name,
       timestamp: new Date().toISOString(),
+    })
+
+    // Log event to database (non-blocking)
+    logGuildEvent({
+      guild_id: guildId.toString(),
+      event_type: 'MEMBER_JOINED',
+      actor_address: address,
+      metadata: {
+        guild_name: guild.name,
+        request_id: requestId,
+      },
+    }).catch((error) => {
+      console.error('[guild-join] Failed to log event:', error)
     })
 
     // 9. SUCCESS RESPONSE

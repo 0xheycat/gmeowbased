@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'edge'
 
@@ -25,6 +26,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { imageId: string } }
 ) {
+  const requestId = generateRequestId()
+
   try {
     // Parse imageId: "quest-legendary-42" or "achievement-rare-badge"
     const parts = params.imageId.split('-')
@@ -185,6 +188,9 @@ export async function GET(
       {
         width: 1200,
         height: 1200,
+        headers: {
+          'X-Request-ID': requestId,
+        },
       }
     )
   } catch (error) {
@@ -215,6 +221,9 @@ export async function GET(
       {
         width: 1200,
         height: 1200,
+        headers: {
+          'X-Request-ID': requestId,
+        },
       }
     )
   }

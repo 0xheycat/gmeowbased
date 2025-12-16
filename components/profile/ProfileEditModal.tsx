@@ -7,6 +7,11 @@
  * Adaptation: 35%
  * Platform Reference: Twitter settings modal
  * 
+ * Dialog Usage:
+ * - ErrorDialog: Displays profile save errors with retry functionality
+ * - ConfirmDialog: Confirmation for unsaved changes when closing (destructive variant)
+ * - useDialog: State management for error and confirm dialogs
+ * 
  * Features:
  * - Display name editing (2-50 chars)
  * - Bio editing (150 char limit with counter)
@@ -30,9 +35,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { z } from 'zod'
 import Image from 'next/image'
-import { useDialog } from '@/lib/hooks/use-dialog'
-import ErrorDialog from '@/components/ui/error-dialog'
-import ConfirmDialog from '@/components/ui/confirm-dialog'
+import { useDialog } from '@/components/dialogs'
+import { ErrorDialog } from '@/components/dialogs'
+import { ConfirmDialog } from '@/components/dialogs'
 import type { ProfileData } from '@/lib/profile/types'
 
 // Validation schema matching API
@@ -79,6 +84,7 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     title: string
     message: string
     type?: 'error' | 'warning' | 'info'
+    onRetry?: () => void
   }>({ title: '', message: '' })
   
   // Confirmation dialog for unsaved changes
@@ -220,13 +226,14 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
     } catch (error) {
       console.error('Upload error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to upload image'
+      const detailedMessage = errorMessage === 'Failed to generate upload URL' 
+        ? 'Storage service is not configured. Please contact support or try again later.'
+        : errorMessage
       
-      // Show error dialog
+      // Show error dialog (no retry since user needs to re-select file)
       setErrorDialogConfig({
         title: 'Upload Failed',
-        message: errorMessage === 'Failed to generate upload URL' 
-          ? 'Storage service is not configured. Please contact support or try again later.'
-          : errorMessage,
+        message: detailedMessage,
         type: 'error'
       })
       errorDialog.open()
@@ -280,7 +287,11 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
       setErrorDialogConfig({
         title: 'Save Failed',
         message: errorMessage,
-        type: 'error'
+        type: 'error',
+        onRetry: () => {
+          const syntheticEvent = { preventDefault: () => {} } as React.FormEvent
+          handleSubmit(syntheticEvent)
+        }
       })
       errorDialog.open()
       
@@ -584,6 +595,7 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
       title={errorDialogConfig.title}
       message={errorDialogConfig.message}
       type={errorDialogConfig.type || 'error'}
+      onRetry={errorDialogConfig.onRetry}
     />
     
     {/* Confirmation Dialog for Unsaved Changes */}

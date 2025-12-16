@@ -517,7 +517,8 @@ export async function fetchBadgeMetadata(tokenURI: string): Promise<BadgeMetadat
     const metadata = await response.json()
     return metadata as BadgeMetadata
   } catch (error) {
-    console.error('Error fetching badge metadata:', error)
+    const { trackError } = await import('@/lib/notifications/error-tracking')
+    trackError('badge_metadata_fetch_error', error, { function: 'fetchBadgeMetadata', tokenURI })
     return null
   }
 }

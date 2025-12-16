@@ -50,7 +50,10 @@ import { z } from 'zod'
 import { apiLimiter } from '@/lib/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
+import { generateRequestId } from '@/lib/request-id'
+import { createClient } from '@supabase/supabase-js'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -109,14 +112,17 @@ async function getTreasuryBalance(guildId: bigint): Promise<string> {
   const client = getPublicClient()
   
   try {
-    const balance = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
-      functionName: 'guildTreasury',
+    // Get guild info: [name, leader, totalPoints, memberCount, level, requiredPoints, treasury]
+    const guildInfo = await client.readContract({
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
+      functionName: 'getGuildInfo',
       args: [guildId],
-    }) as bigint
+    }) as [string, Address, bigint, bigint, bigint, bigint, bigint]
     
-    return balance.toString()
+    // Treasury is the 7th element (index 6)
+    const treasury = guildInfo[6]
+    return treasury.toString()
   } catch (error) {
     console.error('[guild-treasury] getTreasuryBalance error:', error)
     return '0'
@@ -124,19 +130,56 @@ async function getTreasuryBalance(guildId: bigint): Promise<string> {
 }
 
 /**
- * Get treasury transactions
- * Note: This requires scanning blockchain events
- * For now, return simulated data
+ * Get treasury transactions from Supabase guild_events
  */
 async function getTreasuryTransactions(guildId: bigint): Promise<TreasuryTransaction[]> {
-  // In production, this should:
-  // 1. Query contract events (PointsDeposited, PointsClaimed)
-  // 2. Use Blockscout API for event logs
-  // 3. Or maintain off-chain Supabase index
-  
-  // For now, return empty array
-  // Components will handle empty state gracefully
-  return []
+  const supabaseUrl = process.env.SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('[guild-treasury] Missing Supabase credentials')
+    return []
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey)
+
+  try {
+    // Query guild_events for POINTS_DEPOSITED and POINTS_CLAIMED events
+    const { data: events, error } = await supabase
+      .from('guild_events')
+      .select('*')
+      .eq('guild_id', guildId.toString())
+      .in('event_type', ['POINTS_DEPOSITED', 'POINTS_CLAIMED'])
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('[guild-treasury] Error fetching events:', error)
+      return []
+    }
+
+    if (!events || events.length === 0) {
+      console.log('[guild-treasury] No transaction events found')
+      return []
+    }
+
+    // Convert events to TreasuryTransaction format
+    const transactions: TreasuryTransaction[] = events.map(event => ({
+      id: event.id.toString(),
+      type: event.event_type === 'POINTS_DEPOSITED' ? 'deposit' : 'claim',
+      amount: event.amount?.toString() || '0',
+      from: event.event_type === 'POINTS_DEPOSITED' ? event.actor_address : null,
+      to: event.event_type === 'POINTS_CLAIMED' ? event.target_address || event.actor_address : null,
+      timestamp: event.created_at,
+      status: 'completed',
+      transactionHash: event.transaction_hash || '',
+    }))
+
+    console.log('[guild-treasury] Loaded transactions from guild_events:', transactions.length)
+    return transactions
+  } catch (error) {
+    console.error('[guild-treasury] getTreasuryTransactions error:', error)
+    return []
+  }
 }
 
 /**
@@ -156,8 +199,8 @@ function paginateTransactions(
 /**
  * Create success response with cache headers
  */
-function createSuccessResponse(data: any) {
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`
+function createSuccessResponse(data: any, requestId?: string) {
+  const rid = requestId || generateRequestId()
   
   return NextResponse.json(
     {
@@ -171,7 +214,7 @@ function createSuccessResponse(data: any) {
         'Cache-Control': 's-maxage=30, stale-while-revalidate=60',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
-        'X-Request-ID': requestId,
+        'X-Request-ID': rid,
         'X-API-Version': '1.0.0',
       },
     }
@@ -181,8 +224,8 @@ function createSuccessResponse(data: any) {
 /**
  * Create error response (no sensitive data)
  */
-function createErrorResponse(message: string, status: number = 400) {
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`
+function createErrorResponse(message: string, status: number = 400, requestId?: string) {
+  const rid = requestId || generateRequestId()
   
   return NextResponse.json(
     {
@@ -196,7 +239,7 @@ function createErrorResponse(message: string, status: number = 400) {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
-        'X-Request-ID': requestId,
+        'X-Request-ID': rid,
         'X-API-Version': '1.0.0',
       },
     }
@@ -209,14 +252,18 @@ function createErrorResponse(message: string, status: number = 400) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
+  const requestId = generateRequestId()
+
   const startTime = Date.now()
 
   try {
+    // Await params in Next.js 15
+    const { guildId } = await params
     // 1. RATE LIMITING
     if (!apiLimiter) {
-      return createErrorResponse('Rate limiting not configured', 503)
+      return createErrorResponse('Rate limiting not configured', 503, requestId)
     }
     
     const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
@@ -236,6 +283,7 @@ export async function GET(
             'X-RateLimit-Limit': String(RATE_LIMIT_CONFIG.maxRequests),
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': String(Date.now() + RATE_LIMIT_CONFIG.windowMs),
+            'X-Request-ID': requestId,
           },
         }
       )
@@ -251,17 +299,17 @@ export async function GET(
     if (!queryResult.success) {
       return createErrorResponse(
         `Invalid query parameters: ${queryResult.error.issues.map((i) => i.message).join(', ')}`,
-        400
+        400,
+        requestId
       )
     }
 
     const { limit, offset } = queryResult.data
-    const { guildId } = params
 
     // Validate guildId
     const guildIdNum = BigInt(guildId)
     if (guildIdNum <= 0n) {
-      return createErrorResponse('Invalid guild ID', 400)
+      return createErrorResponse('Invalid guild ID', 400, requestId)
     }
 
     // 3. FETCH TREASURY DATA
@@ -292,14 +340,15 @@ export async function GET(
       performance: {
         duration,
       },
-    })
+    }, requestId)
   } catch (error: any) {
     console.error('[guild-treasury] Error:', error)
 
     // 10. ERROR MASKING
     return createErrorResponse(
       'Failed to fetch treasury data. Please try again later.',
-      500
+      500,
+      requestId
     )
   }
 }

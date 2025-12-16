@@ -8,10 +8,11 @@ import {
   assignBadgeToUser, 
   getTierConfig,
   mintBadgeViaNeynar,
-  sendBadgeAwardNotification,
+  // Phase 4: Replaced sendBadgeAwardNotification with notifyWithXPReward for priority filtering
 } from '@/lib/badges'
 import { withErrorHandler } from '@/lib/error-handler'
 import { generateRequestId } from '@/lib/request-id'
+import { notifyWithXPReward } from '@/lib/notifications'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
@@ -249,14 +250,38 @@ export const POST = withErrorHandler(async (request: Request) => {
           })
         }
 
-        // Phase 4.7: Send badge award notification
+        // Phase 4: Send badge award notification with priority filtering
         try {
-          await sendBadgeAwardNotification(
+          // Map tier to event type for XP rewards
+          const tierToEventType: Record<TierType, string> = {
+            mythic: 'badge_mythic',        // 100 XP - high priority
+            legendary: 'badge_legendary',  // 75 XP - high priority
+            epic: 'badge_epic',            // 50 XP - high priority
+            rare: 'badge_rare',            // 35 XP - medium priority
+            common: 'badge_common',        // 25 XP - medium priority
+          }
+          
+          const tierEmojis: Record<TierType, string> = {
+            mythic: '🌟',
+            legendary: '👑',
+            epic: '💎',
+            rare: '✨',
+            common: '🎖️',
+          }
+          
+          const eventType = tierToEventType[tier]
+          const emoji = tierEmojis[tier]
+          const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1)
+          
+          await notifyWithXPReward({
             fid,
-            badgeDef.badgeType,
-            tier,
-            `https://gmeowhq.art/profile?fid=${fid}`
-          )
+            category: 'badge',
+            title: `New Badge Earned! ${emoji}`,
+            body: `You just earned the ${badgeDef.badgeType} badge (${tierLabel} tier)`,
+            targetUrl: `https://gmeowhq.art/profile?fid=${fid}`,
+            eventType,
+            metadata: { badgeType: badgeDef.badgeType, tier },
+          })
           console.log(`[Onboarding] Badge award notification sent to FID ${fid}`)
         } catch (notificationError) {
           console.error('[Onboarding] Failed to send notification:', notificationError)

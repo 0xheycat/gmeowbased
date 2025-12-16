@@ -19,7 +19,7 @@ import { TierFilter, TIER_OPTIONS, type TierFilterOption } from '@/components/le
 import { StatsCard } from '@/components/leaderboard/StatsCard'
 import { useLeaderboardStats } from '@/lib/hooks/useLeaderboardStats'
 import { useLeaderboardRealtime, type RankChangePayload } from '@/lib/hooks/useLeaderboardRealtime'
-import { useNotifications } from '@/components/ui/live-notifications'
+
 // Option 1: Import from centralized icon index
 import { 
   EmojiEventsIcon as Trophy,
@@ -255,37 +255,11 @@ function CategoryLeaderboard({
     period: period as 'daily' | 'weekly' | 'all_time'
   })
   
-  // Notification system
-  const { showNotification } = useNotifications()
-  
-  // Realtime rank change handler
+  // Realtime rank change handler (backend only, no UI notifications)
   const handleRankChange = useCallback((payload: RankChangePayload) => {
-    const { type, username, oldRank, newRank, rankChange } = payload
-    
-    if (type === 'INSERT') {
-      showNotification(
-        `${username || 'New pilot'} joined the leaderboard at rank ${newRank}`,
-        'frame_action' as any, // Generic event for leaderboard updates
-        5000
-      )
-    } else if (type === 'UPDATE' && rankChange !== undefined) {
-      if (rankChange > 0) {
-        // Rank improved (lower number = better)
-        showNotification(
-          `${username || 'A pilot'} climbed to rank ${newRank} (+${rankChange})`,
-          'frame_action' as any,
-          5000
-        )
-      } else if (rankChange < 0) {
-        // Rank decreased
-        showNotification(
-          `${username || 'A pilot'} dropped to rank ${newRank} (${rankChange})`,
-          'frame_action' as any,
-          5000
-        )
-      }
-    }
-  }, [showNotification])
+    // Rank changes handled silently - users see updated leaderboard in real-time
+    // No notification spam for every rank change
+  }, [])
   
   // Subscribe to realtime updates
   useLeaderboardRealtime({

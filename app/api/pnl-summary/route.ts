@@ -400,6 +400,7 @@ export async function GET(request: NextRequest) {
           ...getSecurityHeaders(),
           'X-Response-Time': `${Date.now() - startTime}ms`,
           'X-Request-ID': requestId,
+          'Cache-Control': 's-maxage=180, stale-while-revalidate=360', // 3min cache for PnL calculations
         },
       }
     )

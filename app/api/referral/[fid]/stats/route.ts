@@ -36,6 +36,7 @@ import {
   getReferrer
 } from '@/lib/referral-contract'
 import type { Address } from 'viem'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -52,6 +53,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { fid: string } }
 ) {
+  const requestId = generateRequestId()
+
   const startTime = Date.now()
   const clientIp = getClientIp(request)
   const fid = params.fid

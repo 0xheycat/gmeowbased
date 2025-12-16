@@ -1,5 +1,5 @@
 /**
- * GuildCard Component
+ * GuildCard Component (WCAG AA Compliant)
  * 
  * Purpose: Reusable card for displaying guild information
  * Template: trezoadmin-41/cards (40%) + gmeowbased0.6 layout (10%)
@@ -10,6 +10,9 @@
  * - Level badge with progress bar
  * - Click handler for navigation
  * - Responsive design
+ * - WCAG AA keyboard navigation (Enter/Space)
+ * - ARIA labels for screen readers
+ * - 4.5:1 contrast ratios
  * 
  * Usage:
  * <GuildCard guild={guildData} onClick={(id) => ...} />
@@ -18,6 +21,8 @@
 'use client'
 
 import { UsersIcon, MonetizationOnIcon, TrendingUpIcon } from '@/components/icons'
+import { BadgeShowcase, type Badge } from '@/components/guild/badges'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES } from '@/lib/accessibility'
 
 export interface Guild {
   id: string
@@ -30,6 +35,7 @@ export interface Guild {
   xp: number
   owner: string
   avatarUrl?: string
+  achievements?: Badge[] // Guild-level achievement badges (top contributors, treasury milestones, etc.)
 }
 
 export interface GuildCardProps {
@@ -76,20 +82,31 @@ export function GuildCard({ guild, onClick, className = '' }: GuildCardProps) {
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      handleClick()
-    }
-  }
+  // WCAG AA keyboard handler (Enter/Space activation)
+  const keyboardProps = createKeyboardHandler(handleClick)
+
+  // ARIA label for screen readers
+  const ariaLabel = `${guild.name} guild. ${guild.memberCount} members. ${guild.treasury.toLocaleString()} treasury points. Level ${guild.level}, ${progress}% progress to next level.`
 
   return (
     <div
       onClick={handleClick}
-      onKeyPress={handleKeyPress}
+      {...keyboardProps}
       role="button"
       tabIndex={0}
-      className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${className}`}
+      aria-label={ariaLabel}
+      className={`
+        bg-white dark:bg-gray-800 
+        rounded-xl 
+        border border-gray-200 dark:border-gray-700 
+        overflow-hidden 
+        hover:border-wcag-focus-ring dark:hover:border-wcag-focus-ring-dark 
+        hover:shadow-lg 
+        transition-fast transition-smooth
+        cursor-pointer 
+        ${FOCUS_STYLES.ring}
+        ${className}
+      `}
     >
       {/* Header with Avatar & Level */}
       <div className="p-6 pb-4">
@@ -105,13 +122,26 @@ export function GuildCard({ guild, onClick, className = '' }: GuildCardProps) {
           </div>
         </div>
 
+        {/* Achievement Badges (Steam/Discord pattern - show top 3) */}
+        {guild.achievements && guild.achievements.length > 0 && (
+          <div className="mb-3">
+            <BadgeShowcase 
+              badges={guild.achievements}
+              maxDisplay={3}
+              size="sm"
+              showTooltip={true}
+              showGlow={true}
+            />
+          </div>
+        )}
+
         {/* Guild Name */}
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate">
+        <h3 className={`text-xl font-bold ${WCAG_CLASSES.text.onLight.primary} mb-2 truncate`}>
           {guild.name}
         </h3>
 
         {/* Chain Badge */}
-        <span className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded">
+        <span className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-wcag-text-link-light dark:text-wcag-text-link-dark text-xs font-medium rounded">
           {guild.chain.toUpperCase()}
         </span>
       </div>
@@ -119,10 +149,10 @@ export function GuildCard({ guild, onClick, className = '' }: GuildCardProps) {
       {/* Level Progress Bar */}
       <div className="px-6 pb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-600 dark:text-gray-400">
+          <span className={`text-xs ${WCAG_CLASSES.text.onLight.secondary}`}>
             Progress to Level {guild.level + 1}
           </span>
-          <span className="text-xs font-semibold text-gray-900 dark:text-white">
+          <span className={`text-xs font-semibold ${WCAG_CLASSES.text.onLight.primary}`}>
             {progress}%
           </span>
         </div>
@@ -136,7 +166,7 @@ export function GuildCard({ guild, onClick, className = '' }: GuildCardProps) {
 
       {/* Description */}
       <div className="px-6 pb-4">
-        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+        <p className={`text-sm ${WCAG_CLASSES.text.onLight.secondary} line-clamp-2`}>
           {guild.description}
         </p>
       </div>
@@ -146,12 +176,12 @@ export function GuildCard({ guild, onClick, className = '' }: GuildCardProps) {
         <div className="grid grid-cols-2 gap-4">
           {/* Members */}
           <div className="flex items-center gap-2">
-            <UsersIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <UsersIcon className={`w-5 h-5 ${WCAG_CLASSES.text.onLight.muted} flex-shrink-0`} aria-hidden="true" />
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              <div className={`text-sm font-semibold ${WCAG_CLASSES.text.onLight.primary} truncate`}>
                 {guild.memberCount}
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className={`text-xs ${WCAG_CLASSES.text.onLight.muted}`}>
                 Members
               </div>
             </div>
@@ -159,12 +189,12 @@ export function GuildCard({ guild, onClick, className = '' }: GuildCardProps) {
 
           {/* Treasury */}
           <div className="flex items-center gap-2">
-            <MonetizationOnIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <MonetizationOnIcon className={`w-5 h-5 ${WCAG_CLASSES.text.onLight.muted} flex-shrink-0`} aria-hidden="true" />
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              <div className={`text-sm font-semibold ${WCAG_CLASSES.text.onLight.primary} truncate`}>
                 {guild.treasury.toLocaleString()}
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className={`text-xs ${WCAG_CLASSES.text.onLight.muted}`}>
                 Points
               </div>
             </div>

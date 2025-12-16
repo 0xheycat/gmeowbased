@@ -1,9 +1,12 @@
 {
-  "core": "0x0cf22803Bfac7C5Da849DdCC736A338b37163d99",
-  "guild": "0x1c86E848B01f02d478e5A10A0b51011B0160c39c",
-  "nft": "0xf79AC5AcaceC133081aEAB8896BE25B126c634e5",
-  "badge": "0x30C125Bc40c46483Dd1F444C6985702a0c18b43E",
+  "core": "0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73",
+  "guild": "0x6754e71fFd49Fb9C33C19dA1Aa6596155e53C8A3",
+  "nft": "0xCE9596a992e38c5fa2d997ea916a277E0F652D5C",
+  "badge": "0x5Af50Ee323C45564d94B0869d95698D837c59aD2",
+  "referral": "0x9E7c32C1fB3a2c08e973185181512a442b90Ba44",
   "oracle": "0x8870C155666809609176260F2B65a626C000D773",
   "initialSupply": 10000,
-  "deploymentBlock": 39236809
+  "deploymentBlock": 39236809,
+  "deploymentDate": "2025-12-09",
+  "features": ["setBadgeAuthorizedMinter", "guild_badge_minting", "referral_badge_minting"]
 }

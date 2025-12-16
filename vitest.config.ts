@@ -13,6 +13,8 @@ export default defineConfig({
 			'**/dist/**',
 			'**/e2e/**', // Exclude Playwright E2E tests
 			'**/.{idea,git,cache,output,temp}/**',
+			'**/planning/**', // Exclude planning templates
+			'**/.next/**',
 		],
 		coverage: {
 			provider: 'v8',

@@ -34,6 +34,7 @@ import { rateLimit, webhookLimiter } from '@/lib/rate-limit'
 import { z } from 'zod'
 import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
 import { generateRequestId } from '@/lib/request-id'
+import { notifyWithXPReward } from '@/lib/notifications'
 
 export const runtime = 'nodejs'
 
@@ -176,31 +177,31 @@ export async function POST(request: NextRequest) {
  */
 async function processBadgeMintedWebhook(payload: BadgeMintedPayload) {
   try {
-    // TODO: Add your custom webhook processing logic here
+    // Phase 4: Send notification with priority filtering when badge mints on-chain
+    const tierToEventType: Record<string, string> = {
+      mythic: 'badge_mythic',        // 100 XP - high priority
+      legendary: 'badge_legendary',  // 75 XP - high priority
+      epic: 'badge_epic',            // 50 XP - high priority
+      rare: 'badge_rare',            // 35 XP - medium priority
+      common: 'badge_common',        // 25 XP - medium priority
+    }
     
-    // Example 1: Send Miniapp notification
-    // await sendMiniappNotification({
-    //   fid: payload.fid,
-    //   title: 'Badge Minted! 🎉',
-    //   body: `Your ${payload.tier} badge "${payload.badgeId}" has been minted on-chain!`,
-    //   url: `https://gmeowhq.art/profile/${payload.fid}/badges`,
-    // })
+    const eventType = tierToEventType[payload.tier] || 'badge_common'
     
-    // Example 2: Track analytics event
-    // await trackEvent({
-    //   event: 'badge_minted',
-    //   fid: payload.fid,
-    //   properties: {
-    //     badgeId: payload.badgeId,
-    //     tier: payload.tier,
-    //     chain: payload.chain,
-    //   },
-    // })
-    
-    // Example 3: Award bonus XP for first mythic/legendary mint
-    // if (payload.tier === 'mythic' || payload.tier === 'legendary') {
-    //   await awardBonusXP(payload.fid, 100, 'First rare badge minted')
-    // }
+    await notifyWithXPReward({
+      fid: payload.fid,
+      category: 'badge',
+      title: 'Badge Minted! 🎉',
+      body: `Your ${payload.tier} badge "${payload.badgeId}" has been minted on-chain!`,
+      targetUrl: `https://gmeowhq.art/profile/${payload.fid}/badges`,
+      eventType,
+      metadata: {
+        badgeId: payload.badgeId,
+        tier: payload.tier,
+        chain: payload.chain,
+        txHash: payload.txHash,
+      },
+    })
     
     console.log('[Webhook] Badge minted webhook processed successfully:', payload.badgeId)
   } catch (error) {

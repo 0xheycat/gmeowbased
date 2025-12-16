@@ -27,6 +27,7 @@ import {
   buildRegisterReferralCodeTx 
 } from '@/lib/referral-contract'
 import { CheckCircleIcon, ErrorIcon, RefreshIcon } from '@/components/icons'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 
 export interface ReferralCodeFormProps {
   /** Current referral code (if any) */
@@ -56,6 +57,8 @@ export function ReferralCodeForm({
   const [touched, setTouched] = useState(false)
   const [isChecking, setIsChecking] = useState(false)
   const [availabilityStatus, setAvailabilityStatus] = useState<'available' | 'taken' | null>(null)
+  const [xpOverlayOpen, setXpOverlayOpen] = useState(false)
+  const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
 
   // Validation
   const validation = validateReferralCode(code)
@@ -100,6 +103,21 @@ export function ReferralCodeForm({
   // Handle successful transaction
   useEffect(() => {
     if (isConfirmed && hash) {
+      // Show XP celebration
+      const payload: XpEventPayload = {
+        event: 'referral-register',
+        chainKey: 'base',
+        xpEarned: 10, // Referral code registration reward
+        totalPoints: 0,
+        headline: `Referral Code "${code}" Registered! 🔗`,
+        tierTagline: '+10 XP Earned',
+        shareLabel: 'Share Code',
+        visitLabel: 'View Profile',
+        visitUrl: '/profile',
+      }
+      setXpPayload(payload)
+      setTimeout(() => setXpOverlayOpen(true), 100)
+      
       onSuccess?.(code)
     }
   }, [isConfirmed, hash, code, onSuccess])
@@ -278,6 +296,13 @@ export function ReferralCodeForm({
           </a>
         </div>
       )}
+
+      {/* XP Celebration Overlay */}
+      <XPEventOverlay
+        open={xpOverlayOpen}
+        payload={xpPayload}
+        onClose={() => setXpOverlayOpen(false)}
+      />
     </form>
   )
 }

@@ -509,7 +509,8 @@ export async function fetchNFTMetadata(tokenURI: string): Promise<NFTMetadata | 
     const metadata = await response.json()
     return metadata as NFTMetadata
   } catch (error) {
-    console.error('Error fetching NFT metadata:', error)
+    const { trackError } = await import('@/lib/notifications/error-tracking')
+    trackError('nft_metadata_fetch_error', error, { function: 'fetchNFTMetadata', tokenURI })
     return null
   }
 }

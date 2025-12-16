@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gmeow Triple-Circle Spiral Gaming Collection</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+  background: radial-gradient(ellipse at center, #1e293b, #0a0e1a);
+  color: #fff; 
+  padding: 40px 20px; 
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.header { text-align: center; margin-bottom: 60px; }
+.header h1 { 
+  font-size: 3.5rem; 
+  background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #8b5cf6 100%); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+  background-clip: text; 
+  margin-bottom: 15px;
+  animation: titlePulse 3s ease-in-out infinite;
+}
+@keyframes titlePulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
+.header .subtitle { color: #fbbf24; font-size: 1.4rem; margin-bottom: 10px; font-weight: 600; letter-spacing: 2px; }
+.header p { color: #94a3b8; font-size: 1.1rem; }
+.grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+  gap: 40px; 
+  max-width: 1500px; 
+  margin: 0 auto; 
+}
+.card { 
+  background: linear-gradient(135deg, #1e293b, #334155); 
+  border-radius: 20px; 
+  padding: 35px; 
+  border: 2px solid #334155; 
+  transition: all 0.4s ease; 
+  position: relative;
+}
+.card:hover { 
+  border-color: #f59e0b; 
+  box-shadow: 0 12px 40px rgba(251, 191, 36, 0.4); 
+  transform: translateY(-8px); 
+}
+.card-title { 
+  font-size: 1.6rem; 
+  margin-bottom: 10px; 
+  color: #fbbf24; 
+  font-weight: 700; 
+}
+.card-category { 
+  color: #94a3b8; 
+  font-size: 0.95rem; 
+  margin-bottom: 25px; 
+  text-transform: uppercase; 
+  letter-spacing: 2px; 
+}
+.loader-display { 
+  display: flex; 
+  gap: 35px; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 50px 25px; 
+  background: rgba(10, 14, 26, 0.6); 
+  border-radius: 16px; 
+  flex-wrap: wrap; 
+}
+.size-group { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 12px; 
+}
+.size-label { 
+  color: #64748b; 
+  font-size: 0.8rem; 
+  text-transform: uppercase; 
+  letter-spacing: 1.5px; 
+  font-weight: 700; 
+}
+.size-sm { --s: 48px; }
+.size-md { --s: 96px; }
+.size-lg { --s: 144px; }
+
+/* Base Triple Circle Setup */
+.triple-loader { width: var(--s); height: var(--s); position: relative; }
+.triple-loader .circle { position: absolute; border-radius: 50%; }
+
+/* 1. Gaming Neon Rings */
+.l1 .circle { border: calc(var(--s) * 0.08) solid; animation: neonSpin 3s linear infinite; }
+.l1 .c1 { width: 100%; height: 100%; top: 0; left: 0; border-color: #f59e0b transparent transparent transparent; animation-delay: 0s; box-shadow: 0 0 calc(var(--s) * 0.2) #f59e0b; }
+.l1 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: transparent #ec4899 transparent transparent; animation-delay: -0.5s; animation-direction: reverse; box-shadow: 0 0 calc(var(--s) * 0.2) #ec4899; }
+.l1 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: transparent transparent #8b5cf6 transparent; animation-delay: -1s; box-shadow: 0 0 calc(var(--s) * 0.2) #8b5cf6; }
+@keyframes neonSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* 2. Power Core Pulse */
+.l2 .circle { border: calc(var(--s) * 0.1) solid; animation: corePulse 2s ease-in-out infinite; }
+.l2 .c1 { width: 100%; height: 100%; border-color: rgba(251, 191, 36, 0.8); animation-delay: 0s; box-shadow: inset 0 0 calc(var(--s) * 0.2) rgba(251, 191, 36, 0.6); }
+.l2 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: rgba(236, 72, 153, 0.8); animation-delay: -0.3s; box-shadow: inset 0 0 calc(var(--s) * 0.2) rgba(236, 72, 153, 0.6); }
+.l2 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: rgba(139, 92, 246, 0.8); animation-delay: -0.6s; box-shadow: inset 0 0 calc(var(--s) * 0.2) rgba(139, 92, 246, 0.6); }
+.l2 .core { position: absolute; width: 20%; height: 20%; top: 40%; left: 40%; background: radial-gradient(circle, #fff, #fbbf24); border-radius: 50%; animation: coreGlow 2s ease-in-out infinite; box-shadow: 0 0 calc(var(--s) * 0.4) #fff; }
+@keyframes corePulse { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.1); opacity: 1; } }
+@keyframes coreGlow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+
+/* 3. Orbital Strike */
+.l3 .circle { border: calc(var(--s) * 0.06) solid transparent; animation: orbitalRotate 4s linear infinite; }
+.l3 .c1 { width: 100%; height: 100%; border-top-color: #f59e0b; border-right-color: #f59e0b; }
+.l3 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-right-color: #ec4899; border-bottom-color: #ec4899; animation-direction: reverse; animation-duration: 3s; }
+.l3 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-bottom-color: #8b5cf6; border-left-color: #8b5cf6; animation-duration: 2s; }
+.l3 .target { position: absolute; width: calc(var(--s) * 0.15); height: calc(var(--s) * 0.15); background: #dc2626; border-radius: 50%; animation: targetOrbit 4s linear infinite; box-shadow: 0 0 calc(var(--s) * 0.3) #dc2626; }
+@keyframes orbitalRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes targetOrbit { 0% { top: 0%; left: 42.5%; } 25% { top: 42.5%; left: 85%; } 50% { top: 85%; left: 42.5%; } 75% { top: 42.5%; left: 0%; } 100% { top: 0%; left: 42.5%; } }
+
+/* 4. Energy Shield Generator */
+.l4 .circle { border: calc(var(--s) * 0.12) solid; animation: shieldRotate 3s ease-in-out infinite; }
+.l4 .c1 { width: 100%; height: 100%; border-color: #3b82f6 transparent #3b82f6 transparent; }
+.l4 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: transparent #06b6d4 transparent #06b6d4; animation-delay: -0.5s; }
+.l4 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: #8b5cf6 transparent #8b5cf6 transparent; animation-delay: -1s; animation-direction: reverse; }
+.l4 .energy { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, rgba(59, 130, 246, 0.3), transparent); animation: energyPulse 3s ease-in-out infinite; }
+@keyframes shieldRotate { 0%, 100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.05); } }
+@keyframes energyPulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.2); } }
+
+/* 5. Combo Multiplier */
+.l5 .circle { border: calc(var(--s) * 0.08) solid; animation: comboSpin 2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; }
+.l5 .c1 { width: 100%; height: 100%; border-color: #22c55e transparent transparent transparent; box-shadow: 0 0 calc(var(--s) * 0.25) #22c55e; }
+.l5 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: transparent #f59e0b transparent transparent; animation-delay: -0.3s; box-shadow: 0 0 calc(var(--s) * 0.25) #f59e0b; }
+.l5 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: transparent transparent #dc2626 transparent; animation-delay: -0.6s; box-shadow: 0 0 calc(var(--s) * 0.25) #dc2626; }
+.l5 .multiplier { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: calc(var(--s) * 0.3); font-weight: bold; color: #fff; animation: numberScale 2s ease-in-out infinite; text-shadow: 0 0 calc(var(--s) * 0.3) #f59e0b; }
+@keyframes comboSpin { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(180deg); } }
+@keyframes numberScale { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+
+/* 6. Warp Drive Charging */
+.l6 .circle { border: calc(var(--s) * 0.06) solid; animation: warpCharge 3s ease-in-out infinite; border-style: dashed; }
+.l6 .c1 { width: 100%; height: 100%; border-color: #06b6d4; animation-delay: 0s; }
+.l6 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: #3b82f6; animation-delay: -0.5s; animation-direction: reverse; }
+.l6 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: #8b5cf6; animation-delay: -1s; }
+.l6 .warp-flash { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255, 255, 255, 0.8), transparent 60%); border-radius: 50%; animation: warpFlash 3s ease-in-out infinite; }
+@keyframes warpCharge { 0% { transform: rotate(0deg) scale(0.8); opacity: 0.5; } 100% { transform: rotate(720deg) scale(1.2); opacity: 1; } }
+@keyframes warpFlash { 0%, 90% { opacity: 0; } 95%, 100% { opacity: 1; } }
+
+/* 7. XP Level Up Rings */
+.l7 .circle { border: calc(var(--s) * 0.1) solid; animation: levelPulse 2.5s ease-in-out infinite; }
+.l7 .c1 { width: 100%; height: 100%; border-color: rgba(251, 191, 36, 0.6); box-shadow: 0 0 calc(var(--s) * 0.3) #fbbf24; }
+.l7 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: rgba(251, 191, 36, 0.8); animation-delay: -0.4s; box-shadow: 0 0 calc(var(--s) * 0.3) #fbbf24; }
+.l7 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: rgba(251, 191, 36, 1); animation-delay: -0.8s; box-shadow: 0 0 calc(var(--s) * 0.3) #fbbf24; }
+.l7 .burst { position: absolute; width: calc(var(--s) * 0.1); height: calc(var(--s) * 0.1); background: #fbbf24; border-radius: 50%; animation: burstOut 2.5s ease-out infinite; }
+.l7 .burst:nth-child(5) { animation-delay: 0s; }
+.l7 .burst:nth-child(6) { animation-delay: -0.5s; }
+.l7 .burst:nth-child(7) { animation-delay: -1s; }
+.l7 .burst:nth-child(8) { animation-delay: -1.5s; }
+@keyframes levelPulse { 0%, 100% { transform: scale(0.9); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
+@keyframes burstOut { 0% { top: 45%; left: 45%; opacity: 1; transform: scale(1); } 100% { top: -10%; left: 80%; opacity: 0; transform: scale(0.3); } }
+
+/* 8. Critical Hit Detector */
+.l8 .circle { border: calc(var(--s) * 0.08) solid; animation: critScan 2s linear infinite; }
+.l8 .c1 { width: 100%; height: 100%; border-color: #dc2626 transparent transparent transparent; }
+.l8 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: transparent #f97316 transparent transparent; animation-delay: -0.33s; }
+.l8 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: transparent transparent #fbbf24 transparent; animation-delay: -0.66s; }
+.l8 .crosshair-h { position: absolute; width: 100%; height: calc(var(--s) * 0.03); top: 48.5%; background: linear-gradient(90deg, transparent, #dc2626, transparent); }
+.l8 .crosshair-v { position: absolute; width: calc(var(--s) * 0.03); height: 100%; left: 48.5%; background: linear-gradient(180deg, transparent, #dc2626, transparent); }
+@keyframes critScan { 0% { transform: rotate(0deg); filter: hue-rotate(0deg); } 100% { transform: rotate(360deg); filter: hue-rotate(60deg); } }
+
+/* 9. Mana Regeneration */
+.l9 .circle { border: calc(var(--s) * 0.1) solid; animation: manaFlow 3s ease-in-out infinite; }
+.l9 .c1 { width: 100%; height: 100%; border-color: rgba(59, 130, 246, 0.4); }
+.l9 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: rgba(59, 130, 246, 0.6); animation-delay: -0.5s; }
+.l9 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: rgba(59, 130, 246, 0.9); animation-delay: -1s; }
+.l9 .droplet { position: absolute; width: calc(var(--s) * 0.08); height: calc(var(--s) * 0.12); background: linear-gradient(180deg, #60a5fa, #3b82f6); border-radius: 50% 50% 50% 0; animation: dropletFall 3s ease-in infinite; transform: rotate(45deg); box-shadow: 0 0 calc(var(--s) * 0.2) #3b82f6; }
+.l9 .droplet:nth-child(5) { animation-delay: 0s; }
+.l9 .droplet:nth-child(6) { animation-delay: -1s; }
+.l9 .droplet:nth-child(7) { animation-delay: -2s; }
+@keyframes manaFlow { 0%, 100% { transform: rotate(0deg); opacity: 0.5; } 50% { transform: rotate(360deg); opacity: 1; } }
+@keyframes dropletFall { 0% { top: 10%; left: 45%; opacity: 1; } 100% { top: 80%; left: 45%; opacity: 0; } }
+
+/* 10. Boss Phase Transition */
+.l10 .circle { border: calc(var(--s) * 0.12) solid; animation: phaseShift 4s ease-in-out infinite; }
+.l10 .c1 { width: 100%; height: 100%; border-color: #dc2626; border-style: double; box-shadow: 0 0 calc(var(--s) * 0.4) #dc2626, inset 0 0 calc(var(--s) * 0.2) #dc2626; }
+.l10 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: #f97316; border-style: double; animation-delay: -1s; animation-direction: reverse; box-shadow: 0 0 calc(var(--s) * 0.4) #f97316, inset 0 0 calc(var(--s) * 0.2) #f97316; }
+.l10 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: #fbbf24; border-style: double; animation-delay: -2s; box-shadow: 0 0 calc(var(--s) * 0.4) #fbbf24, inset 0 0 calc(var(--s) * 0.2) #fbbf24; }
+.l10 .skull { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: calc(var(--s) * 0.4); animation: skullPulse 2s ease-in-out infinite; filter: drop-shadow(0 0 calc(var(--s) * 0.3) #dc2626); }
+@keyframes phaseShift { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.15) rotate(180deg); } }
+@keyframes skullPulse { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.2) rotate(10deg); } }
+
+/* 11. Stealth Cloak Activation */
+.l11 .circle { border: calc(var(--s) * 0.06) solid; animation: cloakFade 3s ease-in-out infinite; border-style: dotted; }
+.l11 .c1 { width: 100%; height: 100%; border-color: rgba(139, 92, 246, 0.8); }
+.l11 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: rgba(139, 92, 246, 0.6); animation-delay: -0.5s; }
+.l11 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: rgba(139, 92, 246, 0.4); animation-delay: -1s; }
+.l11 .shimmer { position: absolute; width: 100%; height: 100%; background: linear-gradient(45deg, transparent, rgba(139, 92, 246, 0.3), transparent); animation: shimmerMove 2s linear infinite; border-radius: 50%; }
+@keyframes cloakFade { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(1.1); } }
+@keyframes shimmerMove { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* 12. Rage Mode Buildup */
+.l12 .circle { border: calc(var(--s) * 0.1) solid; animation: rageIntensify 2s ease-in infinite; }
+.l12 .c1 { width: 100%; height: 100%; border-color: #f97316; box-shadow: 0 0 calc(var(--s) * 0.35) #f97316; }
+.l12 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: #dc2626; animation-delay: -0.3s; box-shadow: 0 0 calc(var(--s) * 0.35) #dc2626; }
+.l12 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: #991b1b; animation-delay: -0.6s; box-shadow: 0 0 calc(var(--s) * 0.35) #991b1b; }
+.l12 .flame { position: absolute; width: calc(var(--s) * 0.15); height: calc(var(--s) * 0.2); background: linear-gradient(180deg, #fbbf24, #f97316, transparent); border-radius: 50% 50% 0 0; animation: flameRise 1.5s ease-in-out infinite; filter: blur(calc(var(--s) * 0.01)); }
+.l12 .flame:nth-child(5) { bottom: 0; left: 20%; animation-delay: 0s; }
+.l12 .flame:nth-child(6) { bottom: 0; left: 42.5%; animation-delay: -0.5s; }
+.l12 .flame:nth-child(7) { bottom: 0; right: 20%; animation-delay: -1s; }
+@keyframes rageIntensify { 0% { transform: scale(0.9); opacity: 0.6; } 100% { transform: scale(1.1); opacity: 1; } }
+@keyframes flameRise { 0% { transform: translateY(0) scaleY(1); opacity: 1; } 100% { transform: translateY(-100%) scaleY(1.5); opacity: 0; } }
+
+/* 13. Quest Completion Rings */
+.l13 .circle { border: calc(var(--s) * 0.08) solid; animation: questComplete 3s ease-in-out infinite; }
+.l13 .c1 { width: 100%; height: 100%; border-color: #22c55e; box-shadow: 0 0 calc(var(--s) * 0.3) #22c55e; }
+.l13 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: #10b981; animation-delay: -0.5s; box-shadow: 0 0 calc(var(--s) * 0.3) #10b981; }
+.l13 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: #059669; animation-delay: -1s; box-shadow: 0 0 calc(var(--s) * 0.3) #059669; }
+.l13 .checkmark { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: calc(var(--s) * 0.5); animation: checkmarkPop 3s ease-in-out infinite; color: #22c55e; text-shadow: 0 0 calc(var(--s) * 0.3) #22c55e; }
+@keyframes questComplete { 0% { transform: scale(0.8) rotate(0deg); opacity: 0.5; } 50% { transform: scale(1.1) rotate(180deg); opacity: 1; } 100% { transform: scale(0.8) rotate(360deg); opacity: 0.5; } }
+@keyframes checkmarkPop { 0%, 80% { transform: scale(0); } 90% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+/* 14. Teleport Portal */
+.l14 .circle { border: calc(var(--s) * 0.1) solid; animation: portalSwirl 2s linear infinite; }
+.l14 .c1 { width: 100%; height: 100%; border-color: #06b6d4 transparent #06b6d4 transparent; box-shadow: 0 0 calc(var(--s) * 0.35) #06b6d4; }
+.l14 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: transparent #8b5cf6 transparent #8b5cf6; animation-direction: reverse; animation-duration: 1.5s; box-shadow: 0 0 calc(var(--s) * 0.35) #8b5cf6; }
+.l14 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: #ec4899 transparent #ec4899 transparent; animation-duration: 1s; box-shadow: 0 0 calc(var(--s) * 0.35) #ec4899; }
+.l14 .vortex { position: absolute; width: 20%; height: 20%; top: 40%; left: 40%; background: radial-gradient(circle, #fff, transparent); border-radius: 50%; animation: vortexPull 2s ease-in-out infinite; box-shadow: 0 0 calc(var(--s) * 0.5) #fff; }
+@keyframes portalSwirl { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes vortexPull { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.5); } }
+
+/* 15. Ultimate Ability Charge */
+.l15 .circle { border: calc(var(--s) * 0.12) solid; animation: ultimateCharge 3s ease-in-out infinite; border-style: solid; }
+.l15 .c1 { width: 100%; height: 100%; border-color: #fbbf24; border-image: linear-gradient(45deg, #fbbf24, #f59e0b, #fbbf24) 1; box-shadow: 0 0 calc(var(--s) * 0.4) #fbbf24, inset 0 0 calc(var(--s) * 0.2) rgba(251, 191, 36, 0.3); }
+.l15 .c2 { width: 70%; height: 70%; top: 15%; left: 15%; border-color: #ec4899; border-image: linear-gradient(45deg, #ec4899, #be185d, #ec4899) 1; animation-delay: -0.5s; animation-direction: reverse; box-shadow: 0 0 calc(var(--s) * 0.4) #ec4899, inset 0 0 calc(var(--s) * 0.2) rgba(236, 72, 153, 0.3); }
+.l15 .c3 { width: 40%; height: 40%; top: 30%; left: 30%; border-color: #8b5cf6; border-image: linear-gradient(45deg, #8b5cf6, #6d28d9, #8b5cf6) 1; animation-delay: -1s; box-shadow: 0 0 calc(var(--s) * 0.4) #8b5cf6, inset 0 0 calc(var(--s) * 0.2) rgba(139, 92, 246, 0.3); }
+.l15 .lightning { position: absolute; width: calc(var(--s) * 0.06); height: 50%; background: linear-gradient(180deg, #fff, #fbbf24); left: 47%; top: 25%; clip-path: polygon(40% 0%, 60% 0%, 45% 60%, 70% 60%, 30% 100%, 50% 65%, 30% 65%); animation: lightningStrike 3s ease-in-out infinite; filter: drop-shadow(0 0 calc(var(--s) * 0.2) #fbbf24); }
+@keyframes ultimateCharge { 0% { transform: rotate(0deg) scale(0.9); opacity: 0.7; } 50% { transform: rotate(180deg) scale(1.1); opacity: 1; } 100% { transform: rotate(360deg) scale(0.9); opacity: 0.7; } }
+@keyframes lightningStrike { 0%, 90% { opacity: 0; transform: translateY(-20%); } 92%, 96% { opacity: 1; transform: translateY(0); } 94%, 98% { opacity: 0.3; transform: translateY(5%); } 100% { opacity: 0; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>⚫⚫⚫ Triple-Circle Spiral Gaming</h1>
+<div class="subtitle">15 Professional Gaming Loaders</div>
+<p>Three concentric circles • Advanced spiral animations • Ultimate gaming aesthetics</p>
+</div>
+<div class="grid">
+
+<div class="card">
+<div class="card-title">Gaming Neon Rings</div>
+<div class="card-category">🎮 Classic Spin</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l1 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l1 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l1 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Power Core Pulse</div>
+<div class="card-category">⚡ Energy Center</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l2 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="core"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l2 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="core"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l2 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="core"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Orbital Strike</div>
+<div class="card-category">🎯 Target Lock</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l3 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="target"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l3 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="target"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l3 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="target"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Energy Shield</div>
+<div class="card-category">🛡️ Force Field</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l4 size-sm"><div class="energy"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l4 size-md"><div class="energy"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l4 size-lg"><div class="energy"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Combo Multiplier</div>
+<div class="card-category">🔥 Chain Attack</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l5 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="multiplier">×∞</div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l5 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="multiplier">×∞</div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l5 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="multiplier">×∞</div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Warp Drive</div>
+<div class="card-category">🚀 FTL Speed</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l6 size-sm"><div class="warp-flash"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l6 size-md"><div class="warp-flash"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l6 size-lg"><div class="warp-flash"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">XP Level Up</div>
+<div class="card-category">⭐ Rank Gain</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l7 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="burst"></div><div class="burst"></div><div class="burst"></div><div class="burst"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l7 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="burst"></div><div class="burst"></div><div class="burst"></div><div class="burst"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l7 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="burst"></div><div class="burst"></div><div class="burst"></div><div class="burst"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Critical Hit</div>
+<div class="card-category">💥 Damage Spike</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l8 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="crosshair-h"></div><div class="crosshair-v"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l8 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="crosshair-h"></div><div class="crosshair-v"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l8 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="crosshair-h"></div><div class="crosshair-v"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Mana Regen</div>
+<div class="card-category">💧 Magic Flow</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l9 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="droplet"></div><div class="droplet"></div><div class="droplet"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l9 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="droplet"></div><div class="droplet"></div><div class="droplet"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l9 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="droplet"></div><div class="droplet"></div><div class="droplet"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Boss Phase</div>
+<div class="card-category">💀 Ultimate Enemy</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l10 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="skull">💀</div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l10 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="skull">💀</div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l10 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="skull">💀</div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Stealth Cloak</div>
+<div class="card-category">👻 Invisibility</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l11 size-sm"><div class="shimmer"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l11 size-md"><div class="shimmer"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l11 size-lg"><div class="shimmer"></div><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Rage Mode</div>
+<div class="card-category">🔥 Berserk</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l12 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="flame"></div><div class="flame"></div><div class="flame"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l12 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="flame"></div><div class="flame"></div><div class="flame"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l12 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="flame"></div><div class="flame"></div><div class="flame"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Quest Complete</div>
+<div class="card-category">✅ Mission Done</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l13 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="checkmark">✓</div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l13 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="checkmark">✓</div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l13 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="checkmark">✓</div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Teleport Portal</div>
+<div class="card-category">🌀 Warp Gate</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l14 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="vortex"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l14 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="vortex"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l14 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="vortex"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Ultimate Ability</div>
+<div class="card-category">⚡ Max Power</div>
+<div class="loader-display">
+<div class="size-group">
+<div class="size-label">Small • 48px</div>
+<div class="triple-loader l15 size-sm"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="lightning"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Medium • 96px</div>
+<div class="triple-loader l15 size-md"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="lightning"></div></div>
+</div>
+<div class="size-group">
+<div class="size-label">Large • 144px</div>
+<div class="triple-loader l15 size-lg"><div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div><div class="lightning"></div></div>
+</div>
+</div>
+</div>
+
+</div>
+<div style="text-align: center; margin-top: 80px; padding: 50px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(236, 72, 153, 0.15)); border-radius: 24px; max-width: 1000px; margin-left: auto; margin-right: auto; border: 3px solid #f59e0b;">
+<div style="font-size: 4rem; margin-bottom: 20px;">⚫⚫⚫</div>
+<h2 style="color: #fbbf24; margin-bottom: 25px; font-size: 2.5rem;">Triple-Circle Gaming Complete!</h2>
+<p style="color: #e2e8f0; font-size: 1.3rem; line-height: 1.9; margin-bottom: 30px;">
+<strong style="color: #fbbf24;">15 Professional Gaming Loaders</strong><br>
+Each featuring 3 concentric circles with unique gaming mechanics!
+</p>
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 40px;">
+<div style="padding: 20px; background: rgba(251, 191, 36, 0.1); border-radius: 12px;">
+<div style="font-size: 2.5rem; margin-bottom: 10px;">⚫</div>
+<div style="font-size: 1.1rem; color: #fbbf24;">Outer Ring</div>
+<div style="font-size: 0.9rem; color: #94a3b8;">Primary Layer</div>
+</div>
+<div style="padding: 20px; background: rgba(236, 72, 153, 0.1); border-radius: 12px;">
+<div style="font-size: 2.5rem; margin-bottom: 10px;">⚫</div>
+<div style="font-size: 1.1rem; color: #ec4899;">Middle Ring</div>
+<div style="font-size: 0.9rem; color: #94a3b8;">Secondary Layer</div>
+</div>
+<div style="padding: 20px; background: rgba(139, 92, 246, 0.1); border-radius: 12px;">
+<div style="font-size: 2.5rem; margin-bottom: 10px;">⚫</div>
+<div style="font-size: 1.1rem; color: #8b5cf6;">Inner Ring</div>
+<div style="font-size: 0.9rem; color: #94a3b8;">Core Layer</div>
+</div>
+</div>
+<div style="margin-top: 40px; padding: 25px; background: rgba(10, 14, 26, 0.8); border-radius: 16px;">
+<div style="color: #fbbf24; font-size: 1.5rem; margin-bottom: 15px;">🎮 Gaming Features</div>
+<div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; color: #cbd5e1;">
+<span>⚡ Energy Effects</span>
+<span>🎯 Targeting Systems</span>
+<span>🔥 Combat Mechanics</span>
+<span>✨ Ability Indicators</span>
+</div>
+</div>
+<p style="color: #64748b; font-size: 1rem; margin-top: 40px;">
+<strong style="color: #fff;">Total Collection: 175 Unique Loaders • 525 Size Variants</strong><br>
+Triple-circle mastery achieved! 🎮⚫⚫⚫
+</p>
+</div>
+</body>
+</html>

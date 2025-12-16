@@ -28,6 +28,18 @@ import {
   TrendingUpIcon,
   GroupIcon
 } from '@/components/icons'
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+} from '@/components/dialogs'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton/Skeleton'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
 
 export interface TreasuryTransaction {
   id: string
@@ -63,6 +75,13 @@ export function GuildTreasuryPanel({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
+  // Dialog states
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogMessage, setDialogMessage] = useState('')
+  const [confirmAction, setConfirmAction] = useState<{ type: string; data: any } | null>(null)
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  
   // Deposit state
   const [depositAmount, setDepositAmount] = useState('')
   const [isDepositing, setIsDepositing] = useState(false)
@@ -88,7 +107,6 @@ export function GuildTreasuryPanel({
       setBalance(data.balance || 0)
       setTransactions(data.transactions || [])
     } catch (err) {
-      console.error('Failed to load treasury:', err)
       setError('Failed to load treasury. Please refresh the page.')
     } finally {
       setIsLoading(false)
@@ -98,7 +116,8 @@ export function GuildTreasuryPanel({
   const handleDeposit = async () => {
     const amount = parseInt(depositAmount)
     if (!amount || amount <= 0) {
-      alert('Please enter a valid amount')
+      setDialogMessage('Please enter a valid amount')
+      setDialogOpen(true)
       return
     }
 
@@ -113,13 +132,24 @@ export function GuildTreasuryPanel({
         })
       })
 
-      if (!response.ok) throw new Error('Failed to deposit')
+      if (!response.ok) {
+        setDialogMessage('Failed to deposit. Please try again.')
+        setDialogOpen(true)
+        return
+      }
       
       setDepositAmount('')
-      await loadTreasuryData()
+      setDialogMessage('Deposit successful!')
+      setDialogOpen(true)
+      
+      // Reload data after showing dialog
+      setTimeout(async () => {
+        await loadTreasuryData()
+        setDialogOpen(false)
+      }, 2000)
     } catch (err) {
-      console.error('Failed to deposit:', err)
-      alert('Failed to deposit. Please try again.')
+      setDialogMessage('Failed to deposit. Please try again.')
+      setDialogOpen(true)
     } finally {
       setIsDepositing(false)
     }
@@ -128,7 +158,8 @@ export function GuildTreasuryPanel({
   const handleClaim = async () => {
     const amount = parseInt(claimAmount)
     if (!amount || amount <= 0) {
-      alert('Please enter a valid amount')
+      setDialogMessage('Please enter a valid amount')
+      setDialogOpen(true)
       return
     }
 
@@ -144,22 +175,38 @@ export function GuildTreasuryPanel({
         })
       })
 
-      if (!response.ok) throw new Error('Failed to submit claim')
+      if (!response.ok) {
+        setDialogMessage('Failed to submit claim. Please try again.')
+        setDialogOpen(true)
+        return
+      }
       
       setClaimAmount('')
       setClaimNote('')
-      await loadTreasuryData()
-      alert('Claim request submitted! Waiting for admin approval.')
+      setDialogMessage('Claim request submitted! Waiting for admin approval.')
+      setDialogOpen(true)
+      
+      // Reload data after showing dialog
+      setTimeout(async () => {
+        await loadTreasuryData()
+        setDialogOpen(false)
+      }, 2000)
     } catch (err) {
-      console.error('Failed to submit claim:', err)
-      alert('Failed to submit claim. Please try again.')
+      setDialogMessage('Failed to submit claim. Please try again.')
+      setDialogOpen(true)
     } finally {
       setIsClaiming(false)
     }
   }
 
-  const handleApproveClaim = async (transactionId: string) => {
-    if (!confirm('Approve this claim request?')) return
+  const promptApproveClaim = (transactionId: string) => {
+    setConfirmAction({ type: 'approve', data: transactionId })
+  }
+
+  const handleApproveClaim = async () => {
+    if (!confirmAction) return
+    const transactionId = confirmAction.data
+    setConfirmAction(null)
 
     try {
       const response = await fetch(`/api/guild/${guildId}/claim/approve`, {
@@ -168,11 +215,23 @@ export function GuildTreasuryPanel({
         body: JSON.stringify({ transactionId })
       })
 
-      if (!response.ok) throw new Error('Failed to approve claim')
-      await loadTreasuryData()
+      if (!response.ok) {
+        setDialogMessage('Failed to approve claim. Please try again.')
+        setDialogOpen(true)
+        return
+      }
+      
+      setDialogMessage('Claim approved successfully!')
+      setDialogOpen(true)
+      
+      // Reload data after showing dialog
+      setTimeout(async () => {
+        await loadTreasuryData()
+        setDialogOpen(false)
+      }, 2000)
     } catch (err) {
-      console.error('Failed to approve claim:', err)
-      alert('Failed to approve claim. Please try again.')
+      setDialogMessage('Failed to approve claim. Please try again.')
+      setDialogOpen(true)
     }
   }
 
@@ -180,18 +239,52 @@ export function GuildTreasuryPanel({
 
   if (isLoading) {
     return (
-      <div className={`animate-pulse space-y-6 ${className}`}>
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-32" />
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-64" />
+      <div className={`space-y-6 ${className}`} role="status" aria-live="polite" aria-label="Loading treasury data">
+        <Skeleton variant="rect" className="h-32" animation="wave" />
+        <Skeleton variant="rect" className="h-64" animation="wave" />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 ${className}`}>
-        <p className="text-red-700 dark:text-red-300">{error}</p>
-      </div>
+      <>
+        <Dialog isOpen={true} onClose={() => setError(null)}>
+          <DialogBackdrop />
+          <DialogContent size="sm">
+            <DialogHeader>
+              <DialogTitle>Error Loading Treasury</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              <p className="text-gray-700 dark:text-gray-300">{error}</p>
+            </DialogBody>
+            <DialogFooter>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setError(null)}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-colors"
+                  {...createKeyboardHandler(() => setError(null))}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setError(null)
+                    loadTreasuryData()
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                  {...createKeyboardHandler(() => {
+                    setError(null)
+                    loadTreasuryData()
+                  })}
+                >
+                  Retry
+                </button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     )
   }
 
@@ -232,6 +325,7 @@ export function GuildTreasuryPanel({
               onClick={handleDeposit}
               disabled={isDepositing || !depositAmount}
               className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors min-h-[44px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              {...createKeyboardHandler(handleDeposit)}
             >
               {isDepositing ? 'Depositing...' : 'Deposit'}
             </button>
@@ -268,6 +362,7 @@ export function GuildTreasuryPanel({
               onClick={handleClaim}
               disabled={isClaiming || !claimAmount}
               className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors min-h-[44px] focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              {...createKeyboardHandler(handleClaim)}
             >
               {isClaiming ? 'Submitting...' : 'Request Claim'}
             </button>
@@ -308,8 +403,9 @@ export function GuildTreasuryPanel({
                   </div>
                 </div>
                 <button
-                  onClick={() => handleApproveClaim(claim.id)}
+                  onClick={() => promptApproveClaim(claim.id)}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors min-h-[44px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  {...createKeyboardHandler(() => promptApproveClaim(claim.id))}
                 >
                   Approve
                 </button>
@@ -381,6 +477,47 @@ export function GuildTreasuryPanel({
           </div>
         )}
       </div>
+
+      {/* Notification Dialog */}
+      <Dialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogBackdrop />
+        <DialogContent size="sm">
+          <DialogHeader>
+            <DialogTitle>Treasury Action</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <p className="text-gray-600 dark:text-gray-400">{dialogMessage}</p>
+          </DialogBody>
+          <DialogFooter>
+            <Button onClick={() => setDialogOpen(false)} variant="default">
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog */}
+      <Dialog isOpen={confirmAction !== null} onClose={() => setConfirmAction(null)}>
+        <DialogBackdrop />
+        <DialogContent size="sm">
+          <DialogHeader>
+            <DialogTitle>Confirm Approval</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <p className="text-gray-600 dark:text-gray-400">
+              Are you sure you want to approve this claim request?
+            </p>
+          </DialogBody>
+          <DialogFooter>
+            <Button onClick={() => setConfirmAction(null)} variant="ghost">
+              Cancel
+            </Button>
+            <Button onClick={handleApproveClaim} variant="default">
+              Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

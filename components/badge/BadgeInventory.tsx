@@ -6,7 +6,9 @@ import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import LockIcon from '@mui/icons-material/Lock'
 import { useAccount } from 'wagmi'
-import { useNotifications } from '@/components/ui/live-notifications'
+import { useDialog, ErrorDialog } from '@/components/dialogs'
+import { Tooltip } from '@/components/ui/tooltip'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import { ICON_SIZES } from '@/lib/icon-sizes'
 
 export type UserBadge = {
@@ -77,7 +79,10 @@ export function BadgeInventory({
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
   const [claimingBadge, setClaimingBadge] = useState<string | null>(null)
   const { address } = useAccount()
-  const { showNotification } = useNotifications()
+  const { isOpen: errorOpen, open: openError, close: closeError } = useDialog()
+  const [errorMessage, setErrorMessage] = useState('')
+  const [xpOverlayOpen, setXpOverlayOpen] = useState(false)
+  const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
 
   const displayBadges = useMemo(() => {
     if (maxDisplay) return badges.slice(0, maxDisplay)
@@ -92,12 +97,8 @@ export function BadgeInventory({
     e.stopPropagation() // Don't trigger badge click
 
     if (!address) {
-      showNotification('Please connect your wallet to claim badges', 'badge_eligible')
-      return
-    }
-
-    if (badge.minted) {
-      showNotification('This badge has already been minted on-chain', 'badge_minted')
+      setErrorMessage('Please connect your wallet to claim badges')
+      openError()
       return
     }
 
@@ -125,23 +126,25 @@ export function BadgeInventory({
         throw new Error(result.error || 'Failed to claim badge')
       }
 
-      showNotification(
-        `Badge claimed! Processing mint on ${result.badge.chain}. You'll pay gas, oracle provides points.`,
-        'badge_minted',
-        5000,
-        'badge'
-      )
+      // Show XPEventOverlay celebration (professional UI pattern)
+      setXpPayload({
+        event: 'badge-claim',
+        chainKey: (result.badge.chain || 'base') as any,
+        xpEarned: 100, // Standard badge claim XP
+        totalPoints: 0, // Will be updated from API in future
+        headline: `${result.badge.name} claimed!`,
+        shareLabel: 'Share your new badge',
+        visitUrl: `/badges`,
+        visitLabel: 'View collection',
+      })
+      setXpOverlayOpen(true)
       
-      // Refresh page to show updated status
-      setTimeout(() => window.location.reload(), 2000)
+      // Refresh to show minted status after celebration
+      setTimeout(() => window.location.reload(), 3000)
     } catch (error: any) {
       console.error('Claim failed:', error)
-      showNotification(
-        error.message || 'Failed to claim badge',
-        'badge_eligible',
-        5000,
-        'badge'
-      )
+      setErrorMessage(error.message || 'Failed to claim badge')
+      openError()
     } finally {
       setClaimingBadge(null)
     }
@@ -235,22 +238,34 @@ export function BadgeInventory({
                   </div>
                 )}
 
-                {/* Claim Button for unminted badges */}
-                {!badge.minted && address && (
-                  <button
-                    onClick={(e) => handleClaimBadge(badge, e)}
-                    disabled={claimingBadge === badge.badgeId}
-                    className="absolute top-2 right-2 flex items-center gap-2 px-3 py-2 min-h-6 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-900 dark:text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {claimingBadge === badge.badgeId ? (
-                      <>Claiming...</>
-                    ) : (
-                      <>
+                {/* Claim Button with Tooltip */}
+                {address && (
+                  badge.minted ? (
+                    <Tooltip content="This badge is already minted on-chain" side="bottom">
+                      <button
+                        disabled
+                        className="absolute top-2 right-2 flex items-center gap-2 px-3 py-2 min-h-6 rounded-lg text-[10px] font-bold bg-emerald-500/30 text-white/60 cursor-not-allowed"
+                      >
                         <AutoAwesomeIcon sx={{ fontSize: ICON_SIZES.xs }} />
-                        Claim
-                      </>
-                    )}
-                  </button>
+                        Minted
+                      </button>
+                    </Tooltip>
+                  ) : (
+                    <button
+                      onClick={(e) => handleClaimBadge(badge, e)}
+                      disabled={claimingBadge === badge.badgeId}
+                      className="absolute top-2 right-2 flex items-center gap-2 px-3 py-2 min-h-6 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-900 dark:text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {claimingBadge === badge.badgeId ? (
+                        <>Claiming...</>
+                      ) : (
+                        <>
+                          <AutoAwesomeIcon sx={{ fontSize: ICON_SIZES.xs }} />
+                          Claim
+                        </>
+                      )}
+                    </button>
+                  )
                 )}
 
                 {/* Bottom Info Bar */}
@@ -342,6 +357,19 @@ export function BadgeInventory({
           }
         }
       `}</style>
+
+      <ErrorDialog
+        isOpen={errorOpen}
+        onClose={closeError}
+        title="Badge Error"
+        message={errorMessage}
+      />
+
+      <XPEventOverlay
+        open={xpOverlayOpen}
+        payload={xpPayload}
+        onClose={() => setXpOverlayOpen(false)}
+      />
     </div>
   )
 }

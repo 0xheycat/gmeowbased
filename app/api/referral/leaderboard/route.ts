@@ -30,6 +30,7 @@ import { z } from 'zod'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -55,9 +56,9 @@ interface LeaderboardEntry {
 }
 
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
   const startTime = Date.now()
   const clientIp = getClientIp(request)
-  const requestId = crypto.randomUUID()
 
   // ===== SECURITY LAYER 9: AUDIT LOGGING =====
   console.log('[API /api/referral/leaderboard] Request received', {

@@ -1,11 +1,18 @@
+/**
+ * BadgeManagerPanel Component
+ * 
+ * Dialog Usage:
+ * - ErrorDialog: Displays badge fetch/mutation errors with retry functionality
+ * - useDialog: State management for error dialog (open/close)
+ */
+
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import Image from 'next/image'
-import { useDialog } from '@/lib/hooks/use-dialog'
-import ErrorDialog from '@/components/ui/error-dialog'
-import { toast } from 'sonner'
+import { useDialog } from '@/components/dialogs'
+import { ErrorDialog } from '@/components/dialogs'
 
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
 
@@ -80,6 +87,23 @@ const DEFAULT_FORM: FormState = {
 }
 
 export default function BadgeManagerPanel() {
+  // Dialog for user feedback (success/error messages)
+  const feedbackDialog = useDialog()
+  const [dialogContent, setDialogContent] = useState<{
+    type: 'error' | 'info'
+    title: string
+    message: string
+  } | null>(null)
+  
+  // Feedback helper (blocking dialog, not auto-dismiss notification)
+  const notify = useCallback((options: { type: 'success' | 'error'; title: string; message?: string }) => {
+    setDialogContent({
+      type: options.type === 'success' ? 'info' : 'error',
+      title: options.title,
+      message: options.message || '',
+    })
+    feedbackDialog.open()
+  }, [feedbackDialog])
   
   const [templates, setTemplates] = useState<TemplateRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,6 +124,15 @@ export default function BadgeManagerPanel() {
     message: string
     onConfirm: () => void
   }>({ title: '', message: '', onConfirm: () => {} })
+
+  // Error dialog with retry for network/API failures
+  const [errorDialogState, setErrorDialogState] = useState<{
+    isOpen: boolean
+    title: string
+    error: string
+    details?: string
+    onRetry?: () => void
+  }>({ isOpen: false, title: '', error: '' })
 
   const metadataDerivedRef = useRef<MetadataDerived>({})
 
@@ -138,7 +171,13 @@ export default function BadgeManagerPanel() {
       } catch (e: any) {
         const message = e?.message || 'Failed to load badge templates'
         setError(message)
-        notify({ type: 'error', title: 'Failed to load templates', message })
+        setErrorDialogState({
+          isOpen: true,
+          title: 'Failed to Load Templates',
+          error: 'Unable to load badge templates. Please check your connection and try again.',
+          details: message,
+          onRetry: () => loadTemplates(true),
+        })
       } finally {
         setLoading(false)
       }
@@ -170,7 +209,14 @@ export default function BadgeManagerPanel() {
       setMintQueue(queue)
       setQueueStats(stats)
     } catch (e: any) {
-      notify({ type: 'error', title: 'Failed to load mint queue', message: e?.message || 'Unknown error' })
+      const message = e?.message || 'Unknown error'
+      setErrorDialogState({
+        isOpen: true,
+        title: 'Failed to Load Mint Queue',
+        error: 'Unable to load mint queue. Please check your connection and try again.',
+        details: message,
+        onRetry: () => loadMintQueue(),
+      })
     } finally {
       setQueueLoading(false)
     }
@@ -182,7 +228,14 @@ export default function BadgeManagerPanel() {
       notify({ type: 'success', title: 'Mint retry initiated' })
       await loadMintQueue()
     } catch (e: any) {
-      notify({ type: 'error', title: 'Failed to retry mint', message: e?.message || 'Unknown error' })
+      const message = e?.message || 'Unknown error'
+      setErrorDialogState({
+        isOpen: true,
+        title: 'Failed to Retry Mint',
+        error: 'Unable to retry mint. Please check your connection and try again.',
+        details: message,
+        onRetry: () => handleRetryMint(queueId),
+      })
     }
   }, [loadMintQueue])
 
@@ -193,7 +246,14 @@ export default function BadgeManagerPanel() {
       const registry = loadBadgeRegistry()
       setBadgeRegistry(registry)
     } catch (e: any) {
-      notify({ type: 'error', title: 'Failed to load badge registry', message: e?.message || 'Unknown error' })
+      const message = e?.message || 'Unknown error'
+      setErrorDialogState({
+        isOpen: true,
+        title: 'Failed to Load Badge Registry',
+        error: 'Unable to load badge registry. Please check your connection and try again.',
+        details: message,
+        onRetry: () => loadBadgeRegistryData(),
+      })
     } finally {
       setRegistryLoading(false)
     }
@@ -201,13 +261,23 @@ export default function BadgeManagerPanel() {
 
   // Phase 3B: Manual Assignment
   const handleManualAssign = useCallback(async () => {
+    const validationErrors: string[] = []
+    
     const fid = Number(manualAssignFid)
     if (!fid || !Number.isFinite(fid) || fid <= 0) {
-      notify({ type: 'error', title: 'Invalid FID', message: 'Please enter a valid Farcaster ID' })
-      return
+      validationErrors.push('Please enter a valid Farcaster ID')
     }
     if (!manualAssignBadgeType.trim()) {
-      notify({ type: 'error', title: 'Missing badge type', message: 'Please enter a badge type' })
+      validationErrors.push('Please enter a badge type')
+    }
+    
+    if (validationErrors.length > 0) {
+      setErrorDialogState({
+        isOpen: true,
+        title: 'Validation Errors',
+        error: 'Please fix the following errors:',
+        details: validationErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n'),
+      })
       return
     }
 
@@ -226,7 +296,14 @@ export default function BadgeManagerPanel() {
       setManualAssignFid('')
       setManualAssignBadgeType('')
     } catch (e: any) {
-      notify({ type: 'error', title: 'Assignment failed', message: e?.message || 'Unknown error' })
+      const message = e?.message || 'Unknown error'
+      setErrorDialogState({
+        isOpen: true,
+        title: 'Assignment Failed',
+        error: 'Unable to assign badge. Please check your connection.',
+        details: message,
+        onRetry: () => handleManualAssign(),
+      })
     } finally {
       setManualAssignBusy(false)
     }
@@ -518,7 +595,14 @@ export default function BadgeManagerPanel() {
           metadataJson: syncMetadataImageField(prev.metadataJson, url),
         }))
       } catch (error: any) {
-        notify({ type: 'error', title: 'Upload failed', message: error?.message || 'Failed to upload file' })
+        const message = error?.message || 'Failed to upload file'
+        setErrorDialogState({
+          isOpen: true,
+          title: 'Upload Failed',
+          error: 'Unable to upload badge image. Please check your connection and try again.',
+          details: message,
+          onRetry: () => handleFileUpload(file),
+        })
       } finally {
         setUploadBusy(false)
       }
@@ -527,21 +611,21 @@ export default function BadgeManagerPanel() {
   )
 
   const handleSubmit = useCallback(async () => {
+    // Collect all validation errors
+    const validationErrors: string[] = []
+    
     const name = formState.name.trim()
     const badgeType = formState.badgeType.trim()
     if (!name) {
-      notify({ type: 'error', title: 'Validation error', message: 'Name is required' })
-      return
+      validationErrors.push('Name is required')
     }
     if (!badgeType) {
-      notify({ type: 'error', title: 'Validation error', message: 'Badge type is required' })
-      return
+      validationErrors.push('Badge type is required')
     }
 
     const points = Number(formState.pointsCost)
     if (!Number.isFinite(points) || points < 0) {
-      notify({ type: 'error', title: 'Validation error', message: 'Points cost must be a valid positive number' })
-      return
+      validationErrors.push('Points cost must be a valid positive number')
     }
 
     let metadata: Record<string, unknown> | null = null
@@ -557,15 +641,24 @@ export default function BadgeManagerPanel() {
       } catch (err: any) {
         const message = err?.message || 'Metadata must be valid JSON.'
         setMetadataError(message)
-        notify({ type: 'error', title: 'Invalid metadata', message })
-        return
+        validationErrors.push(`Invalid metadata: ${message}`)
       }
     }
 
     const slugBaseInput = formState.slug.trim() || name
     const slugBase = slugify(slugBaseInput)
     if (!slugBase) {
-      notify({ type: 'error', title: 'Validation error', message: 'Slug is required' })
+      validationErrors.push('Slug is required')
+    }
+
+    // Show all validation errors in ErrorDialog
+    if (validationErrors.length > 0) {
+      setErrorDialogState({
+        isOpen: true,
+        title: 'Validation Errors',
+        error: 'Please fix the following errors before submitting:',
+        details: validationErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n'),
+      })
       return
     }
 
@@ -581,7 +674,16 @@ export default function BadgeManagerPanel() {
       ),
     )
     if (!uniqueChains.length) {
-      notify({ type: 'error', title: 'Validation error', message: 'At least one chain must be selected' })
+      validationErrors.push('At least one chain must be selected')
+    }
+    
+    if (validationErrors.length > 0) {
+      setErrorDialogState({
+        isOpen: true,
+        title: 'Validation Errors',
+        error: 'Please fix the following errors:',
+        details: validationErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n'),
+      })
       return
     }
 
@@ -655,10 +757,23 @@ export default function BadgeManagerPanel() {
       }
 
       if (failureMessages.length) {
-        notify({ type: 'error', title: 'Some templates failed', message: failureMessages.join(', ') })
+        setErrorDialogState({
+          isOpen: true,
+          title: 'Some Templates Failed',
+          error: 'Some chains failed to save. Successfully saved chains are still active.',
+          details: failureMessages.join('\n'),
+          onRetry: successChains.length === 0 ? () => handleSubmit() : undefined,
+        })
       }
     } catch (e: any) {
-      notify({ type: 'error', title: 'Failed to save template', message: e?.message || 'Unknown error' })
+      const message = e?.message || 'Unknown error'
+      setErrorDialogState({
+        isOpen: true,
+        title: 'Failed to Save Template',
+        error: 'Unable to save template. Please check your connection.',
+        details: message,
+        onRetry: () => handleSubmit(),
+      })
     } finally {
       setFormBusy(false)
     }
@@ -681,7 +796,14 @@ export default function BadgeManagerPanel() {
         })
         await loadTemplates(true)
       } catch (e: any) {
-        notify({ type: 'error', title: 'Failed to update status', message: e?.message || 'Unknown error' })
+        const message = e?.message || 'Unknown error'
+        setErrorDialogState({
+          isOpen: true,
+          title: 'Failed to Update Status',
+          error: 'Unable to update template status. Please check your connection.',
+          details: message,
+          onRetry: () => handleToggleActive(template),
+        })
       }
     },
     [loadTemplates],
@@ -701,7 +823,14 @@ export default function BadgeManagerPanel() {
             notify({ type: 'success', title: 'Template deleted', message: `${template.name} has been deleted` })
             await loadTemplates(true)
           } catch (e: any) {
-            notify({ type: 'error', title: 'Failed to delete template', message: e?.message || 'Unknown error' })
+            const message = e?.message || 'Unknown error'
+            setErrorDialogState({
+              isOpen: true,
+              title: 'Failed to Delete Template',
+              error: 'Unable to delete template. Please check your connection.',
+              details: message,
+              onRetry: () => handleDelete(template),
+            })
           }
         }
       })
@@ -1590,6 +1719,27 @@ export default function BadgeManagerPanel() {
           onClick: confirmDialog.close
         }}
       />
+
+      {/* Feedback Dialog for success/error messages */}
+      {dialogContent && (
+        <ErrorDialog
+          isOpen={feedbackDialog.isOpen}
+          onClose={feedbackDialog.close}
+          title={dialogContent.title}
+          message={dialogContent.message}
+          type={dialogContent.type}
+        />
+      )}
+
+      {/* Error Dialog with Retry for API failures */}
+      <ErrorDialog
+        isOpen={errorDialogState.isOpen}
+        onClose={() => setErrorDialogState({ ...errorDialogState, isOpen: false })}
+        title={errorDialogState.title}
+        error={errorDialogState.error}
+        details={errorDialogState.details}
+        onRetry={errorDialogState.onRetry}
+      />
     </section>
   )
 }
@@ -1681,15 +1831,6 @@ function deriveMetadataFields(raw: unknown): MetadataDerived {
   }
 
   return derived
-}
-
-// Notification helper
-function notify(options: { type: 'success' | 'error'; title: string; message?: string }) {
-  if (options.type === 'success') {
-    toast.success(options.title, { description: options.message })
-  } else {
-    toast.error(options.title, { description: options.message })
-  }
 }
 
 // Focus trap hook for accessibility

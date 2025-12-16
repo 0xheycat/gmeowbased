@@ -5,6 +5,7 @@ import { FIDSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached, buildUserBadgesKey } from '@/lib/cache'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ export const dynamic = 'force-dynamic'
  * - Request timing tracking
  */
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
-  const requestId = require('@/lib/request-id').generateRequestId();
+  const requestId = generateRequestId();
   const ip = getClientIp(request)
   const { success } = await rateLimit(ip, apiLimiter)
   

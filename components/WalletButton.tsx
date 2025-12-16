@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { probeMiniappReady } from '@/lib/miniappEnv'
-import { useNotifications } from '@/components/ui/live-notifications'
+import { useDialog, ErrorDialog } from '@/components/dialogs'
 
 /**
  * WalletButton - Single wallet connection component for entire app
@@ -31,7 +31,8 @@ export function WalletButton() {
   const { address, isConnected } = useAccount()
   const { connect, connectAsync, connectors } = useConnect()
   const { disconnect } = useDisconnect()
-  const { showNotification } = useNotifications()
+  const { isOpen: errorOpen, open: openError, close: closeError } = useDialog()
+  const [errorMessage, setErrorMessage] = useState('')
   
   const [connectingId, setConnectingId] = useState<string | null>(null)
   const [showWalletMenu, setShowWalletMenu] = useState(false)
@@ -121,11 +122,8 @@ export function WalletButton() {
 
   const handleConnect = async (connector: any) => {
     if (typeof connector?.ready === 'boolean' && !connector.ready) {
-      showNotification(
-        `${connector.name} is not available in this environment`,
-        'wallet_connection_failed',
-        5000
-      )
+      setErrorMessage(`${connector.name} is not available in this environment`)
+      openError()
       return
     }
     
@@ -138,21 +136,14 @@ export function WalletButton() {
         connect({ connector })
       }
       
-      showNotification(
-        `Connected with ${connector.name}`,
-        'wallet_connected',
-        3000
-      )
+      // Connection success shown in button UI state
     } catch (err: any) {
       console.error('[WalletButton] Failed to connect:', err)
       
       const message = normalizeConnectError(err)
       if (message) {
-        showNotification(
-          message,
-          'wallet_connection_failed',
-          5000
-        )
+        setErrorMessage(message)
+        openError()
       }
       
       setConnectingId(null)
@@ -162,11 +153,7 @@ export function WalletButton() {
   const handleDisconnect = () => {
     disconnect()
     setShowWalletMenu(false)
-    showNotification(
-      'You have been disconnected',
-      'wallet_disconnected',
-      3000
-    )
+    // Disconnection shown in button UI state
   }
 
   // Connected state - show address and disconnect option
@@ -267,6 +254,13 @@ export function WalletButton() {
           </div>
         </div>
       )}
+
+      <ErrorDialog
+        isOpen={errorOpen}
+        onClose={closeError}
+        title="Connection Error"
+        message={errorMessage}
+      />
     </div>
   )
 }
@@ -351,3 +345,5 @@ function normalizeConnectError(error: unknown): string | null {
   
   return 'Unable to connect. Please try again.'
 }
+
+// WalletButton JSX - ErrorDialog component will be added at end of return

@@ -3,23 +3,39 @@ import Loader from '@/components/ui/loader'
 export default function Loading() {
   return (
     <div className="min-h-screen bg-[#060720] via-[#110c3a] to-[#1b0d4a] bg-gradient-to-br text-slate-200" aria-busy="true">
-      <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-4 sm:px-6 py-24 text-center font-site">
-        <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-slate-100/5 dark:bg-white/5 shadow-[0_24px_80px_rgba(12,13,54,0.45)]">
-          <div className="absolute inset-0 rounded-3xl border border-slate-200 dark:border-slate-700/10" />
-          <Loader size="large" variant="moveUp" className="text-[#fdbb2d]" />
+      <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-8 px-4 sm:px-6 py-24 text-center font-site">
+        {/* Professional Loader Container */}
+        <div className="relative flex h-28 w-28 items-center justify-center rounded-3xl bg-gradient-to-br from-slate-100/10 to-slate-100/5 shadow-[0_32px_96px_rgba(99,102,241,0.15)]">
+          <div className="absolute inset-0 rounded-3xl border border-slate-700/20 backdrop-blur-sm" />
+          <div className="absolute inset-0 animate-skeleton-pulsate rounded-3xl border border-indigo-400/10" />
+          <Loader size="large" variant="spin" color="#fdbb2d" />
         </div>
-        <div>
-          <p className="text-sm uppercase tracking-[0.32em] text-slate-400">Gmeow Systems</p>
-          <h1 className="mt-3 text-2xl font-extrabold">Warming up the quest grid…</h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Syncing live notifications and loading your cross-chain streaks.
+
+        {/* Professional Messaging */}
+        <div className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.36em] text-slate-500 font-medium">
+            Gmeow Protocol
+          </p>
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-slate-100 via-slate-200 to-slate-300 bg-clip-text text-transparent">
+            Initializing Your Dashboard
+          </h1>
+          <p className="text-sm leading-relaxed text-slate-400 max-w-sm mx-auto">
+            Syncing cross-chain quests, live notifications, and your on-chain achievements
           </p>
         </div>
-        <div className="flex w-full flex-col gap-2 text-sm uppercase tracking-[0.32em] text-slate-500">
-          <div className="h-[3px] w-full overflow-hidden rounded-full bg-slate-100/5 dark:bg-white/5">
-            <span className="block h-full w-full animate-[progress-drip_1.6s_ease-in-out_infinite] bg-gradient-to-r from-[#6366f1] via-[#ec4899] to-[#fdbb2d]" />
+
+        {/* Professional Progress Indicator */}
+        <div className="w-full space-y-3">
+          <div className="relative h-1 w-full overflow-hidden rounded-full bg-slate-100/5">
+            <span className="absolute inset-0 animate-[progress-drip_1.8s_ease-in-out_infinite] bg-gradient-to-r from-[#6366f1] via-[#ec4899] to-[#fdbb2d] shadow-[0_0_20px_rgba(253,187,45,0.3)]" />
           </div>
-          <span>Live notifications ready</span>
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 animate-skeleton-pulsate rounded-full bg-emerald-400" />
+              System Ready
+            </span>
+            <span className="uppercase tracking-wider">Loading...</span>
+          </div>
         </div>
       </div>
     </div>

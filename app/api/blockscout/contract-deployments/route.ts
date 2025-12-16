@@ -113,7 +113,12 @@ export async function GET(request: NextRequest) {
         timestamp: tx.timestamp,
         verified: tx.created_contract?.is_verified,
       })),
-    }, { headers: { 'X-Request-ID': requestId } })
+    }, {
+      headers: {
+        'X-Request-ID': requestId,
+        'Cache-Control': 's-maxage=300, stale-while-revalidate=600' // 5min cache for deployments
+      }
+    })
   } catch (error: any) {
     console.error('[Blockscout API] Error:', error)
     return NextResponse.json(

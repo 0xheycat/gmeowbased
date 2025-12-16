@@ -10,6 +10,12 @@
  * - Loading simulation toggle for testing
  * - Professional shimmer animations
  * - Code splitting for performance (Task 6) ✅
+ * 
+ * Dialog Usage:
+ * - ErrorDialog: Displays quest data fetch errors with retry
+ * - ConfirmDialog: Confirmation for quest deletion (destructive variant)
+ * - useDialog: State management for error dialog
+ * - QuestManagementTable: Contains useConfirmDialog for quest deletions (via child component)
  */
 
 'use client';
@@ -20,7 +26,9 @@ import {
   type QuestFilterState 
 } from '@/components/quests';
 import { ManagementTableSkeleton, AnalyticsDashboardSkeleton } from '@/components/quests/skeletons';
-import { questToasts } from '@/lib/utils/toast';
+import { useDialog } from '@/components/dialogs';
+import { ConfirmDialog } from '@/components/dialogs';
+import { ErrorDialog } from '@/components/dialogs';
 
 // Lazy load heavy components for better performance (Task 6)
 const QuestAnalyticsDashboard = lazy(() => 
@@ -123,6 +131,9 @@ const SAMPLE_QUESTS = [
 ];
 
 export default function QuestManagementPage() {
+  const feedbackDialog = useDialog();
+  const [feedbackContent, setFeedbackContent] = useState<{ type: 'info' | 'error'; title: string; message: string } | null>(null);
+  
   const [filters, setFilters] = useState<QuestFilterState>({
     categories: [],
     difficulties: [],
@@ -137,6 +148,16 @@ export default function QuestManagementPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showEmptyState, setShowEmptyState] = useState(false);
+
+  // Confirm dialog state for destructive actions
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    action: string;
+    questIds: (string | number)[];
+    variant: 'destructive' | 'warning' | 'info';
+    title: string;
+    message: string;
+  } | null>(null);
 
   // Simulate loading on mount (remove in production)
   useEffect(() => {
@@ -154,26 +175,95 @@ export default function QuestManagementPage() {
     }, 1500);
   };
 
-  // Bulk action handler with toast notifications
+  // Bulk action handler with confirm dialogs for destructive actions
   const handleBulkAction = (action: string, questIds: (string | number)[]) => {
+    const count = questIds.length;
+    const plural = count > 1 ? 's' : '';
+
     switch (action) {
       case 'delete':
-        questToasts.bulkActionSuccess(questIds.length, 'deleted');
+        // Show confirm dialog for destructive action
+        setConfirmDialog({
+          isOpen: true,
+          action: 'delete',
+          questIds,
+          variant: 'destructive',
+          title: 'Delete Quests?',
+          message: `Are you sure you want to delete ${count} quest${plural}? This action cannot be undone.`,
+        });
         break;
       case 'archive':
-        questToasts.bulkActionSuccess(questIds.length, 'archived');
+        // Show confirm dialog for potentially destructive action
+        setConfirmDialog({
+          isOpen: true,
+          action: 'archive',
+          questIds,
+          variant: 'warning',
+          title: 'Archive Quests?',
+          message: `Archive ${count} quest${plural}? Archived quests can be restored later.`,
+        });
         break;
       case 'activate':
-        questToasts.bulkActionSuccess(questIds.length, 'activated');
+        // Non-destructive action - show success dialog
+        setFeedbackContent({
+          type: 'info',
+          title: 'Quests Activated',
+          message: `${count} quest${plural} activated successfully`,
+        });
+        feedbackDialog.open();
         break;
       default:
-        questToasts.bulkActionSuccess(questIds.length, action);
+        // Other actions - show success dialog
+        setFeedbackContent({
+          type: 'info',
+          title: 'Quests Updated',
+          message: `${count} quest${plural} updated`,
+        });
+        feedbackDialog.open();
     }
+  };
+
+  // Execute confirmed bulk action
+  const executeConfirmedAction = () => {
+    if (!confirmDialog) return;
+
+    const { action, questIds } = confirmDialog;
+    const count = questIds.length;
+    const plural = count > 1 ? 's' : '';
+
+    // Execute the action (in real app, this would call API)
+    switch (action) {
+      case 'delete':
+        setFeedbackContent({
+          type: 'info',
+          title: 'Quests Deleted',
+          message: `${count} quest${plural} deleted successfully`,
+        });
+        break;
+      case 'archive':
+        setFeedbackContent({
+          type: 'info',
+          title: 'Quests Archived',
+          message: `${count} quest${plural} archived successfully`,
+        });
+        break;
+    }
+
+    // Show success dialog
+    feedbackDialog.open();
+
+    // Close dialog
+    setConfirmDialog(null);
   };
 
   // Quest creation handler
   const handleCreateQuest = () => {
-    questToasts.questCreated();
+    setFeedbackContent({
+      type: 'info',
+      title: 'Quest Created',
+      message: 'Quest created successfully!',
+    });
+    feedbackDialog.open();
     // Navigate to quest creation page in production
   };
 
@@ -258,8 +348,16 @@ export default function QuestManagementPage() {
             
             <button
               onClick={() => {
-                setError(error ? null : 'Failed to load quest data. Please try again.');
-                if (!error) questToasts.loadError();
+                const shouldError = !error;
+                setError(shouldError ? 'Failed to load quest data. Please try again.' : null);
+                if (shouldError) {
+                  setFeedbackContent({
+                    type: 'error',
+                    title: 'Failed to Load Quests',
+                    message: 'Failed to load quest data. Please try again.',
+                  });
+                  feedbackDialog.open();
+                }
               }}
               className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors"
             >
@@ -276,7 +374,7 @@ export default function QuestManagementPage() {
             </button>
             
             <button
-              onClick={() => questToasts.questCreated()}
+              onClick={handleCreateQuest}
               className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
             >
               Test Toast
@@ -389,6 +487,31 @@ export default function QuestManagementPage() {
           </div>
         </section>
       </div>
+
+      {/* Confirm Dialog for Destructive Actions */}
+      {confirmDialog && (
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          onClose={() => setConfirmDialog(null)}
+          onConfirm={executeConfirmedAction}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          variant={confirmDialog.variant}
+          confirmLabel={confirmDialog.action === 'delete' ? 'Delete' : 'Archive'}
+          cancelLabel="Cancel"
+        />
+      )}
+
+      {/* Feedback Dialog for Success/Error Messages */}
+      {feedbackContent && (
+        <ErrorDialog
+          isOpen={feedbackDialog.isOpen}
+          onClose={feedbackDialog.close}
+          title={feedbackContent.title}
+          message={feedbackContent.message}
+          type={feedbackContent.type}
+        />
+      )}
     </div>
   );
 }

@@ -21,10 +21,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { apiLimiter } from '@/lib/rate-limit'
-import { createPublicClient, http } from 'viem'
+import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI, type ChainKey } from '@/lib/gmeow-utils'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES, type ChainKey } from '@/lib/gmeow-utils'
 import { generateRequestId } from '@/lib/request-id'
+import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -41,10 +42,10 @@ const RATE_LIMIT_CONFIG = {
 // ==========================================
 
 const QuerySchema = z.object({
-  metric: z.enum(['points', 'members', 'level']).default('points'),
-  period: z.enum(['all-time', 'month', 'week']).default('all-time'),
-  chain: z.enum(['all', 'base']).default('all'), // Base chain only, multi-chain ready
-  limit: z.coerce.number().int().min(1).max(100).default(50),
+  metric: z.enum(['points', 'members', 'level']).optional().default('points'),
+  period: z.enum(['all-time', 'month', 'week']).optional().default('all-time'),
+  chain: z.enum(['all', 'base']).optional().default('base'),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
 })
 
 type QueryParams = z.infer<typeof QuerySchema>
@@ -90,11 +91,11 @@ async function fetchGuildsFromChain(chain: ChainKey, maxGuilds: number = 200): P
       transport: http(),
     })
 
-    const contractAddress = getContractAddress(chain === 'base' ? 'base' : 'base') // Base chain only for now
+    const contractAddress = STANDALONE_ADDRESSES.base.guild // Use Guild contract
 
     // Get total guild count
     const nextGuildId = (await client.readContract({
-      address: contractAddress,
+      address: contractAddress as Address,
       abi: GM_CONTRACT_ABI,
       functionName: 'nextGuildId',
       args: [],
@@ -109,9 +110,9 @@ async function fetchGuildsFromChain(chain: ChainKey, maxGuilds: number = 200): P
     const guildIds = Array.from({ length: guildCount }, (_, i) => BigInt(i + 1))
 
     const contracts = guildIds.map((id) => ({
-      address: contractAddress,
-      abi: GM_CONTRACT_ABI,
-      functionName: 'guilds' as const,
+      address: contractAddress as Address,
+      abi: GUILD_ABI_JSON as any,
+      functionName: 'getGuildInfo' as const,
       args: [id],
     }))
 
@@ -122,17 +123,17 @@ async function fetchGuildsFromChain(chain: ChainKey, maxGuilds: number = 200): P
       const result = results[i]
       if (result.status !== 'success' || !result.result) continue
 
-      const guildData = result.result as any[]
-      const name = (guildData[0] as string) || ''
-      const leader = (guildData[1] as string) || ''
-      const totalPoints = (guildData[2] as bigint) || 0n
-      const memberCount = (guildData[3] as bigint) || 0n
-      const active = (guildData[4] as boolean) !== false
+      // Parse tuple response: [name, leader, totalPoints, memberCount, level, requiredPoints, treasury]
+      const guildInfo = result.result as any[]
+      const name = (guildInfo[0] as string) || ''
+      const leader = (guildInfo[1] as Address) || ''
+      const totalPoints = (guildInfo[2] as bigint) || 0n
+      const memberCount = (guildInfo[3] as bigint) || 0n
+      const level = Number((guildInfo[4] as bigint) || 0n)
 
       // Skip inactive or empty guilds
+      const active = name && name.length > 0
       if (!active || !name || totalPoints === 0n) continue
-
-      const level = calculateGuildLevel(totalPoints)
 
       guilds.push({
         rank: 0, // Will be calculated after sorting
@@ -285,12 +286,13 @@ export async function GET(req: NextRequest) {
 
     // 2. INPUT VALIDATION
     const { searchParams } = new URL(req.url)
-    const queryResult = QuerySchema.safeParse({
-      metric: searchParams.get('metric'),
-      period: searchParams.get('period'),
-      chain: searchParams.get('chain'),
-      limit: searchParams.get('limit'),
-    })
+    const rawParams = {
+      metric: searchParams.get('metric') || undefined,
+      period: searchParams.get('period') || undefined,
+      chain: searchParams.get('chain') || undefined,
+      limit: searchParams.get('limit') || undefined,
+    }
+    const queryResult = QuerySchema.safeParse(rawParams)
 
     if (!queryResult.success) {
       return createErrorResponse(

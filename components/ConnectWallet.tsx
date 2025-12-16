@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect } from 'wagmi'
 import { probeMiniappReady } from '@/lib/miniappEnv'
-import { useNotifications } from '@/components/ui/live-notifications'
+
 
 export function ConnectWallet() {
   const { address, isConnected } = useAccount()
@@ -40,8 +40,6 @@ export function ConnectWallet() {
       return true
     })
   }, [connectors])
-
-  const { showNotification } = useNotifications()
 
   // Toast on connect state changes
   useEffect(() => {

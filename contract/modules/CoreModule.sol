@@ -25,6 +25,15 @@ abstract contract CoreModule is BaseModule {
     gmCooldown = cooldown;
   }
 
+  /**
+   * @notice Set authorized minter for Badge contract
+   * @dev Core owns Badge, so Core must call this
+   */
+  function setBadgeAuthorizedMinter(address minter, bool authorized) external onlyOwner {
+    if (minter == address(0)) revert ZeroAddressNotAllowed();
+    badgeContract.setAuthorizedMinter(minter, authorized);
+  }
+
   // ============ POINTS MANAGEMENT ============
 
   mapping(address => bool) public authorizedContracts;

@@ -3,9 +3,11 @@ import localFont from 'next/font/local'
 import './globals.css'
 import { MiniAppProvider } from './providers'
 import type { ReactNode } from 'react'
-import { HeaderWrapper } from '@/components/layout/HeaderWrapper'
+import { Header } from '@/components/layout/Header'
 import { MobileNav } from '@/components/layout/MobileNav'
-import { Toaster } from 'sonner'
+
+// Force dynamic rendering for all pages (uses cookies/headers)
+export const dynamic = 'force-dynamic'
 
 // Category 11 Frame Fix: Import Gmeow font from app/fonts (deleted from public/fonts in 419276f)
 const gmeowFont = localFont({
@@ -108,13 +110,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
         <MiniAppProvider>
           <div className="flex min-h-screen flex-col">
-            <HeaderWrapper />
+            <Header />
             <main id="main-content" className="flex-1 pb-20 md:pb-0">
               {children}
             </main>
             <MobileNav />
           </div>
-          <Toaster position="top-right" richColors closeButton />
         </MiniAppProvider>
       </body>
     </html>

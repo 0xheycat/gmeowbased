@@ -1,0 +1,3715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gmeow Loader – Professional Modern Preview (2025)</title>
+
+<style>
+/* ------------------------------------------------ */
+/* GLOBAL STYLES - WCAG AA+ COMPLIANT */
+/* ------------------------------------------------ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+  color: #e5e5e5;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  padding: 20px;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Responsive padding */
+@media (min-width: 768px) {
+  body { padding: 40px; }
+}
+
+h1 {
+  text-align: center;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  text-align: center;
+  font-weight: 600;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+  color: #00d4ff;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  color: #a0a0a0;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.section {
+  margin-top: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.preview-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Responsive grid */
+@media (min-width: 640px) {
+  .preview-row {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .preview-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.preview-card {
+  background: rgba(255,255,255,0.03);
+  padding: 32px 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  text-align: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.preview-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0,212,255,0.3);
+  box-shadow: 0 8px 32px rgba(0,212,255,0.15);
+}
+
+.card-label {
+  font-size: 0.875rem;
+  color: #a0a0a0;
+  font-weight: 500;
+  margin-top: 16px;
+}
+
+/* Sizing - Responsive */
+.size-sm  { 
+  width: clamp(32px, 8vw, 40px); 
+  height: clamp(32px, 8vw, 40px); 
+}
+.size-md  { 
+  width: clamp(48px, 12vw, 64px); 
+  height: clamp(48px, 12vw, 64px); 
+}
+.size-lg  { 
+  width: clamp(64px, 16vw, 88px); 
+  height: clamp(64px, 16vw, 88px); 
+}
+.size-fs  { 
+  width: clamp(96px, 20vw, 120px); 
+  height: clamp(96px, 20vw, 120px); 
+}
+
+/* ------------------------------------------------ */
+/* MODERN PROFESSIONAL LOADERS */
+/* ------------------------------------------------ */
+
+/* 1. PULSE RING - Clean & Professional */
+.pulse-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-ring-outer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid #00d4ff;
+  opacity: 0;
+  animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pulse-ring-outer:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.pulse-ring-inner {
+  width: 50%;
+  height: 50%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(0,212,255,0.5);
+  animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(0,212,255,0.5);
+  }
+  50% { 
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(124,58,237,0.7);
+  }
+}
+
+/* 2. SPINNER GRADIENT - Modern Smooth */
+.spinner-gradient {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-gradient-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    #00d4ff 90deg,
+    #7c3aed 180deg,
+    transparent 270deg
+  );
+  animation: spin 1.2s linear infinite;
+  -webkit-mask: radial-gradient(circle, transparent 45%, black 45%);
+  mask: radial-gradient(circle, transparent 45%, black 45%);
+}
+
+.spinner-gradient-center {
+  width: 40%;
+  height: 40%;
+  background: linear-gradient(135deg, #1a1a2e, #0a0a0f);
+  border-radius: 50%;
+  border: 2px solid rgba(0,212,255,0.2);
+}
+
+/* 3. DOTS WAVE - Playful & Accessible */
+.dots-wave {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 50%;
+  animation: dotWave 1.4s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(0,212,255,0.5);
+}
+
+.dot:nth-child(1) { animation-delay: 0s; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+.dot:nth-child(4) { animation-delay: 0.6s; }
+
+@keyframes dotWave {
+  0%, 100% { 
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: translateY(-16px) scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+/* 4. ORBIT - Sophisticated */
+.orbit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbit-path {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(0,212,255,0.15);
+}
+
+.orbit-dot {
+  position: absolute;
+  width: 16%;
+  height: 16%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 50%;
+  top: 0;
+  left: 50%;
+  transform-origin: 50% 400%;
+  animation: orbit 2s linear infinite;
+  box-shadow: 0 0 15px rgba(0,212,255,0.7);
+}
+
+.orbit-dot:nth-child(2) {
+  animation-delay: 0.5s;
+  background: linear-gradient(135deg, #7c3aed, #00d4ff);
+}
+
+.orbit-center {
+  width: 30%;
+  height: 30%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(0,212,255,0.5);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 5. BARS SCALE - Clean & Simple */
+.bars-scale {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.bar {
+  width: 4px;
+  height: 60%;
+  background: linear-gradient(180deg, #00d4ff, #7c3aed);
+  border-radius: 4px;
+  animation: barScale 1s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(0,212,255,0.4);
+}
+
+.bar:nth-child(1) { animation-delay: 0s; }
+.bar:nth-child(2) { animation-delay: 0.15s; }
+.bar:nth-child(3) { animation-delay: 0.3s; }
+.bar:nth-child(4) { animation-delay: 0.45s; }
+.bar:nth-child(5) { animation-delay: 0.6s; }
+
+@keyframes barScale {
+  0%, 100% { 
+    transform: scaleY(1);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: scaleY(1.8);
+    opacity: 1;
+  }
+}
+
+/* 6. PROGRESS CIRCLE - Professional */
+.progress-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-circle svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progress-bg {
+  fill: none;
+  stroke: rgba(0,212,255,0.1);
+  stroke-width: 3;
+}
+
+.progress-fill {
+  fill: none;
+  stroke: url(#gradient);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  animation: progressFill 2s ease-in-out infinite;
+}
+
+@keyframes progressFill {
+  0% { stroke-dashoffset: 283; }
+  50% { stroke-dashoffset: 70; }
+  100% { stroke-dashoffset: 283; }
+}
+
+.progress-text {
+  position: absolute;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  font-weight: 600;
+  color: #00d4ff;
+}
+
+/* LOADING TEXT */
+.loading-text {
+  font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+  color: #e5e5e5;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  animation: fadeInOut 2s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* 7. GAMING ENERGY - Power-up Effect */
+.gaming-energy {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.gaming-core {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b);
+  animation: gamingPulse 1.5s ease-in-out infinite;
+  box-shadow: 
+    0 0 30px rgba(168,85,247,0.6),
+    inset 0 0 20px rgba(255,255,255,0.2);
+}
+
+.gaming-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+  animation: orbitParticle 2s linear infinite;
+}
+
+.gaming-particle:nth-child(2) { animation-delay: 0.25s; }
+.gaming-particle:nth-child(3) { animation-delay: 0.5s; }
+.gaming-particle:nth-child(4) { animation-delay: 0.75s; }
+
+.gaming-particle:nth-child(1) { transform-origin: 0 -40px; }
+.gaming-particle:nth-child(2) { transform-origin: 40px 0; }
+.gaming-particle:nth-child(3) { transform-origin: 0 40px; }
+.gaming-particle:nth-child(4) { transform-origin: -40px 0; }
+
+@keyframes gamingPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes orbitParticle {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 8. CYBERPUNK GLITCH - Matrix Style */
+.cyberpunk-glitch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cyber-outer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid #00ff9d;
+  animation: cyberSpin 2s linear infinite;
+  box-shadow: 
+    0 0 30px rgba(0,255,157,0.5),
+    inset 0 0 20px rgba(0,255,157,0.2);
+}
+
+.cyber-hex {
+  position: absolute;
+  inset: 12%;
+  border: 2px solid rgba(255,0,255,0.6);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  animation: hexPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(255,0,255,0.4);
+}
+
+.cyber-cross {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cyber-cross::before,
+.cyber-cross::after {
+  content: '';
+  position: absolute;
+  background: linear-gradient(90deg, #00ff9d, #ff00ff);
+  animation: glitchFlicker 0.3s infinite;
+}
+
+.cyber-cross::before {
+  width: 100%;
+  height: 2px;
+}
+
+.cyber-cross::after {
+  width: 2px;
+  height: 100%;
+}
+
+.cyber-center {
+  width: 20%;
+  height: 20%;
+  background: #00ff9d;
+  border-radius: 50%;
+  animation: centerGlow 1s ease-in-out infinite alternate;
+  box-shadow: 0 0 15px #00ff9d;
+}
+
+@keyframes cyberSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes hexPulse {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: scale(1.1) rotate(30deg);
+    opacity: 1;
+  }
+}
+
+@keyframes glitchFlicker {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.3; }
+  50% { opacity: 1; }
+  75% { opacity: 0.5; }
+}
+
+@keyframes centerGlow {
+  from { 
+    transform: scale(1);
+    box-shadow: 0 0 15px #00ff9d;
+  }
+  to { 
+    transform: scale(1.3);
+    box-shadow: 0 0 25px #00ff9d, 0 0 40px rgba(0,255,157,0.5);
+  }
+}
+
+/* 9. NEON RING - Synthwave Style */
+.neon-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neon-outer-1 {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #ff006e;
+  border-right-color: #ff006e;
+  animation: spin 1s linear infinite;
+  filter: drop-shadow(0 0 10px #ff006e);
+}
+
+.neon-outer-2 {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-bottom-color: #00d4ff;
+  border-left-color: #00d4ff;
+  animation: spin 1.5s linear infinite reverse;
+  filter: drop-shadow(0 0 10px #00d4ff);
+}
+
+.neon-inner {
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff006e, #00d4ff, #7c3aed);
+  animation: neonPulse 1.5s ease-in-out infinite;
+  box-shadow: 
+    0 0 20px rgba(255,0,110,0.5),
+    0 0 30px rgba(0,212,255,0.3);
+}
+
+@keyframes neonPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.2);
+    filter: brightness(1.5);
+  }
+}
+
+/* 10. HOLOGRAM - Futuristic 3D */
+.hologram {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+
+.holo-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(0,212,255,0.6);
+  border-radius: 50%;
+  animation: holoRotate 3s linear infinite;
+  transform-style: preserve-3d;
+}
+
+.holo-ring:nth-child(2) {
+  animation-delay: 0.5s;
+  border-color: rgba(124,58,237,0.6);
+}
+
+.holo-ring:nth-child(3) {
+  animation-delay: 1s;
+  border-color: rgba(255,0,110,0.6);
+}
+
+.holo-core {
+  width: 40%;
+  height: 40%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 50%;
+  animation: holoFloat 2s ease-in-out infinite;
+  box-shadow: 
+    0 0 20px rgba(0,212,255,0.6),
+    0 0 40px rgba(124,58,237,0.4);
+}
+
+@keyframes holoRotate {
+  0% { transform: rotateY(0deg) rotateX(20deg); }
+  100% { transform: rotateY(360deg) rotateX(20deg); }
+}
+
+@keyframes holoFloat {
+  0%, 100% { 
+    transform: translateY(0) scale(1);
+  }
+  50% { 
+    transform: translateY(-8px) scale(1.1);
+  }
+}
+
+/* 11. PLASMA WAVE - Liquid Effect */
+.plasma-wave {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.plasma-bg {
+  position: absolute;
+  inset: -50%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(168,85,247,0.8) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(0,212,255,0.8) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(255,0,110,0.8) 0%, transparent 50%);
+  animation: plasmaFlow 4s ease-in-out infinite;
+}
+
+.plasma-border {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  box-shadow: 
+    inset 0 0 20px rgba(255,255,255,0.2),
+    0 0 30px rgba(168,85,247,0.5);
+}
+
+@keyframes plasmaFlow {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  33% { transform: rotate(120deg) scale(1.2); }
+  66% { transform: rotate(240deg) scale(1.1); }
+}
+
+/* 12. ATOM - Science/Tech Style */
+.atom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.atom-orbit {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(0,212,255,0.4);
+  border-radius: 50%;
+  animation: spin 3s linear infinite;
+}
+
+.atom-orbit:nth-child(2) {
+  transform: rotateX(60deg);
+  border-color: rgba(124,58,237,0.4);
+  animation-duration: 2.5s;
+}
+
+.atom-orbit:nth-child(3) {
+  transform: rotateX(-60deg);
+  border-color: rgba(255,0,110,0.4);
+  animation-duration: 3.5s;
+}
+
+.atom-electron {
+  position: absolute;
+  width: 10%;
+  height: 10%;
+  background: white;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 0;
+  animation: electronOrbit 2s linear infinite;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+.atom-nucleus {
+  width: 25%;
+  height: 25%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 50%;
+  animation: nucleusPulse 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(0,212,255,0.6);
+}
+
+@keyframes electronOrbit {
+  from { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+}
+
+@keyframes nucleusPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* 13. HEXAGON MORPH - Geometric Transformation */
+.hexagon-morph {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hex-shape {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  animation: hexMorph 3s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(0,212,255,0.5);
+}
+
+.hex-inner {
+  position: absolute;
+  inset: 20%;
+  background: rgba(0,0,0,0.3);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  animation: hexRotate 4s linear infinite;
+}
+
+@keyframes hexMorph {
+  0%, 100% { 
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    transform: rotate(0deg);
+  }
+  50% { 
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    transform: rotate(180deg);
+  }
+}
+
+@keyframes hexRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+/* 14. DIAMOND PULSE - Luxury Style */
+.diamond-pulse {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diamond-outer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #ffd700, #ffa500, #ff69b4);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  animation: diamondSpin 2s linear infinite;
+  box-shadow: 0 0 30px rgba(255,215,0,0.6);
+}
+
+.diamond-inner {
+  position: absolute;
+  inset: 25%;
+  background: linear-gradient(135deg, #fff, #ffd700);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  animation: diamondPulse 1.5s ease-in-out infinite;
+  box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+}
+
+@keyframes diamondSpin {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes diamondPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+/* 15. RIPPLE WAVES - Water Effect */
+.ripple-waves {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ripple {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #00d4ff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: rippleOut 2s ease-out infinite;
+}
+
+.ripple:nth-child(2) { animation-delay: 0.5s; }
+.ripple:nth-child(3) { animation-delay: 1s; }
+.ripple:nth-child(4) { animation-delay: 1.5s; }
+
+.ripple-center {
+  width: 30%;
+  height: 30%;
+  background: radial-gradient(circle, #00d4ff, #7c3aed);
+  border-radius: 50%;
+  animation: rippleCore 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(0,212,255,0.8);
+}
+
+@keyframes rippleOut {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes rippleCore {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+/* 16. STAR BURST - Explosive Effect */
+.star-burst {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star-ray {
+  position: absolute;
+  width: 3px;
+  height: 40%;
+  background: linear-gradient(to bottom, #fff, transparent);
+  top: 50%;
+  left: 50%;
+  transform-origin: center top;
+  animation: rayPulse 1.5s ease-in-out infinite;
+}
+
+.star-ray:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg); }
+.star-ray:nth-child(2) { transform: translate(-50%, -50%) rotate(45deg); animation-delay: 0.1s; }
+.star-ray:nth-child(3) { transform: translate(-50%, -50%) rotate(90deg); animation-delay: 0.2s; }
+.star-ray:nth-child(4) { transform: translate(-50%, -50%) rotate(135deg); animation-delay: 0.3s; }
+.star-ray:nth-child(5) { transform: translate(-50%, -50%) rotate(180deg); animation-delay: 0.4s; }
+.star-ray:nth-child(6) { transform: translate(-50%, -50%) rotate(225deg); animation-delay: 0.5s; }
+.star-ray:nth-child(7) { transform: translate(-50%, -50%) rotate(270deg); animation-delay: 0.6s; }
+.star-ray:nth-child(8) { transform: translate(-50%, -50%) rotate(315deg); animation-delay: 0.7s; }
+
+.star-core {
+  width: 25%;
+  height: 25%;
+  background: radial-gradient(circle, #fff, #00d4ff);
+  border-radius: 50%;
+  animation: starGlow 1.5s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(255,255,255,0.9);
+  z-index: 1;
+}
+
+@keyframes rayPulse {
+  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) rotate(var(--rotation, 0deg)) scaleY(0.8); }
+  50% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--rotation, 0deg)) scaleY(1.2); }
+}
+
+@keyframes starGlow {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.3) rotate(180deg); }
+}
+
+/* 17. INFINITY LOOP - Mathematical Beauty */
+.infinity-loop {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.infinity-path {
+  position: absolute;
+  width: 100%;
+  height: 50%;
+  border: 3px solid #00d4ff;
+  border-radius: 50%;
+  animation: infinitySpin 3s linear infinite;
+}
+
+.infinity-path:nth-child(1) {
+  clip-path: polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%);
+}
+
+.infinity-path:nth-child(2) {
+  clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
+  transform: scaleX(-1);
+  border-color: #7c3aed;
+}
+
+.infinity-dot {
+  position: absolute;
+  width: 15%;
+  height: 15%;
+  background: white;
+  border-radius: 50%;
+  animation: infinityTravel 3s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(255,255,255,0.8);
+}
+
+@keyframes infinitySpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes infinityTravel {
+  0%, 100% { transform: translateX(-150%) translateY(0); }
+  25% { transform: translateX(-75%) translateY(-50%); }
+  50% { transform: translateX(0) translateY(0); }
+  75% { transform: translateX(75%) translateY(50%); }
+}
+
+/* 18. SQUARE ROTATE - Minimal Geometric */
+.square-rotate {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.square-outer {
+  position: absolute;
+  inset: 0;
+  border: 3px solid #00d4ff;
+  border-radius: 8px;
+  animation: squareSpin 2s ease-in-out infinite;
+}
+
+.square-middle {
+  position: absolute;
+  inset: 20%;
+  border: 3px solid #7c3aed;
+  border-radius: 6px;
+  animation: squareSpin 2s ease-in-out infinite reverse;
+}
+
+.square-inner {
+  position: absolute;
+  inset: 40%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 4px;
+  animation: squarePulse 1s ease-in-out infinite;
+}
+
+@keyframes squareSpin {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg); }
+}
+
+@keyframes squarePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* 19. DNA HELIX - Biological Spiral */
+.dna-helix {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dna-strand {
+  position: absolute;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(to bottom, #00d4ff, transparent, #7c3aed, transparent, #00d4ff);
+  animation: dnaFlow 2s linear infinite;
+}
+
+.dna-strand:nth-child(1) { left: 30%; }
+.dna-strand:nth-child(2) { right: 30%; }
+
+.dna-base {
+  position: absolute;
+  width: 40%;
+  height: 3px;
+  background: rgba(255,255,255,0.6);
+  left: 30%;
+  animation: dnaFlow 2s linear infinite;
+}
+
+.dna-base:nth-child(3) { top: 10%; }
+.dna-base:nth-child(4) { top: 30%; animation-delay: 0.25s; }
+.dna-base:nth-child(5) { top: 50%; animation-delay: 0.5s; }
+.dna-base:nth-child(6) { top: 70%; animation-delay: 0.75s; }
+.dna-base:nth-child(7) { top: 90%; animation-delay: 1s; }
+
+@keyframes dnaFlow {
+  0% { transform: translateY(0) scaleX(1); opacity: 1; }
+  50% { transform: translateY(20px) scaleX(0.5); opacity: 0.5; }
+  100% { transform: translateY(40px) scaleX(1); opacity: 0; }
+}
+
+/* 20. RADAR SCAN - Detection Style */
+.radar-scan {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.radar-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 30%, rgba(0,212,255,0.1) 30%, rgba(0,212,255,0.1) 60%, transparent 60%);
+  border-radius: 50%;
+  border: 2px solid rgba(0,212,255,0.3);
+}
+
+.radar-sweep {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(0,212,255,0.8) 30deg, transparent 60deg);
+  border-radius: 50%;
+  animation: radarSweep 2s linear infinite;
+}
+
+.radar-blip {
+  position: absolute;
+  width: 10%;
+  height: 10%;
+  background: #00ff00;
+  border-radius: 50%;
+  animation: blipPulse 1s ease-in-out infinite;
+  box-shadow: 0 0 15px #00ff00;
+}
+
+.radar-blip:nth-child(3) { top: 25%; left: 60%; animation-delay: 0.2s; }
+.radar-blip:nth-child(4) { top: 60%; left: 30%; animation-delay: 0.5s; }
+
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes blipPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+}
+
+/* 21. BLOCKCHAIN - Crypto Style */
+.blockchain {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.block {
+  position: absolute;
+  width: 30%;
+  height: 30%;
+  border: 2px solid #00d4ff;
+  border-radius: 4px;
+  background: rgba(0,212,255,0.1);
+  animation: blockFloat 2s ease-in-out infinite;
+}
+
+.block:nth-child(1) {
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.block:nth-child(2) {
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 0.3s;
+}
+
+.block:nth-child(3) {
+  top: 70%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 0.6s;
+}
+
+.chain-link {
+  position: absolute;
+  width: 2px;
+  height: 15%;
+  background: linear-gradient(to bottom, #00d4ff, #7c3aed);
+  left: 50%;
+  transform: translateX(-50%);
+  animation: linkPulse 2s ease-in-out infinite;
+}
+
+.chain-link:nth-child(4) { top: 30%; animation-delay: 0.15s; }
+.chain-link:nth-child(5) { top: 60%; animation-delay: 0.45s; }
+
+@keyframes blockFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-5px); }
+}
+
+@keyframes linkPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* 22. VORTEX - Spiral Energy */
+.vortex {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vortex-spiral {
+  position: absolute;
+  inset: 0;
+  border: 2px solid transparent;
+  border-top-color: #00d4ff;
+  border-right-color: #00d4ff;
+  border-radius: 50%;
+  animation: vortexSpin 1s linear infinite;
+  opacity: 0.8;
+}
+
+.vortex-spiral:nth-child(2) {
+  inset: 15%;
+  border-top-color: #7c3aed;
+  border-right-color: #7c3aed;
+  animation-duration: 0.8s;
+}
+
+.vortex-spiral:nth-child(3) {
+  inset: 30%;
+  border-top-color: #ff00ff;
+  border-right-color: #ff00ff;
+  animation-duration: 0.6s;
+}
+
+.vortex-center {
+  width: 20%;
+  height: 20%;
+  background: radial-gradient(circle, #fff, #00d4ff);
+  border-radius: 50%;
+  animation: vortexPull 1s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(0,212,255,0.8);
+}
+
+@keyframes vortexSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes vortexPull {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.7); }
+}
+
+/* 23. PAW PRINT - Cat Theme 🐾 [RECOMMENDED #1] */
+.paw-print {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paw-pad {
+  position: absolute;
+  background: linear-gradient(135deg, #ff69b4, #ff1493);
+  border-radius: 50%;
+  animation: pawBounce 1.5s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(255,105,180,0.5);
+}
+
+.paw-main {
+  width: 40%;
+  height: 50%;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+}
+
+.paw-toe {
+  width: 20%;
+  height: 25%;
+}
+
+.paw-toe:nth-child(1) { top: 15%; left: 20%; animation-delay: 0.1s; }
+.paw-toe:nth-child(2) { top: 5%; left: 40%; animation-delay: 0.2s; }
+.paw-toe:nth-child(3) { top: 5%; right: 40%; animation-delay: 0.3s; }
+.paw-toe:nth-child(4) { top: 15%; right: 20%; animation-delay: 0.4s; }
+
+@keyframes pawBounce {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
+  50% { transform: translateX(-50%) scale(1.1); opacity: 0.8; }
+}
+
+/* 24. COIN FLIP - Crypto/Rewards 🪙 [RECOMMENDED #2] */
+.coin-flip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+
+.coin {
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+  position: relative;
+  transform-style: preserve-3d;
+  animation: coinFlip 2s ease-in-out infinite;
+  box-shadow: 
+    0 0 20px rgba(255,215,0,0.5),
+    inset 0 0 20px rgba(255,255,255,0.3);
+}
+
+.coin::before {
+  content: 'GM';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: clamp(0.75rem, 3vw, 1.5rem);
+  color: #8b7500;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  backface-visibility: hidden;
+}
+
+.coin::after {
+  content: '⭐';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 4vw, 2rem);
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+}
+
+@keyframes coinFlip {
+  0% { transform: rotateY(0deg) rotateX(0deg); }
+  50% { transform: rotateY(180deg) rotateX(20deg); }
+  100% { transform: rotateY(360deg) rotateX(0deg); }
+}
+
+/* 25. QUEST COMPASS - Adventure/Navigation 🧭 */
+.quest-compass {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compass-ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid rgba(0,212,255,0.3);
+  border-radius: 50%;
+}
+
+.compass-ring::before,
+.compass-ring::after {
+  content: '';
+  position: absolute;
+  background: #00d4ff;
+  opacity: 0.6;
+}
+
+.compass-ring::before {
+  width: 2px;
+  height: 30%;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.compass-ring::after {
+  width: 30%;
+  height: 2px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.compass-needle {
+  position: absolute;
+  width: 4px;
+  height: 45%;
+  top: 50%;
+  left: 50%;
+  transform-origin: center top;
+  animation: compassSpin 3s linear infinite;
+}
+
+.compass-needle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, #ff0055, transparent);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.compass-needle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to top, #00d4ff, transparent);
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+}
+
+@keyframes compassSpin {
+  from { transform: translate(-50%, -100%) rotate(0deg); }
+  to { transform: translate(-50%, -100%) rotate(360deg); }
+}
+
+/* 26. GUILD SHIELD - Community/Team 🛡️ [RECOMMENDED #3] */
+.guild-shield {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shield-shape {
+  width: 85%;
+  height: 90%;
+  background: linear-gradient(135deg, #7c3aed, #3b82f6);
+  clip-path: polygon(50% 0%, 100% 15%, 100% 70%, 50% 100%, 0% 70%, 0% 15%);
+  animation: shieldPulse 2s ease-in-out infinite;
+  box-shadow: 0 0 25px rgba(124,58,237,0.5);
+  position: relative;
+}
+
+.shield-emblem {
+  position: absolute;
+  inset: 25%;
+  background: rgba(255,255,255,0.2);
+  clip-path: polygon(50% 20%, 80% 40%, 70% 80%, 30% 80%, 20% 40%);
+  animation: emblemGlow 2s ease-in-out infinite;
+}
+
+.shield-border {
+  position: absolute;
+  inset: 8%;
+  border: 2px solid rgba(255,255,255,0.4);
+  clip-path: polygon(50% 0%, 100% 15%, 100% 70%, 50% 100%, 0% 70%, 0% 15%);
+}
+
+@keyframes shieldPulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.2); }
+}
+
+@keyframes emblemGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* 27. SOCIAL NETWORK - Connection Graph 🌐 */
+.social-network {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.network-node {
+  position: absolute;
+  width: 15%;
+  height: 15%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  border-radius: 50%;
+  animation: nodePulse 2s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(0,212,255,0.6);
+}
+
+.network-node:nth-child(1) { top: 10%; left: 50%; transform: translateX(-50%); }
+.network-node:nth-child(2) { top: 30%; left: 20%; animation-delay: 0.2s; }
+.network-node:nth-child(3) { top: 30%; right: 20%; animation-delay: 0.4s; }
+.network-node:nth-child(4) { bottom: 20%; left: 30%; animation-delay: 0.6s; }
+.network-node:nth-child(5) { bottom: 20%; right: 30%; animation-delay: 0.8s; }
+
+.network-line {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(0,212,255,0.3), rgba(124,58,237,0.3));
+  transform-origin: left center;
+  animation: lineGrow 2s ease-in-out infinite;
+}
+
+.network-line:nth-child(6) { width: 30%; top: 20%; left: 50%; transform: rotate(-45deg); }
+.network-line:nth-child(7) { width: 30%; top: 20%; right: 50%; transform: rotate(45deg); }
+.network-line:nth-child(8) { width: 25%; bottom: 30%; left: 35%; transform: rotate(15deg); }
+
+@keyframes nodePulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.3); }
+}
+
+@keyframes lineGrow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* 28. STREAK FIRE - Daily Habits 🔥 */
+.streak-fire {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flame {
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  width: 40%;
+  height: 60%;
+  background: linear-gradient(to top, #ff4500, #ff8c00, #ffd700, transparent);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  transform: translateX(-50%);
+  animation: flameFlicker 1s ease-in-out infinite;
+  filter: blur(2px);
+}
+
+.flame:nth-child(2) {
+  width: 30%;
+  height: 50%;
+  background: linear-gradient(to top, #ff6600, #ffaa00, #ffff00, transparent);
+  animation-delay: 0.2s;
+  filter: blur(1px);
+}
+
+.flame:nth-child(3) {
+  width: 20%;
+  height: 40%;
+  background: linear-gradient(to top, #ff8800, #ffcc00, #fff, transparent);
+  animation-delay: 0.4s;
+  filter: blur(0.5px);
+}
+
+.fire-base {
+  position: absolute;
+  bottom: 15%;
+  width: 50%;
+  height: 10%;
+  background: radial-gradient(ellipse, #ff4500, transparent);
+  border-radius: 50%;
+  animation: baseGlow 1s ease-in-out infinite;
+}
+
+@keyframes flameFlicker {
+  0%, 100% { 
+    transform: translateX(-50%) scaleY(1) scaleX(1);
+    opacity: 1;
+  }
+  25% { 
+    transform: translateX(-48%) scaleY(1.1) scaleX(0.95);
+    opacity: 0.9;
+  }
+  50% { 
+    transform: translateX(-52%) scaleY(0.95) scaleX(1.05);
+    opacity: 0.95;
+  }
+  75% { 
+    transform: translateX(-50%) scaleY(1.05) scaleX(0.98);
+    opacity: 0.92;
+  }
+}
+
+@keyframes baseGlow {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+/* 29. LEVEL UP - Gaming Progress ⬆️ */
+.level-up {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.level-arrow {
+  position: absolute;
+  width: 40%;
+  height: 60%;
+  background: linear-gradient(to top, rgba(0,212,255,0), #00d4ff, rgba(0,212,255,0));
+  clip-path: polygon(0% 50%, 50% 0%, 100% 50%, 70% 50%, 70% 100%, 30% 100%, 30% 50%);
+  animation: levelRise 1.5s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(0,212,255,0.5);
+}
+
+.level-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #00d4ff;
+  border-radius: 50%;
+  animation: particleFloat 2s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(0,212,255,0.8);
+}
+
+.level-particle:nth-child(2) { left: 20%; bottom: 20%; animation-delay: 0.2s; }
+.level-particle:nth-child(3) { right: 20%; bottom: 30%; animation-delay: 0.4s; }
+.level-particle:nth-child(4) { left: 30%; bottom: 50%; animation-delay: 0.6s; }
+
+@keyframes levelRise {
+  0% { 
+    transform: translateY(30%);
+    opacity: 0;
+  }
+  50% { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% { 
+    transform: translateY(-30%);
+    opacity: 0;
+  }
+}
+
+@keyframes particleFloat {
+  0% { 
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  50% { 
+    opacity: 1;
+  }
+  100% { 
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+}
+
+/* 30. BADGE UNLOCK - Achievement 🏅 */
+.badge-unlock {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-outer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%, 68% 57%, 
+    79% 91%, 50% 70%, 21% 91%, 32% 57%, 
+    2% 35%, 39% 35%
+  );
+  animation: badgeSpin 3s linear infinite;
+  box-shadow: 0 0 25px rgba(255,215,0,0.6);
+}
+
+.badge-inner {
+  position: absolute;
+  inset: 25%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff, #ffd700);
+  animation: badgePulse 1.5s ease-in-out infinite;
+  box-shadow: inset 0 0 15px rgba(255,255,255,0.5);
+}
+
+@keyframes badgeSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* 31. CHAT BUBBLE - Social Messaging 💬 */
+.chat-bubble {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  animation: bubbleFloat 2s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(0,212,255,0.4);
+}
+
+.bubble:nth-child(1) {
+  width: 60%;
+  height: 60%;
+  top: 10%;
+  left: 20%;
+}
+
+.bubble:nth-child(2) {
+  width: 35%;
+  height: 35%;
+  bottom: 15%;
+  left: 15%;
+  animation-delay: 0.3s;
+}
+
+.bubble:nth-child(3) {
+  width: 25%;
+  height: 25%;
+  bottom: 25%;
+  right: 20%;
+  animation-delay: 0.6s;
+}
+
+.bubble-dot {
+  position: absolute;
+  width: 12%;
+  height: 12%;
+  background: white;
+  border-radius: 50%;
+  animation: dotBounce 1.5s ease-in-out infinite;
+}
+
+.bubble-dot:nth-child(4) { top: 35%; left: 32%; animation-delay: 0s; }
+.bubble-dot:nth-child(5) { top: 35%; left: 44%; animation-delay: 0.2s; }
+.bubble-dot:nth-child(6) { top: 35%; left: 56%; animation-delay: 0.4s; }
+
+@keyframes bubbleFloat {
+  0%, 100% { 
+    transform: translateY(0) scale(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: translateY(-10px) scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes dotBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* 32. TOKEN SWAP - DeFi Exchange 🔄 */
+.token-swap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.token {
+  position: absolute;
+  width: 35%;
+  height: 35%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: clamp(0.5rem, 2vw, 1rem);
+  animation: tokenRotate 3s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(0,212,255,0.5);
+}
+
+.token-a {
+  background: linear-gradient(135deg, #00d4ff, #0080ff);
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+}
+
+.token-a::before {
+  content: 'ETH';
+}
+
+.token-b {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  animation-delay: 1.5s;
+}
+
+.token-b::before {
+  content: 'GM';
+}
+
+.swap-arrow {
+  position: absolute;
+  width: 3px;
+  height: 30%;
+  background: linear-gradient(to bottom, #00d4ff, #7c3aed);
+  left: 50%;
+  transform: translateX(-50%);
+  animation: arrowMove 3s ease-in-out infinite;
+}
+
+.swap-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #7c3aed;
+}
+
+@keyframes tokenRotate {
+  0%, 100% { transform: translateX(-50%) rotate(0deg); }
+  50% { transform: translateX(-50%) rotate(180deg); }
+}
+
+@keyframes arrowMove {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) translateY(0); }
+  50% { opacity: 1; transform: translateX(-50%) translateY(10px); }
+}
+
+/* ACCESSIBILITY & MOBILE SUPPORT */
+.loader-container {
+  /* WCAG AA: Proper focus indicators */
+  outline: none;
+}
+
+.loader-container:focus-visible {
+  outline: 2px solid #00d4ff;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Reduced motion support - WCAG compliance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Touch target size - WCAG AAA (48x48px minimum) */
+.touch-target {
+  min-width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .preview-card {
+    border: 2px solid currentColor;
+  }
+  
+  .pulse-ring-inner,
+  .spinner-gradient-ring,
+  .dot,
+  .orbit-dot,
+  .bar {
+    filter: contrast(1.5);
+  }
+}
+
+/* BUTTON STYLES */
+.btn {
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #00d4ff;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 16px rgba(0,212,255,0.3);
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,212,255,0.5);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:focus-visible {
+  outline: 3px solid #00d4ff;
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.05);
+  color: #00d4ff;
+  border: 2px solid #00d4ff;
+}
+
+/* DEMO SECTION */
+.demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+  padding: 24px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.feature-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 20px;
+  font-size: 0.875rem;
+  color: #00d4ff;
+  font-weight: 500;
+}
+
+.feature-badge::before {
+  content: "✓";
+  font-weight: 700;
+}
+
+/* UTILITIES */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Screen reader only content - WCAG */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* FULLSCREEN OVERLAY */
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 32px;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.fullscreen-overlay.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fullscreen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 32px;
+  max-width: 90vw;
+}
+
+</style>
+</head>
+<body>
+
+<h1>🚀 Gmeow Professional Loader Preview</h1>
+<p class="subtitle">
+  Modern, accessible, and responsive loading animations built with WCAG AA+ compliance. 
+  Mobile-optimized with reduced motion support and high contrast mode.
+</p>
+
+<div class="demo-controls">
+  <span class="feature-badge">WCAG AA+ Compliant</span>
+  <span class="feature-badge">Fully Responsive</span>
+  <span class="feature-badge">Mobile Optimized</span>
+  <span class="feature-badge">Reduced Motion Support</span>
+  <span class="feature-badge">Touch Target 48px+</span>
+  <span class="feature-badge">High Contrast Mode</span>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 1. PULSE RING LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>1. Pulse Ring (Recommended)</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="pulse-ring size-sm" role="status" aria-label="Loading">
+        <div class="pulse-ring-outer"></div>
+        <div class="pulse-ring-outer"></div>
+        <div class="pulse-ring-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Perfect for inline content</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="pulse-ring size-md" role="status" aria-label="Loading">
+        <div class="pulse-ring-outer"></div>
+        <div class="pulse-ring-outer"></div>
+        <div class="pulse-ring-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Default size - most versatile</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="pulse-ring size-lg" role="status" aria-label="Loading">
+        <div class="pulse-ring-outer"></div>
+        <div class="pulse-ring-outer"></div>
+        <div class="pulse-ring-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Page-level loading</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 2. SPINNER GRADIENT LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>2. Spinner Gradient</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="spinner-gradient size-sm" role="status" aria-label="Loading">
+        <div class="spinner-gradient-ring"></div>
+        <div class="spinner-gradient-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Clean & professional</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="spinner-gradient size-md" role="status" aria-label="Loading">
+        <div class="spinner-gradient-ring"></div>
+        <div class="spinner-gradient-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Modern gradient effect</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="spinner-gradient size-lg" role="status" aria-label="Loading">
+        <div class="spinner-gradient-ring"></div>
+        <div class="spinner-gradient-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Smooth animation</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 3. DOTS WAVE LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>3. Dots Wave</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="dots-wave size-sm" role="status" aria-label="Loading">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Playful & friendly</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="dots-wave size-md" role="status" aria-label="Loading">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Great for UX feedback</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="dots-wave size-lg" role="status" aria-label="Loading">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Highly visible</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 4. ORBIT LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>4. Orbit</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="orbit size-sm" role="status" aria-label="Loading">
+        <div class="orbit-path"></div>
+        <div class="orbit-dot"></div>
+        <div class="orbit-dot"></div>
+        <div class="orbit-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Sophisticated design</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="orbit size-md" role="status" aria-label="Loading">
+        <div class="orbit-path"></div>
+        <div class="orbit-dot"></div>
+        <div class="orbit-dot"></div>
+        <div class="orbit-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Premium feel</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="orbit size-lg" role="status" aria-label="Loading">
+        <div class="orbit-path"></div>
+        <div class="orbit-dot"></div>
+        <div class="orbit-dot"></div>
+        <div class="orbit-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Complex animation</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 5. BARS SCALE LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>5. Bars Scale</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="bars-scale size-sm" role="status" aria-label="Loading">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Audio visualizer style</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="bars-scale size-md" role="status" aria-label="Loading">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Dynamic & engaging</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="bars-scale size-lg" role="status" aria-label="Loading">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Perfect for audio apps</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 6. PROGRESS CIRCLE LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>6. Progress Circle</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="progress-circle size-sm" role="status" aria-label="Loading">
+        <svg viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="gradient-sm" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <circle class="progress-bg" cx="50" cy="50" r="45"/>
+          <circle class="progress-fill" cx="50" cy="50" r="45"/>
+        </svg>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Shows progress</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="progress-circle size-md" role="status" aria-label="Loading">
+        <svg viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="gradient-md" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <circle class="progress-bg" cx="50" cy="50" r="45"/>
+          <circle class="progress-fill" cx="50" cy="50" r="45"/>
+        </svg>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Clean & informative</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="progress-circle size-lg" role="status" aria-label="Loading">
+        <svg viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="gradient-lg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <circle class="progress-bg" cx="50" cy="50" r="45"/>
+          <circle class="progress-fill" cx="50" cy="50" r="45"/>
+        </svg>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Determinate progress</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 13. HEXAGON MORPH LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>13. Hexagon Morph 🔶</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="hexagon-morph size-sm" role="status" aria-label="Loading">
+        <div class="hex-shape"></div>
+        <div class="hex-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Geometric transformation</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="hexagon-morph size-md" role="status" aria-label="Loading">
+        <div class="hex-shape"></div>
+        <div class="hex-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Shape-shifting</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="hexagon-morph size-lg" role="status" aria-label="Loading">
+        <div class="hex-shape"></div>
+        <div class="hex-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Hypnotic morphing</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 14. DIAMOND PULSE LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>14. Diamond Pulse 💎</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="diamond-pulse size-sm" role="status" aria-label="Loading">
+        <div class="diamond-outer"></div>
+        <div class="diamond-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Luxury gold effect</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="diamond-pulse size-md" role="status" aria-label="Loading">
+        <div class="diamond-outer"></div>
+        <div class="diamond-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Premium sparkle</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="diamond-pulse size-lg" role="status" aria-label="Loading">
+        <div class="diamond-outer"></div>
+        <div class="diamond-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Jewel shimmer</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 15. RIPPLE WAVES LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>15. Ripple Waves 〰️</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="ripple-waves size-sm" role="status" aria-label="Loading">
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Water ripples</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="ripple-waves size-md" role="status" aria-label="Loading">
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Expanding circles</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="ripple-waves size-lg" role="status" aria-label="Loading">
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Calming waves</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 16. STAR BURST LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>16. Star Burst ⭐</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="star-burst size-sm" role="status" aria-label="Loading">
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-core"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Radiant explosion</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="star-burst size-md" role="status" aria-label="Loading">
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-core"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Brilliant shine</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="star-burst size-lg" role="status" aria-label="Loading">
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-ray"></div>
+        <div class="star-core"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Stellar energy</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 17. INFINITY LOOP LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>17. Infinity Loop ∞</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="infinity-loop size-sm" role="status" aria-label="Loading">
+        <div class="infinity-path"></div>
+        <div class="infinity-path"></div>
+        <div class="infinity-dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Mathematical beauty</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="infinity-loop size-md" role="status" aria-label="Loading">
+        <div class="infinity-path"></div>
+        <div class="infinity-path"></div>
+        <div class="infinity-dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Endless motion</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="infinity-loop size-lg" role="status" aria-label="Loading">
+        <div class="infinity-path"></div>
+        <div class="infinity-path"></div>
+        <div class="infinity-dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Continuous flow</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 18. SQUARE ROTATE LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>18. Square Rotate ◼️</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="square-rotate size-sm" role="status" aria-label="Loading">
+        <div class="square-outer"></div>
+        <div class="square-middle"></div>
+        <div class="square-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Minimal geometric</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="square-rotate size-md" role="status" aria-label="Loading">
+        <div class="square-outer"></div>
+        <div class="square-middle"></div>
+        <div class="square-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Clean design</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="square-rotate size-lg" role="status" aria-label="Loading">
+        <div class="square-outer"></div>
+        <div class="square-middle"></div>
+        <div class="square-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Modern simplicity</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 19. DNA HELIX LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>19. DNA Helix 🧬</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="dna-helix size-sm" role="status" aria-label="Loading">
+        <div class="dna-strand"></div>
+        <div class="dna-strand"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Biological spiral</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="dna-helix size-md" role="status" aria-label="Loading">
+        <div class="dna-strand"></div>
+        <div class="dna-strand"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Genetic flow</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="dna-helix size-lg" role="status" aria-label="Loading">
+        <div class="dna-strand"></div>
+        <div class="dna-strand"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <div class="dna-base"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Science/biotech</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 20. RADAR SCAN LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>20. Radar Scan 📡</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="radar-scan size-sm" role="status" aria-label="Loading">
+        <div class="radar-bg"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-blip"></div>
+        <div class="radar-blip"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Detection system</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="radar-scan size-md" role="status" aria-label="Loading">
+        <div class="radar-bg"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-blip"></div>
+        <div class="radar-blip"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Scanning effect</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="radar-scan size-lg" role="status" aria-label="Loading">
+        <div class="radar-bg"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-blip"></div>
+        <div class="radar-blip"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Military/tech style</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 21. BLOCKCHAIN LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>21. Blockchain ⛓️</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="blockchain size-sm" role="status" aria-label="Loading">
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="chain-link"></div>
+        <div class="chain-link"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Crypto style</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="blockchain size-md" role="status" aria-label="Loading">
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="chain-link"></div>
+        <div class="chain-link"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Distributed ledger</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="blockchain size-lg" role="status" aria-label="Loading">
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="block"></div>
+        <div class="chain-link"></div>
+        <div class="chain-link"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Web3 aesthetic</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 22. VORTEX LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>22. Vortex 🌀</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="vortex size-sm" role="status" aria-label="Loading">
+        <div class="vortex-spiral"></div>
+        <div class="vortex-spiral"></div>
+        <div class="vortex-spiral"></div>
+        <div class="vortex-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Spiral energy</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="vortex size-md" role="status" aria-label="Loading">
+        <div class="vortex-spiral"></div>
+        <div class="vortex-spiral"></div>
+        <div class="vortex-spiral"></div>
+        <div class="vortex-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Hypnotic swirl</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="vortex size-lg" role="status" aria-label="Loading">
+        <div class="vortex-spiral"></div>
+        <div class="vortex-spiral"></div>
+        <div class="vortex-spiral"></div>
+        <div class="vortex-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Portal effect</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 23. PAW PRINT LOADER - [⭐ RECOMMENDED #1] -->
+<!-- ===================================================== -->
+<div class="section" style="border: 3px solid #ff69b4; border-radius: 16px; padding: 24px; background: rgba(255,105,180,0.05);">
+  <h2>23. Paw Print 🐾 [⭐ RECOMMENDED #1 - CAT THEME]</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="paw-print size-sm" role="status" aria-label="Loading">
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-pad paw-main"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Perfect for cat-themed brand!</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="paw-print size-md" role="status" aria-label="Loading">
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-pad paw-main"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Gmeow signature style</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="paw-print size-lg" role="status" aria-label="Loading">
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-toe"></div>
+        <div class="paw-pad paw-main"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Cute & on-brand</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 24. COIN FLIP LOADER - [⭐ RECOMMENDED #2] -->
+<!-- ===================================================== -->
+<div class="section" style="border: 3px solid #ffd700; border-radius: 16px; padding: 24px; background: rgba(255,215,0,0.05);">
+  <h2>24. Coin Flip 🪙 [⭐ RECOMMENDED #2 - CRYPTO/REWARDS]</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="coin-flip size-sm" role="status" aria-label="Loading">
+        <div class="coin"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Perfect for Web3 rewards</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="coin-flip size-md" role="status" aria-label="Loading">
+        <div class="coin"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">GM token vibes</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="coin-flip size-lg" role="status" aria-label="Loading">
+        <div class="coin"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Crypto aesthetic</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 25. QUEST COMPASS LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>25. Quest Compass 🧭</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="quest-compass size-sm" role="status" aria-label="Loading">
+        <div class="compass-ring"></div>
+        <div class="compass-needle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Adventure/quest theme</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="quest-compass size-md" role="status" aria-label="Loading">
+        <div class="compass-ring"></div>
+        <div class="compass-needle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Navigation style</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="quest-compass size-lg" role="status" aria-label="Loading">
+        <div class="compass-ring"></div>
+        <div class="compass-needle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Quest system perfect</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 26. GUILD SHIELD LOADER - [⭐ RECOMMENDED #3] -->
+<!-- ===================================================== -->
+<div class="section" style="border: 3px solid #7c3aed; border-radius: 16px; padding: 24px; background: rgba(124,58,237,0.05);">
+  <h2>26. Guild Shield 🛡️ [⭐ RECOMMENDED #3 - COMMUNITY]</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="guild-shield size-sm" role="status" aria-label="Loading">
+        <div class="shield-shape">
+          <div class="shield-emblem"></div>
+          <div class="shield-border"></div>
+        </div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Perfect for guilds!</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="guild-shield size-md" role="status" aria-label="Loading">
+        <div class="shield-shape">
+          <div class="shield-emblem"></div>
+          <div class="shield-border"></div>
+        </div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Team/community vibe</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="guild-shield size-lg" role="status" aria-label="Loading">
+        <div class="shield-shape">
+          <div class="shield-emblem"></div>
+          <div class="shield-border"></div>
+        </div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Protection/unity</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 27. SOCIAL NETWORK LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>27. Social Network 🌐</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="social-network size-sm" role="status" aria-label="Loading">
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-line"></div>
+        <div class="network-line"></div>
+        <div class="network-line"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Farcaster connections</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="social-network size-md" role="status" aria-label="Loading">
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-line"></div>
+        <div class="network-line"></div>
+        <div class="network-line"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Social graph</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="social-network size-lg" role="status" aria-label="Loading">
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-node"></div>
+        <div class="network-line"></div>
+        <div class="network-line"></div>
+        <div class="network-line"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Community web</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 28. STREAK FIRE LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>28. Streak Fire 🔥</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="streak-fire size-sm" role="status" aria-label="Loading">
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="fire-base"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Daily streak theme</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="streak-fire size-md" role="status" aria-label="Loading">
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="fire-base"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Habit tracking</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="streak-fire size-lg" role="status" aria-label="Loading">
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="fire-base"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">GM streak perfect!</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 29. LEVEL UP LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>29. Level Up ⬆️</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="level-up size-sm" role="status" aria-label="Loading">
+        <div class="level-arrow"></div>
+        <div class="level-particle"></div>
+        <div class="level-particle"></div>
+        <div class="level-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Progress/XP gain</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="level-up size-md" role="status" aria-label="Loading">
+        <div class="level-arrow"></div>
+        <div class="level-particle"></div>
+        <div class="level-particle"></div>
+        <div class="level-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Ranking up</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="level-up size-lg" role="status" aria-label="Loading">
+        <div class="level-arrow"></div>
+        <div class="level-particle"></div>
+        <div class="level-particle"></div>
+        <div class="level-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Gaming progression</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 30. BADGE UNLOCK LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>30. Badge Unlock 🏅</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="badge-unlock size-sm" role="status" aria-label="Loading">
+        <div class="badge-outer"></div>
+        <div class="badge-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Achievement system</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="badge-unlock size-md" role="status" aria-label="Loading">
+        <div class="badge-outer"></div>
+        <div class="badge-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Reward unlocked</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="badge-unlock size-lg" role="status" aria-label="Loading">
+        <div class="badge-outer"></div>
+        <div class="badge-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Trophy earned</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 31. CHAT BUBBLE LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>31. Chat Bubble 💬</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="chat-bubble size-sm" role="status" aria-label="Loading">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble-dot"></div>
+        <div class="bubble-dot"></div>
+        <div class="bubble-dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Social messaging</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="chat-bubble size-md" role="status" aria-label="Loading">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble-dot"></div>
+        <div class="bubble-dot"></div>
+        <div class="bubble-dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Typing indicator</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="chat-bubble size-lg" role="status" aria-label="Loading">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble-dot"></div>
+        <div class="bubble-dot"></div>
+        <div class="bubble-dot"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Conversation flow</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 32. TOKEN SWAP LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>32. Token Swap 🔄</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="token-swap size-sm" role="status" aria-label="Loading">
+        <div class="token token-a"></div>
+        <div class="swap-arrow"></div>
+        <div class="token token-b"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">DeFi exchange</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="token-swap size-md" role="status" aria-label="Loading">
+        <div class="token token-a"></div>
+        <div class="swap-arrow"></div>
+        <div class="token token-b"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Trading pairs</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="token-swap size-lg" role="status" aria-label="Loading">
+        <div class="token token-a"></div>
+        <div class="swap-arrow"></div>
+        <div class="token token-b"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Web3 transactions</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- FULLSCREEN DEMO -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>Fullscreen Demo</h2>
+
+  <div class="demo-controls">
+    <button 
+      onclick="document.getElementById('fullscreen-paw').classList.add('active')"
+      class="btn touch-target"
+      style="background: linear-gradient(135deg, #ff69b4, #ff1493); border-color: #ff69b4;"
+      aria-label="Show fullscreen paw print loader">
+      ⭐ Paw Print
+    </button>
+    <button 
+      onclick="document.getElementById('fullscreen-coin').classList.add('active')"
+      class="btn touch-target"
+      style="background: linear-gradient(135deg, #ffd700, #ff8c00); border-color: #ffd700;"
+      aria-label="Show fullscreen coin flip loader">
+      ⭐ Coin Flip
+    </button>
+    <button 
+      onclick="document.getElementById('fullscreen-shield').classList.add('active')"
+      class="btn touch-target"
+      style="background: linear-gradient(135deg, #7c3aed, #3b82f6); border-color: #7c3aed;"
+      aria-label="Show fullscreen guild shield loader">
+      ⭐ Guild Shield
+    </button>
+    <button 
+      onclick="document.getElementById('fullscreen-fire').classList.add('active')"
+      class="btn touch-target"
+      aria-label="Show fullscreen streak fire loader">
+      Streak Fire
+    </button>
+    <button 
+      onclick="document.getElementById('fullscreen-badge').classList.add('active')"
+      class="btn touch-target"
+      aria-label="Show fullscreen badge unlock loader">
+      Badge Unlock
+    </button>
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 7. GAMING ENERGY LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>7. Gaming Energy ⚡</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="gaming-energy size-sm" role="status" aria-label="Loading">
+        <div class="gaming-core"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Power-up effect</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="gaming-energy size-md" role="status" aria-label="Loading">
+        <div class="gaming-core"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Gaming aesthetic</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="gaming-energy size-lg" role="status" aria-label="Loading">
+        <div class="gaming-core"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <div class="gaming-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Epic & dynamic</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 8. CYBERPUNK GLITCH LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>8. Cyberpunk Glitch 🔮</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="cyberpunk-glitch size-sm" role="status" aria-label="Loading">
+        <div class="cyber-outer"></div>
+        <div class="cyber-hex"></div>
+        <div class="cyber-cross"></div>
+        <div class="cyber-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Matrix style</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="cyberpunk-glitch size-md" role="status" aria-label="Loading">
+        <div class="cyber-outer"></div>
+        <div class="cyber-hex"></div>
+        <div class="cyber-cross"></div>
+        <div class="cyber-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Glitch effects</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="cyberpunk-glitch size-lg" role="status" aria-label="Loading">
+        <div class="cyber-outer"></div>
+        <div class="cyber-hex"></div>
+        <div class="cyber-cross"></div>
+        <div class="cyber-center"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Futuristic tech</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 9. NEON RING LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>9. Neon Ring 🌟</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="neon-ring size-sm" role="status" aria-label="Loading">
+        <div class="neon-outer-1"></div>
+        <div class="neon-outer-2"></div>
+        <div class="neon-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Synthwave vibes</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="neon-ring size-md" role="status" aria-label="Loading">
+        <div class="neon-outer-1"></div>
+        <div class="neon-outer-2"></div>
+        <div class="neon-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Retro futuristic</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="neon-ring size-lg" role="status" aria-label="Loading">
+        <div class="neon-outer-1"></div>
+        <div class="neon-outer-2"></div>
+        <div class="neon-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">80s aesthetic</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 10. HOLOGRAM LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>10. Hologram 🎭</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="hologram size-sm" role="status" aria-label="Loading">
+        <div class="holo-ring"></div>
+        <div class="holo-ring"></div>
+        <div class="holo-ring"></div>
+        <div class="holo-core"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">3D effect</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="hologram size-md" role="status" aria-label="Loading">
+        <div class="holo-ring"></div>
+        <div class="holo-ring"></div>
+        <div class="holo-ring"></div>
+        <div class="holo-core"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Sci-fi projection</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="hologram size-lg" role="status" aria-label="Loading">
+        <div class="holo-ring"></div>
+        <div class="holo-ring"></div>
+        <div class="holo-ring"></div>
+        <div class="holo-core"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Futuristic depth</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 11. PLASMA WAVE LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>11. Plasma Wave 🌊</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="plasma-wave size-sm" role="status" aria-label="Loading">
+        <div class="plasma-bg"></div>
+        <div class="plasma-border"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Liquid effect</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="plasma-wave size-md" role="status" aria-label="Loading">
+        <div class="plasma-bg"></div>
+        <div class="plasma-border"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Flowing colors</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="plasma-wave size-lg" role="status" aria-label="Loading">
+        <div class="plasma-bg"></div>
+        <div class="plasma-border"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Mesmerizing</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- 12. ATOM LOADER -->
+<!-- ===================================================== -->
+<div class="section">
+  <h2>12. Atom ⚛️</h2>
+  <div class="preview-row">
+
+    <div class="preview-card">
+      <div class="atom size-sm" role="status" aria-label="Loading">
+        <div class="atom-orbit"></div>
+        <div class="atom-orbit"></div>
+        <div class="atom-orbit"></div>
+        <div class="atom-electron"></div>
+        <div class="atom-nucleus"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Science themed</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="atom size-md" role="status" aria-label="Loading">
+        <div class="atom-orbit"></div>
+        <div class="atom-orbit"></div>
+        <div class="atom-orbit"></div>
+        <div class="atom-electron"></div>
+        <div class="atom-nucleus"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Orbital motion</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="atom size-lg" role="status" aria-label="Loading">
+        <div class="atom-orbit"></div>
+        <div class="atom-orbit"></div>
+        <div class="atom-orbit"></div>
+        <div class="atom-electron"></div>
+        <div class="atom-nucleus"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Tech/education</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- Fullscreen Overlays -->
+<div id="fullscreen-pulse" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="pulse-ring size-fs">
+      <div class="pulse-ring-outer"></div>
+      <div class="pulse-ring-outer"></div>
+      <div class="pulse-ring-inner"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">Loading your experience...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-pulse').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-gaming" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="gaming-energy size-fs">
+      <div class="gaming-core"></div>
+      <div class="gaming-particle"></div>
+      <div class="gaming-particle"></div>
+      <div class="gaming-particle"></div>
+      <div class="gaming-particle"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">⚡ Powering up...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-gaming').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-cyberpunk" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="cyberpunk-glitch size-fs">
+      <div class="cyber-outer"></div>
+      <div class="cyber-hex"></div>
+      <div class="cyber-cross"></div>
+      <div class="cyber-center"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🔮 Initializing matrix...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-cyberpunk').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-radar" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="radar-scan size-fs">
+      <div class="radar-bg"></div>
+      <div class="radar-sweep"></div>
+      <div class="radar-blip"></div>
+      <div class="radar-blip"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">📡 Scanning...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-radar').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-paw" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="paw-print size-fs">
+      <div class="paw-toe"></div>
+      <div class="paw-toe"></div>
+      <div class="paw-toe"></div>
+      <div class="paw-toe"></div>
+      <div class="paw-pad paw-main"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🐾 Gmeow loading...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-paw').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-coin" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="coin-flip size-fs">
+      <div class="coin"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🪙 Collecting rewards...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-coin').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-shield" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="guild-shield size-fs">
+      <div class="shield-shape">
+        <div class="shield-emblem"></div>
+        <div class="shield-border"></div>
+      </div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🛡️ Joining guild...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-shield').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-fire" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="streak-fire size-fs">
+      <div class="flame"></div>
+      <div class="flame"></div>
+      <div class="flame"></div>
+      <div class="fire-base"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🔥 Keeping your streak...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-fire').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-badge" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="badge-unlock size-fs">
+      <div class="badge-outer"></div>
+      <div class="badge-inner"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🏅 Unlocking achievement...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-badge').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+</body>
+</html>

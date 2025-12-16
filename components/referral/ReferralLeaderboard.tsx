@@ -293,11 +293,11 @@ export function ReferralLeaderboard({ currentUserFid, className = '' }: Referral
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900 dark:text-gray-100 font-medium">
+                        <td className="px-6 py-4 text-right text-gray-900 dark:text-gray-100 font-medium">
                           {entry.totalReferrals}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900 dark:text-gray-100 font-medium">
-                          {entry.pointsEarned.toString()}
+                        <td className="px-6 py-4 text-right text-gray-900 dark:text-gray-100 font-medium">
+                          {entry.pointsEarned?.toString() || '0'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <span className={`${TIER_COLORS[entry.tier as keyof typeof TIER_COLORS]} font-medium`}>

@@ -23,8 +23,11 @@ import { z } from 'zod'
 import { apiLimiter } from '@/lib/rate-limit'
 import { createPublicClient, http } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI, type ChainKey, CHAIN_IDS } from '@/lib/gmeow-utils'
+import type { Address } from 'viem'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES, type ChainKey, CHAIN_IDS } from '@/lib/gmeow-utils'
 import { generateRequestId } from '@/lib/request-id'
+import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
+import type { Badge } from '@/components/guild/badges'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -63,11 +66,130 @@ interface Guild {
   memberCount: bigint
   level: number
   active: boolean
+  achievements?: Badge[] // Guild-level achievement badges
 }
 
 // ==========================================
 // 4. Helper Functions
 // ==========================================
+
+/**
+ * Assign guild-level achievement badges based on guild stats
+ * 
+ * Categories:
+ * - Treasury achievements (based on totalPoints)
+ * - Member count achievements (based on memberCount)
+ * - Level achievements (based on guild level)
+ * - Founding achievements (early guild ID)
+ */
+function assignGuildAchievements(guild: Guild): Badge[] {
+  const badges: Badge[] = []
+  const points = Number(guild.totalPoints)
+  const members = Number(guild.memberCount)
+  const guildId = Number(guild.id)
+
+  // 1. Treasury Achievements
+  if (points >= 100000) {
+    badges.push({
+      id: 'treasury-legendary',
+      name: 'Mega Treasury',
+      description: 'Guild has accumulated over 100,000 points',
+      icon: '/badges/achievement/treasury.png',
+      rarity: 'legendary',
+      category: 'achievement',
+    })
+  } else if (points >= 50000) {
+    badges.push({
+      id: 'treasury-epic',
+      name: 'Major Treasury',
+      description: 'Guild has accumulated over 50,000 points',
+      icon: '/badges/achievement/treasury.png',
+      rarity: 'epic',
+      category: 'achievement',
+    })
+  } else if (points >= 10000) {
+    badges.push({
+      id: 'treasury-rare',
+      name: 'Growing Treasury',
+      description: 'Guild has accumulated over 10,000 points',
+      icon: '/badges/achievement/treasury.png',
+      rarity: 'rare',
+      category: 'achievement',
+    })
+  }
+
+  // 2. Member Count Achievements
+  if (members >= 100) {
+    badges.push({
+      id: 'members-legendary',
+      name: 'Mega Guild',
+      description: 'Guild has over 100 members',
+      icon: '/badges/achievement/top-contributor.png',
+      rarity: 'legendary',
+      category: 'achievement',
+    })
+  } else if (members >= 50) {
+    badges.push({
+      id: 'members-epic',
+      name: 'Large Guild',
+      description: 'Guild has over 50 members',
+      icon: '/badges/achievement/top-contributor.png',
+      rarity: 'epic',
+      category: 'achievement',
+    })
+  } else if (members >= 10) {
+    badges.push({
+      id: 'members-rare',
+      name: 'Growing Guild',
+      description: 'Guild has over 10 members',
+      icon: '/badges/achievement/top-contributor.png',
+      rarity: 'rare',
+      category: 'achievement',
+    })
+  }
+
+  // 3. Level Achievements
+  if (guild.level >= 10) {
+    badges.push({
+      id: 'level-legendary',
+      name: 'Legendary Guild',
+      description: 'Guild has reached level 10+',
+      icon: '/badges/achievement/veteran.png',
+      rarity: 'legendary',
+      category: 'achievement',
+    })
+  } else if (guild.level >= 5) {
+    badges.push({
+      id: 'level-epic',
+      name: 'Elite Guild',
+      description: 'Guild has reached level 5+',
+      icon: '/badges/achievement/veteran.png',
+      rarity: 'epic',
+      category: 'achievement',
+    })
+  }
+
+  // 4. Founding Achievement (first 10 guilds)
+  if (guildId <= 10) {
+    badges.push({
+      id: 'founding-guild',
+      name: 'Founding Guild',
+      description: 'One of the first 10 guilds created',
+      icon: '/badges/founder/founder.png',
+      rarity: 'legendary',
+      category: 'founder',
+    })
+  }
+
+  // Priority order: legendary > epic > rare > common
+  // Max 6 badges per guild (Reddit pattern)
+  const sortedBadges = badges.sort((a, b) => {
+    const rarityOrder = { legendary: 0, epic: 1, rare: 2, common: 3 }
+    return rarityOrder[a.rarity] - rarityOrder[b.rarity]
+  })
+
+  return sortedBadges.slice(0, 6)
+}
 
 /**
  * Sanitize search query
@@ -103,7 +225,8 @@ async function fetchGuildsFromChain(
       transport: http(),
     })
 
-    const contractAddress = getContractAddress(chain === 'base' ? 'base' : 'base') // Base chain only for now
+    // Use Guild contract address, not Core
+    const contractAddress = STANDALONE_ADDRESSES.base.guild
     
     // Get total guild count
     const nextGuildId = await client.readContract({
@@ -122,9 +245,9 @@ async function fetchGuildsFromChain(
     const guildIds = Array.from({ length: guildCount }, (_, i) => BigInt(i + 1))
 
     const contracts = guildIds.map((id) => ({
-      address: contractAddress,
-      abi: GM_CONTRACT_ABI,
-      functionName: 'guilds' as const,
+      address: contractAddress as Address,
+      abi: GUILD_ABI_JSON as any,
+      functionName: 'getGuildInfo' as const,
       args: [id],
     }))
 
@@ -135,15 +258,17 @@ async function fetchGuildsFromChain(
       const result = results[i]
       if (result.status !== 'success' || !result.result) continue
 
-      const guildData = result.result as any[]
-      const name = (guildData[0] as string) || ''
-      const leader = (guildData[1] as string) || ''
-      const totalPoints = (guildData[2] as bigint) || 0n
-      const memberCount = (guildData[3] as bigint) || 0n
-      const active = (guildData[4] as boolean) !== false
+      // Parse tuple response: [name, leader, totalPoints, memberCount, level, requiredPoints, treasury]
+      const guildInfo = result.result as any[]
+      const name = (guildInfo[0] as string) || ''
+      const leader = (guildInfo[1] as Address) || ''
+      const totalPoints = (guildInfo[2] as bigint) || 0n
+      const memberCount = (guildInfo[3] as bigint) || 0n
+      const level = (guildInfo[4] as bigint) || 0n
 
-      // Skip inactive or empty guilds
-      if (!active || !name || totalPoints === 0n) continue
+      // Skip inactive or empty guilds (but allow 0 points - new guilds start at 0)
+      const active = name && name.length > 0
+      if (!active || !name) continue
 
       guilds.push({
         id: guildIds[i],
@@ -152,7 +277,7 @@ async function fetchGuildsFromChain(
         leader,
         totalPoints,
         memberCount,
-        level: calculateGuildLevel(totalPoints),
+        level: Number(level), // Use level from contract
         active,
       })
     }
@@ -339,6 +464,7 @@ export async function GET(req: NextRequest) {
       memberCount: guild.memberCount.toString(),
       level: guild.level,
       active: guild.active,
+      achievements: assignGuildAchievements(guild), // Add guild-level badges
     }))
 
     const duration = Date.now() - startTime

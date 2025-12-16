@@ -162,6 +162,8 @@ export async function fetchUsersByAddresses(
   const uniques = Array.from(new Set(addresses.filter(Boolean))).map(a => a.toLowerCase())
   if (uniques.length === 0) return out
 
+  console.log('[fetchUsersByAddresses] Looking up addresses:', uniques)
+
   const CHUNK = 90
   const chunks: string[][] = []
   for (let i = 0; i < uniques.length; i += CHUNK) chunks.push(uniques.slice(i, i + CHUNK))
@@ -170,6 +172,8 @@ export async function fetchUsersByAddresses(
   const fidsToEnrich = new Set<number>()
 
   for (const chunk of chunks) {
+    console.log('[fetchUsersByAddresses] Fetching chunk:', chunk)
+    
     const data = await neynarFetch<Record<string, NeynarUser[]>>(
       '/v2/farcaster/user/bulk-by-address',
       {
@@ -178,10 +182,22 @@ export async function fetchUsersByAddresses(
       },
     )
 
+    console.log('[fetchUsersByAddresses] API response:', {
+      hasData: !!data,
+      keys: data ? Object.keys(data) : [],
+      firstResult: data ? Object.values(data)[0] : null,
+    })
+
     if (data) {
       for (const addr of chunk) {
         const u0 = data[addr]?.[0]
         const mapped = mapUser(u0)
+        console.log('[fetchUsersByAddresses] Address mapping:', {
+          address: addr,
+          found: !!u0,
+          fid: mapped?.fid,
+          username: mapped?.username,
+        })
         if (mapped) {
           mapped.walletAddress = addr as `0x${string}`
           addressToUser.set(addr, mapped)
@@ -191,6 +207,7 @@ export async function fetchUsersByAddresses(
         }
       }
     } else {
+      console.warn('[fetchUsersByAddresses] No data returned from API')
       for (const addr of chunk) addressToUser.set(addr, null)
     }
   }

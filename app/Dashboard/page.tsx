@@ -19,12 +19,22 @@ import { TrendingTokensSkeleton } from './components/skeletons/TrendingTokensSke
 import { TopCastersSkeleton } from './components/skeletons/TopCastersSkeleton'
 import { TrendingChannelsSkeleton } from './components/skeletons/TrendingChannelsSkeleton'
 import { ActivityFeedSkeleton } from './components/skeletons/ActivityFeedSkeleton'
+import { DashboardGMSection } from '@/app/Dashboard/components/DashboardGMSection'
 
 export default async function DashboardPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Hero Banner - No error boundary needed (static content) */}
       <DashboardHero />
+
+      {/* GM Section - Hero variant at top */}
+      <DashboardErrorBoundary componentName="Daily GM">
+        <Suspense fallback={
+          <div className="mb-6 h-96 bg-slate-100 dark:bg-slate-800 rounded-3xl animate-pulse" />
+        }>
+          <DashboardGMSection />
+        </Suspense>
+      </DashboardErrorBoundary>
 
       {/* Main Content - 2 Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

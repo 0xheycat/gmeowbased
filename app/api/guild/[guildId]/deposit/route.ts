@@ -49,7 +49,9 @@ import { z } from 'zod'
 import { strictLimiter } from '@/lib/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
+import { getContractAddress, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { GUILD_ABI_JSON, GM_CONTRACT_ABI } from '@/lib/contracts/abis'
+import { generateRequestId } from '@/lib/request-id'
 import { 
   checkIdempotency, 
   storeIdempotency, 
@@ -57,6 +59,7 @@ import {
   isValidIdempotencyKey,
   returnCachedResponse 
 } from '@/lib/idempotency'
+import { logGuildEvent } from '@/lib/guild/event-logger'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -122,24 +125,63 @@ async function getUserGuild(address: Address): Promise<bigint> {
   
   try {
     const guildId = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
       functionName: 'guildOf',
       args: [address],
     }) as bigint
     
     return guildId || 0n
-  } catch (error) {
-    console.error('[guild-deposit] getUserGuild error:', error)
+  } catch (error: any) {
+    // Contract may revert for addresses not in any guild - this is expected
+    if (error?.message?.includes('reverted') || error?.message?.includes('execution reverted')) {
+      return 0n
+    }
+    console.error('[guild-deposit] getUserGuild unexpected error:', error)
     return 0n
   }
 }
 
 /**
+ * Check if user is the leader of a specific guild
+ */
+async function isGuildLeader(address: Address, guildId: bigint): Promise<boolean> {
+  const client = getPublicClient()
+  
+  try {
+    const guildInfo = await client.readContract({
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
+      functionName: 'getGuildInfo',
+      args: [guildId],
+    }) as [string, Address, bigint, bigint, bigint, bigint, bigint]
+    
+    const leader = guildInfo[1]
+    return leader.toLowerCase() === address.toLowerCase()
+  } catch (error) {
+    console.error('[guild-deposit] isGuildLeader error:', error)
+    return false
+  }
+}
+
+/**
+ * Check if user is member of guild (includes leader check)
+ */
+async function isUserMemberOfGuild(address: Address, guildId: bigint): Promise<boolean> {
+  // Check 1: Normal membership via guildOf()
+  const userGuildId = await getUserGuild(address)
+  if (userGuildId === guildId) return true
+  
+  // Check 2: Guild leadership (fallback for leaders who haven't "joined")
+  const isLeader = await isGuildLeader(address, guildId)
+  return isLeader
+}
+
+/**
  * Create success response
  */
-function createSuccessResponse(data: any) {
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`
+function createSuccessResponse(data: any, requestId?: string) {
+  const rid = requestId || generateRequestId()
   
   return NextResponse.json(
     {
@@ -153,7 +195,7 @@ function createSuccessResponse(data: any) {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
-        'X-Request-ID': requestId,
+        'X-Request-ID': rid,
         'X-API-Version': '1.0.0',
       },
     }
@@ -163,8 +205,8 @@ function createSuccessResponse(data: any) {
 /**
  * Create error response (no sensitive data)
  */
-function createErrorResponse(message: string, status: number = 400) {
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`
+function createErrorResponse(message: string, status: number = 400, requestId?: string) {
+  const rid = requestId || generateRequestId()
   
   return NextResponse.json(
     {
@@ -178,7 +220,7 @@ function createErrorResponse(message: string, status: number = 400) {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
-        'X-Request-ID': requestId,
+        'X-Request-ID': rid,
         'X-API-Version': '1.0.0',
       },
     }
@@ -191,11 +233,16 @@ function createErrorResponse(message: string, status: number = 400) {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
+  const requestId = generateRequestId()
+
   const startTime = Date.now()
 
   try {
+    // Await params for Next.js 15
+    const { guildId } = await params
+
     // IDEMPOTENCY CHECK - Prevent duplicate point deposits
     const idempotencyKey = getIdempotencyKey(req)
     
@@ -204,7 +251,8 @@ export async function POST(
       if (!isValidIdempotencyKey(idempotencyKey)) {
         return createErrorResponse(
           'Invalid idempotency key format. Must be 36-72 characters.',
-          400
+          400,
+          requestId
         )
       }
       
@@ -218,7 +266,7 @@ export async function POST(
     
     // 1. RATE LIMITING
     if (!strictLimiter) {
-      return createErrorResponse('Rate limiting not configured', 503)
+      return createErrorResponse('Rate limiting not configured', 503, requestId)
     }
 
     const body = await req.json()
@@ -250,50 +298,41 @@ export async function POST(
       console.error('[guild-deposit] Validation error:', bodyResult.error.issues)
       return createErrorResponse(
         `Invalid request: ${bodyResult.error.issues.map((i) => i.message).join(', ')}`,
-        400
+        400,
+        requestId
       )
     }
 
     const { address, amount } = bodyResult.data
-    const { guildId } = params
 
-    // Validate guildId
+    // Validate guildId (already extracted above)
     const guildIdNum = BigInt(guildId)
     if (guildIdNum <= 0n) {
-      return createErrorResponse('Invalid guild ID', 400)
+      return createErrorResponse('Invalid guild ID', 400, requestId)
     }
 
-    // 3. AUTHENTICATION - Check user is in this guild
-    const userGuildId = await getUserGuild(address as Address)
+    // 3. AUTHENTICATION - Check user is in this guild (or is the leader)
+    const isMember = await isUserMemberOfGuild(address as Address, guildIdNum)
     
-    if (userGuildId === 0n) {
+    if (!isMember) {
       const errorResponse = {
         success: false,
-        message: 'You are not in any guild',
+        message: 'You are not a member of this guild. Please join the guild first.',
         timestamp: Date.now(),
       }
       
-      // Cache error response with idempotency key
-      if (idempotencyKey) {
-        await storeIdempotency(idempotencyKey, errorResponse, 400)
-      }
-      
-      return createErrorResponse(errorResponse.message, 400)
-    }
-
-    if (userGuildId !== guildIdNum) {
-      const errorResponse = {
-        success: false,
-        message: 'You are not a member of this guild',
-        timestamp: Date.now(),
-      }
+      console.log('[guild-deposit] Membership check failed:', {
+        address,
+        guildId: guildIdNum.toString(),
+        timestamp: new Date().toISOString(),
+      })
       
       // Cache error response with idempotency key
       if (idempotencyKey) {
         await storeIdempotency(idempotencyKey, errorResponse, 403)
       }
       
-      return createErrorResponse(errorResponse.message, 403)
+      return createErrorResponse(errorResponse.message, 403, requestId)
     }
 
     // 4. RBAC - Check user has sufficient points
@@ -324,6 +363,20 @@ export async function POST(
       timestamp: new Date().toISOString(),
     })
 
+    // Log event to database (non-blocking)
+    logGuildEvent({
+      guild_id: guildId.toString(),
+      event_type: 'POINTS_DEPOSITED',
+      actor_address: address,
+      amount: amount,
+      metadata: {
+        user_points_before: userPoints.toString(),
+        request_id: requestId,
+      },
+    }).catch((error) => {
+      console.error('[guild-deposit] Failed to log event:', error)
+    })
+
     // 6. RETURN INSTRUCTION FOR WALLET
     // Note: Actual contract call must be done client-side with user's wallet
     // This endpoint validates and returns instructions
@@ -333,10 +386,10 @@ export async function POST(
     const responseData = {
       message: `Ready to deposit ${amount} points. Please sign the transaction in your wallet.`,
       contractCall: {
-        address: getContractAddress('base'),
-        abi: GM_CONTRACT_ABI,
+        address: STANDALONE_ADDRESSES.base.guild as Address,
+        abi: GUILD_ABI_JSON,
         functionName: 'depositGuildPoints',
-        args: [guildIdNum, amountBigInt],
+        args: [guildId.toString(), amount.toString()],
       },
       performance: {
         duration,
@@ -348,14 +401,15 @@ export async function POST(
       await storeIdempotency(idempotencyKey, responseData, 200)
     }
     
-    return createSuccessResponse(responseData)
+    return createSuccessResponse(responseData, requestId)
   } catch (error: any) {
     console.error('[guild-deposit] Error:', error)
 
     // 10. ERROR MASKING
     return createErrorResponse(
       'Failed to process deposit request. Please try again later.',
-      500
+      500,
+      requestId
     )
   }
 }

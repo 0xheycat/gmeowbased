@@ -33,8 +33,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler'
-import { validateReferralCode, getReferralCodeOwner } from '@/lib/referral-contract'
+import { validateReferralCode, getReferralOwner } from '@/lib/referral-contract'
 import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/idempotency'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -54,6 +55,8 @@ const GenerateLinkSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId()
+
   const startTime = Date.now()
   const clientIp = getClientIp(request)
 
@@ -79,6 +82,7 @@ export async function POST(request: NextRequest) {
           remaining: 0,
           reset: rateLimitResult.reset,
         },
+        requestId,
       })
     }
 
@@ -91,6 +95,7 @@ export async function POST(request: NextRequest) {
         type: ErrorType.VALIDATION,
         message: 'Invalid JSON body',
         statusCode: 400,
+        requestId,
       })
     }
 
@@ -109,6 +114,7 @@ export async function POST(request: NextRequest) {
         message: 'Invalid request parameters',
         statusCode: 400,
         details: validationResult.error.flatten(),
+        requestId,
       })
     }
 
@@ -132,17 +138,19 @@ export async function POST(request: NextRequest) {
         message: codeValidation.error || 'Invalid referral code',
         statusCode: 400,
         details: { field: 'code', message: codeValidation.error },
+        requestId,
       })
     }
 
     // Verify code exists in contract
-    const codeOwner = await getReferralCodeOwner(code)
+    const codeOwner = await getReferralOwner(code)
     if (!codeOwner) {
       return createErrorResponse({
         type: ErrorType.VALIDATION,
         message: 'Referral code not found',
         statusCode: 404,
         details: { field: 'code', message: 'This referral code does not exist' },
+        requestId,
       })
     }
 
@@ -242,6 +250,7 @@ export async function POST(request: NextRequest) {
       details: process.env.NODE_ENV === 'development' 
         ? { error: error instanceof Error ? error.message : String(error) }
         : undefined,
+      requestId,
     })
   }
 }

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gaming Loaders Showcase</title>
+<style>
+body {
+  background: #0a0a0a;
+  color: #0ff;
+  font-family: 'Segoe UI', monospace;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 40px;
+  padding: 40px;
+}
+
+/* COMMON */
+.loader-box {
+  text-align: center;
+}
+.loader-title {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #8ff;
+}
+
+/* 1. Neon Spinner */
+.neon-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #0ff2;
+  border-top: 4px solid #0ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* 2. Pixel Loader */
+.pixel {
+  width: 48px;
+  height: 48px;
+  background: #0ff;
+  animation: pixel 1.2s steps(2) infinite;
+}
+
+/* 3. Arcade Bars */
+.arcade-bars div {
+  width: 6px;
+  height: 30px;
+  background: #0ff;
+  display: inline-block;
+  margin: 2px;
+  animation: bars 1s infinite ease-in-out;
+}
+.arcade-bars div:nth-child(2){animation-delay:.1s}
+.arcade-bars div:nth-child(3){animation-delay:.2s}
+
+/* 4. Cyber Pulse */
+.cyber-pulse {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #0ff;
+  animation: pulse 1.5s infinite;
+}
+
+/* 5. Glitch Text */
+.glitch {
+  font-size: 18px;
+  animation: glitch 1s infinite;
+}
+
+/* 6. Radar Scan */
+.radar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #0ff;
+  position: relative;
+}
+.radar::after {
+  content:'';
+  width:2px;
+  height:50%;
+  background:#0ff;
+  position:absolute;
+  left:50%;
+  transform-origin: bottom;
+  animation: spin 1s linear infinite;
+}
+
+/* 7. Hex Spin */
+.hex {
+  width: 40px;
+  height: 40px;
+  background: #0ff;
+  clip-path: polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  animation: spin 1s linear infinite;
+}
+
+/* 8. XP Loading Bar */
+.xp {
+  width: 100px;
+  height: 8px;
+  border: 1px solid #0ff;
+}
+.xp::after {
+  content:'';
+  display:block;
+  height:100%;
+  background:#0ff;
+  animation: load 2s infinite;
+}
+
+/* 9. Digital Dots */
+.dots span {
+  animation: blink 1.4s infinite both;
+}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+
+/* 10. Energy Ring */
+.energy {
+  width: 50px;
+  height: 50px;
+  border: 3px dashed #0ff;
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+}
+
+/* 11. Pixel Wave */
+.wave span {
+  display:inline-block;
+  width:6px;
+  height:20px;
+  background:#0ff;
+  animation: wave 1s infinite;
+}
+.wave span:nth-child(2){animation-delay:.1s}
+.wave span:nth-child(3){animation-delay:.2s}
+
+/* 12. Shield Loader */
+.shield {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #0ff;
+  border-radius: 0 0 50% 50%;
+  animation: pulse 1.5s infinite;
+}
+
+/* 13. Console Cursor */
+.cursor {
+  font-size: 20px;
+  animation: blink 1s infinite;
+}
+
+/* 14. Target Lock */
+.target {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #0ff;
+  position: relative;
+}
+.target::before {
+  content:'';
+  width: 100%;
+  height: 2px;
+  background:#0ff;
+  position:absolute;
+  top:50%;
+}
+
+/* 15. FPS Counter */
+.fps {
+  font-size: 18px;
+  animation: glitch 1.2s infinite;
+}
+
+/* ANIMATIONS */
+@keyframes spin { to { transform: rotate(360deg);} }
+@keyframes pixel { 50% { transform: scale(0.4);} }
+@keyframes bars { 50% { height:10px;} }
+@keyframes pulse { 50% { transform: scale(1.2);} }
+@keyframes load { 50% { width:100%;} }
+@keyframes blink { 50% { opacity:0;} }
+@keyframes glitch { 20%{transform:skew(5deg)} 40%{transform:skew(-5deg)} }
+@keyframes wave { 50% { transform: translateY(-10px);} }
+</style>
+</head>
+
+<body>
+
+<div class="loader-box"><div class="neon-spinner"></div><div class="loader-title">Neon Spinner</div></div>
+<div class="loader-box"><div class="pixel"></div><div class="loader-title">Pixel Loader</div></div>
+<div class="loader-box"><div class="arcade-bars"><div></div><div></div><div></div></div><div class="loader-title">Arcade Bars</div></div>
+<div class="loader-box"><div class="cyber-pulse"></div><div class="loader-title">Cyber Pulse</div></div>
+<div class="loader-box"><div class="glitch">LOADING</div><div class="loader-title">Glitch Text</div></div>
+<div class="loader-box"><div class="radar"></div><div class="loader-title">Radar Scan</div></div>
+<div class="loader-box"><div class="hex"></div><div class="loader-title">Hex Spinner</div></div>
+<div class="loader-box"><div class="xp"></div><div class="loader-title">XP Bar</div></div>
+<div class="loader-box"><div class="dots">●<span>●</span><span>●</span></div><div class="loader-title">Digital Dots</div></div>
+<div class="loader-box"><div class="energy"></div><div class="loader-title">Energy Ring</div></div>
+<div class="loader-box"><div class="wave"><span></span><span></span><span></span></div><div class="loader-title">Pixel Wave</div></div>
+<div class="loader-box"><div class="shield"></div><div class="loader-title">Shield</div></div>
+<div class="loader-box"><div class="cursor">█</div><div class="loader-title">Console Cursor</div></div>
+<div class="loader-box"><div class="target"></div><div class="loader-title">Target Lock</div></div>
+<div class="loader-box"><div class="fps">FPS: 60</div><div class="loader-title">FPS Counter</div></div>
+
+</body>
+</html>

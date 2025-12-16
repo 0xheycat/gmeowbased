@@ -3,6 +3,7 @@
 
 import { getSupabaseServerClient } from './supabase-server'
 import { isOGUser } from './rarity-tiers'
+import { trackError, trackInfo } from '@/lib/notifications/error-tracking'
 
 export interface RewardResult {
   awarded: boolean
@@ -47,7 +48,7 @@ export async function checkAndAwardNewUserRewards(
 
     if (fetchError && fetchError.code !== 'PGRST116') {
       // PGRST116 = no rows, which is expected for new users
-      console.error('[Rewards] Error fetching profile:', fetchError)
+      trackError('rewards_fetch_profile_error', fetchError, { function: 'trackFirstView', fid })
       return {
         awarded: false,
         isFirstView: false,
@@ -88,7 +89,7 @@ export async function checkAndAwardNewUserRewards(
       })
 
     if (insertError) {
-      console.error('[Rewards] Error creating profile:', insertError)
+      trackError('rewards_create_profile_error', insertError, { function: 'trackFirstView', fid })
       return {
         awarded: false,
         isFirstView: true,
@@ -100,7 +101,7 @@ export async function checkAndAwardNewUserRewards(
     }
 
     // Log reward event (optional - for analytics)
-    console.log(`[Rewards] New user FID ${fid} awarded:`, {
+    trackInfo(`rewards_new_user_awarded_fid_${fid}`, {
       points,
       xp,
       isOG,
@@ -116,7 +117,7 @@ export async function checkAndAwardNewUserRewards(
       reason: isOG ? 'OG user bonus' : 'New user welcome bonus',
     }
   } catch (err) {
-    console.error('[Rewards] Unexpected error:', err)
+    trackError('rewards_unexpected_error', err, { function: 'trackFirstView', fid })
     return {
       awarded: false,
       isFirstView: false,
@@ -146,7 +147,7 @@ export async function trackFrameView(
     // For now, just return success
     return { success: true }
   } catch (err) {
-    console.error('[Rewards] Error tracking view:', err)
+    trackError('rewards_track_view_error', err, { function: 'trackPageView', fid })
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown error',

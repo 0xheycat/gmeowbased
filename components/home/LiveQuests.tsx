@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { QuestCard } from '@/components/quests'
 import type { QuestFilterKey } from './types'
 import { formatQuestTypeLabel } from '@/lib/formatters'
+import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 
 const QUEST_FILTERS: { key: QuestFilterKey; label: string }[] = [
   { key: 'all', label: 'ALL' },
@@ -48,7 +49,29 @@ export function LiveQuests() {
   }, [activeTab, quests])
 
   if (loading) {
-    return <LiveQuestsSkeleton />
+    return (
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto">
+          <Skeleton variant="text" className="w-48 h-9 mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+                <Skeleton variant="rect" className="h-48 w-full rounded-none" />
+                <div className="p-6 space-y-4">
+                  <Skeleton variant="text" className="w-3/4 h-6" />
+                  <Skeleton variant="text" className="w-full h-4" />
+                  <Skeleton variant="text" className="w-full h-4" />
+                  <div className="flex gap-2 mt-4">
+                    <Skeleton variant="rect" className="h-10 flex-1" />
+                    <Skeleton variant="rect" className="h-10 w-24" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -107,32 +130,6 @@ export function LiveQuests() {
           >
             Browse All Quests
           </Link>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function LiveQuestsSkeleton() {
-  return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto">
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-8" />
-        <div className="flex gap-2 mb-8">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-24" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
-              <div className="animate-pulse">
-                <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </section>

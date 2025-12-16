@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { trackError } from '@/lib/notifications/error-tracking'
 
 export interface BadgeData {
   id: number
@@ -68,7 +69,7 @@ export function useLeaderboardBadges(fids: number[]): UseLeaderboardBadgesReturn
 
       setBadgesByFid(data.data)
     } catch (err) {
-      console.error('[useLeaderboardBadges] Error:', err)
+      trackError('use_leaderboard_badges_error', err, { function: 'fetchBadges', fidCount: fids.length })
       setError(err instanceof Error ? err.message : 'Failed to fetch badges')
       setBadgesByFid({})
     } finally {
