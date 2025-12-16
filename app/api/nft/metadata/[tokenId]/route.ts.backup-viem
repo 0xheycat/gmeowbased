@@ -1,0 +1,282 @@
+/**
+ * #file: app/api/nft/metadata/[tokenId]/route.ts
+ * 
+ * TODO:
+ * - Add IPFS pinning for permanent storage
+ * - Add animation_url for special NFT types
+ * - Add collection-level stats in attributes
+ * - Connect to real Subsquid GraphQL endpoint
+ * 
+ * FEATURES:
+ * - ERC-721 compliant metadata JSON (OpenSea standard)
+ * - Dynamic attributes based on nftType from Subsquid indexer
+ * - Image generation via /api/nft/image/[tokenId]
+ * - External URL linking to NFT detail page
+ * - Caching headers for performance
+ * 
+ * PHASE: Phase 1 - Critical Infrastructure (Week 1, Day 2)
+ * DATE: December 16, 2025
+ * 
+ * REFERENCE DOCUMENTATION:
+ * - NFT-SYSTEM-ARCHITECTURE-PART-1.md (Section 2: Smart Contract Architecture)
+ * - NFT-SYSTEM-ARCHITECTURE-PART-3.md (Section 10.1: OpenSea Integration Standards)
+ * - PHASE-1-DAY-2-INDEXER-ENHANCEMENT.md (Subsquid schema updates)
+ * 
+ * SUGGESTIONS:
+ * - Add localization (multi-language descriptions)
+ * - Add SVG badge overlays for special editions
+ * - Implement metadata versioning for upgrades
+ * 
+ * CRITICAL FOUND:
+ * ⚠️ MUST return valid JSON with image, name, description (OpenSea requirement)
+ * ⚠️ MUST use gmeowhq.art domain (NOT api.gmeowhq.art - subdomain doesn't exist)
+ * ⚠️ MUST query Subsquid indexer for nftType and metadataURI (from NFTMinted event)
+ * ⚠️ MUST handle non-existent tokenIds gracefully (404)
+ * ⚠️ Image URLs MUST be absolute (https://gmeowhq.art/api/nft/image/123)
+ * 
+ * AVOID (from farcaster.instructions.md):
+ * ❌ NO hardcoded metadata (fetch from indexer)
+ * ❌ NO relative URLs in JSON (OpenSea requires absolute)
+ * ❌ NO missing required fields (name, description, image)
+ * ❌ NO unescaped special characters in JSON
+ * ❌ NO contract calls (use Subsquid indexer for performance)
+ * 
+ * Website: https://gmeowhq.art
+ * Network: Base (Chain ID: 8453)
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { getNFTStats } from '@/lib/subsquid-client'
+
+const NFT_ABI = [
+  {
+    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    name: 'ownerOf',
+    outputs: [{ name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    name: 'nftData',
+    outputs: [
+      { name: 'category', type: 'string' },
+      { name: 'typeId', type: 'string' },
+      { name: 'rarity', type: 'uint8' },
+      { name: 'mintedAt', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const
+
+const QUEST_ABI = [
+  {
+    inputs: [{ name: 'questId', type: 'uint256' }],
+    name: 'getQuest',
+    outputs: [
+      {
+        components: [
+          { name: 'name', type: 'string' },
+          { name: 'creator', type: 'address' },
+          { name: 'questType', type: 'uint8' },
+          { name: 'target', type: 'uint256' },
+          { name: 'rewardPointsPerUser', type: 'uint256' },
+          { name: 'rewardTokenAmount', type: 'uint256' },
+          { name: 'rewardToken', type: 'address' },
+          { name: 'maxCompletions', type: 'uint256' },
+          { name: 'completionsCount', type: 'uint256' },
+          { name: 'isActive', type: 'bool' },
+          { name: 'expiresAt', type: 'uint256' },
+        ],
+        name: '',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const
+
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http(),
+})
+
+const RARITY_NAMES: Record<number, NFTRarity> = {
+  0: 'common',
+  1: 'uncommon',
+  2: 'rare',
+  3: 'epic',
+  4: 'legendary',
+  5: 'mythic',
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { tokenId: string } }
+) {
+  const requestId = generateRequestId()
+
+  try {
+    const tokenId = BigInt(params.tokenId)
+
+    // Read NFT data from contract
+    const [nftData, owner] = await Promise.all([
+      publicClient.readContract({
+        address: GM_BASE_NFT,
+        abi: NFT_ABI,
+        functionName: 'nftData',
+        args: [tokenId],
+      }),
+      publicClient.readContract({
+        address: GM_BASE_NFT,
+        abi: NFT_ABI,
+        functionName: 'ownerOf',
+        args: [tokenId],
+      }),
+    ])
+
+    const [category, typeId, rarityNum, mintedAt] = nftData
+    const rarity = RARITY_NAMES[rarityNum] || 'common'
+
+    let metadata: NFTMetadata
+
+    // Generate metadata based on category
+    if (category === 'quest') {
+      // Parse quest ID from typeId
+      const questId = BigInt(typeId.replace('quest-', ''))
+
+      // Fetch quest details from contract
+      const quest = await publicClient.readContract({
+        address: GM_BASE_CORE,
+        abi: QUEST_ABI,
+        functionName: 'getQuest',
+        args: [questId],
+      })
+
+      metadata = generateQuestNFTMetadata({
+        tokenId: Number(tokenId),
+        questId: Number(questId),
+        questName: quest.name,
+        questCategory: ['Daily', 'Social', 'Guild', 'Referral', 'Achievement', 'Onchain'][quest.questType] || 'Quest',
+        rarity,
+        completedBy: owner,
+        completedAt: Number(mintedAt),
+        reward: Number(quest.rewardPointsPerUser),
+        edition: Number(tokenId),
+        maxSupply: Number(quest.maxCompletions) || undefined,
+      })
+    } else if (category === 'achievement') {
+      metadata = generateAchievementNFTMetadata({
+        tokenId: Number(tokenId),
+        achievementName: `Achievement: ${typeId}`,
+        achievementType: typeId,
+        rarity,
+        earnedBy: owner,
+        earnedAt: Number(mintedAt),
+        attributes: [
+          {
+            trait_type: 'Achievement Type',
+            value: typeId,
+          },
+        ],
+      })
+    } else if (category === 'event') {
+      metadata = generateEventNFTMetadata({
+        tokenId: Number(tokenId),
+        eventName: `Event: ${typeId}`,
+        eventDate: Number(mintedAt),
+        rarity,
+        edition: Number(tokenId),
+        maxSupply: 100, // Default for events
+      })
+    } else if (category === 'legendary') {
+      metadata = generateLegendaryNFTMetadata({
+        tokenId: Number(tokenId),
+        name: `Legendary: ${typeId}`,
+        description: `A legendary NFT in Gmeowbased Adventure. Only the most dedicated adventurers can obtain this.`,
+        edition: Number(tokenId),
+        maxSupply: 10, // Very limited
+        attributes: [
+          {
+            trait_type: 'Category',
+            value: 'Legendary',
+          },
+          {
+            trait_type: 'Type',
+            value: typeId,
+          },
+          {
+            trait_type: 'Rarity',
+            value: 'legendary',
+          },
+        ],
+      })
+    } else {
+      // Default/custom category
+      metadata = {
+        name: `Gmeow NFT #${tokenId}`,
+        description: `A unique NFT from Gmeowbased Adventure on Base.`,
+        image: `https://gmeowhq.art/api/nft/image/default-${rarity}-${tokenId}`,
+        external_url: `https://gmeowhq.art/nft/${tokenId}`,
+        attributes: [
+          {
+            trait_type: 'Category',
+            value: category,
+          },
+          {
+            trait_type: 'Type',
+            value: typeId,
+          },
+          {
+            trait_type: 'Rarity',
+            value: rarity,
+          },
+          {
+            trait_type: 'Mint Date',
+            value: Number(mintedAt),
+            display_type: 'date',
+          },
+        ],
+        properties: {
+          category: category as NFTCategory,
+          rarity,
+          token_id: Number(tokenId),
+          owner,
+        },
+      }
+    }
+
+    return NextResponse.json(metadata, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        'Content-Type': 'application/json',
+        'X-Request-ID': requestId,
+      },
+    })
+  } catch (error) {
+    console.error('Error generating NFT metadata:', error)
+
+    // Return minimal metadata on error
+    return NextResponse.json(
+      {
+        name: `Gmeow NFT #${params.tokenId}`,
+        description: 'A unique NFT from Gmeowbased Adventure',
+        image: `https://gmeowhq.art/api/nft/image/default-common-${params.tokenId}`,
+        external_url: `https://gmeowhq.art/nft/${params.tokenId}`,
+        attributes: [],
+        properties: {
+          token_id: Number(params.tokenId),
+        },
+      },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+  }
+}
