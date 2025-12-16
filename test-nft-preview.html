@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmeowbased NFT Badge Preview - Local Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #f59e0b 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 20px;
+            color: #888888;
+            margin-bottom: 48px;
+        }
+
+        .controls {
+            background: rgba(26, 26, 46, 0.6);
+            border: 2px solid #333;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 40px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        select, input {
+            background: rgba(10, 10, 10, 0.8);
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #ffffff;
+            font-size: 16px;
+            min-width: 200px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover, input:hover {
+            border-color: #f59e0b;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #ec4899;
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
+        }
+
+        button {
+            background: linear-gradient(135deg, #f59e0b 0%, #ec4899 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+
+        .nft-card {
+            background: rgba(26, 26, 46, 0.6);
+            border: 2px solid #333;
+            border-radius: 24px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nft-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nft-card:hover {
+            border-color: #f59e0b;
+            transform: translateY(-8px);
+            box-shadow: 0 16px 40px rgba(245, 158, 11, 0.3);
+        }
+
+        .nft-card:hover::before {
+            opacity: 1;
+        }
+
+        .nft-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .nft-type {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+
+        .rarity-badge {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .rarity-common { background: #6b7280; color: #ffffff; }
+        .rarity-rare { background: #3b82f6; color: #ffffff; }
+        .rarity-epic { background: #a855f7; color: #ffffff; }
+        .rarity-legendary { background: #f59e0b; color: #ffffff; }
+        .rarity-mythic { background: #ec4899; color: #ffffff; }
+
+        .nft-image {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nft-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .loading {
+            color: #888888;
+            font-size: 16px;
+        }
+
+        .nft-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(10, 10, 10, 0.4);
+            border-radius: 8px;
+        }
+
+        .info-label {
+            color: #888888;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #ef4444;
+            border-radius: 12px;
+            padding: 16px;
+            color: #ef4444;
+            text-align: center;
+        }
+
+        .success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid #22c55e;
+            border-radius: 12px;
+            padding: 16px;
+            color: #22c55e;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .metadata-display {
+            background: rgba(26, 26, 46, 0.6);
+            border: 2px solid #333;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .metadata-display h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #f59e0b;
+        }
+
+        .metadata-display pre {
+            background: rgba(10, 10, 10, 0.8);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .api-endpoint {
+            background: rgba(10, 10, 10, 0.8);
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #22c55e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-btn {
+            background: #22c55e;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            color: #ffffff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: #16a34a;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .instructions {
+            background: rgba(26, 26, 46, 0.6);
+            border: 2px solid #333;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 40px;
+        }
+
+        .instructions h2 {
+            color: #f59e0b;
+            margin-bottom: 16px;
+        }
+
+        .instructions ol {
+            margin-left: 24px;
+            line-height: 2;
+        }
+
+        .instructions code {
+            background: rgba(10, 10, 10, 0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #22c55e;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Gmeowbased NFT Badge Preview</h1>
+        <p class="subtitle">Local Testing Environment - Phase 1 Day 2</p>
+
+        <div class="instructions">
+            <h2>📋 Testing Instructions</h2>
+            <ol>
+                <li>Start your Next.js dev server: <code>npm run dev</code></li>
+                <li>Select an NFT type and tokenId below</li>
+                <li>Click "Load NFT Preview" to see the badge image and metadata</li>
+                <li>Check that rarity colors match the design system</li>
+                <li>Verify metadata JSON is OpenSea-compliant</li>
+            </ol>
+            <div class="api-endpoint">
+                <span id="currentEndpoint">http://localhost:3003/api/nft/metadata/1</span>
+                <button class="copy-btn" onclick="copyEndpoint()">Copy</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="nftType">NFT Type</label>
+                <select id="nftType">
+                    <option value="LEGENDARY_QUEST">Legendary Quest Master</option>
+                    <option value="QUEST_MASTER">Quest Master</option>
+                    <option value="STREAK_CHAMPION">Streak Champion</option>
+                    <option value="STREAK_LEGEND">Streak Legend</option>
+                    <option value="GUILD_FOUNDER">Guild Founder</option>
+                    <option value="GUILD_CHAMPION">Guild Champion</option>
+                    <option value="RANK_TROPHY_PLATINUM">Platinum Trophy</option>
+                    <option value="RANK_TROPHY_GOLD">Gold Trophy</option>
+                    <option value="RANK_TROPHY_SILVER">Silver Trophy</option>
+                    <option value="RANK_TROPHY_BRONZE">Bronze Trophy</option>
+                    <option value="EARLY_ADOPTER">Early Adopter</option>
+                    <option value="TOP_CONTRIBUTOR">Top Contributor</option>
+                    <option value="REFERRAL_CHAMPION">Referral Champion</option>
+                    <option value="REFERRAL_MASTER">Referral Master</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="tokenId">Token ID</label>
+                <input type="number" id="tokenId" value="1" min="1" max="99999">
+            </div>
+
+            <div class="control-group">
+                <label for="baseUrl">API Base URL</label>
+                <input type="text" id="baseUrl" value="http://localhost:3003">
+            </div>
+
+            <button onclick="loadNFTPreview()">🚀 Load NFT Preview</button>
+            <button onclick="loadAllTypes()" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);">📚 Load All Types</button>
+        </div>
+
+        <div id="message"></div>
+        <div id="gallery" class="gallery"></div>
+    </div>
+
+    <script>
+        const NFT_TYPES = {
+            'LEGENDARY_QUEST': { name: 'Legendary Quest Master', rarity: 'legendary', category: 'Quest', xp: 300 },
+            'QUEST_MASTER': { name: 'Quest Master', rarity: 'epic', category: 'Quest', xp: 200 },
+            'STREAK_CHAMPION': { name: 'Streak Champion', rarity: 'epic', category: 'Activity', xp: 200 },
+            'STREAK_LEGEND': { name: 'Streak Legend', rarity: 'legendary', category: 'Activity', xp: 300 },
+            'GUILD_FOUNDER': { name: 'Guild Founder', rarity: 'legendary', category: 'Guild', xp: 300 },
+            'GUILD_CHAMPION': { name: 'Guild Champion', rarity: 'epic', category: 'Guild', xp: 200 },
+            'RANK_TROPHY_PLATINUM': { name: 'Platinum Trophy', rarity: 'legendary', category: 'Rank', xp: 300 },
+            'RANK_TROPHY_GOLD': { name: 'Gold Trophy', rarity: 'epic', category: 'Rank', xp: 200 },
+            'RANK_TROPHY_SILVER': { name: 'Silver Trophy', rarity: 'rare', category: 'Rank', xp: 100 },
+            'RANK_TROPHY_BRONZE': { name: 'Bronze Trophy', rarity: 'common', category: 'Rank', xp: 50 },
+            'EARLY_ADOPTER': { name: 'Early Adopter', rarity: 'mythic', category: 'Special', xp: 500 },
+            'TOP_CONTRIBUTOR': { name: 'Top Contributor', rarity: 'legendary', category: 'Special', xp: 300 },
+            'REFERRAL_CHAMPION': { name: 'Referral Champion', rarity: 'legendary', category: 'Referral', xp: 300 },
+            'REFERRAL_MASTER': { name: 'Referral Master', rarity: 'epic', category: 'Referral', xp: 200 }
+        };
+
+        function showMessage(message, type = 'success') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function copyEndpoint() {
+            const endpoint = document.getElementById('currentEndpoint').textContent;
+            navigator.clipboard.writeText(endpoint).then(() => {
+                showMessage('✅ Endpoint copied to clipboard!', 'success');
+            });
+        }
+
+        async function loadNFTPreview() {
+            const nftType = document.getElementById('nftType').value;
+            const tokenId = document.getElementById('tokenId').value;
+            const baseUrl = document.getElementById('baseUrl').value;
+
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            showMessage('🔄 Loading NFT preview...', 'success');
+
+            await createNFTCard(nftType, tokenId, baseUrl);
+        }
+
+        async function createNFTCard(nftType, tokenId, baseUrl) {
+            const gallery = document.getElementById('gallery');
+            const typeInfo = NFT_TYPES[nftType];
+
+            const card = document.createElement('div');
+            card.className = 'nft-card';
+            card.innerHTML = `
+                <div class="nft-header">
+                    <div class="nft-type">${typeInfo.name}</div>
+                    <div class="rarity-badge rarity-${typeInfo.rarity}">${typeInfo.rarity}</div>
+                </div>
+                <div class="nft-image">
+                    <div class="loading loading-pulse">Loading image...</div>
+                </div>
+                <div class="nft-info">
+                    <div class="info-row">
+                        <span class="info-label">Token ID</span>
+                        <span class="info-value">#${tokenId}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Category</span>
+                        <span class="info-value">${typeInfo.category}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">XP Bonus</span>
+                        <span class="info-value">+${typeInfo.xp} XP</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Rarity</span>
+                        <span class="info-value">${typeInfo.rarity.toUpperCase()}</span>
+                    </div>
+                </div>
+            `;
+
+            gallery.appendChild(card);
+
+            // Load image
+            const imageUrl = `${baseUrl}/api/nft/image/${tokenId}`;
+            const img = new Image();
+            img.onload = function() {
+                const imageContainer = card.querySelector('.nft-image');
+                imageContainer.innerHTML = `<img src="${imageUrl}" alt="NFT Badge #${tokenId}">`;
+            };
+            img.onerror = function() {
+                const imageContainer = card.querySelector('.nft-image');
+                imageContainer.innerHTML = `<div class="error">Failed to load image<br><small>${imageUrl}</small></div>`;
+            };
+            img.src = imageUrl;
+
+            // Load metadata
+            try {
+                const metadataUrl = `${baseUrl}/api/nft/metadata/${tokenId}`;
+                document.getElementById('currentEndpoint').textContent = metadataUrl;
+
+                const response = await fetch(metadataUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const metadata = await response.json();
+
+                const metadataDisplay = document.createElement('div');
+                metadataDisplay.className = 'metadata-display';
+                metadataDisplay.innerHTML = `
+                    <h3>📄 Metadata JSON</h3>
+                    <pre>${JSON.stringify(metadata, null, 2)}</pre>
+                `;
+                card.appendChild(metadataDisplay);
+
+                showMessage('✅ NFT loaded successfully!', 'success');
+            } catch (error) {
+                const errorDisplay = document.createElement('div');
+                errorDisplay.className = 'error';
+                errorDisplay.textContent = `Failed to load metadata: ${error.message}`;
+                card.appendChild(errorDisplay);
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadAllTypes() {
+            const tokenId = document.getElementById('tokenId').value;
+            const baseUrl = document.getElementById('baseUrl').value;
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            showMessage('🔄 Loading all NFT types...', 'success');
+
+            let index = 1;
+            for (const [type, info] of Object.entries(NFT_TYPES)) {
+                await createNFTCard(type, index, baseUrl);
+                index++;
+            }
+
+            showMessage(`✅ Loaded ${Object.keys(NFT_TYPES).length} NFT types!`, 'success');
+        }
+
+        // Initialize with first preview on load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🎨 NFT Preview Tool Loaded');
+            console.log('📋 Available NFT Types:', Object.keys(NFT_TYPES).length);
+        });
+    </script>
+</body>
+</html>
