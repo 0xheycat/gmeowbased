@@ -65,7 +65,10 @@ import { z } from 'zod'
 import { strictLimiter } from '@/lib/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { generateRequestId } from '@/lib/request-id'
+import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
+import { logGuildEvent } from '@/lib/guild/event-logger'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -118,21 +121,31 @@ async function getGuildData(guildId: bigint) {
   const client = getPublicClient()
   
   try {
-    const guildData = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
-      functionName: 'guilds',
+    const guildInfo = await client.readContract({
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
+      functionName: 'getGuildInfo',
       args: [guildId],
-    }) as any[]
+    })
     
-    if (!guildData || guildData.length === 0) return null
+    if (!guildInfo) return null
+    
+    // Parse tuple response: [name, leader, totalPoints, memberCount, level, requiredPoints, treasury]
+    const [name, leader, totalPoints, memberCount, level, requiredPoints, treasury] = guildInfo as [
+      string, Address, bigint, bigint, bigint, bigint, bigint
+    ]
+    
+    // Guild is active if it has a name
+    const active = name && name.length > 0
     
     return {
-      name: (guildData[0] as string) || '',
-      leader: (guildData[1] as string) || '',
-      totalPoints: (guildData[2] as bigint) || 0n,
-      memberCount: (guildData[3] as bigint) || 0n,
-      active: (guildData[4] as boolean) !== false,
+      name,
+      leader,
+      totalPoints,
+      memberCount,
+      active,
+      level,
+      treasury, // Now included in guild info
     }
   } catch (error) {
     console.error('[guild-claim] getGuildData error:', error)
@@ -144,21 +157,9 @@ async function getGuildData(guildId: bigint) {
  * Get guild treasury balance
  */
 async function getTreasuryBalance(guildId: bigint): Promise<bigint> {
-  const client = getPublicClient()
-  
-  try {
-    const balance = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
-      functionName: 'guildTreasury',
-      args: [guildId],
-    }) as bigint
-    
-    return balance || 0n
-  } catch (error) {
-    console.error('[guild-claim] getTreasuryBalance error:', error)
-    return 0n
-  }
+  // Treasury is now included in getGuildInfo(), but kept for compatibility
+  const guildData = await getGuildData(guildId)
+  return guildData?.treasury || 0n
 }
 
 /**
@@ -169,17 +170,47 @@ async function getUserGuild(address: Address): Promise<bigint> {
   
   try {
     const guildId = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
       functionName: 'guildOf',
       args: [address],
     }) as bigint
     
     return guildId || 0n
-  } catch (error) {
-    console.error('[guild-claim] getUserGuild error:', error)
+  } catch (error: any) {
+    // Contract may revert for addresses not in any guild - this is expected
+    if (error?.message?.includes('reverted') || error?.message?.includes('execution reverted')) {
+      return 0n
+    }
+    console.error('[guild-claim] getUserGuild unexpected error:', error)
     return 0n
   }
+}
+
+/**
+ * Check if address is guild leader
+ */
+async function isGuildLeader(address: Address, guildId: bigint): Promise<boolean> {
+  try {
+    const guildData = await getGuildData(guildId)
+    if (!guildData) return false
+    return guildData.leader.toLowerCase() === address.toLowerCase()
+  } catch (error) {
+    console.error('[guild-claim] isGuildLeader error:', error)
+    return false
+  }
+}
+
+/**
+ * Check if user is member of guild (includes leader fallback)
+ */
+async function isUserMemberOfGuild(address: Address, guildId: bigint): Promise<boolean> {
+  // Check 1: Normal membership via guildOf()
+  const userGuildId = await getUserGuild(address)
+  if (userGuildId === guildId) return true
+  
+  // Check 2: Guild leadership (fallback for leaders who created guilds)
+  return await isGuildLeader(address, guildId)
 }
 
 /**
@@ -220,8 +251,8 @@ function createSuccessResponse(data: any) {
 /**
  * Create error response (no sensitive data)
  */
-function createErrorResponse(message: string, status: number = 400) {
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`
+function createErrorResponse(message: string, status: number = 400, requestId?: string) {
+  const rid = requestId || generateRequestId()
   
   return NextResponse.json(
     {
@@ -235,7 +266,7 @@ function createErrorResponse(message: string, status: number = 400) {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
-        'X-Request-ID': requestId,
+        'X-Request-ID': rid,
         'X-API-Version': '1.0.0',
       },
     }
@@ -248,11 +279,15 @@ function createErrorResponse(message: string, status: number = 400) {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
   const startTime = Date.now()
+  const requestId = generateRequestId()
 
   try {
+    // Await params in Next.js 15
+    const { guildId } = await params
+    
     // IDEMPOTENCY CHECK - Prevent duplicate claim approvals
     const idempotencyKey = getIdempotencyKey(req)
     
@@ -261,7 +296,8 @@ export async function POST(
       if (!isValidIdempotencyKey(idempotencyKey)) {
         return createErrorResponse(
           'Invalid idempotency key format. Must be 36-72 characters.',
-          400
+          400,
+          requestId
         )
       }
       
@@ -300,7 +336,6 @@ export async function POST(
       )
     }
 
-    const { guildId } = params
     const guildIdNum = BigInt(guildId)
     if (guildIdNum <= 0n) {
       return createErrorResponse('Invalid guild ID', 400)
@@ -386,15 +421,29 @@ export async function POST(
         timestamp: new Date().toISOString(),
       })
 
+      // Log event to database (non-blocking)
+      logGuildEvent({
+        guild_id: guildId.toString(),
+        event_type: 'POINTS_CLAIMED',
+        actor_address: address,
+        target_address: targetAddress,
+        amount: amount,
+        metadata: {
+          treasury_balance_before: treasuryBalance.toString(),
+        },
+      }).catch((error) => {
+        console.error('[guild-claim] Failed to log event:', error)
+      })
+
       const duration = Date.now() - startTime
 
       const responseData = {
         message: `Ready to approve claim of ${amount} points for ${targetAddress}. Please sign the transaction in your wallet.`,
         contractCall: {
-          address: getContractAddress('base'),
-          abi: GM_CONTRACT_ABI,
+          address: STANDALONE_ADDRESSES.base.guild as Address,
+          abi: GUILD_ABI_JSON,
           functionName: 'claimGuildReward',
-          args: [guildIdNum, targetAddress as Address, amountBigInt],
+          args: [guildIdNum.toString(), targetAddress as Address, amountBigInt.toString()],
         },
         performance: {
           duration,
@@ -411,9 +460,9 @@ export async function POST(
       // MEMBER REQUEST FLOW
       const { address, amount, note } = validatedData as RequestBody
       
-      // Check requester is in guild
-      const userGuildId = await getUserGuild(address as Address)
-      if (userGuildId !== guildIdNum) {
+      // Check requester is in guild (includes leader fallback)
+      const isMember = await isUserMemberOfGuild(address as Address, guildIdNum)
+      if (!isMember) {
         return createErrorResponse('You are not a member of this guild', 403)
       }
 

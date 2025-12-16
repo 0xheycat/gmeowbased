@@ -319,7 +319,7 @@ export async function POST(request: NextRequest) {
     // 12. POST-PUBLISH ACTIONS (Phase 4 - Complete)
     try {
       // Send success notification to creator via notification history
-      const { saveNotification } = await import('@/lib/notification-history');
+      const { saveNotification } = await import('@/lib/notifications');
       await saveNotification({
         fid: body.creator_fid,
         category: 'quest',

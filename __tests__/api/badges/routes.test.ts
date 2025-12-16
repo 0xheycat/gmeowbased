@@ -25,6 +25,7 @@ vi.mock('@/lib/badges', () => ({
 vi.mock('@/lib/cache', () => ({
   getCached: vi.fn((namespace, key, fetchFn) => fetchFn()),
   buildUserBadgesKey: vi.fn((fid) => `user:${fid}:badges`),
+  buildUserProfileKey: vi.fn((fid) => `user:${fid}:profile`),
   invalidateCache: vi.fn(),
   invalidateCachePattern: vi.fn(),
 }))
@@ -37,6 +38,18 @@ vi.mock('@/lib/rate-limit', () => ({
   rateLimit: vi.fn(),
   getClientIp: vi.fn(),
   apiLimiter: {},
+}))
+
+vi.mock('@/lib/error-handler', () => ({
+  withErrorHandler: vi.fn((handler) => handler),
+}))
+
+vi.mock('@/lib/middleware/timing', () => ({
+  withTiming: vi.fn((handler) => handler),
+}))
+
+vi.mock('@/lib/request-id', () => ({
+  generateRequestId: vi.fn(() => 'test-request-id'),
 }))
 
 import { getUserBadges, assignBadgeToUser, getBadgeFromRegistry, updateBadgeMintStatus } from '@/lib/badges'

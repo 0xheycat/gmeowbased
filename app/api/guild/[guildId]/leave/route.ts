@@ -36,7 +36,10 @@ import { z } from 'zod'
 import { strictLimiter } from '@/lib/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { generateRequestId } from '@/lib/request-id'
+import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
+import { logGuildEvent } from '@/lib/guild/event-logger'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -80,17 +83,76 @@ async function getUserGuild(address: Address): Promise<bigint> {
   
   try {
     const guildId = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
       functionName: 'guildOf',
       args: [address],
     }) as bigint
     
     return guildId || 0n
-  } catch (error) {
-    console.error('[guild-leave] getUserGuild error:', error)
+  } catch (error: any) {
+    // Contract may revert for addresses not in any guild - this is expected
+    if (error?.message?.includes('reverted') || error?.message?.includes('execution reverted')) {
+      return 0n
+    }
+    console.error('[guild-leave] getUserGuild unexpected error:', error)
     return 0n
   }
+}
+
+/**
+ * Get guild data
+ */
+async function getGuildData(guildId: bigint) {
+  const client = getPublicClient()
+  
+  try {
+    const guildInfo = await client.readContract({
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
+      functionName: 'getGuildInfo',
+      args: [guildId],
+    }) as readonly [string, Address, bigint, bigint, boolean, bigint, bigint]
+    
+    return {
+      name: guildInfo[0],
+      leader: guildInfo[1],
+      totalPoints: guildInfo[2],
+      memberCount: guildInfo[3],
+      active: guildInfo[4],
+      level: guildInfo[5],
+      treasury: guildInfo[6],
+    }
+  } catch (error) {
+    console.error('[guild-leave] getGuildData error:', error)
+    return null
+  }
+}
+
+/**
+ * Check if address is guild leader
+ */
+async function isGuildLeader(address: Address, guildId: bigint): Promise<boolean> {
+  try {
+    const guildData = await getGuildData(guildId)
+    if (!guildData) return false
+    return guildData.leader.toLowerCase() === address.toLowerCase()
+  } catch (error) {
+    console.error('[guild-leave] isGuildLeader error:', error)
+    return false
+  }
+}
+
+/**
+ * Check if user is member of guild (includes leader fallback)
+ */
+async function isUserMemberOfGuild(address: Address, guildId: bigint): Promise<boolean> {
+  // Check 1: Normal membership via guildOf()
+  const userGuildId = await getUserGuild(address)
+  if (userGuildId === guildId) return true
+  
+  // Check 2: Guild leadership (fallback for leaders who created guilds)
+  return await isGuildLeader(address, guildId)
 }
 
 /**
@@ -149,11 +211,16 @@ function createErrorResponse(message: string, status: number = 400) {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
+  const requestId = generateRequestId()
+
   const startTime = Date.now()
 
   try {
+    // Await params for Next.js 15
+    const { guildId } = await params
+    
     // 1. RATE LIMITING
     if (!strictLimiter) {
       return createErrorResponse('Rate limiting not configured', 503)
@@ -193,7 +260,6 @@ export async function POST(
     }
 
     const { address } = bodyResult.data
-    const { guildId } = params
 
     // Validate guildId
     const guildIdNum = BigInt(guildId)
@@ -201,14 +267,10 @@ export async function POST(
       return createErrorResponse('Invalid guild ID', 400)
     }
 
-    // 3. AUTHENTICATION - Check user is in this guild
-    const userGuildId = await getUserGuild(address as Address)
+    // 3. AUTHENTICATION - Check user is in this guild (includes leader fallback)
+    const isMember = await isUserMemberOfGuild(address as Address, guildIdNum)
     
-    if (userGuildId === 0n) {
-      return createErrorResponse('You are not in any guild', 400)
-    }
-
-    if (userGuildId !== guildIdNum) {
+    if (!isMember) {
       return createErrorResponse('You are not a member of this guild', 403)
     }
 
@@ -217,6 +279,18 @@ export async function POST(
       address,
       guildId: guildId,
       timestamp: new Date().toISOString(),
+    })
+
+    // Log event to database (non-blocking)
+    logGuildEvent({
+      guild_id: guildId.toString(),
+      event_type: 'MEMBER_LEFT',
+      actor_address: address,
+      metadata: {
+        timestamp: new Date().toISOString(),
+      },
+    }).catch((error) => {
+      console.error('[guild-leave] Failed to log event:', error)
     })
 
     // 5. RETURN INSTRUCTION FOR WALLET
@@ -230,8 +304,8 @@ export async function POST(
         success: true,
         message: 'Ready to leave guild. Please sign the transaction in your wallet.',
         contractCall: {
-          address: getContractAddress('base'),
-          abi: GM_CONTRACT_ABI,
+          address: STANDALONE_ADDRESSES.base.guild as Address,
+          abi: GUILD_ABI_JSON,
           functionName: 'leaveGuild',
           args: [],
         },

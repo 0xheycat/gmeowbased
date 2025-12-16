@@ -228,7 +228,7 @@ export default function BadgeCollection({
                     const rect = e.currentTarget.getBoundingClientRect()
                     // Position card to the right and slightly below (Twitter pattern)
                     // Auto-adjust if too close to viewport edges
-                    const x = rect.right + 12 > window.innerWidth - 280
+                    const x = typeof window !== 'undefined' && rect.right + 12 > window.innerWidth - 280
                       ? rect.left - 280 - 12 // Show on left if no space on right
                       : rect.right + 12
                     const y = rect.top

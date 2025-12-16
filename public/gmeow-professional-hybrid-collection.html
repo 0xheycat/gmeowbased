@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gmeow Professional Hybrid Collection - 15 Premium Loaders</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+  background: linear-gradient(135deg, #0a0e1a 0%, #1e293b 50%, #0f172a 100%); 
+  color: #fff; 
+  padding: 40px 20px; 
+  line-height: 1.6; 
+  min-height: 100vh;
+}
+.header { 
+  text-align: center; 
+  margin-bottom: 60px; 
+  padding: 40px 20px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(236, 72, 153, 0.1));
+  border-radius: 20px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+.header h1 { 
+  font-size: 3.5rem; 
+  background: linear-gradient(135deg, #667eea 0%, #ec4899 50%, #fbbf24 100%); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+  background-clip: text;
+  margin-bottom: 15px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.header p { 
+  color: #cbd5e1; 
+  font-size: 1.3rem; 
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.header .subtitle { 
+  color: #64748b; 
+  font-size: 1rem; 
+  font-style: italic; 
+}
+.grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+  gap: 35px; 
+  max-width: 1600px; 
+  margin: 0 auto; 
+}
+.card { 
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9)); 
+  border-radius: 20px; 
+  padding: 35px; 
+  border: 2px solid rgba(102, 126, 234, 0.2); 
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.card:hover::before { opacity: 1; }
+.card:hover { 
+  border-color: #667eea; 
+  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4); 
+  transform: translateY(-8px); 
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.card-title { 
+  font-size: 1.6rem; 
+  color: #fff; 
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.card-badge {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.card-category { 
+  color: #94a3b8; 
+  font-size: 0.95rem; 
+  margin-bottom: 25px; 
+  text-transform: uppercase; 
+  letter-spacing: 1.5px; 
+  font-weight: 600;
+}
+.loader-display { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 60px 20px; 
+  background: linear-gradient(135deg, #0f172a, #1e293b); 
+  border-radius: 16px; 
+  min-height: 180px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+.loader-display::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(102, 126, 234, 0.05), transparent);
+}
+
+/* Loader 1: Professional Cat Paw */
+.l1 { width: 80px; height: 80px; position: relative; z-index: 1; }
+.l1 .paw { width: 100%; height: 100%; position: relative; animation: pawPulse 1.8s ease-in-out infinite; }
+.l1 .pad { position: absolute; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; box-shadow: 0 0 20px rgba(102, 126, 234, 0.6); }
+.l1 .pad-main { width: 35px; height: 40px; bottom: 10px; left: 50%; margin-left: -17.5px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; }
+.l1 .pad-toe { width: 15px; height: 18px; }
+.l1 .pad-toe:nth-child(2) { top: 5px; left: 12px; animation-delay: -0.2s; }
+.l1 .pad-toe:nth-child(3) { top: 0; left: 33px; animation-delay: -0.4s; }
+.l1 .pad-toe:nth-child(4) { top: 5px; right: 12px; animation-delay: -0.6s; }
+@keyframes pawPulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.15); filter: brightness(1.4); } }
+
+/* Loader 2: Cyber Cat Eye */
+.l2 { width: 100px; height: 60px; position: relative; z-index: 1; }
+.l2 .eye { width: 100%; height: 100%; position: relative; border-radius: 50% / 40%; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border: 3px solid #667eea; animation: eyeBlink 3s ease-in-out infinite; overflow: hidden; }
+.l2 .iris { position: absolute; width: 35%; height: 70%; top: 15%; left: 32.5%; background: radial-gradient(circle at 35% 35%, #0ff, #667eea, #764ba2); border-radius: 50%; animation: irisMove 4s ease-in-out infinite; box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5); }
+.l2 .pupil { position: absolute; width: 30%; height: 50%; top: 25%; left: 35%; background: #000; border-radius: 50%; animation: pupilDilate 2s ease-in-out infinite; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); }
+.l2 .glint { position: absolute; width: 8px; height: 8px; top: 30%; left: 40%; background: #fff; border-radius: 50%; animation: glintShine 2s ease-in-out infinite; }
+@keyframes eyeBlink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes irisMove { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
+@keyframes pupilDilate { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.7); } }
+@keyframes glintShine { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
+
+/* Loader 3: Punk Spinner */
+.l3 { width: 80px; height: 80px; position: relative; z-index: 1; }
+.l3 .punk-ring { position: absolute; width: 100%; height: 100%; border: 4px solid transparent; border-top-color: #ec4899; border-right-color: #f59e0b; border-radius: 50%; animation: punkSpin 1.2s linear infinite; box-shadow: 0 0 25px rgba(236, 72, 153, 0.6); }
+.l3 .punk-ring:nth-child(2) { width: 70%; height: 70%; top: 15%; left: 15%; border-top-color: #fbbf24; border-right-color: #0ff; animation-duration: 1s; animation-direction: reverse; }
+.l3 .punk-ring:nth-child(3) { width: 40%; height: 40%; top: 30%; left: 30%; border-top-color: #0ff; border-right-color: #ec4899; animation-duration: 0.8s; }
+@keyframes punkSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Loader 4: Gaming HUD Cat */
+.l4 { width: 90px; height: 90px; position: relative; z-index: 1; }
+.l4 .hud-frame { width: 100%; height: 100%; position: relative; border: 3px solid #22c55e; clip-path: polygon(0% 15%, 15% 15%, 15% 0%, 85% 0%, 85% 15%, 100% 15%, 100% 85%, 85% 85%, 85% 100%, 15% 100%, 15% 85%, 0% 85%); animation: hudScan 2s ease-in-out infinite; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), transparent); }
+.l4 .cat-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.5rem; animation: catBounce 1s ease-in-out infinite; filter: drop-shadow(0 0 15px #22c55e); }
+.l4 .scan-line { position: absolute; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, #22c55e, transparent); animation: scanMove 2s linear infinite; box-shadow: 0 0 10px #22c55e; }
+@keyframes hudScan { 0%, 100% { border-color: #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.6); } 50% { border-color: #0ff; box-shadow: 0 0 30px rgba(0, 255, 255, 0.8); } }
+@keyframes catBounce { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -55%) scale(1.1); } }
+@keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+
+/* Loader 5: Professional Orbit */
+.l5 { width: 90px; height: 90px; position: relative; z-index: 1; }
+.l5 .orbit { position: absolute; width: 100%; height: 100%; border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 50%; animation: orbitRotate 3s linear infinite; }
+.l5 .planet { position: absolute; width: 14px; height: 14px; background: radial-gradient(circle at 30% 30%, #667eea, #764ba2); border-radius: 50%; top: -7px; left: 50%; margin-left: -7px; box-shadow: 0 0 20px #667eea; }
+.l5 .orbit:nth-child(2) { width: 70%; height: 70%; top: 15%; left: 15%; animation-duration: 2.3s; animation-direction: reverse; border-color: rgba(236, 72, 153, 0.3); }
+.l5 .orbit:nth-child(2) .planet { background: radial-gradient(circle at 30% 30%, #ec4899, #f43f5e); box-shadow: 0 0 20px #ec4899; }
+.l5 .orbit:nth-child(3) { width: 40%; height: 40%; top: 30%; left: 30%; animation-duration: 1.8s; border-color: rgba(251, 191, 36, 0.3); }
+.l5 .orbit:nth-child(3) .planet { background: radial-gradient(circle at 30% 30%, #fbbf24, #f59e0b); box-shadow: 0 0 20px #fbbf24; }
+@keyframes orbitRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Loader 6: Neon Punk Wave */
+.l6 { width: 100px; height: 70px; position: relative; display: flex; align-items: flex-end; gap: 5px; z-index: 1; }
+.l6 .wave-bar { width: 10px; background: linear-gradient(180deg, #0ff, #ec4899); border-radius: 5px; animation: waveRise 1.2s ease-in-out infinite; box-shadow: 0 0 15px rgba(0, 255, 255, 0.8); }
+.l6 .wave-bar:nth-child(1) { animation-delay: 0s; }
+.l6 .wave-bar:nth-child(2) { animation-delay: -0.1s; }
+.l6 .wave-bar:nth-child(3) { animation-delay: -0.2s; }
+.l6 .wave-bar:nth-child(4) { animation-delay: -0.3s; }
+.l6 .wave-bar:nth-child(5) { animation-delay: -0.4s; }
+.l6 .wave-bar:nth-child(6) { animation-delay: -0.5s; }
+.l6 .wave-bar:nth-child(7) { animation-delay: -0.6s; }
+@keyframes waveRise { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+
+/* Loader 7: Cat Ears Radar */
+.l7 { width: 80px; height: 80px; position: relative; z-index: 1; }
+.l7 .radar-base { width: 100%; height: 100%; border: 3px solid rgba(102, 126, 234, 0.3); border-radius: 50%; position: relative; animation: radarPulse 2s ease-in-out infinite; }
+.l7 .ear { position: absolute; width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 30px solid #667eea; filter: drop-shadow(0 0 15px #667eea); animation: earTwitch 2s ease-in-out infinite; }
+.l7 .ear-left { top: -25px; left: 10px; transform: rotate(-15deg); }
+.l7 .ear-right { top: -25px; right: 10px; transform: rotate(15deg); animation-delay: -0.5s; }
+.l7 .sweep { position: absolute; width: 2px; height: 50%; background: linear-gradient(180deg, #667eea, transparent); top: 50%; left: 50%; margin-left: -1px; transform-origin: 50% 0%; animation: radarSweep 2s linear infinite; box-shadow: 0 0 10px #667eea; }
+@keyframes radarPulse { 0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); } 50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8); } }
+@keyframes earTwitch { 0%, 100% { transform: rotate(-15deg); } 50% { transform: rotate(-25deg); } }
+.l7 .ear-right { animation-name: earTwitchRight; }
+@keyframes earTwitchRight { 0%, 100% { transform: rotate(15deg); } 50% { transform: rotate(25deg); } }
+@keyframes radarSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Loader 8: Professional Hexagon Matrix */
+.l8 { width: 85px; height: 85px; position: relative; z-index: 1; }
+.l8 .hexagon { position: absolute; width: 100%; height: 100%; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); border: 3px solid #8b5cf6; animation: hexRotate 3s linear infinite; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), transparent); box-shadow: 0 0 25px rgba(139, 92, 246, 0.4); }
+.l8 .hexagon:nth-child(2) { width: 70%; height: 70%; top: 15%; left: 15%; border-color: #a78bfa; animation-duration: 2.2s; animation-direction: reverse; }
+.l8 .hexagon:nth-child(3) { width: 40%; height: 40%; top: 30%; left: 30%; border-color: #c4b5fd; animation-duration: 1.7s; }
+@keyframes hexRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Loader 9: Gaming Cat Badge */
+.l9 { width: 80px; height: 80px; position: relative; z-index: 1; }
+.l9 .badge { width: 100%; height: 100%; position: relative; background: linear-gradient(135deg, #f59e0b, #fbbf24); clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); animation: badgeShine 2s ease-in-out infinite; box-shadow: 0 0 30px rgba(251, 191, 36, 0.6); }
+.l9 .cat-face { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; animation: faceWiggle 1s ease-in-out infinite; }
+@keyframes badgeShine { 0%, 100% { filter: brightness(1) drop-shadow(0 0 20px #fbbf24); } 50% { filter: brightness(1.4) drop-shadow(0 0 40px #fbbf24); } }
+@keyframes faceWiggle { 0%, 100% { transform: translate(-50%, -50%) rotate(0deg); } 25% { transform: translate(-50%, -50%) rotate(-5deg); } 75% { transform: translate(-50%, -50%) rotate(5deg); } }
+
+/* Loader 10: Punk Glitch */
+.l10 { width: 100px; height: 50px; position: relative; z-index: 1; }
+.l10 .glitch-box { width: 100%; height: 100%; position: relative; background: linear-gradient(135deg, #ec4899, #f43f5e); animation: glitchShake 0.3s infinite; border-radius: 8px; overflow: hidden; }
+.l10 .glitch-box::before, .l10 .glitch-box::after { content: ''; position: absolute; width: 100%; height: 100%; background: inherit; }
+.l10 .glitch-box::before { animation: glitchTop 0.4s infinite; clip-path: polygon(0 0, 100% 0, 100% 40%, 0 40%); }
+.l10 .glitch-box::after { animation: glitchBottom 0.5s infinite; clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%); }
+.l10 .text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2rem; font-weight: 800; color: #fff; z-index: 1; letter-spacing: 2px; text-shadow: 2px 2px 0 #0ff, -2px -2px 0 #f0f; }
+@keyframes glitchShake { 0%, 100% { transform: translate(0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } }
+@keyframes glitchTop { 0%, 100% { transform: translate(0); } 50% { transform: translate(-5px, 0); } }
+@keyframes glitchBottom { 0%, 100% { transform: translate(0); } 50% { transform: translate(5px, 0); } }
+
+/* Loader 11: Professional Cat Tail */
+.l11 { width: 80px; height: 80px; position: relative; z-index: 1; }
+.l11 .tail { position: absolute; width: 50%; height: 50%; border: 4px solid #667eea; border-top: none; border-right: none; border-radius: 0 0 0 100%; animation: tailWag 1.5s ease-in-out infinite; transform-origin: 100% 0%; left: 25%; top: 25%; box-shadow: -5px 5px 20px rgba(102, 126, 234, 0.6); }
+.l11 .tail::after { content: ''; position: absolute; width: 15px; height: 15px; background: #667eea; border-radius: 50%; bottom: -7.5px; left: -7.5px; box-shadow: 0 0 15px #667eea; animation: tailTipGlow 1.5s ease-in-out infinite; }
+@keyframes tailWag { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(45deg); } }
+@keyframes tailTipGlow { 0%, 100% { box-shadow: 0 0 15px #667eea; } 50% { box-shadow: 0 0 30px #667eea, 0 0 45px #667eea; } }
+
+/* Loader 12: Cyber Gaming Grid */
+.l12 { width: 90px; height: 90px; position: relative; z-index: 1; }
+.l12 .grid-cell { position: absolute; width: 25px; height: 25px; border: 2px solid #0ff; background: rgba(0, 255, 255, 0.1); animation: cellPulse 2s ease-in-out infinite; }
+.l12 .grid-cell:nth-child(1) { top: 0; left: 0; animation-delay: 0s; }
+.l12 .grid-cell:nth-child(2) { top: 0; left: 32px; animation-delay: -0.2s; }
+.l12 .grid-cell:nth-child(3) { top: 0; right: 0; animation-delay: -0.4s; }
+.l12 .grid-cell:nth-child(4) { top: 32px; left: 0; animation-delay: -0.6s; }
+.l12 .grid-cell:nth-child(5) { top: 32px; left: 32px; animation-delay: -0.8s; }
+.l12 .grid-cell:nth-child(6) { top: 32px; right: 0; animation-delay: -1s; }
+.l12 .grid-cell:nth-child(7) { bottom: 0; left: 0; animation-delay: -1.2s; }
+.l12 .grid-cell:nth-child(8) { bottom: 0; left: 32px; animation-delay: -1.4s; }
+.l12 .grid-cell:nth-child(9) { bottom: 0; right: 0; animation-delay: -1.6s; }
+@keyframes cellPulse { 0%, 100% { transform: scale(0.8); opacity: 0.4; box-shadow: 0 0 0 #0ff; } 50% { transform: scale(1); opacity: 1; box-shadow: 0 0 20px #0ff; } }
+
+/* Loader 13: Punk Cat Whiskers */
+.l13 { width: 90px; height: 70px; position: relative; z-index: 1; }
+.l13 .whisker { position: absolute; height: 2px; background: linear-gradient(90deg, transparent, #ec4899, transparent); animation: whiskerTwitch 1.5s ease-in-out infinite; box-shadow: 0 0 10px #ec4899; transform-origin: center; }
+.l13 .whisker:nth-child(1) { width: 40%; top: 20%; left: 0; animation-delay: 0s; }
+.l13 .whisker:nth-child(2) { width: 35%; top: 35%; left: 0; animation-delay: -0.3s; }
+.l13 .whisker:nth-child(3) { width: 40%; top: 50%; left: 0; animation-delay: -0.6s; }
+.l13 .whisker:nth-child(4) { width: 40%; top: 20%; right: 0; animation-delay: -0.15s; }
+.l13 .whisker:nth-child(5) { width: 35%; top: 35%; right: 0; animation-delay: -0.45s; }
+.l13 .whisker:nth-child(6) { width: 40%; top: 50%; right: 0; animation-delay: -0.75s; }
+.l13 .nose { position: absolute; width: 12px; height: 10px; background: #ec4899; top: 35%; left: 50%; margin-left: -6px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); box-shadow: 0 0 15px #ec4899; animation: noseWiggle 1.5s ease-in-out infinite; }
+@keyframes whiskerTwitch { 0%, 100% { transform: scaleX(1); opacity: 0.8; } 50% { transform: scaleX(1.2); opacity: 1; } }
+@keyframes noseWiggle { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
+/* Loader 14: Professional Progress Ring */
+.l14 { width: 85px; height: 85px; position: relative; z-index: 1; }
+.l14 .progress-ring { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, #667eea 0%, #764ba2 50%, #ec4899 100%, transparent 100%); animation: progressFill 2s linear infinite; position: relative; }
+.l14 .progress-ring::before { content: ''; position: absolute; inset: 12px; background: #0f172a; border-radius: 50%; }
+.l14 .progress-ring::after { content: 'GMEOW'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.7rem; font-weight: 800; color: #667eea; letter-spacing: 1px; text-shadow: 0 0 10px #667eea; z-index: 1; }
+@keyframes progressFill { 0% { background: conic-gradient(from 0deg, #667eea 0%, transparent 0%); } 100% { background: conic-gradient(from 0deg, #667eea 0%, #764ba2 50%, #ec4899 100%, transparent 100%); transform: rotate(360deg); } }
+
+/* Loader 15: Ultimate Hybrid Cat Core */
+.l15 { width: 90px; height: 90px; position: relative; z-index: 1; }
+.l15 .core { position: absolute; width: 30px; height: 30px; top: 50%; left: 50%; margin: -15px 0 0 -15px; background: radial-gradient(circle, #fff, #667eea); border-radius: 50%; box-shadow: 0 0 30px #667eea, 0 0 60px #667eea, 0 0 90px #667eea; animation: corePulse 2s ease-in-out infinite; }
+.l15 .ring { position: absolute; width: 100%; height: 100%; border: 3px solid transparent; border-top-color: #667eea; border-right-color: #ec4899; border-radius: 50%; animation: ringRotate 1.5s linear infinite; }
+.l15 .ring:nth-child(2) { width: 75%; height: 75%; top: 12.5%; left: 12.5%; border-top-color: #fbbf24; border-right-color: #0ff; animation-duration: 1.2s; animation-direction: reverse; }
+.l15 .cat-particle { position: absolute; width: 8px; height: 8px; background: #ec4899; border-radius: 50%; animation: particleOrbit 3s linear infinite; box-shadow: 0 0 10px #ec4899; }
+.l15 .cat-particle:nth-child(4) { animation-delay: 0s; }
+.l15 .cat-particle:nth-child(5) { animation-delay: -1s; }
+.l15 .cat-particle:nth-child(6) { animation-delay: -2s; }
+@keyframes corePulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 30px #667eea; } 50% { transform: scale(1.2); box-shadow: 0 0 50px #667eea, 0 0 80px #667eea; } }
+@keyframes ringRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes particleOrbit { 0% { top: 0; left: 50%; margin-left: -4px; } 25% { top: 50%; right: 0; margin-top: -4px; margin-right: -4px; left: auto; } 50% { bottom: 0; left: 50%; margin-left: -4px; top: auto; right: auto; } 75% { top: 50%; left: 0; margin-top: -4px; margin-left: -4px; bottom: auto; } 100% { top: 0; left: 50%; margin-left: -4px; } }
+
+.footer {
+  text-align: center;
+  margin-top: 80px;
+  padding: 50px 30px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+  border-radius: 20px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.footer h2 {
+  color: #667eea;
+  margin-bottom: 25px;
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.footer p {
+  color: #cbd5e1;
+  font-size: 1.2rem;
+  line-height: 2;
+  margin-bottom: 20px;
+}
+.footer .stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 25px;
+  margin-top: 40px;
+}
+.footer .stat-card {
+  padding: 25px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(236, 72, 153, 0.1));
+  border-radius: 12px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+.footer .stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+.footer .stat-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+.footer .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #667eea;
+  margin-bottom: 5px;
+}
+.footer .stat-label {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+  .header h1 { font-size: 2.5rem; }
+  .footer h2 { font-size: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🎮 Gmeow Professional Hybrid Collection 🐱</h1>
+<p>15 Premium Loaders • Gaming × Cat × Punk × Professional</p>
+<p class="subtitle">Next-gen loading experiences crafted for the Gmeow ecosystem</p>
+</div>
+
+<div class="grid">
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Professional Cat Paw</div>
+<div class="card-badge">Premium</div>
+</div>
+<div class="card-category">🐾 Signature • Brand • Elegant</div>
+<div class="loader-display">
+<div class="l1">
+<div class="paw">
+<div class="pad pad-main"></div>
+<div class="pad pad-toe"></div>
+<div class="pad pad-toe"></div>
+<div class="pad pad-toe"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Cyber Cat Eye</div>
+<div class="card-badge">Futuristic</div>
+</div>
+<div class="card-category">👁️ Cyberpunk • Watching • AI</div>
+<div class="loader-display">
+<div class="l2">
+<div class="eye">
+<div class="iris">
+<div class="pupil"></div>
+<div class="glint"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Punk Spinner</div>
+<div class="card-badge">Rebel</div>
+</div>
+<div class="card-category">⚡ Punk • Neon • Electric</div>
+<div class="loader-display">
+<div class="l3">
+<div class="punk-ring"></div>
+<div class="punk-ring"></div>
+<div class="punk-ring"></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Gaming HUD Cat</div>
+<div class="card-badge">Gaming</div>
+</div>
+<div class="card-category">🎯 HUD • Tactical • Scan</div>
+<div class="loader-display">
+<div class="l4">
+<div class="hud-frame">
+<div class="cat-icon">🐱</div>
+<div class="scan-line"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Professional Orbit</div>
+<div class="card-badge">Corporate</div>
+</div>
+<div class="card-category">🌌 Enterprise • Elegant • Smooth</div>
+<div class="loader-display">
+<div class="l5">
+<div class="orbit"><div class="planet"></div></div>
+<div class="orbit"><div class="planet"></div></div>
+<div class="orbit"><div class="planet"></div></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Neon Punk Wave</div>
+<div class="card-badge">Cyberpunk</div>
+</div>
+<div class="card-category">🎵 Audio • Neon • Vibrant</div>
+<div class="loader-display">
+<div class="l6">
+<div class="wave-bar"></div>
+<div class="wave-bar"></div>
+<div class="wave-bar"></div>
+<div class="wave-bar"></div>
+<div class="wave-bar"></div>
+<div class="wave-bar"></div>
+<div class="wave-bar"></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Cat Ears Radar</div>
+<div class="card-badge">Hybrid</div>
+</div>
+<div class="card-category">📡 Detection • Cute • Tech</div>
+<div class="loader-display">
+<div class="l7">
+<div class="radar-base">
+<div class="ear ear-left"></div>
+<div class="ear ear-right"></div>
+<div class="sweep"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Professional Hexagon Matrix</div>
+<div class="card-badge">Premium</div>
+</div>
+<div class="card-category">⬡ Geometric • Modern • Tech</div>
+<div class="loader-display">
+<div class="l8">
+<div class="hexagon"></div>
+<div class="hexagon"></div>
+<div class="hexagon"></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Gaming Cat Badge</div>
+<div class="card-badge">Achievement</div>
+</div>
+<div class="card-category">⭐ Reward • Trophy • Victory</div>
+<div class="loader-display">
+<div class="l9">
+<div class="badge">
+<div class="cat-face">😸</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Punk Glitch</div>
+<div class="card-badge">Cyberpunk</div>
+</div>
+<div class="card-category">⚠️ Corrupted • Digital • Error</div>
+<div class="loader-display">
+<div class="l10">
+<div class="glitch-box">
+<div class="text">GMEOW</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Professional Cat Tail</div>
+<div class="card-badge">Elegant</div>
+</div>
+<div class="card-category">🎀 Graceful • Smooth • Playful</div>
+<div class="loader-display">
+<div class="l11">
+<div class="tail"></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Cyber Gaming Grid</div>
+<div class="card-badge">Gaming</div>
+</div>
+<div class="card-category">🔲 Matrix • Grid • Digital</div>
+<div class="loader-display">
+<div class="l12">
+<div class="grid-cell"></div>
+<div class="grid-cell"></div>
+<div class="grid-cell"></div>
+<div class="grid-cell"></div>
+<div class="grid-cell"></div>
+<div class="grid-cell"></div>
+<div class="grid-cell"></div>
+<div class="grid-cell"></div>
+<div class="grid-cell"></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Punk Cat Whiskers</div>
+<div class="card-badge">Rebel</div>
+</div>
+<div class="card-category">😺 Cute • Punk • Animated</div>
+<div class="loader-display">
+<div class="l13">
+<div class="whisker"></div>
+<div class="whisker"></div>
+<div class="whisker"></div>
+<div class="whisker"></div>
+<div class="whisker"></div>
+<div class="whisker"></div>
+<div class="nose"></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Professional Progress Ring</div>
+<div class="card-badge">Premium</div>
+</div>
+<div class="card-category">📊 Progress • Business • Clean</div>
+<div class="loader-display">
+<div class="l14">
+<div class="progress-ring"></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<div class="card-title">Ultimate Hybrid Cat Core</div>
+<div class="card-badge">Ultimate</div>
+</div>
+<div class="card-category">💎 All-in-One • Premium • Power</div>
+<div class="loader-display">
+<div class="l15">
+<div class="core"></div>
+<div class="ring"></div>
+<div class="ring"></div>
+<div class="cat-particle"></div>
+<div class="cat-particle"></div>
+<div class="cat-particle"></div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="footer">
+<h2>🎨 Professional Hybrid Collection Complete! 🎮</h2>
+<p>
+<strong style="color: #fff; font-size: 1.3rem;">15 premium loaders</strong> that perfectly blend:<br>
+Professional elegance × Gaming excitement × Cat charm × Punk rebellion
+</p>
+<div class="stats">
+<div class="stat-card">
+<div class="stat-icon">🐱</div>
+<div class="stat-value">100%</div>
+<div class="stat-label">Cat Themed</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon">🎮</div>
+<div class="stat-value">15</div>
+<div class="stat-label">Unique Designs</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon">⚡</div>
+<div class="stat-value">Pure CSS</div>
+<div class="stat-label">Technology</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon">✨</div>
+<div class="stat-value">Premium</div>
+<div class="stat-label">Quality</div>
+</div>
+</div>
+<p style="color: #64748b; font-size: 1rem; margin-top: 40px; font-style: italic;">
+Perfect for the Gmeow brand ecosystem • Ready for production • Optimized for performance 🚀
+</p>
+</div>
+
+</body>
+</html>

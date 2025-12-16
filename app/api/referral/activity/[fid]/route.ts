@@ -29,6 +29,7 @@ import { z } from 'zod'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -59,9 +60,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { fid: string } }
 ) {
+  const requestId = generateRequestId()
   const startTime = Date.now()
   const clientIp = getClientIp(request)
-  const requestId = crypto.randomUUID()
 
   try {
     // ===== SECURITY LAYER 1: RATE LIMITING (60 req/hour) =====

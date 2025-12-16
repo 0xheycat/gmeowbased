@@ -28,63 +28,71 @@ import {
 
 /**
  * STEP 3: Add idempotency check at start of POST handler
+ * 
+ * Example implementation:
  */
-async function POST(req: NextRequest) {
+export async function examplePOSTHandler(req: any) {
   try {
     // IDEMPOTENCY CHECK - Prevent duplicate operations
     const idempotencyKey = getIdempotencyKey(req)
     
     if (idempotencyKey) {
-      // Validate key format
-      if (!isValidIdempotencyKey(idempotencyKey)) {
-        return createErrorResponse(
-          'Invalid idempotency key format. Must be 36-72 characters.',
-          400
-        )
+      try {
+        // Validate key format
+        if (!isValidIdempotencyKey(idempotencyKey)) {
+          return {
+            error: 'Invalid idempotency key format. Must be 36-72 characters.',
+            status: 400
+          }
+        }
+        
+        // Check if operation already completed
+        const cachedResult = await checkIdempotency(idempotencyKey)
+        if (cachedResult.exists) {
+          console.log('[api-name] Returning cached response for idempotency key:', idempotencyKey)
+          return returnCachedResponse(cachedResult)
+        }
+      } catch (cacheError) {
+        console.error('Cache check error:', cacheError)
       }
-      
-      // Check if operation already completed
-      const cachedResult = await checkIdempotency(idempotencyKey)
-      if (cachedResult.exists) {
-        console.log('[api-name] Returning cached response for idempotency key:', idempotencyKey)
-        return returnCachedResponse(cachedResult)
-      }
-    } catch (cacheError) {
-      console.error('Cache check error:', cacheError)
     }
     
     // ... rest of handler
+    
+    /**
+     * STEP 4: Cache success response
+     */
+    const responseData = {
+      // ... response data
+      success: true
+    }
+
+    // Store result with idempotency key if provided
+    if (idempotencyKey) {
+      await storeIdempotency(idempotencyKey, responseData, 200)
+    }
+
+    return { data: responseData, status: 200 }
+    
+  } catch (error) {
+    console.error('Handler error:', error)
+    
+    /**
+     * STEP 5: Cache critical error responses (optional but recommended)
+     */
+    const criticalError = error as Error
+    const errorResponse = {
+      success: false,
+      message: criticalError.message || 'Error message',
+      timestamp: Date.now(),
+    }
+    
+    // Cache error response with idempotency key
+    const idempotencyKey = getIdempotencyKey(req)
+    if (idempotencyKey) {
+      await storeIdempotency(idempotencyKey, errorResponse, 403)
+    }
+    
+    return { error: errorResponse.message, status: 403 }
   }
-}
-
-/**
- * STEP 4: Cache success response
- */
-const responseData = {
-  // ... response data
-}
-
-// Store result with idempotency key if provided
-if (idempotencyKey) {
-  await storeIdempotency(idempotencyKey, responseData, 200)
-}
-
-return createSuccessResponse(responseData)
-
-/**
- * STEP 5: Cache critical error responses (optional but recommended)
- */
-if (criticalError) {
-  const errorResponse = {
-    success: false,
-    message: 'Error message',
-    timestamp: Date.now(),
-  }
-  
-  // Cache error response with idempotency key
-  if (idempotencyKey) {
-    await storeIdempotency(idempotencyKey, errorResponse, 403)
-  }
-  
-  return createErrorResponse(errorResponse.message, 403)
 }

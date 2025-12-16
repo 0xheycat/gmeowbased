@@ -4,6 +4,8 @@
  * Tracks user behavior, completion rates, and drop-off points
  */
 
+import { trackError } from '@/lib/notifications/error-tracking'
+
 export type AnalyticsEvent =
   | 'wizard_started'
   | 'wizard_completed'
@@ -140,7 +142,7 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
       localStorage.setItem(key, JSON.stringify(payload))
     }
   } catch (error) {
-    console.error('[Analytics] Failed to track event:', error)
+    trackError('analytics_track_event_failed', error, { function: 'track', event, properties })
   }
 }
 

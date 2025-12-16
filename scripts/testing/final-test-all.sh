@@ -1,6 +1,18 @@
 #!/bin/bash
 echo "=== FINAL PHASE 1F TESTING ==="
 echo ""
+
+# Auto-detect Next.js port
+PORT=3002
+for p in 3002 3001 3000 3003; do
+  if curl -s "http://localhost:$p/api/frame?type=gm&fid=18139" 2>/dev/null | grep -q "fc:frame"; then
+    PORT=$p
+    break
+  fi
+done
+
+echo "Using port: $PORT"
+echo ""
 echo "1. Testing all 9 frame types on localhost..."
 
 frames=(
@@ -18,7 +30,7 @@ frames=(
 for frame in "${frames[@]}"; do
   type=$(echo $frame | cut -d'&' -f1)
   echo -n "   Testing $type... "
-  response=$(curl -s "http://localhost:3000/api/frame?type=$frame")
+  response=$(curl -s "http://localhost:$PORT/api/frame?type=$frame")
   if echo "$response" | grep -q "fc:frame"; then
     echo "✅"
   else
@@ -28,7 +40,7 @@ done
 
 echo ""
 echo "2. Checking CORS headers..."
-cors=$(curl -s -I "http://localhost:3000/api/frame?type=gm&fid=18139" | grep -i "access-control-allow-methods")
+cors=$(curl -s -I "http://localhost:$PORT/api/frame?type=gm&fid=18139" | grep -i "access-control-allow-methods")
 if echo "$cors" | grep -q "GET, OPTIONS"; then
   echo "   ✅ CORS: GET, OPTIONS (POST removed)"
 else

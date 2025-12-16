@@ -2,8 +2,8 @@
  * Guild Contract Wrapper
  * 
  * Purpose: Type-safe wrapper for GuildModule contract functions
- * Contract: GmeowGuild (standalone module)
- * Address: 0x967457be45facE07c22c0374dAfBeF7b2f7cd059 (Base)
+ * Contract: GmeowGuildStandalone (standalone module)
+ * Address: 0x6754e71fFd49Fb9C33C19dA1Aa6596155e53C8A3 (Base)
  * 
  * Functions from GuildModule.sol:
  * - createGuild(string name) - Create guild (100 pt cost, auto "Guild Leader" badge)
@@ -85,22 +85,31 @@ const publicClient = createPublicClient({
  */
 export async function getGuild(guildId: bigint): Promise<Guild | null> {
   try {
-    const guild = await publicClient.readContract({
+    const result = await publicClient.readContract({
       address: getGuildAddress('base'),
       abi: getGuildABI(),
       functionName: 'getGuildInfo',
       args: [guildId],
     }) as any
     
-    if (!guild || !guild.active) return null
+    // getGuildInfo returns: (name, leader, totalPoints, memberCount, active, level, treasuryPoints)
+    if (!result) return null
+    
+    // Handle both tuple array format and object format
+    const [name, leader, totalPoints, memberCount, active, level] = Array.isArray(result) 
+      ? result 
+      : [result.name, result.leader, result.totalPoints, result.memberCount, result.active, result.level]
+    
+    // Return null if guild doesn't exist (empty name) or is inactive
+    if (!name || !active) return null
     
     return {
-      name: guild.name,
-      leader: guild.leader as Address,
-      totalPoints: BigInt(guild.totalPoints || 0),
-      memberCount: BigInt(guild.memberCount || 0),
-      active: guild.active,
-      level: Number(guild.level || 0),
+      name,
+      leader: leader as Address,
+      totalPoints: BigInt(totalPoints || 0),
+      memberCount: BigInt(memberCount || 0),
+      active,
+      level: Number(level || 0),
     }
   } catch (error) {
     console.error('[guild-contract] getGuild error:', error)
@@ -157,7 +166,7 @@ export async function isGuildOfficer(guildId: bigint, userAddress: Address): Pro
     const isOfficer = await publicClient.readContract({
       address: getGuildAddress('base'),
       abi: getGuildABI(),
-      functionName: 'guildOfficers',
+      functionName: 'guildOfficers', // Correct: view function checks officer status
       args: [guildId, userAddress],
     }) as boolean
     

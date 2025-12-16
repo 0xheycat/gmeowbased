@@ -2,11 +2,9 @@
  * Referral Contract Wrapper
  * 
  * Purpose: Type-safe wrapper for ReferralModule contract functions
- * Contract: GmeowCore (inherits ReferralModule)
- * Address: 0xA3A5f38F536323d45d7445a04d26EfbC8E549962 (Base)
- * 
- * NOTE: ReferralModule functions are NOT in current GmeowCore.abi.json
- * Action required: Regenerate ABI from GmeowCoreStandalone.sol contract source
+ * Contract: GmeowReferralStandalone
+ * Address: 0x9E7c32C1fB3a2c08e973185181512a442b90Ba44 (Base - VERIFIED)
+ * Previous: 0x3FBd8B03ad8Ac22B73Baa7b152323739f2070e94 (deprecated proxy)
  * 
  * Functions from ReferralModule.sol:
  * - registerReferralCode(string code) - Register custom referral code (3-32 chars)
@@ -24,13 +22,15 @@
  * - Bronze: 1 referral
  * - Silver: 5 referrals  
  * - Gold: 10 referrals
+ * 
+ * @updated December 11, 2025 - Migrated to verified standalone contract
  */
 
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
 import {
-  getCoreAddress,
-  getCoreABI,
+  getReferralAddress,
+  getReferralABI,
   createRegisterReferralCodeTx,
   createSetReferrerTx,
   type GMChainKey,
@@ -74,8 +74,8 @@ const publicClient = createPublicClient({
 export async function getReferralCode(userAddress: Address): Promise<string | null> {
   try {
     const code = await publicClient.readContract({
-      address: getCoreAddress('base'),
-      abi: getCoreABI(),
+      address: getReferralAddress('base'),
+      abi: getReferralABI(),
       functionName: 'referralCodeOf',
       args: [userAddress],
     }) as string
@@ -92,11 +92,11 @@ export async function getReferralCode(userAddress: Address): Promise<string | nu
  * @param code Referral code
  * @returns Owner address or null if code doesn't exist
  */
-export async function getReferralCodeOwner(code: string): Promise<Address | null> {
+export async function getReferralOwner(code: string): Promise<Address | null> {
   try {
     const owner = await publicClient.readContract({
-      address: getCoreAddress('base'),
-      abi: getCoreABI(),
+      address: getReferralAddress('base'),
+      abi: getReferralABI(),
       functionName: 'referralOwnerOf',
       args: [code],
     }) as Address
@@ -116,8 +116,8 @@ export async function getReferralCodeOwner(code: string): Promise<Address | null
 export async function getReferrer(userAddress: Address): Promise<Address | null> {
   try {
     const referrer = await publicClient.readContract({
-      address: getCoreAddress('base'),
-      abi: getCoreABI(),
+      address: getReferralAddress('base'),
+      abi: getReferralABI(),
       functionName: 'referrerOf',
       args: [userAddress],
     }) as Address
@@ -137,8 +137,8 @@ export async function getReferrer(userAddress: Address): Promise<Address | null>
 export async function getReferralStats(userAddress: Address): Promise<ReferralStats> {
   try {
     const stats = await publicClient.readContract({
-      address: getCoreAddress('base'),
-      abi: getCoreABI(),
+      address: getReferralAddress('base'),
+      abi: getReferralABI(),
       functionName: 'referralStats',
       args: [userAddress],
     }) as any
@@ -212,7 +212,7 @@ export async function getReferralData(userAddress: Address): Promise<ReferralDat
 export async function isReferralCodeAvailable(code: string): Promise<boolean> {
   if (code.length < 3 || code.length > 32) return false
   
-  const owner = await getReferralCodeOwner(code)
+  const owner = await getReferralOwner(code)
   return owner === null
 }
 

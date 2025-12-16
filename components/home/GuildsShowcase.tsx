@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { ShieldIcon } from '@/components/icons/shield-icon'
+import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 
 interface Guild {
   id: string
@@ -36,7 +37,31 @@ export function GuildsShowcase() {
   }, [])
 
   if (loading) {
-    return <GuildsShowcaseSkeleton />
+    return (
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <Skeleton variant="text" className="w-48 h-9 mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <Skeleton variant="avatar" className="w-16 h-16" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton variant="text" className="w-1/2 h-5" />
+                    <Skeleton variant="text" className="w-1/3 h-4" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <Skeleton variant="rect" className="h-16" />
+                  <Skeleton variant="rect" className="h-16" />
+                  <Skeleton variant="rect" className="h-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -81,29 +106,6 @@ export function GuildsShowcase() {
         >
           CREATE YOUR GUILD
         </Link>
-      </div>
-    </section>
-  )
-}
-
-function GuildsShowcaseSkeleton() {
-  return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gray-50 dark:bg-gray-900/50">
-      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mx-auto mb-12" />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
-            <div className="animate-pulse">
-              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4" />
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-32 mx-auto mb-4" />
-              <div className="flex justify-around mb-4">
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16" />
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16" />
-              </div>
-              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
-            </div>
-          </div>
-        ))}
       </div>
     </section>
   )

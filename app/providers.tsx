@@ -7,7 +7,6 @@ import { OnchainKitProvider } from '@coinbase/onchainkit'
 import { base } from 'viem/chains'
 
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
-import { NotificationProvider } from '@/components/ui/live-notifications'
 import { LayoutModeProvider } from '@/components/ui/layout-mode-context'
 import { LiveEventBridge } from '@/components/ui/LiveEventBridge'
 import { wagmiAdapter } from '@/lib/appkit-config'
@@ -120,10 +119,8 @@ export function MiniAppProvider({ children }: { children: React.ReactNode }) {
                 )}
                 {/* Phase 1.5: Unified auth wraps entire app */}
                 <AuthProvider>
-                  <NotificationProvider>
-                    <LiveEventBridge />
-                    {children}
-                  </NotificationProvider>
+                  <LiveEventBridge />
+                  {children}
                 </AuthProvider>
               </LayoutModeProvider>
             </OnchainKitProvider>

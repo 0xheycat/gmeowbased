@@ -33,6 +33,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { generateRequestId } from '@/lib/request-id'
 import { getSupabaseServerClient } from '@/lib/supabase'
 import { createErrorResponse, ErrorType } from '@/lib/error-handler'
 
@@ -109,6 +110,8 @@ export async function GET(
   request: NextRequest,
   context?: { params: Promise<{ fid: string }> }
 ) {
+  const requestId = generateRequestId()
+
   try {
     // Next.js 15: Await params before accessing
     const params = await context?.params

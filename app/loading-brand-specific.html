@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gmeowbased Brand-Specific Loaders</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+      color: #e5e5e5;
+      min-height: 100vh;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding: 2rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .header h1 {
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #00d4ff, #7c3aed, #ff69b4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: rgba(255,255,255,0.7);
+      font-size: clamp(0.875rem, 2vw, 1rem);
+    }
+
+    .section {
+      margin-bottom: 4rem;
+    }
+
+    .section h2 {
+      font-size: clamp(1.25rem, 3vw, 1.75rem);
+      margin-bottom: 1.5rem;
+      padding-left: 1rem;
+      border-left: 4px solid #00d4ff;
+      color: #fff;
+    }
+
+    .category-label {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #00d4ff;
+      margin-left: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .preview-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .preview-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.3s ease;
+      min-height: 200px;
+      justify-content: center;
+    }
+
+    .preview-card:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(0,212,255,0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0,212,255,0.15);
+    }
+
+    .loading-text {
+      font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+      color: #e5e5e5;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    .card-label {
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+    }
+
+    /* Size variants */
+    .size-sm { width: 40px; height: 40px; }
+    .size-md { width: 64px; height: 64px; }
+    .size-lg { width: 88px; height: 88px; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* ========================================
+       BRAND-SPECIFIC LOADERS
+       ======================================== */
+
+    /* 1. GM STREAK FLAME */
+    .gm-streak {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gm-flame {
+      position: absolute;
+      bottom: 20%;
+      width: 50%;
+      height: 70%;
+      background: linear-gradient(to top, #ff4500 0%, #ff8c00 40%, #ffd700 80%, transparent 100%);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      animation: gmFlicker 1.2s ease-in-out infinite;
+      filter: blur(1px);
+    }
+
+    .gm-flame:nth-child(2) {
+      width: 35%;
+      height: 55%;
+      background: linear-gradient(to top, #ff6600, #ffaa00, #ffff00, transparent);
+      animation-delay: 0.15s;
+      filter: blur(0.5px);
+    }
+
+    .gm-count {
+      position: absolute;
+      font-size: clamp(0.875rem, 2.5vw, 1.25rem);
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 0 10px rgba(255,69,0,0.8);
+      z-index: 1;
+    }
+
+    @keyframes gmFlicker {
+      0%, 100% { transform: scaleY(1) scaleX(1); opacity: 1; }
+      25% { transform: scaleY(1.1) scaleX(0.95); opacity: 0.9; }
+      50% { transform: scaleY(0.95) scaleX(1.05); opacity: 0.95; }
+      75% { transform: scaleY(1.05) scaleX(0.98); opacity: 0.92; }
+    }
+
+    /* 2. QUEST VERIFICATION */
+    .quest-verify {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .verify-ring {
+      position: absolute;
+      inset: 0;
+      border: 3px solid transparent;
+      border-top-color: #00d4ff;
+      border-right-color: #00d4ff;
+      border-radius: 50%;
+      animation: verifySpin 1.5s linear infinite;
+    }
+
+    .verify-check {
+      width: 50%;
+      height: 50%;
+      border-radius: 50%;
+      background: radial-gradient(circle, #00d4ff, #0080ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: verifyPulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(0,212,255,0.5);
+    }
+
+    .verify-check::after {
+      content: '✓';
+      color: white;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      font-weight: bold;
+    }
+
+    @keyframes verifySpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes verifyPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    /* 3. BADGE MINTING */
+    .badge-mint {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .badge-star {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      clip-path: polygon(
+        50% 0%, 61% 35%, 98% 35%, 68% 57%,
+        79% 91%, 50% 70%, 21% 91%, 32% 57%,
+        2% 35%, 39% 35%
+      );
+      animation: badgeRotate 3s linear infinite;
+      box-shadow: 0 0 30px rgba(255,215,0,0.6);
+    }
+
+    .badge-gem {
+      position: absolute;
+      inset: 30%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fff, #ffd700);
+      animation: badgeGlow 1.5s ease-in-out infinite;
+      box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+    }
+
+    @keyframes badgeRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes badgeGlow {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.9; }
+    }
+
+    /* 4. GUILD ACTIVITY */
+    .guild-activity {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .guild-shield {
+      width: 85%;
+      height: 90%;
+      background: linear-gradient(135deg, #7c3aed, #3b82f6);
+      clip-path: polygon(50% 0%, 100% 15%, 100% 70%, 50% 100%, 0% 70%, 0% 15%);
+      animation: guildPulse 2s ease-in-out infinite;
+      box-shadow: 0 0 25px rgba(124,58,237,0.5);
+    }
+
+    .guild-emblem {
+      position: absolute;
+      inset: 25%;
+      background: rgba(255,255,255,0.2);
+      clip-path: polygon(50% 20%, 80% 40%, 70% 80%, 30% 80%, 20% 40%);
+      animation: emblemShine 2s ease-in-out infinite;
+    }
+
+    @keyframes guildPulse {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.05); filter: brightness(1.2); }
+    }
+
+    @keyframes emblemShine {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* 5. POINTS TRANSFER */
+    .points-transfer {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .points-particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #ffd700;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(255,215,0,0.8);
+    }
+
+    .points-particle:nth-child(1) { animation: transferFlow 2s ease-in-out infinite 0s; }
+    .points-particle:nth-child(2) { animation: transferFlow 2s ease-in-out infinite 0.2s; }
+    .points-particle:nth-child(3) { animation: transferFlow 2s ease-in-out infinite 0.4s; }
+    .points-particle:nth-child(4) { animation: transferFlow 2s ease-in-out infinite 0.6s; }
+    .points-particle:nth-child(5) { animation: transferFlow 2s ease-in-out infinite 0.8s; }
+
+    @keyframes transferFlow {
+      0% {
+        transform: translateX(-150%) translateY(0) scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: translateX(0) translateY(-20px) scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(150%) translateY(0) scale(0);
+        opacity: 0;
+      }
+    }
+
+    /* 6. LEADERBOARD RANK */
+    .leaderboard-rank {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rank-arrow {
+      position: absolute;
+      width: 40%;
+      height: 60%;
+      background: linear-gradient(to top, transparent, #00ff00);
+      clip-path: polygon(0% 50%, 50% 0%, 100% 50%, 70% 50%, 70% 100%, 30% 100%, 30% 50%);
+      animation: rankRise 1.5s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(0,255,0,0.5);
+    }
+
+    .rank-sparkle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #00ff00;
+      border-radius: 50%;
+      animation: sparkleFloat 2s ease-in-out infinite;
+      box-shadow: 0 0 10px #00ff00;
+    }
+
+    .rank-sparkle:nth-child(2) { left: 20%; bottom: 20%; animation-delay: 0.2s; }
+    .rank-sparkle:nth-child(3) { right: 20%; bottom: 30%; animation-delay: 0.4s; }
+    .rank-sparkle:nth-child(4) { left: 30%; bottom: 50%; animation-delay: 0.6s; }
+
+    @keyframes rankRise {
+      0% { transform: translateY(30%); opacity: 0; }
+      50% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-30%); opacity: 0; }
+    }
+
+    @keyframes sparkleFloat {
+      0% { transform: translateY(50px); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateY(-50px); opacity: 0; }
+    }
+
+    /* 7. VIRAL CAST */
+    .viral-cast {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .viral-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff69b4, #ff1493);
+      animation: viralExpand 2s ease-out infinite;
+      box-shadow: 0 0 20px rgba(255,105,180,0.5);
+    }
+
+    .viral-bubble:nth-child(1) {
+      width: 60%;
+      height: 60%;
+    }
+
+    .viral-bubble:nth-child(2) {
+      width: 40%;
+      height: 40%;
+      animation-delay: 0.3s;
+      background: linear-gradient(135deg, #00d4ff, #7c3aed);
+    }
+
+    .viral-bubble:nth-child(3) {
+      width: 20%;
+      height: 20%;
+      animation-delay: 0.6s;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+    }
+
+    @keyframes viralExpand {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    /* 8. NFT MINTING */
+    .nft-mint {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nft-frame {
+      position: absolute;
+      inset: 0;
+      border: 3px solid;
+      border-image: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b) 1;
+      animation: nftShimmer 2s linear infinite;
+      box-shadow: 0 0 30px rgba(168,85,247,0.4);
+    }
+
+    .nft-inner {
+      width: 70%;
+      height: 70%;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      animation: nftFloat 2s ease-in-out infinite;
+      box-shadow: inset 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    @keyframes nftShimmer {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+
+    @keyframes nftFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.05); }
+    }
+
+    /* 9. REFERRAL REWARD */
+    .referral-reward {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .referral-link {
+      position: absolute;
+      width: 70%;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff, #7c3aed);
+      animation: linkPulse 1.5s ease-in-out infinite;
+    }
+
+    .referral-node {
+      position: absolute;
+      width: 20%;
+      height: 20%;
+      background: radial-gradient(circle, #00d4ff, #0080ff);
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0,212,255,0.6);
+    }
+
+    .referral-node:nth-child(1) {
+      left: 10%;
+      animation: nodeBounce 1.5s ease-in-out infinite;
+    }
+
+    .referral-node:nth-child(3) {
+      right: 10%;
+      animation: nodeBounce 1.5s ease-in-out infinite 0.3s;
+    }
+
+    @keyframes linkPulse {
+      0%, 100% { opacity: 0.5; transform: scaleX(1); }
+      50% { opacity: 1; transform: scaleX(1.1); }
+    }
+
+    @keyframes nodeBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+
+    /* 10. ONCHAIN TRANSACTION */
+    .onchain-tx {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .blockchain-block {
+      position: absolute;
+      width: 30%;
+      height: 30%;
+      border: 2px solid #00d4ff;
+      border-radius: 4px;
+      background: rgba(0,212,255,0.1);
+      animation: blockFloat 2s ease-in-out infinite;
+    }
+
+    .blockchain-block:nth-child(1) {
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .blockchain-block:nth-child(2) {
+      top: 40%;
+      left: 50%;
+      transform: translateX(-50%);
+      animation-delay: 0.3s;
+    }
+
+    .blockchain-block:nth-child(3) {
+      top: 70%;
+      left: 50%;
+      transform: translateX(-50%);
+      animation-delay: 0.6s;
+    }
+
+    .chain-connection {
+      position: absolute;
+      width: 2px;
+      height: 15%;
+      background: linear-gradient(to bottom, #00d4ff, #7c3aed);
+      left: 50%;
+      transform: translateX(-50%);
+      animation: connectionPulse 2s ease-in-out infinite;
+    }
+
+    .chain-connection:nth-child(4) { top: 30%; animation-delay: 0.15s; }
+    .chain-connection:nth-child(5) { top: 60%; animation-delay: 0.45s; }
+
+    @keyframes blockFloat {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    @keyframes connectionPulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* Fullscreen overlay styles */
+    .fullscreen-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .fullscreen-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .fullscreen-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .size-fs {
+      width: 120px;
+      height: 120px;
+    }
+
+    .btn, .btn-secondary {
+      padding: 0.75rem 2rem;
+      border-radius: 12px;
+      border: 2px solid;
+      background: transparent;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 48px;
+      min-height: 48px;
+    }
+
+    .btn {
+      border-color: #00d4ff;
+      background: rgba(0,212,255,0.1);
+    }
+
+    .btn:hover {
+      background: rgba(0,212,255,0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,212,255,0.3);
+    }
+
+    .btn-secondary {
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .demo-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      padding: 2rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .touch-target {
+      min-width: 48px;
+      min-height: 48px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .header {
+        padding: 1.5rem;
+      }
+
+      .section {
+        margin-bottom: 3rem;
+      }
+
+      .preview-card {
+        min-height: 160px;
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🐾 Gmeowbased Brand-Specific Loaders</h1>
+  <p>Context-aware loading animations for every feature type</p>
+</div>
+
+<!-- 1. GM STREAK -->
+<div class="section">
+  <h2>1. GM Streak 🔥 <span class="category-label">Daily Ritual</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="gm-streak size-sm" role="status" aria-label="Loading">
+        <div class="gm-flame"></div>
+        <div class="gm-flame"></div>
+        <div class="gm-count">47</div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">GM streak counter</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="gm-streak size-md" role="status" aria-label="Loading">
+        <div class="gm-flame"></div>
+        <div class="gm-flame"></div>
+        <div class="gm-count">47</div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Daily GM tracking</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="gm-streak size-lg" role="status" aria-label="Loading">
+        <div class="gm-flame"></div>
+        <div class="gm-flame"></div>
+        <div class="gm-count">47</div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Streak milestones</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 2. QUEST VERIFICATION -->
+<div class="section">
+  <h2>2. Quest Verification ✓ <span class="category-label">Social + Onchain</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="quest-verify size-sm" role="status" aria-label="Loading">
+        <div class="verify-ring"></div>
+        <div class="verify-check"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Verifying quest</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="quest-verify size-md" role="status" aria-label="Loading">
+        <div class="verify-ring"></div>
+        <div class="verify-check"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Oracle signature check</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="quest-verify size-lg" role="status" aria-label="Loading">
+        <div class="verify-ring"></div>
+        <div class="verify-check"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Completion validation</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 3. BADGE MINTING -->
+<div class="section">
+  <h2>3. Badge Minting 🎖️ <span class="category-label">Achievement</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="badge-mint size-sm" role="status" aria-label="Loading">
+        <div class="badge-star"></div>
+        <div class="badge-gem"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Minting badge</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="badge-mint size-md" role="status" aria-label="Loading">
+        <div class="badge-star"></div>
+        <div class="badge-gem"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Soulbound NFT</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="badge-mint size-lg" role="status" aria-label="Loading">
+        <div class="badge-star"></div>
+        <div class="badge-gem"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Badge unlocked</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 4. GUILD ACTIVITY -->
+<div class="section">
+  <h2>4. Guild Activity 🛡️ <span class="category-label">Community</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="guild-activity size-sm" role="status" aria-label="Loading">
+        <div class="guild-shield">
+          <div class="guild-emblem"></div>
+        </div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Guild loading</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="guild-activity size-md" role="status" aria-label="Loading">
+        <div class="guild-shield">
+          <div class="guild-emblem"></div>
+        </div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Member sync</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="guild-activity size-lg" role="status" aria-label="Loading">
+        <div class="guild-shield">
+          <div class="guild-emblem"></div>
+        </div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Guild events</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 5. POINTS TRANSFER -->
+<div class="section">
+  <h2>5. Points Transfer 💰 <span class="category-label">Economy</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="points-transfer size-sm" role="status" aria-label="Loading">
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Tip sending</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="points-transfer size-md" role="status" aria-label="Loading">
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Points transaction</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="points-transfer size-lg" role="status" aria-label="Loading">
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <div class="points-particle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Reward claiming</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 6. LEADERBOARD RANK -->
+<div class="section">
+  <h2>6. Leaderboard Rank 🏆 <span class="category-label">Competition</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="leaderboard-rank size-sm" role="status" aria-label="Loading">
+        <div class="rank-arrow"></div>
+        <div class="rank-sparkle"></div>
+        <div class="rank-sparkle"></div>
+        <div class="rank-sparkle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Rank updating</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="leaderboard-rank size-md" role="status" aria-label="Loading">
+        <div class="rank-arrow"></div>
+        <div class="rank-sparkle"></div>
+        <div class="rank-sparkle"></div>
+        <div class="rank-sparkle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Position change</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="leaderboard-rank size-lg" role="status" aria-label="Loading">
+        <div class="rank-arrow"></div>
+        <div class="rank-sparkle"></div>
+        <div class="rank-sparkle"></div>
+        <div class="rank-sparkle"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Tier progression</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 7. VIRAL CAST -->
+<div class="section">
+  <h2>7. Viral Cast 📢 <span class="category-label">Social</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="viral-cast size-sm" role="status" aria-label="Loading">
+        <div class="viral-bubble"></div>
+        <div class="viral-bubble"></div>
+        <div class="viral-bubble"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Cast spreading</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="viral-cast size-md" role="status" aria-label="Loading">
+        <div class="viral-bubble"></div>
+        <div class="viral-bubble"></div>
+        <div class="viral-bubble"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Viral bonus XP</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="viral-cast size-lg" role="status" aria-label="Loading">
+        <div class="viral-bubble"></div>
+        <div class="viral-bubble"></div>
+        <div class="viral-bubble"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Engagement tracking</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 8. NFT MINTING -->
+<div class="section">
+  <h2>8. NFT Minting 🎨 <span class="category-label">Collectible</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="nft-mint size-sm" role="status" aria-label="Loading">
+        <div class="nft-frame"></div>
+        <div class="nft-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Minting NFT</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="nft-mint size-md" role="status" aria-label="Loading">
+        <div class="nft-frame"></div>
+        <div class="nft-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">OG member badge</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="nft-mint size-lg" role="status" aria-label="Loading">
+        <div class="nft-frame"></div>
+        <div class="nft-inner"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Limited edition</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 9. REFERRAL REWARD -->
+<div class="section">
+  <h2>9. Referral Reward 🤝 <span class="category-label">Growth</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="referral-reward size-sm" role="status" aria-label="Loading">
+        <div class="referral-node"></div>
+        <div class="referral-link"></div>
+        <div class="referral-node"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Referral tracking</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="referral-reward size-md" role="status" aria-label="Loading">
+        <div class="referral-node"></div>
+        <div class="referral-link"></div>
+        <div class="referral-node"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Friend joined</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="referral-reward size-lg" role="status" aria-label="Loading">
+        <div class="referral-node"></div>
+        <div class="referral-link"></div>
+        <div class="referral-node"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Network effect</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 10. ONCHAIN TRANSACTION -->
+<div class="section">
+  <h2>10. Onchain Transaction ⛓️ <span class="category-label">Blockchain</span></h2>
+  <div class="preview-row">
+    
+    <div class="preview-card">
+      <div class="onchain-tx size-sm" role="status" aria-label="Loading">
+        <div class="blockchain-block"></div>
+        <div class="blockchain-block"></div>
+        <div class="blockchain-block"></div>
+        <div class="chain-connection"></div>
+        <div class="chain-connection"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Small (40px)</div>
+      <div class="card-label">Transaction pending</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="onchain-tx size-md" role="status" aria-label="Loading">
+        <div class="blockchain-block"></div>
+        <div class="blockchain-block"></div>
+        <div class="blockchain-block"></div>
+        <div class="chain-connection"></div>
+        <div class="chain-connection"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Medium (64px)</div>
+      <div class="card-label">Block confirmation</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="onchain-tx size-lg" role="status" aria-label="Loading">
+        <div class="blockchain-block"></div>
+        <div class="blockchain-block"></div>
+        <div class="blockchain-block"></div>
+        <div class="chain-connection"></div>
+        <div class="chain-connection"></div>
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="loading-text">Large (88px)</div>
+      <div class="card-label">Multi-chain sync</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FULLSCREEN DEMO -->
+<div class="section">
+  <h2>Fullscreen Context Examples</h2>
+  <div class="demo-controls">
+    <button 
+      onclick="document.getElementById('fullscreen-gm').classList.add('active')"
+      class="btn touch-target"
+      aria-label="Show GM streak loader">
+      GM Streak
+    </button>
+    <button 
+      onclick="document.getElementById('fullscreen-quest').classList.add('active')"
+      class="btn touch-target"
+      aria-label="Show quest verification loader">
+      Quest Verify
+    </button>
+    <button 
+      onclick="document.getElementById('fullscreen-badge').classList.add('active')"
+      class="btn touch-target"
+      aria-label="Show badge minting loader">
+      Badge Mint
+    </button>
+    <button 
+      onclick="document.getElementById('fullscreen-guild').classList.add('active')"
+      class="btn touch-target"
+      aria-label="Show guild activity loader">
+      Guild Activity
+    </button>
+    <button 
+      onclick="document.getElementById('fullscreen-rank').classList.add('active')"
+      class="btn touch-target"
+      aria-label="Show leaderboard rank loader">
+      Rank Update
+    </button>
+  </div>
+</div>
+
+<!-- Fullscreen Overlays -->
+<div id="fullscreen-gm" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="gm-streak size-fs">
+      <div class="gm-flame"></div>
+      <div class="gm-flame"></div>
+      <div class="gm-count">47</div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🔥 Sending your daily GM...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-gm').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-quest" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="quest-verify size-fs">
+      <div class="verify-ring"></div>
+      <div class="verify-check"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">✓ Verifying quest completion...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-quest').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-badge" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="badge-mint size-fs">
+      <div class="badge-star"></div>
+      <div class="badge-gem"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🎖️ Minting your badge...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-badge').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-guild" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="guild-activity size-fs">
+      <div class="guild-shield">
+        <div class="guild-emblem"></div>
+      </div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🛡️ Loading guild data...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-guild').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="fullscreen-rank" class="fullscreen-overlay" role="dialog" aria-label="Loading">
+  <div class="fullscreen-content">
+    <div class="leaderboard-rank size-fs">
+      <div class="rank-arrow"></div>
+      <div class="rank-sparkle"></div>
+      <div class="rank-sparkle"></div>
+      <div class="rank-sparkle"></div>
+    </div>
+    <div class="loading-text" style="font-size: 1.5rem;">🏆 Calculating your rank...</div>
+    <button 
+      onclick="document.getElementById('fullscreen-rank').classList.remove('active')"
+      class="btn-secondary touch-target"
+      aria-label="Close fullscreen loader">
+      Close
+    </button>
+  </div>
+</div>
+
+</body>
+</html>

@@ -26,7 +26,6 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseServerClient } from './supabase-server'
-import { dispatchViralNotification, type AchievementNotification } from './viral-notifications'
 
 // ============================================================================
 // Type Definitions
@@ -41,7 +40,7 @@ export type AchievementType =
 // Dependencies interface for testing
 export type AchievementDependencies = {
   supabase?: SupabaseClient
-  dispatchNotification?: typeof dispatchViralNotification
+  dispatchNotification?: (notification: AchievementNotification) => Promise<{ success: boolean; error?: string }>
 }
 
 export type AchievementConfig = {
@@ -64,6 +63,15 @@ export type UserAchievement = {
 export type AchievementCheckResult = {
   unlocked: AchievementType[]
   alreadyHas: AchievementType[]
+}
+
+export type AchievementNotification = {
+  type: 'achievement' | 'tier_upgrade'
+  fid: number
+  achievementType?: AchievementType
+  tierName?: string
+  castHash?: string
+  xpBonus: number
 }
 
 // ============================================================================
@@ -354,9 +362,11 @@ export async function awardAchievement(
     }
 
     // Fire and forget - don't block on notification
-    notificationFn(notification).catch((error) => {
-      console.error('[Achievements] Notification dispatch failed:', error)
-    })
+    if (notificationFn) {
+      notificationFn(notification).catch((error: Error) => {
+        console.error('[Achievements] Notification dispatch failed:', error)
+      })
+    }
 
     console.log(
       `[Achievements] Awarded ${achievementType} to user ${fid} (+${config.xpReward} XP)`
@@ -449,5 +459,71 @@ export async function getUserAchievementDetails(
   } catch (error) {
     console.error('[Achievements] Error fetching achievement details:', error)
     return []
+  }
+}
+
+/**
+ * Dispatch viral notification to user_notification_history
+ * Integrated with existing notification system to prevent duplicates
+ */
+export async function dispatchViralNotification(
+  notification: AchievementNotification
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = getSupabaseServerClient()
+    if (!supabase) {
+      return { success: false, error: 'Supabase client not available' }
+    }
+
+    // Map notification type to category
+    const category = notification.type === 'achievement' ? 'achievement' : 'viral'
+    
+    // Build title and description
+    let title: string
+    let description: string
+    
+    if (notification.type === 'achievement' && notification.achievementType) {
+      const config = ACHIEVEMENTS[notification.achievementType]
+      title = `${config.icon} ${config.name}!`
+      description = `${config.description} +${notification.xpBonus} XP`
+    } else if (notification.type === 'tier_upgrade' && notification.tierName) {
+      title = `🔥 Viral Tier Upgrade!`
+      description = `Your cast reached '${notification.tierName}' tier! +${notification.xpBonus} XP bonus`
+    } else {
+      return { success: false, error: 'Invalid notification type' }
+    }
+
+    // Insert into user_notification_history
+    const { error } = await supabase
+      .from('user_notification_history')
+      .insert({
+        fid: notification.fid,
+        category,
+        title,
+        description,
+        metadata: {
+          type: notification.type,
+          achievement_type: notification.achievementType,
+          tier_name: notification.tierName,
+          cast_hash: notification.castHash,
+          xp_bonus: notification.xpBonus,
+        },
+      })
+
+    if (error) {
+      console.error('[ViralNotifications] Insert failed:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log(
+      `[ViralNotifications] Sent ${notification.type} notification to FID ${notification.fid}`
+    )
+    return { success: true }
+  } catch (error) {
+    console.error('[ViralNotifications] Error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }
   }
 }

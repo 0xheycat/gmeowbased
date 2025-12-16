@@ -44,7 +44,10 @@ import { z } from 'zod'
 import { strictLimiter } from '@/lib/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { generateRequestId } from '@/lib/request-id'
+import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
+import { logGuildEvent } from '@/lib/guild/event-logger'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -89,21 +92,31 @@ async function getGuildData(guildId: bigint) {
   const client = getPublicClient()
   
   try {
-    const guildData = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
-      functionName: 'guilds',
+    const guildInfo = await client.readContract({
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
+      functionName: 'getGuildInfo',
       args: [guildId],
-    }) as any[]
+    })
     
-    if (!guildData || guildData.length === 0) return null
+    if (!guildInfo) return null
+    
+    // Parse tuple response: [name, leader, totalPoints, memberCount, level, requiredPoints, treasury]
+    const [name, leader, totalPoints, memberCount, level, requiredPoints, treasury] = guildInfo as [
+      string, Address, bigint, bigint, bigint, bigint, bigint
+    ]
+    
+    // Guild is active if it has a name
+    const active = name && name.length > 0
     
     return {
-      name: (guildData[0] as string) || '',
-      leader: (guildData[1] as string) || '',
-      totalPoints: (guildData[2] as bigint) || 0n,
-      memberCount: (guildData[3] as bigint) || 0n,
-      active: (guildData[4] as boolean) !== false,
+      name,
+      leader,
+      totalPoints,
+      memberCount,
+      active,
+      level,
+      treasury,
     }
   } catch (error) {
     console.error('[guild-manage-member] getGuildData error:', error)
@@ -119,17 +132,47 @@ async function getUserGuild(address: Address): Promise<bigint> {
   
   try {
     const guildId = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
       functionName: 'guildOf',
       args: [address],
     }) as bigint
     
     return guildId || 0n
-  } catch (error) {
-    console.error('[guild-manage-member] getUserGuild error:', error)
+  } catch (error: any) {
+    // Contract may revert for addresses not in any guild - this is expected
+    if (error?.message?.includes('reverted') || error?.message?.includes('execution reverted')) {
+      return 0n
+    }
+    console.error('[guild-manage-member] getUserGuild unexpected error:', error)
     return 0n
   }
+}
+
+/**
+ * Check if address is guild leader
+ */
+async function isGuildLeader(address: Address, guildId: bigint): Promise<boolean> {
+  try {
+    const guildData = await getGuildData(guildId)
+    if (!guildData) return false
+    return guildData.leader.toLowerCase() === address.toLowerCase()
+  } catch (error) {
+    console.error('[guild-manage-member] isGuildLeader error:', error)
+    return false
+  }
+}
+
+/**
+ * Check if user is member of guild (includes leader fallback)
+ */
+async function isUserMemberOfGuild(address: Address, guildId: bigint): Promise<boolean> {
+  // Check 1: Normal membership via guildOf()
+  const userGuildId = await getUserGuild(address)
+  if (userGuildId === guildId) return true
+  
+  // Check 2: Guild leadership (fallback for leaders who created guilds)
+  return await isGuildLeader(address, guildId)
 }
 
 /**
@@ -188,11 +231,16 @@ function createErrorResponse(message: string, status: number = 400) {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
+  const requestId = generateRequestId()
+
   const startTime = Date.now()
 
   try {
+    // Await params for Next.js 15
+    const { guildId } = await params
+
     // 1. RATE LIMITING
     if (!strictLimiter) {
       return createErrorResponse('Rate limiting not configured', 503)
@@ -232,7 +280,6 @@ export async function POST(
     }
 
     const { address, action, targetAddress } = bodyResult.data
-    const { guildId } = params
 
     // Validate guildId
     const guildIdNum = BigInt(guildId)
@@ -251,10 +298,10 @@ export async function POST(
       return createErrorResponse('Only guild owner can manage members', 403)
     }
 
-    // 4. RBAC - Check target is in guild
-    const targetGuildId = await getUserGuild(targetAddress as Address)
+    // 4. RBAC - Check target is in guild (includes leader fallback)
+    const isTargetMember = await isUserMemberOfGuild(targetAddress as Address, guildIdNum)
     
-    if (targetGuildId !== guildIdNum) {
+    if (!isTargetMember) {
       return createErrorResponse('Target is not a member of this guild', 400)
     }
 
@@ -272,6 +319,33 @@ export async function POST(
       timestamp: new Date().toISOString(),
     })
 
+    // Log event to database (non-blocking)
+    if (action === 'promote') {
+      logGuildEvent({
+        guild_id: guildId.toString(),
+        event_type: 'MEMBER_PROMOTED',
+        actor_address: address,
+        target_address: targetAddress,
+        metadata: {
+          guild_name: guildData.name,
+        },
+      }).catch((error) => {
+        console.error('[guild-manage-member] Failed to log event:', error)
+      })
+    } else if (action === 'demote') {
+      logGuildEvent({
+        guild_id: guildId.toString(),
+        event_type: 'MEMBER_DEMOTED',
+        actor_address: address,
+        target_address: targetAddress,
+        metadata: {
+          guild_name: guildData.name,
+        },
+      }).catch((error) => {
+        console.error('[guild-manage-member] Failed to log event:', error)
+      })
+    }
+
     // 6. RETURN INSTRUCTION FOR WALLET
     // Note: Actual contract call must be done client-side with user's wallet
     
@@ -282,27 +356,22 @@ export async function POST(
       case 'promote':
         message = 'Ready to promote member to officer. Please sign the transaction in your wallet.'
         contractCall = {
-          address: getContractAddress('base'),
-          abi: GM_CONTRACT_ABI,
+          contractAddress: STANDALONE_ADDRESSES.base.guild,
           functionName: 'setGuildOfficer',
-          args: [guildIdNum, targetAddress as Address, true],
+          args: [guildIdNum.toString(), targetAddress, '1'], // true as '1'
         }
         break
       case 'demote':
         message = 'Ready to demote officer to member. Please sign the transaction in your wallet.'
         contractCall = {
-          address: getContractAddress('base'),
-          abi: GM_CONTRACT_ABI,
+          contractAddress: STANDALONE_ADDRESSES.base.guild,
           functionName: 'setGuildOfficer',
-          args: [guildIdNum, targetAddress as Address, false],
+          args: [guildIdNum.toString(), targetAddress, '0'], // false as '0'
         }
         break
       case 'kick':
-        message = 'Ready to kick member from guild. Please sign the transaction in your wallet.'
-        // Note: Contract might not have kickMember function
-        // For now, return error indicating feature not available
         return createErrorResponse(
-          'Kick functionality not yet implemented in contract',
+          'Kick functionality not available in contract. Members can leave voluntarily.',
           501
         )
     }

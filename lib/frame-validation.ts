@@ -5,6 +5,7 @@
  */
 
 import { ALL_CHAIN_KEYS, type ChainKey } from './gmeow-utils'
+import { trackWarning } from '@/lib/notifications/error-tracking'
 
 /**
  * Sanitize and validate Farcaster FID
@@ -68,6 +69,8 @@ export type FrameType =
   | 'verify' 
   | 'onchainstats' 
   | 'badge'
+  | 'nft'
+  | 'badgecollection'
   | 'generic'
 
 const VALID_FRAME_TYPES: FrameType[] = [
@@ -80,13 +83,18 @@ const VALID_FRAME_TYPES: FrameType[] = [
   'verify',
   'onchainstats',
   'badge',
+  'nft',
+  'badgecollection',
   'generic',
 ]
 
 export function sanitizeFrameType(type: unknown): FrameType | null {
   if (!type) return null
   
-  const str = String(type).toLowerCase().trim()
+  let str = String(type).toLowerCase().trim()
+  
+  // Normalize common variants
+  if (str === 'leaderboard') str = 'leaderboards'
   
   if (!VALID_FRAME_TYPES.includes(str as FrameType)) return null
   
@@ -248,16 +256,19 @@ export function sanitizeButtons<T extends { label?: string; target?: string }>(b
   })
   
   if (truncated) {
-    console.warn(
-      `[FRAME_VALIDATION] Button count exceeded: ${originalCount} buttons provided, truncated to ${MAX_FRAME_BUTTONS}`
-    )
+    trackWarning('frame_validation_button_count_exceeded', {
+      function: 'validateButtons',
+      originalCount,
+      maxButtons: MAX_FRAME_BUTTONS,
+    })
   }
   
   if (invalidTitles.length > 0) {
-    console.warn(
-      `[FRAME_VALIDATION] Button title length violations (max 32 chars):`,
-      invalidTitles
-    )
+    trackWarning('frame_validation_title_length_violations', {
+      function: 'validateButtons',
+      invalidTitles,
+      maxLength: 32,
+    })
   }
   
   return {

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/forms/select'
 import { Input } from '@/components/ui/forms/input'
 import { Textarea } from '@/components/ui/forms/textarea'
+import { ERROR_ARIA } from '@/lib/accessibility'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
@@ -34,6 +35,7 @@ export function TaskBuilder({
   className = '',
 }: TaskBuilderProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   const addTask = () => {
     const newTask: TaskConfig = {
@@ -76,15 +78,17 @@ export function TaskBuilder({
   }
 
   const handleNext = () => {
+    setValidationError(null)
+    
     if (tasks.length === 0) {
-      alert('Please add at least one task')
+      setValidationError('Please add at least one task before continuing')
       return
     }
 
     // Validate all tasks have titles
     const invalidTasks = tasks.filter((task) => !task.title)
     if (invalidTasks.length > 0) {
-      alert('All tasks must have a title')
+      setValidationError('All tasks must have a title before continuing')
       return
     }
 
@@ -144,8 +148,13 @@ export function TaskBuilder({
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => removeTask(index)}
+                  onClick={() => {
+                    if (window.confirm('Remove this task? This action cannot be undone.')) {
+                      removeTask(index)
+                    }
+                  }}
                   className="text-destructive hover:bg-destructive/10"
+                  aria-label="Remove task"
                 >
                   <DeleteIcon className="h-4 w-4" />
                 </Button>
@@ -182,6 +191,15 @@ export function TaskBuilder({
           Add Task
         </Button>
       </div>
+
+      {/* Validation Error */}
+      {validationError && (
+        <div className="bg-wcag-error-light/10 dark:bg-wcag-error-dark/10 border border-wcag-error-light dark:border-wcag-error-dark rounded-lg p-4">
+          <p {...ERROR_ARIA} className="text-sm text-wcag-error-light dark:text-wcag-error-dark">
+            {validationError}
+          </p>
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex justify-between">

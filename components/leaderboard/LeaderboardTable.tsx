@@ -57,6 +57,11 @@ export interface LeaderboardEntry {
   // Added for comparison modal
   tip_points?: number
   nft_points?: number
+  // Task 4.1: Guild integration
+  guild_id?: number | null
+  guild_name?: string | null
+  is_guild_officer?: boolean
+  guild_bonus_points?: number
 }
 
 type TimePeriod = 'daily' | 'weekly' | 'all_time'
@@ -201,8 +206,23 @@ export function LeaderboardTable({
               </div>
             )}
             <div className="flex-1">
-              <div className="font-semibold text-base">
-                {row.display_name || row.username || `Pilot #${row.farcaster_fid}`}
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-base">
+                  {row.display_name || row.username || `Pilot #${row.farcaster_fid}`}
+                </span>
+                {/* Guild Badge (Task 4.1) */}
+                {row.guild_name && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full font-medium">
+                      {row.guild_name}
+                    </span>
+                    {row.is_guild_officer && (
+                      <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full font-medium">
+                        Officer
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
               {tier && (
                 <div className={cn('rank-badge text-xs mt-1', tier.tier)}>
@@ -269,8 +289,24 @@ export function LeaderboardTable({
       label: 'Guild Bonus',
       sortable: true,
       headerClassName: 'text-right',
-      className: 'text-right text-yellow-500',
-      render: (row) => (row.guild_bonus > 0 ? `+${row.guild_bonus}` : '0'),
+      className: 'text-right',
+      render: (row) => {
+        if (!row.guild_bonus_points || row.guild_bonus_points === 0) {
+          return <span className="text-gray-500">0</span>
+        }
+        return (
+          <div className="flex flex-col items-end">
+            <span className="text-purple-600 dark:text-purple-400 font-semibold">
+              +{row.guild_bonus_points.toLocaleString()}
+            </span>
+            {row.is_guild_officer && (
+              <span className="text-xs text-amber-600 dark:text-amber-400">
+                (Officer +5%)
+              </span>
+            )}
+          </div>
+        )
+      },
     },
     {
       key: 'referral_bonus',

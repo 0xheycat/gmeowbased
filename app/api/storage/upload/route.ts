@@ -27,7 +27,8 @@ import { generateRequestId } from '@/lib/request-id'
 let supabase: ReturnType<typeof createClient> | null = null;
 
 function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Use SUPABASE_URL (server-side) not NEXT_PUBLIC_SUPABASE_URL (client-side)
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
@@ -47,11 +48,17 @@ const UploadRequestSchema = z.object({
   fileName: z.string().min(1),
   fileType: z.string().startsWith('image/'),
   fileSize: z.number().max(10 * 1024 * 1024), // 10MB max
-  type: z.enum(['avatar', 'cover']),
+  type: z.enum(['avatar', 'cover', 'quest', 'guild-banner']),
+  guildId: z.string().optional(), // Required for guild-banner type
 })
 
-const AVATAR_BUCKET = 'avatars'
-const COVER_BUCKET = 'covers'
+// Bucket mapping for different upload types
+const BUCKET_MAP: Record<string, string> = {
+  avatar: 'avatars',
+  cover: 'covers',
+  quest: 'quest-images',
+  'guild-banner': 'covers', // Reuse covers bucket for guild banners
+}
 
 export async function POST(request: NextRequest) {
   const requestId = generateRequestId()
@@ -84,7 +91,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { fid, fileName, fileType, type } = validation.data
+    const { fid, fileName, fileType, type, guildId } = validation.data
+
+    // Validate guild-banner type requires guildId
+    if (type === 'guild-banner' && !guildId) {
+      return NextResponse.json(
+        { error: 'guildId is required for guild-banner uploads' },
+        { status: 400, headers: { 'X-Request-ID': requestId } }
+      )
+    }
 
     // Idempotency check (prevents duplicate uploads on retry)
     const baseKey = getIdempotencyKey(request)
@@ -96,13 +111,21 @@ export async function POST(request: NextRequest) {
       return returnCachedResponse(idempotencyResult);
     }
 
-    // Generate unique filename
+    // Generate unique filename based on type
     const extension = fileName.split('.').pop() || 'jpg'
     const timestamp = Date.now()
-    const uniqueFileName = `${fid}/${type}-${timestamp}.${extension}`
+    
+    let uniqueFileName: string
+    if (type === 'guild-banner') {
+      uniqueFileName = `${guildId}/${timestamp}.${extension}`
+    } else if (type === 'quest') {
+      uniqueFileName = `general/${fid}/${timestamp}-${fileName.replace(/[^a-zA-Z0-9_.-]/g, '_')}`
+    } else {
+      uniqueFileName = `${fid}/${type}-${timestamp}.${extension}`
+    }
 
     // Select bucket
-    const bucket = type === 'avatar' ? AVATAR_BUCKET : COVER_BUCKET
+    const bucket = BUCKET_MAP[type]
 
     // Create signed upload URL (expires in 5 minutes)
     const { data: signedUrlData, error: signedUrlError } = await supabaseClient.storage

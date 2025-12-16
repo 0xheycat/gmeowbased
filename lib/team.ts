@@ -1,7 +1,8 @@
 import { decodeEventLog } from 'viem'
 import { getPublicClient } from 'wagmi/actions'
 import { wagmiConfig } from '@/lib/wagmi'
-import { CHAIN_IDS, type ChainKey, GM_CONTRACT_ABI, getContractAddress } from '@/lib/gmeow-utils'
+import { CHAIN_IDS, type ChainKey, getContractAddress, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { GM_CONTRACT_ABI, GUILD_ABI_JSON } from '@/lib/contracts/abis'
 
 export type TeamSummary = {
   chain: ChainKey
@@ -37,10 +38,6 @@ export function extractTeamIdFromSlug(slug: string | null | undefined): number |
 
 const DEPLOY_BLOCKS: Partial<Record<ChainKey, bigint>> = {
   base: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_BASE'),
-  unichain: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_UNICHAIN'),
-  celo: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_CELO'),
-  ink: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_INK'),
-  op: envBig('NEXT_PUBLIC_DEPLOY_BLOCK_OP'),
 }
 
 function envBig(k: string): bigint | undefined {
@@ -50,11 +47,11 @@ function envBig(k: string): bigint | undefined {
 
 type WagmiChainId = (typeof wagmiConfig)['chains'][number]['id']
 
-// get "team" summary using guilds(...) view
+// get "team" summary using getGuildInfo() from standalone contract
 export async function getTeamSummary(chain: ChainKey, teamId: number): Promise<TeamSummary> {
-  const chainId = CHAIN_IDS[chain] as WagmiChainId
+  // Force base chain since guilds only exist on Base
+  const chainId = CHAIN_IDS.base as WagmiChainId
   const client = getPublicClient(wagmiConfig, { chainId })
-  const address = getContractAddress(chain)
 
   const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
     Promise.race([
@@ -62,31 +59,30 @@ export async function getTeamSummary(chain: ChainKey, teamId: number): Promise<T
       new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 10000))
     ])
 
-  // guilds(guildId) -> (name, leader, totalPoints, memberCount, active, level)
+  // getGuildInfo(guildId) -> [name, leader, totalPoints, memberCount, level, requiredPoints, treasury]
   const g = await rpcTimeout(
     client.readContract({
-      address,
-      abi: GM_CONTRACT_ABI,
-      functionName: 'guilds',
+      address: STANDALONE_ADDRESSES.base.guild,
+      abi: GUILD_ABI_JSON,
+      functionName: 'getGuildInfo',
       args: [BigInt(teamId)],
     }),
     null
   )
   if (!g) throw new Error('Guild read timeout')
 
-  const name = (g as any)[0] as string
-  const leader = (g as any)[1] as string
-  const totalPoints = Number(((g as any)[2] as bigint) ?? 0n)
-  const memberCount = Number(((g as any)[3] as bigint) ?? 0n)
+  const [name, leader, totalPoints, memberCount] = g as [string, `0x${string}`, bigint, bigint, bigint, bigint, bigint]
+  const totalPointsNum = Number(totalPoints ?? 0n)
+  const memberCountNum = Number(memberCount ?? 0n)
 
   return {
     chain,
     teamId,
     name,
     founder: leader,
-    totalPoints,
+    totalPoints: totalPointsNum,
     founderBonus: 0, // not present in ABI
-    memberCount,
+    memberCount: memberCountNum,
     pfp: null,
     bio: null,
   }
@@ -101,10 +97,11 @@ export async function getTeamMembersClient(
   limit = 50,
   offset = 0,
 ): Promise<{ address: string; points: bigint; pct: number }[]> {
-  const chainId = CHAIN_IDS[chain] as WagmiChainId
+  // Force base chain since guilds only exist on Base
+  const chainId = CHAIN_IDS.base as WagmiChainId
   const client = getPublicClient(wagmiConfig, { chainId })
-  const address = getContractAddress(chain)
-  const fromBlock = DEPLOY_BLOCKS[chain] ?? 0n
+  const address = getContractAddress('base')
+  const fromBlock = DEPLOY_BLOCKS.base ?? 0n
 
   const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
     Promise.race([

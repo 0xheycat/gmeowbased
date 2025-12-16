@@ -1,12 +1,12 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
-import { useNotificationCenter } from '@/hooks/useNotificationCenter'
-import type { NotificationCategory, NotificationItem } from '@/components/ui/live-notifications'
-import type { TipBroadcast } from '@/lib/tips-types'
+import { useAuth } from '@/lib/hooks/use-auth'
+import { createClient } from '@supabase/supabase-js'
+import type { NotificationCategory, NotificationHistoryItem } from '@/lib/notifications'
 import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt'
 import ExploreIcon from '@mui/icons-material/Explore'
 import MilitaryTechIcon from '@mui/icons-material/MilitaryTech'
@@ -59,47 +59,8 @@ function formatTimeAgo(timestamp: number): string {
   return `${days}d ago`
 }
 
-function formatTipSender(tip: TipBroadcast): string {
-  if (tip.fromDisplay && tip.fromDisplay.trim()) return tip.fromDisplay.trim()
-  if (tip.fromUsername && tip.fromUsername.trim()) return `@${tip.fromUsername.replace(/^@/, '').trim()}`
-  if (tip.fromAddress) return formatAddress(tip.fromAddress)
-  if (typeof tip.fromFid === 'number' && Number.isFinite(tip.fromFid)) return `fid:${tip.fromFid}`
-  return 'Someone'
-}
-
-function formatTipRecipient(tip: TipBroadcast): string {
-  if (tip.toDisplay && tip.toDisplay.trim()) return tip.toDisplay.trim()
-  if (tip.toUsername && tip.toUsername.trim()) return `@${tip.toUsername.replace(/^@/, '').trim()}`
-  if (tip.toAddress) return formatAddress(tip.toAddress)
-  if (typeof tip.toFid === 'number' && Number.isFinite(tip.toFid)) return `fid:${tip.toFid}`
-  return 'the squad'
-}
-
-function formatTipValue(tip: TipBroadcast): string | null {
-  if (typeof tip.amount === 'number' && Number.isFinite(tip.amount)) {
-    const amount = tip.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })
-    return tip.symbol ? `${amount} ${tip.symbol}` : amount
-  }
-  if (typeof tip.points === 'number' && Number.isFinite(tip.points)) {
-    return `+${tip.points.toLocaleString()} pts`
-  }
-  if (typeof tip.usdValue === 'number' && Number.isFinite(tip.usdValue)) {
-    return `$${tip.usdValue.toFixed(2)}`
-  }
-  if ((tip.kind ?? 'tip') === 'mention') return 'Shout-out'
-  return null
-}
-
-function formatTipKindLabel(tip: TipBroadcast): string {
-  switch (tip.kind) {
-    case 'mention':
-      return 'Mention'
-    case 'activity':
-      return 'Activity'
-    default:
-      return 'Tip'
-  }
-}
+// Removed formatTipSender, formatTipRecipient, formatTipValue, formatTipKindLabel
+// Will be rebuilt with mention-based tip system
 
 function formatAddress(raw: string): string {
   if (!raw) return '—'
@@ -111,12 +72,54 @@ type DashboardNotificationCenterProps = {
   tipOptIn: boolean
   onTipOptInChange: (value: boolean) => void
   tipStatusLabel: string
-  tipFeed: TipBroadcast[]
+  // Removed tipFeed - will be rebuilt with mention-based system
 }
 
-export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipStatusLabel, tipFeed }: DashboardNotificationCenterProps) {
-  const { notifications, categories, dismiss, dismissAll } = useNotificationCenter()
+export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipStatusLabel }: DashboardNotificationCenterProps) {
+  const { fid } = useAuth()
+  const [notifications, setNotifications] = useState<NotificationHistoryItem[]>([])
+  const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState<'all' | NotificationCategory>('all')
+
+  // Fetch notifications from database (Phase 1-6 system)
+  useEffect(() => {
+    if (!fid) return
+
+    const loadNotifications = async () => {
+      setLoading(true)
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        if (!supabaseUrl || !supabaseKey) return
+
+        const supabase = createClient(supabaseUrl, supabaseKey)
+        const { data, error } = await supabase
+          .from('user_notification_history')
+          .select('*')
+          .eq('fid', fid)
+          .is('dismissed_at', null)
+          .order('created_at', { ascending: false })
+          .limit(50)
+
+        if (!error && data) {
+          setNotifications(data as NotificationHistoryItem[])
+        }
+      } catch (error) {
+        console.error('[DashboardNotificationCenter] Failed to load notifications:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadNotifications()
+  }, [fid])
+
+  // Extract unique categories from loaded notifications
+  const categories = useMemo(() => {
+    const set = new Set<NotificationCategory>()
+    notifications.forEach(n => set.add(n.category))
+    return Array.from(set)
+  }, [notifications])
 
   const filterOptions = useMemo(() => {
     const set = new Set<NotificationCategory>(categories)
@@ -128,16 +131,49 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
     return notifications.filter((note) => note.category === activeFilter)
   }, [notifications, activeFilter])
 
-  const handleDismiss = (noteId: string) => {
-    // Note: dismiss expects number but note.id is string - convert if needed
-    // For now, keeping as-is since the hook implementation may handle both
-    dismiss(noteId as any)
+  const handleDismiss = async (noteId: string) => {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (!supabaseUrl || !supabaseKey) return
+
+      const supabase = createClient(supabaseUrl, supabaseKey)
+      await supabase
+        .from('user_notification_history')
+        .update({ dismissed_at: new Date().toISOString() })
+        .eq('id', noteId)
+
+      // Optimistically remove from UI
+      setNotifications(prev => prev.filter(n => n.id !== noteId))
+    } catch (error) {
+      console.error('[DashboardNotificationCenter] Failed to dismiss notification:', error)
+    }
+  }
+
+  const dismissAll = async () => {
+    if (!fid) return
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (!supabaseUrl || !supabaseKey) return
+
+      const supabase = createClient(supabaseUrl, supabaseKey)
+      await supabase
+        .from('user_notification_history')
+        .update({ dismissed_at: new Date().toISOString() })
+        .eq('fid', fid)
+        .is('dismissed_at', null)
+
+      // Clear UI
+      setNotifications([])
+    } catch (error) {
+      console.error('[DashboardNotificationCenter] Failed to clear all:', error)
+    }
   }
 
   const handlePrimaryAction = (noteId: string) => {
-    // NotificationItem doesn't have onAction or href fields
-    // These would need to be added to the interface if needed
-    dismiss(noteId as any)
+    // Dismiss after action
+    handleDismiss(noteId)
   }
 
   return (
@@ -181,9 +217,8 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
         {filtered.length ? (
           filtered.map((note) => {
             const icon = note.category ? CATEGORY_ICONS[note.category] ?? <AutoAwesomeIcon sx={{ fontSize: 16 }} /> : <AutoAwesomeIcon sx={{ fontSize: 16 }} />
-            // Note: NotificationItem interface doesn't include description, createdAt, actionLabel, href
-            // Using message, timestamp, and title fields that do exist
-            const timestamp = note.timestamp ?? Date.now()
+            // NotificationHistoryItem has: title, description, created_at
+            const timestamp = note.created_at ? new Date(note.created_at).getTime() : Date.now()
             return (
               <article
                 key={note.id}
@@ -196,15 +231,15 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-sm font-semibold text-slate-950 dark:text-white">{note.title || note.message}</h4>
+                        <h4 className="text-sm font-semibold text-slate-950 dark:text-white">{note.title}</h4>
                         {note.category ? (
                           <span className="pixel-pill bg-slate-100/10 dark:bg-white/5 text-[9px] text-slate-950 dark:text-white/70">
                             {FILTER_LABELS[note.category]}
                           </span>
                         ) : null}
                       </div>
-                      {note.title && note.message ? (
-                        <p className="mt-1 text-[12px] text-[var(--px-sub)] leading-relaxed">{note.message}</p>
+                      {note.description ? (
+                        <p className="mt-1 text-[12px] text-[var(--px-sub)] leading-relaxed">{note.description}</p>
                       ) : null}
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.26em] text-[var(--px-sub)]">
                         <span>{formatTimeAgo(timestamp)}</span>
@@ -247,35 +282,9 @@ export function DashboardNotificationCenter({ tipOptIn, onTipOptInChange, tipSta
             <span>Enable stream</span>
           </label>
         </div>
-        {tipFeed.length ? (
-          <ul className="mt-3 space-y-2">
-            {tipFeed.slice(0, 4).map((tip) => {
-              const valueLabel = formatTipValue(tip)
-              return (
-                <li key={tip.id} className="rounded-xl border border-slate-200 dark:border-slate-700/10 bg-dark-bg-panel/70 px-3 py-2 text-[11px] text-slate-950 dark:text-white/80">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-semibold">
-                    {formatTipSender(tip)}
-                    <span className="ml-2 text-[10px] text-[var(--px-sub)]">→ {formatTipRecipient(tip)}</span>
-                  </span>
-                  {valueLabel ? <span className="text-emerald-200">{valueLabel}</span> : null}
-                </div>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-[var(--px-sub)]">
-                  <span className="pixel-pill bg-slate-100/10 dark:bg-white/5 px-2 py-[2px] text-[9px] uppercase tracking-[0.22em] text-slate-950 dark:text-white/70">
-                    {formatTipKindLabel(tip)}
-                  </span>
-                  <span>{formatTimeAgo(tip.createdAt)}</span>
-                </div>
-                {tip.message ? <div className="mt-1 text-[11px] text-slate-200 line-clamp-2">{tip.message}</div> : null}
-                </li>
-              )
-            })}
-          </ul>
-        ) : (
-          <p className="mt-3 text-[11px] text-[var(--px-sub)]">
-            No tips yet. Enable the stream and keep this page open to celebrate incoming boosts in real time.
-          </p>
-        )}
+        <p className="mt-3 text-[11px] text-[var(--px-sub)]">
+          No tips yet. Enable the stream and keep this page open to celebrate incoming boosts in real time.
+        </p>
       </div>
     </div>
   )

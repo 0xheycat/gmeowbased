@@ -2,7 +2,8 @@
    Gmeowbased utilities - Base chain only
    - Simplified for single-chain operation (Base)
    - Keep multichain types for api/frame OnchainStats compatibility
-   - ABIs: Core, Guild, NFT modules with proxy architecture
+   - All contracts verified on BaseScan (Dec 11, 2025)
+   - ABIs: Centralized in @/lib/contracts/abis for single source of truth
 */
 
 import {
@@ -16,12 +17,17 @@ import {
   type AbiFunction,
   type Address,
 } from 'viem'
+import { trackWarning } from '@/lib/notifications/error-tracking'
 
-// ABI imports
-import GM_ABI_JSON from '@/abi/GmeowCombined.abi.json'
-import CORE_ABI_JSON from '@/abi/GmeowCore.abi.json'
-import GUILD_ABI_JSON from '@/abi/GmeowGuild.abi.json'
-import NFT_ABI_JSON from '@/abi/GmeowNFT.abi.json'
+// Import ABIs from centralized source (single source of truth)
+import {
+  GM_CONTRACT_ABI,
+  CORE_ABI,
+  GUILD_ABI,
+  NFT_ABI,
+  BADGE_ABI,
+  REFERRAL_ABI,
+} from '@/lib/contracts/abis'
 
 // -------------------------------
 // Chain registry / configuration
@@ -73,28 +79,34 @@ export const ALL_CHAIN_IDS: Record<ChainKey, number> = {
 
 // Base chain contracts only (proxy-based standalone architecture)
 export const CONTRACT_ADDRESSES: Record<GMChainKey, `0x${string}`> = {
-  base: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x0cf22803Bfac7C5Da849DdCC736A338b37163d99',
+  base: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73',
 }
 
 // Standalone architecture addresses (Base chain only)
 export const STANDALONE_ADDRESSES = {
   base: {
-    core: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x0cf22803Bfac7C5Da849DdCC736A338b37163d99',
-    guild: (process.env.NEXT_PUBLIC_GM_BASE_GUILD as `0x${string}`) || '0x1c86E848B01f02d478e5A10A0b51011B0160c39c',
-    nft: (process.env.NEXT_PUBLIC_GM_BASE_NFT as `0x${string}`) || '0xf79AC5AcaceC133081aEAB8896BE25B126c634e5',
-    badge: (process.env.NEXT_PUBLIC_GM_BASE_BADGE as `0x${string}`) || '0x30C125Bc40c46483Dd1F444C6985702a0c18b43E',
-    proxy: (process.env.NEXT_PUBLIC_GM_BASE_PROXY as `0x${string}`) || '0x6A48B758ed42d7c934D387164E60aa58A92eD206',
+    core: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73',
+    guild: (process.env.NEXT_PUBLIC_GM_BASE_GUILD as `0x${string}`) || '0x6754e71fFd49Fb9C33C19dA1Aa6596155e53C8A3',
+    nft: (process.env.NEXT_PUBLIC_GM_BASE_NFT as `0x${string}`) || '0xCE9596a992e38c5fa2d997ea916a277E0F652D5C',
+    badge: (process.env.NEXT_PUBLIC_GM_BASE_BADGE as `0x${string}`) || '0x5Af50Ee323C45564d94B0869d95698D837c59aD2',
+    referral: (process.env.NEXT_PUBLIC_GM_BASE_REFERRAL as `0x${string}`) || '0x9E7c32C1fB3a2c08e973185181512a442b90Ba44',
+   // proxy: (process.env.NEXT_PUBLIC_GM_BASE_PROXY as `0x${string}`) || '0x', // GM Proxy Contract deprecated latest update dec 9 standalone fix
   },
 }
 
 export const GM_CONTRACT_ADDRESS = CONTRACT_ADDRESSES.base
 export const getContractAddress = (chain: GMChainKey = 'base') => CONTRACT_ADDRESSES[chain]
 
-// ABIs
-export const GM_CONTRACT_ABI = GM_ABI_JSON as unknown as Abi
-export const CORE_ABI = CORE_ABI_JSON as unknown as Abi
-export const GUILD_ABI = GUILD_ABI_JSON as unknown as Abi
-export const NFT_ABI = NFT_ABI_JSON as unknown as Abi
+// Re-export ABIs from centralized source (already imported above)
+// All verified on BaseScan: https://basescan.org (Dec 11, 2025)
+export {
+  GM_CONTRACT_ABI,
+  CORE_ABI,
+  GUILD_ABI,
+  NFT_ABI,
+  BADGE_ABI,
+  REFERRAL_ABI,
+}
 export const ERC721_ABI = erc721Abi as unknown as Abi
 
 // Helper to get correct ABI based on chain
@@ -111,6 +123,10 @@ export function getNFTABI(): Abi {
   return NFT_ABI
 }
 
+export function getReferralABI(): Abi {
+  return REFERRAL_ABI
+}
+
 // Helper to get contract address by type
 export function getGuildAddress(chain: GMChainKey = 'base'): `0x${string}` {
   return STANDALONE_ADDRESSES[chain].guild
@@ -120,12 +136,16 @@ export function getNFTAddress(chain: GMChainKey = 'base'): `0x${string}` {
   return STANDALONE_ADDRESSES[chain].nft
 }
 
-export function getProxyAddress(chain: GMChainKey = 'base'): `0x${string}` {
-  return STANDALONE_ADDRESSES[chain].proxy
-}
+//export function getProxyAddress(chain: GMChainKey = 'base'): `0x${string}` {
+ // return STANDALONE_ADDRESSES[chain].proxy
+//}
 
 export function getCoreAddress(chain: GMChainKey = 'base'): `0x${string}` {
   return STANDALONE_ADDRESSES[chain].core
+}
+
+export function getReferralAddress(chain: GMChainKey = 'base'): `0x${string}` {
+  return STANDALONE_ADDRESSES[chain].referral
 }
 
 // GM contract chains only
@@ -266,7 +286,7 @@ function assertFunctionInAbi(functionName: string) {
   if (ABI_FUNCTION_NAMES.has(functionName)) return true
   if (!missingFunctionWarnings.has(functionName)) {
     missingFunctionWarnings.add(functionName)
-    console.warn(`[gm-utils] Function "${functionName}" not present in loaded contract ABI.`)
+    trackWarning('gmeow_utils_function_not_in_abi', { function: 'getTxDataForFunction', functionName })
   }
   return false
 }
@@ -313,6 +333,16 @@ function buildCallObject(functionName: string, args: readonly unknown[], chain: 
   return {
     address: getContractAddress(chain),
     abi: GM_CONTRACT_ABI,
+    functionName: functionName as any,
+    args,
+  }
+}
+
+// Helper for referral contract calls (uses REFERRAL_ABI and referral address)
+function buildReferralCallObject(functionName: string, args: readonly unknown[], chain: GMChainKey = 'base') {
+  return {
+    address: getReferralAddress(chain),
+    abi: REFERRAL_ABI,
     functionName: functionName as any,
     args,
   }
@@ -464,10 +494,10 @@ export const createGetActiveQuestsCall = (chain: GMChainKey = 'base') =>
 // Referral system TX builders
 // -------------------------------
 export const createRegisterReferralCodeTx = (code: string, chain: GMChainKey = 'base') =>
-  buildCallObject('registerReferralCode', [code], chain)
+  buildReferralCallObject('registerReferralCode', [code], chain)
 
 export const createSetReferrerTx = (code: string, chain: GMChainKey = 'base') =>
-  buildCallObject('setReferrer', [code], chain)
+  buildReferralCallObject('setReferrer', [code], chain)
 
 export const createSetFarcasterFidTx = (fid: bigint | number | string, chain: GMChainKey = 'base') =>
   buildCallObject('setFarcasterFid', [toBigInt(fid)], chain)

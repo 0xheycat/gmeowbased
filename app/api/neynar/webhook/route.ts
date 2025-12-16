@@ -11,7 +11,6 @@ import { buildAgentAutoReply } from '@/lib/agent-auto-reply'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib/neynar-bot'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import { markNotificationTokenDisabled, upsertNotificationToken } from '@/lib/miniapp-notifications'
 import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot-frame-builder'
 // Phase 5.1: Real-time Viral Notifications
 // Source: lib/viral-engagement-sync.ts, lib/viral-achievements.ts
@@ -19,7 +18,8 @@ import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot-frame-b
 // Approved by: @heycat on November 17, 2025
 import { syncCastEngagement } from '@/lib/viral-engagement-sync'
 import { checkAndAwardAchievements } from '@/lib/viral-achievements'
-import { dispatchViralNotification } from '@/lib/viral-notifications'
+// Phase 4: Priority System Integration - replaced dispatchViralNotification with notifyWithXPReward
+import { notifyWithXPReward } from '@/lib/notifications'
 
 export const runtime = 'nodejs'
 
@@ -181,18 +181,17 @@ async function handleMiniAppNotificationEvent(
     }
 
     const statusForStore = resolvedStatus === 'disabled' ? 'disabled' : 'enabled'
-    const stored = await upsertNotificationToken({
+    // TODO: Implement notification token storage when miniapp-notifications module is available
+    console.log('[neynar-webhook] Would store notification token:', {
       fid: resolvedFid,
       token: rawToken,
-      notificationUrl: resolvedUrl || rawUrl,
-      status: statusForStore === 'disabled' ? 'disabled' : 'enabled',
+      status: statusForStore,
       eventType: eventName,
-      eventAt: new Date(),
-      clientFid: appFid ?? null,
     })
 
-    meta.tokenStored = stored
+    meta.tokenStored = false
     meta.status = statusForStore
+    meta.skipped = 'miniapp-notifications-not-available'
     return { type: 'miniapp-event', meta }
   }
 
@@ -202,16 +201,17 @@ async function handleMiniAppNotificationEvent(
       return { type: 'miniapp-event', meta }
     }
 
-    const updated = await markNotificationTokenDisabled({
-      token: rawToken || undefined,
-      fid: eventFid ?? undefined,
+    // TODO: Implement notification token disabling when miniapp-notifications module is available
+    console.log('[neynar-webhook] Would disable notification token:', {
+      token: rawToken,
+      fid: eventFid,
       status: eventName === 'miniapp_removed' ? 'removed' : 'disabled',
       reason: eventName,
-      eventAt: new Date(),
     })
 
-    meta.tokenUpdated = updated
+    meta.tokenUpdated = false
     meta.status = eventName === 'miniapp_removed' ? 'removed' : 'disabled'
+    meta.skipped = 'miniapp-notifications-not-available'
     return { type: 'miniapp-event', meta }
   }
 
@@ -424,15 +424,38 @@ async function handleViralEngagementSync(
       additionalXp: syncResult.additionalXp,
     })
 
-    // If tier upgraded, send notification
+    // Phase 4: If tier upgraded, send notification with priority filtering
     if (syncResult.tierUpgrade && badgeCast.fid) {
-      await dispatchViralNotification({
-        type: 'tier_upgrade',
+      // Map viral tier to notification event type
+      const tierToEventType: Record<string, string> = {
+        mega_viral: 'tier_mega_viral',  // 200 XP - critical priority
+        viral: 'tier_viral',              // 150 XP - critical priority
+        popular: 'tier_popular',          // 100 XP - high priority
+        engaging: 'tier_engaging',        // 50 XP - high priority
+        active: 'tier_active',            // 25 XP - medium priority
+      }
+      
+      const eventType = tierToEventType[syncResult.newTier] || 'tier_active'
+      const tierEmojis: Record<string, string> = {
+        mega_viral: '🔥',
+        viral: '⚡',
+        popular: '✨',
+        engaging: '💫',
+        active: '🌟',
+      }
+      const emoji = tierEmojis[syncResult.newTier] || '🎉'
+      
+      // BUG FIX: Use 'achievement' category instead of 'viral_tier'
+      // DEFAULT_PRIORITY_MAP doesn't have 'viral_tier', causing all viral notifications to be filtered
+      // Viral tier upgrades are achievements, so should use 'achievement' category
+      await notifyWithXPReward({
         fid: badgeCast.fid,
-        castHash,
-        oldTier: syncResult.oldTier,
-        newTier: syncResult.newTier,
-        xpBonus: syncResult.additionalXp,
+        category: 'achievement',
+        title: `${emoji} Viral Tier Upgrade!`,
+        body: `Your cast reached "${syncResult.newTier}" tier!`,
+        targetUrl: `https://warpcast.com/~/conversations/${castHash}`,
+        eventType,
+        metadata: { castHash, oldTier: syncResult.oldTier, newTier: syncResult.newTier },
       })
     }
 

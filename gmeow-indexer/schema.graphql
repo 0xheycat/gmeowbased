@@ -1,0 +1,133 @@
+# User XP & Streaks (from Core contract)
+type User @entity {
+  id: ID! # wallet address (lowercase)
+  totalXP: BigInt!
+  currentStreak: Int!
+  lastGMTimestamp: BigInt!
+  lifetimeGMs: Int!
+  badges: [BadgeMint!] @derivedFrom(field: "user")
+  guilds: [GuildMember!] @derivedFrom(field: "user")
+  gmEvents: [GMEvent!] @derivedFrom(field: "user")
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# GM Events (from Core contract)
+type GMEvent @entity {
+  id: ID! # txHash-logIndex
+  user: User!
+  timestamp: BigInt!
+  xpAwarded: BigInt!
+  streakDay: Int!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# Leaderboard (pre-computed rankings)
+type LeaderboardEntry @entity {
+  id: ID! # wallet address (lowercase)
+  user: User!
+  rank: Int! @index
+  totalPoints: BigInt!
+  weeklyPoints: BigInt!
+  monthlyPoints: BigInt!
+  updatedAt: DateTime!
+}
+
+# Guild System (from Guild contract)
+type Guild @entity {
+  id: ID! # guild ID from contract
+  owner: String! @index
+  createdAt: BigInt!
+  totalMembers: Int!
+  totalPoints: BigInt!
+  members: [GuildMember!] @derivedFrom(field: "guild")
+  events: [GuildEvent!] @derivedFrom(field: "guild")
+}
+
+type GuildMember @entity {
+  id: ID! # guildId-memberAddress
+  guild: Guild!
+  user: User!
+  joinedAt: BigInt!
+  role: String! # owner, officer, member
+  pointsContributed: BigInt!
+  isActive: Boolean!
+}
+
+type GuildEvent @entity {
+  id: ID! # txHash-logIndex
+  guild: Guild!
+  eventType: String! # CREATED, JOINED, LEFT, DEPOSIT, POINTS_AWARDED
+  user: String! @index
+  amount: BigInt # for deposits/points
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# Badge/NFT System (from Badge contract)
+type BadgeMint @entity {
+  id: ID! # txHash-logIndex
+  tokenId: BigInt!
+  user: User!
+  badgeType: String!
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# NFT Mints and Transfers
+# Updated: Phase 1 Day 2 - Added nftType and metadataURI fields
+type NFTMint @entity {
+  id: ID! # txHash-logIndex
+  tokenId: BigInt!
+  to: String! @index
+  nftType: String! @index       # Badge type (legendary_quest, streak_champion, etc.)
+  metadataURI: String!          # IPFS or HTTP URI for metadata
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+type NFTTransfer @entity {
+  id: ID! # txHash-logIndex
+  tokenId: BigInt!
+  from: String! @index
+  to: String! @index
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# Referral System (from Referral contract)
+type ReferralCode @entity {
+  id: ID! # referral code (string)
+  owner: String! @index
+  createdAt: BigInt!
+  totalUses: Int!
+  totalRewards: BigInt!
+  referrals: [ReferralUse!] @derivedFrom(field: "code")
+}
+
+type ReferralUse @entity {
+  id: ID! # txHash-logIndex
+  code: ReferralCode!
+  referrer: String! @index
+  referee: String! @index
+  reward: BigInt!
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# Daily Aggregations (for analytics)
+type DailyStats @entity {
+  id: ID! # date-YYYY-MM-DD
+  date: String! @index
+  totalGMs: Int!
+  uniqueUsers: Int!
+  totalXPAwarded: BigInt!
+  newGuilds: Int!
+  badgesMinted: Int!
+}

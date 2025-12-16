@@ -28,6 +28,7 @@ import { getSupabaseServerClient } from '@/lib/supabase';
 import { fetchProfileData, updateProfileData, type ProfileData } from '@/lib/profile/profile-service';
 import DOMPurify from 'isomorphic-dompurify';
 import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/idempotency';
+import { generateRequestId } from '@/lib/request-id';
 
 export const dynamic = 'force-dynamic';
 
@@ -236,6 +237,7 @@ export const GET = withErrorHandler(async (
   request: NextRequest,
   context?: { params: Promise<{ fid: string }> }
 ) => {
+  const requestId = generateRequestId();
   const startTime = Date.now();
   
   // Next.js 15: Await params before accessing

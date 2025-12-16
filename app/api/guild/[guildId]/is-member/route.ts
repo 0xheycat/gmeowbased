@@ -33,10 +33,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { apiLimiter } from '@/lib/rate-limit'
+import { strictLimiter, apiLimiter } from '@/lib/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
 import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
+import { generateRequestId } from '@/lib/request-id'
+import { STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -80,8 +83,8 @@ async function getUserGuild(address: Address): Promise<bigint> {
   
   try {
     const guildId = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
       functionName: 'guildOf',
       args: [address],
     }) as bigint
@@ -100,17 +103,20 @@ async function getGuildData(guildId: bigint): Promise<{ leader: string } | null>
   const client = getPublicClient()
   
   try {
-    const guildData = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
-      functionName: 'guilds',
+    const guildInfo = await client.readContract({
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
+      functionName: 'getGuildInfo',
       args: [guildId],
-    }) as any[]
+    }) as any
     
-    if (!guildData || guildData.length === 0) return null
+    if (!guildInfo) return null
+    
+    // Parse tuple response: (name, leader, totalPoints, memberCount, active, level, treasuryPoints)
+    const leader = Array.isArray(guildInfo) ? guildInfo[1] : guildInfo.leader
     
     return {
-      leader: (guildData[1] as string) || '',
+      leader: (leader as string) || '',
     }
   } catch (error) {
     console.error('[guild-is-member] getGuildData error:', error)
@@ -194,11 +200,16 @@ function createErrorResponse(message: string, status: number = 400) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
+  const requestId = generateRequestId()
+
   const startTime = Date.now()
 
   try {
+    // Await params for Next.js 15
+    const { guildId } = await params
+
     // 1. RATE LIMITING
     if (!apiLimiter) {
       return createErrorResponse('Rate limiting not configured', 503)
@@ -240,17 +251,26 @@ export async function GET(
     }
 
     const { address } = queryResult.data
-    const { guildId } = params
 
-    // Validate guildId
+    // Validate guildId (already extracted above)
     const guildIdNum = BigInt(guildId)
     if (guildIdNum <= 0n) {
       return createErrorResponse('Invalid guild ID', 400)
     }
 
     // 3. CHECK MEMBERSHIP
+    // First check if user is in this guild via guildOf()
     const userGuildId = await getUserGuild(address as Address)
-    const isMember = userGuildId === guildIdNum
+    let isMember = userGuildId === guildIdNum
+    
+    // If not a member via guildOf(), check if user is the guild leader
+    // Leaders are automatically considered members even if guildOf() returns 0
+    if (!isMember) {
+      const guildData = await getGuildData(guildIdNum)
+      if (guildData && guildData.leader.toLowerCase() === address.toLowerCase()) {
+        isMember = true
+      }
+    }
     
     let role: 'owner' | 'officer' | 'member' | null = null
     if (isMember) {
@@ -261,6 +281,7 @@ export async function GET(
     console.log('[guild-is-member] Membership check:', {
       address,
       guildId,
+      userGuildId: userGuildId.toString(),
       isMember,
       role,
       timestamp: new Date().toISOString(),

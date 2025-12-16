@@ -174,7 +174,9 @@ export function ReferralActivityFeed({ fid, limit = 20, className = '' }: Referr
           {/* Activities */}
           <div className="space-y-6">
             {activities.map((activity) => {
-              const { title, description } = getActivityText(activity)
+              const activityText = getActivityText(activity)
+              if (!activityText) return null
+              const { title, description } = activityText
               return (
                 <div key={activity.id} className="relative flex gap-4">
                   {/* Icon */}

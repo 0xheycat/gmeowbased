@@ -292,95 +292,122 @@ export async function copyToClipboardSafe(value: string): Promise<boolean> {
 
 /**
  * Build dynamic frame image URL with query parameters
- * Generates personalized image URLs for /api/frame/image endpoint
+ * Generates personalized image URLs for modular /api/frame/image/* routes
+ * Updated December 2025: Use modular routes matching lib/frames/handlers pattern
  * 
  * @param input - Frame share input with type and parameters
  * @param originOverride - Optional origin override
- * @returns Dynamic image URL with query parameters, or fallback static image
+ * @returns Dynamic image URL with query parameters to modular route
  */
 export function buildDynamicFrameImageUrl(input: FrameShareInput, originOverride?: string | null): string {
   const origin = resolveOrigin(originOverride)
   if (!origin) return `${origin || ''}/frame-image.png`
   
   const params = new URLSearchParams()
-  params.set('type', input.type)
   if (input.chain) params.set('chain', String(input.chain))
   if (input.user) params.set('user', input.user)
   if (input.fid != null) params.set('fid', String(input.fid))
   
-  if (input.type === 'quest' && input.questId != null) {
-    params.set('questId', String(input.questId))
-  }
+  // Badge handling (special case: separate route for single badge)
   if (input.type === 'badge') {
     if (input.badgeId) {
-      // Badge share route (single badge)
+      // Single badge route
       params.set('badgeId', input.badgeId)
-      // Badge images: dynamic generation with aggressive CDN caching for speed
-      // Cache buster: v=2 to invalidate old cached error responses (2025-11-20 multi-line CSS fix)
       params.set('v', '2')
       return `${origin}/api/frame/badgeShare/image?${params.toString()}`
     } else {
-      // Badge collection route (multiple badges) - Phase 2.1 Task 2.1.1
+      // Badge collection route
       if (input.extra?.earnedBadges) params.set('earnedBadges', String(input.extra.earnedBadges))
       if (input.extra?.earnedCount) params.set('earnedCount', String(input.extra.earnedCount))
       if (input.extra?.eligibleCount) params.set('eligibleCount', String(input.extra.eligibleCount))
       if (input.extra?.username) params.set('username', String(input.extra.username))
       if (input.extra?.displayName) params.set('displayName', String(input.extra.displayName))
-      return `${origin}/api/frame/image?${params.toString()}`
-    }
-  }
-  if (input.type === 'leaderboards' && input.extra) {
-    if (input.extra.limit) params.set('limit', String(input.extra.limit))
-    if (input.extra.season) params.set('season', String(input.extra.season))
-    if (input.extra.global) params.set('global', String(input.extra.global))
-  }
-  if (input.type === 'guild' && input.id != null) {
-    params.set('guildId', String(input.id))
-  }
-  if (input.type === 'referral' && input.referral) {
-    params.set('ref', input.referral)
-  }
-  if (input.type === 'onchainstats' && input.extra) {
-    // Pass all onchainstats metrics to image generator
-    const onchainMetrics = ['statsChain', 'chainName', 'explorer', 'txs', 'contracts', 'volume', 'balance', 'age', 'builder', 'neynar', 'power', 'firstTx', 'lastTx']
-    for (const key of onchainMetrics) {
-      const value = input.extra[key]
-      if (value !== undefined && value !== null) {
-        params.set(key, String(value))
-      }
-    }
-  }
-  if (input.type === 'gm' && input.extra) {
-    // Pass GM stats to image generator
-    const gmMetrics = ['gmCount', 'streak', 'rank']
-    for (const key of gmMetrics) {
-      const value = input.extra[key]
-      if (value !== undefined && value !== null) {
-        params.set(key, String(value))
-      }
-    }
-  }
-  if (input.type === 'quest' && input.extra) {
-    // Pass quest details to image generator
-    const questMetrics = ['questName', 'reward', 'expires', 'progress']
-    for (const key of questMetrics) {
-      const value = input.extra[key]
-      if (value !== undefined && value !== null) {
-        params.set(key, String(value))
-      }
-    }
-  }
-  if (input.extra) {
-    // Pass any remaining extra parameters
-    for (const [key, value] of Object.entries(input.extra)) {
-      if (value === undefined || value === null) continue
-      if (['limit', 'season', 'global'].includes(key) && input.type === 'leaderboards') continue
-      // Skip already-handled type-specific parameters
-      const handledKeys = ['statsChain', 'chainName', 'explorer', 'txs', 'contracts', 'volume', 'balance', 'age', 'builder', 'neynar', 'power', 'firstTx', 'lastTx', 'gmCount', 'streak', 'rank', 'questName', 'reward', 'expires', 'progress']
-      if (handledKeys.includes(key)) continue
-      params.set(key, String(value))
+      return `${origin}/api/frame/image/badgecollection?${params.toString()}`
     }
   }
   
-  return `${origin}/api/frame/image?${params.toString()}`
+  // GM frame image
+  if (input.type === 'gm') {
+    if (input.extra?.gmCount) params.set('gmCount', String(input.extra.gmCount))
+    if (input.extra?.streak) params.set('streak', String(input.extra.streak))
+    if (input.extra?.rank) params.set('rank', String(input.extra.rank))
+    if (input.extra?.lifetimeGMs) params.set('lifetimeGMs', String(input.extra.lifetimeGMs))
+    if (input.extra?.xp) params.set('xp', String(input.extra.xp))
+    if (input.extra?.username) params.set('username', String(input.extra.username))
+    if (input.extra?.displayName) params.set('displayName', String(input.extra.displayName))
+    return `${origin}/api/frame/image/gm?${params.toString()}`
+  }
+  
+  // Quest frame image
+  if (input.type === 'quest') {
+    if (input.questId != null) params.set('questId', String(input.questId))
+    if (input.extra?.questName) params.set('questName', String(input.extra.questName))
+    if (input.extra?.reward) params.set('reward', String(input.extra.reward))
+    if (input.extra?.expires) params.set('expires', String(input.extra.expires))
+    if (input.extra?.progress) params.set('progress', String(input.extra.progress))
+    if (input.extra?.difficulty) params.set('difficulty', String(input.extra.difficulty))
+    return `${origin}/api/frame/image/quest?${params.toString()}`
+  }
+  
+  // Guild frame image
+  if (input.type === 'guild') {
+    if (input.id != null) params.set('guildId', String(input.id))
+    if (input.extra?.guildName) params.set('guildName', String(input.extra.guildName))
+    if (input.extra?.members) params.set('members', String(input.extra.members))
+    if (input.extra?.totalPoints) params.set('totalPoints', String(input.extra.totalPoints))
+    if (input.extra?.rank) params.set('rank', String(input.extra.rank))
+    return `${origin}/api/frame/image/guild?${params.toString()}`
+  }
+  
+  // Leaderboard frame image
+  if (input.type === 'leaderboards') {
+    if (input.extra?.limit) params.set('limit', String(input.extra.limit))
+    if (input.extra?.season) params.set('season', String(input.extra.season))
+    if (input.extra?.global) params.set('global', String(input.extra.global))
+    if (input.extra?.top3) params.set('top3', String(input.extra.top3))
+    return `${origin}/api/frame/image/leaderboard?${params.toString()}`
+  }
+  
+  // Points frame image
+  if (input.type === 'points') {
+    if (input.extra?.totalXP) params.set('totalXP', String(input.extra.totalXP))
+    if (input.extra?.availableXP) params.set('availableXP', String(input.extra.availableXP))
+    if (input.extra?.lockedXP) params.set('lockedXP', String(input.extra.lockedXP))
+    if (input.extra?.rank) params.set('rank', String(input.extra.rank))
+    if (input.extra?.username) params.set('username', String(input.extra.username))
+    return `${origin}/api/frame/image/points?${params.toString()}`
+  }
+  
+  // Referral frame image
+  if (input.type === 'referral') {
+    if (input.referral) params.set('ref', input.referral)
+    if (input.extra?.referralCode) params.set('referralCode', String(input.extra.referralCode))
+    if (input.extra?.referralCount) params.set('referralCount', String(input.extra.referralCount))
+    if (input.extra?.referralXP) params.set('referralXP', String(input.extra.referralXP))
+    return `${origin}/api/frame/image/referral?${params.toString()}`
+  }
+  
+  // Onchain stats frame image
+  if (input.type === 'onchainstats') {
+    const onchainMetrics = ['statsChain', 'chainName', 'explorer', 'txs', 'contracts', 'volume', 'balance', 'age', 'builder', 'neynar', 'power', 'firstTx', 'lastTx']
+    for (const key of onchainMetrics) {
+      const value = input.extra?.[key]
+      if (value !== undefined && value !== null) {
+        params.set(key, String(value))
+      }
+    }
+    if (input.extra?.username) params.set('username', String(input.extra.username))
+    return `${origin}/api/frame/image/onchainstats?${params.toString()}`
+  }
+  
+  // Verify frame image
+  if (input.type === 'verify') {
+    if (input.extra?.verified) params.set('verified', String(input.extra.verified))
+    if (input.extra?.questId) params.set('questId', String(input.extra.questId))
+    if (input.extra?.username) params.set('username', String(input.extra.username))
+    return `${origin}/api/frame/image/verify?${params.toString()}`
+  }
+  
+  // Fallback: generic frame image (should not be reached with proper types)
+  return `${origin}/frame-image.png`
 }

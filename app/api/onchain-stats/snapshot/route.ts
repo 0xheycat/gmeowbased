@@ -32,6 +32,7 @@ import {
 } from '@/lib/api-security'
 import { getRequestId } from '@/lib/request-id'
 import { z } from 'zod'
+import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -240,6 +241,8 @@ export async function OPTIONS(req: NextRequest) {
 // ============================================================================
 
 export async function PUT(req: NextRequest) {
+  const requestId = generateRequestId()
+
   try {
     // Validate CRON_SECRET for automated calls
     const cronSecret = req.headers.get('x-cron-secret')

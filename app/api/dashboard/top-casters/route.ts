@@ -23,10 +23,11 @@ import {
 } from '@/lib/api-security'
 import { getRequestId } from '@/lib/request-id'
 import { getTopCasters } from '@/lib/api/neynar-dashboard'
+import { generateRequestId } from '@/lib/request-id'
 
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId()
   const startTime = Date.now()
-  const requestId = getRequestId(request)
 
   try {
     // ============================================================================
@@ -74,20 +75,15 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[Top Casters API] Error:', error)
-    logApiRequest({
-      method: 'GET',
-      path: '/api/dashboard/top-casters',
+    logApiRequest(request, {
       status: 500,
       duration: Date.now() - startTime,
-      requestId,
       error: error instanceof Error ? error.message : String(error),
     })
 
     return createErrorResponse(
       'Internal server error',
-      500,
-      request.headers.get('origin'),
-      requestId
+      500
     )
   }
 }

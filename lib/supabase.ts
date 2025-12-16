@@ -272,6 +272,60 @@ export function getSupabaseAdminClient(): SupabaseClient<Database> | null {
 }
 
 // ========================================
+// Browser Client (Client-Side Components)
+// ========================================
+
+let cachedBrowserClient: SupabaseClient<Database> | null = null
+
+/**
+ * Get browser-safe Supabase client (singleton)
+ * 
+ * Features:
+ * - Single instance shared across all client components
+ * - Prevents "Multiple GoTrueClient instances" warning
+ * - Anon Key only (public operations, RLS enforced)
+ * - Session persistence enabled for auth
+ * 
+ * Usage:
+ * - Client Components ('use client')
+ * - Browser-side operations
+ * - User-scoped queries
+ * 
+ * @returns SupabaseClient or null if not configured
+ */
+export function getSupabaseBrowserClient(): SupabaseClient<Database> | null {
+  if (typeof window === 'undefined') {
+    console.warn('[Supabase] Browser client called on server-side')
+    return null
+  }
+  
+  if (cachedBrowserClient) return cachedBrowserClient
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('[Supabase] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
+    return null
+  }
+  
+  cachedBrowserClient = createClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'gmeow-browser/2.0.0',
+      },
+    },
+  })
+  
+  return cachedBrowserClient
+}
+
+// ========================================
 // Utility Functions (from old foundation)
 // ========================================
 
@@ -287,6 +341,7 @@ export function clearSupabaseCache(): void {
   cachedServerClient = null
   cachedEdgeClient = null
   cachedAdminClient = null
+  cachedBrowserClient = null
 }
 
 /**

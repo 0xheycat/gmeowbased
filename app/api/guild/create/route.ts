@@ -152,6 +152,61 @@ async function getUserGuild(address: Address): Promise<bigint> {
 }
 
 /**
+ * Get guild data
+ */
+async function getGuildData(guildId: bigint) {
+  const client = getPublicClient()
+  
+  try {
+    const guildInfo = await client.readContract({
+      address: STANDALONE_ADDRESSES.base.guild,
+      abi: GM_CONTRACT_ABI,
+      functionName: 'getGuildInfo',
+      args: [guildId],
+    }) as readonly [string, Address, bigint, bigint, boolean, bigint, bigint]
+    
+    return {
+      name: guildInfo[0],
+      leader: guildInfo[1],
+      totalPoints: guildInfo[2],
+      memberCount: guildInfo[3],
+      active: guildInfo[4],
+      level: guildInfo[5],
+      treasury: guildInfo[6],
+    }
+  } catch (error) {
+    console.error('[guild-create] getGuildData error:', error)
+    return null
+  }
+}
+
+/**
+ * Check if address is guild leader
+ */
+async function isGuildLeader(address: Address, guildId: bigint): Promise<boolean> {
+  try {
+    const guildData = await getGuildData(guildId)
+    if (!guildData) return false
+    return guildData.leader.toLowerCase() === address.toLowerCase()
+  } catch (error) {
+    console.error('[guild-create] isGuildLeader error:', error)
+    return false
+  }
+}
+
+/**
+ * Check if user is member of guild (includes leader fallback)
+ */
+async function isUserMemberOfGuild(address: Address, guildId: bigint): Promise<boolean> {
+  // Check 1: Normal membership via guildOf()
+  const userGuildId = await getUserGuild(address)
+  if (userGuildId === guildId) return true
+  
+  // Check 2: Guild leadership (fallback for leaders who created guilds)
+  return await isGuildLeader(address, guildId)
+}
+
+/**
  * Sanitize guild name (XSS prevention)
  */
 function sanitizeGuildName(name: string): string {

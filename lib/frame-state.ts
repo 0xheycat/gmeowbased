@@ -7,6 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
+import { trackError, trackInfo } from '@/lib/notifications/error-tracking'
 
 // Types
 export interface FrameState {
@@ -62,13 +63,13 @@ export async function saveFrameState(
       })
 
     if (error) {
-      console.error('[frame-state] Failed to save state:', error)
+      trackError('frame_state_save_failed', error, { function: 'saveState', sessionId, fid })
       return false
     }
 
     return true
   } catch (err) {
-    console.error('[frame-state] Error saving state:', err)
+    trackError('frame_state_save_error', err, { function: 'saveState', sessionId })
     return false
   }
 }
@@ -89,7 +90,7 @@ export async function loadFrameState(
       .single()
 
     if (error || !data) {
-      console.log('[frame-state] Session not found:', sessionId)
+      trackInfo('frame_state_session_not_found', { function: 'loadState', sessionId })
       return null
     }
 
@@ -105,7 +106,7 @@ export async function loadFrameState(
 
     return data as FrameSession
   } catch (err) {
-    console.error('[frame-state] Error loading state:', err)
+    trackError('frame_state_load_error', err, { function: 'loadState', sessionId })
     return null
   }
 }
@@ -118,7 +119,7 @@ export async function deleteFrameState(sessionId: string): Promise<void> {
   try {
     await supabase.from('frame_sessions').delete().eq('session_id', sessionId)
   } catch (err) {
-    console.error('[frame-state] Error deleting state:', err)
+    trackError('frame_state_delete_error', err, { function: 'deleteState', sessionId })
   }
 }
 
@@ -137,13 +138,13 @@ export async function getUserSessions(fid: number): Promise<FrameSession[]> {
       .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('[frame-state] Error fetching user sessions:', error)
+      trackError('frame_state_fetch_sessions_failed', error, { function: 'getUserSessions', fid })
       return []
     }
 
     return (data as FrameSession[]) || []
   } catch (err) {
-    console.error('[frame-state] Error fetching user sessions:', err)
+    trackError('frame_state_fetch_sessions_error', err, { function: 'getUserSessions', fid })
     return []
   }
 }
@@ -157,13 +158,13 @@ export async function cleanupExpiredSessions(): Promise<number> {
     const { data, error } = await supabase.rpc('cleanup_expired_frame_sessions')
 
     if (error) {
-      console.error('[frame-state] Error during cleanup:', error)
+      trackError('frame_state_cleanup_failed', error, { function: 'cleanupExpiredSessions' })
       return 0
     }
 
     return data as number
   } catch (err) {
-    console.error('[frame-state] Error during cleanup:', err)
+    trackError('frame_state_cleanup_error', err, { function: 'cleanupExpiredSessions' })
     return 0
   }
 }

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import {
-  generateQuestNFTMetadata,
+import { generateQuestNFTMetadata,
   generateAchievementNFTMetadata,
   generateEventNFTMetadata,
   generateLegendaryNFTMetadata,
@@ -10,7 +9,7 @@ import {
   type NFTCategory,
   type NFTRarity,
 } from '@/lib/nft-metadata'
-
+import { generateRequestId } from '@/lib/request-id'
 const GM_BASE_NFT = (process.env.NEXT_PUBLIC_GM_BASE_NFT || process.env.GM_BASE_NFT) as Address
 const GM_BASE_CORE = (process.env.NEXT_PUBLIC_GM_BASE_CORE || process.env.GM_BASE_CORE) as Address
 
@@ -82,6 +81,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { tokenId: string } }
 ) {
+  const requestId = generateRequestId()
+
   try {
     const tokenId = BigInt(params.tokenId)
 
@@ -216,6 +217,7 @@ export async function GET(
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
         'Content-Type': 'application/json',
+        'X-Request-ID': requestId,
       },
     })
   } catch (error) {

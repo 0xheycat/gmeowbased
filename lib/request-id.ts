@@ -6,15 +6,14 @@
  * Format: req_<timestamp>_<random>
  */
 
-import { randomUUID } from 'crypto'
-
 /**
  * Generate unique request ID
  * Format: req_1234567890_abc123
+ * Uses Web Crypto API (Edge Runtime compatible)
  */
 export function generateRequestId(): string {
   const timestamp = Date.now()
-  const random = randomUUID().split('-')[0]
+  const random = crypto.randomUUID().split('-')[0]
   return `req_${timestamp}_${random}`
 }
 

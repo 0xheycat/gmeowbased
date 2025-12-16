@@ -725,6 +725,19 @@
     }
   }
   
+  /* Week 3 Day 4: Bell Shake Animation */
+  @keyframes shake {
+    0%, 100% { 
+      transform: rotate(0deg); 
+    }
+    10%, 30%, 50%, 70%, 90% { 
+      transform: rotate(-10deg); 
+    }
+    20%, 40%, 60%, 80% { 
+      transform: rotate(10deg); 
+    }
+  }
+  
   /* Animation Utility Classes */
   .animate-fade-in {
     animation: fadeIn var(--transition-base);
@@ -756,6 +769,50 @@
   
   .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  /* Skeleton Wave Animation - Professional Loading */
+  @keyframes skeleton-wave {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  
+  .skeleton-wave {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: skeleton-wave 1.5s ease-in-out infinite;
+    will-change: background-position;
+  }
+  
+  /* Dark mode skeleton wave */
+  .dark .skeleton-wave {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+  }
+  
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-wave {
+      animation: none;
+      background-image: none;
+    }
   }
   
   .animate-spin {
@@ -1458,7 +1515,7 @@ input[type='number'] {
 }
 
 /* ============================================================================
-   NOTIFICATION ANIMATIONS - Removed per user requirement
+   NOTIFICATION ANIMATIONS - will adding later
    ============================================================================ */
 
 /* Tooltip arrow utility */
@@ -2139,6 +2196,21 @@ input[type='number'] {
   
   .animate-bounce-horizontal {
     animation: bounce-horizontal 1s ease-in-out infinite;
+  }
+  
+  /* Professional Skeleton Animations (music template) */
+  .skeleton-wave {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent
+    );
+    background-size: 200% 100%;
+  }
+  
+  .skeleton-pulsate {
+    /* Animation defined in tailwind.config.ts */
   }
 }
 

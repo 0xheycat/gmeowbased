@@ -30,6 +30,7 @@ import { z } from 'zod'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { strictLimiter, getClientIp } from '@/lib/rate-limit'
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler'
+import { generateRequestId } from '@/lib/request-id'
 
 // ===== SECURITY LAYER 2: INPUT VALIDATION =====
 const FidParamSchema = z.object({
@@ -40,9 +41,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { fid: string } }
 ) {
+  const requestId = generateRequestId()
   const startTime = Date.now()
   const clientIp = getClientIp(request)
-  const requestId = crypto.randomUUID()
 
   // ===== SECURITY LAYER 9: AUDIT LOGGING =====
   console.log('[API /api/referral/[fid]/analytics] Request received', {
@@ -128,7 +129,7 @@ export async function GET(
     // Fetch referral metrics
     const { data: metricsData, error: metricsError } = await supabase
       .from('referral_stats')
-      .select('total_referrals, conversion_rate, avg_convert_time_hours, growth_rate')
+      .select('total_referrals, conversion_rate, growth_rate')
       .eq('fid', fid)
       .single()
 
@@ -238,7 +239,7 @@ export async function GET(
           metrics: {
             totalReferrals: metricsData?.total_referrals || 0,
             conversionRate: metricsData?.conversion_rate || 0,
-            averageTimeToConvert: metricsData?.avg_convert_time_hours || 0,
+            averageTimeToConvert: 0, // Not tracked in current schema
             growthRate: metricsData?.growth_rate || 0,
             peakDay,
           },

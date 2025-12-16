@@ -16,6 +16,7 @@
  */
 
 import type { NextRequest } from 'next/server'
+import { trackError } from '@/lib/notifications/error-tracking'
 
 // ========================================
 // TYPES
@@ -127,10 +128,12 @@ function withTiming(handler: ApiHandler): ApiHandler {
       const duration = performance.now() - startTime
       const url = new URL(request.url)
       
-      console.error(
-        `[ERROR] ${request.method} ${url.pathname} failed after ${duration.toFixed(2)}ms`,
-        error
-      )
+      trackError('timing_request_failed', error, {
+        function: 'withTiming',
+        method: request.method,
+        pathname: url.pathname,
+        duration: duration.toFixed(2),
+      })
       
       throw error
     }
@@ -162,7 +165,7 @@ async function logSlowRequest(
         status,
       })
     } catch (error) {
-      console.error('[Analytics] Failed to send slow request event:', error)
+      trackError('timing_analytics_failed', error, { function: 'logSlowRequest', route, method, duration })
     }
   }
   
@@ -184,7 +187,7 @@ async function logSlowRequest(
         }),
       })
     } catch (error) {
-      console.error('[Monitoring] Failed to send slow request webhook:', error)
+      trackError('timing_monitoring_webhook_failed', error, { function: 'logSlowRequest', route, method, duration })
     }
   }
 }

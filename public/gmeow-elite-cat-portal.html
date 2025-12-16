@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gmeow Elite Cat Portal - Premium Professional Gaming Loader</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+  background: #0a0e1a;
+  color: #fff; 
+  padding: 50px 20px; 
+  line-height: 1.6; 
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.header { 
+  text-align: center; 
+  margin-bottom: 70px; 
+  padding: 50px 40px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(236, 72, 153, 0.08));
+  border-radius: 24px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+  max-width: 900px;
+}
+
+.header h1 { 
+  font-size: 4rem; 
+  background: linear-gradient(135deg, #667eea 0%, #ec4899 50%, #fbbf24 100%); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+  background-clip: text;
+  margin-bottom: 20px;
+  font-weight: 900;
+  letter-spacing: -2px;
+}
+
+.header p { 
+  color: #e2e8f0; 
+  font-size: 1.5rem; 
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.header .subtitle { 
+  color: #94a3b8; 
+  font-size: 1.1rem; 
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.showcase { 
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)); 
+  border-radius: 28px; 
+  padding: 60px; 
+  border: 1px solid rgba(102, 126, 234, 0.2); 
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  max-width: 800px;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.showcase::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #ec4899, #fbbf24);
+}
+
+.showcase:hover { 
+  border-color: rgba(102, 126, 234, 0.4); 
+  box-shadow: 0 30px 80px rgba(102, 126, 234, 0.3); 
+  transform: translateY(-5px); 
+}
+
+.title { 
+  font-size: 2.2rem; 
+  color: #f8fafc; 
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.3;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(236, 72, 153, 0.2));
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #a5b4fc;
+  margin-bottom: 12px;
+}
+
+.category { 
+  color: #94a3b8; 
+  font-size: 1rem; 
+  margin-bottom: 40px; 
+  text-transform: uppercase; 
+  letter-spacing: 2.5px; 
+  font-weight: 600;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.loader-display { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 100px 40px; 
+  background: linear-gradient(135deg, #0a0e1a, #0f172a); 
+  border-radius: 20px; 
+  min-height: 300px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(102, 126, 234, 0.15);
+}
+
+.loader-display::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(102, 126, 234, 0.05), transparent 70%);
+}
+
+.loader-display::after {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(from 0deg, transparent, rgba(102, 126, 234, 0.1), transparent 30%);
+  animation: backgroundRotate 8s linear infinite;
+}
+
+@keyframes backgroundRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Elite Cat Portal Loader */
+.cat-portal { 
+  width: 160px; 
+  height: 160px; 
+  position: relative; 
+  z-index: 1; 
+}
+
+.portal-outer-ring {
+  position: absolute;
+  inset: 0;
+  border: 4px solid #667eea;
+  border-radius: 50%;
+  animation: portalOuterPulse 3s ease-in-out infinite;
+}
+
+.portal-outer-ring::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: 50%;
+  animation: portalRingExpand 3s ease-out infinite;
+}
+
+.portal-middle-ring {
+  position: absolute;
+  inset: 15px;
+  border: 3px solid #764ba2;
+  border-radius: 50%;
+  animation: portalMiddleSpin 4s linear infinite;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.portal-inner-ring {
+  position: absolute;
+  inset: 30px;
+  border: 3px solid #ec4899;
+  border-radius: 50%;
+  animation: portalInnerSpin 3s linear infinite reverse;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.portal-vortex {
+  position: absolute;
+  inset: 45px;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.3), rgba(236, 72, 153, 0.2), transparent);
+  border-radius: 50%;
+  animation: portalVortexPulse 2.5s ease-in-out infinite;
+}
+
+.portal-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(0, 255, 255, 0.4), rgba(102, 126, 234, 0.2));
+  border-radius: 50%;
+  animation: portalCorePulse 2s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.6), inset 0 0 30px rgba(0, 255, 255, 0.3);
+}
+
+.energy-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #fbbf24;
+  border-radius: 50%;
+  animation: particleOrbit 3s linear infinite;
+  box-shadow: 0 0 15px #fbbf24;
+}
+
+.energy-particle:nth-child(6) { 
+  animation-delay: 0s; 
+  animation-duration: 3s;
+}
+
+.energy-particle:nth-child(7) { 
+  animation-delay: -0.6s; 
+  animation-duration: 3s;
+  background: #ec4899;
+  box-shadow: 0 0 15px #ec4899;
+}
+
+.energy-particle:nth-child(8) { 
+  animation-delay: -1.2s; 
+  animation-duration: 3s;
+  background: #0ff;
+  box-shadow: 0 0 15px #0ff;
+}
+
+.energy-particle:nth-child(9) { 
+  animation-delay: -1.8s; 
+  animation-duration: 3s;
+  background: #22c55e;
+  box-shadow: 0 0 15px #22c55e;
+}
+
+.energy-particle:nth-child(10) { 
+  animation-delay: -2.4s; 
+  animation-duration: 3s;
+}
+
+.cat-avatar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  z-index: 2;
+  animation: catFloat 3s ease-in-out infinite;
+}
+
+.cat-silhouette {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjUwMCIgdmlld0JveD0iMCAwIDUwMCA1MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImNhdEdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgo8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNjY3ZWVhO3N0b3Atb3BhY2l0eToxIiAvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNlYzQ4OTk7c3RvcC1vcGFjaXR5OjEiIC8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPCEtLSBDYXQgQm9keSAtLT4KPGVsbGlwc2UgY3g9IjI1MCIgY3k9IjMyMCIgcng9IjEyMCIgcnk9IjE0MCIgZmlsbD0idXJsKCNjYXRHcmFkKSIvPgo8IS0tIENhdCBIZWFkIC0tPgo8Y2lyY2xlIGN4PSIyNTAiIGN5PSIxODAiIHI9IjEwMCIgZmlsbD0idXJsKCNjYXRHcmFkKSIvPgo8IS0tIExlZnQgRWFyIC0tPgo8cGF0aCBkPSJNMTgwIDEyMCBMMTUwIDQwIEwyMDAgOTAgWiIgZmlsbD0idXJsKCNjYXRHcmFkKSIvPgo8IS0tIFJpZ2h0IEVhciAtLT4KPHBhdGggZD0iTTMyMCAxMjAgTDM1MCA0MCAzMDAgOTAgWiIgZmlsbD0idXJsKCNjYXRHcmFkKSIvPgo8IS0tIExlZnQgRXllIC0tPgo8ZWxsaXBzZSBjeD0iMjIwIiBjeT0iMTcwIiByeD0iMTIiIHJ5PSIxOCIgZmlsbD0iIzAwZmZmZiIgb3BhY2l0eT0iMC45Ij4KPGFUAW1hdGUgYXR0cmlidXRlTmFtZT0ib3BhY2l0eSIgdmFsdWVzPSIwLjk7MTswLjkiIGR1cj0iMnMiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIi8+CjwvZWxsaXBzZT4KPCEtLSBSaWdodCBFeWUgLS0+CjxlbGxpcHNlIGN4PSIyODAiIGN5PSIxNzAiIHJ4PSIxMiIgcnk9IjE4IiBmaWxsPSIjMDBmZmZmIiBvcGFjaXR5PSIwLjkiPgo8YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSJvcGFjaXR5IiB2YWx1ZXM9IjAuOTsxOzAuOSIgZHVyPSIycyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiLz4KPC9lbGxpcHNlPgo8IS0tIE5vc2UgLS0+Cjxwb2x5Z29uIHBvaW50cz0iMjUwLDIwMCAyNDAsMjE1IDI2MCwyMTUiIGZpbGw9IiNmYmJmMjQiIG9wYWNpdHk9IjAuOCIvPgo8IS0tIExlZnQgV2hpc2tlcnMgLS0+CjxsaW5lIHgxPSIxNTAiIHkxPSIxOTAiIHgyPSI4MCIgeTI9IjE4MCIgc3Ryb2tlPSIjNjY3ZWVhIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuNiIvPgo8bGluZSB4MT0iMTUwIiB5MT0iMjAwIiB4Mj0iNzAiIHkyPSIyMDAiIHN0cm9rZT0iIzY2N2VlYSIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjYiLz4KPGxpbmUgeDE9IjE1MCIgeTE9IjIxMCIgeDI9IjgwIiB5Mj0iMjIwIiBzdHJva2U9IiM2NjdlZWEiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC42Ii8+CjwhLS0gUmlnaHQgV2hpc2tlcnMgLS0+CjxsaW5lIHgxPSIzNTAiIHkxPSIxOTAiIHgyPSI0MjAiIHkyPSIxODAiIHN0cm9rZT0iI2VjNDg5OSIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjYiLz4KPGxpbmUgeDE9IjM1MCIgeTE9IjIwMCIgeDI9IjQzMCIgeTI9IjIwMCIgc3Ryb2tlPSIjZWM0ODk5IiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuNiIvPgo8bGluZSB4MT0iMzUwIiB5MT0iMjEwIiB4Mj0iNDIwIiB5Mj0iMjIwIiBzdHJva2U9IiNlYzQ4OTkiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC42Ii8+CjwhLS0gVGFpbCAtLT4KPHBhdGggZD0iTTM1MCAzNTAgUTQwMCAzMDAgNDIwIDM4MCBRNDAwIDQ1MCAzNTAgNDAwIiBzdHJva2U9InVybCgjY2F0R3JhZCkiIHN0cm9rZS13aWR0aD0iMjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44Ii8+CjwhLS0gTGVmdCBQYXcgLS0+CjxlbGxpcHNlIGN4PSIyMDAiIGN5PSI0NDAiIHJ4PSIzNSIgcnk9IjQ1IiBmaWxsPSJ1cmwoI2NhdEdyYWQpIiBvcGFjaXR5PSIwLjkiLz4KPCEtLSBSaWdodCBQYXcgLS0+CjxlbGxpcHNlIGN4PSIzMDAiIGN5PSI0NDAiIHJ4PSIzNSIgcnk9IjQ1IiBmaWxsPSJ1cmwoI2NhdEdyYWQpIiBvcGFjaXR5PSIwLjkiLz4KPC9zdmc+');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 0 20px #667eea) drop-shadow(0 0 30px #ec4899);
+  animation: catGlow 2s ease-in-out infinite;
+}
+
+@keyframes catGlow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 20px #667eea) drop-shadow(0 0 30px #ec4899);
+  }
+  50% { 
+    filter: drop-shadow(0 0 30px #667eea) drop-shadow(0 0 45px #ec4899) drop-shadow(0 0 50px #fbbf24);
+  }
+}
+
+@keyframes eyeGlow {
+  0%, 100% { 
+    opacity: 1;
+    box-shadow: 15px 0 0 #0ff, 0 0 10px #0ff, 15px 0 10px #0ff;
+  }
+  50% { 
+    opacity: 0.8;
+    box-shadow: 15px 0 0 #0ff, 0 0 15px #0ff, 15px 0 15px #0ff;
+  }
+}
+
+.portal-glow-1 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.15), transparent 60%);
+  border-radius: 50%;
+  animation: portalGlowExpand 3s ease-out infinite;
+}
+
+.portal-glow-2 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.1), transparent 60%);
+  border-radius: 50%;
+  animation: portalGlowExpand 3s ease-out infinite;
+  animation-delay: -1s;
+}
+
+.dimension-line {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  top: 0;
+  left: 50%;
+  margin-left: -1px;
+  background: linear-gradient(180deg, transparent, #667eea, transparent);
+  animation: dimensionPulse 2s ease-in-out infinite;
+  transform-origin: 50% 50%;
+}
+
+.dimension-line:nth-child(12) { transform: rotate(0deg); animation-delay: 0s; }
+.dimension-line:nth-child(13) { transform: rotate(45deg); animation-delay: -0.3s; }
+.dimension-line:nth-child(14) { transform: rotate(90deg); animation-delay: -0.6s; }
+.dimension-line:nth-child(15) { transform: rotate(135deg); animation-delay: -0.9s; }
+
+@keyframes portalOuterPulse {
+  0%, 100% { 
+    box-shadow: 0 0 30px rgba(102, 126, 234, 0.4), inset 0 0 20px rgba(102, 126, 234, 0.2); 
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 60px rgba(102, 126, 234, 0.8), inset 0 0 40px rgba(102, 126, 234, 0.4); 
+    transform: scale(1.03);
+  }
+}
+
+@keyframes portalRingExpand {
+  0% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(1.4); 
+  }
+}
+
+@keyframes portalMiddleSpin {
+  0% { 
+    transform: rotate(0deg); 
+    box-shadow: 0 0 25px rgba(118, 75, 162, 0.4);
+  }
+  100% { 
+    transform: rotate(360deg); 
+    box-shadow: 0 0 25px rgba(118, 75, 162, 0.4);
+  }
+}
+
+@keyframes portalInnerSpin {
+  0% { 
+    transform: rotate(0deg); 
+    box-shadow: 0 0 25px rgba(236, 72, 153, 0.4);
+  }
+  100% { 
+    transform: rotate(360deg); 
+    box-shadow: 0 0 25px rgba(236, 72, 153, 0.4);
+  }
+}
+
+@keyframes portalVortexPulse {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 0.6; 
+  }
+  50% { 
+    transform: scale(1.15) rotate(180deg); 
+    opacity: 1; 
+  }
+}
+
+@keyframes portalCorePulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1); 
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.6), inset 0 0 30px rgba(0, 255, 255, 0.3);
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.15); 
+    box-shadow: 0 0 70px rgba(0, 255, 255, 1), inset 0 0 50px rgba(0, 255, 255, 0.5);
+  }
+}
+
+@keyframes particleOrbit {
+  0% { 
+    transform: rotate(0deg) translateX(70px) rotate(0deg); 
+    opacity: 1;
+  }
+  100% { 
+    transform: rotate(360deg) translateX(70px) rotate(-360deg); 
+    opacity: 1;
+  }
+}
+
+@keyframes catFloat {
+  0%, 100% { 
+    transform: translate(-50%, -50%) rotate(0deg); 
+  }
+  25% { 
+    transform: translate(-50%, -52%) rotate(3deg); 
+  }
+  75% { 
+    transform: translate(-50%, -48%) rotate(-3deg); 
+  }
+}
+
+/* Size Variants */
+.cat-avatar.size-small {
+  width: 35px;
+  height: 35px;
+}
+
+.cat-avatar.size-medium {
+  width: 50px;
+  height: 50px;
+}
+
+.cat-avatar.size-large {
+  width: 70px;
+  height: 70px;
+}
+
+@keyframes portalGlowExpand {
+  0% { 
+    opacity: 0.5; 
+    transform: translate(-50%, -50%) scale(0.8); 
+  }
+  50% { 
+    opacity: 0.2; 
+  }
+  100% { 
+    opacity: 0; 
+    transform: translate(-50%, -50%) scale(1.5); 
+  }
+}
+
+@keyframes dimensionPulse {
+  0%, 100% { 
+    opacity: 0.3; 
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+  }
+  50% { 
+    opacity: 0.7; 
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+  }
+}
+
+.description {
+  margin-top: 50px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(102, 126, 234, 0.2);
+  text-align: center;
+}
+
+.description h3 {
+  color: #667eea;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.description p {
+  color: #cbd5e1;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 15px;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.feature-item {
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(236, 72, 153, 0.05));
+  border-radius: 12px;
+  border: 1px solid rgba(102, 126, 234, 0.15);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-3px);
+  border-color: rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.feature-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .header h1 { font-size: 2.8rem; }
+  .header p { font-size: 1.2rem; }
+  .showcase { padding: 40px 30px; }
+  .title { font-size: 1.8rem; }
+  .loader-display { padding: 80px 30px; }
+  .cat-portal { width: 130px; height: 130px; }
+  .cat-avatar { font-size: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { 
+    animation-duration: 0.01ms !important; 
+    animation-iteration-count: 1 !important; 
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌟 Elite Cat Portal 🐱</h1>
+  <p>Ultimate Professional Gaming Loader</p>
+  <p class="subtitle">Dimensional gateway with multi-layered animation system</p>
+</div>
+
+<div class="showcase">
+  <div style="text-align: center; margin-bottom: 30px;">
+    <span class="badge">ULTIMATE</span>
+  </div>
+  <h2 class="title">Elite Cat Portal</h2>
+  <div class="category">🌌 DIMENSIONAL • PORTAL • PREMIUM</div>
+  
+  <div class="loader-display">
+    <div class="cat-portal">
+      <div class="portal-glow-1"></div>
+      <div class="portal-glow-2"></div>
+      <div class="portal-outer-ring"></div>
+      <div class="portal-middle-ring"></div>
+      <div class="portal-inner-ring"></div>
+      <div class="portal-vortex"></div>
+      <div class="portal-core"></div>
+      <div class="energy-particle"></div>
+      <div class="energy-particle"></div>
+      <div class="energy-particle"></div>
+      <div class="energy-particle"></div>
+      <div class="energy-particle"></div>
+      <div class="dimension-line"></div>
+      <div class="dimension-line"></div>
+      <div class="dimension-line"></div>
+      <div class="dimension-line"></div>
+      <div class="cat-avatar size-medium">
+        <div class="cat-silhouette"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="description">
+    <h3>✨ Premium Design Features</h3>
+    <p>
+      Multi-layered portal system with 4 rotating rings, pulsing vortex core,<br>
+      orbital energy particles, dimensional cross-hair lines, and animated glow effects
+    </p>
+    
+    <div class="features">
+      <div class="feature-item">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-label">4 Ring System</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">✨</div>
+        <div class="feature-label">5 Particle Orbits</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">💫</div>
+        <div class="feature-label">Vortex Core</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🌟</div>
+        <div class="feature-label">Expanding Glows</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📐</div>
+        <div class="feature-label">Dimension Lines</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🎮</div>
+        <div class="feature-label">Gaming Ready</div>
+      </div>
+    </div>
+
+    <p style="margin-top: 40px; color: #64748b; font-size: 0.95rem; font-style: italic;">
+      Perfect as a default loader • 100% Pure CSS • Professional grade animation • Cat brand excellence
+    </p>
+
+    <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid rgba(102, 126, 234, 0.15);">
+      <h4 style="color: #94a3b8; font-size: 1.1rem; margin-bottom: 25px; text-align: center;">Size Variants</h4>
+      <div style="display: flex; gap: 40px; justify-content: center; align-items: center; flex-wrap: wrap;">
+        
+        <div style="text-align: center;">
+          <div style="padding: 30px; background: linear-gradient(135deg, #0a0e1a, #0f172a); border-radius: 12px; border: 1px solid rgba(102, 126, 234, 0.15); margin-bottom: 12px;">
+            <div class="cat-avatar size-small" style="position: relative; display: inline-block; margin: 0;">
+              <div class="cat-silhouette"></div>
+            </div>
+          </div>
+          <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 600;">SMALL • 35px</p>
+        </div>
+
+        <div style="text-align: center;">
+          <div style="padding: 30px; background: linear-gradient(135deg, #0a0e1a, #0f172a); border-radius: 12px; border: 1px solid rgba(102, 126, 234, 0.15); margin-bottom: 12px;">
+            <div class="cat-avatar size-medium" style="position: relative; display: inline-block; margin: 0;">
+              <div class="cat-silhouette"></div>
+            </div>
+          </div>
+          <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 600;">MEDIUM • 50px (Default)</p>
+        </div>
+
+        <div style="text-align: center;">
+          <div style="padding: 30px; background: linear-gradient(135deg, #0a0e1a, #0f172a); border-radius: 12px; border: 1px solid rgba(102, 126, 234, 0.15); margin-bottom: 12px;">
+            <div class="cat-avatar size-large" style="position: relative; display: inline-block; margin: 0;">
+              <div class="cat-silhouette"></div>
+            </div>
+          </div>
+          <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 600;">LARGE • 70px</p>
+        </div>
+
+      </div>
+      <p style="margin-top: 25px; color: #64748b; font-size: 0.9rem; text-align: center;">
+        Simply change class: <code style="padding: 3px 8px; background: rgba(102, 126, 234, 0.1); border-radius: 4px; color: #a5b4fc;">size-small</code>, 
+        <code style="padding: 3px 8px; background: rgba(102, 126, 234, 0.1); border-radius: 4px; color: #a5b4fc;">size-medium</code>, 
+        <code style="padding: 3px 8px; background: rgba(102, 126, 234, 0.1); border-radius: 4px; color: #a5b4fc;">size-large</code>
+      </p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

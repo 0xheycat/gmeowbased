@@ -1,3 +1,13 @@
+/**
+ * Quest Create Page
+ * Route: /quests/create
+ * 
+ * Dialog Usage:
+ * - ErrorDialog: Displays template fetch errors with retry option
+ * - useDialog: State management for error dialog
+ * - QuestDraftRecoveryPrompt: Contains useConfirmDialog for discard confirmation (via child component)
+ */
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -17,6 +27,8 @@ import {
 } from '@/lib/hooks/use-quest-draft-autosave'
 import { QuestDraftSaveIndicator } from '@/components/quests/QuestDraftSaveIndicator'
 import { QuestDraftRecoveryPrompt } from '@/components/quests/QuestDraftRecoveryPrompt'
+import { useDialog } from '@/components/dialogs'
+import { ErrorDialog } from '@/components/dialogs'
 import type { QuestDraft, QuestTemplate, TaskConfig } from '@/lib/quests/types'
 
 // Mock templates for development (fallback if database fetch fails)
@@ -104,6 +116,14 @@ export default function QuestCreatePage() {
   // Templates state (Phase 3: Database integration)
   const [templates, setTemplates] = useState<QuestTemplate[]>([])
   const [loadingTemplates, setLoadingTemplates] = useState(true)
+  
+  // Error dialog
+  const errorDialog = useDialog()
+  const [errorDialogConfig, setErrorDialogConfig] = useState<{
+    title: string
+    message: string
+    onRetry?: () => void
+  }>({ title: '', message: '' })
   
   // NEW Auto-save system (built from scratch)
   const {
@@ -210,7 +230,13 @@ export default function QuestCreatePage() {
       router.push(`/quests/${result.data.quest.slug}`)
     } catch (error) {
       console.error('Failed to publish quest:', error)
-      alert('Failed to publish quest. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      setErrorDialogConfig({
+        title: 'Failed to Publish Quest',
+        message: `Unable to publish quest. Please check your connection and try again. ${errorMessage}`,
+        onRetry: handlePublish
+      })
+      errorDialog.open()
     } finally {
       setIsPublishing(false)
     }
@@ -218,8 +244,17 @@ export default function QuestCreatePage() {
   
   // Handle save draft
   const handleSaveDraft = () => {
-    saveDraft(questDraft)
-    alert('Draft saved successfully!')
+    try {
+      saveDraft(questDraft)
+      // Draft auto-saves, no need for manual success message
+    } catch (error) {
+      console.error('Failed to save draft:', error)
+      setErrorDialogConfig({
+        title: 'Failed to Save Draft',
+        message: 'Unable to save quest draft to local storage.',
+      })
+      errorDialog.open()
+    }
   }
 
   return (
@@ -323,6 +358,15 @@ export default function QuestCreatePage() {
           />
         )}
       </div>
+
+      {/* Error Dialog */}
+      <ErrorDialog
+        isOpen={errorDialog.isOpen}
+        onClose={errorDialog.close}
+        title={errorDialogConfig.title}
+        error={errorDialogConfig.message}
+        onRetry={errorDialogConfig.onRetry}
+      />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 export { Button, buttonVariants } from './button'
 export { default as Loader } from './loader'
 export { RankProgress } from './RankProgress'
-export { NotificationProvider, useNotifications } from './live-notifications'
+// Notification system removed - use Dialog for confirmations
 export { LiveEventBridge } from './LiveEventBridge'
 export { LayoutModeProvider, useLayoutMode } from './layout-mode-context'
 export { LayoutModeSwitch } from './LayoutModeSwitch'

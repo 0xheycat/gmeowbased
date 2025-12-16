@@ -1,20 +1,61 @@
 import { createPublicClient, http } from 'viem'
-import { GM_CONTRACT_ABI, getContractAddress, CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
+import { getContractAddress, CHAIN_IDS, type ChainKey, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { GM_CONTRACT_ABI, GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { buildFrameShareUrl } from '@/lib/share'
 import { calculateRankProgress } from '@/lib/rank'
 import { fetchUserByAddress, fetchFidByAddress, fetchUserByFid } from '@/lib/neynar'
-import type { ProfileOverviewData, ProfileChainSnapshot, TeamOverview } from '@/lib/profile-types'
+import { getReferrer } from '@/lib/referral-contract'
+
+// Type definitions
+export type ProfileChainSnapshot = {
+  chain: ChainKey
+  totalPoints: number
+  availablePoints: number
+  lockedPoints: number
+  streak: number
+  lastGM?: number
+  registered: boolean
+  gmReward?: number
+  teamId?: number
+}
+
+export type TeamOverview = {
+  chain: ChainKey
+  teamId: number
+  name: string
+  founder: `0x${string}`
+  memberCount: number
+}
+
+export type ProfileOverviewData = {
+  address: `0x${string}`
+  fid: number | null
+  displayName: string
+  username?: string
+  pfpUrl?: string
+  farcasterUser: any
+  totalPoints: number
+  estimatedGMs: number
+  streak: number
+  lastGM?: number
+  globalRank: number | null
+  referrer: `0x${string}` | null
+  team: TeamOverview | null
+  chainSummaries: ProfileChainSnapshot[]
+  badges: any[]
+  registeredChains: ChainKey[]
+  frameUrl?: string
+  shareUrl?: string
+  neynarScore: number | null
+}
 
 export const PROFILE_SUPPORTED_CHAINS: ChainKey[] = Object.keys(CHAIN_IDS) as ChainKey[]
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 //we only support base network for profile data fetching, delete others to reduce code size
-const PUBLIC_RPCS: Record<ChainKey, string> = {
+const PUBLIC_RPCS: Partial<Record<ChainKey, string>> = {
   base: process.env.NEXT_PUBLIC_RPC_BASE || 'https://base-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
-  unichain: process.env.NEXT_PUBLIC_RPC_UNICHAIN || 'https://unichain-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
-  celo: process.env.NEXT_PUBLIC_RPC_CELO || 'https://celo-mainnet.g.alchemy.com/v2/AQYbCkrkuEDaD_hCDse6ezP2W-zUCEFe',
-  ink: process.env.NEXT_PUBLIC_RPC_INK || 'https://ink-mainnet.g.alchemy.com/v2/AQYbCkrkuEDaD_hCDse6ezP2W-zUCEFe',
-  op: process.env.NEXT_PUBLIC_RPC_OP || 'https://opt-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
+
 }
 
 const PROFILE_CHAIN_CACHE_TTL = getNumberFromEnv('NEXT_PUBLIC_PROFILE_CHAIN_CACHE_TTL_MS', 30_000)
@@ -179,6 +220,8 @@ export async function fetchChainSnapshot(chain: ChainKey, userAddress: `0x${stri
 async function fetchChainSnapshotWithoutCache(chain: ChainKey, userAddress: `0x${string}`): Promise<ChainAggregation | null> {
   const rpc = PUBLIC_RPCS[chain]
   if (!rpc) return null
+  // Only proceed if chain is supported by getContractAddress
+  if (chain !== 'base') return null
   try {
     const client = createPublicClient({ transport: http(rpc) })
     const contract = getContractAddress(chain)
@@ -196,7 +239,7 @@ async function fetchChainSnapshotWithoutCache(chain: ChainKey, userAddress: `0x$
       rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'farcasterFidOf', args: [userAddress] }).catch(() => 0n), 0n),
       rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'guildOf', args: [userAddress] }).catch(() => 0n), 0n),
       rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'gmPointReward' }).catch(() => null), null),
-      rpcTimeout(client.readContract({ address: contract, abi: GM_CONTRACT_ABI, functionName: 'referrerOf', args: [userAddress] }).catch(() => null), null),
+      rpcTimeout(getReferrer(userAddress).catch(() => null), null),
     ])
 
     const availablePoints = Number((statsRaw as any)?.[0] ?? 0n)
@@ -216,18 +259,18 @@ async function fetchChainSnapshotWithoutCache(chain: ChainKey, userAddress: `0x$
       try {
         const guildRawData = await rpcTimeout(
           client.readContract({
-            address: contract,
-            abi: GM_CONTRACT_ABI,
-            functionName: 'guilds',
+            address: STANDALONE_ADDRESSES.base.guild,
+            abi: GUILD_ABI_JSON,
+            functionName: 'getGuildInfo',
             args: [BigInt(guildId)],
           }),
           null
         )
         if (guildRawData) {
-          const name = String((guildRawData as any)?.[0] || `Guild #${guildId}`)
-          const founder = normalizeAddress((guildRawData as any)?.[1]) || ZERO_ADDRESS
-          const memberCount = Number((guildRawData as any)?.[3] ?? 0n)
-          team = { chain, teamId: guildId, name, founder, memberCount }
+          const [name, leader, , memberCount] = guildRawData as [string, `0x${string}`, bigint, bigint, bigint, bigint, bigint]
+          const founder = normalizeAddress(leader) || ZERO_ADDRESS
+          const memberCountNum = Number(memberCount ?? 0n)
+          team = { chain, teamId: guildId, name: String(name || `Guild #${guildId}`), founder, memberCount: memberCountNum }
         }
       } catch {}
     }

@@ -11,6 +11,7 @@
  */
 
 import type { Metric } from 'web-vitals'
+import { trackError } from '@/lib/notifications/error-tracking'
 
 interface WebVitalsMetric extends Metric {
   label: 'web-vital'
@@ -87,7 +88,7 @@ function sendToAnalytics(metric: Metric) {
       )
     }
   } catch (error) {
-    console.error('[Web Vitals] Error sending metric:', error)
+    trackError('web_vitals_send_metric_error', error, { function: 'sendToAnalytics', metric: metric.name })
   }
 }
 
@@ -107,7 +108,7 @@ export async function initWebVitals() {
     onTTFB(sendToAnalytics)
     onINP(sendToAnalytics) // INP replaces FID in web-vitals v3+
   } catch (error) {
-    console.error('[Web Vitals] Failed to initialize:', error)
+    trackError('web_vitals_init_error', error, { function: 'initWebVitals' })
   }
 }
 

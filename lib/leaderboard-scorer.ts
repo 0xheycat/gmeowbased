@@ -2,7 +2,11 @@
  * Leaderboard Score Calculator
  * Calculates leaderboard scores from on-chain + off-chain sources
  * 
- * Formula: Base Points + Viral XP + Guild Bonus + Referral Bonus + Streak Bonus + Badge Prestige
+ * Formula: Base Points + Viral XP + Guild Bonus + Guild Bonus Points (10% + 5%) + Referral Bonus + Streak Bonus + Badge Prestige
+ * 
+ * Guild Bonus Points:
+ * - 10% of (Base Points + Viral XP) for guild members
+ * - +5% additional bonus for guild officers
  * 
  * NO HARDCODED COLORS - Uses Tailwind config only
  * NO EMOJIS - Uses icon references only
@@ -23,7 +27,8 @@ export type LeaderboardScore = {
   farcasterFid: number
   basePoints: number         // Quest points from contract
   viralXP: number            // Viral bonuses from badge_casts
-  guildBonus: number         // Guild level * 100
+  guildBonus: number         // Guild level * 100 (legacy)
+  guildBonusPoints: number   // Guild membership bonus: 10% member + 5% officer
   referralBonus: number      // Referral count * 50
   streakBonus: number        // GM streak * 10
   badgePrestige: number      // Badge count * 25
@@ -101,6 +106,23 @@ export async function calculateLeaderboardScore(
 
   const guildBonus = (guildData?.guild_level || 0) * 100
 
+  // 4.5. Get guild bonus points (10% member + 5% officer)
+  const { data: guildMembershipData } = await supabase
+    .from('leaderboard_calculations')
+    .select('guild_id, is_guild_officer')
+    .eq('address', address)
+    .single()
+
+  let guildBonusPoints = 0
+  if (guildMembershipData?.guild_id) {
+    const baseScore = basePoints + viralXP
+    guildBonusPoints = Math.floor(baseScore * 0.1)  // 10% member bonus
+    
+    if (guildMembershipData.is_guild_officer) {
+      guildBonusPoints += Math.floor(baseScore * 0.05)  // +5% officer bonus
+    }
+  }
+
   // 5. Get referral count (count * 50)
   const { count: referralCount } = await supabase
     .from('referral_tracking')
@@ -119,7 +141,7 @@ export async function calculateLeaderboardScore(
 
   // Calculate total
   const totalScore =
-    basePoints + viralXP + guildBonus + referralBonus + streakBonus + badgePrestige
+    basePoints + viralXP + guildBonus + guildBonusPoints + referralBonus + streakBonus + badgePrestige
 
   return {
     address,
@@ -127,6 +149,7 @@ export async function calculateLeaderboardScore(
     basePoints,
     viralXP,
     guildBonus,
+    guildBonusPoints,
     referralBonus,
     streakBonus,
     badgePrestige,
@@ -254,6 +277,7 @@ export async function updateLeaderboardCalculation(
       base_points: score.basePoints,
       viral_xp: score.viralXP,
       guild_bonus: score.guildBonus,
+      guild_bonus_points: score.guildBonusPoints,
       referral_bonus: score.referralBonus,
       streak_bonus: score.streakBonus,
       badge_prestige: score.badgePrestige,

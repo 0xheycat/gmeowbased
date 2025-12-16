@@ -77,25 +77,42 @@ export function ImageUploader({
     }
     reader.readAsDataURL(file)
 
-    // Upload to server
+    // Upload to server using unified API
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'quests')
-
-      const response = await fetch('/api/upload/quest-image', {
+      // Step 1: Get signed upload URL
+      const uploadUrlResponse = await fetch('/api/storage/upload', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fid: 'quest-creator',
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          type: 'quest',
+        }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Upload failed')
+      if (!uploadUrlResponse.ok) {
+        const errorData = await uploadUrlResponse.json()
+        throw new Error(errorData.error || 'Failed to get upload URL')
       }
 
-      const data = await response.json()
-      onChange(data.url)
+      const { uploadUrl, publicUrl } = await uploadUrlResponse.json()
+
+      // Step 2: Upload file to signed URL
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      // Success - use publicUrl
+      onChange(publicUrl)
     } catch (err) {
       console.error('Upload error:', err)
       setError(err instanceof Error ? err.message : 'Upload failed')

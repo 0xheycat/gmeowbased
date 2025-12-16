@@ -172,18 +172,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Priority 2: Wallet address (main app)
       if (isConnected && address) {
         console.log('[AuthProvider] Authenticating via wallet address:', address)
+        console.log('[AuthProvider] Wallet connection state:', { isConnected, address })
         
         // Fetch profile by wallet address
         const profileData = await fetchUserByAddress(address)
         
+        console.log('[AuthProvider] Profile fetch result:', {
+          success: !!profileData,
+          fid: profileData?.fid,
+          username: profileData?.username,
+          displayName: profileData?.displayName,
+        })
+        
         if (profileData?.fid) {
           setFid(profileData.fid)
           setProfile(profileData)
+          console.log('[AuthProvider] ✅ Successfully authenticated:', {
+            fid: profileData.fid,
+            username: profileData.username,
+            address,
+          })
         } else {
           // Wallet connected but no Farcaster profile found
           setFid(null)
           setProfile(null)
-          console.warn('[AuthProvider] No Farcaster profile found for address:', address)
+          console.warn('[AuthProvider] ⚠️ No Farcaster profile found for address:', address)
+          console.warn('[AuthProvider] This wallet may not be linked to Farcaster')
         }
         
         setIsLoading(false)

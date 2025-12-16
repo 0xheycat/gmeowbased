@@ -42,7 +42,6 @@ import {
   FrameActionSchema,
   WebhookPayloadSchema,
   AdminLoginSchema,
-  MaintenanceAuthSchema,
   SeasonQuerySchema,
   LeaderboardSyncSchema,
 } from '@/lib/validation/api-schemas'
@@ -677,20 +676,6 @@ describe('Bot Config Schemas', () => {
     it('should reject negative minEngagementThreshold', () => {
       const invalid = { minEngagementThreshold: -1 }
       expect(() => BotConfigUpdateSchema.parse(invalid)).toThrow()
-    })
-  })
-})
-
-describe('Maintenance Schemas', () => {
-  describe('MaintenanceAuthSchema', () => {
-    it('should accept valid maintenance password', () => {
-      const valid = { password: 'secure-password-123' }
-      expect(() => MaintenanceAuthSchema.parse(valid)).not.toThrow()
-    })
-
-    it('should reject empty password', () => {
-      const invalid = { password: '' }
-      expect(() => MaintenanceAuthSchema.parse(invalid)).toThrow('Password is required')
     })
   })
 })

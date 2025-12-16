@@ -1,37 +1,56 @@
 #!/bin/bash
 # Generate app store screenshots from actual frame renders
+# Updated for December 2025 modular architecture
 
 echo "=== GENERATING APP STORE SCREENSHOTS ==="
 echo "Creating 5 key feature screenshots for manifest"
 echo ""
 
-BASE_URL="http://localhost:3000/api/frame/image"
-DEST_DIR="public/screenshots"
+# Auto-detect port
+PORT=""
+for p in 3002 3001 3000 3003; do
+  if curl -s "http://localhost:$p" > /dev/null 2>&1; then
+    PORT=$p
+    break
+  fi
+done
 
-# Screenshot 1: GM Streak (show streak milestone)
+if [ -z "$PORT" ]; then
+  echo "❌ No dev server found. Please run: pnpm dev"
+  exit 1
+fi
+
+echo "✓ Using dev server on port $PORT"
+echo ""
+
+BASE_URL="http://localhost:$PORT/api/frame/image"
+DEST_DIR="public/screenshots"
+mkdir -p "$DEST_DIR"
+
+# Screenshot 1: GM Streak (NEW modular params)
 echo "1/5: Generating GM streak screenshot..."
-curl -s "${BASE_URL}?type=gm&fid=1568&username=heycat&streak=42&gmCount=150" \
+curl -s "${BASE_URL}/gm?streak=42&lifetimeGMs=150&xp=500&username=heycat" \
   -o "$DEST_DIR/gm-streak.png"
 
-# Screenshot 2: Leaderboard (show top rankings)
-echo "2/5: Generating leaderboard screenshot..."
-curl -s "${BASE_URL}?type=leaderboards&top5=fid1%3A1000%2Cfid2%3A800%2Cfid3%3A600%2Cfid4%3A400%2Cfid5%3A200" \
+# Screenshot 2: Points (NEW modular endpoint)
+echo "2/5: Generating points screenshot..."
+curl -s "${BASE_URL}/points?totalXP=1250&rank=42&streakBonus=20&username=heycat" \
+  -o "$DEST_DIR/points.png"
+
+# Screenshot 3: Badge (NEW single badge showcase)
+echo "3/5: Generating badge screenshot..."
+curl -s "${BASE_URL}/badge?id=gm-master&name=GM%20Master&username=heycat&earnedDate=2024-12-01" \
+  -o "$DEST_DIR/badge.png"
+
+# Screenshot 4: Leaderboard (modular endpoint)
+echo "4/5: Generating leaderboard screenshot..."
+curl -s "${BASE_URL}/leaderboards?type=gm&top5=heycat:1000,pilot2:800,user3:600" \
   -o "$DEST_DIR/leaderboard.png"
 
-# Screenshot 3: Badge Collection (show earned badges)
-echo "3/5: Generating badge collection screenshot..."
-curl -s "${BASE_URL}?type=badgeCollection&earnedBadges=neon-initiate,pulse-runner,signal-luminary,warp-navigator,gmeow-vanguard&earnedCount=5&eligibleCount=10&username=player&badgeXp=500" \
-  -o "$DEST_DIR/badges.png"
-
-# Screenshot 4: Guild (show guild stats)
-echo "4/5: Generating guild screenshot..."
-curl -s "${BASE_URL}?type=guild&guildName=Gmeow%20Warriors&members=25&totalGms=1500&avgStreak=12&username=leader&fid=1568" \
-  -o "$DEST_DIR/guild.png"
-
-# Screenshot 5: Quest (show active quest)
-echo "5/5: Generating quest screenshot..."
-curl -s "${BASE_URL}?type=quest&questName=Daily%20GM%20Ritual&description=Say%20GM%20for%207%20days%20straight&reward=100%20XP&progress=5&target=7&status=active&username=adventurer&fid=1568" \
-  -o "$DEST_DIR/quest.png"
+# Screenshot 5: OnChain Stats (modular endpoint)
+echo "5/5: Generating onchain stats screenshot..."
+curl -s "${BASE_URL}/onchainstats?totalTx=42&totalValue=1.5&lastActivity=2024-12-12&username=heycat" \
+  -o "$DEST_DIR/onchainstats.png"
 
 echo ""
 echo "=== SCREENSHOT GENERATION COMPLETE ==="

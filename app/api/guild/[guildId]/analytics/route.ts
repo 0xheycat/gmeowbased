@@ -48,7 +48,8 @@ import { generateRequestId } from '@/lib/request-id'
 import { apiLimiter } from '@/lib/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
+import { STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -254,62 +255,37 @@ async function fetchGuildAnalytics(guildId: bigint, period: string): Promise<Ana
   try {
     // Fetch guild info from contract
     const guildInfo = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
+      address: STANDALONE_ADDRESSES.base.guild as Address,
+      abi: GUILD_ABI_JSON,
       functionName: 'getGuildInfo',
       args: [guildId],
     }) as any
 
-    if (!guildInfo || !guildInfo.active) {
+    // Handle both tuple array and object format
+    const [name, leader, totalPoints, memberCount, active, level] = Array.isArray(guildInfo) 
+      ? guildInfo 
+      : [guildInfo.name, guildInfo.leader, guildInfo.totalPoints, guildInfo.memberCount, guildInfo.active, guildInfo.level]
+
+    if (!name || !active) {
       return null
     }
 
-    const totalMembers = Number(guildInfo.memberCount || 0n)
-    const totalPoints = guildInfo.totalPoints || 0n
-    const treasuryBalance = guildInfo.treasury || 0n
-    const level = calculateGuildLevel(totalPoints)
+    const totalMembers = Number(memberCount || 0)
+    const totalPointsBigInt = BigInt(totalPoints || 0)
+    const treasuryBalance = 0n // Guild contract doesn't have treasury field in getGuildInfo
+    const guildLevel = Number(level || 1)
 
-    // Get top contributors (fetch member details)
-    const members = (guildInfo.members || []) as Address[]
+    // Top contributors - Guild contract doesn't expose member list
+    // Would need to query events or maintain off-chain index
     const topContributors: TopContributor[] = []
-
-    // Fetch individual member points (limit to top 10)
-    const memberPromises = members.slice(0, 10).map(async (memberAddress) => {
-      try {
-        const memberGuild = await client.readContract({
-          address: getContractAddress('base'),
-          abi: GM_CONTRACT_ABI,
-          functionName: 'getUserGuild',
-          args: [memberAddress],
-        }) as any
-
-        return {
-          address: memberAddress,
-          points: (memberGuild?.guildPoints || 0n).toString(),
-        }
-      } catch {
-        return {
-          address: memberAddress,
-          points: '0',
-        }
-      }
-    })
-
-    const memberResults = await Promise.all(memberPromises)
-    topContributors.push(
-      ...memberResults
-        .filter((m) => m.points !== '0')
-        .sort((a, b) => BigInt(b.points) - BigInt(a.points) > 0n ? 1 : -1)
-        .slice(0, 5)
-    )
 
     // Calculate average points per member
     const avgPointsPerMember =
-      totalMembers > 0 ? (totalPoints / BigInt(totalMembers)).toString() : '0'
+      totalMembers > 0 ? (totalPointsBigInt / BigInt(totalMembers)).toString() : '0'
 
     // Generate time-series data
     const memberGrowth = generateMemberGrowthData(period, totalMembers)
-    const treasuryFlow = generateTreasuryFlowData(period, totalPoints)
+    const treasuryFlow = generateTreasuryFlowData(period, totalPointsBigInt)
     const activityTimeline = generateActivityData(period, totalMembers)
 
     return {
@@ -319,10 +295,10 @@ async function fetchGuildAnalytics(guildId: bigint, period: string): Promise<Ana
       topContributors,
       stats: {
         totalMembers,
-        totalPoints: totalPoints.toString(),
+        totalPoints: totalPointsBigInt.toString(),
         avgPointsPerMember,
         treasuryBalance: treasuryBalance.toString(),
-        level,
+        level: guildLevel,
       },
     }
   } catch (error) {
@@ -351,15 +327,17 @@ function createErrorResponse(message: string, status: number = 500, requestId?: 
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
   const requestId = generateRequestId()
   const startTime = Date.now()
 
   try {
+    // Await params in Next.js 15
+    const { guildId } = await params
     // Layer 1: Rate Limiting
     if (apiLimiter) {
-      const rateLimitKey = `guild-analytics:${params.guildId}`
+      const rateLimitKey = `guild-analytics:${guildId}`
       const rateLimitResult = await apiLimiter.limit(rateLimitKey)
 
       if (!rateLimitResult.success) {
@@ -383,8 +361,8 @@ export async function GET(
     }
 
     // Layer 2: Input Validation - Guild ID
-    const guildId = validateGuildId(params.guildId)
-    if (!guildId) {
+    const guildIdNum = validateGuildId(guildId)
+    if (!guildIdNum) {
       return createErrorResponse('Invalid guild ID', 400, requestId)
     }
 
@@ -402,7 +380,7 @@ export async function GET(
     const { period } = validation.data
 
     // Layer 6: Fetch Analytics Data
-    const analytics = await fetchGuildAnalytics(guildId, period)
+    const analytics = await fetchGuildAnalytics(guildIdNum, period)
 
     if (!analytics) {
       return createErrorResponse('Guild not found or inactive', 404, requestId)
