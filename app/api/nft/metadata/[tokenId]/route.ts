@@ -203,10 +203,10 @@ const DEFAULT_METADATA = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tokenId: string } }
+  { params }: { params: Promise<{ tokenId: string }> }
 ) {
   try {
-    const tokenId = params.tokenId
+    const { tokenId } = await params
 
     // Validate tokenId
     if (!tokenId || isNaN(Number(tokenId)) || Number(tokenId) < 0) {
