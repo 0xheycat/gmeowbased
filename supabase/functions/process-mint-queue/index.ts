@@ -55,7 +55,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 import { ethers } from 'https://esm.sh/ethers@6.9.0'
 
-// NFT Contract ABI (minimal - only mint function needed)
+// NFT Contract ABI (mint function + NFTMinted event)
 const NFT_ABI = [
   {
     "inputs": [
@@ -67,6 +67,17 @@ const NFT_ABI = [
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "recipient", "type": "address" },
+      { "indexed": true, "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+      { "indexed": false, "internalType": "string", "name": "nftType", "type": "string" },
+      { "indexed": false, "internalType": "string", "name": "metadataURI", "type": "string" }
+    ],
+    "name": "NFTMinted",
+    "type": "event"
   }
 ]
 
@@ -93,11 +104,13 @@ const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, wallet)
 
 /**
  * Generate metadata URI for NFT
- * Uses API endpoint pattern for dynamic metadata
+ * Updated: Phase 1 Day 2 - Use tokenId-based metadata endpoint
+ * Format: https://gmeowhq.art/api/nft/metadata/{tokenId}
+ * Note: We'll update this after mint to use the actual tokenId
  */
-function generateMetadataURI(mint: any): string {
-  // Option 1: API endpoint (dynamic metadata)
-  return `https://gmeowhq.art/api/nft/metadata/${mint.badge_type}/${mint.fid}`
+function generateMetadataURI(tokenId: bigint): string {
+  // Use tokenId-based metadata endpoint (ERC-721 standard)
+  return `https://gmeowhq.art/api/nft/metadata/${tokenId.toString()}`
   
   // Option 2: IPFS (static metadata - uncomment if preferred)
   // return `ipfs://QmXxx/${mint.badge_type}/${mint.fid}.json`
@@ -123,15 +136,16 @@ async function processMint(mint: any): Promise<{ success: boolean; txHash?: stri
       throw new Error(`Failed to update status: ${updateError.message}`)
     }
 
-    // Step 2: Generate metadata URI
-    const metadataURI = generateMetadataURI(mint)
+    // Step 2: Temporary placeholder metadata URI (will be replaced by indexer)
+    // The indexer will capture the actual tokenId from NFTMinted event
+    const tempMetadataURI = `https://gmeowhq.art/api/nft/metadata/pending`
 
     // Step 3: Call contract mint function
     console.log(`Calling contract mint: to=${mint.wallet_address}, type=${mint.badge_type}`)
     const tx = await nftContract.mint(
       mint.wallet_address,
       mint.badge_type,
-      metadataURI,
+      tempMetadataURI,
       {
         gasLimit: 300000, // Add 20% buffer (250k base + 50k buffer)
       }
@@ -142,18 +156,37 @@ async function processMint(mint: any): Promise<{ success: boolean; txHash?: stri
     // Step 4: Wait for confirmation
     const receipt = await tx.wait()
     
+    // Step 5: Extract tokenId from NFTMinted event logs
+    let tokenId: bigint | null = null
+    for (const log of receipt.logs) {
+      try {
+        const parsedLog = nftContract.interface.parseLog({
+          topics: log.topics as string[],
+          data: log.data
+        })
+        if (parsedLog && parsedLog.name === 'NFTMinted') {
+          tokenId = parsedLog.args.tokenId
+          console.log(`NFT minted with tokenId: ${tokenId}`)
+          break
+        }
+      } catch (e) {
+        // Skip logs that don't match our ABI
+      }
+    }
+    
     if (receipt.status !== 1) {
       throw new Error(`Transaction failed: ${tx.hash}`)
     }
 
     console.log(`Transaction confirmed: ${tx.hash}`)
 
-    // Step 5: Update mint_queue to 'minted'
+    // Step 6: Update mint_queue to 'minted'
     const { error: mintedError } = await supabase
       .from('mint_queue')
       .update({
         status: 'minted',
         tx_hash: tx.hash,
+        token_id: tokenId ? tokenId.toString() : null,
         minted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -163,12 +196,13 @@ async function processMint(mint: any): Promise<{ success: boolean; txHash?: stri
       console.error(`Failed to update mint_queue: ${mintedError.message}`)
     }
 
-    // Step 6: Update user_badges table
+    // Step 7: Update user_badges table with tokenId
     const { error: badgeError } = await supabase
       .from('user_badges')
       .update({
         minted: true,
         tx_hash: tx.hash,
+        token_id: tokenId ? parseInt(tokenId.toString()) : null,
         minted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
