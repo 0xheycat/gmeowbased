@@ -108,7 +108,11 @@ export interface BadgeStats {
 export interface NFTStats {
   tokenId: string;
   owner: string;
+  nftType: string; // NEW: Phase 1 Day 2 - Badge type from NFTMinted event
+  metadataURI: string; // NEW: Phase 1 Day 2 - Metadata URI from NFTMinted event
   mintedAt: string;
+  blockNumber?: number;
+  mintTxHash?: string;
   transferCount: number;
   transferHistory: Array<{
     from: string;
@@ -679,27 +683,26 @@ export async function getQuestStats(questId: string): Promise<QuestStats | null>
 
 /**
  * Get NFT statistics and transfer history
- * Used by: NFT Frame (NEW)
+ * Updated: Phase 1 Day 2 - Added nftType and metadataURI fields
+ * Used by: NFT Frame, metadata API
  */
 export async function getNFTStats(params: { tokenId: string }): Promise<NFTStats | null> {
   const { tokenId } = params;
 
   const query = gql`
-    query GetNFTStats($tokenId: String!) {
-      nftMint(id: $tokenId) {
+    query GetNFTStats($tokenId: BigInt!) {
+      nftMints(where: { tokenId: $tokenId }) {
         tokenId
-        to {
-          id
-        }
+        to
+        nftType
+        metadataURI
         timestamp
+        blockNumber
+        txHash
       }
       nftTransfers(where: { tokenId: $tokenId }, orderBy: timestamp_DESC) {
-        from {
-          id
-        }
-        to {
-          id
-        }
+        from
+        to
         timestamp
         txHash
       }
@@ -709,22 +712,27 @@ export async function getNFTStats(params: { tokenId: string }): Promise<NFTStats
   try {
     const data: any = await client.request(query, { tokenId });
     
-    if (!data.nftMint) {
+    if (!data.nftMints || data.nftMints.length === 0) {
       return null;
     }
 
+    const mint = data.nftMints[0];
     const transfers = data.nftTransfers || [];
     const currentOwner = transfers.length > 0 ? 
-      transfers[0].to.id : data.nftMint.to.id;
+      transfers[0].to : mint.to;
 
     return {
       tokenId,
       owner: currentOwner,
-      mintedAt: data.nftMint.timestamp,
+      nftType: mint.nftType,
+      metadataURI: mint.metadataURI,
+      mintedAt: mint.timestamp,
+      blockNumber: mint.blockNumber,
+      mintTxHash: mint.txHash,
       transferCount: transfers.length,
       transferHistory: transfers.map((t: any) => ({
-        from: t.from.id,
-        to: t.to.id,
+        from: t.from,
+        to: t.to,
         timestamp: t.timestamp,
         txHash: t.txHash,
       })),
