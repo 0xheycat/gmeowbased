@@ -1,0 +1,179 @@
+# #file: .github/workflows/nft-mint-worker.yml
+#
+# TODO:
+# - Add Slack/Discord notification on failures
+# - Add workflow run metrics to monitoring dashboard
+# - Add conditional execution (skip if maintenance mode)
+# - Add manual trigger with parameters (batch_size, priority)
+#
+# FEATURES:
+# - Runs every 5 minutes via GitHub Actions cron
+# - Triggers Supabase Edge Function via API endpoint
+# - Authenticates using CRON_SECRET from GitHub secrets
+# - Supports manual trigger via workflow_dispatch
+# - Timeout after 5 minutes to prevent hanging
+#
+# PHASE: Phase 1 - Critical Infrastructure (Week 1, Day 1)
+# DATE: December 16, 2025
+#
+# REFERENCE DOCUMENTATION:
+# - NFT-SYSTEM-ARCHITECTURE-PART-4.md (Section 17, Task 1.2)
+# - farcaster.instructions.md (Section 4.6 - GitHub Cron for Automated Tasks)
+# - farcaster.instructions.md (Section 4.7 - Environment Variables Verification)
+#
+# SUGGESTIONS:
+# - Consider adding retry logic for failed API calls
+# - Add health check before executing worker
+# - Add metrics export to Datadog/Prometheus
+# - Consider running more frequently (every 2-3 minutes) during high traffic
+#
+# CRITICAL FOUND:
+# - CRON_SECRET must exist in GitHub secrets before workflow runs
+# - NEXT_PUBLIC_BASE_URL must point to production URL (https://gmeowhq.art)
+# - Workflow will fail silently if secrets missing - add validation step
+# - 5-minute interval may be too slow for high-volume minting periods
+#
+# AVOID (from farcaster.instructions.md):
+# - NO Vercel Cron (this is GitHub Actions as required)
+# - NO hardcoded secrets in workflow file
+# - NO direct Supabase Edge Function calls (use API endpoint)
+# - NO mixing deployment environments
+#
+# Website: https://gmeowhq.art
+# Network: Base (Chain ID: 8453)
+
+name: NFT Mint Worker
+
+on:
+  # Runs every 5 minutes
+  schedule:
+    - cron: '*/5 * * * *'
+  
+  # Allow manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Enable debug logging'
+        required: false
+        type: boolean
+        default: false
+
+# Only one instance at a time (prevent concurrent execution)
+concurrency:
+  group: nft-mint-worker
+  cancel-in-progress: false
+
+jobs:
+  process-mint-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Log workflow start
+        run: |
+          echo "=== NFT Mint Worker Started ==="
+          echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "Trigger: ${{ github.event_name }}"
+          echo "Debug mode: ${{ inputs.debug || 'false' }}"
+      
+      - name: Validate required secrets
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "ERROR: CRON_SECRET is not set in GitHub secrets"
+            exit 1
+          fi
+          if [ -z "${{ secrets.NEXT_PUBLIC_BASE_URL }}" ]; then
+            echo "ERROR: NEXT_PUBLIC_BASE_URL is not set in GitHub secrets"
+            exit 1
+          fi
+          echo "✓ All required secrets are present"
+      
+      - name: Call mint worker endpoint
+        id: mint_worker
+        run: |
+          echo "Calling API endpoint: ${{ secrets.NEXT_PUBLIC_BASE_URL }}/api/cron/process-mint-queue"
+          
+          response=$(curl -X POST \
+            "${{ secrets.NEXT_PUBLIC_BASE_URL }}/api/cron/process-mint-queue" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "\n%{http_code}" \
+            -s \
+            --max-time 280)
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+          
+          # Save response for next step
+          echo "response_body=$body" >> $GITHUB_OUTPUT
+          echo "http_code=$http_code" >> $GITHUB_OUTPUT
+          
+          # Exit with error if not 200
+          if [ "$http_code" != "200" ]; then
+            echo "ERROR: API call failed with status $http_code"
+            exit 1
+          fi
+      
+      - name: Parse results
+        if: success()
+        run: |
+          response='${{ steps.mint_worker.outputs.response_body }}'
+          
+          # Extract metrics using jq (if available) or grep
+          if command -v jq &> /dev/null; then
+            processed=$(echo "$response" | jq -r '.processed // 0')
+            successful=$(echo "$response" | jq -r '.successful // 0')
+            failed=$(echo "$response" | jq -r '.failed // 0')
+          else
+            processed=$(echo "$response" | grep -oP '"processed":\s*\K\d+' || echo "0")
+            successful=$(echo "$response" | grep -oP '"successful":\s*\K\d+' || echo "0")
+            failed=$(echo "$response" | grep -oP '"failed":\s*\K\d+' || echo "0")
+          fi
+          
+          echo "=== Mint Worker Results ==="
+          echo "Total processed: $processed"
+          echo "Successful: $successful"
+          echo "Failed: $failed"
+          
+          # Create workflow summary
+          echo "### NFT Mint Worker Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Processed | $processed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Successful | $successful |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failed | $failed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Last run: $(date -u +"%Y-%m-%d %H:%M:%S UTC")_" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Handle failures
+        if: failure()
+        run: |
+          echo "=== Mint Worker Failed ==="
+          echo "Workflow failed at step: ${{ steps.mint_worker.outcome }}"
+          echo "HTTP Code: ${{ steps.mint_worker.outputs.http_code }}"
+          echo "Response: ${{ steps.mint_worker.outputs.response_body }}"
+          
+          # Create failure summary
+          echo "### NFT Mint Worker Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: Failed" >> $GITHUB_STEP_SUMMARY
+          echo "**HTTP Code**: ${{ steps.mint_worker.outputs.http_code }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Error**: Check workflow logs for details" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Failed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")_" >> $GITHUB_STEP_SUMMARY
+          
+          # Exit with error to mark workflow as failed
+          exit 1
+      
+      - name: Debug output
+        if: inputs.debug == true || inputs.debug == 'true'
+        run: |
+          echo "=== Debug Information ==="
+          echo "Full response: ${{ steps.mint_worker.outputs.response_body }}"
+          echo "Workflow run ID: ${{ github.run_id }}"
+          echo "Workflow run number: ${{ github.run_number }}"
+          echo "Repository: ${{ github.repository }}"

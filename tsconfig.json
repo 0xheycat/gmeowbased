@@ -54,6 +54,7 @@
     "cache/**/*",
     "docs-archive/**/*",
     ".next/**/*",
-    "out/**/*"
+    "out/**/*",
+    "supabase/functions/**/*"
   ]
 }
