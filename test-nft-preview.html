@@ -386,7 +386,7 @@
 
             <div class="control-group">
                 <label for="baseUrl">API Base URL</label>
-                <input type="text" id="baseUrl" value="http://localhost:3003">
+                <input type="text" id="baseUrl" value="http://localhost:3000">
             </div>
 
             <button onclick="loadNFTPreview()">🚀 Load NFT Preview</button>
@@ -479,8 +479,8 @@
 
             gallery.appendChild(card);
 
-            // Load image
-            const imageUrl = `${baseUrl}/api/nft/image/${tokenId}`;
+            // Load image (use SVG version for local testing)
+            const imageUrl = `${baseUrl}/api/nft/image-svg/${tokenId}`;
             const img = new Image();
             img.onload = function() {
                 const imageContainer = card.querySelector('.nft-image');
