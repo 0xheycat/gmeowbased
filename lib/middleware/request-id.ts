@@ -1,9 +1,49 @@
 /**
- * Request ID Generation
+ * Request ID Generation Middleware
+ * Phase 7.4: Comprehensive Headers
  * 
- * Generates unique request IDs for API debugging and tracing
- * Pattern: GitHub, Stripe, Vercel
- * Format: req_<timestamp>_<random>
+ * FEATURES:
+ * - Generates unique request IDs for API debugging and distributed tracing
+ * - Follows industry patterns from GitHub, Stripe, and Vercel APIs
+ * - Uses Web Crypto API (Edge Runtime compatible)
+ * - Supports client-provided request IDs for client-side tracing
+ * - Validates request ID format to prevent injection attacks
+ * - Adds standardized X-Request-ID headers to responses
+ * - Format: req_<timestamp>_<random> (e.g., req_1234567890_abc123)
+ * - Enables end-to-end request tracking across microservices
+ * - Compatible with logging and APM tools (Sentry, Datadog)
+ * 
+ * TODO:
+ * - Add request ID middleware for automatic injection
+ * - Integrate with structured logging system
+ * - Support correlation IDs for multi-request flows
+ * - Add request ID to error tracking payloads
+ * - Implement request ID propagation to external APIs
+ * - Add OpenTelemetry trace ID mapping
+ * - Support custom request ID formats via config
+ * 
+ * CRITICAL:
+ * - Always validate client-provided request IDs (prevent injection)
+ * - Request IDs must be unique (avoid collisions)
+ * - Never expose sensitive data in request IDs
+ * - Limit request ID length to prevent header overflow
+ * 
+ * SUGGESTIONS:
+ * - Consider using UUIDv7 for better sortability
+ * - Add request ID to all API error responses
+ * - Include request ID in rate limit headers
+ * - Log request ID at the start of each request
+ * 
+ * AVOID:
+ * - Using sequential IDs (security risk, predictable)
+ * - Including PII in request IDs
+ * - Accepting arbitrarily long request IDs from clients
+ * - Forgetting to add request ID to error responses
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Pattern: GitHub API, Stripe API, Vercel Edge
+ * Quality Gates: GI-8 (Security), GI-9 (Observability)
  */
 
 /**

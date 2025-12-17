@@ -1,6 +1,49 @@
 /**
  * Quest Creation Validation Schemas
- * Zod schemas for validating quest creation inputs
+ * Phase 7.5: Comprehensive Headers
+ * 
+ * FEATURES:
+ * - Comprehensive Zod schemas for quest creation wizard
+ * - Validates quest basics (title, description, category, difficulty)
+ * - Validates quest timing (start/end dates, duration)
+ * - Validates rewards (XP, points, badges with constraints)
+ * - Validates tasks (verification data, ordering, requirements)
+ * - Validates images (URL format, file size limits)
+ * - Cross-field validation (start < end dates, cost <= balance)
+ * - Provides detailed error messages for each validation failure
+ * - Type-safe schema inference for TypeScript
+ * 
+ * TODO:
+ * - Add custom chain-specific validation rules
+ * - Implement task dependency validation (task B requires task A)
+ * - Add image URL validation with HEAD requests
+ * - Support quest draft validation (partial schemas)
+ * - Add localized error messages (i18n)
+ * - Implement async validation for unique quest slugs
+ * - Add validation for quest templates
+ * 
+ * CRITICAL:
+ * - All date validations must use UTC timezone (avoid client timezone bugs)
+ * - Max participant limits prevent database overload (max 10,000)
+ * - Reward amounts must be validated server-side (client can be manipulated)
+ * - Quest slugs must be validated for uniqueness in database
+ * 
+ * SUGGESTIONS:
+ * - Consider splitting into smaller schema modules by wizard step
+ * - Add schema versioning for backward compatibility
+ * - Implement custom error formatter for better UX
+ * - Add validation telemetry to track common errors
+ * 
+ * AVOID:
+ * - Client-only validation without server-side checks (security risk)
+ * - Hardcoding validation limits (use environment variables)
+ * - Allowing arbitrarily long text fields (DoS risk)
+ * - Skipping date range validation (can cause infinite quests)
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Library: Zod v3 - https://zod.dev/
+ * Quality Gates: GI-14 (Input Validation), GI-8 (Security)
  */
 
 import { z } from 'zod'

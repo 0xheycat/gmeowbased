@@ -1,4 +1,61 @@
 /**
+ * @file lib/frames/compose-text.ts
+ * @description Frame compose text generator for Farcaster cast composer pre-fill
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Rich share text generation for frame types
+ *   - Context-aware message templating
+ *   - XP and stats formatting (K/M notation)
+ *   - Badge count and streak formatting
+ *   - Progress percentage display
+ *   - Tier and level mentions
+ *   - Dynamic hashtag generation
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Farcaster composer: https://docs.farcaster.xyz/reference/frames/spec
+ *   - Frame handlers: lib/frames/handlers/
+ *   - HTML builder: lib/frames/html-builder.ts
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Compose text max 280 characters
+ *   - NO EMOJIS (some clients don't render)
+ *   - Text must be engaging and shareable
+ *   - Include relevant hashtags
+ * 
+ * TODO:
+ *   - [ ] Add A/B testing for compose text variants
+ *   - [ ] Add compose text analytics tracking
+ *   - [ ] Add multi-language support
+ *   - [ ] Add personalization based on user history
+ *   - [ ] Add compose text templates per frame type
+ *   - [ ] Add character limit validation
+ * 
+ * CRITICAL:
+ *   - Text must be under 280 characters
+ *   - No personally identifiable information
+ *   - Must be appropriate for all audiences
+ *   - Include call-to-action when relevant
+ *   - Format numbers for readability
+ * 
+ * SUGGESTIONS:
+ *   - Add trending hashtag integration
+ *   - Generate multiple variants and pick best
+ *   - Track share conversion rates
+ *   - Add seasonal messaging
+ *   - Personalize based on achievement type
+ * 
+ * AVOID:
+ *   - Generic or boring text (low engagement)
+ *   - Exceeding character limits
+ *   - Using emojis (compatibility issues)
+ *   - Exposing sensitive user data
+ *   - Hardcoding text (use templates)
+ */
+
+/**
  * Frame Compose Text Generator
  * Generates rich share text for Farcaster frame composer
  */

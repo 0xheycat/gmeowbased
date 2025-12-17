@@ -1,8 +1,61 @@
 /**
- * Badge Frame Utilities
+ * @file lib/frames/frame-badge.ts
+ * @description Badge frame utilities for share frames and OG image generation
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * FEATURES:
+ *   - Badge share frame URL generation
+ *   - Badge OG image URL generation
+ *   - Badge collection frame support
+ *   - Origin resolution with fallbacks
+ *   - Query parameter serialization
+ *   - Type-safe badge metadata handling
  * 
  * Helper functions for generating badge share frames and OG images.
  * Used by /api/frame/badgeShare and badge inventory pages.
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Badge system: lib/badges/badges.ts
+ *   - Share API: lib/api/share.ts
+ *   - Frame routes: app/api/frame/badgeShare/
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Badge IDs must exist in registry
+ *   - FIDs must be valid Farcaster IDs
+ *   - URLs must be absolute
+ *   - OG images must be <256KB
+ * 
+ * TODO:
+ *   - [ ] Add badge frame preview generation
+ *   - [ ] Add badge rarity display in frames
+ *   - [ ] Add badge unlock date in frames
+ *   - [ ] Add badge share analytics tracking
+ *   - [ ] Add badge frame caching
+ *   - [ ] Add badge collection summary frames
+ * 
+ * CRITICAL:
+ *   - Badge IDs must be validated before URL generation
+ *   - FIDs must be positive integers
+ *   - Origin must be HTTPS in production
+ *   - Query parameters must be URL encoded
+ *   - Badge metadata must be loaded before rendering
+ * 
+ * SUGGESTIONS:
+ *   - Cache badge frame URLs per user
+ *   - Add badge share tracking for analytics
+ *   - Generate multiple badge layouts
+ *   - Add badge rarity indicators
+ *   - Support batch badge frame generation
+ * 
+ * AVOID:
+ *   - Generating frames for non-existent badges
+ *   - Using HTTP URLs in production
+ *   - Hardcoding badge URLs (use registry)
+ *   - Generating frames without badge validation
+ *   - Exposing internal badge IDs in URLs
  */
 
 import { resolveOrigin } from '@/lib/api/share'

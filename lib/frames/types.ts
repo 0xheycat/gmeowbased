@@ -1,6 +1,53 @@
 /**
- * Frame System Types
- * Shared type definitions for Farcaster Frame handlers
+ * @file lib/frames/types.ts
+ * @description Shared type definitions for Farcaster frame system
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * FEATURES:
+ *   - 12 frame type definitions (quest, guild, points, referral, etc.)
+ *   - FrameRequest type for handler inputs
+ *   - HybridDataResult for data fetching
+ *   - Trace types for performance monitoring
+ *   - LeaderboardEntry for ranking displays
+ *   - Type-safe frame parameter handling
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Frame handlers: lib/frames/handlers/
+ *   - Hybrid data: lib/frames/hybrid-data.ts
+ *   - Chain types: lib/contracts/gmeow-utils.ts
+ * 
+ * REQUIREMENTS:
+ *   - All frame types must have handlers
+ *   - Types must be exported for external use
+ *   - Breaking changes require version bump
+ *   - All types must be documented
+ * 
+ * TODO:
+ *   - [ ] Add frame type validation schemas
+ *   - [ ] Add runtime type checking
+ *   - [ ] Add type versioning for migrations
+ *   - [ ] Add type generation from frame handlers
+ *   - [ ] Add type documentation generator
+ * 
+ * CRITICAL:
+ *   - Frame types must match handler implementations
+ *   - All optional fields must have defaults
+ *   - Breaking type changes require careful migration
+ *   - Types must be kept in sync with Farcaster spec
+ * 
+ * SUGGESTIONS:
+ *   - Generate types from OpenAPI schema
+ *   - Add type validation tests
+ *   - Add type compatibility matrix
+ *   - Document type evolution over time
+ * 
+ * AVOID:
+ *   - Adding types without corresponding handlers
+ *   - Breaking changes to exported types
+ *   - Using 'any' type (use 'unknown' instead)
+ *   - Mixing concerns in type definitions
  */
 
 import type { NormalizedQuest, ChainKey } from '@/lib/contracts/gmeow-utils'

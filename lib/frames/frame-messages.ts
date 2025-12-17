@@ -1,8 +1,61 @@
 /**
- * Phase 1B: Rich Text Message Builder
+ * @file lib/frames/frame-messages.ts
+ * @description Rich text message builder for frame action responses
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL: Phase 1B: Rich Text Message Builder
+ * 
+ * FEATURES:
+ *   - Success message formatting
+ *   - Error message templates
+ *   - CTA link embedding
+ *   - Image URL inclusion
+ *   - Multi-line message support
+ *   - Action result descriptions
  * 
  * Utilities for building formatted post-action messages in frame responses.
  * These messages appear in the feed after users click frame buttons.
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Farcaster frames: https://docs.farcaster.xyz/reference/frames/spec
+ *   - Frame handlers: lib/frames/handlers/
+ * 
+ * REQUIREMENTS:
+ *   - Messages must be concise and clear
+ *   - NO EMOJIS in messages
+ *   - Include relevant links when available
+ *   - Format must be readable in feed
+ * 
+ * TODO:
+ *   - [ ] Add message templates per action type
+ *   - [ ] Add multi-language message support
+ *   - [ ] Add message analytics tracking
+ *   - [ ] Add message A/B testing
+ *   - [ ] Add rich media message support
+ *   - [ ] Add message personalization
+ * 
+ * CRITICAL:
+ *   - Messages must be feed-safe (no XSS)
+ *   - Links must be absolute URLs
+ *   - CTA labels must be clear and actionable
+ *   - Error messages must be user-friendly
+ *   - Messages must not expose sensitive data
+ * 
+ * SUGGESTIONS:
+ *   - Add message preview before sending
+ *   - Track message click-through rates
+ *   - Generate contextual messages
+ *   - Add message sentiment analysis
+ *   - Support rich formatting when available
+ * 
+ * AVOID:
+ *   - Generic error messages (be specific)
+ *   - Overly long messages (truncate smartly)
+ *   - Using emojis (compatibility issues)
+ *   - Exposing technical errors to users
+ *   - Hardcoding message text
  */
 
 export interface SuccessMessageParams {

@@ -1,9 +1,49 @@
 /**
- * On-Chain Quest Verification
- * Phase 2.7: Quest Page Rebuild
+ * On-Chain Quest Verification Service
+ * Phase 7.5: Comprehensive Headers
  * 
- * Verify on-chain activities via Base Mainnet proxy contract
- * Proxy Address: 0x6A48B758ed42d7c934D387164E60aa58A92eD206
+ * FEATURES:
+ * - Verifies on-chain activities on Base Mainnet using Viem
+ * - Supports NFT ownership verification (ERC-721 balanceOf)
+ * - Supports token balance verification (ERC-20 balances)
+ * - Supports swap/liquidity verification via event logs
+ * - Supports bridge transaction verification
+ * - Provides transaction proofs with block numbers and timestamps
+ * - Uses proxy contract for complex multi-step verifications
+ * - Edge Runtime compatible (no Node.js dependencies)
+ * - Handles RPC errors gracefully with retry logic
+ * 
+ * TODO:
+ * - Add ERC-1155 multi-token support
+ * - Implement event log parsing for DEX swaps (Uniswap V3)
+ * - Add Blockscout API fallback when RPC is down
+ * - Support cross-chain verification via bridge APIs
+ * - Add verification history with transaction indexing
+ * - Implement gas-efficient batch verification
+ * - Add support for Coinbase Wallet SDK verification
+ * 
+ * CRITICAL:
+ * - RPC endpoint must be set (RPC_BASE or NEXT_PUBLIC_RPC_BASE)
+ * - Proxy contract address is hardcoded (must match deployment)
+ * - BigInt values must be serialized before storing in database
+ * - Never expose RPC endpoints with authentication in client code
+ * 
+ * SUGGESTIONS:
+ * - Use Subsquid indexer for historical transaction queries
+ * - Add Supabase caching for verified transactions (7-day TTL)
+ * - Implement rate limiting for RPC calls (5 req/sec)
+ * - Consider using Alchemy/Infura for better RPC reliability
+ * 
+ * AVOID:
+ * - Calling RPC for every quest check (cache verified transactions)
+ * - Verifying old transactions repeatedly (store results)
+ * - Exposing contract addresses without validation
+ * - Making unbounded contract calls (always set gas limits)
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Contract: Base Mainnet Proxy 0x6A48B758ed42d7c934D387164E60aa58A92eD206
+ * Quality Gates: GI-11 (Blockchain Integration), GI-8 (Security)
  */
 
 import { createPublicClient, http, parseAbi, type Address } from 'viem';

@@ -1,7 +1,55 @@
 /**
+ * @file lib/frames/frame-fonts.ts
+ * @description Font loading utility for frame image generation
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Custom font loading from filesystem
+ *   - Gmeow font support
+ *   - ArrayBuffer conversion for @vercel/og
+ *   - Error handling with tracking
+ *   - Font data type definitions
+ *   - Multiple weight support (400, 700)
+ * 
  * Frame Font Loading Utility
  * Loads custom fonts for frame image generation
  * Used across all modular frame routes
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Fonts directory: app/fonts/
+ *   - Vercel OG: https://vercel.com/docs/functions/og-image-generation
+ *   - Error tracking: lib/notifications/error-tracking.ts
+ * 
+ * REQUIREMENTS:
+ *   - Fonts must exist in app/fonts/ directory
+ *   - Font files must be .ttf format
+ *   - Filesystem access required (Node.js)
+ * 
+ * TODO:
+ *   - [ ] Add font fallback chain
+ *   - [ ] Add font validation
+ *   - [ ] Add font caching
+ *   - [ ] Support multiple font formats
+ *   - [ ] Add font loading performance metrics
+ * 
+ * CRITICAL:
+ *   - Font files must be readable
+ *   - Font paths must be correct
+ *   - ArrayBuffer conversion must succeed
+ *   - Error handling required (graceful degradation)
+ * 
+ * SUGGESTIONS:
+ *   - Cache loaded fonts in memory
+ *   - Add font preloading on startup
+ *   - Support font CDN fallbacks
+ *   - Add font format detection
+ * 
+ * AVOID:
+ *   - Loading fonts synchronously
+ *   - Missing error handling
+ *   - Hardcoding font paths
+ *   - Using fonts without license
  */
 
 import { readFile } from 'fs/promises'

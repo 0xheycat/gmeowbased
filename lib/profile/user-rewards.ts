@@ -1,7 +1,7 @@
 // User Rewards System for Phase 0
 // Tracks first-time frame views and awards points/XP
 
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { isOGUser } from '@/lib/badges/rarity-tiers'
 import { trackError, trackInfo } from '@/lib/notifications/error-tracking'
 

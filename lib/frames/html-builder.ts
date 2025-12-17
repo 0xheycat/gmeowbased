@@ -1,4 +1,65 @@
 /**
+ * @file lib/frames/html-builder.ts
+ * @description Frame HTML builder with Farcaster vNext metadata generation
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Farcaster vNext frame metadata generation
+ *   - HTML escaping and XSS protection
+ *   - URL sanitization (blocks dangerous protocols)
+ *   - Button validation and sanitization
+ *   - Compose action metadata
+ *   - Profile overlay support
+ *   - Debug mode with trace information
+ *   - SEO-friendly meta tags
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Frame validation: lib/frames/frame-validation.ts
+ *   - Compose text: lib/frames/compose-text.ts
+ *   - Farcaster frames spec: https://docs.farcaster.xyz/reference/frames/spec
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - All URLs must be absolute
+ *   - All user input must be sanitized
+ *   - XSS protection required (no javascript: or data: URLs)
+ *   - Frame images must be <256KB
+ *   - NO EMOJIS in metadata
+ * 
+ * TODO:
+ *   - [ ] Add frame preview generation
+ *   - [ ] Add frame metadata validation
+ *   - [ ] Add frame caching headers
+ *   - [ ] Add frame analytics tracking
+ *   - [ ] Add frame error boundaries
+ *   - [ ] Add frame metadata versioning
+ * 
+ * CRITICAL:
+ *   - ALL user input must be HTML escaped
+ *   - URLs must be sanitized to prevent XSS
+ *   - Buttons must be validated (max 4 buttons)
+ *   - Button labels must be <32 characters
+ *   - Image URLs must be absolute and HTTPS
+ *   - Compose actions require valid target URLs
+ * 
+ * SUGGESTIONS:
+ *   - Cache generated HTML for repeated requests
+ *   - Add frame metadata linting
+ *   - Generate frame previews for testing
+ *   - Add frame versioning for backwards compatibility
+ *   - Implement frame templates for common patterns
+ * 
+ * AVOID:
+ *   - Using user input without escaping
+ *   - Allowing javascript: or data: URLs
+ *   - Generating frames without image URLs
+ *   - Exceeding button limits (max 4)
+ *   - Using relative URLs in metadata
+ *   - Embedding sensitive data in frames
+ */
+
+/**
  * Frame HTML Builder
  * Generates frame HTML with Farcaster vNext metadata
  */

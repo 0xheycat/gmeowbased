@@ -1,7 +1,11 @@
 /**
- * #file: lib/frames/hybrid-calculator.ts
+ * @file lib/frames/hybrid-calculator.ts
+ * @description Hybrid scoring system combining Subsquid blockchain data + Supabase off-chain data
  * 
- * PHASE: Phase 1 Week 1-2 Complete (Dec 16, 2025)
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL: Phase 1 Week 1-2 Complete (Dec 16, 2025)
  * DATE UPDATED: December 16, 2025, 4:00 PM CST
  * WEBSITE: https://gmeowhq.art
  * NETWORK: Base (Chain ID: 8453)

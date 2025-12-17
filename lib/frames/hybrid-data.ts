@@ -1,11 +1,65 @@
 /**
- * Hybrid Data Fetcher
- * Combines Subsquid (blockchain events) + Supabase (off-chain data)
+ * @file lib/frames/hybrid-data.ts
+ * @description Hybrid data fetcher combining Subsquid blockchain + Supabase off-chain data
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * FEATURES:
+ *   - Dual data source strategy (Subsquid + Supabase)
+ *   - Leaderboard data aggregation
+ *   - User profile enrichment
+ *   - Quest completion tracking
+ *   - Viral score calculations
+ *   - In-memory caching (5min TTL)
+ *   - Parallel data fetching for performance
  * 
  * Strategy:
  * - Subsquid: Source of truth for on-chain events (GMs, badges, guilds, referrals)
  * - Supabase: Enrichment data (user profiles, quest completions, viral scores)
  * - Cache: Short TTL for expensive queries
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Hybrid calculator: lib/frames/hybrid-calculator.ts
+ *   - Types: lib/frames/types.ts
+ *   - Utils: lib/frames/utils.ts
+ *   - Subsquid: gmeow-indexer/ directory
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453)
+ *   - Subsquid API must be available
+ *   - Supabase must be configured
+ *   - Cache must expire to allow fresh data
+ * 
+ * TODO:
+ *   - [ ] Add Redis caching for distributed environments
+ *   - [ ] Add data staleness indicators
+ *   - [ ] Add fallback logic when Subsquid unavailable
+ *   - [ ] Add batch fetching optimization
+ *   - [ ] Add data freshness monitoring
+ *   - [ ] Add query performance metrics
+ * 
+ * CRITICAL:
+ *   - Cache TTL must be short enough for real-time data (5min)
+ *   - Parallel queries required for performance
+ *   - Must handle missing data gracefully
+ *   - Subsquid failures should not break frames
+ *   - All queries must have timeouts
+ * 
+ * SUGGESTIONS:
+ *   - Add query result pooling for identical requests
+ *   - Implement data prefetching for predicted queries
+ *   - Add query analytics (most requested data)
+ *   - Cache negative results to avoid repeated failures
+ *   - Add data validation before caching
+ * 
+ * AVOID:
+ *   - Blocking frame rendering on slow queries
+ *   - Caching stale data indefinitely
+ *   - Making sequential queries (use parallel)
+ *   - Ignoring Subsquid errors (log and fallback)
+ *   - Exposing raw database queries in responses
  */
 
 import type { Trace, HybridDataResult } from './types'

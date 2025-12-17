@@ -25,7 +25,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 
 // ============================================================================
 // Type Definitions
@@ -501,6 +501,7 @@ export async function dispatchViralNotification(
         category,
         title,
         description,
+        tone: 'success',  // Required field for notifications
         metadata: {
           type: notification.type,
           achievement_type: notification.achievementType,

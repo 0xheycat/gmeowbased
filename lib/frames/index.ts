@@ -1,4 +1,54 @@
 /**
+ * @file lib/frames/index.ts
+ * @description Frame system barrel export with handler registry
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Centralized frame handler exports
+ *   - Handler registry for dynamic lookup
+ *   - Type definitions export
+ *   - Utility functions export
+ *   - 11 frame handler types (leaderboards, gm, guild, points, quest, badge, referral, onchainstats, nft, badgecollection, verify)
+ *   - Handler resolution by frame type
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Frame handlers: lib/frames/handlers/
+ *   - Frame types: lib/frames/types.ts
+ *   - Frame routes: app/api/frame/
+ * 
+ * REQUIREMENTS:
+ *   - All frame types must have handlers
+ *   - Handler registry must be complete
+ *   - Types must be exported
+ * 
+ * TODO:
+ *   - [ ] Add handler versioning
+ *   - [ ] Add handler health checks
+ *   - [ ] Add handler analytics
+ *   - [ ] Add handler middleware support
+ *   - [ ] Add dynamic handler loading
+ * 
+ * CRITICAL:
+ *   - All handlers must be registered
+ *   - Handler registry must match FrameType enum
+ *   - Breaking changes require version management
+ *   - All exports must be typed
+ * 
+ * SUGGESTIONS:
+ *   - Add handler capability discovery
+ *   - Generate handler documentation
+ *   - Add handler performance metrics
+ *   - Implement handler hot-reloading
+ * 
+ * AVOID:
+ *   - Missing handler registrations
+ *   - Circular dependencies
+ *   - Mixing default and named exports
+ *   - Exporting internal implementation details
+ */
+
+/**
  * Frame System Index
  * Main entry point for modular frame handlers
  */

@@ -1,5 +1,11 @@
 /**
- * Frame Design System - Phase 2 Layer 1
+ * @file lib/frames/frame-design-system.ts
+ * @description Unified design system for Farcaster frame image generation
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL: Frame Design System - Phase 2 Layer 1
  * Unified typography, colors, and layout constants for all frame image generation
  * 
  * Phase 2 Updates:
@@ -7,7 +13,28 @@
  * - Enhanced typography controls (letter-spacing, line-height, text-shadow)
  * - FRAME_FONTS_V2 with semantic naming (display, h1, h2, h3)
  * 
+ * FEATURES:
+ *   - Premium font stack (Gmeow from app/fonts)
+ *   - Semantic typography scale (display, h1, h2, h3, body, caption)
+ *   - Comprehensive color system (GM, guild, badge, referral themes)
+ *   - Layout constants (spacing, dimensions, borders)
+ *   - Text styling utilities (shadows, letter-spacing, line-height)
+ *   - Button states and variants
+ *   - Gradient definitions for backgrounds
+ * 
  * Note: PixelifySans-Bold removed in commit 419276f (bundle optimization)
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Frame fonts: lib/frames/frame-fonts.ts
+ *   - HTML builder: lib/frames/html-builder.ts
+ *   - Frame handlers: lib/frames/handlers/
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Fonts must be loaded via loadFonts() in frame API routes
+ *   - NO HARDCODED COLORS (use FRAME_COLORS constants)
+ *   - NO EMOJIS in frame text
+ *   - All dimensions in pixels for consistency
  * 
  * Usage:
  * ```typescript
@@ -16,6 +43,35 @@
  * <div style={{ fontFamily: FRAME_FONT_FAMILY.display, fontSize: FRAME_FONTS_V2.h1 }}>Title</div>
  * <div style={{ color: FRAME_COLORS.gm.primary }}>Content</div>
  * ```
+ * 
+ * TODO:
+ *   - [ ] Add dark mode color variants
+ *   - [ ] Add responsive typography scale
+ *   - [ ] Add animation constants (durations, easings)
+ *   - [ ] Add accessibility contrast checker
+ *   - [ ] Add color palette generator for new themes
+ *   - [ ] Add design token documentation generator
+ * 
+ * CRITICAL:
+ *   - Colors must meet WCAG contrast requirements
+ *   - Fonts must be preloaded to avoid FOUT/FOIT
+ *   - All constants must be frozen (as const)
+ *   - Breaking changes require version bump
+ *   - Design tokens must be single source of truth
+ * 
+ * SUGGESTIONS:
+ *   - Add theme provider for dynamic color switching
+ *   - Generate CSS variables from design tokens
+ *   - Add design system documentation site
+ *   - Implement design token validation tests
+ *   - Add Figma plugin for token export
+ * 
+ * AVOID:
+ *   - Hardcoding colors in frame handlers (use constants)
+ *   - Mixing font families within single frame
+ *   - Using non-semantic color names (use theme-based)
+ *   - Breaking changes to exported constants
+ *   - Adding colors that don't meet contrast requirements
  */
 
 // ============================================================================

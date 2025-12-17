@@ -1,15 +1,49 @@
 /**
  * Points Escrow Service
- * Phase 3: Business Logic - Quest Creation System
- * Task 8.5: Quest Creation UI
+ * Phase 7.5: Comprehensive Headers
  * 
- * Manages BASE POINTS escrow for quest creation:
- * - Deduct points from creator (leaderboard_calculations.base_points)
- * - Store escrow record in quest_creation_costs
- * - Refund unused points when quest expires
- * - Transaction safety with Supabase
+ * FEATURES:
+ * - Manages BASE POINTS escrow for quest creation
+ * - Deducts points from creator's leaderboard_calculations.base_points
+ * - Stores escrow records in quest_creation_costs table
+ * - Refunds unused points when quests expire
+ * - Partial refunds for completed quests (refund unclaimed rewards)
+ * - Transaction-safe database operations (rollback on error)
+ * - Detailed escrow tracking with creator FID and quest metadata
+ * - Supports escrow history queries
+ * - Handles concurrent escrow operations safely
+ * 
+ * TODO:
+ * - Add escrow expiration notifications (remind creators)
+ * - Implement automatic refunds via cron job
+ * - Add escrow analytics (total locked, average duration)
+ * - Support escrow transfers between creators
+ * - Add escrow reserve system for high-value quests
+ * - Implement escrow insurance for quest failures
+ * - Add multi-currency escrow (points + tokens)
+ * 
+ * CRITICAL:
+ * - All escrow operations must be atomic (transaction or rollback)
+ * - Creator balance must be checked before escrow (prevent negative)
+ * - Escrow records must be created before marking quest active
+ * - Refunds must only be issued once per quest (idempotency)
+ * 
+ * SUGGESTIONS:
+ * - Add Supabase function for atomic escrow+refund operations
+ * - Implement escrow event sourcing for audit trail
+ * - Add escrow dashboard for creators to track locked points
+ * - Consider adding escrow interest (reward long-running quests)
+ * 
+ * AVOID:
+ * - Escrowing points without transaction safety (data loss risk)
+ * - Refunding points without verifying quest status
+ * - Allowing concurrent refunds for same quest (double refund)
+ * - Exposing escrow amounts in public APIs (privacy)
  * 
  * Created: December 4, 2025
+ * Last Modified: December 17, 2025
+ * Currency: BASE POINTS (leaderboard_calculations.base_points)
+ * Quality Gates: GI-13 (Transactional Integrity), GI-16 (Economic System)
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase';

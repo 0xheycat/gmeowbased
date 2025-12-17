@@ -1,8 +1,49 @@
 /**
  * Quest Verification Orchestrator
- * Phase 2.7: Quest Page Rebuild
+ * Phase 7.5: Comprehensive Headers
  * 
- * Coordinate on-chain and social verifications, update database
+ * FEATURES:
+ * - Coordinates on-chain and social quest verifications
+ * - Fetches quest details with user progress from Supabase
+ * - Validates quest eligibility (locked, completed, expired)
+ * - Routes verification to appropriate service (Farcaster vs onchain)
+ * - Updates quest progress in database (marks tasks/quests complete)
+ * - Calculates rewards (XP, points, tokens, NFTs)
+ * - Handles multi-step quest flows with task ordering
+ * - Provides detailed verification responses with next actions
+ * - Supports viral XP unlock requirements
+ * 
+ * TODO:
+ * - Add webhook notifications for quest completions
+ * - Implement leaderboard updates in same transaction
+ * - Add quest completion analytics tracking
+ * - Support partial credit for failed multi-step quests
+ * - Add retry mechanism for failed verifications
+ * - Implement verification cooldown periods
+ * - Add quest recommendation engine based on completion history
+ * 
+ * CRITICAL:
+ * - All database updates must be transactional (prevent partial state)
+ * - Verification proofs must be stored before marking complete
+ * - User address required for on-chain quests (validate before calling)
+ * - Reward calculations must match quest configuration exactly
+ * 
+ * SUGGESTIONS:
+ * - Consider splitting into smaller orchestration steps
+ * - Add event sourcing for quest state changes
+ * - Implement saga pattern for distributed transactions
+ * - Add circuit breaker for external API failures
+ * 
+ * AVOID:
+ * - Marking quests complete without storing verification proof
+ * - Updating user XP/points outside of orchestrator (causes drift)
+ * - Allowing verification without checking eligibility first
+ * - Hardcoding reward calculations (use quest configuration)
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Pattern: Orchestrator/Coordinator
+ * Quality Gates: GI-12 (Quest System), GI-13 (Transactional Integrity)
  */
 
 import type { Address } from 'viem';
