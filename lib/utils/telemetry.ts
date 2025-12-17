@@ -3,6 +3,7 @@ import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/g
 import { getRpcUrl } from '@/lib/contracts/rpc'
 import { createPublicClient, http, parseAbiItem, type AbiEvent, type Log } from 'viem'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Json } from '@/types/supabase'
 
 export type TelemetryMetric = {
   value: number
@@ -761,7 +762,7 @@ export async function recordRankEvent(input: RankTelemetryEventInput): Promise<v
       }
       return Math.max(0, Math.min(100, Number(((input.tierPercent as number) * 100).toFixed(2))))
     })(),
-    metadata: input.metadata ?? null,
+    metadata: (input.metadata ?? null) as Json,
   }
 
   try {

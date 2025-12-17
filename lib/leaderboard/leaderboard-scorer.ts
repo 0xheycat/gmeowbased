@@ -97,14 +97,9 @@ export async function calculateLeaderboardScore(
 
   const viralXP = viralData?.reduce((sum: number, row: any) => sum + (row.viral_bonus_xp || 0), 0) || 0
 
-  // 4. Get guild bonus (guild level * 100) - guild_members not in Database types
-  const { data: guildData } = await supabase
-    .from('guild_members')
-    .select('guild_level')
-    .eq('address', address)
-    .single()
-
-  const guildBonus = (guildData?.guild_level || 0) * 100
+  // 4. Guild bonus deprecated (guild_members table removed)
+  // TODO: Implement guild level bonus from guild_metadata if needed
+  const guildBonus = 0
 
   // 4.5. Get guild bonus points (10% member + 5% officer)
   const { data: guildMembershipData } = await supabase
