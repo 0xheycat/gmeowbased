@@ -1,13 +1,131 @@
-// @edit-start 2025-02-14 — Community event aggregation helpers
-import { COMMUNITY_EVENT_TYPES, type CommunityEventSummary, type CommunityEventType } from '@/lib/profile/community-event-types'
+/**
+ * @file lib/profile/community-events.ts
+ * @description Community event aggregation system for activity feeds and notifications.
+ * Fetches, formats, and enriches rank events from Supabase with Farcaster profile data.
+ * 
+ * PHASE: Phase 6.3 - Profile Category Consolidation (December 17, 2025)
+ * CONSOLIDATED FROM:
+ *   - lib/profile/community-event-types.ts (48 lines, type definitions)
+ *   - lib/profile/community-events.ts (374 lines, event aggregation logic)
+ * 
+ * FEATURES:
+ *   - Event type system (gm, quest-verify, quest-create, tip, stats-query, stake, unstake)
+ *   - Real-time activity feed from gmeow_rank_events table
+ *   - Farcaster profile enrichment via Neynar API
+ *   - Contextual headlines and descriptions
+ *   - Smart CTAs (call-to-action links)
+ *   - Pagination with cursor-based navigation
+ *   - Type filtering and time-based queries
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - LIB-REFACTOR-PLAN.md (Phase 6.3)
+ *   - DOCS-STRUCTURE.md (Profile system)
+ *   - Supabase: gmeow_rank_events table schema
+ *   - Neynar API: User profile enrichment
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain
+ *   - NO EMOJIS in production code
+ *   - NO HARDCODED COLORS
+ *   - Supabase configured (falls back gracefully if not)
+ *   - Neynar API for Farcaster data enrichment
+ * 
+ * TODO:
+ *   - [ ] Add event caching layer (Redis/Upstash) for high-traffic periods
+ *   - [ ] Implement real-time subscriptions for live activity feed
+ *   - [ ] Add event analytics (most popular event types, peak times)
+ *   - [ ] Support event reactions/comments (future social feature)
+ * 
+ * CRITICAL:
+ *   - Validate 'since' parameter to prevent SQL injection/errors
+ *   - Handle Neynar API failures gracefully (don't block event listing)
+ *   - Batch Farcaster profile lookups (avoid rate limits)
+ *   - Use proper cursor-based pagination (not offset/limit)
+ * 
+ * SUGGESTIONS:
+ *   - Consider WebSocket/SSE for real-time event streaming
+ *   - Add event filtering by wallet address or FID
+ *   - Implement event search by keywords
+ *   - Cache enriched events for 5-10 minutes
+ * 
+ * AVOID:
+ *   - Fetching all Farcaster profiles individually (batch them)
+ *   - Hardcoded event type strings (use COMMUNITY_EVENT_TYPES constant)
+ *   - Exposing raw database errors to clients
+ *   - Blocking event listing if enrichment fails
+ */
+
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { normalizeAddress } from '@/lib/profile/profile-data'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/integrations/neynar'
 import { CHAIN_KEYS, type ChainKey } from '@/lib/contracts/gmeow-utils'
 
-const RANK_EVENT_TABLE = 'gmeow_rank_events'
-const DEFAULT_LIMIT = 40
-const MAX_LIMIT = 120
+// ========================================
+// EVENT TYPE SYSTEM
+// ========================================
+
+/**
+ * All supported community event types
+ * Must match gmeow_rank_events.event_type enum in Supabase
+ */
+export const COMMUNITY_EVENT_TYPES = [
+  'gm',              // GM streak logged
+  'quest-verify',    // Quest completion verified
+  'quest-create',    // New quest created
+  'tip',             // User received tip
+  'stats-query',     // User synced stats
+  'stake',           // Staked into treasury
+  'unstake',         // Withdrew from treasury
+] as const
+
+export type CommunityEventType = (typeof COMMUNITY_EVENT_TYPES)[number]
+
+/**
+ * Actor (user) in a community event
+ */
+export type CommunityEventActor = {
+  fid: number | null
+  username: string | null
+  displayName: string | null
+  walletAddress: `0x${string}` | string | null
+}
+
+/**
+ * Call-to-action link for an event
+ */
+export type CommunityEventCta = {
+  label: string
+  href: string
+}
+
+/**
+ * Complete community event summary (enriched with Farcaster data)
+ */
+export type CommunityEventSummary = {
+  id: string
+  eventType: CommunityEventType
+  headline: string
+  context: string | null
+  emphasis: 'positive' | 'neutral' | 'negative'
+  createdAt: string
+  cursor: string
+  chain: ChainKey | null
+  questId: number | null
+  delta: number | null
+  totalPoints: number | null
+  previousTotal: number | null
+  level: number | null
+  tierName: string | null
+  tierPercent: number | null
+  actor: CommunityEventActor
+  metadata: Record<string, unknown> | null
+  cta: CommunityEventCta | null
+}
+
+// ========================================
+// FETCH OPTIONS & RESULT TYPES
+// ========================================
 
 export type FetchCommunityEventsOptions = {
   limit?: number
@@ -44,6 +162,14 @@ type RankEventRow = {
   tier_percent?: number | string | null
   metadata?: Record<string, unknown> | null
 }
+
+// ========================================
+// CONSTANTS & UTILITIES
+// ========================================
+
+const RANK_EVENT_TABLE = 'gmeow_rank_events'
+const DEFAULT_LIMIT = 40
+const MAX_LIMIT = 120
 
 function clampLimit(value: number | undefined, fallback: number): number {
   if (!Number.isFinite(value)) return fallback
@@ -97,6 +223,10 @@ function toTwoDecimals(value: number | null): number | null {
   if (value == null || !Number.isFinite(value)) return null
   return Math.round(value * 100) / 100
 }
+
+// ========================================
+// EVENT DESCRIPTION GENERATION
+// ========================================
 
 function describeEvent(row: RankEventRow, actorLabel: string): { headline: string; context: string | null } {
   const delta = coerceNumber(row.delta)
@@ -167,6 +297,10 @@ function describeEvent(row: RankEventRow, actorLabel: string): { headline: strin
   }
 }
 
+// ========================================
+// CTA GENERATION
+// ========================================
+
 function deriveCta(row: RankEventRow): { label: string; href: string } | null {
   const eventType = sanitizeEventType(row.event_type)
   const questId = coerceNumber(row.quest_id)
@@ -194,6 +328,10 @@ function deriveCta(row: RankEventRow): { label: string; href: string } | null {
   return null
 }
 
+// ========================================
+// ACTOR ENRICHMENT
+// ========================================
+
 function buildActorCacheEntry(user: FarcasterUser | null, fid: number | null, wallet: `0x${string}` | string | null) {
   return {
     fid,
@@ -203,6 +341,23 @@ function buildActorCacheEntry(user: FarcasterUser | null, fid: number | null, wa
   }
 }
 
+// ========================================
+// MAIN FETCH FUNCTION
+// ========================================
+
+/**
+ * Fetch recent community events with Farcaster profile enrichment
+ * 
+ * @param options - Filter and pagination options
+ * @returns Enriched event list with metadata
+ * 
+ * @example
+ * const result = await fetchRecentCommunityEvents({
+ *   limit: 20,
+ *   since: '2025-12-01T00:00:00Z',
+ *   types: ['gm', 'quest-verify']
+ * })
+ */
 export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOptions = {}): Promise<FetchCommunityEventsResult> {
   const supabaseConfigured = isSupabaseConfigured()
   const nowIso = new Date().toISOString()
@@ -371,4 +526,3 @@ export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOp
     },
   }
 }
-// @edit-end

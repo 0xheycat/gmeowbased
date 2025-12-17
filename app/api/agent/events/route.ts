@@ -3,7 +3,7 @@ import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
 
 // @edit-start 2025-02-14 — Agent community events API
-import { COMMUNITY_EVENT_TYPES, type CommunityEventType } from '@/lib/profile/community-event-types'
+import { COMMUNITY_EVENT_TYPES, type CommunityEventType } from '@/lib/profile/community-events'
 import { fetchRecentCommunityEvents } from '@/lib/profile/community-events'
 
 export const runtime = 'nodejs'
