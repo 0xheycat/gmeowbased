@@ -5,7 +5,7 @@ import {
   getPerformanceStats,
   getSlowRequests 
 } from '@/lib/middleware/timing'
-import { getCacheStats } from '@/lib/cache'
+import { getCacheStats } from '@/lib/cache/server'
 import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'

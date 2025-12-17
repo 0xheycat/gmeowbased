@@ -5,7 +5,7 @@ import { FIDSchema } from '@/lib/validation/api-schemas'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
-import { getCached } from '@/lib/cache'
+import { getCached } from '@/lib/cache/server'
 import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'

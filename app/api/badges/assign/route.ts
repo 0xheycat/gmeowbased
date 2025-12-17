@@ -4,7 +4,7 @@ import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { BadgeAssignSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
-import { invalidateCache, buildUserBadgesKey, getCached, buildUserProfileKey } from '@/lib/cache'
+import { invalidateCache, buildUserBadgesKey, getCached, buildUserProfileKey } from '@/lib/cache/server'
 import { generateRequestId } from '@/lib/request-id'
 
 export const dynamic = 'force-dynamic'
