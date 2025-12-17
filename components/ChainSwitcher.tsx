@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'
-import { ICON_SIZES } from '@/lib/utils/icon-sizes'
+import { ICON_SIZES } from '@/lib/utils/icons'
 
 // Only Blockscout-supported chains (legacy quest system)
 export const CHAIN_BRAND: Partial<Record<ChainKey, { bg: string; fg: string; label: string; title: string }>> = {

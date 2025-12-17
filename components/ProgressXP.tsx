@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { CHAIN_LABEL, type ChainKey } from '@/lib/contracts/gmeow-utils'
-import { getChainIconUrl } from '@/lib/utils/chain-icons'
+import { getChainIconUrl } from '@/lib/utils/icons'
 
 export type ProgressXPProps = {
   open: boolean
