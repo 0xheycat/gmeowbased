@@ -134,7 +134,7 @@
 // @edit-start 2025-11-13 — Agent auto-reply engine
 import { computeBotUserStats, type BotUserStats } from '@/lib/bot/analytics/stats'
 import type { BotStatsConfig } from '@/lib/bot/config/types'
-import { type CommunityEventType } from '@/lib/profile/community-event-types'
+import { type CommunityEventType } from '@/lib/profile/community-events'
 import { normalizeAddress } from '@/lib/profile/profile-data'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/integrations/neynar'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
