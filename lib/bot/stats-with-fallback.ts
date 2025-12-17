@@ -1,7 +1,11 @@
 /**
- * #file: lib/bot/stats-with-fallback.ts
+ * @file lib/bot/stats-with-fallback.ts
+ * @description User stats with automatic cache fallback for database outages
  * 
- * PHASE: Free-Tier Failover Architecture (Day 1-2)
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL: Free-Tier Failover Architecture (Day 1-2)
  * DATE: December 17, 2025
  * WEBSITE: https://gmeowhq.art
  * NETWORK: Base (Chain ID: 8453)

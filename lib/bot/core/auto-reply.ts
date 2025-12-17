@@ -1,7 +1,11 @@
 /**
- * #file: lib/agent-auto-reply.ts
+ * @file lib/bot/core/auto-reply.ts
+ * @description Intent-based auto-reply system for Farcaster bot with multi-turn conversations
  * 
- * PHASE: ALL PHASES COMPLETE (Phase 1, 2, 3 - Dec 16, 2025)
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL PHASES: ALL PHASES COMPLETE (Phase 1, 2, 3 - Dec 16, 2025)
  * DATE UPDATED: December 16, 2025, 1:50 PM CST
  * WEBSITE: https://gmeowhq.art
  * NETWORK: Base (Chain ID: 8453)

@@ -1,5 +1,11 @@
 /**
- * Phase 2 P5: Dynamic Frame Selection - User Context Builder
+ * @file lib/bot/context/user-context.ts
+ * @description Comprehensive user context builder for intelligent frame selection
+ * 
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL: Phase 2 P5: Dynamic Frame Selection - User Context Builder
  * 
  * Project: Gmeowbased (https://gmeowhq.art)
  * Network: Base (Chain ID 8453)

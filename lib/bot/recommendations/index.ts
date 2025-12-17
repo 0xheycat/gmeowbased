@@ -1,3 +1,58 @@
+/**
+ * @file lib/bot/recommendations/index.ts
+ * @description Smart quest recommendations based on user history and preferences
+ * 
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Personalized quest recommendations
+ *   - User history analysis (completed quests, chains, types)
+ *   - Scoring algorithm (0-100) based on relevance
+ *   - Reason generation for each recommendation
+ *   - Multi-chain quest support
+ *   - Quest type preference tracking
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Quests: lib/quests/
+ *   - User context: lib/bot/context/user-context.ts
+ *   - Auto-reply: lib/bot/core/auto-reply.ts
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453) primary
+ *   - Recommendations must be relevant to user level
+ *   - Exclude completed quests from recommendations
+ * 
+ * TODO:
+ *   - [ ] Add quest difficulty matching to user level
+ *   - [ ] Add quest reward optimization
+ *   - [ ] Add time-based quest recommendations (daily, weekly)
+ *   - [ ] Add social quest recommendations (friends' activity)
+ *   - [ ] Add quest completion prediction
+ *   - [ ] Add recommendation caching per user
+ * 
+ * CRITICAL:
+ *   - Never recommend completed quests
+ *   - Score must reflect actual likelihood of completion
+ *   - Recommendations must be actionable (quest available)
+ *   - Reason must be clear and helpful to user
+ *   - Limit recommendations to top 3-5 (avoid overwhelming)
+ * 
+ * SUGGESTIONS:
+ *   - Add A/B testing for recommendation algorithms
+ *   - Track recommendation acceptance rate
+ *   - Add quest recommendation analytics
+ *   - Implement collaborative filtering
+ *   - Add seasonal quest promotions
+ * 
+ * AVOID:
+ *   - Recommending quests beyond user level
+ *   - Showing quests with expired deadlines
+ *   - Recommending chain-specific quests for unsupported chains
+ *   - Using generic reasons (be specific)
+ *   - Overwhelming users with too many options
+ */
+
 // Smart quest recommendations based on user history
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'

@@ -1,7 +1,11 @@
 /**
- * #file: lib/bot/local-cache.ts
+ * @file lib/bot/local-cache.ts
+ * @description Filesystem-based cache for free-tier deployments without Redis
  * 
- * PHASE: Free-Tier Failover Architecture (Day 1-2)
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL: Free-Tier Failover Architecture (Day 1-2)
  * DATE: December 17, 2025
  * WEBSITE: https://gmeowhq.art
  * NETWORK: Base (Chain ID: 8453)
