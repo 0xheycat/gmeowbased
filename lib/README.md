@@ -200,16 +200,30 @@ pnpm test __tests__/integration/ --run
 
 ### December 17, 2025
 - **Phase 0**: Initial analysis (162 files, 87 in root)
-- **Phase 1**: Quick wins
+- **Phase 1**: Quick wins (5 min)
   - Deleted `gmeow-utils.ts(backup)`
   - Created this README.md
-  - Added index files to key directories
+  - Added index files to 8 key directories
+- **Phase 2**: Consolidate duplicates (completed)
+  - **Phase 2.1**: Cache files (3 files → lib/cache/)
+    - cache.ts → cache/server.ts (Vercel KV, 8 imports)
+    - cache-storage.ts → cache/client.ts (localStorage, 2 imports)
+    - frame-cache.ts → cache/frame.ts (Upstash Redis, 1 import)
+    - Updated 12 files with new import paths
+  - **Phase 2.2**: Auth files (2 files → lib/auth/)
+    - admin-auth.ts → auth/admin.ts (JWT/TOTP, 18 imports)
+    - auth.ts → auth/api-key.ts (API key legacy, 0 imports)
+    - Updated 18 files with new import paths
+  - **Phase 2.3**: Supabase files (2 files → lib/supabase/)
+    - supabase-server.ts → supabase/client.ts (44 imports)
+    - supabase.ts → supabase/edge.ts (9 imports)
+    - Updated 53 files with new import paths
+  - **Total**: 7 files moved, 83 import paths updated, all tests passing
 
 ### Future Plans
-- **Phase 2**: Consolidate duplicate files (cache, auth, supabase, utils)
+- **Phase 2.4**: Organize utils files (2 huge files, 68 imports) - optional, high risk
 - **Phase 3**: Better documentation of chain types
-- **Phase 4**: Create consolidated index files
-- **Phase 5**: Ongoing organization improvements
+- **Phase 4**: Ongoing organization improvements
 
 ---
 
