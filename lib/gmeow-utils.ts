@@ -1,10 +1,33 @@
-/* src/lib/gmeow-utils.ts
-   Gmeowbased utilities - Base chain only
-   - Simplified for single-chain operation (Base)
-   - Keep multichain types for api/frame OnchainStats compatibility
-   - All contracts verified on BaseScan (Dec 11, 2025)
-   - ABIs: Centralized in @/lib/contracts/abis for single source of truth
-*/
+/**
+ * Gmeowbased Contract Utilities
+ * 
+ * ⚠️ IMPORTANT: Multi-Chain Architecture Documentation
+ * 
+ * This file contains TWO distinct chain type systems:
+ * 
+ * 1️⃣ GMChainKey (ACTIVE - WRITE OPERATIONS ONLY)
+ *    - Type: 'base' only
+ *    - Purpose: All contract write operations (GM, Guild, NFT, Badge, Referral)
+ *    - Deployment: Base chain (December 12, 2025)
+ *    - Contracts: STANDALONE_ADDRESSES.base.*
+ *    - Usage: Use this for ANY contract interaction that modifies state
+ * 
+ * 2️⃣ ChainKey (VIEW-ONLY - BLOCKSCOUT MCP)
+ *    - Type: 'base' | 'ethereum' | 'optimism' | ... (12 chains)
+ *    - Purpose: OnchainStats frame VIEWING ONLY via Blockscout MCP
+ *    - Access: Blockscout API (FREE, $0/month)
+ *    - Usage: ONLY for reading blockchain data in OnchainStats frame
+ *    - ⛔ DO NOT use for contract writes - they will fail!
+ * 
+ * 📍 Quick Reference:
+ * - Writing to contracts? → Use GMChainKey ('base' only)
+ * - Reading from other chains? → Use ChainKey (12 chains via Blockscout)
+ * - Default chain for app? → Base (8453)
+ * 
+ * @module lib/gmeow-utils
+ * @see docs/migration/BLOCKSCOUT-CHAIN-SUPPORT-COMPLETE.md
+ * @verified BaseScan December 12, 2025
+ */
 
 import {
   encodeFunctionData,
@@ -29,38 +52,109 @@ import {
   REFERRAL_ABI,
 } from '@/lib/contracts/abis'
 
-// -------------------------------
-// Chain registry / configuration
-// -------------------------------
-// PRIMARY: Base chain only (for app functionality)
+// ========================================
+// CHAIN TYPE DEFINITIONS
+// ========================================
+
+/**
+ * GMChainKey - Active Chain for Contract Operations
+ * 
+ * ✅ USE THIS FOR:
+ * - All contract write operations (createGM, joinGuild, mintNFT, etc.)
+ * - Reading from our deployed contracts
+ * - Transaction creation and signing
+ * - Contract state modifications
+ * 
+ * 🚫 RESTRICTIONS:
+ * - Only 'base' is supported
+ * - No other chains have deployed contracts
+ * - All write operations MUST use this type
+ * 
+ * @example
+ * ```typescript
+ * // Correct usage
+ * const chain: GMChainKey = 'base'
+ * const address = STANDALONE_ADDRESSES[chain].core
+ * await createGMTransaction(address, ...)
+ * ```
+ */
 export type GMChainKey = 'base'
 
-// SECONDARY: All chains (for OnchainStats frame viewing only - api/frame routes)
-// BLOCKSCOUT-ONLY: Using Blockscout API for FREE access to 12 chains
-// See: docs/migration/BLOCKSCOUT-CHAIN-SUPPORT-COMPLETE.md
+/**
+ * ChainKey - View-Only Chain Support (Blockscout MCP)
+ * 
+ * ✅ USE THIS FOR:
+ * - OnchainStats frame (viewing stats on multiple chains)
+ * - Reading blockchain data via Blockscout API
+ * - Cross-chain balance checking (view-only)
+ * - Historical data queries
+ * 
+ * 🚫 DO NOT USE FOR:
+ * - Contract write operations (will fail - no contracts deployed)
+ * - Transaction creation
+ * - State modifications
+ * - Minting, claiming, or any contract interactions
+ * 
+ * 💡 IMPLEMENTATION:
+ * - Access via Blockscout MCP (Model Context Protocol)
+ * - FREE tier: $0/month for 12 chains
+ * - Read-only API access
+ * 
+ * @example
+ * ```typescript
+ * // Correct usage (OnchainStats frame only)
+ * const chain: ChainKey = 'ethereum'
+ * const stats = await fetchOnchainStatsViaBlockscout(chain, address)
+ * 
+ * // WRONG - will fail!
+ * await createGMTransaction(chain, ...) // ❌ No contracts on ethereum
+ * ```
+ */
 export type ChainKey = 
-  | 'base'       // Base (8453)
-  | 'ethereum'   // Ethereum (1)
-  | 'optimism'   // OP Mainnet (10)
-  | 'arbitrum'   // Arbitrum One (42161)
-  | 'polygon'    // Polygon PoS (137)
-  | 'gnosis'     // Gnosis (100)
-  | 'celo'       // Celo (42220)
-  | 'scroll'     // Scroll (534352)
-  | 'unichain'   // Unichain (130)
-  | 'soneium'    // Soneium (1868)
-  | 'zksync'     // zkSync Era (324)
-  | 'zora'       // Zora (7777777)
-  | 'op'         // Alias for optimism
+  | 'base'       // Base (8453) - Our active chain
+  | 'ethereum'   // Ethereum (1) - View-only
+  | 'optimism'   // OP Mainnet (10) - View-only
+  | 'arbitrum'   // Arbitrum One (42161) - View-only
+  | 'polygon'    // Polygon PoS (137) - View-only
+  | 'gnosis'     // Gnosis (100) - View-only
+  | 'celo'       // Celo (42220) - View-only
+  | 'scroll'     // Scroll (534352) - View-only
+  | 'unichain'   // Unichain (130) - View-only
+  | 'soneium'    // Soneium (1868) - View-only
+  | 'zksync'     // zkSync Era (324) - View-only
+  | 'zora'       // Zora (7777777) - View-only
+  | 'op'         // Alias for optimism - View-only
 
-// Base chain ID (primary)
+/**
+ * Active Chain IDs - Base Only
+ * 
+ * Chain IDs for chains where we have deployed contracts.
+ * Use this for all contract operations.
+ * 
+ * @constant
+ */
 export const CHAIN_IDS: Record<GMChainKey, number> = {
   base: 8453,
 }
 
-// All chain IDs (for OnchainStats frame support only)
-// BLOCKSCOUT-ONLY: Free API access via Blockscout MCP
-// Cost: $0/month | Coverage: 12 chains | Quality: Perfect
+/**
+ * All Chain IDs - View-Only Support
+ * 
+ * Complete chain ID registry for Blockscout MCP read-only access.
+ * 
+ * ⚠️ WARNING: Only 'base' has deployed contracts!
+ * All other chains are VIEW-ONLY via Blockscout API.
+ * 
+ * Used exclusively by:
+ * - OnchainStats frame (app/frames/onchain-stats)
+ * - Cross-chain balance viewing
+ * - Historical data queries
+ * 
+ * Cost: FREE ($0/month) | Coverage: 12 chains | Quality: Perfect
+ * 
+ * @constant
+ * @see docs/migration/BLOCKSCOUT-CHAIN-SUPPORT-COMPLETE.md
+ */
 export const ALL_CHAIN_IDS: Record<ChainKey, number> = {
   base: 8453,
   ethereum: 1,
@@ -77,12 +171,36 @@ export const ALL_CHAIN_IDS: Record<ChainKey, number> = {
   zora: 7777777,
 }
 
-// Base chain contracts only (proxy-based standalone architecture)
+/**
+ * Core Contract Addresses - Base Chain Only
+ * 
+ * Main entry point for contract interactions.
+ * 
+ * @constant
+ * @verified BaseScan December 12, 2025
+ */
 export const CONTRACT_ADDRESSES: Record<GMChainKey, `0x${string}`> = {
   base: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73',
 }
 
-// Standalone architecture addresses (Base chain only)
+/**
+ * Standalone Architecture Addresses - Base Chain Only
+ * 
+ * Complete contract suite for Gmeowbased platform.
+ * Deployed: December 12, 2025
+ * 
+ * Architecture:
+ * - Core: Main GM contract (user stats, history)
+ * - Guild: Guild management and membership
+ * - NFT: NFT minting and ownership
+ * - Badge: Badge system and achievements
+ * - Referral: Referral tracking and rewards
+ * 
+ * ⚠️ IMPORTANT: Only Base chain is supported for writes!
+ * 
+ * @constant
+ * @verified BaseScan https://basescan.org/
+ */
 export const STANDALONE_ADDRESSES = {
   base: {
     core: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73',
@@ -362,10 +480,39 @@ export const createSendGMTx = (chain: GMChainKey = 'base') =>
 export const createGMTransaction = (chain: GMChainKey = 'base'): Tx =>
   buildTx('sendGM', [], chain)
 
-// Deprecated multichain helpers - kept for backwards compatibility, all use Base
+// ========================================
+// DEPRECATED: Multichain Transaction Helpers
+// ========================================
+// ⚠️ These functions are DEPRECATED and redirect to Base chain only.
+// They exist solely for backwards compatibility with old code.
+//
+// Why deprecated?
+// - No contracts deployed on Unichain, Celo, Ink, or OP chains
+// - All operations now occur on Base chain only
+// - Multichain support is VIEW-ONLY via Blockscout MCP
+//
+// Migration:
+// - Replace all calls with: createGMTransaction('base')
+// - Or use: createGMTransaction() (defaults to 'base')
+
+/**
+ * @deprecated Use createGMTransaction('base') instead. No Unichain contracts deployed.
+ */
 export const createGMUniTransaction = (): Tx => createGMTransaction('base')
+
+/**
+ * @deprecated Use createGMTransaction('base') instead. No Celo contracts deployed.
+ */
 export const createGMCeloTransaction = (): Tx => createGMTransaction('base')
+
+/**
+ * @deprecated Use createGMTransaction('base') instead. No Ink contracts deployed.
+ */
 export const createGMInkTransaction = (): Tx => createGMTransaction('base')
+
+/**
+ * @deprecated Use createGMTransaction('base') instead. No OP contracts deployed.
+ */
 export const createGMOpTransaction = (): Tx => createGMTransaction('base')
 
 // -------------------------------
