@@ -407,7 +407,7 @@ export async function getCastsNeedingSync(): Promise<string[]> {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
     // badge_casts table not in Database types
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('badge_casts')
       .select('cast_hash')
       .gte('created_at', sevenDaysAgo.toISOString())

@@ -131,7 +131,7 @@ export async function getGuildEvents(
 
     // Note: guild_events table not yet in Database types (pending schema migration)
     // Using type assertion until migration is run
-    const { data, error} = await (supabase as any)
+    const { data, error} = await supabase
       .from('guild_events')
       .select('*')
       .eq('guild_id', guildId)

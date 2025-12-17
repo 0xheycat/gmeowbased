@@ -765,7 +765,7 @@ export async function recordRankEvent(input: RankTelemetryEventInput): Promise<v
   }
 
   try {
-    await (supabase as any).from(RANK_EVENT_TABLE).insert(payload)
+    await supabase.from(RANK_EVENT_TABLE).insert(payload)
   } catch (error) {
     console.warn('[telemetry] recordRankEvent failed:', (error as Error)?.message || error)
   }

@@ -295,7 +295,7 @@ export async function listBadgeTemplates(options: ListBadgeTemplatesOptions = {}
   const supabase = getSupabaseServerClient()
   if (!supabase) return []
 
-  let query = (supabase as any).from(BADGE_TABLE).select('*').order('points_cost', { ascending: true })
+  let query = supabase.from(BADGE_TABLE).select('*').order('points_cost', { ascending: true })
   if (!includeInactive) {
     query = query.eq('active', true)
   }
@@ -332,7 +332,7 @@ export async function getBadgeTemplateById(id: string): Promise<BadgeTemplate | 
   assertSupabase()
   const supabase = getSupabaseServerClient()
   if (!supabase) return null
-  const { data, error } = await (supabase as any).from(BADGE_TABLE).select('*').eq('id', id).maybeSingle()
+  const { data, error } = await supabase.from(BADGE_TABLE).select('*').eq('id', id).maybeSingle()
   if (error) {
     if (isMissingTableError(error)) return null
     throw new Error(`Failed to load template: ${error.message}`)
@@ -372,7 +372,7 @@ export async function createBadgeTemplate(input: BadgeTemplateInput): Promise<Ba
     metadata: input.metadata ?? null,
   }
 
-  const { data, error } = await (supabase as any).from(BADGE_TABLE).insert(payload).select().maybeSingle()
+  const { data, error } = await supabase.from(BADGE_TABLE).insert(payload).select().maybeSingle()
   if (error) {
     if (isMissingTableError(error)) throw new Error(missingTableMessage())
     throw new Error(`Failed to create badge template: ${error.message}`)
@@ -414,7 +414,7 @@ export async function updateBadgeTemplate(id: string, input: Partial<BadgeTempla
     if (existing && existing.length > 0) throw new Error('Badge slug already exists')
   }
 
-  const { data, error } = await (supabase as any).from(BADGE_TABLE).update(updates).eq('id', id).select().maybeSingle()
+  const { data, error } = await supabase.from(BADGE_TABLE).update(updates).eq('id', id).select().maybeSingle()
   if (error) {
     if (isMissingTableError(error)) throw new Error(missingTableMessage())
     throw new Error(`Failed to update badge template: ${error.message}`)
@@ -428,14 +428,14 @@ export async function deleteBadgeTemplate(id: string): Promise<void> {
   const supabase = getSupabaseServerClient()
   if (!supabase) throw new Error('Supabase client unavailable')
 
-  const { data, error } = await (supabase as any).from(BADGE_TABLE).select('art_path').eq('id', id).maybeSingle()
+  const { data, error } = await supabase.from(BADGE_TABLE).select('art_path').eq('id', id).maybeSingle()
   if (error) {
     if (isMissingTableError(error)) throw new Error(missingTableMessage())
     throw new Error(`Failed to load art path: ${error.message}`)
   }
 
   const artPath = (data as { art_path?: string | null } | null)?.art_path
-  const { error: deleteError } = await (supabase as any).from(BADGE_TABLE).delete().eq('id', id)
+  const { error: deleteError } = await supabase.from(BADGE_TABLE).delete().eq('id', id)
   if (deleteError) {
     if (isMissingTableError(deleteError)) throw new Error(missingTableMessage())
     throw new Error(`Failed to delete badge template: ${deleteError.message}`)

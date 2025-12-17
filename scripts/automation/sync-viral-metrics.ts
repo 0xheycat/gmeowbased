@@ -167,7 +167,7 @@ async function fetchCastsToUpdate(supabase: ReturnType<typeof createClient<Datab
   const thresholdDate = new Date()
   thresholdDate.setHours(thresholdDate.getHours() - UPDATE_THRESHOLD_HOURS)
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('badge_casts')
     .select('*')
     .or(`last_metrics_update.is.null,last_metrics_update.lt.${thresholdDate.toISOString()}`)
@@ -208,7 +208,7 @@ async function updateCastMetrics(
 
   const newBonusXp = calculateBonusXp(newTier)
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('badge_casts')
     .update({
       likes_count: metrics.likes,
@@ -242,7 +242,7 @@ async function awardViralXp(
   newTier: ViralTier
 ) {
   // Update user XP using RPC function
-  const { error: xpError } = await (supabase as any).rpc('increment_user_xp', {
+  const { error: xpError } = await supabase.rpc('increment_user_xp', {
     p_fid: fid,
     p_xp_amount: xpAmount,
     p_source: 'viral_tier_upgrade',
