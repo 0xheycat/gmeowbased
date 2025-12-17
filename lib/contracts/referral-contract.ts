@@ -1,10 +1,22 @@
 /**
- * Referral Contract Wrapper
+ * @file lib/contracts/referral-contract.ts
+ * @description Type-safe wrapper for ReferralModule contract functions
  * 
- * Purpose: Type-safe wrapper for ReferralModule contract functions
+ * PHASE: Phase 7.1 - Contracts (December 17, 2025)
+ * 
  * Contract: GmeowReferralStandalone
  * Address: 0x9E7c32C1fB3a2c08e973185181512a442b90Ba44 (Base - VERIFIED)
  * Previous: 0x3FBd8B03ad8Ac22B73Baa7b152323739f2070e94 (deprecated proxy)
+ * Verified: BaseScan December 11, 2025
+ * 
+ * FEATURES:
+ *   - Custom referral code registration (3-32 characters)
+ *   - One-time referrer setting with auto-rewards
+ *   - Automatic point distribution (50 referrer, 25 referee)
+ *   - Auto-badge minting at milestones (1, 5, 10 referrals)
+ *   - Referral statistics tracking
+ *   - Referral code ownership queries
+ *   - Type-safe contract interaction wrappers
  * 
  * Functions from ReferralModule.sol:
  * - registerReferralCode(string code) - Register custom referral code (3-32 chars)
@@ -15,13 +27,60 @@
  * - referralStats(address user) view returns (ReferralStats) - Get referral stats
  * 
  * Auto-rewards:
- * - Referrer: +50 points
- * - Referee: +25 points
+ * - Referrer: +50 points per successful referral
+ * - Referee: +25 points when setting referrer
  * 
  * Auto-badges (via BadgeContract):
- * - Bronze: 1 referral
- * - Silver: 5 referrals  
- * - Gold: 10 referrals
+ * - Bronze Referrer: 1 referral
+ * - Silver Referrer: 5 referrals
+ * - Gold Referrer: 10 referrals
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Contract source: contract/src/GmeowReferralStandalone.sol
+ *   - Referral UI: components/referral/
+ *   - Badge system: lib/badges/badges.ts
+ *   - BaseScan: https://basescan.org/address/0x9E7c32C1fB3a2c08e973185181512a442b90Ba44
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453)
+ *   - Referral codes: 3-32 characters, alphanumeric
+ *   - Referrer can only be set once per user (irreversible)
+ *   - Users must register code before others can use it
+ *   - NO EMOJIS in referral codes
+ * 
+ * TODO:
+ *   - [ ] Add referral code validation (profanity filter)
+ *   - [ ] Add referral code availability check before registration
+ *   - [ ] Add referral leaderboard (top referrers)
+ *   - [ ] Add referral campaign tracking
+ *   - [ ] Add referral analytics (conversion rates, sources)
+ *   - [ ] Add custom referral rewards for special campaigns
+ *   - [ ] Add referral expiration system
+ * 
+ * CRITICAL:
+ *   - Referrer can ONLY be set once per user (warn before setting)
+ *   - Referral codes must be unique (check availability first)
+ *   - Users cannot refer themselves (validate client-side)
+ *   - Referral rewards distribute immediately (no claiming needed)
+ *   - Badge minting happens automatically at milestones
+ *   - Deprecated proxy address should not be used
+ * 
+ * SUGGESTIONS:
+ *   - Add referral code suggestions if desired code is taken
+ *   - Add referral link generator with QR codes
+ *   - Add social sharing for referral codes
+ *   - Add referral tracking in user profile
+ *   - Cache referral stats for frequently checked users
+ *   - Add referral attribution to analytics
+ * 
+ * AVOID:
+ *   - Allowing offensive or inappropriate referral codes
+ *   - Letting users change referrer after setting (impossible on-chain)
+ *   - Using deprecated proxy address for new interactions
+ *   - Referral code spam (rate limit registrations)
+ *   - Displaying raw addresses instead of codes
+ *   - Hardcoding referral rewards (read from contract)
  * 
  * @updated December 11, 2025 - Migrated to verified standalone contract
  */

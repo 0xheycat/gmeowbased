@@ -1,3 +1,62 @@
+/**
+ * @file lib/contracts/contract-events.ts
+ * @description Contract event registry, categorization, and notification templates for Gmeowbased
+ * 
+ * PHASE: Phase 7.1 - Contracts (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Complete registry of all contract events with signatures and descriptions
+ *   - Event categorization system (gm, quests, economy, badges, referrals, guilds, admin)
+ *   - Notification templates for user-facing event notifications
+ *   - Input parameter documentation for each event
+ *   - Recommended automation triggers per event type
+ *   - Reference documentation linking to contract source code
+ *   - Event extraction utilities from contract ABIs
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Contract source: /contract/ directory (Foundry project)
+ *   - Event emissions: GmeowCore.sol, GmeowGuild.sol, GmeowReferral.sol
+ *   - Notification system: lib/notifications/
+ *   - Bot automation: lib/bot/core/auto-reply.ts
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453)
+ *   - All events must have category and description
+ *   - Notification templates use {placeholder} syntax
+ *   - NO EMOJIS in notification titles/bodies
+ * 
+ * TODO:
+ *   - [ ] Add notification templates for admin events (currently null)
+ *   - [ ] Add event signature validation against deployed contracts
+ *   - [ ] Add event indexing recommendations (which events to track)
+ *   - [ ] Add historical event analysis utilities
+ *   - [ ] Add event filtering by category utility
+ *   - [ ] Add event search by signature or name
+ * 
+ * CRITICAL:
+ *   - Event signatures MUST match deployed contract exactly
+ *   - Notification placeholders must match event input names
+ *   - Category labels used in UI filters and analytics
+ *   - Event registry is single source of truth for contract events
+ *   - Changes here require updating bot automation triggers
+ * 
+ * SUGGESTIONS:
+ *   - Add event importance levels (critical, high, medium, low)
+ *   - Add event frequency tracking (how often each fires)
+ *   - Add event correlation tracking (which events trigger together)
+ *   - Add event cost analysis (gas usage per event)
+ *   - Generate TypeScript types from event descriptors
+ *   - Add event simulation/testing utilities
+ * 
+ * AVOID:
+ *   - Hardcoding event signatures (use ABI extraction)
+ *   - Modifying event signatures without contract redeployment
+ *   - Adding events that don't exist in deployed contracts
+ *   - Using emojis in notification templates (breaks some clients)
+ *   - Changing category labels without updating UI filters
+ */
+
 import { type Abi, type AbiEvent } from 'viem'
 
 import { GM_CONTRACT_ABI } from './gmeow-utils'

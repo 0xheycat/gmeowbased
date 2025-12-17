@@ -1,6 +1,63 @@
 /**
- * Contract mint utilities for badge minting
- * Handles blockchain minting via viem
+ * @file lib/contracts/contract-mint.ts
+ * @description Automated badge minting system with oracle wallet and queue processing
+ * 
+ * PHASE: Phase 7.1 - Contracts (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Automated badge minting via oracle wallet (no user gas required)
+ *   - Multi-chain support (Base, Optimism, Celo, Unichain, Ink)
+ *   - Mint queue processing from Supabase
+ *   - Transaction monitoring and retry logic
+ *   - Event decoding for mint confirmations
+ *   - Auto-balance checking with deposit oracle integration
+ *   - Badge registry integration for metadata
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Badge system: lib/badges/badges.ts
+ *   - Oracle wallet: lib/contracts/auto-deposit-oracle.ts
+ *   - Mint queue: supabase/migrations/create_mint_queue.sql
+ *   - Badge contracts: contract/src/BadgeContract.sol
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base primary, multi-chain secondary
+ *   - Env: OWNER_PRIVATE_KEY for oracle wallet
+ *   - Env: NEXT_PUBLIC_GM_*_ADDRESS for each chain
+ *   - Oracle wallet must maintain gas balance
+ *   - NO EMOJIS in transaction data
+ * 
+ * TODO:
+ *   - [ ] Add transaction failure notifications to users
+ *   - [ ] Add gas price optimization (wait for lower gas)
+ *   - [ ] Add batch minting for multiple badges (reduce gas)
+ *   - [ ] Add mint retry queue for failed transactions
+ *   - [ ] Add mint analytics (success rate, gas costs, timing)
+ *   - [ ] Add multi-signature support for high-value mints
+ * 
+ * CRITICAL:
+ *   - OWNER_PRIVATE_KEY must be kept secure (server-side only)
+ *   - Oracle wallet balance must be monitored (auto-deposit below threshold)
+ *   - Mint queue must be processed in order (FIFO)
+ *   - Failed mints must be logged and retried
+ *   - Transaction hashes must be stored for verification
+ *   - Badge IDs must match contract badge registry
+ * 
+ * SUGGESTIONS:
+ *   - Add mint simulation before actual transaction
+ *   - Add gas estimation with buffer (1.2x estimated)
+ *   - Add mint scheduling (process during low gas periods)
+ *   - Add mint prioritization (premium users first)
+ *   - Add mint notifications via webhook or email
+ *   - Cache RPC clients for better performance
+ * 
+ * AVOID:
+ *   - Exposing OWNER_PRIVATE_KEY in client-side code
+ *   - Minting without checking badge exists in registry
+ *   - Minting without checking oracle balance first
+ *   - Hardcoding gas limits (estimate dynamically)
+ *   - Blocking API routes while minting (use background jobs)
+ *   - Minting same badge twice without checking ownership
  */
 
 import { createPublicClient, createWalletClient, http, parseAbi, decodeEventLog } from 'viem'

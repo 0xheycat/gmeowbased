@@ -1,6 +1,62 @@
 /**
- * Auto-deposit oracle points when balance is low
- * Allows badge minting without manual owner deposits
+ * @file lib/contracts/auto-deposit-oracle.ts
+ * @description Automated point deposit system for oracle wallet balance maintenance
+ * 
+ * PHASE: Phase 7.1 - Contracts (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Automatic oracle balance monitoring
+ *   - Auto-deposit when balance below threshold (100k points)
+ *   - Multi-chain support (Base, Optimism, Celo, Unichain, Ink)
+ *   - Owner wallet integration via private key
+ *   - Balance checking before mint operations
+ *   - Transaction creation and signing for deposits
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Contract mint: lib/contracts/contract-mint.ts
+ *   - Badge system: lib/badges/badges.ts
+ *   - Oracle wallet: 0x8870C155666809609176260F2B65a626C000D773
+ *   - GM contract: contract/src/GmeowCore.sol (depositPoints function)
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Multi-chain (Base primary)
+ *   - Env: OWNER_PRIVATE_KEY (must be contract owner)
+ *   - Env: NEXT_PUBLIC_GM_*_ADDRESS for each chain
+ *   - Owner wallet must maintain sufficient point balance
+ *   - Oracle wallet address: 0x8870C155666809609176260F2B65a626C000D773
+ * 
+ * TODO:
+ *   - [ ] Add balance monitoring alerts (email/webhook when low)
+ *   - [ ] Add configurable deposit amounts per chain
+ *   - [ ] Add deposit history tracking in database
+ *   - [ ] Add automatic owner balance refills from treasury
+ *   - [ ] Add multi-threshold system (warning at 50k, critical at 25k)
+ *   - [ ] Add deposit scheduling (bulk deposits at optimal gas times)
+ * 
+ * CRITICAL:
+ *   - OWNER_PRIVATE_KEY must never be exposed client-side
+ *   - Deposit amount (100k) must exceed typical mint costs
+ *   - Check oracle balance BEFORE every mint operation
+ *   - Owner wallet must have sufficient points to deposit
+ *   - Deposit transactions must be confirmed before proceeding
+ *   - Handle deposit failures gracefully (retry or alert)
+ * 
+ * SUGGESTIONS:
+ *   - Add dynamic deposit amounts based on mint queue size
+ *   - Add gas price monitoring for optimal deposit timing
+ *   - Add owner balance monitoring with refill automation
+ *   - Add deposit analytics (frequency, amounts, timing)
+ *   - Cache balance checks for short periods (reduce RPC calls)
+ *   - Add emergency deposit function for manual intervention
+ * 
+ * AVOID:
+ *   - Depositing without checking owner wallet balance first
+ *   - Using fixed deposit amounts across all chains (consider gas costs)
+ *   - Blocking mint operations while depositing (async handling)
+ *   - Hardcoding oracle wallet address (use environment variable)
+ *   - Depositing more than necessary (wastes owner points)
+ *   - Ignoring deposit transaction failures
  */
 
 import { createPublicClient, createWalletClient, http } from 'viem'

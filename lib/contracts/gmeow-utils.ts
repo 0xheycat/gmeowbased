@@ -1,5 +1,9 @@
 /**
- * Gmeowbased Contract Utilities
+ * @file lib/contracts/gmeow-utils.ts
+ * @description Core contract utilities, ABIs, addresses, and transaction builders for Gmeowbased
+ * 
+ * PHASE: Phase 7.1 - Contracts (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
  * 
  * ⚠️ IMPORTANT: Multi-Chain Architecture Documentation
  * 
@@ -23,6 +27,67 @@
  * - Writing to contracts? → Use GMChainKey ('base' only)
  * - Reading from other chains? → Use ChainKey (12 chains via Blockscout)
  * - Default chain for app? → Base (8453)
+ * 
+ * FEATURES:
+ *   - Dual chain type system (GMChainKey for writes, ChainKey for views)
+ *   - Complete contract address registry (Core, Guild, NFT, Badge, Referral)
+ *   - Transaction builder functions for all contract operations
+ *   - ABI utilities and function encoding helpers
+ *   - Contract event definitions and parsing
+ *   - Type-safe transaction parameter handling
+ *   - ERC20/ERC721 standard support
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Migration docs: docs/migration/BLOCKSCOUT-CHAIN-SUPPORT-COMPLETE.md
+ *   - Contract source: /contract/ directory (Foundry project)
+ *   - BaseScan verification: https://basescan.org
+ *   - ABIs: lib/contracts/abis.ts
+ *   - Blockscout MCP: Tools for multi-chain viewing
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453) for all writes
+ *   - Contracts verified on BaseScan (December 12, 2025)
+ *   - All transactions must use GMChainKey type
+ *   - View-only operations can use ChainKey for 12 chains
+ *   - NO EMOJIS in transaction data
+ * 
+ * TODO:
+ *   - [ ] Add transaction simulation before sending
+ *   - [ ] Add gas estimation utilities with buffer multipliers
+ *   - [ ] Add transaction retry logic with exponential backoff
+ *   - [ ] Add contract upgrade detection and version tracking
+ *   - [ ] Add ABI change detection vs deployed contracts
+ *   - [ ] Add contract method deprecation warnings
+ *   - [ ] Add transaction batching utilities for multiple calls
+ *   - [ ] Add contract interaction analytics (usage tracking)
+ * 
+ * CRITICAL:
+ *   - GMChainKey ONLY supports 'base' - do not add other chains without deployment
+ *   - ChainKey is VIEW-ONLY - writing to non-base chains will fail
+ *   - STANDALONE_ADDRESSES.base.* are production addresses (handle with care)
+ *   - All contract addresses verified on BaseScan December 12, 2025
+ *   - Transaction builders encode parameters - validate inputs before calling
+ *   - Contract ABIs must match deployed bytecode exactly
+ *   - Changes to GMChainKey type require contract redeployment
+ * 
+ * SUGGESTIONS:
+ *   - Cache public clients for better performance
+ *   - Add contract method gas cost estimates
+ *   - Add transaction parameter validation before encoding
+ *   - Add contract state caching for frequently accessed data
+ *   - Generate TypeScript types from ABIs automatically
+ *   - Add contract interaction logging for debugging
+ *   - Add multi-call support for batch reads
+ * 
+ * AVOID:
+ *   - Using ChainKey for contract writes (will fail, no contracts deployed)
+ *   - Hardcoding contract addresses (use STANDALONE_ADDRESSES)
+ *   - Modifying GMChainKey without deploying to new chains
+ *   - Using deprecated multichain functions (marked with warnings)
+ *   - Sending transactions without gas estimation
+ *   - Using old proxy addresses (use standalone addresses only)
+ *   - Mixing GMChainKey and ChainKey in same function signatures
  * 
  * @module lib/gmeow-utils
  * @see docs/migration/BLOCKSCOUT-CHAIN-SUPPORT-COMPLETE.md

@@ -1,5 +1,65 @@
 /**
- * NFT Metadata & URI System
+ * @file lib/contracts/nft-metadata.ts
+ * @description Professional NFT metadata generation for GmeowNFT (ERC-721 transferable collectibles)
+ * 
+ * PHASE: Phase 7.1 - Contracts (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - OpenSea/Rarible/LooksRare compliant metadata
+ *   - Multi-storage support (IPFS, Arweave, R2, Supabase)
+ *   - NFT category system (quest, achievement, event, legendary, seasonal, custom)
+ *   - Rarity tiers (common, uncommon, rare, epic, legendary, mythic)
+ *   - Dynamic attribute system with display types
+ *   - Animation URL support for video/3D NFTs
+ *   - Background color customization
+ *   - Edition and supply tracking
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - OpenSea metadata: https://docs.opensea.io/docs/metadata-standards
+ *   - NFT contract: contract/src/GmeowNFT.sol
+ *   - Storage: Supabase R2 buckets
+ *   - IPFS: Pinata or similar provider
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453)
+ *   - Metadata must follow ERC-721 standards
+ *   - Images must be publicly accessible URLs
+ *   - Attributes must include trait_type and value
+ *   - NO EMOJIS in metadata fields
+ * 
+ * TODO:
+ *   - [ ] Add metadata validation against marketplace standards
+ *   - [ ] Add metadata caching layer
+ *   - [ ] Add bulk metadata generation for collections
+ *   - [ ] Add metadata versioning system
+ *   - [ ] Add on-chain metadata encoding option
+ *   - [ ] Add metadata update history tracking
+ *   - [ ] Add royalty information in metadata
+ * 
+ * CRITICAL:
+ *   - Image URLs must be permanent (IPFS/Arweave preferred)
+ *   - Metadata JSON must be valid and parsable
+ *   - Attribute trait_types should be consistent across collection
+ *   - Rarity values must match actual distribution
+ *   - Background colors must be 6-char hex without #
+ *   - Animation URLs require proper MIME types
+ * 
+ * SUGGESTIONS:
+ *   - Use IPFS for immutable metadata storage
+ *   - Add thumbnail generation for video NFTs
+ *   - Add metadata preview functionality
+ *   - Generate rarity scores automatically
+ *   - Add collection-level metadata
+ *   - Support multiple languages in descriptions
+ * 
+ * AVOID:
+ *   - Using centralized storage without backups (use IPFS)
+ *   - Changing metadata after minting (immutability expected)
+ *   - Inconsistent attribute naming across NFTs
+ *   - Missing required OpenSea fields
+ *   - Using copyrighted images without permission
+ *   - Hardcoding storage URLs (use environment config)
  * 
  * Professional metadata generation for GmeowNFT (transferable collectibles)
  * Follows OpenSea, Rarible, LooksRare standards
