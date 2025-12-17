@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import { createPublicClient, http, parseAbiItem, type AbiEvent } from 'viem'
 import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/gmeow-utils'
 import { getRpcUrl } from '@/lib/rpc'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { BADGE_REGISTRY } from '@/lib/badge-registry-data'
 
 const BADGE_TABLE = process.env.SUPABASE_BADGE_TEMPLATE_TABLE || 'badge_templates'

@@ -2,11 +2,11 @@
  * Supabase Server Client
  * Server-side Supabase client for API routes
  * 
- * Source: lib/supabase-server.ts (existing pattern)
- * Date: December 9, 2025
+ * Source: lib/supabase-server.ts → lib/supabase/client.ts
+ * Date: December 17, 2025
  */
 
-import { getSupabaseServerClient } from '../supabase-server'
+import { getSupabaseServerClient } from './client'
 
 // Export standard createClient function for API routes
 export function createClient() {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseEdgeClient } from '@/lib/supabase'
+import { getSupabaseEdgeClient } from '@/lib/supabase/edge'
 import { 
   generateRequestId,
   checkIdempotency,

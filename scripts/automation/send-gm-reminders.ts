@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto'
 import process from 'node:process'
 
 import { getNeynarServerClient } from '@/lib/neynar-server'
-import { isSupabaseConfigured } from '@/lib/supabase-server'
+import { isSupabaseConfigured } from '@/lib/supabase/client'
 import {
   listActiveNotificationTokens,
   recordGmReminderSent,

@@ -20,7 +20,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getNeynarServerClient } from './neynar-server'
-import { getSupabaseServerClient } from './supabase-server'
+import { getSupabaseServerClient } from './supabase/client'
 import {
   calculateEngagementScore,
   getViralTier,

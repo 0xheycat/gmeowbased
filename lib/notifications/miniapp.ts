@@ -1,4 +1,4 @@
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { trackError } from './error-tracking'
 
 const TABLE_NAME = 'miniapp_notification_tokens'

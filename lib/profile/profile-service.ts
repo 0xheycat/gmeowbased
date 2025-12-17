@@ -23,7 +23,7 @@
  * @module lib/profile/profile-service
  */
 
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { getCached, invalidateCache } from '@/lib/cache/server'
 import type { 
   ProfileData, 

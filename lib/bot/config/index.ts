@@ -1,5 +1,5 @@
 // @edit-start 2025-11-12 — Bot runtime configuration helpers
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import type { BotStatsConfig } from './types'
 import { DEFAULT_BOT_STATS_CONFIG } from './types'
 

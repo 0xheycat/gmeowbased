@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { syncSupabaseLeaderboard } from '@/lib/leaderboard-sync'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { withErrorHandler } from '@/lib/error-handler'
 import { generateRequestId } from '@/lib/request-id'
 

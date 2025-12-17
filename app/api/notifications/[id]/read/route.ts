@@ -57,7 +57,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { trackError } from '@/lib/notifications/error-tracking'
 import { generateRequestId } from '@/lib/notifications/api-helpers'
 import { z } from 'zod'
