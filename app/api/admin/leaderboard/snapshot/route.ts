@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { syncSupabaseLeaderboard } from '@/lib/leaderboard/leaderboard-sync'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 
