@@ -3,7 +3,7 @@
 // @edit-start 2025-02-14 — Community event stream hook
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import type { CommunityEventSummary, CommunityEventType } from '@/lib/community-event-types'
+import type { CommunityEventSummary, CommunityEventType } from '@/lib/profile/community-event-types'
 
 const DEFAULT_POLL_MS = Number(process.env.NEXT_PUBLIC_AGENT_EVENTS_POLL_MS ?? 7000)
 const DEFAULT_INITIAL_LIMIT = Number(process.env.NEXT_PUBLIC_AGENT_EVENTS_INITIAL_LIMIT ?? 40)

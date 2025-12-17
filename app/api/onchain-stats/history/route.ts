@@ -30,10 +30,10 @@ import {
   getSecurityHeaders,
   createErrorResponse,
   logApiRequest,
-} from '@/lib/api-security'
-import { getRequestId } from '@/lib/request-id'
+} from '@/lib/middleware/api-security'
+import { getRequestId } from '@/lib/middleware/request-id'
 import { z } from 'zod'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

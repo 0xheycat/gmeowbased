@@ -22,7 +22,7 @@
 
 import { UsersIcon, MonetizationOnIcon, TrendingUpIcon } from '@/components/icons'
 import { BadgeShowcase, type Badge } from '@/components/guild/badges'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES } from '@/lib/accessibility'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES } from '@/lib/utils/accessibility'
 
 export interface Guild {
   id: string

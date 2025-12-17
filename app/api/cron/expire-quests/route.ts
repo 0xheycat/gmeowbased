@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { rateLimit, strictLimiter } from '@/lib/rate-limit';
-import { getClientIp } from '@/lib/rate-limit';
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency';
-import { generateRequestId } from '@/lib/request-id';
+import { rateLimit, strictLimiter } from '@/lib/middleware/rate-limit';
+import { getClientIp } from '@/lib/middleware/rate-limit';
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency';
+import { generateRequestId } from '@/lib/middleware/request-id';
 
 /**
  * Quest Expiry Cron Job

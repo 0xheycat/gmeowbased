@@ -13,7 +13,7 @@
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase';
-import { logError } from '@/lib/error-handler';
+import { logError } from '@/lib/middleware/error-handler';
 
 export interface EscrowPointsInput {
   fid: number;

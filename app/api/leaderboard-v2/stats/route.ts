@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/client'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const revalidate = 300 // 5 minutes

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect } from 'wagmi'
-import { probeMiniappReady } from '@/lib/miniappEnv'
+import { probeMiniappReady } from '@/lib/miniapp/miniappEnv'
 
 
 export function ConnectWallet() {

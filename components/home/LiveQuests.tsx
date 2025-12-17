@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { QuestCard } from '@/components/quests'
 import type { QuestFilterKey } from './types'
-import { formatQuestTypeLabel } from '@/lib/formatters'
+import { formatQuestTypeLabel } from '@/lib/utils/formatters'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 
 const QUEST_FILTERS: { key: QuestFilterKey; label: string }[] = [

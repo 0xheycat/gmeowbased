@@ -25,7 +25,7 @@ import { BadgeShowcase } from './badges'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
-import { createKeyboardHandler, WCAG_CLASSES, FOCUS_STYLES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, WCAG_CLASSES, FOCUS_STYLES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 
 export interface MemberStats {
   joinedAt: string

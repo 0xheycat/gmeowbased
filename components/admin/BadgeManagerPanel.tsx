@@ -14,7 +14,7 @@ import Image from 'next/image'
 import { useDialog } from '@/components/dialogs'
 import { ErrorDialog } from '@/components/dialogs'
 
-import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
+import { CHAIN_KEYS, type ChainKey } from '@/lib/contracts/gmeow-utils'
 
 import {
   getPendingMints,
@@ -24,7 +24,7 @@ import {
   loadBadgeRegistry,
   type MintQueueEntry,
   type BadgeRegistry,
-} from '@/lib/badges'
+} from '@/lib/badges/badges'
 
 // @edit-start 2025-02-16 — Rebuilt badge manager panel with metadata autofill and multichain support
 // Base-only chain (legacy ChainKey type kept for backward compatibility, but only base is used)

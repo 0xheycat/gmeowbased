@@ -1,4 +1,4 @@
-import type { ChainKey } from '@/lib/gmeow-utils'
+import type { ChainKey } from '@/lib/contracts/gmeow-utils'
 
 export type QuestType = 'FARCASTER_CAST' | 'FARCASTER_FRAME_INTERACT' | 'GENERIC'
 

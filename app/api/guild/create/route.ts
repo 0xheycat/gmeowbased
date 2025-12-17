@@ -44,18 +44,18 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { strictLimiter } from '@/lib/rate-limit'
+import { strictLimiter } from '@/lib/middleware/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { 
   checkIdempotency, 
   storeIdempotency, 
   getIdempotencyKey, 
   isValidIdempotencyKey,
   returnCachedResponse 
-} from '@/lib/idempotency'
-import { getOrGenerateRequestId } from '@/lib/request-id'
+} from '@/lib/middleware/idempotency'
+import { getOrGenerateRequestId } from '@/lib/middleware/request-id'
 
 // ==========================================
 // 1. Rate Limiting Configuration

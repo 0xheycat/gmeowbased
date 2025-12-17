@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { Listbox, RadioGroup, Switch } from '@headlessui/react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import SearchIcon from '@mui/icons-material/Search';

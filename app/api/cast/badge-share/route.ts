@@ -10,12 +10,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getNeynarServerClient } from '@/lib/neynar-server'
-import { resolveBotSignerUuid } from '@/lib/neynar-bot'
-import { getUserBadges } from '@/lib/badges'
+import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { resolveBotSignerUuid } from '@/lib/integrations/neynar-bot'
+import { getUserBadges } from '@/lib/badges/badges'
 import { getSupabaseServerClient } from '@/lib/supabase/client'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

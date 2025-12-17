@@ -1,8 +1,8 @@
 'use client'
 
 import { BadgeIcon, type Badge, type BadgeSize } from './BadgeIcon'
-import { cn } from '@/lib/utils'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES } from '@/lib/accessibility'
+import { cn } from '@/lib/utils/utils'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES } from '@/lib/utils/accessibility'
 
 /**
  * BadgeShowcase Component

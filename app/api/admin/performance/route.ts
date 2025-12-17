@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { 
   generatePerformanceReport, 
   getPerformanceStats,
   getSlowRequests 
 } from '@/lib/middleware/timing'
 import { getCacheStats } from '@/lib/cache/server'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const dynamic = 'force-dynamic'
 

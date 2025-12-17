@@ -27,8 +27,8 @@ import { base } from 'wagmi/chains'
 import { CloseIcon, AddIcon } from '@/components/icons'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
-import { GUILD_ABI } from '@/lib/gmeow-utils'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, ERROR_ARIA, LOADING_ARIA } from '@/lib/accessibility'
+import { GUILD_ABI } from '@/lib/contracts/gmeow-utils'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, ERROR_ARIA, LOADING_ARIA } from '@/lib/utils/accessibility'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 
 // Zod validation schema

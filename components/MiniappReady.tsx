@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { fireMiniappReady } from '@/lib/miniappEnv'
+import { fireMiniappReady } from '@/lib/miniapp/miniappEnv'
 
 export function MiniappReady() {
   const firedRef = useRef(false)

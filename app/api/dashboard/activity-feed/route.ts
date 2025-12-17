@@ -20,10 +20,10 @@ import {
   getSecurityHeaders,
   createErrorResponse,
   logApiRequest,
-} from '@/lib/api-security'
-import { getRequestId } from '@/lib/request-id'
+} from '@/lib/middleware/api-security'
+import { getRequestId } from '@/lib/middleware/request-id'
 import { getActivityFeed } from '@/lib/api/neynar-dashboard'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export async function GET(request: NextRequest) {
   const requestId = generateRequestId()

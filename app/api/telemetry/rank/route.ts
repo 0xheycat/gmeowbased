@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'
-import { recordRankEvent, type RankTelemetryEventInput, type RankTelemetryEventKind } from '@/lib/telemetry'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { CHAIN_KEYS, type ChainKey } from '@/lib/contracts/gmeow-utils'
+import { recordRankEvent, type RankTelemetryEventInput, type RankTelemetryEventKind } from '@/lib/utils/telemetry'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

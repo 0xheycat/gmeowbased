@@ -44,11 +44,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { generateRequestId } from '@/lib/request-id'
-import { apiLimiter } from '@/lib/rate-limit'
+import { generateRequestId } from '@/lib/middleware/request-id'
+import { apiLimiter } from '@/lib/middleware/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 
 // ==========================================

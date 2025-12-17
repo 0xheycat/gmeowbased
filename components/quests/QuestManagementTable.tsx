@@ -34,7 +34,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import StarIcon from '@mui/icons-material/Star';
 import { useConfirmDialog } from '@/components/dialogs';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { ManagementTableSkeleton } from './skeletons';
 import { ManagementTableEmptyState, NoSearchResultsEmptyState, ErrorState } from './empty-states';
 

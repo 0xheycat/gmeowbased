@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserBadges } from '@/lib/badges'
-import { generateRequestId } from '@/lib/request-id'
+import { getUserBadges } from '@/lib/badges/badges'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

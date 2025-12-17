@@ -8,10 +8,10 @@
  */
 
 import { getTrendingTokens, formatNumber, formatTimeAgo } from '@/lib/api/neynar-dashboard'
-import { withRetry, RetryStrategies } from '@/lib/retry'
+import { withRetry, RetryStrategies } from '@/lib/api/retry'
 import { TrendingBadge, ActivityIndicator, ContextBadge } from '@/components/dashboard-patterns'
 import { TrendingUpIcon } from '@/components/icons/trending-up-icon'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 
 export async function TrendingTokens() {
   const response = await withRetry(

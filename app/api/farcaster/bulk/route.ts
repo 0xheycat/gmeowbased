@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { fetchUsersByAddresses } from '@/lib/neynar'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { fetchUsersByAddresses } from '@/lib/integrations/neynar'
 import { AddressSchema } from '@/lib/validation/api-schemas'
 import { z } from 'zod'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

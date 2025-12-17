@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { CHAIN_IDS, ALL_CHAIN_IDS, normalizeToGMChain, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { CHAIN_IDS, ALL_CHAIN_IDS, normalizeToGMChain, type ChainKey, type GMChainKey } from '@/lib/contracts/gmeow-utils'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 const ONCHAINKIT_API_KEY = process.env.ONCHAINKIT_API_KEY ?? process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY ?? ''
 const ONCHAINKIT_RPC_BASE_URL = 'https://api.developer.coinbase.com/rpc/v1'

@@ -25,7 +25,7 @@ import {
   validateReferralCode, 
   isReferralCodeAvailable,
   buildRegisterReferralCodeTx 
-} from '@/lib/referral-contract'
+} from '@/lib/contracts/referral-contract'
 import { CheckCircleIcon, ErrorIcon, RefreshIcon } from '@/components/icons'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 

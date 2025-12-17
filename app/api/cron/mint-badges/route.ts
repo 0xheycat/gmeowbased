@@ -21,8 +21,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { processBatch } from '@/scripts/automation/mint-badge-queue'
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes max execution time

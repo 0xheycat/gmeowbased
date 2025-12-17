@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { assignBadgeToUser, getBadgeFromRegistry } from '@/lib/badges'
+import { assignBadgeToUser, getBadgeFromRegistry } from '@/lib/badges/badges'
 import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { BadgeAssignSchema } from '@/lib/validation/api-schemas'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { invalidateCache, buildUserBadgesKey, getCached, buildUserProfileKey } from '@/lib/cache/server'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const dynamic = 'force-dynamic'
 

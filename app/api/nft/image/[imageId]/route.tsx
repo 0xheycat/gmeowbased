@@ -45,7 +45,7 @@
 
 import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
-import { getNFTStats } from '@/lib/subsquid-client'
+import { getNFTStats } from '@/lib/integrations/subsquid-client'
 
 export const runtime = 'edge'
 

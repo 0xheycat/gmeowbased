@@ -14,7 +14,7 @@ import ShareIcon from '@mui/icons-material/Share'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { useState } from 'react'
-import { trackEvent } from '@/lib/analytics'
+import { trackEvent } from '@/lib/utils/analytics'
 
 type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
 

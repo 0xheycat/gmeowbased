@@ -78,7 +78,7 @@ export async function fetchLeaderboard(params: {
   try {
     // Step 1: Get leaderboard from Subsquid (95% of data)
     tracePush(traces, 'leaderboard-subsquid-start')
-    const { getLeaderboard } = await import('@/lib/subsquid-client')
+    const { getLeaderboard } = await import('@/lib/integrations/subsquid-client')
     const subsquidData = await getLeaderboard({ limit, offset, period })
     tracePush(traces, 'leaderboard-subsquid-ok', { count: subsquidData.length })
     
@@ -174,7 +174,7 @@ export async function fetchUserStats(params: {
   try {
     // Step 1: Get on-chain stats from Subsquid
     tracePush(traces, 'user-stats-subsquid-start')
-    const { getUserStats } = await import('@/lib/subsquid-client')
+    const { getUserStats } = await import('@/lib/integrations/subsquid-client')
     const subsquidData = await getUserStats(address.toLowerCase())
     tracePush(traces, 'user-stats-subsquid-ok')
     
@@ -265,7 +265,7 @@ export async function fetchGuildData(params: {
   try {
     // Step 1: Get guild from Subsquid
     tracePush(traces, 'guild-subsquid-start')
-    const { getGuildStats } = await import('@/lib/subsquid-client')
+    const { getGuildStats } = await import('@/lib/integrations/subsquid-client')
     const subsquidData = await getGuildStats(String(guildId))
     tracePush(traces, 'guild-subsquid-ok')
     

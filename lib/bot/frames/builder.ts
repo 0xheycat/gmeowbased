@@ -1,6 +1,6 @@
 // Bot frame builder for embedding frames in cast replies
-import { buildFrameShareUrl, type FrameShareInput } from '@/lib/share'
-import type { ChainKey } from '@/lib/gmeow-utils'
+import { buildFrameShareUrl, type FrameShareInput } from '@/lib/api/share'
+import type { ChainKey } from '@/lib/contracts/gmeow-utils'
 import { buildUserContext, selectOptimalFrame, type UserContext } from '@/lib/bot/context/user-context'
 import { getConversationState } from '@/lib/bot/cache'
 

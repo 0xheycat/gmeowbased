@@ -11,10 +11,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyQuest } from '@/lib/quests/verification-orchestrator';
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit';
-import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit';
+import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler';
 import { z } from 'zod';
-import { generateRequestId } from '@/lib/request-id';
+import { generateRequestId } from '@/lib/middleware/request-id';
 
 export const dynamic = 'force-dynamic';
 

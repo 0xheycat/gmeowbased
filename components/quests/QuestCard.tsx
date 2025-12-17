@@ -34,7 +34,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PeopleIcon from '@mui/icons-material/People';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 
 export interface QuestCardProps {
   /** Quest ID */

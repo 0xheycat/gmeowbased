@@ -41,12 +41,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { strictLimiter } from '@/lib/rate-limit'
-import { getGuild, getGuildStats, getUserGuild, isGuildOfficer } from '@/lib/guild-contract'
+import { strictLimiter } from '@/lib/middleware/rate-limit'
+import { getGuild, getGuildStats, getUserGuild, isGuildOfficer } from '@/lib/contracts/guild-contract'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'
-import { generateRequestId } from '@/lib/request-id'
+import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/contracts/gmeow-utils'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 // ==========================================
 // Helper Functions

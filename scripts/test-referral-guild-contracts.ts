@@ -23,7 +23,7 @@ import {
   createLeaveGuildTx,
   createDepositGuildPointsTx,
   createClaimGuildRewardTx,
-} from '@/lib/gmeow-utils'
+} from '@/lib/contracts/gmeow-utils'
 
 // Test configuration
 const TEST_FID = 12345n

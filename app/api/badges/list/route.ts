@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getUserBadges } from '@/lib/badges'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { getUserBadges } from '@/lib/badges/badges'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { FIDSchema } from '@/lib/validation/api-schemas'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached, buildUserBadgesKey } from '@/lib/cache/server'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const dynamic = 'force-dynamic'
 

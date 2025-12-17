@@ -20,7 +20,7 @@
 import { useState, useEffect } from 'react'
 import type { Address } from 'viem'
 import { PeopleIcon, TrendingUpIcon, Calendar, EmojiEventsIcon } from '@/components/icons'
-import { getReferralStats, getReferralCode, getReferralTier } from '@/lib/referral-contract'
+import { getReferralStats, getReferralCode, getReferralTier } from '@/lib/contracts/referral-contract'
 
 export interface ReferralStatsCardsProps {
   /** User's wallet address */

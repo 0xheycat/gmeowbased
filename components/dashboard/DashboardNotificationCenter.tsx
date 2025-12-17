@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 import { buttonVariants } from '@/components/ui/button'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { createClient } from '@supabase/supabase-js'

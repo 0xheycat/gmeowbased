@@ -33,9 +33,9 @@ import {
   getSecurityHeaders,
   createErrorResponse,
   logApiRequest,
-} from '@/lib/api-security'
+} from '@/lib/middleware/api-security'
 import { z } from 'zod'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 // Blockscout MCP integration
 const BLOCKSCOUT_DOMAINS: Record<string, string> = {

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { getNeynarServerClient } from '@/lib/neynar-server'
-import { withErrorHandler, handleValidationError, handleNotFoundError, handleExternalApiError } from '@/lib/error-handler'
+import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { withErrorHandler, handleValidationError, handleNotFoundError, handleExternalApiError } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const dynamic = 'force-dynamic'
 

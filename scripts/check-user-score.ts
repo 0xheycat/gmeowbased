@@ -4,7 +4,7 @@
  * Usage: npx tsx scripts/check-user-score.ts
  */
 
-import { fetchUserByFid } from '@/lib/neynar'
+import { fetchUserByFid } from '@/lib/integrations/neynar'
 
 async function checkUser(fid: number) {
   console.log(`\n🔍 Checking user FID ${fid}...`)

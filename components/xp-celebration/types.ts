@@ -20,7 +20,7 @@
  * Network: Base (Chain ID: 8453)
  */
 
-import type { ChainKey } from '@/lib/gmeow-utils'
+import type { ChainKey } from '@/lib/contracts/gmeow-utils'
 
 /**
  * XP Event Types (15 total)

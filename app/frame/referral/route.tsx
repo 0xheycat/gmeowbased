@@ -2,7 +2,7 @@
 // Dynamic Referral Sharing Frame Route
 
 import { NextResponse } from 'next/server'
-import { buildDynamicFrameImageUrl } from '@/lib/share'
+import { buildDynamicFrameImageUrl } from '@/lib/api/share'
 
 export const runtime = 'nodejs'
 export const revalidate = 300

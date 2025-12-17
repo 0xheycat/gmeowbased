@@ -15,7 +15,7 @@
 import { useState, useMemo } from 'react'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 import { Button } from '@/components/ui/button'
 
 export interface Column<T> {

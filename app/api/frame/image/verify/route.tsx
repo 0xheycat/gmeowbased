@@ -8,7 +8,7 @@ import { NextRequest } from 'next/server'
 import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
-import { loadFrameFonts } from '@/lib/frame-fonts'
+import { loadFrameFonts } from '@/lib/frames/frame-fonts'
 import {
   FRAME_FONTS_V2,
   FRAME_FONT_FAMILY,
@@ -18,7 +18,7 @@ import {
   SHARED_COLORS,
   buildIdentityDisplay,
   buildFooterText,
-} from '@/lib/frame-design-system'
+} from '@/lib/frames/frame-design-system'
 import { withFrameImageCache, getStringParam } from '@/lib/frames/image-cache-helper'
 
 export const runtime = 'nodejs'

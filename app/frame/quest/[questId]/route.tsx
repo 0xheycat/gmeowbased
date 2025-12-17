@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server'
-import { sanitizeQuestId, sanitizeChainKey } from '@/lib/frame-validation'
+import { sanitizeQuestId, sanitizeChainKey } from '@/lib/frames/frame-validation'
 
 export const runtime = 'nodejs'
 export const revalidate = 300

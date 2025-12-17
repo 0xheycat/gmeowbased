@@ -6,7 +6,7 @@
 import type { FrameHandlerContext } from '../types'
 import { tracePush, buildHtmlResponse, shortenAddress } from '../utils'
 import { fetchUserStats } from '../hybrid-data'
-import { getUserNFTStats } from '@/lib/subsquid-client'
+import { getUserNFTStats } from '@/lib/integrations/subsquid-client'
 
 export async function handleNFTFrame(ctx: FrameHandlerContext): Promise<Response> {
   const { params, traces, origin, defaultFrameImage, asJson } = ctx

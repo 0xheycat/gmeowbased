@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import CheckIcon from '@/components/icons/check-icon'
-import { BADGE_REGISTRY } from '@/lib/badge-registry-data'
+import { BADGE_REGISTRY } from '@/lib/badges/badge-registry-data'
 
 interface BadgeSelectorProps {
   selectedBadgeIds: string[]

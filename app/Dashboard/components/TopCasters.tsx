@@ -8,7 +8,7 @@
  */
 
 import { getTopCasters, formatNumber, formatTimeAgo } from '@/lib/api/neynar-dashboard'
-import { withRetry, RetryStrategies } from '@/lib/retry'
+import { withRetry, RetryStrategies } from '@/lib/api/retry'
 import { ContextBadge, ActivityIndicator } from '@/components/dashboard-patterns'
 import { PeopleIcon } from '@/components/icons/people-icon'
 import Image from 'next/image'

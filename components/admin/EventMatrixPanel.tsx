@@ -6,7 +6,7 @@ import {
   CONTRACT_EVENT_CATEGORY_LABEL,
   type ContractEventCategory,
   listContractEvents,
-} from '@/lib/contract-events'
+} from '@/lib/contracts/contract-events'
 
 const CATEGORY_ORDER: ContractEventCategory[] = [
   'gm',

@@ -31,11 +31,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
-import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler'
-import { validateReferralCode, getReferralOwner } from '@/lib/referral-contract'
-import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
+import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler'
+import { validateReferralCode, getReferralOwner } from '@/lib/contracts/referral-contract'
+import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

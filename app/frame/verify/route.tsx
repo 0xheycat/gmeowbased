@@ -2,7 +2,7 @@
 // Dynamic Quest Verification Frame Route
 
 import { NextResponse } from 'next/server'
-import { sanitizeFID } from '@/lib/frame-validation'
+import { sanitizeFID } from '@/lib/frames/frame-validation'
 
 export const runtime = 'nodejs'
 export const revalidate = 60

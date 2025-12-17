@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import clsx from 'clsx'
 
-import { CHAIN_KEYS, CHAIN_LABEL, type ChainKey } from '@/lib/gmeow-utils'
+import { CHAIN_KEYS, CHAIN_LABEL, type ChainKey } from '@/lib/contracts/gmeow-utils'
 import {
   type PartnerRequirementKind,
   type PartnerSnapshotSummaryPayload,
-} from '@/lib/partner-snapshot'
+} from '@/lib/profile/partner-snapshot'
 
 // Simple notify helper for feedback
 const notify = (options: { type: string; title: string; message: string }) => {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { recalculateGlobalRanks } from '@/lib/leaderboard-scorer'
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+import { recalculateGlobalRanks } from '@/lib/leaderboard/leaderboard-scorer'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes

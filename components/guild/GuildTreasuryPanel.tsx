@@ -39,7 +39,7 @@ import {
 } from '@/components/dialogs'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 
 export interface TreasuryTransaction {
   id: string

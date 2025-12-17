@@ -1,9 +1,9 @@
 export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
-import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
+import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const GET = withErrorHandler(async (req: Request) => {
   const requestId = generateRequestId()

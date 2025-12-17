@@ -16,12 +16,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { generateRequestId } from '@/lib/request-id'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { generateRequestId } from '@/lib/middleware/request-id'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { validateAdminRequest } from '@/lib/auth/admin'
 import { NeynarAPIClient } from '@neynar/nodejs-sdk'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AdminQuerySchema } from '@/lib/validation/api-schemas'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY

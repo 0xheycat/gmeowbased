@@ -1,12 +1,12 @@
 // /api/seasons/route.ts
 import { NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
-import { CONTRACT_ADDRESSES, CHAIN_IDS, ALL_CHAIN_IDS, normalizeToGMChain, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey, type GMChainKey } from '@/lib/gmeow-utils'
-import { getRpcUrl } from '@/lib/rpc'
+import { CONTRACT_ADDRESSES, CHAIN_IDS, ALL_CHAIN_IDS, normalizeToGMChain, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey, type GMChainKey } from '@/lib/contracts/gmeow-utils'
+import { getRpcUrl } from '@/lib/contracts/rpc'
 import { SeasonQuerySchema } from '@/lib/validation/api-schemas'
-import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/error-handler'
+import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 type SeasonTuple = readonly [bigint, bigint, bigint, boolean, string, boolean]
 type SeasonInfo = {

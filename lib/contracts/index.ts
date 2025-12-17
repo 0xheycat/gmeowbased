@@ -29,8 +29,27 @@
  *    - Assume multichain contract support exists
  * 
  * @module lib/contracts
- * @see lib/gmeow-utils.ts for detailed chain type documentation
+ * @see lib/contracts/gmeow-utils.ts for detailed chain type documentation
  * @verified BaseScan December 12, 2025
  */
 
 export * from './abis'
+// Export gmeow-utils types and addresses (ABIs excluded to avoid conflicts)
+export { 
+  STANDALONE_ADDRESSES,
+  CONTRACT_ADDRESSES,
+  CHAIN_IDS,
+  ALL_CHAIN_IDS,
+  type GMChainKey,
+  type ChainKey,
+  getContractAddress,
+  getGuildAddress,
+  getNFTAddress
+} from './gmeow-utils'
+export * from './guild-contract'
+export * from './referral-contract'
+export * from './contract-events'
+export * from './contract-mint'
+export * from './auto-deposit-oracle'
+export * from './nft-metadata'
+export * from './rpc'

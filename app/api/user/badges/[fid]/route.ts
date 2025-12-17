@@ -32,11 +32,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { generateRequestId } from '@/lib/request-id'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { generateRequestId } from '@/lib/middleware/request-id'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
-import { BADGE_REGISTRY } from '@/lib/badge-registry-data'
-import { createErrorResponse, ErrorType } from '@/lib/error-handler'
+import { BADGE_REGISTRY } from '@/lib/badges/badge-registry-data'
+import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 
 export const dynamic = 'force-dynamic'
 

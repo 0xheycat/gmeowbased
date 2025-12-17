@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getBadgeFromRegistry, updateBadgeMintStatus } from '@/lib/badges'
+import { getBadgeFromRegistry, updateBadgeMintStatus } from '@/lib/badges/badges'
 import { getSupabaseServerClient } from '@/lib/supabase/client'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
-import { mintBadgeOnChain } from '@/lib/contract-mint'
+import { mintBadgeOnChain } from '@/lib/contracts/contract-mint'
 import { z } from 'zod'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60

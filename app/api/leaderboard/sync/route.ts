@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { syncSupabaseLeaderboard } from '@/lib/leaderboard-sync'
+import { syncSupabaseLeaderboard } from '@/lib/leaderboard/leaderboard-sync'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 const SYNC_TOKEN = process.env.SUPABASE_SYNC_TOKEN || process.env.CRON_SECRET || process.env.SYNC_LEADERBOARD_TOKEN
 

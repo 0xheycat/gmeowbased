@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { getTelemetrySummary } from '@/lib/telemetry'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { getTelemetrySummary } from '@/lib/utils/telemetry'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

@@ -47,12 +47,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { apiLimiter } from '@/lib/rate-limit'
+import { apiLimiter } from '@/lib/middleware/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 import { createClient } from '@supabase/supabase-js'
 
 // ==========================================

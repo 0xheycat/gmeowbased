@@ -21,8 +21,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, http, parseAbiItem } from 'viem';
 import { base } from 'viem/chains';
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency';
-import { generateRequestId } from '@/lib/request-id';
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency';
+import { generateRequestId } from '@/lib/middleware/request-id';
 import type { Address } from 'viem';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

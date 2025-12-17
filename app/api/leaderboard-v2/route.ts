@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getLeaderboard } from '@/lib/leaderboard-scorer'
+import { getLeaderboard } from '@/lib/leaderboard/leaderboard-scorer'
 import {
   checkLeaderboardRateLimit,
   createRateLimitResponse,
   addRateLimitHeaders,
-} from '@/lib/rate-limit'
-import { generateRequestId } from '@/lib/request-id'
+} from '@/lib/middleware/rate-limit'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const revalidate = 300 // 5 minutes

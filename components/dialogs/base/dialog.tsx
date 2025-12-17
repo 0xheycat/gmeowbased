@@ -16,7 +16,7 @@
 import { createContext, useContext, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import CloseIcon from '@mui/icons-material/Close'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 
 // Context for dialog state
 interface DialogContextType {

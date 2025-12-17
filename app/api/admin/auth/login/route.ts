@@ -8,10 +8,10 @@ import {
   validateAccessCode,
   validateTotp,
 } from '@/lib/auth/admin'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { AdminLoginSchema } from '@/lib/validation/api-schemas'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

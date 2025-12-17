@@ -7,7 +7,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 
 import { Card, CardDescription, CardFooter, CardTitle, EmptyState, type CardProps } from '@/components/ui/button'
-import type { CommunityEventSummary } from '@/lib/community-event-types'
+import type { CommunityEventSummary } from '@/lib/profile/community-event-types'
 
 const dotStyles: Record<CommunityEventSummary['emphasis'], string> = {
   positive: 'bg-emerald-300',

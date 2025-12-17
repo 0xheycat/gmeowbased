@@ -7,10 +7,10 @@ import {
   hasMetricsIncreased,
   calculateIncrementalBonus,
   type EngagementMetrics,
-} from '@/lib/viral-bonus'
-import { trackEvent } from '@/lib/analytics'
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+} from '@/lib/viral/viral-bonus'
+import { trackEvent } from '@/lib/utils/analytics'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

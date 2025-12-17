@@ -30,10 +30,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, webhookLimiter } from '@/lib/rate-limit'
+import { rateLimit, webhookLimiter } from '@/lib/middleware/rate-limit'
 import { z } from 'zod'
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 import { notifyWithXPReward } from '@/lib/notifications'
 
 export const runtime = 'nodejs'

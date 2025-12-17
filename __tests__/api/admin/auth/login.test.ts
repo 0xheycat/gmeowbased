@@ -33,7 +33,7 @@ import {
 	issueAdminSession,
 	buildAdminSessionCookie,
 } from '@/lib/admin-auth'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { rateLimit, getClientIp } from '@/lib/middleware/rate-limit'
 
 describe('/api/admin/auth/login', () => {
 	beforeEach(() => {

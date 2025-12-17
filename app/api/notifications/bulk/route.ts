@@ -64,7 +64,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { trackError } from '@/lib/notifications/error-tracking'
 import { generateRequestId } from '@/lib/notifications/api-helpers'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { z } from 'zod'
 
 // Zod schema for bulk action request

@@ -41,11 +41,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { strictLimiter } from '@/lib/rate-limit'
+import { strictLimiter } from '@/lib/middleware/rate-limit'
 import { createPublicClient, http, type Address } from 'viem'
 import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
-import { generateRequestId } from '@/lib/request-id'
+import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
+import { generateRequestId } from '@/lib/middleware/request-id'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { logGuildEvent } from '@/lib/guild/event-logger'
 

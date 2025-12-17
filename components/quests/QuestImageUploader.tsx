@@ -29,7 +29,7 @@ import Image from 'next/image';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 
 export type QuestFileType = File & {
   path?: string;

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { rateLimit, getClientIp, webhookLimiter } from '@/lib/rate-limit'
-import { resolveBotFid, resolveBotSignerUuid } from '@/lib/neynar-bot'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { rateLimit, getClientIp, webhookLimiter } from '@/lib/middleware/rate-limit'
+import { resolveBotFid, resolveBotSignerUuid } from '@/lib/integrations/neynar-bot'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

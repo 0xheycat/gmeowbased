@@ -32,9 +32,9 @@ import {
   getSecurityHeaders,
   createErrorResponse,
   logApiRequest,
-} from '@/lib/api-security'
+} from '@/lib/middleware/api-security'
 import { trackApiUsage } from '@/app/api/admin/usage-metrics/route'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 import { z } from 'zod'
 
 type ChainKey = 'base' | 'ethereum' | 'optimism' | 'arbitrum' | 'polygon' | 'gnosis' | 'celo' | 'scroll' | 'unichain' | 'soneium' | 'zksync' | 'zora' | 'op'

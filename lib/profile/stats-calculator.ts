@@ -15,9 +15,9 @@
  * @module lib/profile/stats-calculator
  */
 
-import { calculateLevelProgress, getRankTierByPoints } from '@/lib/rank'
+import { calculateLevelProgress, getRankTierByPoints } from '@/lib/leaderboard/rank'
 import type { ProfileStats } from './types'
-import type { RankProgress } from '@/lib/rank'
+import type { RankProgress } from '@/lib/leaderboard/rank'
 
 // ============================================================================
 // TYPES

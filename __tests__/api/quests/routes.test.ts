@@ -18,7 +18,7 @@ vi.mock('@/lib/rate-limit', () => ({
   apiLimiter: {},
 }))
 
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { rateLimit, getClientIp } from '@/lib/middleware/rate-limit'
 
 let testCounter = 0
 

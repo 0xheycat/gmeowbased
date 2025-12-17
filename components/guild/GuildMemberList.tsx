@@ -33,11 +33,11 @@ import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, Dialo
 import { ConfirmDialog } from '@/components/dialogs'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
-import { STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { BadgeShowcase, type Badge } from '@/components/guild/badges'
 import MemberHoverCard from './MemberHoverCard'
 import Image from 'next/image'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 
 export interface GuildMember {

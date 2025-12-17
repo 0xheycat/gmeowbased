@@ -1,4 +1,4 @@
-import type { ChainKey } from '@/lib/gmeow-utils'
+import type { ChainKey } from '@/lib/contracts/gmeow-utils'
 
 type Primitive = string | number | boolean
 

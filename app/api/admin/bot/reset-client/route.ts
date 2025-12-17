@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { generateRequestId } from '@/lib/request-id'
-import { resetNeynarClientCache } from '@/lib/neynar-server'
+import { generateRequestId } from '@/lib/middleware/request-id'
+import { resetNeynarClientCache } from '@/lib/integrations/neynar-server'
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
-import { withErrorHandler } from '@/lib/error-handler'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 export const runtime = 'nodejs'
 

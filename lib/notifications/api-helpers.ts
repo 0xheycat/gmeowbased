@@ -22,15 +22,15 @@
  */
 
 // Re-export existing infrastructure (no duplication)
-export { generateRequestId, getOrGenerateRequestId } from '@/lib/request-id'
+export { generateRequestId, getOrGenerateRequestId } from '@/lib/middleware/request-id'
 export { 
   checkIdempotency, 
   storeIdempotency, 
   getIdempotencyKey,
   isValidIdempotencyKey,
   returnCachedResponse
-} from '@/lib/idempotency'
-export type { IdempotencyResult } from '@/lib/idempotency'
+} from '@/lib/middleware/idempotency'
+export type { IdempotencyResult } from '@/lib/middleware/idempotency'
 
 /**
  * Generate Cache-Control header for preferences endpoint
