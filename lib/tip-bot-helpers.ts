@@ -107,7 +107,10 @@ export async function postTipCelebration(params: {
   botSignerUuid: string
 }): Promise<{ castHash: string; success: boolean }> {
   try {
-    const messageText = generateTipMessage(params)
+    const messageText = generateTipMessage({
+      ...params,
+      amount: params.amount.toString(),
+    })
 
     const response = await neynar.publishCast({
       signerUuid: params.botSignerUuid,
