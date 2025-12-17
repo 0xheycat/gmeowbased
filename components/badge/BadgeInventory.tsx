@@ -9,7 +9,7 @@ import { useAccount } from 'wagmi'
 import { useDialog, ErrorDialog } from '@/components/dialogs'
 import { Tooltip } from '@/components/ui/tooltip'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
-import { ICON_SIZES } from '@/lib/utils/icon-sizes'
+import { ICON_SIZES } from '@/lib/utils/icons'
 
 export type UserBadge = {
   id: string

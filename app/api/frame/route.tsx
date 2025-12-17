@@ -26,7 +26,7 @@ import gm, {
 } from '@/lib/contracts/gmeow-utils'
 import { getReferralCode } from '@/lib/contracts/referral-contract'
 import { calculateRankProgress } from '@/lib/leaderboard/rank'
-import { getChainIconUrl } from '@/lib/utils/chain-icons'
+import { getChainIconUrl } from '@/lib/utils/icons'
 import { buildDynamicFrameImageUrl } from '@/lib/api/share'
 import {
   sanitizeFID,

@@ -6,7 +6,7 @@
 import type { FrameHandlerContext } from '../types'
 import { tracePush, toBooleanFlag, getChainDisplayName, sanitizeNumber, buildHtmlResponse, formatPoints, shortenAddress } from '../utils'
 import { fetchLeaderboard } from '../hybrid-data'
-import { getChainIconUrl } from '@/lib/utils/chain-icons'
+import { getChainIconUrl } from '@/lib/utils/icons'
 
 export async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<Response> {
   const { params, traces, origin, defaultFrameImage, asJson } = ctx
