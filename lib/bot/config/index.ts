@@ -1,3 +1,58 @@
+/**
+ * @file lib/bot/config/index.ts
+ * @description Bot runtime configuration management with caching
+ * 
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Runtime configuration loading from database
+ *   - Configuration caching (3 min TTL)
+ *   - Default configuration fallbacks
+ *   - Configuration validation and sanitization
+ *   - Environment variable overrides
+ *   - Type-safe configuration structure
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Config types: lib/bot/config/types.ts
+ *   - Bot behavior: lib/bot/core/auto-reply.ts
+ *   - Database: supabase/migrations (app_settings table)
+ * 
+ * REQUIREMENTS:
+ *   - Configuration must have sensible defaults
+ *   - Cache must expire to allow updates
+ *   - All numeric values must be validated (positive, max limits)
+ *   - String arrays must be normalized (lowercase, trimmed)
+ * 
+ * TODO:
+ *   - [ ] Add configuration versioning
+ *   - [ ] Add configuration change notifications
+ *   - [ ] Add A/B testing support
+ *   - [ ] Add per-user configuration overrides
+ *   - [ ] Add configuration validation UI
+ *   - [ ] Add configuration backup/restore
+ * 
+ * CRITICAL:
+ *   - Cache must expire to allow config updates (3min TTL)
+ *   - Default config must always be valid
+ *   - Validation must prevent invalid values
+ *   - Configuration changes require cache invalidation
+ *   - No destructive defaults (preserve user settings)
+ * 
+ * SUGGESTIONS:
+ *   - Add configuration change audit log
+ *   - Add configuration diff visualization
+ *   - Cache configuration per request context
+ *   - Add configuration presets (strict, relaxed, etc.)
+ *   - Add configuration health checks
+ * 
+ * AVOID:
+ *   - Caching configuration indefinitely
+ *   - Allowing invalid configuration values
+ *   - Hardcoding configuration in code
+ *   - Breaking changes to configuration schema
+ *   - Exposing sensitive config to client
+ */
+
 // @edit-start 2025-11-12 — Bot runtime configuration helpers
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import type { BotStatsConfig } from './types'

@@ -1,3 +1,60 @@
+/**
+ * @file lib/bot/frames/builder.ts
+ * @description Bot frame builder for embedding interactive frames in Farcaster cast replies
+ * 
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - 8 bot frame types (stats, quest, badge, leaderboard, guild, profile, streak)
+ *   - Dynamic frame selection based on intent
+ *   - User context integration for personalized frames
+ *   - Frame URL generation with share utilities
+ *   - Conversation state awareness for follow-ups
+ *   - Type-safe frame routing to /frame/ endpoints
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Frame routes: app/frame/ directory
+ *   - User context: lib/bot/context/user-context.ts
+ *   - Share API: lib/api/share.ts
+ *   - Conversation state: lib/bot/cache/index.ts
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453)
+ *   - Frame URLs must be absolute
+ *   - Frames must load within 5 seconds
+ *   - NO EMOJIS in frame metadata
+ * 
+ * TODO:
+ *   - [ ] Add frame preview generation
+ *   - [ ] Add frame analytics tracking
+ *   - [ ] Add A/B testing for frame variants
+ *   - [ ] Add frame caching for frequent requests
+ *   - [ ] Add frame error boundaries
+ *   - [ ] Support custom frame themes
+ * 
+ * CRITICAL:
+ *   - Frame URLs must match available routes in app/frame/
+ *   - Frame IDs (fid, questId, guildId) must be validated
+ *   - Frames must handle missing user data gracefully
+ *   - Frame actions must be idempotent
+ *   - Always check user context before selecting frame
+ * 
+ * SUGGESTIONS:
+ *   - Cache frame URLs for repeated intents
+ *   - Add frame preloading for predicted intents
+ *   - Generate multiple frame options ranked by relevance
+ *   - Add frame rotation to prevent repetitiveness
+ *   - Track frame engagement metrics (clicks, shares)
+ * 
+ * AVOID:
+ *   - Hardcoding frame URLs (use share API)
+ *   - Embedding frames without context validation
+ *   - Using non-existent frame routes
+ *   - Generating frames without user permissions check
+ *   - Creating frames with broken or expired URLs
+ */
+
 // Bot frame builder for embedding frames in cast replies
 import { buildFrameShareUrl, type FrameShareInput } from '@/lib/api/share'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'

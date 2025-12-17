@@ -1,3 +1,56 @@
+/**
+ * @file lib/bot/config/i18n.ts
+ * @description Multi-language support for bot responses (8 languages)
+ * 
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - 8 supported languages (en, es, fr, de, zh, ja, ko, pt)
+ *   - Automatic language detection from cast text
+ *   - Pattern-based language matching (regex + common words)
+ *   - Localized response templates for all intents
+ *   - Fallback to English for unsupported languages
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Auto-reply: lib/bot/core/auto-reply.ts
+ *   - Farcaster instructions: farcaster.instructions.md
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - All translations must be culturally appropriate
+ *   - NO EMOJIS in translations (breaks some clients)
+ *   - Maintain consistent tone across languages
+ * 
+ * TODO:
+ *   - [ ] Add more languages (ar, hi, ru, etc.)
+ *   - [ ] Add language preference persistence per user
+ *   - [ ] Add translation quality scoring
+ *   - [ ] Add professional translation review
+ *   - [ ] Add language-specific formatting rules
+ *   - [ ] Add RTL language support
+ * 
+ * CRITICAL:
+ *   - Language detection must be fast (<10ms)
+ *   - Fallback to English if detection confidence low
+ *   - Translations must preserve intent meaning
+ *   - No machine translation without human review
+ *   - Character encoding must support all languages
+ * 
+ * SUGGESTIONS:
+ *   - Add language analytics (usage by language)
+ *   - Cache detected language per user (5min TTL)
+ *   - Add language override command for users
+ *   - Provide translation contribution system
+ *   - Add language-specific error messages
+ * 
+ * AVOID:
+ *   - Using machine translations without review
+ *   - Adding languages without native speaker validation
+ *   - Hardcoding strings in code (use translation keys)
+ *   - Mixing languages in single response
+ *   - Using informal language without context
+ */
+
 // Multi-language support for bot responses
 export type SupportedLanguage = 'en' | 'es' | 'fr' | 'de' | 'zh' | 'ja' | 'ko' | 'pt'
 

@@ -1,9 +1,64 @@
 /**
- * #file: lib/bot/retry-queue.ts
+ * @file lib/bot/retry-queue.ts
+ * @description In-memory retry queue for failed operations with exponential backoff
  * 
- * PHASE: Free-Tier Failover Architecture (Day 3-4)
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL: Free-Tier Failover Architecture (Day 3-4)
  * DATE: December 17, 2025
  * 
+ * FEATURES:
+ *   - In-memory retry queue (no external service required)
+ *   - Exponential backoff (1s, 2s, 4s, 8s, 16s)
+ *   - Max 5 retries per operation
+ *   - Persistent storage to disk on shutdown
+ *   - Auto-cleanup after 1 hour
+ *   - Support for 4 operation types (cache-update, notification, analytics, webhook)
+ *   - Background processing every 5 seconds
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Local cache: lib/bot/local-cache.ts
+ *   - Stats fallback: lib/bot/stats-with-fallback.ts
+ *   - Free-tier architecture: FOUNDATION-REBUILD-ROADMAP.md
+ * 
+ * REQUIREMENTS:
+ *   - Filesystem write access for persistence
+ *   - Max queue size: 1000 items
+ *   - Processing interval: 5 seconds
+ *   - Auto-cleanup: 1 hour after failure
+ * 
+ * TODO:
+ *   - [ ] Add retry priority system (critical vs normal)
+ *   - [ ] Add queue monitoring and alerts
+ *   - [ ] Add configurable backoff strategies
+ *   - [ ] Add dead letter queue for permanent failures
+ *   - [ ] Add queue persistence to database option
+ *   - [ ] Add queue size limits per operation type
+ * 
+ * CRITICAL:
+ *   - Queue size limited to 1000 items (prevent memory leaks)
+ *   - Exponential backoff prevents thundering herd
+ *   - Failed items cleaned up after 1 hour
+ *   - Disk persistence only on graceful shutdown
+ *   - Processing interval must not block main thread
+ * 
+ * SUGGESTIONS:
+ *   - Use Redis queue for production (distributed)
+ *   - Add queue metrics (items pending, success rate)
+ *   - Implement circuit breaker for failing endpoints
+ *   - Add queue drain on deployment
+ *   - Log all retry attempts for debugging
+ * 
+ * AVOID:
+ *   - Adding items without max retry limit
+ *   - Processing queue synchronously (use background)
+ *   - Storing large payloads in queue items
+ *   - Retrying operations that will never succeed
+ *   - Ignoring queue overflow (implement backpressure)
+ */
+
+/**
  * In-memory retry queue for failed operations (no external queue service required)
  */
 

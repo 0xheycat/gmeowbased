@@ -1,3 +1,58 @@
+/**
+ * @file lib/bot/analytics/stats.ts
+ * @description User stats aggregation across chains for bot responses
+ * 
+ * PHASE: Phase 7.2 - Bot (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Multi-chain stats aggregation
+ *   - Level and tier calculations
+ *   - Tip tracking (7d, 14d, 21d, all-time)
+ *   - Rank progress computation
+ *   - Primary chain detection
+ *   - Type-safe stats structure
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Profile data: lib/profile/profile-data.ts
+ *   - Rank calculations: lib/leaderboard/rank.ts
+ *   - Chain snapshots: Supabase gmeow_rank_snapshot table
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Multi-chain (Base primary)
+ *   - Stats must be accurate within 5 minutes
+ *   - All chains must be queried in parallel (<200ms target)
+ * 
+ * TODO:
+ *   - [ ] Add stats caching per user (5min TTL)
+ *   - [ ] Add stats change detection (delta from last query)
+ *   - [ ] Add historical stats tracking (trends)
+ *   - [ ] Add stats comparison (vs friends, vs average)
+ *   - [ ] Add stats prediction (projected next level)
+ *   - [ ] Add stats validation (sanity checks)
+ * 
+ * CRITICAL:
+ *   - Parallel queries required for performance
+ *   - Handle missing chain data gracefully
+ *   - Calculate tier correctly using rank module
+ *   - Primary chain must have highest total points
+ *   - Tip windows must be accurate (7/14/21 days)
+ * 
+ * SUGGESTIONS:
+ *   - Cache stats per user with short TTL
+ *   - Add stats quality indicators (freshness)
+ *   - Pre-calculate stats for active users
+ *   - Add stats anomaly detection
+ *   - Batch multiple user stat queries
+ * 
+ * AVOID:
+ *   - Sequential chain queries (too slow)
+ *   - Returning stale stats without disclaimer
+ *   - Hardcoding tier thresholds (use rank module)
+ *   - Ignoring errors from individual chains
+ *   - Calculating stats on every request (cache it)
+ */
+
 // @edit-start 2025-11-12 — Bot stats aggregation helper
 import { PROFILE_SUPPORTED_CHAINS, fetchChainSnapshot, normalizeAddress } from '@/lib/profile/profile-data'
 import { calculateRankProgress } from '@/lib/leaderboard/rank'
