@@ -25,7 +25,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { trackError } from './error-tracking'
 import { DEFAULT_PRIORITY_MAP, type NotificationPriority } from './priority'
 import { handleNotificationBatching, type NotificationBatchType, type NotificationPriority as BatchPriority } from '@/lib/notifications/notification-batching'
@@ -569,7 +569,7 @@ async function markNotificationSent(notification: ViralNotification, deps?: Noti
 
     // Call the helper function from migration
     // Source: scripts/sql/phase5.1-viral-realtime.sql
-    await supabase.rpc('mark_notification_sent', {
+    await (supabase as any).rpc('mark_notification_sent', {
       p_notification_type: notification.type,
       p_id:
         notification.type === 'tier_upgrade'
@@ -694,7 +694,7 @@ export async function shouldSendNotification(
     }
     
     // Query user preferences
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('notification_preferences')
       .select('priority_settings, min_priority_for_push, global_mute, category_settings')
       .eq('fid', fid)
