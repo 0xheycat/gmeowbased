@@ -98,7 +98,7 @@ export async function calculateLeaderboardScore(
   const viralXP = viralData?.reduce((sum: number, row: any) => sum + (row.viral_bonus_xp || 0), 0) || 0
 
   // 4. Get guild bonus (guild level * 100) - guild_members not in Database types
-  const { data: guildData } = await (supabase as any)
+  const { data: guildData } = await supabase
     .from('guild_members')
     .select('guild_level')
     .eq('address', address)

@@ -120,7 +120,7 @@ export async function markNotificationTokenDisabled(input: DisableNotificationTo
     last_seen_at: nowIso,
   }
 
-  const query = (client as any).from(TABLE_NAME).update(updatePayload)
+  const query = client.from(TABLE_NAME).update(updatePayload)
   if (input.token) {
     query.eq('token', input.token)
   }

@@ -569,7 +569,7 @@ async function markNotificationSent(notification: ViralNotification, deps?: Noti
 
     // Call the helper function from migration
     // Source: scripts/sql/phase5.1-viral-realtime.sql
-    await (supabase as any).rpc('mark_notification_sent', {
+    await supabase.rpc('mark_notification_sent', {
       p_notification_type: notification.type,
       p_id:
         notification.type === 'tier_upgrade'
