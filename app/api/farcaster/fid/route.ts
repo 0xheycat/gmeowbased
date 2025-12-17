@@ -3,7 +3,7 @@ import type { Address } from 'viem'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
 import { fetchFidByAddress } from '@/lib/neynar'
 import { withErrorHandler, handleValidationError, handleRateLimitError, handleExternalApiError } from '@/lib/error-handler'
-import { getCached } from '@/lib/cache'
+import { getCached } from '@/lib/cache/server'
 import { generateRequestId } from '@/lib/request-id'
 
 function isAddress(a?: string): a is Address {

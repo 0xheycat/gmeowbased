@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getAllCacheStats, clearAllCaches } from '@/lib/cache-storage'
+import { getAllCacheStats, clearAllCaches } from '@/lib/cache/client'
 
 /**
  * Cache Management Component

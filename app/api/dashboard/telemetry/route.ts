@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getDashboardTelemetry } from '@/lib/telemetry'
 import { withErrorHandler } from '@/lib/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
-import { getCached } from '@/lib/cache'
+import { getCached } from '@/lib/cache/server'
 import { generateRequestId } from '@/lib/request-id'
 
 export const runtime = 'nodejs'

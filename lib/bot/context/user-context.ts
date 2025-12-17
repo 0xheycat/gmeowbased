@@ -33,7 +33,7 @@
  */
 
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import { getCached } from '@/lib/cache'
+import { getCached } from '@/lib/cache/server'
 import type { BotFrameType } from '@/lib/bot/frames/builder'
 
 // ============================================================================

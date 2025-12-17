@@ -24,7 +24,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { ImageResponse } from 'next/og'
-import { getCachedFrame, setCachedFrame, type FrameCacheKey } from '@/lib/frame-cache'
+import { getCachedFrame, setCachedFrame, type FrameCacheKey } from '@/lib/cache/frame'
 
 export type FrameImageGeneratorParams = {
   searchParams: URLSearchParams

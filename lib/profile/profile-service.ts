@@ -24,7 +24,7 @@
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase-server'
-import { getCached, invalidateCache } from '@/lib/cache'
+import { getCached, invalidateCache } from '@/lib/cache/server'
 import type { 
   ProfileData, 
   ProfileUpdateRequest,
