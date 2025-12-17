@@ -208,27 +208,29 @@ export default function QuestFilters({
         )}
       </div>
       
-      {/* Sort Dropdown */}
-      <div className="flex items-center gap-3">\n        <label htmlFor="quest-sort" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-          <SwapVertIcon className="w-4 h-4" />
-          Sort by:
-        </label>
-        <select
-          id="quest-sort"
-          value={sortBy}
-          onChange={(e) => onSortChange(e.target.value as QuestSortOption)}
-          className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
-        >
-          {SORT_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      
-      {/* Filter Header */}
-      <div className="flex items-center justify-between">
+      {/* Sort and Filter Controls */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        {/* Sort Dropdown */}
+        <div className="flex items-center gap-3">
+          <label htmlFor="quest-sort" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <SwapVertIcon className="w-4 h-4" />
+            Sort by:
+          </label>
+          <select
+            id="quest-sort"
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value as QuestSortOption)}
+            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+          >
+            {SORT_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        {/* Filter Toggle Button */}
         <motion.button
           whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
           whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}

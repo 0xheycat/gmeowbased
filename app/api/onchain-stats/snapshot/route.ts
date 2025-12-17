@@ -45,7 +45,7 @@ const snapshotSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
-  const requestId = getRequestId()
+  const requestId = getRequestId(req)
   
   try {
     // Security Layer 1: Validate CRON_SECRET (required for cron endpoints)

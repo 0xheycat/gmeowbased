@@ -23,7 +23,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   QuestFilters,
-  type QuestFilterState 
+  type QuestFilterState,
+  type QuestSortOption
 } from '@/components/quests';
 import { ManagementTableSkeleton, AnalyticsDashboardSkeleton } from '@/components/quests/skeletons';
 import { useDialog } from '@/components/dialogs';
@@ -142,7 +143,10 @@ export default function QuestManagementPage() {
     participantRange: { min: 0, max: 1000 },
     dateRange: null,
     isFeatured: null,
+    search: '',
   });
+  
+  const [sortBy, setSortBy] = useState<QuestSortOption>('trending');
 
   // Loading and error states for demo/testing
   const [isLoading, setIsLoading] = useState(false);
@@ -412,11 +416,13 @@ export default function QuestManagementPage() {
             </p>
           </div>
           <QuestFilters 
-            filters={filters} 
+            filters={filters}
+            sortBy={sortBy}
             isLoading={isLoading}
             error={error || undefined}
             onRetry={handleRetry}
-            onFiltersChange={setFilters} 
+            onFiltersChange={setFilters}
+            onSortChange={setSortBy}
           />
         </section>
 

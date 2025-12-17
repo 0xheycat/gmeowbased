@@ -2,11 +2,16 @@
 ## Ultra-Fast, Lightweight, Accurate Analytics Architecture
 
 **Date**: December 11, 2025  
-**Last Updated**: December 12, 2025, 11:45 AM CST  
-**Status**: ⚠️ PARTIAL UNBLOCK - Frame System 92/100 ✅, Hybrid Calculator remains blocker  
+**Last Updated**: December 16, 2025, 4:30 PM CST  
+**Status**: ✅ UNBLOCKED - Hybrid Calculator Implemented, Bot Analytics Created  
 **Goal**: Lightning-fast (<10ms queries), accurate real-time data, scale to 1000+ DAUs  
-**Progress**: Frame system complete (134/135 tests, 99%), Notifications enhancement next  
-**Blocker**: Hybrid calculator implementation required before Phase 3 Supabase refactor
+**Progress**: Frame system complete (134/135 tests, 99%), Hybrid calculator implemented (Phase 1 Week 1-2 complete)  
+**Next Phase**: Phase 1 Quick Wins (Week 3) - Context-aware bot replies, personalized greetings, streak encouragement  
+**Update (Dec 16, 2025)**: 
+- ✅ NFT art integration removed - focusing on Badge system only
+- ✅ Hybrid calculator implemented (lib/frames/hybrid-calculator.ts - 354 lines)
+- ✅ Bot analytics infrastructure created (lib/bot-analytics.ts - 474 lines)
+- ✅ Admin components updated with Phase headers (BotManagerPanel, BotStatsConfigPanel)
 
 ---
 
@@ -220,12 +225,24 @@ Total API Routes: 115
 - **Status**: 134/135 critical tests passing (99%), ready for Phase 3
 - **Final Score**: 92/100 (exceeded 90/100 target) ✅
 
-### **2. Hybrid Calculator MISSING (CRITICAL)**
-- ❌ File `lib/scoring/hybrid-calculator.ts` does NOT exist
-- ❌ Referenced in HYBRID-CALCULATOR-USAGE-GUIDE.md (375 lines of docs)
-- ❌ All 9 scoring components documented but not implemented
-- ❌ Cannot calculate: basePoints, viralXP, guildBonus, referralBonus, etc.
-- **Required**: Create hybrid calculator with Supabase + Subsquid data sources
+### **2. Hybrid Calculator: IMPLEMENTED (Dec 16, 2025)** ✅
+- ✅ File `lib/frames/hybrid-calculator.ts` implemented (354 lines)
+- ✅ All 9 scoring components implemented:
+  - basePoints (Quest completions from Supabase)
+  - viralXP (Badge cast engagement from Supabase)
+  - guildBonus (Guild level × 100 from Subsquid)
+  - referralBonus (Referral count × 50 from Subsquid)
+  - streakBonus (GM streak × 10 from Subsquid)
+  - badgePrestige (Badge count × 25 from Subsquid)
+  - tipPoints (Tip activity from Supabase)
+  - nftPoints (NFT rewards from Subsquid)
+  - guildBonusPoints (10% member + 5% officer from Supabase)
+- ✅ Parallel data fetching (Subsquid + Supabase)
+- ✅ Category-specific leaderboards (8 categories)
+- ✅ Batch score calculation for efficiency
+- ⚠️ **TODO**: Add caching layer (Redis, 5-min TTL) for performance
+- ⚠️ **TODO**: Add fallback logic when Subsquid unavailable
+- **Status**: Core implementation complete, ready for production testing
 
 ### **3. Legacy Blockers (Lower Priority)**
 - ✅ Referral System: COMPLETE (Dec 11, 2025)
@@ -239,9 +256,15 @@ Total API Routes: 115
   - ✅ 14 contrast tests (WCAG AA)
   - ✅ 0 TypeScript errors
   - 📄 See: [NOTIFICATION-SYSTEM-PHASE-7-ROADMAP.md](NOTIFICATION-SYSTEM-PHASE-7-ROADMAP.md)
+- ✅ **NFT Art System: REMOVED (Dec 16, 2025)** 🗑️
+  - ✅ Removed custom-cat-generator.ts (568 lines)
+  - ✅ Removed DiceBear integration files
+  - ✅ Removed test files and SVG outputs
+  - ✅ Removed @dicebear packages
+  - ✅ Restored original badge generator
+  - 📝 Decision: Badge system sufficient for achievements
 - ⚠️ Tips System: Integration unclear
 - ⚠️ Bot & Auto-Reply: Needs enhancement
-- ⚠️ NFT System: Backend missing
 - ⚠️ Multichain: Code organization
 
 **Updated Critical Path**:

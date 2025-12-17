@@ -5,9 +5,9 @@
  * Usage: tsx scripts/test-bot-reply.ts
  */
 
-import { buildAgentAutoReply } from '@/lib/agent-auto-reply'
-import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot-frame-builder'
-import { loadBotStatsConfig } from '@/lib/bot-config'
+import { buildAgentAutoReply } from '@/lib/bot'
+import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot/frames/builder'
+import { loadBotStatsConfig } from '@/lib/bot/config'
 
 const TEST_SCENARIOS = [
   {

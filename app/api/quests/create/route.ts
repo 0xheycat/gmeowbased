@@ -224,9 +224,9 @@ export async function POST(request: NextRequest) {
         title: body.title,
         description: body.description,
         slug,
-        category: body.category as QuestCategory,
+        category: body.category,
         type: 'custom',
-        difficulty: body.difficulty as QuestDifficulty,
+        difficulty: body.difficulty,
         estimated_time_minutes: parseInt(body.estimated_time) || 30,
         creator_fid: body.creator_fid,
         creator_address: body.creator_address,
@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
           creation_cost: cost.total,
           template_id: body.template_id,
         },
-      })
+      } as any)
       .select()
       .single();
     

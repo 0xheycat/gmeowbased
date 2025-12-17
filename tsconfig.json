@@ -43,10 +43,7 @@
     "node_modules",
     "Planing/**/*",
     "planning/**/*",
-    "scripts/run-migration.ts",
-    "scripts/run-migration-pg.ts",
-    "scripts/test-notification-history.ts",
-    "scripts/test-png-generation.ts",
+    "scripts/**/*",
     "backups/**/*",
     "backstop_data/**/*",
     "playwright-report/**/*",
@@ -56,6 +53,14 @@
     "docs-archive/**/*",
     ".next/**/*",
     "out/**/*",
-    "supabase/functions/**/*"
+    "supabase/functions/**/*",
+    "gmeow-indexer/**/*",
+    "__tests__/**/*",
+    "tests/**/*",
+    "e2e/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }

@@ -132,7 +132,7 @@ export default function QuestActivity({
           Complete quests to earn XP and BASE Points. Your journey starts here!
         </p>
         <Link
-          href="/Quest"
+          href="/quests"
           className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
         >
           Browse Quests
@@ -186,7 +186,7 @@ export default function QuestActivity({
           {filteredQuests.map(quest => (
             <Link
               key={quest.id}
-              href={`/Quest/${quest.quest_slug}`}
+              href={`/quests/${quest.quest_slug}`}
               className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/3 p-4 backdrop-blur transition-all duration-300 hover:border-blue-400/40 hover:shadow-lg hover:shadow-blue-600/20"
             >
               {/* Quest Image */}

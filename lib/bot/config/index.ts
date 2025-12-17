@@ -1,10 +1,10 @@
 // @edit-start 2025-11-12 — Bot runtime configuration helpers
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import type { BotStatsConfig } from '@/lib/bot-config-types'
-import { DEFAULT_BOT_STATS_CONFIG } from '@/lib/bot-config-types'
+import type { BotStatsConfig } from './types'
+import { DEFAULT_BOT_STATS_CONFIG } from './types'
 
-export type { BotStatsConfig } from '@/lib/bot-config-types'
-export { DEFAULT_BOT_STATS_CONFIG } from '@/lib/bot-config-types'
+export type { BotStatsConfig } from './types'
+export { DEFAULT_BOT_STATS_CONFIG } from './types'
 
 const CONFIG_KEY = 'app.bot_stats_config'
 const CACHE_TTL_MS = Number(process.env.BOT_STATS_CONFIG_CACHE_MS ?? 180_000)

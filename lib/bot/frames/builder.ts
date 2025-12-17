@@ -1,6 +1,8 @@
 // Bot frame builder for embedding frames in cast replies
 import { buildFrameShareUrl, type FrameShareInput } from '@/lib/share'
 import type { ChainKey } from '@/lib/gmeow-utils'
+import { buildUserContext, selectOptimalFrame, type UserContext } from '@/lib/bot/context/user-context'
+import { getConversationState } from '@/lib/bot/cache'
 
 /**
  * Available frame routes in app/frame/
@@ -199,11 +201,22 @@ export function selectFrameForIntent(
       })
 
     case 'badge':
+    case 'badges':
     case 'achievement':
+    case 'achievements':
       // Prefer badge frame if user has badges, otherwise stats
       return buildBotFrameEmbed({
         type: hasBadge ? 'badge-showcase' : 'stats-summary',
         fid,
+        chain: chain as ChainKey | 'all' | undefined
+      })
+
+    case 'referral':
+      // Show user stats with referral context
+      return buildBotFrameEmbed({
+        type: 'stats-summary',
+        fid,
+        username,
         chain: chain as ChainKey | 'all' | undefined
       })
 
@@ -269,6 +282,103 @@ export function selectFrameForIntent(
       return buildBotFrameEmbed({
         type: 'leaderboards'
       })
+  }
+}
+
+/**
+ * Phase 2 P5: Context-aware frame selection
+ * 
+ * Uses user context to intelligently select optimal frame
+ * Prioritizes: active quest > achievement > guild > stats > default
+ * 
+ * @param intent - Detected user intent
+ * @param fid - User's Farcaster ID
+ * @param chain - Optional chain filter
+ * @returns Frame embed with selection reasoning
+ */
+export async function selectFrameWithContext(
+  intent: string,
+  fid: number | undefined,
+  chain?: ChainKey | 'all'
+): Promise<{
+  embed: BotFrameEmbed | null
+  reason: string
+  priority: number
+}> {
+  // If no FID, fall back to basic selection
+  if (!fid) {
+    const basicEmbed = selectFrameForIntent(intent, { chain })
+    return {
+      embed: basicEmbed,
+      reason: 'No FID - using basic intent-based selection',
+      priority: 10,
+    }
+  }
+
+  try {
+    // Build user context (cached for 5 minutes)
+    const userContext = await buildUserContext(fid)
+
+    // P8: Get conversation state for multi-turn context-aware frame selection
+    const conversationState = getConversationState(fid)
+
+    // Get optimal frame selection
+    const selection = selectOptimalFrame(intent, userContext, conversationState)
+
+    // Build frame embed based on selection
+    let frameOptions: BotFrameOptions
+
+    switch (selection.frameType) {
+      case 'quest-specific':
+        frameOptions = {
+          type: 'quest-specific',
+          questId: userContext.activeQuestId,
+          fid,
+          chain: chain as ChainKey | 'all' | undefined,
+        }
+        break
+
+      case 'badge-showcase':
+        frameOptions = {
+          type: 'badge-showcase',
+          fid,
+          chain: chain as ChainKey | 'all' | undefined,
+        }
+        break
+
+      case 'guild-invite':
+        frameOptions = {
+          type: 'guild-invite',
+          fid,
+          guildId: userContext.guildId,
+        }
+        break
+
+      default:
+        frameOptions = {
+          type: selection.frameType,
+          fid,
+          chain: chain as ChainKey | 'all' | undefined,
+        }
+    }
+
+    const embed = buildBotFrameEmbed(frameOptions)
+
+    return {
+      embed,
+      reason: selection.reason,
+      priority: selection.priority,
+    }
+  } catch (error) {
+    console.error('[FrameBuilder] Error in context-aware selection:', error)
+
+    // Fallback to basic selection
+    const basicEmbed = selectFrameForIntent(intent, { fid, chain })
+    return {
+      embed: basicEmbed,
+      reason: 'Context error - using basic selection',
+      priority: 10,
+    }
   }
 }
 

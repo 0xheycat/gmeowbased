@@ -52,7 +52,8 @@ export function useTelemetryAlertNotifications(
 
     for (const alert of freshAlerts) {
       const tone = deriveTone(alert.label)
-      // Notification removed
+      // Notification removed - alerts are tracked but not displayed
+      console.log('[Telemetry Alert]', `${tone}:`, alert)
     }
 
     if (seen.size > seenCacheLimit) {
@@ -60,5 +61,5 @@ export function useTelemetryAlertNotifications(
       const trimmed = new Set(entries.slice(entries.length - seenCacheLimit))
       seenRef.current = trimmed
     }
-  }, [alerts, enabled, notify, seenCacheLimit])
+  }, [alerts, enabled, seenCacheLimit])
 }

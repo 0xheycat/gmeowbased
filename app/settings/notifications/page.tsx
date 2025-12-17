@@ -102,7 +102,7 @@ export default function NotificationSettingsPage() {
         </div>
 
         {/* Settings Component */}
-        <NotificationSettings fid={fid} />
+        <NotificationSettings fid={fid ?? 0} />
 
         {/* Help Text */}
         <div className="mt-8 p-4 rounded-lg bg-white/5 border border-white/10">

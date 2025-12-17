@@ -373,7 +373,7 @@ export default function ProfilePage() {
             The profile you're looking for doesn't exist or has been removed.
           </p>
           <a
-            href="/Dashboard"
+            href="/dashboard"
             className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white transition-all hover:bg-white/10"
           >
             ← Back to Dashboard

@@ -1,6 +1,6 @@
 import cn from 'classnames';
 import Image from '@/components/ui/image';
-import { StaticImageData } from 'next/image';
+import type { StaticImageData } from 'next/image';
 
 interface AvatarProps {
   image: StaticImageData;

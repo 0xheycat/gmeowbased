@@ -59,12 +59,24 @@ function calculateLevel(totalScore: number): {
   xpToNext: number
   rankProgress: RankProgress
 } {
-  const rankProgress = calculateLevelProgress(totalScore)
+  const levelData = calculateLevelProgress(totalScore)
+  const tier = getRankTierByPoints(totalScore)
+  
+  // Combine level data with tier information to create full RankProgress
+  const rankProgress: RankProgress = {
+    ...levelData,
+    currentTier: tier,
+    percent: levelData.levelPercent,
+    currentFloor: levelData.levelFloor,
+    nextTarget: levelData.nextLevelTarget,
+    pointsIntoTier: levelData.xpIntoLevel,
+    pointsToNext: levelData.xpToNextLevel,
+  }
   
   return {
-    level: rankProgress.level,
-    percent: rankProgress.levelPercent,
-    xpToNext: rankProgress.xpToNextLevel,
+    level: levelData.level,
+    percent: levelData.levelPercent,
+    xpToNext: levelData.xpToNextLevel,
     rankProgress,
   }
 }

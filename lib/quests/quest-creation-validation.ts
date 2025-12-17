@@ -34,11 +34,11 @@ export const QuestBasicsSchema = z.object({
     .optional(),
   
   category: z.enum(['onchain', 'social', 'creative', 'learn', 'hybrid'], {
-    errorMap: () => ({ message: 'Invalid category' })
+    message: 'Invalid category'
   }),
   
   difficulty: z.enum(['beginner', 'intermediate', 'advanced'], {
-    errorMap: () => ({ message: 'Invalid difficulty' })
+    message: 'Invalid difficulty'
   }),
   
   estimated_time_minutes: z
@@ -112,7 +112,7 @@ export const TaskVerificationSchema = z.object({
 export const TaskConfigSchema = z.object({
   id: z.string().uuid().optional(), // Generated on frontend
   type: z.enum(['social', 'onchain', 'manual'], {
-    errorMap: () => ({ message: 'Invalid task type' })
+    message: 'Invalid task type'
   }),
   
   title: z
@@ -151,7 +151,7 @@ export const RewardsSchema = z.object({
     .max(1000, 'Maximum 1000 XP per quest'),
   
   reward_category: z.enum(['viral_xp', 'base_points', 'both'], {
-    errorMap: () => ({ message: 'Invalid reward category' })
+    message: 'Invalid reward category'
   }),
   
   reward_points: z
@@ -331,8 +331,8 @@ export function validateQuestDraft(data: unknown) {
 /**
  * Get user-friendly error messages
  */
-export function getValidationErrors(result: z.SafeParseError<any>): string[] {
-  return result.error.issues.map(issue => {
+export function getValidationErrors(result: z.ZodError<any>): string[] {
+  return result.issues.map((issue: z.ZodIssue) => {
     const path = issue.path.join('.')
     return path ? `${path}: ${issue.message}` : issue.message
   })

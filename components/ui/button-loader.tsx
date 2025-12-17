@@ -1,9 +1,13 @@
 'use client'
 
 import Loader, {
-  type LoaderSizeTypes,
-  type LoaderVariantTypes,
+  type LoaderSize,
+  type LoaderVariant,
 } from '@/components/ui/loader'
+
+// Alias for backwards compatibility
+type LoaderSizeTypes = LoaderSize
+type LoaderVariantTypes = LoaderVariant
 
 export default function ButtonLoader({
   size,
@@ -15,10 +19,8 @@ export default function ButtonLoader({
   return (
     <span className="absolute inset-0 h-full w-full flex items-center justify-center">
       <Loader
-        tag="span"
         size={size}
         variant={variant}
-        showOnlyThreeDots={true}
       />
     </span>
   )

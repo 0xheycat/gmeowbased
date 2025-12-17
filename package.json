@@ -12,6 +12,8 @@
     "start": "next start",
     "clean": "rimraf .next",
     "clean:all": "pnpm clean && rm -rf node_modules && pnpm install",
+    "cache:cleanup": "tsx scripts/cache-cleanup.ts",
+    "cache:stats": "tsx scripts/cache-cleanup.ts",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\"",
     "test": "vitest",
     "test:verify": "tsx ./scripts/test-quest-verification.ts",
@@ -64,7 +66,7 @@
     "contracts:test": "tsx ./scripts/test-contracts-professional.ts"
   },
   "dependencies": {
-    "@coinbase/onchainkit": "^1.1.2",
+    "@coinbase/onchainkit": "^0.36.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@farcaster/core": "^0.18.9",
@@ -143,6 +145,7 @@
     "react-window": "^2.2.3",
     "recharts": "^2.14.1",
     "satori": "^0.18.3",
+    "supabase": "2.67.2",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^0.1.19",

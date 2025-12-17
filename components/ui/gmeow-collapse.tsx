@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
 import { useMeasure } from '@/lib/hooks/use-measure';
-import { Plus } from '@/components/icons/plus';
+import { Plus } from '@/components/icons/ui/plus';
 
 interface CollapseProps {
   label: string;

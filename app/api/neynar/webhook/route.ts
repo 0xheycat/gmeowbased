@@ -1,3 +1,66 @@
+/**
+ * #file: app/api/neynar/webhook/route.ts
+ * 
+ * PHASE: Phase 1 Complete + Cast Deletion Handler (Dec 16, 2025)
+ * DATE: December 16, 2025
+ * WEBSITE: https://gmeowhq.art
+ * NETWORK: Base (Chain ID 8453)
+ * 
+ * FEATURES:
+ * - Neynar webhook endpoint for Farcaster events
+ * - HMAC signature verification (sha512)
+ * - Event routing (cast.created, cast.deleted, miniapp events)
+ * - Auto-reply generation for targeted casts
+ * - Viral engagement sync (Phase 5.1 background processing)
+ * - MiniApp notification token management
+ * - Bot analytics tracking (11 metric types)
+ * - Rate limiting (100 req/min per IP)
+ * - Frame embedding in replies
+ * 
+ * TODO:
+ * - [ ] Add retry logic for transient Neynar API failures
+ * - [ ] Monitor cast.deleted handler performance
+ * - [ ] Add A/B testing for reply variations
+ * - [ ] Optimize engagement sync frequency
+ * 
+ * REFERENCE DOCUMENTATION:
+ * - FARCASTER-BOT-ENHANCEMENT-PLAN-PART-1.md (Bot architecture)
+ * - FARCASTER-BOT-ENHANCEMENT-PLAN-PART-2.md (Event types, Section 5.3)
+ * - PHASE-1-MISSING-EVENTS-AUDIT.md (Cast deletion handler spec)
+ * - lib/agent-auto-reply.ts (Intent detection and reply generation)
+ * - lib/viral-engagement-sync.ts (Phase 5.1 viral sync)
+ * 
+ * CRITICAL ISSUES & WARNINGS:
+ * - HMAC verification REQUIRED (reject invalid signatures)
+ * - Rate limit: 100 webhooks/min per IP (429 if exceeded)
+ * - Viral sync is fire-and-forget (doesn't block webhook response)
+ * - Cast deletion: Soft delete (marks deleted_at, preserves data)
+ * - Self-cast prevention: Skip if author FID == bot FID
+ * 
+ * SUGGESTIONS & OPTIMIZATIONS:
+ * - Consider batching badge_casts updates (reduce DB writes)
+ * - Add webhook replay endpoint for failed events
+ * - Monitor cast.deleted frequency (may indicate spam)
+ * - Cache bot FID/signer UUID (reduce env lookups)
+ * 
+ * AVOID (from farcaster.instructions.md):
+ * - NO emojis in code
+ * - NO unhandled promise rejections
+ * - NO mixing old/new patterns
+ * - NO hardcoded FIDs or secrets
+ * 
+ * REQUIREMENTS (from farcaster.instructions.md):
+ * - Update CURRENT-TASK.md after changes
+ * - Professional response headers (rate limits, request ID)
+ * - Zero TypeScript errors
+ * - Comprehensive error logging
+ * 
+ * CHANGE LOG:
+ * - 2025-12-16: Added cast.deleted handler (soft delete in badge_casts)
+ * - 2025-12-16: Added comprehensive file header
+ * - 2025-11-17: Phase 5.1 viral engagement sync integration
+ * - 2025-11-16: Phase 4 priority system integration
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 
@@ -6,12 +69,12 @@ import { rateLimit, getClientIp, webhookLimiter } from '@/lib/rate-limit'
 import { withErrorHandler } from '@/lib/error-handler'
 import { generateRequestId } from '@/lib/request-id'
 
-import { loadBotStatsConfig } from '@/lib/bot-config'
-import { buildAgentAutoReply } from '@/lib/agent-auto-reply'
+import { loadBotStatsConfig } from '@/lib/bot/config'
+import { buildAgentAutoReply } from '@/lib/bot'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib/neynar-bot'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
-import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot-frame-builder'
+import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot/frames/builder'
 // Phase 5.1: Real-time Viral Notifications
 // Source: lib/viral-engagement-sync.ts, lib/viral-achievements.ts
 // MCP Verified: November 17, 2025
@@ -20,6 +83,8 @@ import { syncCastEngagement } from '@/lib/viral-engagement-sync'
 import { checkAndAwardAchievements } from '@/lib/viral-achievements'
 // Phase 4: Priority System Integration - replaced dispatchViralNotification with notifyWithXPReward
 import { notifyWithXPReward } from '@/lib/notifications'
+// Phase 1: Bot Analytics - Track webhook metrics for health monitoring
+import { recordBotMetric } from '@/lib/bot/analytics'
 
 export const runtime = 'nodejs'
 
@@ -357,11 +422,11 @@ function buildReplyText(data: NeynarCastEventData): string {
   const handle = username ? `@${username}` : fid ? `pilot #${fid}` : 'friend'
   const lowerText = data.text?.toLowerCase() || ''
 
-  let callToAction = 'Log your gm streak & daily quests at https://gmeowhq.art/Quest'
+  let callToAction = 'Log your gm streak & daily quests at https://gmeowhq.art/quests'
   if (lowerText.includes('leaderboard')) {
     callToAction = 'Leaderboard intel unlocked → https://gmeowhq.art/leaderboard'
   } else if (lowerText.includes('guild')) {
-    callToAction = 'Recruiters await in HQ → https://gmeowhq.art/Guild'
+    callToAction = 'Recruiters await in HQ → https://gmeowhq.art/guild'
   } else if (lowerText.includes('profile')) {
     callToAction = 'Inspect your pilot card → https://gmeowhq.art/profile'
   }
@@ -482,10 +547,24 @@ async function handleViralEngagementSync(
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const requestId = generateRequestId()
+  const startTime = Date.now()
+  
+  // Track webhook received
+  recordBotMetric({
+    type: 'webhook_received',
+    timestamp: new Date(),
+  }).catch(err => console.warn('[bot-analytics] Failed to record webhook_received:', err))
+  
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, webhookLimiter)
   
   if (!success) {
+    // Track rate limit hit
+    recordBotMetric({
+      type: 'rate_limit_hit',
+      timestamp: new Date(),
+      metadata: { ip },
+    }).catch(err => console.warn('[bot-analytics] Failed to record rate_limit_hit:', err))
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
       { status: 429, headers: { 'X-Request-ID': requestId } }
@@ -530,6 +609,54 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const event = parsedBody as NeynarWebhookEvent
 
   const eventType = event.type || event.event_type
+  
+  // ========================================================================
+  // Handle cast.deleted event
+  // ========================================================================
+  // When a cast is deleted, mark it in badge_casts table (soft delete)
+  // This prevents viral sync from processing deleted casts
+  // Reference: PHASE-1-MISSING-EVENTS-AUDIT.md
+  if (eventType === 'cast.deleted') {
+    const castHash = event.data?.hash
+    if (castHash) {
+      try {
+        const supabase = getSupabaseServerClient()
+        if (supabase) {
+          const { error } = await supabase
+            .from('badge_casts')
+            .update({ 
+              deleted_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('cast_hash', castHash)
+            .is('deleted_at', null)  // Only update if not already marked deleted
+          
+          if (error) {
+            console.warn('[webhook] Failed to mark cast as deleted:', error)
+          } else {
+            console.log('[webhook] Cast marked as deleted:', castHash.slice(0, 10))
+          }
+          
+          // Track cast deletion
+          recordBotMetric({
+            type: 'webhook_processed',
+            timestamp: new Date(),
+            metadata: { eventType: 'cast.deleted', castHash }
+          }).catch(err => console.warn('[bot-analytics] Failed to record cast.deleted:', err))
+        }
+      } catch (error) {
+        console.error('[webhook] Error handling cast.deleted:', error)
+      }
+    }
+    
+    return NextResponse.json({ 
+      ok: true, 
+      handled: 'cast-deleted',
+      castHash: castHash?.slice(0, 10)
+    }, { headers: { 'X-Request-ID': requestId } })
+  }
+  // ========================================================================
+  
   if (eventType !== 'cast.created') {
     return NextResponse.json({ ok: true, skipped: `ignored:${eventType || 'unknown'}` }, { headers: { 'X-Request-ID': requestId } })
   }
@@ -577,6 +704,14 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   const isTargeted = isCastTargetedToBot(data, botFid, config)
   if (!isTargeted) {
+    // Track targeting check failed
+    recordBotMetric({
+      type: 'targeting_check_failed',
+      timestamp: new Date(),
+      fid: data.author?.fid,
+      castHash: data.hash,
+    }).catch(err => console.warn('[bot-analytics] Failed to record targeting_check_failed:', err))
+    
     console.log('[bot-webhook] Cast not targeted:', {
       author: data.author?.username,
       fid: data.author?.fid,
@@ -586,6 +721,14 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     })
     return NextResponse.json({ ok: true, skipped: 'bot-not-targeted' }, { headers: { 'X-Request-ID': requestId } })
   }
+  
+  // Track targeting check passed
+  recordBotMetric({
+    type: 'targeting_check_passed',
+    timestamp: new Date(),
+    fid: data.author?.fid,
+    castHash: data.hash,
+  }).catch(err => console.warn('[bot-analytics] Failed to record targeting_check_passed:', err))
   
   console.log('[bot-webhook] Cast IS targeted to bot:', {
     author: data.author?.username,
@@ -610,6 +753,17 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       replyText = autoReply.text
       replyMeta = { intent: autoReply.intent, ...autoReply.meta }
       detectedIntent = autoReply.intent
+      
+      // Track reply generated
+      const responseTime = Date.now() - startTime
+      recordBotMetric({
+        type: 'reply_generated',
+        timestamp: new Date(),
+        fid: data.author?.fid,
+        castHash: data.hash,
+        responseTimeMs: responseTime,
+        metadata: { intent: autoReply.intent },
+      }).catch(err => console.warn('[bot-analytics] Failed to record reply_generated:', err))
 
       // Build frame embed based on intent
       const frameEmbed = selectFrameForIntent(autoReply.intent, {
@@ -627,6 +781,15 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
         }
       }
     } else {
+      // Track reply failed
+      recordBotMetric({
+        type: 'reply_failed',
+        timestamp: new Date(),
+        fid: data.author?.fid,
+        castHash: data.hash,
+        errorMessage: `${autoReply.reason}: ${autoReply.detail || 'no detail'}`,
+      }).catch(err => console.warn('[bot-analytics] Failed to record reply_failed:', err))
+      
       // Log the reason but don't reply (truly can't help)
       console.log('[bot-webhook] Cannot generate reply:', {
         author: data.author?.username,
@@ -641,6 +804,15 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       }, { headers: { 'X-Request-ID': requestId } })
     }
   } catch (error) {
+    // Track reply failed on exception
+    recordBotMetric({
+      type: 'reply_failed',
+      timestamp: new Date(),
+      fid: data.author?.fid,
+      castHash: data.hash,
+      errorMessage: (error as Error)?.message || 'Unknown error',
+    }).catch(err => console.warn('[bot-analytics] Failed to record reply_failed:', err))
+    
     console.warn('[neynar-webhook] auto reply pipeline failed, falling back', (error as Error)?.message || error)
   }
 
@@ -681,6 +853,26 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     }
 
     const response = await client.publishCast(castPayload)
+    
+    // Track cast published
+    const totalResponseTime = Date.now() - startTime
+    recordBotMetric({
+      type: 'cast_published',
+      timestamp: new Date(),
+      fid: data.author?.fid,
+      castHash: response.cast?.hash ?? data.hash,
+      responseTimeMs: totalResponseTime,
+      metadata: { intent: detectedIntent, frameEmbedded: frameEmbeds.length > 0 },
+    }).catch(err => console.warn('[bot-analytics] Failed to record cast_published:', err))
+    
+    // Track webhook processed (successful end-to-end)
+    recordBotMetric({
+      type: 'webhook_processed',
+      timestamp: new Date(),
+      fid: data.author?.fid,
+      castHash: data.hash,
+      responseTimeMs: totalResponseTime,
+    }).catch(err => console.warn('[bot-analytics] Failed to record webhook_processed:', err))
 
     return NextResponse.json({ 
       ok: true, 
@@ -690,6 +882,27 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     }, { headers: { 'X-Request-ID': requestId } })
   } catch (error: any) {
     const isDuplicate = error?.status === 409 || error?.response?.status === 409
+    
+    // Track cast failed (unless duplicate)
+    if (!isDuplicate) {
+      recordBotMetric({
+        type: 'cast_failed',
+        timestamp: new Date(),
+        fid: data.author?.fid,
+        castHash: data.hash,
+        errorMessage: error?.message || 'Unknown error',
+        metadata: { status: error?.status ?? error?.response?.status },
+      }).catch(err => console.warn('[bot-analytics] Failed to record cast_failed:', err))
+      
+      // Track neynar API error
+      recordBotMetric({
+        type: 'neynar_api_error',
+        timestamp: new Date(),
+        errorMessage: `publishCast failed: ${error?.message || 'Unknown'}`,
+        metadata: { status: error?.status ?? error?.response?.status },
+      }).catch(err => console.warn('[bot-analytics] Failed to record neynar_api_error:', err))
+    }
+    
     console.error('[neynar-webhook] Failed to publish reply', {
       status: error?.status ?? error?.response?.status,
       message: error?.message,

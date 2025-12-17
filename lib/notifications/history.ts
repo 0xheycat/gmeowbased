@@ -8,7 +8,7 @@ const MAX_HISTORY_PER_USER = 100
 export type NotificationCategory = 'gm' | 'quest' | 'badge' | 'level' | 'streak' | 'tip' | 'achievement' | 'reward' | 'guild' | 'system' | 'social'
 
 // Notification tone/severity
-export type NotificationTone = 'success' | 'error' | 'info' | 'warning' | 'achievement' | 'reward'
+export type NotificationTone = 'success' | 'error' | 'info' | 'warning' | 'achievement' | 'reward' | 'quest_added'
 
 export type NotificationHistoryItem = {
   id: string

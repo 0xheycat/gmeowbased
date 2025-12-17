@@ -811,6 +811,8 @@ export async function getUserNFTStats(params: { address: string }): Promise<User
         timestamp: new Date(Number(t.timestamp) * 1000).toISOString(),
       })),
     };
+    
+    return result;
   } catch (error) {
     console.error('Error fetching user NFT stats:', error);
     return {

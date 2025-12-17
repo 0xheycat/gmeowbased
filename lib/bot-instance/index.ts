@@ -3,11 +3,11 @@ import { ethers } from "ethers"
 import { createHash } from "crypto"
 import dotenv from "dotenv"
 import { CHAIN_IDS, CONTRACT_ADDRESSES } from "@/lib/gmeow-utils"
-import type { ChainKey } from "@/lib/gmeow-utils"
-import { computeBotUserStats, type BotUserStats } from "@/lib/bot-stats"
-import { loadBotStatsConfig } from "@/lib/bot-config"
-import type { BotStatsConfig } from "@/lib/bot-config-types"
-import { DEFAULT_BOT_STATS_CONFIG } from "@/lib/bot-config-types"
+import type { ChainKey, GMChainKey } from "@/lib/gmeow-utils"
+import { computeBotUserStats, type BotUserStats } from "@/lib/bot/analytics/stats"
+import { loadBotStatsConfig } from "@/lib/bot/config"
+import type { BotStatsConfig } from "@/lib/bot/config/types"
+import { DEFAULT_BOT_STATS_CONFIG } from "@/lib/bot/config/types"
 import { recordRankEvent } from "@/lib/telemetry"
 import { resolveBotSignerUuid } from "@/lib/neynar-bot"
 import { normalizeAddress } from "@/lib/profile-data"
@@ -206,7 +206,7 @@ async function checkNewCasts() {
     }
 
     const { chain, id: questId } = ref
-    const chainId = CHAIN_IDS[chain]
+    const chainId = CHAIN_IDS[chain as GMChainKey]
     if (!chainId) {
       rememberCast(castHash)
       continue
@@ -218,7 +218,7 @@ async function checkNewCasts() {
     })
     const previousTotal = initialStats?.totalPoints ?? null
 
-    const CONTRACT = CONTRACT_ADDRESSES[chain]
+    const CONTRACT = CONTRACT_ADDRESSES[chain as GMChainKey]
 
     const isValid = await verifyQuestCondition(fid, questId, cast)
     if (!isValid) {

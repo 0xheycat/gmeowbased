@@ -169,6 +169,13 @@ export type Database = {
           avatar_url: string | null
           cover_image_url: string | null
           social_links: Json | null
+          pfp_url: string | null
+          profile_visibility: string | null
+          viral_xp: number | null
+          points_escrowed: number | null
+          is_refunded: boolean | null
+          guild_id: string | null
+          last_gm_at: string | null
         }
         Insert: {
           id?: string
@@ -192,6 +199,13 @@ export type Database = {
           avatar_url?: string | null
           cover_image_url?: string | null
           social_links?: Json | null
+          pfp_url?: string | null
+          profile_visibility?: string | null
+          viral_xp?: number | null
+          points_escrowed?: number | null
+          is_refunded?: boolean | null
+          guild_id?: string | null
+          last_gm_at?: string | null
         }
         Update: {
           id?: string
@@ -215,12 +229,351 @@ export type Database = {
           avatar_url?: string | null
           cover_image_url?: string | null
           social_links?: Json | null
+          pfp_url?: string | null
+          profile_visibility?: string | null
+          viral_xp?: number | null
+          points_escrowed?: number | null
+          is_refunded?: boolean | null
+          guild_id?: string | null
+          last_gm_at?: string | null
+        }
+        Relationships: []
+      }
+      quest_templates: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          category: string
+          description: string
+          difficulty: string
+          usage_count: number
+          created_at: string
+          updated_at: string
+          [key: string]: any
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          category: string
+          description: string
+          difficulty: string
+          usage_count?: number
+          created_at?: string
+          updated_at?: string
+          [key: string]: any
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          category?: string
+          description?: string
+          difficulty?: string
+          usage_count?: number
+          created_at?: string
+          updated_at?: string
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      unified_quests: {
+        Row: {
+          id: number
+          slug: string
+          title: string
+          category: string
+          description: string
+          type: string
+          status: string
+          creator_fid: number
+          creator_address: string
+          reward_points: number
+          created_at: string
+          updated_at: string
+          [key: string]: any
+        }
+        Insert: {
+          id?: number
+          slug: string
+          title: string
+          category: string
+          description: string
+          type: string
+          status?: string
+          creator_fid: number
+          creator_address: string
+          reward_points?: number
+          created_at?: string
+          updated_at?: string
+          [key: string]: any
+        }
+        Update: {
+          id?: number
+          slug?: string
+          title?: string
+          category?: string
+          description?: string
+          type?: string
+          status?: string
+          creator_fid?: number
+          creator_address?: string
+          reward_points?: number
+          created_at?: string
+          updated_at?: string
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      leaderboard_calculations: {
+        Row: {
+          id: number
+          farcaster_fid: number
+          address: string
+          base_points: number
+          total_score: number | null
+          period: string
+          calculated_at: string
+          updated_at: string
+          [key: string]: any
+        }
+        Insert: {
+          id?: number
+          farcaster_fid: number
+          address: string
+          base_points?: number
+          total_score?: number | null
+          period?: string
+          calculated_at?: string
+          updated_at?: string
+          [key: string]: any
+        }
+        Update: {
+          id?: number
+          farcaster_fid?: number
+          address?: string
+          base_points?: number
+          total_score?: number | null
+          period?: string
+          calculated_at?: string
+          updated_at?: string
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      xp_transactions: {
+        Row: {
+          id: string
+          fid: number
+          amount: number
+          source: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          fid: number
+          amount: number
+          source: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          fid?: number
+          amount?: number
+          source?: string
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          id: string
+          entity_type: string
+          entity_id: string
+          action: string
+          [key: string]: any
+        }
+        Insert: {
+          id?: string
+          entity_type: string
+          entity_id: string
+          action: string
+          [key: string]: any
+        }
+        Update: {
+          id?: string
+          entity_type?: string
+          entity_id?: string
+          action?: string
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      user_badge_collection: {
+        Row: {
+          id: number
+          fid: number
+          [key: string]: any
+        }
+        Insert: {
+          id?: number
+          fid: number
+          [key: string]: any
+        }
+        Update: {
+          id?: number
+          fid?: number
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      user_quest_progress: {
+        Row: {
+          id: number
+          user_fid: number
+          quest_id: number
+          status: string
+          [key: string]: any
+        }
+        Insert: {
+          id?: number
+          user_fid: number
+          quest_id: number
+          status?: string
+          [key: string]: any
+        }
+        Update: {
+          id?: number
+          user_fid?: number
+          quest_id?: number
+          status?: string
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      quest_tasks: {
+        Row: {
+          id: number
+          quest_id: number
+          title: string
+          description: string
+          [key: string]: any
+        }
+        Insert: {
+          id?: number
+          quest_id: number
+          title: string
+          description: string
+          [key: string]: any
+        }
+        Update: {
+          id?: number
+          quest_id?: number
+          title?: string
+          description?: string
+          [key: string]: any
+        }
+        Relationships: []
+      }
+      quest_creation_costs: {
+        Row: {
+          id: string
+          creator_fid: number
+          points_escrowed: number
+          quest_id: string | null
+          quest_title: string
+          quest_category: string
+          quest_slug: string | null
+          is_refunded: boolean
+          refunded_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          creator_fid: number
+          points_escrowed: number
+          quest_id?: string | null
+          quest_title: string
+          quest_category: string
+          quest_slug?: string | null
+          is_refunded?: boolean
+          refunded_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          creator_fid?: number
+          points_escrowed?: number
+          quest_id?: string | null
+          quest_title?: string
+          quest_category?: string
+          quest_slug?: string | null
+          is_refunded?: boolean
+          refunded_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      guilds: {
+        Row: {
+          guild_id: string
+          name: string
+          description: string | null
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          guild_id: string
+          name: string
+          description?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          guild_id?: string
+          name?: string
+          description?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
     }
     Views: {}
-    Functions: {}
+    Functions: {
+      increment_template_usage: {
+        Args: {
+          p_template_id: string
+        }
+        Returns: void
+      }
+      increment_base_points: {
+        Args: {
+          user_fid: number
+          points: number
+        }
+        Returns: void
+      }
+      update_user_quest_progress: {
+        Args: {
+          p_user_fid: number
+          p_quest_id: number
+          p_status: string
+        }
+        Returns: void
+      }
+      user_meets_viral_xp_requirement: {
+        Args: {
+          p_user_fid: number
+          p_required_xp: number
+        }
+        Returns: boolean
+      }
+    }
     Enums: {}
     CompositeTypes: {}
   }
