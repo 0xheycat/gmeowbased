@@ -1,9 +1,21 @@
 /**
- * Guild Contract Wrapper
+ * @file lib/contracts/guild-contract.ts
+ * @description Type-safe wrapper for GuildModule contract functions
  * 
- * Purpose: Type-safe wrapper for GuildModule contract functions
+ * PHASE: Phase 7.1 - Contracts (December 17, 2025)
+ * 
  * Contract: GmeowGuildStandalone (standalone module)
  * Address: 0x6754e71fFd49Fb9C33C19dA1Aa6596155e53C8A3 (Base)
+ * Verified: BaseScan December 12, 2025
+ * 
+ * FEATURES:
+ *   - Guild creation (100 point cost, auto "Guild Leader" badge)
+ *   - Guild joining and leaving system
+ *   - Guild treasury management (deposits and claims)
+ *   - Guild officer management system
+ *   - Guild level progression (5 levels based on points)
+ *   - Guild info queries and member lookups
+ *   - Type-safe contract interaction wrappers
  * 
  * Functions from GuildModule.sol:
  * - createGuild(string name) - Create guild (100 pt cost, auto "Guild Leader" badge)
@@ -23,6 +35,53 @@
  * - Level 3: 2000-4999 points
  * - Level 4: 5000-9999 points
  * - Level 5: 10000+ points
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Contract source: contract/src/GmeowGuildStandalone.sol
+ *   - Guild UI: components/guild/
+ *   - Guild leaderboard: lib/leaderboard/
+ *   - BaseScan: https://basescan.org/address/0x6754e71fFd49Fb9C33C19dA1Aa6596155e53C8A3
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453)
+ *   - Guild names must be unique (enforced on-chain)
+ *   - Creating guild costs 100 points
+ *   - Users can only be in one guild at a time
+ *   - NO EMOJIS in guild names
+ * 
+ * TODO:
+ *   - [ ] Add guild creation validation (name length, characters)
+ *   - [ ] Add guild treasury balance monitoring
+ *   - [ ] Add guild activity tracking (last active timestamp)
+ *   - [ ] Add guild member count queries
+ *   - [ ] Add guild leaderboard integration
+ *   - [ ] Add guild quest system integration
+ *   - [ ] Add guild analytics (growth rate, activity metrics)
+ * 
+ * CRITICAL:
+ *   - Guild names must be sanitized before submission
+ *   - Users must have 100+ points to create guild
+ *   - Leaving guild forfeits all deposited points (warn users)
+ *   - Officer permissions are permanent until revoked
+ *   - Guild IDs start at 1 (0 = no guild)
+ *   - Treasury operations require officer or leader status
+ * 
+ * SUGGESTIONS:
+ *   - Add guild name availability check before creation
+ *   - Add guild invitation system
+ *   - Add guild chat or messaging
+ *   - Add guild banners/avatars
+ *   - Cache guild data for frequently accessed guilds
+ *   - Add guild merge functionality
+ * 
+ * AVOID:
+ *   - Creating guilds with inappropriate names (add moderation)
+ *   - Allowing users to spam guild creation (rate limit)
+ *   - Depositing points without user confirmation (irreversible)
+ *   - Removing officers without proper permissions
+ *   - Hardcoding guild IDs in code (query dynamically)
+ *   - Displaying raw guild IDs to users (use names)
  */
 
 import { createPublicClient, http, type Address } from 'viem'

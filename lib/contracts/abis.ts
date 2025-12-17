@@ -1,5 +1,9 @@
 /**
- * Centralized ABI Exports - Base Chain Only
+ * @file lib/contracts/abis.ts
+ * @description Centralized ABI exports for all Gmeowbased smart contracts
+ * 
+ * PHASE: Phase 7.1 - Contracts (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
  * 
  * ⚠️ IMPORTANT: Single-Chain Deployment
  * 
@@ -10,6 +14,15 @@
  * - Ethereum, Optimism, Arbitrum, etc.: NO contracts deployed
  * - These chains: VIEW-ONLY via Blockscout MCP
  * - Write operations: Base chain ONLY
+ * 
+ * FEATURES:
+ *   - Complete ABI definitions for all contract modules
+ *   - Core module ABI (GM system, points, streaks)
+ *   - Guild module ABI (guild creation, management)
+ *   - NFT module ABI (ERC-721 collectibles)
+ *   - Badge module ABI (achievement badges)
+ *   - Referral module ABI (referral tracking)
+ *   - Helper functions to extract ABIs from imports
  * 
  * Usage:
  * ```typescript
@@ -41,6 +54,48 @@
  * - Deployment Block: 39,270,005 - 39,281,269
  * - Deployer: 0x8870C155666809609176260F2B65a626C000D773
  * - Network: Base (8453)
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Contract source: /contract/ directory (Foundry project)
+ *   - ABI files: /abi/ directory (JSON exports)
+ *   - Chain types: lib/contracts/gmeow-utils.ts
+ *   - BaseScan: https://basescan.org
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (8453)
+ *   - ABIs must match deployed contract bytecode exactly
+ *   - All ABIs extracted from verified contracts
+ *   - ABI changes require contract redeployment
+ * 
+ * TODO:
+ *   - [ ] Add ABI version tracking
+ *   - [ ] Add ABI change detection vs deployed contracts
+ *   - [ ] Add automatic ABI regeneration from /abi/ directory
+ *   - [ ] Add ABI function signature documentation
+ *   - [ ] Add ABI event signature documentation
+ *   - [ ] Generate TypeScript types from ABIs
+ * 
+ * CRITICAL:
+ *   - ABIs MUST match deployed contracts exactly
+ *   - Modifying ABIs without redeployment will cause transaction failures
+ *   - ABI imports from /abi/ directory are source of truth
+ *   - Do not manually edit ABI arrays (regenerate from source)
+ *   - All contracts are Base chain only (no multichain)
+ * 
+ * SUGGESTIONS:
+ *   - Add ABI validation tests against deployed contracts
+ *   - Add ABI documentation generator
+ *   - Cache parsed ABIs for performance
+ *   - Add ABI diff tool for upgrade detection
+ *   - Generate human-readable function descriptions
+ * 
+ * AVOID:
+ *   - Manually editing ABI arrays (use source files)
+ *   - Using ABIs for non-existent contracts on other chains
+ *   - Mixing ABIs from different contract versions
+ *   - Hardcoding function selectors (derive from ABI)
+ *   - Using outdated ABIs from previous deployments
  * 
  * @module lib/contracts/abis
  * @see lib/gmeow-utils.ts for GMChainKey vs ChainKey documentation
