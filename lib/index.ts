@@ -11,7 +11,7 @@
  * 
  * // Domain-specific (prefer direct paths)
  * import { getUserBadges } from '@/lib/badges/badges'
- * import { getSupabaseServerClient } from '@/lib/supabase/client'
+ * import { getSupabaseServerClient } from '@/lib/supabase/edge'
  * ```
  */
 
@@ -40,7 +40,7 @@ export * from './auth'
 export * from './cache'
 
 // Supabase
-export { getSupabaseServerClient } from '@/lib/supabase/client'
+export { getSupabaseServerClient } from '@/lib/supabase/edge'
 export { getSupabaseAdminClient, getSupabaseEdgeClient } from './supabase/edge'
 
 // ============================================================================

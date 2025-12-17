@@ -302,7 +302,7 @@ import { calculateViralBonus } from '@/lib/viral/viral-bonus'
 import { isMiniApp } from '@/lib/miniapp/miniappEnv'
 
 // Core systems (unchanged)
-import { getSupabaseClient } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/edge'
 import { requireAuth } from '@/lib/auth/admin'
 import { getCached } from '@/lib/cache/server'
 ```

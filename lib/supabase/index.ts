@@ -11,7 +11,7 @@
  * - mock-quest-data.ts: Test data
  * 
  * Import patterns:
- * - Server: import { getSupabaseServerClient } from '@/lib/supabase/client'
+ * - Server: import { getSupabaseServerClient } from '@/lib/supabase/edge'
  * - Edge: import { getEdgeSupabaseClient } from '@/lib/supabase/edge'
  * - API Routes: import { createClient } from '@/lib/supabase/server'
  * 
