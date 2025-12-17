@@ -19,8 +19,8 @@ function extractFidFromSignIn(result: any): number | null {
   return normalizeFid(result?.fid)
 }
 
-function formatUnknownError(error: any): string {
-  return error?.message || String(error)
+function formatUnknownError(error: any, fallbackMessage?: string): string {
+  return error?.message || fallbackMessage || String(error)
 }
 
 /**
