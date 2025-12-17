@@ -109,6 +109,11 @@ export type FrameLeaderboardEntry = {
   address: `0x${string}`
   name: string
   pfpUrl: string
+  /** 
+   * Chain identifier for viewing stats across multiple chains.
+   * Note: Only 'base' has active contracts. Other chains are VIEW-ONLY via Blockscout MCP.
+   * @see lib/gmeow-utils.ts ChainKey documentation
+   */
   chain: ChainKey
   points: number
   completed: number
