@@ -7,7 +7,7 @@ import {
   issueAdminSession,
   validateAccessCode,
   validateTotp,
-} from '@/lib/admin-auth'
+} from '@/lib/auth/admin'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
 import { AdminLoginSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { buildAdminSessionClearCookie, isAdminSecurityEnabled } from '@/lib/admin-auth'
+import { buildAdminSessionClearCookie, isAdminSecurityEnabled } from '@/lib/auth/admin'
 import { withErrorHandler } from '@/lib/error-handler'
 import { generateRequestId } from '@/lib/request-id'
 

@@ -13,7 +13,7 @@ import {
   resolveWebhookSecret,
 } from '@/lib/neynar-bot'
 import { extractHttpErrorMessage } from '@/lib/http-error'
-import { validateAdminRequest } from '@/lib/admin-auth'
+import { validateAdminRequest } from '@/lib/auth/admin'
 import { withErrorHandler } from '@/lib/error-handler'
 
 export const runtime = 'nodejs'
