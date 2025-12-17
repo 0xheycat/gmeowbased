@@ -18,13 +18,20 @@
 - **Phase 2.1**: Cache consolidation (3 files, 12 imports)
 - **Phase 2.2**: Auth consolidation (2 files, 18 imports)
 - **Phase 2.3**: Supabase consolidation (2 files, 53 imports)
+- **Phase 3**: Document chain types (4 files enhanced)
+  - Comprehensive JSDoc for GMChainKey vs ChainKey
+  - Deprecation warnings for multichain functions
+  - Usage guidelines and examples
+  - Contract documentation with DO/DON'T sections
 
 ### 📊 Results
 - Files moved from root: 7 (87 → 80 in root)
 - Import paths updated: 83
-- TypeScript errors: 0
+- Documentation enhanced: 4 files (gmeow-utils, abis, contracts/index, frames/types)
+- Deprecation warnings added: 4 multichain functions
+- TypeScript errors: 0 new errors
 - Tests passing: 60/61 bot tests, 35/35 failover tests
-- Time taken: ~2 hours
+- Time taken: ~3 hours total
 
 ### 🎯 Impact
 - Clearer organization with subdirectories
@@ -181,9 +188,9 @@ lib/contracts/
 
 ---
 
-## Phase 3: Multichain Cleanup (Remove Dead Code)
+## Phase 3: Document Chain Types ✅ COMPLETED
 
-### 3.1 Identify Active vs View-Only
+### 3.1 Identify Active vs View-Only ✅ DONE
 **Active** (Base only - write operations):
 - `STANDALONE_ADDRESSES.base.*` - Core, Guild, NFT, Badge, Referral
 - `CONTRACT_ADDRESSES` - Only Base
@@ -194,32 +201,60 @@ lib/contracts/
 - `ALL_CHAIN_IDS` - For reading other chains via Blockscout
 - Multichain read functions - Used by OnchainStats frame
 
-### 3.2 Document Chain Types Clearly
+### 3.2 Document Chain Types Clearly ✅ DONE
+
+**Completed**:
+- Enhanced lib/gmeow-utils.ts with comprehensive JSDoc
+  - Module-level documentation explaining two chain systems
+  - Detailed GMChainKey documentation (Base only, write operations)
+  - Detailed ChainKey documentation (12 chains, view-only via Blockscout)
+  - Usage examples for both correct and incorrect patterns
+  - Enhanced CHAIN_IDS and ALL_CHAIN_IDS with clear warnings
+  - Documented CONTRACT_ADDRESSES and STANDALONE_ADDRESSES
+
+- Enhanced lib/contracts/abis.ts
+  - Added single-chain deployment warning
+  - Included usage examples (correct vs incorrect)
+  - Enhanced all helper function JSDoc comments
+  - Noted Base chain restriction on all functions
+
+- Enhanced lib/contracts/index.ts
+  - Comprehensive module-level documentation
+  - Usage guidelines with DO/DON'T sections
+  - Contract addresses and verification details
+
+- Enhanced lib/frames/types.ts
+  - Added JSDoc to FrameLeaderboardEntry.chain field
+  - References main documentation
+
+**Result**: 
+- Clear IDE autocomplete with rich documentation
+- Prevents accidental writes to unsupported chains
+- No TypeScript errors introduced
+
+### 3.3 Deprecate Multichain Writes ✅ DONE
+
+**Completed**:
 ```typescript
-// lib/contracts/chain-types.ts
+// Added comprehensive deprecation warnings
+/** @deprecated Use createGMTransaction('base') instead. No Unichain contracts deployed. */
+export const createGMUniTransaction = (): Tx => createGMTransaction('base')
 
-/** 
- * ✅ ACTIVE: Our deployed contracts (Base only)
- * Use this for all write operations
- */
-export type GMChainKey = 'base'
+/** @deprecated Use createGMTransaction('base') instead. No Celo contracts deployed. */
+export const createGMCeloTransaction = (): Tx => createGMTransaction('base')
 
-/** 
- * ✅ ALLOWED: View-only for OnchainStats frame
- * Blockscout MCP supports 12 chains for READ operations
- * Used by OnchainStats frame to view other chains
- * DO NOT USE for contract writes (use GMChainKey instead)
- */
-export type ChainKey = 'base' | 'ethereum' | ... // 12 chains
+/** @deprecated Use createGMTransaction('base') instead. No Ink contracts deployed. */
+export const createGMInkTransaction = (): Tx => createGMTransaction('base')
+
+/** @deprecated Use createGMTransaction('base') instead. No OP contracts deployed. */
+export const createGMOpTransaction = (): Tx => createGMTransaction('base')
 ```
 
-### 3.3 Deprecate Multichain Writes
-```typescript
-// Mark deprecated functions
-/** @deprecated Only Base supported. Use createGMTransaction() instead */
-export const createGMCeloTransaction = () => createGMTransaction('base')
-export const createGMOpTransaction = () => createGMTransaction('base')
-```
+**Result**:
+- All deprecated functions clearly marked with @deprecated tags
+- Explanation why they're deprecated (no contracts deployed)
+- Migration guidance provided (use createGMTransaction('base'))
+- Maintains backwards compatibility
 
 ---
 
@@ -365,11 +400,13 @@ git revert HEAD~1
   - [x] Tested - all passing
 - [ ] Utils files → deferred (high risk, 68 imports)
 
-### Phase 3: Multichain Cleanup
-- [ ] Add deprecation comments
-- [ ] Mark legacy code
-- [ ] Update docs
-- [ ] Test Base-only operations
+### Phase 3: Document Chain Types ✅ COMPLETED
+- [x] Add comprehensive JSDoc to chain type definitions
+- [x] Mark deprecated multichain functions with @deprecated
+- [x] Update contract documentation with usage guidelines
+- [x] Document view-only vs write-only chain architecture
+- [x] Enhance all helper functions with clear warnings
+- [x] Verified TypeScript compilation (no new errors)
 
 ### Phase 4: Documentation
 - [ ] Create lib/README.md
