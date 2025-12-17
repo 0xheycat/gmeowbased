@@ -124,7 +124,7 @@ export function HeroSection({ user, statsLoading, onRevealStats, onReplayIntro }
               {statsLoading ? 'Fetching telemetry…' : primaryCtaLabel}
             </button>
             {user.fid ? (
-              <Link className="retro-btn retro-btn-secondary" href="/Guild">
+              <Link className="retro-btn retro-btn-secondary" href="/guild">
                 Join a Guild Run
               </Link>
             ) : null}

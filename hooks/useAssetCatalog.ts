@@ -1,7 +1,18 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import type { TokenOption, NftOption, AssetSnapshot } from '@/components/quest-wizard/shared'
-import { DEFAULT_TOKEN_QUERY, DEFAULT_NFT_QUERY, DEFAULT_CHAIN_FILTER, ASSET_SNAPSHOT_TTL_MS } from '@/components/quest-wizard/shared'
-import { isAbortError } from '@/components/quest-wizard/utils'
+
+// Type definitions moved from removed quest-wizard
+type TokenOption = { symbol: string; address: string; chainId: number; decimals?: number }
+type NftOption = { name: string; address: string; chainId: number; tokenId?: string }
+type AssetSnapshot = { items: (TokenOption | NftOption)[]; warnings: string[]; timestamp?: number }
+
+const DEFAULT_TOKEN_QUERY = ''
+const DEFAULT_NFT_QUERY = ''
+const DEFAULT_CHAIN_FILTER = 'all'
+const ASSET_SNAPSHOT_TTL_MS = 300000
+
+function isAbortError(error: any): boolean {
+  return error?.name === 'AbortError'
+}
 
 type UseAssetCatalogOptions = {
 	isMobile: boolean
@@ -24,16 +35,16 @@ export function useAssetCatalog({ isMobile, stepIndex }: UseAssetCatalogOptions)
 
 	const tokenFetchControllerRef = useRef<AbortController | null>(null)
 	const nftFetchControllerRef = useRef<AbortController | null>(null)
-	const tokenSnapshotCacheRef = useRef<Map<string, AssetSnapshot<TokenOption>>>(new Map())
-	const nftSnapshotCacheRef = useRef<Map<string, AssetSnapshot<NftOption>>>(new Map())
+	const tokenSnapshotCacheRef = useRef<Map<string, AssetSnapshot>>(new Map())
+	const nftSnapshotCacheRef = useRef<Map<string, AssetSnapshot>>(new Map())
 
 	const fetchTokenCatalog = useCallback(
 		async (term: string, chains: string = DEFAULT_CHAIN_FILTER, options: { force?: boolean } = {}) => {
 			const trimmed = term.trim()
 			const cacheKey = `${chains}::${trimmed.toLowerCase()}`
 			const cached = tokenSnapshotCacheRef.current.get(cacheKey)
-			if (!options.force && cached && Date.now() - cached.timestamp < ASSET_SNAPSHOT_TTL_MS) {
-				setTokens(cached.items)
+			if (!options.force && cached && cached.timestamp && Date.now() - cached.timestamp < ASSET_SNAPSHOT_TTL_MS) {
+				setTokens(cached.items as TokenOption[])
 				setTokenWarnings(cached.warnings)
 				setTokenLoading(false)
 				setTokenError(null)
@@ -101,10 +112,10 @@ export function useAssetCatalog({ isMobile, stepIndex }: UseAssetCatalogOptions)
 		async (query: string, chains: string = DEFAULT_CHAIN_FILTER, options: { force?: boolean } = {}) => {
 			const trimmed = query.trim()
 			const cacheKey = `${chains}::${trimmed.toLowerCase()}`
-			const cached = nftSnapshotCacheRef.current.get(cacheKey)
-			if (!options.force && cached && Date.now() - cached.timestamp < ASSET_SNAPSHOT_TTL_MS) {
-				setNfts(cached.items)
-				setNftWarnings(cached.warnings)
+		const cached = nftSnapshotCacheRef.current.get(cacheKey)
+		if (!options.force && cached && cached.timestamp && Date.now() - cached.timestamp < ASSET_SNAPSHOT_TTL_MS) {
+			setNfts(cached.items as NftOption[])
+			setNftWarnings(cached.warnings)
 				setNftLoading(false)
 				setNftError(null)
 				return

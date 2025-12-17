@@ -134,7 +134,7 @@ function buildPointsFrameHtml(params: {
     <li>🏰 Guild: ${formatPoints(breakdown.guildBonus)}</li>
     <li>🔗 Referrals: ${formatPoints(breakdown.referralBonus)}</li>
   </ul>
-  <p><a href="${origin}/Dashboard">View Full Dashboard</a></p>
+  <p><a href="${origin}/dashboard">View Full Dashboard</a></p>
 </body>
 </html>`
 }

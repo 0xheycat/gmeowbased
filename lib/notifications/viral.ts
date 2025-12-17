@@ -28,6 +28,7 @@ import { getNeynarServerClient } from '@/lib/neynar-server'
 import { getSupabaseServerClient } from '@/lib/supabase-server'
 import { trackError } from './error-tracking'
 import { DEFAULT_PRIORITY_MAP, type NotificationPriority } from './priority'
+import { handleNotificationBatching, type NotificationBatchType, type NotificationPriority as BatchPriority } from '@/lib/notification-batching'
 
 // ============================================================================
 // Type Definitions
@@ -462,25 +463,70 @@ export async function dispatchViralNotification(
       console.warn(`[ViralNotifications] No tokens for FID ${notification.fid}, attempting direct send`)
     }
 
+    // Build notification payload
+    const payload =
+      notification.type === 'tier_upgrade'
+        ? buildTierUpgradeNotification(notification)
+        : notification.type === 'achievement'
+          ? buildAchievementNotification(notification)
+          : buildGenericNotification(notification)
+
+    // Phase 2 P6: Check if notification should be batched
+    // Map notification type to batch type
+    const batchType: NotificationBatchType = notification.type === 'tier_upgrade' ? 'achievement' : 
+                                              notification.type === 'achievement' ? 'achievement' : 'social'
+    
+    // Map priority: achievement=1, tip=3, quest=5
+    const batchPriority: BatchPriority = notification.type === 'achievement' || notification.type === 'tier_upgrade' ? 1 : 5
+
+    // Check batching logic (quiet hours, throttling)
+    const wasQueued = await handleNotificationBatching({
+      fid: notification.fid,
+      type: batchType,
+      priority: batchPriority,
+      payload: {
+        title: payload.title,
+        body: payload.body,
+        targetUrl: payload.targetUrl,
+        metadata: {
+          notificationType: notification.type,
+          castHash: notification.type === 'tier_upgrade' ? notification.castHash :
+                    notification.type === 'achievement' ? notification.castHash : undefined,
+        },
+      },
+    }, deps?.supabase)
+
+    // If queued for batching, return success (will be sent later by digest cron)
+    if (wasQueued) {
+      console.log(`[ViralNotifications] Queued notification for batching: FID ${notification.fid}, type ${notification.type}`)
+      return {
+        success: true,
+        notificationId: crypto.randomUUID(),
+      }
+    }
+
     // Check rate limits (using FID instead of token)
     const fidKey = `fid:${notification.fid}`
     const limiter = deps?.rateLimiter || rateLimiter
     if (!limiter.canSendNotification(fidKey)) {
       const timeUntilAvailable = limiter.getTimeUntilAvailable(fidKey)
+      // Queue instead of failing
+      await handleNotificationBatching({
+        fid: notification.fid,
+        type: batchType,
+        priority: batchPriority,
+        payload: {
+          title: payload.title,
+          body: payload.body,
+          targetUrl: payload.targetUrl,
+        },
+      }, deps?.supabase)
       return {
         success: false,
-        error: `Rate limited. Retry in ${Math.ceil(timeUntilAvailable / 1000)}s`,
+        error: `Rate limited. Queued for next available time.`,
         rateLimited: true,
       }
-    }
-
-  // Build notification payload
-  const payload =
-    notification.type === 'tier_upgrade'
-      ? buildTierUpgradeNotification(notification)
-      : notification.type === 'achievement'
-        ? buildAchievementNotification(notification)
-        : buildGenericNotification(notification)    // Send notification
+    }    // Send notification
     const result = await sendNeynarNotification(
       notification.fid,
       payload.title,

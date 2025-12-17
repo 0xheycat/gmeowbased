@@ -45,7 +45,7 @@ export type { QuestFileType } from './QuestImageUploader';
 export { default as QuestAnalyticsDashboard } from './QuestAnalyticsDashboard';
 export { default as QuestManagementTable } from './QuestManagementTable';
 export { default as QuestFilters } from './QuestFilters';
-export type { QuestFilterState } from './QuestFilters';
+export type { QuestFilterState, QuestSortOption } from './QuestFilters';
 
 // Phase 5 Enhancement: Loading States
 export {

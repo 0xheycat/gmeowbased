@@ -28,7 +28,7 @@ export interface EscrowPointsInput {
 export interface EscrowResult {
   success: boolean;
   error?: string;
-  escrow_id?: number;
+  escrow_id?: string;
 }
 
 export interface RefundResult {
@@ -140,7 +140,7 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
     // 4. SUCCESS
     return {
       success: true,
-      escrow_id: escrowData.id,
+      escrow_id: String(escrowData.id),
     };
     
   } catch (error) {
@@ -197,7 +197,7 @@ export async function refundPoints(questId: number): Promise<RefundResult> {
     const { data: escrowData, error: escrowError } = await supabase
       .from('quest_creation_costs')
       .select('id, points_escrowed, is_refunded')
-      .eq('quest_id', questId)
+      .eq('quest_id', String(questId))
       .single();
     
     if (escrowError || !escrowData) {
@@ -234,8 +234,8 @@ export async function refundPoints(questId: number): Promise<RefundResult> {
     
     // 4. REFUND POINTS TO CREATOR
     const { error: refundError } = await supabase.rpc('increment_base_points', {
-      p_fid: questData.creator_fid,
-      p_amount: refundAmount,
+      user_fid: questData.creator_fid,
+      points: refundAmount,
     });
     
     if (refundError) {
@@ -308,7 +308,7 @@ export async function calculateRefund(questId: number): Promise<number | null> {
     const { data: escrowData, error: escrowError } = await supabase
       .from('quest_creation_costs')
       .select('points_escrowed, is_refunded')
-      .eq('quest_id', questId)
+      .eq('quest_id', String(questId))
       .single();
     
     if (escrowError || !escrowData || escrowData.is_refunded) {

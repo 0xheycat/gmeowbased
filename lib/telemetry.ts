@@ -44,12 +44,11 @@ const LOOKBACK_DAYS = 7
 const LOOKBACK_BUFFER_SECONDS = 6 * 60 * 60
 const DEFAULT_BLOCK_TIME_SEC = 3
 
-const BLOCK_TIME_SEC: Record<ChainKey, number> = {
+const BLOCK_TIME_SEC: Partial<Record<ChainKey, number>> = {
   base: 2,
   unichain: 2,
   op: 2,
   celo: 5,
-  ink: 2,
 }
 
 type CacheBucket = {

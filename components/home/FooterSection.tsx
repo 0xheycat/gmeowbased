@@ -28,7 +28,7 @@ export function FooterSection() {
         <div className="footer-right">
           <div className="cta">
             <h3>Ready to earn?</h3>
-            <Link className="btn-primary" href="/Quest">
+            <Link className="btn-primary" href="/quests">
               START YOUR ADVENTURE
             </Link>
           </div>
@@ -47,8 +47,8 @@ export function FooterSection() {
       <div className="footer-bottom">
         <span>© {new Date().getFullYear()} GMEOW. All rights reserved.</span>
         <div className="foot-links">
-          <Link href="/Quest">Quests</Link>
-          <Link href="/Guild">Guilds</Link>
+          <Link href="/quests">Quests</Link>
+          <Link href="/guild">Guilds</Link>
           <Link href="/leaderboard">Leaderboard</Link>
         </div>
       </div>

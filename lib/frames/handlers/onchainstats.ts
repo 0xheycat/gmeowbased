@@ -147,7 +147,7 @@ function buildOnchainStatsFrameHtml(params: {
   </ul>
   
   <p><strong>Data Source:</strong> Subsquid (Real-time blockchain indexing)</p>
-  <p><a href="${origin}/Dashboard">View Full Dashboard</a></p>
+  <p><a href="${origin}/dashboard">View Full Dashboard</a></p>
 </body>
 </html>`
 }

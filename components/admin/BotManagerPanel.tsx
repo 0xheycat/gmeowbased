@@ -1,8 +1,61 @@
+/**
+ * @file components/admin/BotManagerPanel.tsx
+ * 
+ * Farcaster Bot Manager Admin Panel
+ * Comprehensive dashboard for bot health monitoring, activity tracking, and manual cast publishing.
+ * 
+ * PHASE: Phase 1 - Week 1-2 (December 2025)
+ * DATE: Updated December 16, 2025
+ * STATUS: 🔨 IN PROGRESS (Analytics dashboard integration pending)
+ * 
+ * TODO:
+ * - [x] Bot status display (env vars, signer, FID)
+ * - [x] Bot activity tracking (recent casts, interactions)
+ * - [x] Manual cast publishing form
+ * - [ ] Add health metrics dashboard (webhook/reply success rates)
+ * - [ ] Add response time percentiles (P50, P95, P99)
+ * - [ ] Add real-time error log display
+ * - [ ] Add user engagement metrics (top interactors)
+ * - [ ] Add export metrics as CSV button
+ * 
+ * FEATURES:
+ * - ✅ Environment variable validation
+ * - ✅ Signer status check (approved/pending/revoked)
+ * - ✅ Bot FID configuration
+ * - ✅ Recent cast display (12 casts)
+ * - ✅ Interaction tracking (mentions, replies, recasts, follows)
+ * - ✅ Keyword insights (7-day lookback)
+ * - ✅ Manual cast publishing (with parent, channel, idem support)
+ * - ✅ Neynar client cache reset
+ * - ⏳ Health metrics dashboard (PENDING - see lib/bot-analytics.ts)
+ * 
+ * REFERENCE DOCUMENTATION:
+ * - FARCASTER-BOT-ENHANCEMENT-PLAN-PART-3.md (Section 9.1: Immediate Action Items)
+ * - FARCASTER-BOT-ENHANCEMENT-PLAN-PART-3.md (Section 10.1: Bot Performance Metrics)
+ * - FARCASTER-BOT-ENHANCEMENT-PLAN-PART-1.md (Section 3.1: Active Bot Review)
+ * 
+ * SUGGESTIONS:
+ * - Integrate lib/bot-analytics.ts for health metrics display
+ * - Add WebSocket for real-time metric updates
+ * - Add "Health Score" badge (green/yellow/red based on targets)
+ * - Add trend charts for 7-day/30-day comparisons
+ * 
+ * CRITICAL FINDINGS:
+ * ⚠️ NO HEALTH MONITORING: Missing webhook/reply success rate tracking
+ * ⚠️ NO ALERTING: Admin must manually check for degraded performance
+ * ⚠️ COMPLEX UI: Hardcoded everywhere, needs component refactoring
+ * 
+ * REQUIREMENTS FROM farcaster.instructions.md:
+ * - Admin-only access (session validation required)
+ * - Network: Base (ChainID: 8453)
+ * - Website: https://gmeowhq.art
+ */
+
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import clsx from 'clsx'
-import QuestLoadingDeck from '@/components/Quest/QuestLoadingDeck'
+import Loader from '@/components/ui/loader' // Using unified Loader component
 
 type EnvSummary = {
   apiKey: { present: boolean; preview: string | null }
@@ -244,6 +297,27 @@ export default function BotManagerPanel() {
   const [sendingCast, setSendingCast] = useState(false)
   const [castFeedback, setCastFeedback] = useState<{ type: 'success' | 'error'; message: string; link?: string } | null>(null)
 
+  // Bot health metrics state
+  const [healthMetrics, setHealthMetrics] = useState<{
+    webhookSuccessRate: number
+    replySuccessRate: number
+    p50ResponseTimeMs: number
+    p95ResponseTimeMs: number
+    p99ResponseTimeMs: number
+    neynarApiErrorRate: number
+    rateLimitHitRate: number
+  } | null>(null)
+  const [healthLoading, setHealthLoading] = useState(true)
+  const [healthError, setHealthError] = useState<string | null>(null)
+  const [healthWindow, setHealthWindow] = useState<'1h' | '24h' | '7d' | '30d'>('24h')
+  const [recentErrors, setRecentErrors] = useState<Array<{
+    type: string
+    error_message: string
+    created_at: string
+    fid?: number
+    cast_hash?: string
+  }>>([])
+
   const fetchStatus = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -308,6 +382,34 @@ export default function BotManagerPanel() {
   useEffect(() => {
     void fetchInsights()
   }, [fetchInsights, refreshNonce])
+
+  const fetchHealthMetrics = useCallback(async () => {
+    setHealthLoading(true)
+    setHealthError(null)
+    try {
+      const res = await fetch(`/api/admin/bot/health?window=${healthWindow}`, { cache: 'no-store' })
+      if (res.status === 401) {
+        throw new Error(SESSION_EXPIRED_MESSAGE)
+      }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+      const json = await res.json()
+      setHealthMetrics(json.metrics || null)
+      setRecentErrors(json.recentErrors || [])
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch health metrics'
+      setHealthError(message)
+      setHealthMetrics(null)
+      setRecentErrors([])
+    } finally {
+      setHealthLoading(false)
+    }
+  }, [healthWindow])
+
+  useEffect(() => {
+    void fetchHealthMetrics()
+  }, [fetchHealthMetrics, refreshNonce])
 
   const signerStatusDisplay = useMemo(() => {
     const rawStatus = status?.signer?.status?.toLowerCase()
@@ -624,8 +726,8 @@ export default function BotManagerPanel() {
           </div>
 
           {insightsLoading ? (
-            <div className="mt-4">
-              <QuestLoadingDeck columns="single" count={2} dense />
+            <div className="mt-4 flex justify-center py-8">
+              <Loader size="medium" variant="dots" />
             </div>
           ) : insightsError ? (
             <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-[12px] text-red-200">
@@ -684,6 +786,187 @@ export default function BotManagerPanel() {
         </div>
       </div>
 
+      {/* Bot Health Metrics Dashboard */}
+      <div className="mt-6 rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="pixel-section-title text-sm">Bot health metrics</h3>
+          <div className="flex items-center gap-2">
+            <select
+              className="rounded-lg border border-slate-200 dark:border-slate-700/10 bg-black dark:bg-slate-950/20 px-2 py-1 text-[11px] text-slate-950 dark:text-white focus:border-sky-400 focus:outline-none"
+              value={healthWindow}
+              onChange={(e) => setHealthWindow(e.target.value as any)}
+            >
+              <option value="1h">Last hour</option>
+              <option value="24h">Last 24h</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+            </select>
+            <button
+              className="pixel-button btn-xs"
+              onClick={() => setRefreshNonce((n) => n + 1)}
+              disabled={healthLoading}
+            >
+              {healthLoading ? '…' : '↻'}
+            </button>
+          </div>
+        </div>
+
+        {healthLoading ? (
+          <div className="mt-4 flex justify-center py-8">
+            <Loader size="medium" variant="dots" />
+          </div>
+        ) : healthError ? (
+          <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-[12px] text-red-200">
+            <div className="font-semibold">Health metrics unavailable</div>
+            <p>{healthError}</p>
+          </div>
+        ) : healthMetrics ? (
+          <>
+            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+              {/* Webhook Success Rate */}
+              <div className={clsx(
+                'rounded-lg border p-3',
+                healthMetrics.webhookSuccessRate >= 99
+                  ? 'border-emerald-400/40 bg-emerald-500/10'
+                  : healthMetrics.webhookSuccessRate >= 95
+                  ? 'border-amber-400/40 bg-amber-500/10'
+                  : 'border-red-400/40 bg-red-500/10'
+              )}>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60">Webhook Success</div>
+                <div className={clsx(
+                  'mt-1 text-xl font-bold',
+                  healthMetrics.webhookSuccessRate >= 99
+                    ? 'text-emerald-200'
+                    : healthMetrics.webhookSuccessRate >= 95
+                    ? 'text-amber-200'
+                    : 'text-red-200'
+                )}>
+                  {healthMetrics.webhookSuccessRate.toFixed(1)}%
+                </div>
+                <div className="mt-1 text-[9px] text-slate-950 dark:text-white/60">Target: &gt;99%</div>
+              </div>
+
+              {/* Reply Success Rate */}
+              <div className={clsx(
+                'rounded-lg border p-3',
+                healthMetrics.replySuccessRate >= 95
+                  ? 'border-emerald-400/40 bg-emerald-500/10'
+                  : healthMetrics.replySuccessRate >= 90
+                  ? 'border-amber-400/40 bg-amber-500/10'
+                  : 'border-red-400/40 bg-red-500/10'
+              )}>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60">Reply Success</div>
+                <div className={clsx(
+                  'mt-1 text-xl font-bold',
+                  healthMetrics.replySuccessRate >= 95
+                    ? 'text-emerald-200'
+                    : healthMetrics.replySuccessRate >= 90
+                    ? 'text-amber-200'
+                    : 'text-red-200'
+                )}>
+                  {healthMetrics.replySuccessRate.toFixed(1)}%
+                </div>
+                <div className="mt-1 text-[9px] text-slate-950 dark:text-white/60">Target: &gt;95%</div>
+              </div>
+
+              {/* P95 Response Time */}
+              <div className={clsx(
+                'rounded-lg border p-3',
+                healthMetrics.p95ResponseTimeMs < 2000
+                  ? 'border-emerald-400/40 bg-emerald-500/10'
+                  : healthMetrics.p95ResponseTimeMs < 3000
+                  ? 'border-amber-400/40 bg-amber-500/10'
+                  : 'border-red-400/40 bg-red-500/10'
+              )}>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60">P95 Response</div>
+                <div className={clsx(
+                  'mt-1 text-xl font-bold',
+                  healthMetrics.p95ResponseTimeMs < 2000
+                    ? 'text-emerald-200'
+                    : healthMetrics.p95ResponseTimeMs < 3000
+                    ? 'text-amber-200'
+                    : 'text-red-200'
+                )}>
+                  {healthMetrics.p95ResponseTimeMs.toFixed(0)}ms
+                </div>
+                <div className="mt-1 text-[9px] text-slate-950 dark:text-white/60">Target: &lt;2000ms</div>
+              </div>
+
+              {/* API Error Rate */}
+              <div className={clsx(
+                'rounded-lg border p-3',
+                healthMetrics.neynarApiErrorRate < 1
+                  ? 'border-emerald-400/40 bg-emerald-500/10'
+                  : healthMetrics.neynarApiErrorRate < 5
+                  ? 'border-amber-400/40 bg-amber-500/10'
+                  : 'border-red-400/40 bg-red-500/10'
+              )}>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60">API Errors</div>
+                <div className={clsx(
+                  'mt-1 text-xl font-bold',
+                  healthMetrics.neynarApiErrorRate < 1
+                    ? 'text-emerald-200'
+                    : healthMetrics.neynarApiErrorRate < 5
+                    ? 'text-amber-200'
+                    : 'text-red-200'
+                )}>
+                  {healthMetrics.neynarApiErrorRate.toFixed(1)}%
+                </div>
+                <div className="mt-1 text-[9px] text-slate-950 dark:text-white/60">Target: &lt;1%</div>
+              </div>
+            </div>
+
+            {/* Recent Errors */}
+            {recentErrors.length > 0 && (
+              <div className="mt-4">
+                <div className="text-[11px] font-semibold text-slate-950 dark:text-white/80 mb-2">Recent errors ({recentErrors.length})</div>
+                <div className="space-y-2">
+                  {recentErrors.slice(0, 5).map((error, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-lg border border-red-400/40 bg-red-500/10 p-2 text-[11px] text-red-200"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="font-semibold">{error.type}</div>
+                          <div className="mt-1 text-[10px] opacity-90">{error.error_message}</div>
+                          {error.cast_hash && (
+                            <div className="mt-1 text-[9px] opacity-70">Cast: {error.cast_hash.slice(0, 10)}...</div>
+                          )}
+                        </div>
+                        <div className="text-[9px] opacity-70 whitespace-nowrap">
+                          {formatRelativeTime(error.created_at)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Additional Metrics */}
+            <div className="mt-4 grid grid-cols-3 gap-3 text-[11px]">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60">P50 Response</div>
+                <div className="mt-1 text-base font-semibold text-slate-950 dark:text-white/90">{healthMetrics.p50ResponseTimeMs.toFixed(0)}ms</div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60">P99 Response</div>
+                <div className="mt-1 text-base font-semibold text-slate-950 dark:text-white/90">{healthMetrics.p99ResponseTimeMs.toFixed(0)}ms</div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-950 dark:text-white/60">Rate Limit Hits</div>
+                <div className="mt-1 text-base font-semibold text-slate-950 dark:text-white/90">{healthMetrics.rateLimitHitRate.toFixed(1)}%</div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="mt-3 text-[12px] text-[var(--px-sub)]">
+            No health metrics available. Metrics will appear once the bot starts processing webhooks.
+          </p>
+        )}
+      </div>
+
       <div className="mt-6 rounded-xl border border-slate-200 dark:border-slate-700/10 bg-slate-100/5 dark:bg-white/5 p-4 backdrop-blur-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -699,7 +982,7 @@ export default function BotManagerPanel() {
 
         {insightsLoading ? (
           <div className="mt-4">
-            <QuestLoadingDeck columns="single" count={3} dense />
+            <div className="flex justify-center py-8"><Loader size="medium" variant="dots" /></div>
           </div>
         ) : insightsError ? (
           <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-[12px] text-red-200">
@@ -779,7 +1062,7 @@ export default function BotManagerPanel() {
 
         {insightsLoading ? (
           <div className="mt-4">
-            <QuestLoadingDeck columns="single" count={3} dense />
+            <div className="flex justify-center py-8"><Loader size="medium" variant="dots" /></div>
           </div>
         ) : insightsError ? (
           <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-[12px] text-red-200">

@@ -247,7 +247,7 @@ export async function generateQuestRecommendations(
 
 export function formatQuestRecommendations(recommendations: QuestRecommendation[]): string {
   if (recommendations.length === 0) {
-    return 'Check gmeowhq.art/Quest for all available quests!'
+    return 'Check gmeowhq.art/quests for all available quests!'
   }
   
   const lines = ['🎯 Recommended quests for you:\n']
@@ -258,7 +258,7 @@ export function formatQuestRecommendations(recommendations: QuestRecommendation[
     )
   })
   
-  lines.push('\nStart: gmeowhq.art/Quest')
+  lines.push('\nStart: gmeowhq.art/quests')
   
   return lines.join('\n')
 }

@@ -1,8 +1,27 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
-import type { MiniKitContextUser, AuthStatus, MiniAppSignInResult } from '@/components/quest-wizard/types'
-import { normalizeFid } from '@/components/quest-wizard/shared'
-import { safeParseSignInMessage, extractFidFromSignIn, formatUnknownError } from '@/components/quest-wizard/utils'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
+
+// Type definitions moved from removed quest-wizard
+type MiniKitContextUser = { fid: number; username: string; pfpUrl?: string }
+type AuthStatus = 'idle' | 'connecting' | 'connected' | 'error' | 'pending' | 'success'
+type MiniAppSignInResult = { isSuccess: boolean; message?: string }
+
+function normalizeFid(fid: any): number | null {
+  const parsed = typeof fid === 'string' ? parseInt(fid, 10) : fid
+  return typeof parsed === 'number' && !isNaN(parsed) && parsed > 0 ? parsed : null
+}
+
+function safeParseSignInMessage(message: any): any {
+  try { return typeof message === 'string' ? JSON.parse(message) : message } catch { return null }
+}
+
+function extractFidFromSignIn(result: any): number | null {
+  return normalizeFid(result?.fid)
+}
+
+function formatUnknownError(error: any): string {
+  return error?.message || String(error)
+}
 
 /**
  * @deprecated Use `useAuth` from `lib/hooks/use-auth` instead
@@ -168,7 +187,7 @@ export function useMiniKitAuth({
 				tone: 'error',
 				title: 'Sign-in failed',
 				description: message,
-			})
+			} as any)
 			return false
 		}
 	}, [dismissNotification, pushNotification, signInWithMiniKit])

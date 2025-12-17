@@ -1,8 +1,6 @@
 import cn from 'classnames';
-import {
-  OverlayScrollbarsComponent,
-  OverlayScrollbarsComponentProps,
-} from 'overlayscrollbars-react';
+import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
+import type { OverlayScrollbarsComponentProps } from 'overlayscrollbars-react';
 import React from 'react';
 
 interface ScrollbarProps extends OverlayScrollbarsComponentProps {

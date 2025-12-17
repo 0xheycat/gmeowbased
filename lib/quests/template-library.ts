@@ -3,7 +3,7 @@
  * Pre-built quest templates for quick creation
  */
 
-import type { Database } from '@/lib/supabase/database.types'
+import type { Database } from '@/types/supabase'
 
 type QuestTemplate = Database['public']['Tables']['quest_templates']['Row']
 

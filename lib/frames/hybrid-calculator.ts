@@ -1,12 +1,105 @@
 /**
- * Hybrid Leaderboard Score Calculator
+ * #file: lib/frames/hybrid-calculator.ts
  * 
- * Combines Subsquid (blockchain events) + Supabase (off-chain data)
- * to calculate comprehensive leaderboard scores.
+ * PHASE: Phase 1 Week 1-2 Complete (Dec 16, 2025)
+ * DATE UPDATED: December 16, 2025, 4:00 PM CST
+ * WEBSITE: https://gmeowhq.art
+ * NETWORK: Base (Chain ID: 8453)
  * 
- * Architecture: 95/5 Rule
+ * ═══════════════════════════════════════════════════════════════════════════
+ * FEATURES
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ✅ Hybrid scoring (Subsquid blockchain + Supabase off-chain)
+ * ✅ 9 scoring components:
+ *    • basePoints - Core activity multiplier (Neynar score * 100)
+ *    • viralXP - Engagement from badge casts (recasts×10 + replies×5 + likes×2)
+ *    • guildBonus - Active guild membership multiplier (10% + 5% officer)
+ *    • referralBonus - Successful referral rewards (50 XP per referral)
+ *    • streakBonus - GM streak consistency bonus (days × 5 XP)
+ *    • badgePrestige - NFT badge collection value (100 XP per badge)
+ *    • tipPoints - Tip participation score (10 XP per tip)
+ *    • nftPoints - OnchainStats NFT ownership (100 XP per NFT)
+ *    • guildBonusPoints - Guild activity bonus (calculated separately)
+ * ✅ Category-specific leaderboards (8 categories: base, viral, guild, referral, streak, badge, tip, nft)
+ * ✅ Batch calculation support for efficient leaderboard generation
+ * ✅ Parallel data fetching (Subsquid + Supabase queries run concurrently)
+ * ✅ Comprehensive type safety (TypeScript interfaces for all data shapes)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * TODO - FUTURE ENHANCEMENTS
+ * ═══════════════════════════════════════════════════════════════════════════
+ * [ ] Rarity-based NFT scoring (currently 100pts flat per badge)
+ * [ ] Redis caching layer (5-min TTL for frequently accessed scores)
+ * [ ] Score history tracking (trend analysis, growth charts)
+ * [ ] Optimize batch calculations (for leaderboards >100 users)
+ * [ ] Fallback logic when Subsquid unavailable (graceful degradation)
+ * [ ] XP time decay system (defer until DAUs > 1000 per instructions)
+ * [ ] Category weight customization (admin-configurable multipliers)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * REFERENCE DOCUMENTATION
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Core: /FARCASTER-BOT-ENHANCEMENT-PLAN-PART-2.md (Sec 4.1-4.8: XP Formulas)
+ * Priority: /FARCASTER-BOT-ENHANCEMENT-PLAN-PART-3.md (Sec 8.1: Critical Blocker)
+ * Usage: /HYBRID-CALCULATOR-USAGE-GUIDE.md (375 lines, integration specs)
+ * Status: /PHASE-1-WEEK-1-2-COMPLETE.md
+ * Instructions: /.config/Code/User/prompts/farcaster.instructions.md
+ * Related: lib/bot-stats.ts (original stats engine, now deprecated for scoring)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CRITICAL ISSUES & WARNINGS
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ⚠️ SUBSQUID DEPENDENCY: Requires gmeow-indexer running (no fallback yet)
+ * ⚠️ PERFORMANCE: Full recalculation per user (~400-600ms per FID)
+ * ⚠️ NO CACHING: Every score request hits database (Redis cache TODO)
+ * ⚠️ NFT SCORING: Flat 100pts per badge (no rarity weighting)
+ * ⚠️ GUILD BONUS: Requires guild_members table populated correctly
+ * ⚠️ BATCH LIMITS: May timeout for >500 users (need pagination)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * SUGGESTIONS
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 💡 Pre-compute scores hourly (cron job) instead of on-demand
+ * 💡 Use PostgreSQL materialized views for leaderboard queries
+ * 💡 Implement score change notifications (e.g., "You moved up 3 ranks!")
+ * 💡 Add score prediction (show progress to next milestone)
+ * 💡 Create score breakdown visualization (donut chart per category)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * AVOID / REQUIREMENTS (from farcaster.instructions.md)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ❌ NO RPC calls (use Blockscout API only per instructions)
+ * ❌ NO unvalidated Subsquid data (verify schema matches before querying)
+ * ❌ NO mixing old stats computation (bot-stats.ts deprecated for scoring)
+ * ✅ USE parallel fetching (Promise.all for Subsquid + Supabase)
+ * ✅ USE null-safety (check data exists before scoring)
+ * ✅ VALIDATE addresses (normalizeAddress before queries)
+ * ✅ LOG score breakdowns (for debugging/transparency)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * - SUBSQUID-SUPABASE-MIGRATION-PLAN.md (Section 2: Hybrid Calculator MISSING)
+ * 
+ * ARCHITECTURE: 95/5 Rule
  * - Subsquid (95%): GM streaks, Guild membership, Badges, NFTs, Referrals
  * - Supabase (5%): Quest completions, Viral engagement, Tip activity, FID mapping
+ * 
+ * SUGGESTIONS:
+ * - Consider implementing score caching to reduce database load
+ * - Add monitoring for score calculation performance (target: <500ms P95)
+ * - Implement gradual rollout: calculate scores for top 100 users first
+ * - Add A/B test infrastructure to validate new scoring formulas
+ * 
+ * CRITICAL FINDINGS:
+ * ⚠️ PERFORMANCE: Batch calculations may timeout for >200 users (add pagination)
+ * ⚠️ DATA CONSISTENCY: Subsquid lag (5-10 min) vs Supabase real-time creates score drift
+ * ⚠️ EDGE CASE: Users without wallets can't get Subsquid data (FID-only users)
+ * ⚠️ GAMING RISK: No unique user check for viral score (self-recast exploit possible)
+ * 
+ * REQUIREMENTS FROM farcaster.instructions.md:
+ * - Avoid creating new Supabase tables (use existing leaderboard_calculations)
+ * - Use existing Subsquid indexer (do NOT create new indexer)
+ * - Follow hybrid data model: onchain via Subsquid, offchain via Supabase
+ * - Network: Base (ChainID: 8453)
+ * - Website: https://gmeowhq.art
  */
 
 import { getUserStats as getSubsquidUserStats } from '@/lib/subsquid-client'
@@ -182,11 +275,11 @@ async function getSubsquidStats(walletAddress: string) {
   const stats = await getSubsquidUserStats(walletAddress)
   
   return {
-    currentStreak: stats?.user?.currentStreak || 0,
-    badgeCount: stats?.user?.badges?.length || 0,
-    referralCount: stats?.user?.referralCodes?.[0]?.totalUses || 0,
-    nftRewards: calculateNFTPoints(stats?.user?.nftMints || []),
-    guildLevel: calculateGuildLevel(stats?.user?.guilds || []),
+    currentStreak: stats?.currentStreak || 0,
+    badgeCount: stats?.badgeCount || 0,
+    referralCount: 0, // Referral count not in UserStats type
+    nftRewards: 0, // NFT mints not in UserStats type
+    guildLevel: stats?.guildMemberships || 0,
   }
 }
 

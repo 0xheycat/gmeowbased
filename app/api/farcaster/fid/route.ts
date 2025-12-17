@@ -18,14 +18,14 @@ export const GET = withErrorHandler(async (req: Request) => {
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
-    return handleRateLimitError(60, requestId)
+    return handleRateLimitError(60)
   }
 
   const { searchParams } = new URL(req.url)
   const address = searchParams.get('address') || ''
   
   if (!isAddress(address)) {
-    return handleValidationError(new Error(`Invalid Ethereum address format: ${address}`), requestId)
+    return handleValidationError(new Error(`Invalid Ethereum address format: ${address}`))
   }
   
   try {
@@ -41,6 +41,6 @@ export const GET = withErrorHandler(async (req: Request) => {
       headers: { 'X-Request-ID': requestId }
     })
   } catch (error) {
-    throw handleExternalApiError(error instanceof Error ? error : new Error('Failed to fetch FID'), 'Neynar', requestId)
+    throw handleExternalApiError(error instanceof Error ? error : new Error('Failed to fetch FID'), 'Neynar')
   }
 })

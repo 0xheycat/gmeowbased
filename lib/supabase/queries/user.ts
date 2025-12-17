@@ -64,10 +64,10 @@ export async function getUserProfile(
 
     return {
       fid: data.fid,
-      wallet_address: data.wallet_address,
+      wallet_address: data.wallet_address || '',
       display_name: data.display_name,
       pfp_url: data.pfp_url,
-      username: data.display_name, // Use display_name as username fallback
+      username: data.display_name || `user-${data.fid}`, // Use display_name as username fallback
     }
   } catch (err) {
     console.error('[getUserProfile] Error:', err)

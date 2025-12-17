@@ -9,6 +9,11 @@ import {
   type PartnerSnapshotSummaryPayload,
 } from '@/lib/partner-snapshot'
 
+// Simple notify helper for feedback
+const notify = (options: { type: string; title: string; message: string }) => {
+  console.log(`[${options.type.toUpperCase()}] ${options.title}:`, options.message)
+}
+
 
 const REQUIREMENT_OPTIONS: Array<{ value: PartnerRequirementKind; label: string; description: string }> = [
   { value: 'points', label: 'GMEOW points', description: 'Validate native points held in-contract on the selected chains.' },

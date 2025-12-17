@@ -134,7 +134,7 @@ function buildReferralFrameHtml(params: {
     <li>⭐ Special guild perks</li>
   </ul>
   <p><strong>Share:</strong> <a href="${shareUrl}">${shareUrl}</a></p>
-  <p><a href="${origin}/Dashboard">Get Your Referral Code</a></p>
+  <p><a href="${origin}/dashboard">Get Your Referral Code</a></p>
 </body>
 </html>`
 }

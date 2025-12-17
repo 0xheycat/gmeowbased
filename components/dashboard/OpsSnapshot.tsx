@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
-import QuestLoadingDeck from '@/components/Quest/QuestLoadingDeck'
+import Loader from '@/components/ui/loader'
 import type { DashboardTelemetryPayload } from '@/lib/telemetry'
 
 const METRIC_DEFINITIONS = [
@@ -104,7 +104,7 @@ export default function OpsSnapshot({ data, loading, error, stale = false, lastU
 
       {loading && !totals ? (
         <div className="mt-4">
-          <QuestLoadingDeck columns="single" count={3} dense />
+          <div className="flex justify-center py-8"><Loader size="medium" variant="dots" /></div>
         </div>
       ) : null}
 

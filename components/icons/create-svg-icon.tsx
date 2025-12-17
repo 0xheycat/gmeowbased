@@ -1,5 +1,7 @@
-import React, {ComponentType, ReactElement, RefObject} from 'react';
-import {SvgIcon, SvgIconProps} from './svg-icon';
+import React from 'react';
+import type {ComponentType, ReactElement, RefObject} from 'react';
+import {SvgIcon} from './svg-icon';
+import type {SvgIconProps} from './svg-icon';
 
 export function createSvgIcon(
   path: ReactElement | ReactElement[],

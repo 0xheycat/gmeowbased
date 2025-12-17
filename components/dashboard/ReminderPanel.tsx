@@ -54,7 +54,7 @@ export function ReminderPanel({ reminders }: { reminders: DashboardReminder[] })
                         {reminder.href ? (
                           <Link
                             href={reminder.href}
-                            className={cn(buttonVariants({ variant: 'ghost', color: 'primary', size: 'small' }), 'px-5 text-[11px] uppercase tracking-[0.28em]')}
+                            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'px-5 text-[11px] uppercase tracking-[0.28em]')}
                           >
                             {reminder.actionLabel}
                           </Link>
@@ -62,7 +62,7 @@ export function ReminderPanel({ reminders }: { reminders: DashboardReminder[] })
                         {reminder.onAction ? (
                           <button
                             type="button"
-                            className={cn(buttonVariants({ variant: 'ghost', color: 'primary', size: 'small' }), 'px-5 text-[11px] uppercase tracking-[0.28em]')}
+                            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'px-5 text-[11px] uppercase tracking-[0.28em]')}
                             onClick={reminder.onAction}
                           >
                             {reminder.actionLabel}

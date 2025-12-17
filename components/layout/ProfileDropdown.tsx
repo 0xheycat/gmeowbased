@@ -209,7 +209,7 @@ export function ProfileDropdown() {
                 View Full Profile
               </Link>
               <Link
-                href="/Dashboard"
+                href="/dashboard"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-white backdrop-blur-xl backdrop-saturate-150"
               >

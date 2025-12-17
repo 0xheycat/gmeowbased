@@ -76,7 +76,7 @@ export async function withFrameImageCache(options: FrameImageCacheOptions): Prom
     // Try to get cached image
     const cachedImage = await getCachedFrame(cacheKey)
     if (cachedImage) {
-      return new NextResponse(cachedImage, {
+      return new NextResponse(cachedImage as any, {
         status: 200,
         headers: {
           'Content-Type': 'image/png',
@@ -107,7 +107,7 @@ export async function withFrameImageCache(options: FrameImageCacheOptions): Prom
       })
       
       // Return response with cache miss header
-      return new NextResponse(buffer, {
+      return new NextResponse(buffer as any, {
         status: 200,
         headers: {
           'Content-Type': 'image/png',

@@ -80,7 +80,7 @@ export async function fetchQuestTemplates(
     
     return {
       success: true,
-      templates: data as QuestTemplate[],
+      templates: data as unknown as QuestTemplate[],
     };
     
   } catch (error) {

@@ -7,7 +7,11 @@ import { Slot } from '@radix-ui/react-slot'
 import { cn } from '@/lib/utils'
 import ButtonDrip from '@/components/ui/button-drip'
 import ButtonLoader from '@/components/ui/button-loader'
-import { type LoaderSizeTypes, type LoaderVariantTypes } from '@/components/ui/loader'
+import { type LoaderSize, type LoaderVariant } from '@/components/ui/loader'
+
+// Alias for backwards compatibility
+type LoaderSizeTypes = LoaderSize
+type LoaderVariantTypes = LoaderVariant
 
 const buttonVariants = cva(
   'relative inline-flex shrink-0 items-center justify-center overflow-hidden text-center text-xs sm:text-sm font-medium tracking-wider outline-none transition-all',
@@ -62,7 +66,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading,
       disabled,
       loaderSize = 'small',
-      loaderVariant = 'scaleUp',
+      loaderVariant = 'dots',
       onClick,
       children,
       ...props 

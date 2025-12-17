@@ -33,7 +33,7 @@ const CHAIN_CONFIG = {
   },
 } as const
 
-const GM_CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
+const GM_CONTRACT_ADDRESSES: Partial<Record<ChainKey | 'ink', `0x${string}`>> = {
   base: (process.env.NEXT_PUBLIC_GM_BASE_ADDRESS as `0x${string}`) || '0x3ad420B8C2Be19ff8EBAdB484Ed839Ae9254bf2F',
   unichain: (process.env.NEXT_PUBLIC_GM_UNICHAIN_ADDRESS as `0x${string}`) || '0xD8b4190c87d86E28f6B583984cf0C89FCf9C2a0f',
   celo: (process.env.NEXT_PUBLIC_GM_CELO_ADDRESS as `0x${string}`) || '0xa68BfB4BB6F7D612182A3274E7C555B7b0b27a52',
@@ -54,8 +54,16 @@ export async function ensureOracleBalance(chain: ChainKey, requiredPoints: bigin
     throw new Error('OWNER_PRIVATE_KEY not configured - cannot auto-deposit points')
   }
 
-  const contractAddress = GM_CONTRACT_ADDRESSES[chain]
-  const chainConfig = CHAIN_CONFIG[chain]
+  const contractAddress = GM_CONTRACT_ADDRESSES[chain as keyof typeof GM_CONTRACT_ADDRESSES]
+  const chainConfig = CHAIN_CONFIG[chain as keyof typeof CHAIN_CONFIG]
+  
+  if (!contractAddress) {
+    throw new Error(`No contract address configured for chain: ${chain}`)
+  }
+  if (!chainConfig) {
+    throw new Error(`No chain config for: ${chain}`)
+  }
+  
   const rpcUrl = getRpcUrl(chain)
 
   // Check current balance

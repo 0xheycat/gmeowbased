@@ -9,6 +9,7 @@ import {
   GM_CONTRACT_ABI,
   normalizeChainKey,
   type ChainKey,
+  type GMChainKey,
 } from '@/lib/gmeow-utils'
 import { fetchAggregatedRaw, type RawAggregate } from '@/lib/leaderboard-aggregator'
 import { getRpcUrl } from '@/lib/rpc'
@@ -179,7 +180,7 @@ async function resolvePointsBalance(chain: ChainKey, address: Address, minimum: 
 
     const result = await rpcTimeout(
       client.readContract({
-        address: CONTRACT_ADDRESSES[chain],
+        address: CONTRACT_ADDRESSES[chain as GMChainKey],
         abi: GM_CONTRACT_ABI,
         functionName: 'getUserStats',
         args: [address],

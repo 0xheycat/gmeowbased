@@ -125,7 +125,7 @@ function buildBadgeFrameHtml(params: {
   <p><strong>Badges Earned:</strong> ${stats.badgeCount}</p>
   ${badgeId ? `<p><strong>Viewing Badge:</strong> #${badgeId}</p>` : ''}
   <p>Badges represent your achievements in Gmeowbased. Complete quests, maintain streaks, and participate in guilds to earn more!</p>
-  <p><a href="${origin}/Dashboard">View Dashboard</a></p>
+  <p><a href="${origin}/dashboard">View Dashboard</a></p>
 </body>
 </html>`
 }

@@ -5,6 +5,7 @@ import {
   GM_CONTRACT_ABI,
   gmContractHasFunction,
   type ChainKey,
+  type GMChainKey,
 } from '@/lib/gmeow-utils'
 import { fetchUsersByAddresses } from '@/lib/neynar'
 import { getRpcUrl } from '@/lib/rpc'
@@ -163,7 +164,7 @@ async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState>
     trackWarning('leaderboard_client_creation_failed', { function: 'getOrCreateClient', chain, error: String(error) })
     throw error
   }
-  const contractAddr = CONTRACT_ADDRESSES[chain]
+  const contractAddr = CONTRACT_ADDRESSES[chain as GMChainKey]
 
   const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
     Promise.race([
@@ -265,7 +266,7 @@ async function resolveProfile(entry: RawAggregate) {
 
     const profile = await rpcTimeout(
       client.readContract({
-        address: CONTRACT_ADDRESSES[entry.chain],
+        address: CONTRACT_ADDRESSES[entry.chain as GMChainKey],
         abi: GM_CONTRACT_ABI,
         functionName: 'getUserProfile',
         args: [entry.address],

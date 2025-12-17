@@ -62,9 +62,9 @@ export function Header() {
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-4">
             <Link
-              href="/Quest"
+              href="/quests"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/Quest')
+                isActive('/quests')
                   ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50'
               }`}
@@ -82,7 +82,7 @@ export function Header() {
               Leaderboard
             </Link>
             <Link
-              href="/Dashboard"
+              href="/dashboard"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/Dashboard')
                   ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'

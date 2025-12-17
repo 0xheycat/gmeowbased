@@ -1,10 +1,55 @@
+/**
+ * @file components/admin/BotStatsConfigPanel.tsx
+ * 
+ * Bot Stats Response Engine Configuration Panel
+ * Admin UI for configuring bot auto-reply triggers, cooldowns, and Neynar score thresholds.
+ * 
+ * PHASE: Phase 1 - Week 3 (December 2025)
+ * DATE: Updated December 16, 2025
+ * STATUS: ✅ IMPLEMENTED (minNeynarScore field added)
+ * 
+ * TODO:
+ * - [ ] Add real-time config validation preview (show sample cast matching)
+ * - [ ] Add A/B testing toggle for new config variants
+ * - [ ] Add config version history (rollback capability)
+ * - [ ] Add "Test Configuration" button to simulate targeting
+ * 
+ * FEATURES:
+ * - ✅ Mention triggers configuration (multi-line input)
+ * - ✅ Signal keywords configuration
+ * - ✅ Question starters configuration
+ * - ✅ Response variants (rotated phrases)
+ * - ✅ Cooldown minutes (rate limiting)
+ * - ✅ Repeat cooldown minutes
+ * - ✅ XP delta threshold
+ * - ✅ Minimum Neynar score threshold (0.0-1.0)
+ * - ✅ Require question mark toggle
+ * - ✅ Dirty state tracking
+ * - ✅ Reset defaults & revert changes
+ * 
+ * REFERENCE DOCUMENTATION:
+ * - FARCASTER-BOT-ENHANCEMENT-PLAN-PART-2.md (Section 4.7: Edge Cases & Exploits)
+ * - FARCASTER-BOT-ENHANCEMENT-PLAN-PART-1.md (Section 3.3: Bot Targeting Logic)
+ * 
+ * CRITICAL FINDINGS:
+ * ⚠️ NEYNAR SCORE: Set to 0 disables quality gate (allow all casts)
+ * ⚠️ COOLDOWN: Too low (<5 min) may cause spam, too high (>60 min) reduces engagement
+ * ⚠️ KEYWORDS: Case-insensitive matching, avoid overly broad terms
+ * 
+ * REQUIREMENTS FROM farcaster.instructions.md:
+ * - Config stored in Supabase (bot_config table)
+ * - Changes take effect within 3 minutes (config refresh interval)
+ * - Admin-only access (session validation required)
+ * - Network: Base (ChainID: 8453)
+ */
+
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import clsx from 'clsx'
 
-import type { BotStatsConfig } from '@/lib/bot-config-types'
-import { DEFAULT_BOT_STATS_CONFIG } from '@/lib/bot-config-types'
+import type { BotStatsConfig } from '@/lib/bot/config/types'
+import { DEFAULT_BOT_STATS_CONFIG } from '@/lib/bot/config/types'
 
 const SESSION_EXPIRED_MESSAGE = 'Admin session expired. Please sign in again.'
 

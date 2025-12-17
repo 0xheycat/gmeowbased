@@ -37,7 +37,7 @@ const CHAIN_CONFIG = {
 } as const
 
 // GmeowMultichain contract addresses per chain (these own the badge contracts)
-const GM_CONTRACT_ADDRESSES: Record<ChainKey, `0x${string}`> = {
+const GM_CONTRACT_ADDRESSES: Partial<Record<ChainKey | 'ink', `0x${string}`>> = {
   base: (process.env.NEXT_PUBLIC_GM_BASE_ADDRESS as `0x${string}`) || '0x3ad420B8C2Be19ff8EBAdB484Ed839Ae9254bf2F',
   unichain: (process.env.NEXT_PUBLIC_GM_UNICHAIN_ADDRESS as `0x${string}`) || '0xD8b4190c87d86E28f6B583984cf0C89FCf9C2a0f',
   celo: (process.env.NEXT_PUBLIC_GM_CELO_ADDRESS as `0x${string}`) || '0xa68BfB4BB6F7D612182A3274E7C555B7b0b27a52',
@@ -69,7 +69,7 @@ function getOracleAccount() {
  * Get chain configuration
  */
 function getChainConfig(chain: ChainKey) {
-  const config = CHAIN_CONFIG[chain]
+  const config = CHAIN_CONFIG[chain as keyof typeof CHAIN_CONFIG]
   if (!config) {
     throw new Error(`Unsupported chain: ${chain}`)
   }

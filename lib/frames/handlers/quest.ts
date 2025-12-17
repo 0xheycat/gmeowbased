@@ -127,7 +127,7 @@ function buildQuestFrameHtml(params: {
   <ul>
     ${(quest.requirements || []).map((req: string) => `<li>${req}</li>`).join('')}
   </ul>
-  <p><a href="${origin}/Quest?quest=${quest.id}">Start Quest</a></p>
+  <p><a href="${origin}/quests?quest=${quest.id}">Start Quest</a></p>
 </body>
 </html>`
 }
