@@ -9,12 +9,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { getUserBadges, loadBadgeRegistry } from '@/lib/badges/badges'
 import { FIDSchema } from '@/lib/validation/api-schemas'
-import { withErrorHandler } from '@/lib/error-handler'
-import { buildDynamicFrameImageUrl } from '@/lib/share'
-import { generateRequestId } from '@/lib/request-id'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { buildDynamicFrameImageUrl } from '@/lib/api/share'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 /**
  * Farcaster Frame: Badge Showcase

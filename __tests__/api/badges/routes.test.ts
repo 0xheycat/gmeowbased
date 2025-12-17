@@ -52,9 +52,9 @@ vi.mock('@/lib/request-id', () => ({
   generateRequestId: vi.fn(() => 'test-request-id'),
 }))
 
-import { getUserBadges, assignBadgeToUser, getBadgeFromRegistry, updateBadgeMintStatus } from '@/lib/badges'
+import { getUserBadges, assignBadgeToUser, getBadgeFromRegistry, updateBadgeMintStatus } from '@/lib/badges/badges'
 import { getSupabaseServerClient } from '@/lib/supabase/client'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { rateLimit, getClientIp } from '@/lib/middleware/rate-limit'
 
 // Shared Supabase mock
 const mockSupabase = {

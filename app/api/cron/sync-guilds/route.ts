@@ -15,8 +15,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency';
-import { generateRequestId } from '@/lib/request-id';
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency';
+import { generateRequestId } from '@/lib/middleware/request-id';
 
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

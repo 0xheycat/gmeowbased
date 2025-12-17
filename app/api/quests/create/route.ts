@@ -21,15 +21,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit';
-import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit';
+import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler';
 import { calculateQuestCost, type QuestCostInput } from '@/lib/quests/cost-calculator';
 import { escrowPoints } from '@/lib/quests/points-escrow-service';
 import { getSupabaseServerClient } from '@/lib/supabase';
 import type { QuestCategory, QuestDifficulty } from '@/lib/supabase/types/quest';
 import type { QuestDraft } from '@/lib/quests/types';
-import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/idempotency';
-import { generateRequestId } from '@/lib/request-id';
+import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/middleware/idempotency';
+import { generateRequestId } from '@/lib/middleware/request-id';
 
 export const dynamic = 'force-dynamic';
 

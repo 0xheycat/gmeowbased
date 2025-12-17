@@ -20,8 +20,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
-import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 // Lazy initialization of Supabase client with config validation
 let supabase: ReturnType<typeof createClient> | null = null;

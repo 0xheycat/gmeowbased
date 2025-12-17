@@ -4,7 +4,7 @@ import { config } from 'dotenv'
 config({ path: process.env.DOTENV_PATH || '.env.local', override: true })
 
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
-import { syncSupabaseLeaderboard } from '@/lib/leaderboard-sync'
+import { syncSupabaseLeaderboard } from '@/lib/leaderboard/leaderboard-sync'
 
 async function main() {
   if (!isSupabaseConfigured()) {

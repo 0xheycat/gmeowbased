@@ -22,10 +22,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, strictLimiter } from '@/lib/rate-limit'
-import { getClientIp } from '@/lib/rate-limit'
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+import { rateLimit, strictLimiter } from '@/lib/middleware/rate-limit'
+import { getClientIp } from '@/lib/middleware/rate-limit'
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes max execution time
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     
     // Import dependencies
     const { getSupabaseServerClient, isSupabaseConfigured } = await import('@/lib/supabase/client')
-    const { syncSupabaseLeaderboard } = await import('@/lib/leaderboard-sync')
+    const { syncSupabaseLeaderboard } = await import('@/lib/leaderboard/leaderboard-sync')
     
     // Verify Supabase configuration
     if (!isSupabaseConfigured()) {

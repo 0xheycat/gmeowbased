@@ -18,7 +18,7 @@ import {
   SHARED_COLORS,
   buildFooterText,
 } from '@/lib/frame-design-system'
-import { formatXp } from '@/lib/rank'
+import { formatXp } from '@/lib/leaderboard/rank'
 
 export const runtime = 'nodejs'
 

@@ -1,7 +1,7 @@
 import { domainManifestSchema } from '@farcaster/miniapp-core'
 import { NextResponse } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 const DEFAULT_BASE_URL = 'https://gmeowhq.art'
 const PLACEHOLDER_PATTERN = /^(?:REPLACE|PLACEHOLDER|TODO|FILL_ME)/i

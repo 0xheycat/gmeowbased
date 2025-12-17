@@ -11,7 +11,7 @@
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase';
-import { logError } from '@/lib/error-handler';
+import { logError } from '@/lib/middleware/error-handler';
 import type { QuestTemplate } from '@/lib/quests/types';
 
 export interface FetchTemplatesOptions {

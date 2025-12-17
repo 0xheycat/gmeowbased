@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
-import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
+import { fetchUserByFid, type FarcasterUser } from '@/lib/integrations/neynar'
 
 // Type definitions moved from removed quest-wizard
 type MiniKitContextUser = { fid: number; username: string; pfpUrl?: string }

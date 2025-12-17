@@ -9,8 +9,8 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import BoltIcon from '@mui/icons-material/Bolt'
 import PersonIcon from '@mui/icons-material/Person'
 import LogoutIcon from '@mui/icons-material/Logout'
-import { fetchUserByAddress, type FarcasterUser } from '@/lib/neynar'
-import { formatNumber } from '@/lib/formatters'
+import { fetchUserByAddress, type FarcasterUser } from '@/lib/integrations/neynar'
+import { formatNumber } from '@/lib/utils/formatters'
 
 export function ProfileDropdown() {
   const { address, isConnected } = useAccount()

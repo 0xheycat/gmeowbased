@@ -6,7 +6,7 @@
 
 import { forwardRef } from 'react'
 import CheckIcon from '@mui/icons-material/Check'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 
 export interface CheckboxProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {

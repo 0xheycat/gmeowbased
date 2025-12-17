@@ -20,7 +20,7 @@ import { useState, useEffect } from 'react'
 import { TrendingUpIcon, GroupIcon, StarIcon } from '@/components/icons'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
-import { createKeyboardHandler, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 
 export interface GuildStats {
   totalPoints: number

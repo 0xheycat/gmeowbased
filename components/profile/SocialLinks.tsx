@@ -23,7 +23,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { copyToClipboardSafe } from '@/lib/share'
+import { copyToClipboardSafe } from '@/lib/api/share'
 import type { SocialLinks as SocialLinksType, WalletData } from '@/lib/profile/types'
 
 // Icons from components/icons

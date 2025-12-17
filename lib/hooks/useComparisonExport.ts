@@ -12,7 +12,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { openWarpcastComposer, copyToClipboardSafe } from '@/lib/share'
+import { openWarpcastComposer, copyToClipboardSafe } from '@/lib/api/share'
 
 export interface ExportPilot {
   farcaster_fid: number | null
@@ -128,7 +128,7 @@ export function useComparisonExport() {
       const dataUrl = canvas.toDataURL('image/png', 0.95)
       
       // Import share utilities
-      const { openWarpcastComposer } = await import('@/lib/share')
+      const { openWarpcastComposer } = await import('@/lib/api/share')
       
       // Open composer with text and image embed
       await openWarpcastComposer(shareText, dataUrl)
@@ -165,7 +165,7 @@ export function useComparisonExport() {
       const reason = `Pilot Battle: ${names} - ${topName} won with ${topScorer.total_score.toLocaleString()} points`
       
       // Import wallet transaction utilities dynamically
-      const { createMintNFTTx } = await import('@/lib/gmeow-utils')
+      const { createMintNFTTx } = await import('@/lib/contracts/gmeow-utils')
       
       // Create NFT mint transaction (tradeable NFT, not soulbound badge)
       const mintTx = createMintNFTTx(nftTypeId, reason, 'base')

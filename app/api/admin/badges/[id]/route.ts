@@ -1,13 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { AdminBadgeUpdateSchema } from '@/lib/validation/api-schemas'
-import { deleteBadgeTemplate, getBadgeTemplateById, invalidateBadgeCaches, updateBadgeTemplate } from '@/lib/badges'
+import { deleteBadgeTemplate, getBadgeTemplateById, invalidateBadgeCaches, updateBadgeTemplate } from '@/lib/badges/badges'
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { CHAIN_IDS, type ChainKey } from '@/lib/gmeow-utils'
-import type { BadgeTemplateInput } from '@/lib/badges'
-import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+import { CHAIN_IDS, type ChainKey } from '@/lib/contracts/gmeow-utils'
+import type { BadgeTemplateInput } from '@/lib/badges/badges'
+import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

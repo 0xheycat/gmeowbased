@@ -21,14 +21,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { rateLimit, getClientIp, apiLimiter, strictLimiter } from '@/lib/rate-limit';
-import { createErrorResponse, ErrorType, logError, withErrorHandler } from '@/lib/error-handler';
+import { rateLimit, getClientIp, apiLimiter, strictLimiter } from '@/lib/middleware/rate-limit';
+import { createErrorResponse, ErrorType, logError, withErrorHandler } from '@/lib/middleware/error-handler';
 import { validateAdminRequest } from '@/lib/auth/admin';
 import { getSupabaseServerClient } from '@/lib/supabase';
 import { fetchProfileData, updateProfileData, type ProfileData } from '@/lib/profile/profile-service';
 import DOMPurify from 'isomorphic-dompurify';
-import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/idempotency';
-import { generateRequestId } from '@/lib/request-id';
+import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/middleware/idempotency';
+import { generateRequestId } from '@/lib/middleware/request-id';
 
 export const dynamic = 'force-dynamic';
 

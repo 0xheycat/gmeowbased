@@ -24,7 +24,7 @@ import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, Dialo
 import WarningIcon from '@mui/icons-material/Warning'
 import InfoIcon from '@mui/icons-material/Info'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import { ICON_SIZES } from '@/lib/icon-sizes'
+import { ICON_SIZES } from '@/lib/utils/icon-sizes'
 
 export type ConfirmDialogVariant = 'destructive' | 'warning' | 'info'
 

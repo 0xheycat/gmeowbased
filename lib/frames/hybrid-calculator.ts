@@ -102,7 +102,7 @@
  * - Website: https://gmeowhq.art
  */
 
-import { getUserStats as getSubsquidUserStats } from '@/lib/subsquid-client'
+import { getUserStats as getSubsquidUserStats } from '@/lib/integrations/subsquid-client'
 import { createClient } from '@/lib/supabase/server'
 
 /**

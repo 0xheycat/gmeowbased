@@ -18,9 +18,9 @@ import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, http } from 'viem';
 import type { Address } from 'viem';
 import { base } from 'viem/chains';
-import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/idempotency';
-import { generateRequestId } from '@/lib/request-id';
-import { STANDALONE_ADDRESSES } from '@/lib/gmeow-utils';
+import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency';
+import { generateRequestId } from '@/lib/middleware/request-id';
+import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils';
 import GUILD_ABI_JSON from '@/abi/GmeowGuildStandalone.abi.json';
 
 export const runtime = 'nodejs';

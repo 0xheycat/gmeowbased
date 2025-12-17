@@ -51,8 +51,8 @@
 
 import { useEffect, useRef } from 'react'
 import { XPCelebrationModal } from '@/components/xp-celebration'
-import type { ChainKey } from '@/lib/gmeow-utils'
-import { calculateRankProgress, type RankProgress } from '@/lib/rank'
+import type { ChainKey } from '@/lib/contracts/gmeow-utils'
+import { calculateRankProgress, type RankProgress } from '@/lib/leaderboard/rank'
 import type { TierCategory } from '@/components/xp-celebration/types'
 import {
   GmIcon,

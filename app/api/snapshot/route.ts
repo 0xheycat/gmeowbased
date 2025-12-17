@@ -3,16 +3,16 @@ import type { NextRequest } from 'next/server'
 
 import { validateAdminRequest } from '@/lib/auth/admin'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
-import { extractHttpErrorMessage } from '@/lib/http-error'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { extractHttpErrorMessage } from '@/lib/middleware/http-error'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 import {
   buildRequirement,
   runPartnerSnapshot,
   serializePartnerSnapshotSummary,
   type PartnerRequirementKind,
   type PartnerSnapshotSummaryPayload,
-} from '@/lib/partner-snapshot'
+} from '@/lib/profile/partner-snapshot'
 
 const DEFAULT_TABLE = process.env.SUPABASE_PARTNER_SNAPSHOT_TABLE || 'partner_snapshots'
 

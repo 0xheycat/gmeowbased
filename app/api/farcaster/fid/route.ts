@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { Address } from 'viem'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { fetchFidByAddress } from '@/lib/neynar'
-import { withErrorHandler, handleValidationError, handleRateLimitError, handleExternalApiError } from '@/lib/error-handler'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { fetchFidByAddress } from '@/lib/integrations/neynar'
+import { withErrorHandler, handleValidationError, handleRateLimitError, handleExternalApiError } from '@/lib/middleware/error-handler'
 import { getCached } from '@/lib/cache/server'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 function isAddress(a?: string): a is Address {
   return !!a && /^0x[a-fA-F0-9]{40}$/.test(a)

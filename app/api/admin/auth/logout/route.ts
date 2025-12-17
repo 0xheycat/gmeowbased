@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 
 import { buildAdminSessionClearCookie, isAdminSecurityEnabled } from '@/lib/auth/admin'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

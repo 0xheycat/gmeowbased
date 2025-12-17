@@ -3,7 +3,7 @@
  * Shared type definitions for Farcaster Frame handlers
  */
 
-import type { NormalizedQuest, ChainKey } from '@/lib/gmeow-utils'
+import type { NormalizedQuest, ChainKey } from '@/lib/contracts/gmeow-utils'
 
 export type FrameType =
   | 'quest'

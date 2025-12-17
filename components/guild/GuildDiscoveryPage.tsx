@@ -33,7 +33,7 @@ import {
 import { Button } from '@/components/ui/button'
 import GuildLeaderboard from '@/components/guild/GuildLeaderboard'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 
 export interface Guild {
   id: string

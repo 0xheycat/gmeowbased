@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { generateRequestId } from '@/lib/request-id'
-import { getNeynarServerClient } from '@/lib/neynar-server'
-import { resolveBotSignerUuid } from '@/lib/neynar-bot'
+import { generateRequestId } from '@/lib/middleware/request-id'
+import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { resolveBotSignerUuid } from '@/lib/integrations/neynar-bot'
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
-import { withErrorHandler } from '@/lib/error-handler'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 export const runtime = 'nodejs'
 

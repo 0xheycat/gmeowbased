@@ -26,7 +26,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { copyToClipboardSafe } from '@/lib/share'
+import { copyToClipboardSafe } from '@/lib/api/share'
 import type { ProfileData } from '@/lib/profile/types'
 
 // Icons from components/icons

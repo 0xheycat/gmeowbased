@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { withErrorHandler } from '@/lib/error-handler'
-import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { getUserBadges, loadBadgeRegistry } from '@/lib/badges/badges'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import {
   buildBadgeShareImageUrl,
   getBadgeExplorerUrl,
   isValidBadgeId,
   isValidFid,
-} from '@/lib/frame-badge'
-import { generateRequestId } from '@/lib/request-id'
+} from '@/lib/frames/frame-badge'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 function getBaseUrl(request: NextRequest): string {
   const protocol = request.headers.get('x-forwarded-proto') || 'https'

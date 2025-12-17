@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { generateRequestId } from '@/lib/request-id'
-import { BADGE_BUCKET_NAME, invalidateBadgeCaches, uploadBadgeArt } from '@/lib/badges'
+import { generateRequestId } from '@/lib/middleware/request-id'
+import { BADGE_BUCKET_NAME, invalidateBadgeCaches, uploadBadgeArt } from '@/lib/badges/badges'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
-import { withErrorHandler } from '@/lib/error-handler'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 export const runtime = 'nodejs'
 

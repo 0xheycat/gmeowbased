@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { getTimeUntilMidnight, getTimeUntilNextGM } from '@/lib/gmeow-utils'
+import { getTimeUntilMidnight, getTimeUntilNextGM } from '@/lib/contracts/gmeow-utils'
 
 interface CountdownProps {
   className?: string

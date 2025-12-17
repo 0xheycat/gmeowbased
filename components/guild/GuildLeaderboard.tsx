@@ -25,7 +25,7 @@ import { EmojiEventsIcon, MilitaryTechIcon, LeaderboardIcon } from '@/components
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import { Button } from '@/components/ui/button'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 
 export interface GuildRank {
   rank: number

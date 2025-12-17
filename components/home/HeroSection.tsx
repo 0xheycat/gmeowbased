@@ -7,8 +7,8 @@ import Link from 'next/link'
 import { TimeEmoji } from '@/components/TimeEmoji'
 import { useAnimatedCount } from '@/hooks/useAnimatedCount'
 import type { HeroUser } from './types'
-import { formatNumber } from '@/lib/formatters'
-import { formatTimeUntilNextGM } from '@/lib/gmeow-utils'
+import { formatNumber } from '@/lib/utils/formatters'
+import { formatTimeUntilNextGM } from '@/lib/contracts/gmeow-utils'
 
 const POWER_USER_HANDLES = new Set(['vbuterin', 'dwr', 'punk6529', 'far'])
 

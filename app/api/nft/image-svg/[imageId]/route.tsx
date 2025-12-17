@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { generateGmeowBadgeWithBranding } from '@/lib/dicebear-generator'
+import { generateGmeowBadgeWithBranding } from '@/lib/utils/dicebear-generator'
 
 // Mock data for local testing (same as metadata API)
 function getMockNFTData(tokenId: string) {

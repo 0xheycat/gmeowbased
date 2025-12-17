@@ -14,7 +14,7 @@
 
 import { useState, useEffect } from 'react'
 import { ViralTierBadge, ViralTierProgress } from './ViralTierBadge'
-import { getViralTier, estimateNextTier, formatEngagementMetrics, type EngagementMetrics } from '@/lib/viral-bonus'
+import { getViralTier, estimateNextTier, formatEngagementMetrics, type EngagementMetrics } from '@/lib/viral/viral-bonus'
 
 type ViralCastStat = {
   castHash: string

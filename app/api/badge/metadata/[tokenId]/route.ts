@@ -6,14 +6,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
 import { base } from 'viem/chains'
-import { STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import {
   generateGuildLeaderMetadata,
   generateGuildMemberMetadata,
   generateQuestBadgeMetadata,
   generateAchievementBadgeMetadata,
   type BadgeMetadata,
-} from '@/lib/badge-metadata'
+} from '@/lib/badges/badge-metadata'
 
 const BADGE_ABI = [
   {

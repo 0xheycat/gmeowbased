@@ -2,9 +2,9 @@
 // Dynamic Guild Frame Route
 
 import { NextResponse } from 'next/server'
-import { sanitizeFID } from '@/lib/frame-validation'
-import { buildDynamicFrameImageUrl } from '@/lib/share'
-import * as Ne from '@/lib/neynar'
+import { sanitizeFID } from '@/lib/frames/frame-validation'
+import { buildDynamicFrameImageUrl } from '@/lib/api/share'
+import * as Ne from '@/lib/integrations/neynar'
 
 export const runtime = 'nodejs'
 export const revalidate = 300

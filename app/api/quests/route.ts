@@ -9,10 +9,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getActiveQuests } from '@/lib/supabase/queries/quests';
 import { QuestListQuerySchema } from '@/lib/validation/api-schemas';
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit';
-import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit';
+import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler';
 import { ZodError } from 'zod';
-import { generateRequestId } from '@/lib/request-id';
+import { generateRequestId } from '@/lib/middleware/request-id';
 
 interface QuestFilters {
   category?: 'onchain' | 'social';

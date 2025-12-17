@@ -21,7 +21,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/client'
-import { sendDailyDigest } from '@/lib/notification-batching'
+import { sendDailyDigest } from '@/lib/notifications/notification-batching'
 
 export const runtime = 'edge'
 export const dynamic = 'force-dynamic'

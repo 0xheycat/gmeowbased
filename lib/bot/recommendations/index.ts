@@ -1,6 +1,6 @@
 // Smart quest recommendations based on user history
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
-import type { ChainKey } from '@/lib/gmeow-utils'
+import type { ChainKey } from '@/lib/contracts/gmeow-utils'
 
 export type QuestRecommendation = {
   questId: number

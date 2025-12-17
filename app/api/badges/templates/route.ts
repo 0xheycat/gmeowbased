@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { listBadgeTemplates } from '@/lib/badges'
-import { withErrorHandler } from '@/lib/error-handler'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { listBadgeTemplates } from '@/lib/badges/badges'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached, buildBadgeTemplatesKey } from '@/lib/cache/server'
-import { generateRequestId } from '@/lib/request-id'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

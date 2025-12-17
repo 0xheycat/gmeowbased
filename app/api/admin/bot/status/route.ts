@@ -2,19 +2,19 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Signer } from '@neynar/nodejs-sdk/build/api/models/signer'
 
-import { generateRequestId } from '@/lib/request-id'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
-import { getNeynarServerClient } from '@/lib/neynar-server'
+import { generateRequestId } from '@/lib/middleware/request-id'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
+import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
 import {
   previewSecret,
   resolveBotFid,
   resolveBotSignerUuid,
   resolveNeynarApiKey,
   resolveWebhookSecret,
-} from '@/lib/neynar-bot'
-import { extractHttpErrorMessage } from '@/lib/http-error'
+} from '@/lib/integrations/neynar-bot'
+import { extractHttpErrorMessage } from '@/lib/middleware/http-error'
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 export const runtime = 'nodejs'
 

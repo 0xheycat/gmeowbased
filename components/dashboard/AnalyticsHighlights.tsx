@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 
-import type { DashboardTelemetryPayload } from '@/lib/telemetry'
+import type { DashboardTelemetryPayload } from '@/lib/utils/telemetry'
 
 type AnalyticsHighlightsProps = {
   data: DashboardTelemetryPayload | null

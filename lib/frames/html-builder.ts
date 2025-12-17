@@ -3,7 +3,7 @@
  * Generates frame HTML with Farcaster vNext metadata
  */
 
-import { sanitizeButtons } from '@/lib/frame-validation'
+import { sanitizeButtons } from './frame-validation'
 import { getComposeText } from './compose-text'
 
 // Helper function for HTML escaping

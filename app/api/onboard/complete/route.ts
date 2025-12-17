@@ -9,9 +9,9 @@ import {
   getTierConfig,
   mintBadgeViaNeynar,
   // Phase 4: Replaced sendBadgeAwardNotification with notifyWithXPReward for priority filtering
-} from '@/lib/badges'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+} from '@/lib/badges/badges'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 import { notifyWithXPReward } from '@/lib/notifications'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY

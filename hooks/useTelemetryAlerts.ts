@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { TelemetryAlert } from '@/lib/telemetry'
+import type { TelemetryAlert } from '@/lib/utils/telemetry'
 
 
 type TelemetryAlertTone = 'success' | 'info' | 'warn'

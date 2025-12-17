@@ -24,10 +24,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { processBatch } from '@/scripts/automation/mint-badge-queue'
-import { rateLimit, strictLimiter } from '@/lib/rate-limit'
+import { rateLimit, strictLimiter } from '@/lib/middleware/rate-limit'
 import { z } from 'zod'
-import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes max execution time

@@ -23,7 +23,7 @@ import { MonetizationOnIcon, KeyboardArrowUpIcon, KeyboardArrowDownIcon, AccessT
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import Loader from '@/components/ui/gmeow-loader'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA, ERROR_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA, ERROR_ARIA } from '@/lib/utils/accessibility'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 
 export interface TreasuryTransaction {

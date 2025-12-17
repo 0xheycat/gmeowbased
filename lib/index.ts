@@ -10,7 +10,7 @@
  * import { withErrorHandler, generateRequestId } from '@/lib'
  * 
  * // Domain-specific (prefer direct paths)
- * import { getUserBadges } from '@/lib/badges'
+ * import { getUserBadges } from '@/lib/badges/badges'
  * import { getSupabaseServerClient } from '@/lib/supabase/client'
  * ```
  */
@@ -19,9 +19,9 @@
 // Core Middleware & Error Handling (Most Common)
 // ============================================================================
 
-export * from './error-handler'
-export * from './request-id'
-export * from './rate-limit'
+export * from './middleware/error-handler'
+export * from './middleware/request-id'
+export * from './middleware/rate-limit'
 
 // ============================================================================
 // Validation
@@ -40,7 +40,7 @@ export * from './auth'
 export * from './cache'
 
 // Supabase
-export { getSupabaseServerClient } from './supabase/client'
+export { getSupabaseServerClient } from '@/lib/supabase/client'
 export { getSupabaseAdminClient, getSupabaseEdgeClient } from './supabase/edge'
 
 // ============================================================================
@@ -48,7 +48,7 @@ export { getSupabaseAdminClient, getSupabaseEdgeClient } from './supabase/edge'
 // ============================================================================
 
 export * from './contracts'
-export type { GMChainKey, ChainKey } from './gmeow-utils'
+export type { GMChainKey, ChainKey } from './contracts/gmeow-utils'
 
 // ============================================================================
 // Common Types
@@ -60,7 +60,8 @@ export type { Database } from '../types/supabase'
 // Utilities
 // ============================================================================
 
-export * from './utils'
+export * from './utils/utils'
+export * from './utils/formatters'
 
 // ============================================================================
 // Feature Modules (Type Exports Only - Use Direct Imports for Functions)

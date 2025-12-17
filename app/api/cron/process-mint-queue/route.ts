@@ -47,7 +47,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limit'
+import { checkRateLimit, getClientIdentifier } from '@/lib/middleware/rate-limit'
 
 /**
  * POST /api/cron/process-mint-queue

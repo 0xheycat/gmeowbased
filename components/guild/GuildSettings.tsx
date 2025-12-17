@@ -38,7 +38,7 @@ import { useDialog } from '@/components/dialogs'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import { ConfirmDialog } from '@/components/dialogs'
 import { ErrorDialog } from '@/components/dialogs'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 
 // Validation schema
 const GuildEditSchema = z.object({

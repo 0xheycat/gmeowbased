@@ -9,9 +9,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getQuestBySlug } from '@/lib/supabase/queries/quests';
 import { QuestDetailsQuerySchema } from '@/lib/validation/api-schemas';
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit';
-import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler';
-import { generateRequestId } from '@/lib/request-id';
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit';
+import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler';
+import { generateRequestId } from '@/lib/middleware/request-id';
 
 export const dynamic = 'force-dynamic';
 

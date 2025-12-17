@@ -1,7 +1,7 @@
 'use client'
 
 import { createAppKit } from '@reown/appkit/react'
-import { appkitConfig } from '@/lib/appkit-config'
+import { appkitConfig } from '@/lib/integrations/appkit-config'
 
 // Initialize AppKit modal
 // This must be called once at the root of the app

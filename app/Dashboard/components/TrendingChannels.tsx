@@ -8,7 +8,7 @@
  */
 
 import { getTrendingChannels, formatNumber, truncateText, formatTimeAgo } from '@/lib/api/neynar-dashboard'
-import { withRetry, RetryStrategies } from '@/lib/retry'
+import { withRetry, RetryStrategies } from '@/lib/api/retry'
 import { TrendingBadge, ActivityIndicator, ContextBadge } from '@/components/dashboard-patterns'
 import { TagIcon } from '@/components/icons/tag-icon'
 import Image from 'next/image'

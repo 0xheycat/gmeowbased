@@ -15,7 +15,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { ViralTierBadge } from './ViralTierBadge'
-import { getViralTier, type ViralTier } from '@/lib/viral-bonus'
+import { getViralTier, type ViralTier } from '@/lib/viral/viral-bonus'
 
 type BadgeMetric = {
   badgeId: string

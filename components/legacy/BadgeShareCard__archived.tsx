@@ -26,9 +26,9 @@
 
 import { useState } from 'react'
 import clsx from 'clsx'
-import { openWarpcastComposer } from '@/lib/share'
-import { buildBadgeShareFrameUrl, buildBadgeShareText, formatBadgeDate } from '@/lib/frame-badge'
-import type { UserBadge } from '@/lib/badges'
+import { openWarpcastComposer } from '@/lib/api/share'
+import { buildBadgeShareFrameUrl, buildBadgeShareText, formatBadgeDate } from '@/lib/frames/frame-badge'
+import type { UserBadge } from '@/lib/badges/badges'
 
 interface BadgeShareCardProps {
   badge: UserBadge

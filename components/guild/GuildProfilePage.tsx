@@ -36,7 +36,7 @@ import { UsersIcon, LeaderboardIcon, MonetizationOnIcon, SettingsIcon } from '@/
 import { Activity } from 'lucide-react'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
-import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/accessibility'
+import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 
 export interface Guild {
   id: string

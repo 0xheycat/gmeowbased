@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
-import { generateRequestId } from '@/lib/request-id'
+import { getUserBadges, loadBadgeRegistry } from '@/lib/badges/badges'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

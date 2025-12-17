@@ -8,7 +8,7 @@
  */
 
 import { getActivityFeed, formatNumber, formatTimeAgo, truncateText } from '@/lib/api/neynar-dashboard'
-import { withRetry, RetryStrategies } from '@/lib/retry'
+import { withRetry, RetryStrategies } from '@/lib/api/retry'
 import { ActivityIndicator, ContextBadge } from '@/components/dashboard-patterns'
 import { TimelineIcon } from '@/components/icons/timeline-icon'
 import Image from 'next/image'

@@ -7,7 +7,7 @@
 
 import { NextRequest } from 'next/server'
 import { ImageResponse } from 'next/og'
-import { loadFrameFonts, loadBackgroundImage } from '@/lib/frame-fonts'
+import { loadFrameFonts, loadBackgroundImage } from '@/lib/frames/frame-fonts'
 import {
   FRAME_FONT_FAMILY,
   FRAME_FONTS_V2,
@@ -16,7 +16,7 @@ import {
   buildBackgroundGradient,
   buildBoxShadow,
   buildBorderEffect,
-} from '@/lib/frame-design-system'
+} from '@/lib/frames/frame-design-system'
 import { withFrameImageCache, getStringParam, getNumericParam } from '@/lib/frames/image-cache-helper'
 
 export const runtime = 'nodejs'

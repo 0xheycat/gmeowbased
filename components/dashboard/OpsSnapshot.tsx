@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
 import Loader from '@/components/ui/loader'
-import type { DashboardTelemetryPayload } from '@/lib/telemetry'
+import type { DashboardTelemetryPayload } from '@/lib/utils/telemetry'
 
 const METRIC_DEFINITIONS = [
   {

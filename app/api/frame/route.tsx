@@ -23,20 +23,20 @@ import gm, {
   type NormalizedQuest,
   type ChainKey,
   type GMChainKey,
-} from '@/lib/gmeow-utils'
-import { getReferralCode } from '@/lib/referral-contract'
-import { calculateRankProgress } from '@/lib/rank'
-import { getChainIconUrl } from '@/lib/chain-icons'
-import { buildDynamicFrameImageUrl } from '@/lib/share'
+} from '@/lib/contracts/gmeow-utils'
+import { getReferralCode } from '@/lib/contracts/referral-contract'
+import { calculateRankProgress } from '@/lib/leaderboard/rank'
+import { getChainIconUrl } from '@/lib/utils/chain-icons'
+import { buildDynamicFrameImageUrl } from '@/lib/api/share'
 import {
   sanitizeFID,
   sanitizeQuestId,
   sanitizeChainKey as validateChainKey,
   sanitizeFrameType,
   sanitizeButtons,
-} from '@/lib/frame-validation'
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
-import { checkAndAwardNewUserRewards } from '@/lib/user-rewards'
+} from '@/lib/frames/frame-validation'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { checkAndAwardNewUserRewards } from '@/lib/profile/user-rewards'
 
 // ✅ NEW: Import modular frame handlers
 import { getFrameHandler } from '@/lib/frames'
@@ -47,7 +47,7 @@ export const runtime = 'nodejs'
 export const revalidate = 500
 // If you maintain a neynar helper module, use it; otherwise this file contains
 // lightweight neynar helpers (below) that behave reasonably for embedded use.
-import * as Ne from '@/lib/neynar' // optional — wrapped in try/catch at runtime
+import * as Ne from '@/lib/integrations/neynar' // optional — wrapped in try/catch at runtime
 
 // -------------------- Config & Defaults --------------------
 const DEFAULT_RPCS: Record<string, string> = {

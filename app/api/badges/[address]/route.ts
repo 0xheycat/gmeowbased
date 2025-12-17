@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { rateLimit, getClientIp, apiLimiter } from '@/lib/rate-limit'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { AddressSchema } from '@/lib/validation/api-schemas'
-import { fetchMintedBadges } from '@/lib/badges'
-import { CHAIN_IDS, type ChainKey, isAddress } from '@/lib/gmeow-utils'
-import { generateRequestId } from '@/lib/request-id'
+import { fetchMintedBadges } from '@/lib/badges/badges'
+import { CHAIN_IDS, type ChainKey, isAddress } from '@/lib/contracts/gmeow-utils'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 

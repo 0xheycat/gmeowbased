@@ -6,7 +6,7 @@ config({ path: process.env.DOTENV_PATH || '.env.local', override: true })
 import { randomUUID } from 'node:crypto'
 import process from 'node:process'
 
-import { getNeynarServerClient } from '@/lib/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
 import {
   listActiveNotificationTokens,
@@ -14,9 +14,9 @@ import {
   refreshTokenMetadata,
   type MiniAppNotificationToken,
 } from '@/lib/miniapp-notifications'
-import { fetchUserByFid } from '@/lib/neynar'
-import { fetchChainSnapshot, normalizeAddress, type ChainAggregation } from '@/lib/profile-data'
-import { getTimeUntilNextGM, hasGMToday } from '@/lib/gmeow-utils'
+import { fetchUserByFid } from '@/lib/integrations/neynar'
+import { fetchChainSnapshot, normalizeAddress, type ChainAggregation } from '@/lib/profile/profile-data'
+import { getTimeUntilNextGM, hasGMToday } from '@/lib/contracts/gmeow-utils'
 
 const DEFAULT_REMINDER_WINDOW_MINUTES = 180
 const DEFAULT_MAX_NOTIFICATIONS = 100

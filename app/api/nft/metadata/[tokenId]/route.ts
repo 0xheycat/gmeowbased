@@ -51,7 +51,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getNFTStats } from '@/lib/subsquid-client'
+import { getNFTStats } from '@/lib/integrations/subsquid-client'
 
 // Base URL for assets (from environment or default)
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art'

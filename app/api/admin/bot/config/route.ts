@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { generateRequestId } from '@/lib/request-id'
-import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
+import { generateRequestId } from '@/lib/middleware/request-id'
+import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { validateAdminRequest } from '@/lib/auth/admin'
 import { loadBotStatsConfig, saveBotStatsConfig, sanitiseBotStatsConfigInput } from '@/lib/bot/config'
 import { DEFAULT_BOT_STATS_CONFIG, type BotStatsConfig } from '@/lib/bot/config/types'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { BotConfigUpdateSchema } from '@/lib/validation/api-schemas'
 
 export const runtime = 'nodejs'

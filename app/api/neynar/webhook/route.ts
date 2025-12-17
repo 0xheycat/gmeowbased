@@ -65,22 +65,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 
 import { parseWebhookEvent, verifyAppKeyWithNeynar } from '@farcaster/miniapp-node'
-import { rateLimit, getClientIp, webhookLimiter } from '@/lib/rate-limit'
-import { withErrorHandler } from '@/lib/error-handler'
-import { generateRequestId } from '@/lib/request-id'
+import { rateLimit, getClientIp, webhookLimiter } from '@/lib/middleware/rate-limit'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { generateRequestId } from '@/lib/middleware/request-id'
 
 import { loadBotStatsConfig } from '@/lib/bot/config'
 import { buildAgentAutoReply } from '@/lib/bot'
-import { getNeynarServerClient } from '@/lib/neynar-server'
-import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib/neynar-bot'
+import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib/integrations/neynar-bot'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot/frames/builder'
 // Phase 5.1: Real-time Viral Notifications
 // Source: lib/viral-engagement-sync.ts, lib/viral-achievements.ts
 // MCP Verified: November 17, 2025
 // Approved by: @heycat on November 17, 2025
-import { syncCastEngagement } from '@/lib/viral-engagement-sync'
-import { checkAndAwardAchievements } from '@/lib/viral-achievements'
+import { syncCastEngagement } from '@/lib/viral/viral-engagement-sync'
+import { checkAndAwardAchievements } from '@/lib/viral/viral-achievements'
 // Phase 4: Priority System Integration - replaced dispatchViralNotification with notifyWithXPReward
 import { notifyWithXPReward } from '@/lib/notifications'
 // Phase 1: Bot Analytics - Track webhook metrics for health monitoring

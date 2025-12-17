@@ -43,9 +43,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { strictLimiter } from '@/lib/rate-limit'
-import { getGuild, getUserGuild } from '@/lib/guild-contract'
-import { getContractAddress, STANDALONE_ADDRESSES } from '@/lib/gmeow-utils'
+import { strictLimiter } from '@/lib/middleware/rate-limit'
+import { getGuild, getUserGuild } from '@/lib/contracts/guild-contract'
+import { getContractAddress, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import type { Address } from 'viem'
 import { 
   checkIdempotency, 
@@ -53,8 +53,8 @@ import {
   getIdempotencyKey, 
   isValidIdempotencyKey,
   returnCachedResponse 
-} from '@/lib/idempotency'
-import { generateRequestId } from '@/lib/request-id'
+} from '@/lib/middleware/idempotency'
+import { generateRequestId } from '@/lib/middleware/request-id'
 import { logGuildEvent } from '@/lib/guild/event-logger'
 
 // ==========================================

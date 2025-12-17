@@ -13,8 +13,8 @@
 import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
-import { fetchUserByFid } from '@/lib/neynar'
-import { FRAME_FONTS_V2, FRAME_FONT_FAMILY, FRAME_TYPOGRAPHY } from '@/lib/frame-design-system'
+import { fetchUserByFid } from '@/lib/integrations/neynar'
+import { FRAME_FONTS_V2, FRAME_FONT_FAMILY, FRAME_TYPOGRAPHY } from '@/lib/frames/frame-design-system'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

@@ -26,11 +26,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { strictLimiter } from '@/lib/rate-limit'
+import { strictLimiter } from '@/lib/middleware/rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
-import { generateRequestId } from '@/lib/request-id'
-import { getGuild } from '@/lib/guild-contract'
+import { generateRequestId } from '@/lib/middleware/request-id'
+import { getGuild } from '@/lib/contracts/guild-contract'
 
 // Validation schema
 const GuildUpdateSchema = z.object({

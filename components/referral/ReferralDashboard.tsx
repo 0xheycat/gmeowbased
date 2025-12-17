@@ -23,7 +23,7 @@ import { ReferralCodeForm } from './ReferralCodeForm'
 import { ReferralLinkGenerator } from './ReferralLinkGenerator'
 import { ReferralStatsCards } from './ReferralStatsCards'
 import { ErrorIcon, InfoIcon } from '@/components/icons'
-import { getReferralCode } from '@/lib/referral-contract'
+import { getReferralCode } from '@/lib/contracts/referral-contract'
 
 export interface ReferralDashboardProps {
   /** User's wallet address */
