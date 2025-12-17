@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Import dependencies
-    const { getSupabaseServerClient, isSupabaseConfigured } = await import('@/lib/supabase-server')
+    const { getSupabaseServerClient, isSupabaseConfigured } = await import('@/lib/supabase/client')
     const { syncSupabaseLeaderboard } = await import('@/lib/leaderboard-sync')
     
     // Verify Supabase configuration

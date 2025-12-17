@@ -10,7 +10,7 @@
 import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
 import { getUserBadges, loadBadgeRegistry } from '@/lib/badges'
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { updateBadgeMintStatus } from '@/lib/badges'
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { BadgeMintSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/error-handler'
 import { generateRequestId } from '@/lib/request-id'

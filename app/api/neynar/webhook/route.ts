@@ -73,7 +73,7 @@ import { loadBotStatsConfig } from '@/lib/bot/config'
 import { buildAgentAutoReply } from '@/lib/bot'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib/neynar-bot'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot/frames/builder'
 // Phase 5.1: Real-time Viral Notifications
 // Source: lib/viral-engagement-sync.ts, lib/viral-achievements.ts

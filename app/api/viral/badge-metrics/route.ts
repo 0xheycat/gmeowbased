@@ -17,7 +17,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { withErrorHandler } from '@/lib/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { generateRequestId } from '@/lib/request-id'

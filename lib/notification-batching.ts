@@ -23,7 +23,7 @@
  * @module lib/notification-batching
  */
 
-import { getSupabaseServerClient } from './supabase-server'
+import { getSupabaseServerClient } from './supabase/client'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ============================================================================

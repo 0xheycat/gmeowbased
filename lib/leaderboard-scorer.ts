@@ -12,7 +12,7 @@
  * NO EMOJIS - Uses icon references only
  */
 
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { createPublicClient, http, parseAbiItem } from 'viem'
 import { base } from 'viem/chains'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI } from '@/lib/gmeow-utils'

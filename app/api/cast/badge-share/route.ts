@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getNeynarServerClient } from '@/lib/neynar-server'
 import { resolveBotSignerUuid } from '@/lib/neynar-bot'
 import { getUserBadges } from '@/lib/badges'
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { withErrorHandler } from '@/lib/error-handler'
 import { generateRequestId } from '@/lib/request-id'
 

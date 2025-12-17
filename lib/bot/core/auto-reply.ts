@@ -137,7 +137,7 @@ import type { BotStatsConfig } from '@/lib/bot/config/types'
 import { type CommunityEventType } from '@/lib/community-event-types'
 import { normalizeAddress } from '@/lib/profile-data'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { getUserStatsWithFallback } from '@/lib/bot/stats-with-fallback'
 import { 
   getCachedStats, 

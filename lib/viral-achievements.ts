@@ -25,7 +25,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { getSupabaseServerClient } from './supabase-server'
+import { getSupabaseServerClient } from './supabase/client'
 
 // ============================================================================
 // Type Definitions

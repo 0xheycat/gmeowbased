@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { extractHttpErrorMessage } from '@/lib/http-error'
 import { withErrorHandler } from '@/lib/error-handler'
 import { generateRequestId } from '@/lib/request-id'

@@ -27,7 +27,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { strictLimiter, getClientIp } from '@/lib/rate-limit'
 import { createErrorResponse, ErrorType, logError } from '@/lib/error-handler'
 import { generateRequestId } from '@/lib/request-id'

@@ -1,6 +1,6 @@
 // @edit-start 2025-02-14 — Community event aggregation helpers
 import { COMMUNITY_EVENT_TYPES, type CommunityEventSummary, type CommunityEventType } from '@/lib/community-event-types'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { normalizeAddress } from '@/lib/profile-data'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/neynar'
 import { CHAIN_KEYS, type ChainKey } from '@/lib/gmeow-utils'

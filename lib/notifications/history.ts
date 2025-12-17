@@ -1,4 +1,4 @@
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { trackError } from '@/lib/notifications/error-tracking'
 
 const TABLE_NAME = 'user_notification_history'

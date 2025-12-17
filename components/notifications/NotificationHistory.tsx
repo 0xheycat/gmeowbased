@@ -33,7 +33,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { trackError } from '@/lib/notifications/error-tracking'
-import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { getSupabaseBrowserClient } from '@/lib/supabase/edge'
 import type { NotificationHistoryItem } from '@/lib/notifications'
 import { markAsRead } from '@/lib/notifications/history'
 import { Button } from '@/components/ui/button'

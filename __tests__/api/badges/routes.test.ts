@@ -53,7 +53,7 @@ vi.mock('@/lib/request-id', () => ({
 }))
 
 import { getUserBadges, assignBadgeToUser, getBadgeFromRegistry, updateBadgeMintStatus } from '@/lib/badges'
-import { getSupabaseServerClient } from '@/lib/supabase-server'
+import { getSupabaseServerClient } from '@/lib/supabase/client'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 // Shared Supabase mock
