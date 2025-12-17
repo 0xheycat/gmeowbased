@@ -54,7 +54,7 @@
  */
 
 // @edit-start 2025-11-12 — Bot runtime configuration helpers
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import type { BotStatsConfig } from './types'
 import { DEFAULT_BOT_STATS_CONFIG } from './types'
 
@@ -181,7 +181,7 @@ async function fetchConfigFromSupabase(): Promise<BotStatsConfig | null> {
   if (!supabase) return null
 
   try {
-    const { data, error } = await supabase.rpc('http_get_config', { name: CONFIG_KEY })
+    const { data, error } = await (supabase as any).rpc('http_get_config', { name: CONFIG_KEY })
 
     if (error) {
       console.warn('[bot-config] failed to load config via http_get_config:', error.message)
@@ -251,7 +251,7 @@ export async function saveBotStatsConfig(config: BotStatsConfig): Promise<void> 
   }
 
   const payload = JSON.stringify(config)
-  const { error } = await supabase.rpc('http_set_config', { name: CONFIG_KEY, value: payload })
+  const { error } = await (supabase as any).rpc('http_set_config', { name: CONFIG_KEY, value: payload })
   if (error) {
     throw new Error(`Failed to persist bot stats config: ${error.message}`)
   }

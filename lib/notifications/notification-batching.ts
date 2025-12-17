@@ -23,7 +23,7 @@
  * @module lib/notification-batching
  */
 
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ============================================================================
@@ -140,7 +140,7 @@ export async function getUserTimezone(
     }
 
     // Try notification_preferences first
-    const { data: prefs, error: prefsError } = await client
+    const { data: prefs, error: prefsError } = await (client as any)
       .from('notification_preferences')
       .select('quiet_hours_timezone')
       .eq('fid', fid)
@@ -429,7 +429,7 @@ export async function queueNotification(
 
     const { fid, type, priority, payload } = input
 
-    const { error } = await client.from('notification_batch_queue').insert({
+    const { error } = await (client as any).from('notification_batch_queue').insert({
       fid,
       notification_type: type,
       priority,

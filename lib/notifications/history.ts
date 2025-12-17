@@ -1,4 +1,4 @@
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { trackError } from '@/lib/notifications/error-tracking'
 
 const TABLE_NAME = 'user_notification_history'
@@ -81,7 +81,7 @@ export async function saveNotification(input: SaveNotificationInput): Promise<bo
       action_href: input.actionHref ?? null,
     }
 
-    const { error } = await client.from(TABLE_NAME).insert(payload)
+    const { error } = await (client as any).from(TABLE_NAME).insert(payload)
 
     if (error) {
       trackError('notification_save_failed', error, {

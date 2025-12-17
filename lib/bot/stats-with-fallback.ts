@@ -64,7 +64,7 @@
  */
 
 import { localCache } from './local-cache'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { getUserStats as getSubsquidStats } from '@/lib/integrations/subsquid-client'
 import { computeBotUserStats, type BotUserStats } from '@/lib/bot/analytics/stats'
 
@@ -304,7 +304,7 @@ export async function getQuestRecommendationsWithFallback(
     const supabase = getSupabaseServerClient()
     if (!supabase) throw new Error('Supabase not configured')
 
-    const { data: quests, error } = await supabase
+    const { data: quests, error } = await (supabase as any)
       .from('quest_definitions')
       .select('*')
       .eq('is_active', true)

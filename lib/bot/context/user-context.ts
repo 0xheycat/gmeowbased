@@ -38,7 +38,7 @@
  * @see farcaster.instructions.md (section 4.1: Always include file headers)
  */
 
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { getCached } from '@/lib/cache/server'
 import type { BotFrameType } from '@/lib/bot/frames/builder'
 

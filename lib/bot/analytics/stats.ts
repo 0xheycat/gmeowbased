@@ -56,7 +56,7 @@
 // @edit-start 2025-11-12 — Bot stats aggregation helper
 import { PROFILE_SUPPORTED_CHAINS, fetchChainSnapshot, normalizeAddress } from '@/lib/profile/profile-data'
 import { calculateRankProgress } from '@/lib/leaderboard/rank'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'
 
 const DAY_MS = 24 * 60 * 60 * 1000

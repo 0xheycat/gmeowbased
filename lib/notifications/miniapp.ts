@@ -1,4 +1,4 @@
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { trackError } from './error-tracking'
 
 const TABLE_NAME = 'miniapp_notification_tokens'
@@ -120,7 +120,7 @@ export async function markNotificationTokenDisabled(input: DisableNotificationTo
     last_seen_at: nowIso,
   }
 
-  const query = client.from(TABLE_NAME).update(updatePayload)
+  const query = (client as any).from(TABLE_NAME).update(updatePayload)
   if (input.token) {
     query.eq('token', input.token)
   }

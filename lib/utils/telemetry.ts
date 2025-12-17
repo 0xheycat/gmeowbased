@@ -1,4 +1,4 @@
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/gmeow-utils'
 import { getRpcUrl } from '@/lib/contracts/rpc'
 import { createPublicClient, http, parseAbiItem, type AbiEvent, type Log } from 'viem'
@@ -765,7 +765,7 @@ export async function recordRankEvent(input: RankTelemetryEventInput): Promise<v
   }
 
   try {
-    await supabase.from(RANK_EVENT_TABLE).insert(payload)
+    await (supabase as any).from(RANK_EVENT_TABLE).insert(payload)
   } catch (error) {
     console.warn('[telemetry] recordRankEvent failed:', (error as Error)?.message || error)
   }
