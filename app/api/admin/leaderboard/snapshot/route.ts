@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 
 import { generateRequestId } from '@/lib/request-id'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/rate-limit'
-import { validateAdminRequest } from '@/lib/admin-auth'
+import { validateAdminRequest } from '@/lib/auth/admin'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase-server'
 import { syncSupabaseLeaderboard } from '@/lib/leaderboard-sync'
 import { withErrorHandler } from '@/lib/error-handler'

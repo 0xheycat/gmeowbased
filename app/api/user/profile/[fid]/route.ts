@@ -23,7 +23,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { rateLimit, getClientIp, apiLimiter, strictLimiter } from '@/lib/rate-limit';
 import { createErrorResponse, ErrorType, logError, withErrorHandler } from '@/lib/error-handler';
-import { validateAdminRequest } from '@/lib/admin-auth';
+import { validateAdminRequest } from '@/lib/auth/admin';
 import { getSupabaseServerClient } from '@/lib/supabase';
 import { fetchProfileData, updateProfileData, type ProfileData } from '@/lib/profile/profile-service';
 import DOMPurify from 'isomorphic-dompurify';
