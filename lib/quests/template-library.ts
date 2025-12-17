@@ -1,6 +1,49 @@
 /**
  * Quest Template Library
- * Pre-built quest templates for quick creation
+ * Phase 7.5: Comprehensive Headers
+ * 
+ * FEATURES:
+ * - Manages pre-built quest templates for quick creation
+ * - Fetches active templates from Supabase quest_templates table
+ * - Supports template filtering by category
+ * - Tracks template usage counts for popularity ranking
+ * - Applies templates to create quest drafts
+ * - Supports template customization before creation
+ * - Includes template preview images
+ * - Type-safe template data structures
+ * - Supports both desktop and Farcaster Mini App
+ * 
+ * TODO:
+ * - Add template versioning for updates
+ * - Implement template marketplace (user-created templates)
+ * - Add template ratings and reviews
+ * - Support template localization (i18n)
+ * - Add template tags for better discovery
+ * - Implement template recommendations based on creator history
+ * - Add template analytics (conversion rates, completion rates)
+ * 
+ * CRITICAL:
+ * - Template data must be validated before applying (schema validation)
+ * - Template costs must be calculated dynamically (don't trust stored cost)
+ * - Inactive templates must be filtered out (is_active = true)
+ * - Template creators must be credited when templates are used
+ * 
+ * SUGGESTIONS:
+ * - Cache popular templates in Redis (1-hour TTL)
+ * - Add template preview mode (show example quest)
+ * - Implement template search with fuzzy matching
+ * - Add template duplication detection
+ * 
+ * AVOID:
+ * - Applying templates without cost validation (creator may lack points)
+ * - Exposing admin-only templates to standard users
+ * - Hardcoding template data (must come from database)
+ * - Allowing template creation without proper validation
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Database: Supabase quest_templates table
+ * Quality Gates: GI-19 (Template System), GI-14 (Input Validation)
  */
 
 import type { Database } from '@/types/supabase'

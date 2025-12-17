@@ -1,3 +1,53 @@
+/**
+ * @file lib/frames/frog-config.ts
+ * @description Frog framework configuration for Farcaster frames
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Frog framework instance configuration
+ *   - Neynar middleware integration
+ *   - Custom fonts (Gmeow, Inter)
+ *   - Hub API configuration
+ *   - Image generation settings (1200x630)
+ *   - Devtools integration for development
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Frog framework: https://frog.fm
+ *   - Neynar API: https://neynar.com
+ *   - Frame routes: app/api/frame/
+ * 
+ * REQUIREMENTS:
+ *   - NEYNAR_API_KEY environment variable
+ *   - Farcaster hub access
+ *   - Custom fonts in app/fonts/
+ * 
+ * TODO:
+ *   - [ ] Add production/development config separation
+ *   - [ ] Add rate limiting middleware
+ *   - [ ] Add error handling middleware
+ *   - [ ] Add analytics middleware
+ *   - [ ] Add caching middleware
+ * 
+ * CRITICAL:
+ *   - NEYNAR_API_KEY must be set
+ *   - Hub URL must be correct
+ *   - Image dimensions must match frame spec
+ *   - Fonts must exist in app/fonts/
+ * 
+ * SUGGESTIONS:
+ *   - Add middleware for common operations
+ *   - Configure different settings per environment
+ *   - Add request logging middleware
+ *   - Cache Frog instance creation
+ * 
+ * AVOID:
+ *   - Exposing API keys in config
+ *   - Using default image dimensions
+ *   - Missing font fallbacks
+ *   - Running devtools in production
+ */
+
 import { Frog } from 'frog'
 import { devtools } from 'frog/dev'
 import { neynar } from 'frog/middlewares'

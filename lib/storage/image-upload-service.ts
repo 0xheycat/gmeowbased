@@ -1,29 +1,53 @@
 /**
- * Image Upload Service - Supabase Storage Integration
+ * ========================================
+ * 📦 IMAGE UPLOAD SERVICE - SUPABASE STORAGE INTEGRATION
+ * ========================================
  * 
- * Features:
- * - Avatar and cover image uploads
- * - Automatic resizing and optimization
- * - Public URL generation
- * - File validation (type, size)
- * - Error handling
+ * Handles user-uploaded images (avatars, cover images) with validation, optimization,
+ * and Supabase Storage integration. Uses PUBLIC client for client-side uploads.
  * 
- * Security:
- * - 10MB max file size
- * - Image types only (image/*)
- * - Unique filenames (FID + timestamp)
- * - Public read, authenticated write
+ * FEATURES:
+ * - ✅ Avatar and cover image uploads to Supabase Storage buckets
+ * - ✅ Automatic file validation (type: image/*, size: <10MB)
+ * - ✅ Unique filename generation (FID + timestamp)
+ * - ✅ Public URL generation for uploaded images
+ * - ✅ Image deletion with bucket-aware path handling
+ * - ✅ Upsert support (replace existing images)
+ * - ✅ 1-year cache control for performance
+ * 
+ * STORAGE BUCKETS:
+ * - avatars/ - User profile avatars (public read)
+ * - covers/ - Profile cover/banner images (public read)
+ * - badge-art/ - Badge artwork (handled by scripts/badge/deploy-badge-assets.ts)
+ * 
+ * TODO:
+ * - [ ] Add image resizing/optimization (Sharp library or Supabase transforms)
+ * - [ ] Add WebP conversion for better compression
+ * - [ ] Add batch upload support for multiple images
+ * - [ ] Add progress tracking for large uploads
+ * - [ ] Add retry logic for failed uploads
+ * - [ ] Add storage quota tracking per user
+ * 
+ * CRITICAL:
+ * - ⚠️ Uses PUBLIC client (NEXT_PUBLIC_SUPABASE_ANON_KEY) for client-side uploads
+ * - ⚠️ All uploads are PUBLIC read (Storage bucket policy)
+ * - ⚠️ 10MB max file size enforced
+ * - ⚠️ Only image/* MIME types allowed
+ * 
+ * SUGGESTIONS:
+ * - Consider adding image compression before upload (reduce bandwidth)
+ * - Consider adding upload analytics (track storage usage per user)
+ * - Consider adding CDN integration (CloudFlare/Vercel Edge) for faster delivery
+ * - Consider adding EXIF stripping for privacy (remove GPS metadata)
  * 
  * @module lib/storage/image-upload-service
+ * @see https://supabase.com/docs/guides/storage
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseBrowserClient } from '@/lib/supabase/edge'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-// Initialize Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Get Supabase client (public client for client-side uploads)
+const supabase = getSupabaseBrowserClient()
 
 // Storage buckets
 const AVATAR_BUCKET = 'avatars'
@@ -74,6 +98,11 @@ export async function uploadImage(options: ImageUploadOptions): Promise<ImageUpl
   const { fid, file, type } = options
 
   try {
+    // Check Supabase client
+    if (!supabase) {
+      return { url: '', path: '', error: 'Supabase client not initialized' }
+    }
+
     // Validate image
     const validation = validateImage(file)
     if (!validation.valid) {
@@ -126,6 +155,11 @@ export async function uploadImage(options: ImageUploadOptions): Promise<ImageUpl
  */
 export async function deleteImage(path: string, type: 'avatar' | 'cover'): Promise<{ success: boolean; error?: string }> {
   try {
+    // Check Supabase client
+    if (!supabase) {
+      return { success: false, error: 'Supabase client not initialized' }
+    }
+
     const bucket = type === 'avatar' ? AVATAR_BUCKET : COVER_BUCKET
 
     const { error } = await supabase.storage
@@ -151,6 +185,11 @@ export async function deleteImage(path: string, type: 'avatar' | 'cover'): Promi
  * Get public URL for existing image
  */
 export function getImageUrl(path: string, type: 'avatar' | 'cover'): string {
+  if (!supabase) {
+    console.error('Supabase client not initialized')
+    return ''
+  }
+
   const bucket = type === 'avatar' ? AVATAR_BUCKET : COVER_BUCKET
   const { data } = supabase.storage.from(bucket).getPublicUrl(path)
   return data.publicUrl

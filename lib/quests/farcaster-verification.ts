@@ -1,8 +1,49 @@
 /**
- * Farcaster Social Quest Verification
- * Phase 2.7: Quest Page Rebuild
+ * Farcaster Social Quest Verification Service
+ * Phase 7.5: Comprehensive Headers
  * 
- * Verify social activities via Neynar API
+ * FEATURES:
+ * - Verifies Farcaster social activities using Neynar API v2
+ * - Supports follow verification (checks if user follows target FID)
+ * - Supports cast interaction verification (likes, recasts, replies)
+ * - Supports channel membership verification
+ * - Supports hashtag/mention verification in casts
+ * - Provides detailed verification proofs with timestamps
+ * - Handles API errors gracefully with fallback messages
+ * - Supports pagination for large following lists (1000+ users)
+ * - Returns structured verification results with success/failure status
+ * 
+ * TODO:
+ * - Add rate limiting for Neynar API calls (currently unlimited)
+ * - Cache verification results in Redis (24-hour TTL)
+ * - Add webhook support for real-time cast/follow events
+ * - Implement batch verification for multiple quests
+ * - Add support for Farcaster Frames interactions
+ * - Support custom channel rules (e.g., must be moderator)
+ * - Add verification history tracking in database
+ * 
+ * CRITICAL:
+ * - Neynar API key must be set in NEYNAR_API_KEY environment variable
+ * - API responses can be large (paginate following lists over 1000)
+ * - Verification proofs should be stored immediately after success
+ * - Never expose Neynar API key in client-side code
+ * 
+ * SUGGESTIONS:
+ * - Consider migrating to Neynar webhooks for real-time verification
+ * - Add caching layer to reduce duplicate API calls
+ * - Implement exponential backoff for API rate limits
+ * - Add Datadog/Sentry tracing for verification flows
+ * 
+ * AVOID:
+ * - Calling Neynar API on every quest check (use caching)
+ * - Verifying same action multiple times (idempotency)
+ * - Exposing user following lists to unauthorized users
+ * - Hardcoding FIDs or cast hashes in verification logic
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * API: Neynar v2 - https://docs.neynar.com/
+ * Quality Gates: GI-10 (External API Integration)
  */
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;

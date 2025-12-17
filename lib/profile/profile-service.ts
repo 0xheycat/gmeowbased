@@ -23,7 +23,7 @@
  * @module lib/profile/profile-service
  */
 
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { getCached, invalidateCache } from '@/lib/cache/server'
 import type { 
   ProfileData, 
@@ -150,7 +150,8 @@ async function countQuestCompletions(fid: number): Promise<number> {
   const supabase = getSupabaseServerClient()
   if (!supabase) return 0
 
-  const { count, error } = await supabase
+  // quest_completions table not yet in Database types
+  const { count, error } = await (supabase as any)
     .from('quest_completions')
     .select('*', { count: 'exact', head: true })
     .eq('fid', fid)
@@ -166,7 +167,8 @@ async function countUserBadges(fid: number): Promise<number> {
   const supabase = getSupabaseServerClient()
   if (!supabase) return 0
 
-  const { count, error } = await supabase
+  // user_badges table not yet in Database types
+  const { count, error } = await (supabase as any)
     .from('user_badges')
     .select('*', { count: 'exact', head: true })
     .eq('fid', fid)
@@ -182,7 +184,8 @@ async function countViralCasts(fid: number): Promise<number> {
   const supabase = getSupabaseServerClient()
   if (!supabase) return 0
 
-  const { count, error } = await supabase
+  // badge_casts table not yet in Database types
+  const { count, error } = await (supabase as any)
     .from('badge_casts')
     .select('*', { count: 'exact', head: true })
     .eq('fid', fid)
@@ -235,12 +238,13 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
         is_verified: (userProfile.verified_addresses?.length || 0) > 0,
       }
 
-      // Parse social links from JSONB
+      // Parse social links from JSONB (type assertion needed due to Database types)
+      const links = (userProfile.social_links || {}) as Record<string, string | undefined>
       const socialLinks: SocialLinks = {
-        warpcast: userProfile.social_links?.warpcast || `https://warpcast.com/${neynarUser?.username || fid}`,
-        twitter: userProfile.social_links?.twitter || null,
-        github: userProfile.social_links?.github || null,
-        website: userProfile.social_links?.website || null,
+        warpcast: links.warpcast || `https://warpcast.com/${neynarUser?.username || fid}`,
+        twitter: links.twitter || null,
+        github: links.github || null,
+        website: links.website || null,
       }
 
       // Calculate level from total_score (uses lib/rank.ts)
@@ -298,8 +302,8 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
         neynar_score: userProfile.neynar_score || null,
         neynar_tier: userProfile.neynar_tier || null,
         
-        // Metadata
-        metadata: userProfile.metadata || {},
+        // Metadata (type assertion needed due to Database types)
+        metadata: (userProfile.metadata || {}) as Record<string, unknown>,
         
         // Timestamps
         created_at: userProfile.created_at || new Date().toISOString(),

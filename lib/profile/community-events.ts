@@ -56,7 +56,7 @@
  *   - Blocking event listing if enrichment fails
  */
 
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { normalizeAddress } from '@/lib/profile/profile-data'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/integrations/neynar'
 import { CHAIN_KEYS, type ChainKey } from '@/lib/contracts/gmeow-utils'

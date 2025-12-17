@@ -1,3 +1,64 @@
+/**
+ * @file lib/frames/frame-validation.ts
+ * @description Input validation and sanitization for Farcaster frames (GI-8 security)
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * FEATURES:
+ *   - FID validation and sanitization
+ *   - Quest ID validation (0-999999 range)
+ *   - Guild ID validation
+ *   - Chain key validation
+ *   - Button sanitization (XSS protection)
+ *   - URL sanitization (protocol blocking)
+ *   - Integer range validation
+ *   - Type coercion with safety checks
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Security: GI-8 security requirements
+ *   - Chain types: lib/contracts/gmeow-utils.ts
+ *   - Error tracking: lib/notifications/error-tracking.ts
+ * 
+ * REQUIREMENTS:
+ *   - All user input must be validated
+ *   - FID range: 1 to 2^31-1
+ *   - Quest IDs: 0 to 999999
+ *   - NO dangerous protocols (javascript:, data:)
+ *   - Button labels max 32 characters
+ *   - Max 4 buttons per frame
+ * 
+ * TODO:
+ *   - [ ] Add comprehensive input fuzzing tests
+ *   - [ ] Add validation metrics tracking
+ *   - [ ] Add validation error aggregation
+ *   - [ ] Add custom validation rules per frame type
+ *   - [ ] Add validation caching for performance
+ *   - [ ] Add validation rule versioning
+ * 
+ * CRITICAL:
+ *   - NEVER trust user input without validation
+ *   - All numbers must be checked for NaN, Infinity
+ *   - FID must be positive 32-bit integer
+ *   - Chain keys must exist in ALL_CHAIN_KEYS
+ *   - URLs must block javascript:, data:, vbscript:, file:
+ *   - Button labels must be sanitized for HTML
+ * 
+ * SUGGESTIONS:
+ *   - Add validation result caching
+ *   - Log all validation failures for security monitoring
+ *   - Add rate limiting for repeated validation failures
+ *   - Generate validation schemas from types
+ *   - Add validation performance metrics
+ * 
+ * AVOID:
+ *   - Skipping validation for "trusted" inputs
+ *   - Using regex for complex validation (use parser)
+ *   - Silently accepting invalid input
+ *   - Validation without error tracking
+ *   - Type coercion without range checks
+ */
+
 // lib/frame-validation.ts
 /**
  * Input validation and sanitization for Farcaster frames

@@ -20,7 +20,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import {
   calculateEngagementScore,
   getViralTier,
@@ -406,7 +406,8 @@ export async function getCastsNeedingSync(): Promise<string[]> {
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    const { data, error } = await supabase
+    // badge_casts table not in Database types
+    const { data, error } = await (supabase as any)
       .from('badge_casts')
       .select('cast_hash')
       .gte('created_at', sevenDaysAgo.toISOString())
@@ -417,7 +418,7 @@ export async function getCastsNeedingSync(): Promise<string[]> {
       throw new Error(`Failed to fetch casts: ${error.message}`)
     }
 
-    return data?.map((row) => row.cast_hash) || []
+    return data?.map((row: any) => row.cast_hash) || []
   } catch (error) {
     console.error('[EngagementSync] Error fetching casts needing sync:', error)
     return []

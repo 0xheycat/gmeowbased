@@ -1,6 +1,49 @@
 /**
  * Quest Creation Cost Calculator
- * Calculates points cost for creating quests
+ * Phase 7.5: Comprehensive Headers
+ * 
+ * FEATURES:
+ * - Calculates BASE POINTS cost for creating quests
+ * - Category-based base costs (social=50, onchain=200, hybrid=250)
+ * - Task count pricing (20 points per task)
+ * - Reward cost calculation (10:1 XP ratio, 1:1 points ratio)
+ * - Badge creation cost (50 points for new badges)
+ * - Detailed cost breakdown (base, tasks, rewards, badge)
+ * - Affordability checking with shortage calculation
+ * - Refund calculation for expired quests
+ * - Type-safe cost interfaces
+ * 
+ * TODO:
+ * - Add dynamic pricing based on quest complexity
+ * - Implement surge pricing during high-demand periods
+ * - Add creator reputation discounts (trusted creators pay less)
+ * - Support promotional cost reductions (events, partnerships)
+ * - Add cost estimation API for wizard preview
+ * - Implement cost audit logging
+ * - Add A/B testing for pricing models
+ * 
+ * CRITICAL:
+ * - Cost calculations must match points-escrow-service exactly
+ * - Never allow negative costs (validation required)
+ * - Badge costs must be charged only once per quest
+ * - Refund calculations must account for already-claimed rewards
+ * 
+ * SUGGESTIONS:
+ * - Consider caching cost configurations in Redis
+ * - Add cost breakdown UI component for transparency
+ * - Implement cost alerts when approaching user's balance
+ * - Add cost comparison vs average quest cost
+ * 
+ * AVOID:
+ * - Changing cost formulas without migration plan
+ * - Allowing client-side cost calculation only (must validate server-side)
+ * - Hardcoding cost values (use configuration)
+ * - Forgetting to update refund logic when changing costs
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Currency: BASE POINTS (not Viral XP)
+ * Quality Gates: GI-16 (Economic System), GI-14 (Input Validation)
  */
 
 export interface QuestCostBreakdown {

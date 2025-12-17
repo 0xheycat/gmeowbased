@@ -1,4 +1,58 @@
 /**
+ * @file lib/frames/utils.ts
+ * @description Shared utility functions for frame system
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * 
+ * FEATURES:
+ *   - Trace utilities for performance monitoring
+ *   - Boolean flag helpers
+ *   - Chain display name formatting
+ *   - Cache validity checking
+ *   - Cache key generation
+ *   - Time calculation utilities
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Types: lib/frames/types.ts
+ *   - Frame handlers: lib/frames/handlers/
+ * 
+ * REQUIREMENTS:
+ *   - All utilities must be pure functions
+ *   - No side effects in utility functions
+ *   - Type-safe parameter handling
+ *   - Performance-optimized implementations
+ * 
+ * TODO:
+ *   - [ ] Add more date/time utilities
+ *   - [ ] Add number formatting utilities
+ *   - [ ] Add string truncation helpers
+ *   - [ ] Add validation utilities
+ *   - [ ] Add retry helpers
+ *   - [ ] Add debounce/throttle utilities
+ * 
+ * CRITICAL:
+ *   - Utilities must be stateless
+ *   - No mutations of input parameters
+ *   - All functions must handle edge cases
+ *   - Type guards must be accurate
+ *   - Cache keys must be unique and stable
+ * 
+ * SUGGESTIONS:
+ *   - Add utility performance benchmarks
+ *   - Generate utility documentation
+ *   - Add utility usage examples
+ *   - Group related utilities
+ *   - Add utility testing suite
+ * 
+ * AVOID:
+ *   - Stateful utilities (use classes instead)
+ *   - Side effects in utility functions
+ *   - Mutating input parameters
+ *   - Using 'any' type
+ *   - Complex logic in utilities (keep simple)
+ */
+
+/**
  * Frame System Utilities
  * Shared utility functions for frame handlers
  */

@@ -1,21 +1,52 @@
 /**
  * Guild Event Logging System
+ * Phase 7.6: Comprehensive Headers + Pattern Consolidation
  * 
- * Tracks all guild activities for analytics, activity feed, and audit trails.
- * Uses Supabase for persistence, graceful degradation on errors.
+ * FEATURES:
+ * - Tracks all guild activities (joins, leaves, promotions, treasury operations)
+ * - Persists events to Supabase guild_events table
+ * - Supports 8 event types (member lifecycle, points operations, guild management)
+ * - Provides activity feed data for guild dashboard
+ * - Audit trail for guild governance
+ * - Graceful degradation on database errors
+ * - Formatted event messages for UI display
+ * - Chronological event ordering (newest first)
+ * - Configurable event limits for pagination
  * 
- * Event Types:
- * - MEMBER_JOINED: User joins guild
- * - MEMBER_LEFT: User leaves guild
- * - MEMBER_PROMOTED: Member promoted to officer
- * - MEMBER_DEMOTED: Officer demoted to member
- * - POINTS_DEPOSITED: Points deposited into guild treasury
- * - POINTS_CLAIMED: Guild owner claims points
- * - GUILD_CREATED: New guild created
- * - GUILD_UPDATED: Guild settings changed
+ * TODO:
+ * - Add event streaming via Supabase Realtime
+ * - Implement event filtering by type/actor/date
+ * - Add event aggregation for analytics (daily/weekly summaries)
+ * - Support event pagination with cursors
+ * - Add event retention policies (auto-delete old events)
+ * - Implement event notifications (push/email for important events)
+ * - Add event search with full-text indexing
+ * 
+ * CRITICAL:
+ * - Must use Supabase Admin Client (Service Role Key) for writes
+ * - Events are immutable (never update/delete existing events)
+ * - Guild ID must be validated before logging
+ * - Actor address must be valid Ethereum address
+ * 
+ * SUGGESTIONS:
+ * - Consider event batching for high-volume guilds
+ * - Add Redis caching for recent events (5-minute TTL)
+ * - Implement event webhooks for external integrations
+ * - Add event analytics dashboard (most active guilds, event trends)
+ * 
+ * AVOID:
+ * - Logging sensitive data in metadata (private keys, passwords)
+ * - Synchronous event logging (always async, fire-and-forget)
+ * - Blocking guild operations on event logging failures
+ * - Exposing Service Role Key in client-side code
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Pattern: Event Sourcing (Audit Log)
+ * Quality Gates: GI-13 (Transactional Integrity), GI-22 (Guild System)
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdminClient } from '@/lib/supabase/edge'
 
 export type GuildEventType =
   | 'MEMBER_JOINED'
@@ -49,16 +80,14 @@ export interface GuildEventRecord extends GuildEvent {
  */
 export async function logGuildEvent(event: GuildEvent): Promise<boolean> {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('[guild-event-logger] Missing Supabase credentials')
+    const supabase = getSupabaseAdminClient()
+    
+    if (!supabase) {
+      console.error('[guild-event-logger] Supabase Admin client not configured')
       return false
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
+    // @ts-expect-error - guild_events table not yet in Database types (pending schema migration)
     const { error } = await supabase.from('guild_events').insert({
       guild_id: event.guild_id,
       event_type: event.event_type,
@@ -93,17 +122,16 @@ export async function getGuildEvents(
   limit: number = 50
 ): Promise<GuildEventRecord[]> {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('[guild-event-logger] Missing Supabase credentials')
+    const supabase = getSupabaseAdminClient()
+    
+    if (!supabase) {
+      console.error('[guild-event-logger] Supabase Admin client not configured')
       return []
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    const { data, error } = await supabase
+    // Note: guild_events table not yet in Database types (pending schema migration)
+    // Using type assertion until migration is run
+    const { data, error} = await (supabase as any)
       .from('guild_events')
       .select('*')
       .eq('guild_id', guildId)
@@ -115,7 +143,7 @@ export async function getGuildEvents(
       return []
     }
 
-    return data as GuildEventRecord[]
+    return (data || []) as GuildEventRecord[]
   } catch (error) {
     console.error('[guild-event-logger] Unexpected error:', error)
     return []

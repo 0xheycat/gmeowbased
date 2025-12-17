@@ -1,6 +1,49 @@
 /**
  * Quest Bookmarking System
- * Manages saved quests in localStorage with type-safe operations
+ * Phase 7.5: Comprehensive Headers
+ * 
+ * FEATURES:
+ * - Client-side quest bookmarking using localStorage
+ * - Type-safe bookmark operations with TypeScript interfaces
+ * - Chain-scoped bookmarks (multi-chain support)
+ * - Chronological ordering (newest first)
+ * - Duplicate prevention (same chain + quest ID)
+ * - Bookmark count tracking
+ * - SSR-safe (window undefined check)
+ * - JSON serialization with error handling
+ * - Supports both desktop and mobile apps
+ * 
+ * TODO:
+ * - Migrate to Supabase for cross-device sync
+ * - Add bookmark folders/categories
+ * - Implement bookmark sharing (export/import)
+ * - Add bookmark search and filtering
+ * - Support bookmark notes/comments
+ * - Add bookmark expiration (auto-remove old bookmarks)
+ * - Implement bookmark analytics (most bookmarked quests)
+ * 
+ * CRITICAL:
+ * - LocalStorage has 5-10MB limit (implement pagination)
+ * - Must handle localStorage quota exceeded errors
+ * - JSON parse errors must not crash app (fallback to empty array)
+ * - Always check window !== undefined before accessing localStorage
+ * 
+ * SUGGESTIONS:
+ * - Consider IndexedDB for larger bookmark collections
+ * - Add bookmark sync status indicator (local only vs synced)
+ * - Implement bookmark conflict resolution for cross-device sync
+ * - Add bookmark export to CSV/JSON
+ * 
+ * AVOID:
+ * - Storing large objects in bookmarks (only IDs and metadata)
+ * - Accessing localStorage in server components (SSR error)
+ * - Synchronous localStorage operations on main thread (performance)
+ * - Storing sensitive data in bookmarks (localStorage is not encrypted)
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Storage: localStorage (client-side only)
+ * Quality Gates: GI-17 (Client Storage), GI-18 (Cross-Device Sync)
  */
 
 const BOOKMARK_STORAGE_KEY = 'gmeow_quest_bookmarks_v1'

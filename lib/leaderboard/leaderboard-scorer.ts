@@ -12,7 +12,7 @@
  * NO EMOJIS - Uses icon references only
  */
 
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { createPublicClient, http, parseAbiItem } from 'viem'
 import { base } from 'viem/chains'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI } from '@/lib/contracts/gmeow-utils'
@@ -55,16 +55,16 @@ export async function calculateLeaderboardScore(
   // 1. Get Farcaster FID
   const { data: userData } = await supabase
     .from('user_profiles')
-    .select('farcaster_fid')
-    .eq('address', address)
+    .select('fid')
+    .eq('wallet_address', address)
     .single()
 
-  if (!userData?.farcaster_fid) {
+  if (!userData?.fid) {
     console.error(`No FID found for address: ${address}`)
     return null
   }
 
-  const fid = userData.farcaster_fid
+  const fid = userData.fid
 
   // 2. Check contract data cache first
   const cachedContract = await getCachedContractData(address)
@@ -89,16 +89,16 @@ export async function calculateLeaderboardScore(
     })
   }
 
-  // 3. Get viral XP from badge_casts table
-  const { data: viralData } = await supabase
+  // 3. Get viral XP from badge_casts table (not in Database types)
+  const { data: viralData } = await (supabase as any)
     .from('badge_casts')
     .select('viral_bonus_xp')
     .eq('fid', fid)
 
-  const viralXP = viralData?.reduce((sum, row) => sum + (row.viral_bonus_xp || 0), 0) || 0
+  const viralXP = viralData?.reduce((sum: number, row: any) => sum + (row.viral_bonus_xp || 0), 0) || 0
 
-  // 4. Get guild bonus (guild level * 100)
-  const { data: guildData } = await supabase
+  // 4. Get guild bonus (guild level * 100) - guild_members not in Database types
+  const { data: guildData } = await (supabase as any)
     .from('guild_members')
     .select('guild_level')
     .eq('address', address)
@@ -123,16 +123,16 @@ export async function calculateLeaderboardScore(
     }
   }
 
-  // 5. Get referral count (count * 50)
-  const { count: referralCount } = await supabase
+  // 5. Get referral count (count * 50) - referral_tracking not in Database types
+  const { count: referralCount } = await (supabase as any)
     .from('referral_tracking')
     .select('*', { count: 'exact', head: true })
     .eq('referrer_address', address)
 
   const referralBonus = (referralCount || 0) * 50
 
-  // 7. Get badge count (count * 25)
-  const { count: badgeCount } = await supabase
+  // 7. Get badge count (count * 25) - badge_ownership not in Database types
+  const { count: badgeCount } = await (supabase as any)
     .from('badge_ownership')
     .select('*', { count: 'exact', head: true })
     .eq('address', address)

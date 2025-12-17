@@ -1,8 +1,63 @@
 /**
- * Phase 1B: Frame State Management
+ * @file lib/frames/frame-state.ts
+ * @description Frame state persistence for multi-step interactions
+ * 
+ * PHASE: Phase 7.3 - Frames (December 17, 2025)
+ * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * 
+ * ORIGINAL: Phase 1B: Frame State Management
+ * 
+ * FEATURES:
+ *   - Frame session persistence in Supabase
+ *   - 24-hour session TTL
+ *   - Quest progress tracking
+ *   - GM count and streak state
+ *   - Step-based navigation state
+ *   - Metadata storage for custom data
+ *   - Session ID generation (UUID)
  * 
  * Utilities for persisting frame interaction state across button clicks.
  * State is stored in Supabase frame_sessions table with 24-hour TTL.
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Supabase: supabase/migrations (frame_sessions table)
+ *   - Frame handlers: lib/frames/handlers/
+ *   - Error tracking: lib/notifications/error-tracking.ts
+ * 
+ * REQUIREMENTS:
+ *   - Supabase must be configured
+ *   - frame_sessions table must exist
+ *   - Sessions expire after 24 hours
+ *   - State must be JSON-serializable
+ * 
+ * TODO:
+ *   - [ ] Add Redis caching for hot sessions
+ *   - [ ] Add session cleanup job
+ *   - [ ] Add session analytics (duration, steps)
+ *   - [ ] Add session migration support
+ *   - [ ] Add session backup/restore
+ *   - [ ] Add concurrent session handling
+ * 
+ * CRITICAL:
+ *   - Sessions must expire after 24 hours
+ *   - FID must be validated before storing
+ *   - State must not contain sensitive data
+ *   - Concurrent updates must be handled
+ *   - Session IDs must be unique (UUID)
+ * 
+ * SUGGESTIONS:
+ *   - Cache active sessions in memory
+ *   - Add session compression for large state
+ *   - Track session lifecycle events
+ *   - Add session recovery on errors
+ *   - Implement session pooling
+ * 
+ * AVOID:
+ *   - Storing sensitive data in state
+ *   - Infinite session retention (memory leak)
+ *   - Blocking operations on state save
+ *   - Assuming sessions always exist
+ *   - Using predictable session IDs
  */
 
 import { createClient } from '@supabase/supabase-js'

@@ -1,8 +1,49 @@
 /**
  * Quest Creation System Types
- * Task 8.5: Quest Creation UI
+ * Phase 7.5: Comprehensive Headers
  * 
- * Extended types for quest creation wizard
+ * FEATURES:
+ * - Type definitions for quest creation wizard
+ * - QuestTemplate interface with usage tracking
+ * - TaskConfig with multi-type verification support
+ * - QuestDraft for wizard state management
+ * - Social verification types (Farcaster via Neynar)
+ * - Onchain verification types (Base RPC + proxy)
+ * - Manual verification types (admin approval)
+ * - Reward configuration types (points, XP, badges, NFTs)
+ * - Image upload tracking (URLs and filenames)
+ * 
+ * TODO:
+ * - Add branded types for quest IDs (type safety)
+ * - Implement discriminated unions for verification data
+ * - Add Zod schema generation from TypeScript types
+ * - Support task dependencies (prerequisite tasks)
+ * - Add quest versioning types
+ * - Implement quest diff types for updates
+ * - Add quest analytics types
+ * 
+ * CRITICAL:
+ * - All types must match Supabase schema exactly (no drift)
+ * - Verification data must be validated at runtime (Zod)
+ * - Optional fields must have undefined handling
+ * - BigInt types must be serializable (convert to string)
+ * 
+ * SUGGESTIONS:
+ * - Consider splitting into multiple type modules by domain
+ * - Add JSDoc comments for complex types
+ * - Implement type guards for runtime validation
+ * - Add utility types for common transformations
+ * 
+ * AVOID:
+ * - Using 'any' types (defeats TypeScript benefits)
+ * - Duplicating types from other modules (import instead)
+ * - Creating types that don't match database schema
+ * - Defining types without validation schemas
+ * 
+ * Created: December 2025
+ * Last Modified: December 17, 2025
+ * Related: lib/supabase/types/quest.ts, quest-creation-validation.ts
+ * Quality Gates: GI-20 (Type Safety)
  */
 
 import type { QuestCategory, QuestDifficulty, QuestType } from '@/lib/supabase/types/quest'

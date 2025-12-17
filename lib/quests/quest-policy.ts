@@ -1,5 +1,50 @@
-// Quest creation policy helpers shared across desktop and Farcaster Mini App surfaces.
-// Reference: planning/quest-policy.md (updated 2025-11-11)
+/**
+ * Quest Creation Policy System
+ * Phase 7.5: Comprehensive Headers
+ * 
+ * FEATURES:
+ * - Three-tier creator system (standard, partner, admin)
+ * - FID and wallet-based tier resolution
+ * - Partner mode permissions (multi-chain quest creation)
+ * - Raffle quest gating (admin-only)
+ * - Asset verification requirements (standard = verified only)
+ * - Hold quest gating enforcement
+ * - Policy summaries with tone indicators (info/warn/success)
+ * - Environment variable configuration for tier lists
+ * - Supports both desktop and Farcaster Mini App surfaces
+ * 
+ * TODO:
+ * - Add dynamic tier promotion based on quest performance
+ * - Implement temporary tier upgrades (time-limited partner access)
+ * - Add audit logging for policy decisions
+ * - Support organization-based tiering (team accounts)
+ * - Add policy versioning for A/B testing
+ * - Implement quest moderation queue for flagged creators
+ * - Add reputation scoring system
+ * 
+ * CRITICAL:
+ * - Admin/partner FIDs and wallets must be kept in sync across environments
+ * - Policy changes affect all active quests (test thoroughly)
+ * - Never expose tier lists in client-side code (security risk)
+ * - Always validate asset verification before allowing unverified override
+ * 
+ * SUGGESTIONS:
+ * - Consider migrating tier lists to database for dynamic updates
+ * - Add Supabase RLS policies matching creator tiers
+ * - Implement tier change notifications (email/webhook)
+ * - Add policy dashboard for admins to manage tiers
+ * 
+ * AVOID:
+ * - Hardcoding tier logic in multiple places (use this module)
+ * - Allowing standard users to bypass asset verification
+ * - Granting admin permissions without proper vetting
+ * - Changing tier logic without migration plan for existing quests
+ * 
+ * Created: November 2025
+ * Last Modified: December 17, 2025
+ * Reference: planning/quest-policy.md
+ * Quality Gates: GI-15 (Access Control), GI-8 (Security)
+ */
 
 import { QUEST_TYPES, type ChainKey } from '@/lib/contracts/gmeow-utils'
 
