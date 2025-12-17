@@ -31,7 +31,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { trackError } from '@/lib/notifications/error-tracking'
 import { validatePrioritySettings, DEFAULT_PRIORITY_MAP } from '@/lib/notifications/priority'
 import type { NotificationPriority } from '@/lib/notifications/priority'

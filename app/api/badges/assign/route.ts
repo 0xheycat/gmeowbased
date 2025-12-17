@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { assignBadgeToUser, getBadgeFromRegistry } from '@/lib/badges/badges'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { BadgeAssignSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'

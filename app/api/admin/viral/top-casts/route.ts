@@ -17,7 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { validateAdminRequest } from '@/lib/auth/admin'
 import { NeynarAPIClient } from '@neynar/nodejs-sdk'
 import { withErrorHandler } from '@/lib/middleware/error-handler'

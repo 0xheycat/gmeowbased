@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { NeynarAPIClient } from '@neynar/nodejs-sdk'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { 
   getTierFromScore, 
   getBadgeByTier, 

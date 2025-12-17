@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getBadgeFromRegistry, updateBadgeMintStatus } from '@/lib/badges/badges'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { mintBadgeOnChain } from '@/lib/contracts/contract-mint'

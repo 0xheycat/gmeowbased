@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/lib/supabase/client'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
