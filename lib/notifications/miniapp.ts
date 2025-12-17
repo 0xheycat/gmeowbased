@@ -1,5 +1,6 @@
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { trackError } from './error-tracking'
+import type { Json } from '@/types/supabase'
 
 const TABLE_NAME = 'miniapp_notification_tokens'
 
@@ -85,7 +86,7 @@ export async function upsertNotificationToken(input: UpsertNotificationTokenInpu
     last_seen_at: nowIso,
     client_fid: input.clientFid ?? null,
     wallet_address: input.walletAddress ?? null,
-    last_gm_context: input.context ?? null,
+    last_gm_context: (input.context ?? null) as Json,
   }
 
   const response = await client

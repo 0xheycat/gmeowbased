@@ -1,5 +1,6 @@
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { trackError } from '@/lib/notifications/error-tracking'
+import type { Json } from '@/types/supabase'
 
 const TABLE_NAME = 'user_notification_history'
 const MAX_HISTORY_PER_USER = 100
@@ -76,7 +77,7 @@ export async function saveNotification(input: SaveNotificationInput): Promise<bo
       title: input.title,
       description: input.description ?? null,
       tone: input.tone,
-      metadata: input.metadata ?? null,
+      metadata: (input.metadata ?? null) as Json,
       action_label: input.actionLabel ?? null,
       action_href: input.actionHref ?? null,
     }

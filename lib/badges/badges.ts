@@ -665,7 +665,7 @@ export async function assignBadgeToUser(params: {
   if (existing && !checkError) {
     // Badge already assigned, return it
     return {
-      id: existing.id,
+      id: String(existing.id),
       fid: params.fid,
       badgeId: existing.badge_id,
       badgeType: params.badgeType,

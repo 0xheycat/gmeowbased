@@ -87,7 +87,6 @@ export async function logGuildEvent(event: GuildEvent): Promise<boolean> {
       return false
     }
 
-    // @ts-expect-error - guild_events table not yet in Database types (pending schema migration)
     const { error } = await supabase.from('guild_events').insert({
       guild_id: event.guild_id,
       event_type: event.event_type,
