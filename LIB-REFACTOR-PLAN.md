@@ -14,20 +14,21 @@
 - **Active pages**: 30+ API routes, main pages use supabase/bot/profile systems
 - **Multichain issue**: Only **Base chain active**, but old code references 12 chains
 
-### Critical Finding: Multichain Code is LEGACY
+### Critical Finding: Multichain Architecture
 ```typescript
-// ❌ LEGACY: Only in gmeow-utils.ts for viewing other chains
+// ✅ ALLOWED: Used by OnchainStats frame for viewing 12 chains via Blockscout MCP
 ChainKey = 'base' | 'ethereum' | 'optimism' | 'arbitrum' | ... // 12 chains
 
-// ✅ ACTIVE: Only Base contracts deployed Dec 12
+// ✅ ACTIVE: Our deployed contracts (Base only)
 GMChainKey = 'base' // Our actual contracts
 CONTRACT_ADDRESSES: { base: '0x9EB...' } // Only Base
 ```
 
 **Reality**: 
 - Contracts only on **Base** (Dec 12, 2025)
-- Multichain = read-only via Blockscout MCP (for OnchainStats frame)
-- 53 files reference contracts, but all use Base
+- **ChainKey** = view-only for 12 chains via Blockscout MCP (OnchainStats frame needs this)
+- **GMChainKey** = write operations, Base only
+- 53 files reference contracts, but all write operations use Base
 
 ---
 
@@ -146,31 +147,32 @@ lib/contracts/
 
 ## Phase 3: Multichain Cleanup (Remove Dead Code)
 
-### 3.1 Identify Active vs Legacy
-**Active** (Base only):
+### 3.1 Identify Active vs View-Only
+**Active** (Base only - write operations):
 - `STANDALONE_ADDRESSES.base.*` - Core, Guild, NFT, Badge, Referral
 - `CONTRACT_ADDRESSES` - Only Base
-- `GMChainKey = 'base'` - Our contract type
+- `GMChainKey = 'base'` - Our contract type for writes
 
-**Legacy** (View-only, keep for OnchainStats frame):
-- `ChainKey` - 12 chains for Blockscout viewing
-- `ALL_CHAIN_IDS` - For reading other chains
-- Multichain functions - Only for stats viewing
+**View-Only** (Keep for OnchainStats frame):
+- `ChainKey` - 12 chains for Blockscout MCP viewing (ALLOWED)
+- `ALL_CHAIN_IDS` - For reading other chains via Blockscout
+- Multichain read functions - Used by OnchainStats frame
 
-### 3.2 Mark Legacy Code
+### 3.2 Document Chain Types Clearly
 ```typescript
 // lib/contracts/chain-types.ts
 
 /** 
- * ⚠️ ACTIVE: Our deployed contracts (Base only)
+ * ✅ ACTIVE: Our deployed contracts (Base only)
  * Use this for all write operations
  */
 export type GMChainKey = 'base'
 
 /** 
- * ⚠️ LEGACY: View-only for OnchainStats frame
- * Blockscout MCP supports 12 chains for READ
- * DO NOT USE for contract writes
+ * ✅ ALLOWED: View-only for OnchainStats frame
+ * Blockscout MCP supports 12 chains for READ operations
+ * Used by OnchainStats frame to view other chains
+ * DO NOT USE for contract writes (use GMChainKey instead)
  */
 export type ChainKey = 'base' | 'ethereum' | ... // 12 chains
 ```
@@ -209,10 +211,10 @@ export const createGMOpTransaction = () => createGMTransaction('base')
 - `validation/` - Input validation
 - `hooks/` - React hooks (9 files)
 
-## ⚠️ Deprecation Notices
-- Multichain: Only **Base** contracts active
-- ChainKey: Use for viewing only (Blockscout MCP)
-- Legacy cache files: Use `lib/cache/` exports
+## ⚠️ Important Notes
+- **GMChainKey**: Only **Base** for contract writes
+- **ChainKey**: Allowed for view-only (OnchainStats frame via Blockscout MCP)
+- Cache files: Use organized `lib/cache/` exports after refactor
 ```
 
 ### 4.2 lib/index.ts (Main Entry Point)
