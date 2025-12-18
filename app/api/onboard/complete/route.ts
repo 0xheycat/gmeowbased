@@ -202,7 +202,7 @@ export const POST = withErrorHandler(async (request: Request) => {
     let assignedBadge = null
     let mintResult = null
     try {
-      const badgeDef = getBadgeByTier(tier)
+      const badgeDef = await getBadgeByTier(tier)
       if (badgeDef) {
         assignedBadge = await assignBadgeToUser({
           fid,

@@ -30,9 +30,9 @@ export type BadgeArtwork = {
  * const artwork = getBadgeArtworkForTier('mythic')
  * // Returns: { imageUrl: 'https://...', color: '#9C27FF', ... }
  */
-export function getBadgeArtworkForTier(tier: TierType): BadgeArtwork {
+export async function getBadgeArtworkForTier(tier: TierType): Promise<BadgeArtwork> {
   const tierConfig = getTierConfig(tier)
-  const badge = getBadgeByTier(tier)
+  const badge = await getBadgeByTier(tier)
   
   // Fallback to tier-specific default image if badge not found
   const fallbackUrl = `/badges/tier-${tier}.png`
@@ -52,9 +52,9 @@ export function getBadgeArtworkForTier(tier: TierType): BadgeArtwork {
  * Get all tier badge artworks (for admin preview or gallery)
  * @returns Array of BadgeArtwork for all tiers
  */
-export function getAllTierBadgeArtworks(): BadgeArtwork[] {
+export async function getAllTierBadgeArtworks(): Promise<BadgeArtwork[]> {
   const tiers: TierType[] = ['mythic', 'legendary', 'epic', 'rare', 'common']
-  return tiers.map(tier => getBadgeArtworkForTier(tier))
+  return await Promise.all(tiers.map(tier => getBadgeArtworkForTier(tier)))
 }
 
 /**
@@ -99,11 +99,11 @@ export function validateBadgeArtworkUrl(url: string): boolean {
  * @param customFallback - Optional custom fallback URL
  * @returns Validated artwork URL
  */
-export function getBadgeArtworkUrlSafe(
+export async function getBadgeArtworkUrlSafe(
   tier: TierType, 
   customFallback?: string
-): string {
-  const artwork = getBadgeArtworkForTier(tier)
+): Promise<string> {
+  const artwork = await getBadgeArtworkForTier(tier)
   
   // Try imageUrl first
   if (artwork.imageUrl && validateBadgeArtworkUrl(artwork.imageUrl)) {
@@ -136,9 +136,9 @@ export function getBadgeArtworkUrlSafe(
  * @param tier - User tier
  * @returns CSS background value with gradient overlay
  */
-export function getBadgeArtworkBackground(tier: TierType): string {
-  const artwork = getBadgeArtworkForTier(tier)
-  const imageUrl = getBadgeArtworkUrlSafe(tier)
+export async function getBadgeArtworkBackground(tier: TierType): Promise<string> {
+  const artwork = await getBadgeArtworkForTier(tier)
+  const imageUrl = await getBadgeArtworkUrlSafe(tier)
   
   return `linear-gradient(135deg, ${artwork.color}15, ${artwork.color}05), url('${imageUrl}')`
 }
@@ -152,19 +152,19 @@ export function getBadgeArtworkBackground(tier: TierType): string {
  * @param score - Neynar score
  * @returns Metadata object for OG image generation
  */
-export function getBadgeArtworkMetadata(
+export async function getBadgeArtworkMetadata(
   tier: TierType,
   username: string,
   score: number
 ) {
-  const artwork = getBadgeArtworkForTier(tier)
+  const artwork = await getBadgeArtworkForTier(tier)
   
   return {
     tier,
     tierLabel: artwork.badgeName,
     color: artwork.color,
     bgGradient: artwork.bgGradient,
-    imageUrl: getBadgeArtworkUrlSafe(tier),
+    imageUrl: await getBadgeArtworkUrlSafe(tier),
     username,
     score,
     scoreFormatted: score.toFixed(2),

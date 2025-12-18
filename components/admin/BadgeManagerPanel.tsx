@@ -243,7 +243,7 @@ export default function BadgeManagerPanel() {
   const loadBadgeRegistryData = useCallback(async () => {
     setRegistryLoading(true)
     try {
-      const registry = loadBadgeRegistry()
+      const registry = await loadBadgeRegistry()
       setBadgeRegistry(registry)
     } catch (e: any) {
       const message = e?.message || 'Unknown error'

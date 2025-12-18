@@ -54,7 +54,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     // Fetch user badges
     const badges = await getUserBadges(fid)
-    const badgeRegistry = loadBadgeRegistry()
+    const badgeRegistry = await loadBadgeRegistry()
 
     if (badges.length === 0) {
       // No badges frame - use vNext JSON format matching main route
