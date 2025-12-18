@@ -133,8 +133,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Sanitize inputs
+    // Sanitize inputs (Phase 8.5: sanitizeAddress now returns null for invalid)
     const address = sanitizeAddress(validation.data.address)
+    if (!address) {
+      return NextResponse.json(
+        { error: 'Invalid Ethereum address format' },
+        { status: 400, headers: { 'X-Request-ID': requestId } }
+      )
+    }
     const chain = sanitizeChain(validation.data.chain)
 
     console.log(`[Transaction Patterns] Analyzing patterns for ${address} on ${chain}`)

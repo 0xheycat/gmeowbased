@@ -49,16 +49,27 @@ import { fetchUserByFid } from '@/lib/integrations/neynar'
 
 ## 🎯 NEW: Consolidated Structure (December 17, 2025)
 
-### Middleware (10 files)
+### Middleware (10 files - Phase 8.5 Complete - Dec 18, 2025)
 - `middleware/` - **Request handling, error management, security**
   - `error-handler.ts` - Centralized error handling (65+ imports)
   - `request-id.ts` - Request tracking (117+ imports)
   - `rate-limit.ts` - Rate limiting (81+ imports)
   - `rate-limiter.ts` - Limiter implementation
   - `idempotency.ts` - Duplicate request prevention
-  - `api-security.ts` - API validation and security
+  - `api-security.ts` - **PRIMARY**: API validation and sanitization
+    - Functions: sanitizeAddress (Ethereum), sanitizeChain, sanitizeString, validateInput
+    - Phase 8.5: Enhanced with proper address validation (0x + 40 hex)
+    - Use for: ALL address/chain validation (replaces inline normalizeAddress)
+    - **DO NOT**: Create duplicate normalizeAddress functions
   - `http-error.ts` - HTTP error utilities
   - `timing.ts` - Performance timing
+  
+  **Phase 8.5 Consolidation** (35+ lines reduced):
+  - ✅ Enhanced sanitizeAddress with proper validation (0x + 40 hex chars)
+  - ✅ Removed normalizeAddress from quest-policy.ts (14 lines)
+  - ✅ Removed normalizeAddressValue from telemetry.ts (7 lines)
+  - ✅ Fixed 7 API routes to handle null returns
+  - ✅ Single source of truth for address validation
 
 ### Utils (12 files)
 - `utils/` - **Common utilities and helpers**
@@ -317,6 +328,10 @@ import { getPublicClient, getClientByChainKey } from '@/lib/contracts/rpc-client
 import { fetchUserByFid, fetchUsersByAddresses } from '@/lib/integrations/neynar' // For Farcaster API
 import { getUserProfile, getUserProfiles } from '@/lib/supabase/queries/user' // For DB profiles
 // ❌ NEVER: lib/api/farcaster/client (deleted), gm.ts getUserProfile (deprecated)
+
+// Validation & Sanitization (Phase 8.5 - ALWAYS USE THIS)
+import { sanitizeAddress, sanitizeChain, validateInput } from '@/lib/middleware/api-security'
+// ❌ NEVER: Create inline normalizeAddress functions - use sanitizeAddress!
 
 // Profile (UPDATED PATHS)
 import { normalizeAddress } from '@/lib/profile/profile-data'

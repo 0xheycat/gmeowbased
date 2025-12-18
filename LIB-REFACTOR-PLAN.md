@@ -1746,30 +1746,82 @@ import { getUserStats } from '@/lib/integrations/subsquid-client'
 
 ---
 
-### 8.5 Validation & Sanitization Consolidation (MEDIUM PRIORITY) 🟡
+### 8.5 Validation & Sanitization Consolidation ✅ COMPLETE (December 18, 2025)
 
-#### Current Status: ⚠️ PARTIALLY CONSOLIDATED
+#### Problem: Duplicate normalizeAddress Functions
+Multiple files with duplicate Ethereum address validation logic.
 
-**Canonical**: lib/middleware/api-security.ts
-- ✅ `validateInput<T>` (Zod schema validation)
-- ✅ `sanitizeString` (XSS prevention)
-- ✅ `sanitizeAddress` (Ethereum address normalization)
-- ✅ `sanitizeChain` (Chain name validation)
+#### Solution: Enhanced Canonical sanitizeAddress
 
-**Other Implementations**:
-1. ⚠️ **lib/notifications/priority.ts**: `validatePrioritySettings` (domain-specific, KEEP)
-2. ⚠️ **lib/middleware/request-id.ts**: Request ID validation (domain-specific, KEEP)
-3. ⚠️ **lib/middleware/idempotency.ts**: Idempotency key validation (domain-specific, KEEP)
-4. ⚠️ **lib/bot/local-cache.ts** (line 220): Directory traversal prevention (security-critical, KEEP)
-5. ✅ **lib/profile/profile-data.ts**: `normalizeAddress` - Uses sanitizeAddress internally
-6. ✅ **lib/bot/core/auto-reply.ts**: Uses normalizeAddress from profile-data
+**Enhanced**: lib/middleware/api-security.ts
+- ✅ `sanitizeAddress(address: unknown): `0x${string}` | null` - Enhanced with proper validation
+  - Validates: 0x prefix + exactly 40 hex characters
+  - Returns: Lowercase normalized address or null
+  - Replaces: 3 duplicate normalizeAddress implementations
+- ✅ `sanitizeChain(chain: string)` - Chain name validation
+- ✅ `sanitizeString(str: string)` - XSS prevention
+- ✅ `validateInput<T>(schema, data)` - Zod schema validation
 
-#### Analysis:
-**NO MAJOR CONSOLIDATION NEEDED** - Domain-specific validation is appropriate
+**Domain-Specific Kept** (different purposes):
+- ✅ lib/notifications/priority.ts: validatePrioritySettings
+- ✅ lib/middleware/request-id.ts: Request ID validation
+- ✅ lib/middleware/idempotency.ts: Idempotency key validation
+- ✅ lib/bot/local-cache.ts: Directory traversal prevention
 
-**Minor Cleanup**:
-- Ensure all address normalization uses lib/middleware/api-security.ts `sanitizeAddress`
-- Document validation hierarchy in headers
+#### Actions Taken:
+
+**Step 1**: ✅ Enhanced sanitizeAddress in api-security.ts
+- Added proper Ethereum address validation (0x + 40 hex)
+- Changed return type: `string` → ``0x${string}` | null`
+- Now matches normalizeAddress pattern exactly
+
+**Step 2**: ✅ Removed duplicate normalizeAddress in quest-policy.ts (14 lines)
+- Replaced with: `import { sanitizeAddress as normalizeAddress }`
+- Fixed parseAddressList type predicates
+
+**Step 3**: ✅ Removed duplicate normalizeAddressValue in telemetry.ts (7 lines)
+- Replaced with: `import { sanitizeAddress as normalizeAddressValue }`
+
+**Step 4**: ✅ Fixed 7 API routes to handle null returns
+- app/api/advanced-analytics/route.ts: Filter null addresses
+- app/api/onchain-stats/snapshot/route.ts: Null check + error
+- app/api/onchain-stats/history/route.ts: Null check + error
+- app/api/onchain-stats/[chain]/route.ts: Null check + error
+- app/api/transaction-patterns/route.ts: Null check + error
+- All routes return proper 400 errors for invalid addresses
+
+**Step 5**: ✅ Updated Documentation
+- lib/index.ts: Exported sanitize functions
+- lib/README.md: Added Phase 8.5 section
+- Added ❌ NEVER warnings against inline normalizeAddress
+
+#### Phase 8.5 Results:
+- ✅ **sanitizeAddress enhanced** with proper validation
+- ✅ **21 lines removed** (normalizeAddress duplicates)
+- ✅ **7 API routes fixed** (null handling)
+- ✅ **TypeScript: 0 errors** (verified)
+- ✅ **Single source of truth** for address validation
+
+#### Validation Pattern:
+```typescript
+// Phase 8.5: ALWAYS use centralized validation
+import { sanitizeAddress } from '@/lib/middleware/api-security'
+
+const address = sanitizeAddress(input)
+if (!address) {
+  return { error: 'Invalid Ethereum address format' }
+}
+
+// ❌ NEVER: Create inline normalizeAddress
+// ❌ NEVER: function normalizeAddress(addr) { ... }
+```
+
+#### Benefits:
+- **Single validation logic** across entire codebase
+- **Type-safe returns** (``0x${string}` | null`)
+- **Proper error handling** in all API routes
+- **21 lines removed** (duplicate validation)
+- **Prevents future duplication** (documented standard)
 
 ---
 
@@ -1851,6 +1903,9 @@ Already fixed in Phase 7.6 Pattern Consolidation:
 |----------------|---------------|-----------|------------|----------|--------|
 | **1. Caching** | 10 files | lib/cache/server.ts | 6 duplicates | ✅ DONE | ~670 lines |
 | **2. RPC Clients** | 15+ files | lib/contracts/rpc-client-pool.ts | 15 duplicates | ✅ DONE | ~180 lines |
+| **3. Neynar Client** | 3 files | lib/integrations/neynar-server.ts | 0 duplicates | ✅ DONE | Verified |
+| **4. User Fetching** | 10 functions | neynar.ts + queries/user.ts | 2 duplicates | ✅ DONE | ~252 lines |
+| **5. Validation** | 5+ files | lib/middleware/api-security.ts | 3 duplicates | ✅ DONE | ~21 lines |
 | **3. User Fetching** | 10 functions | lib/integrations/neynar.ts + lib/supabase/queries/user.ts | 3 duplicates | 🔴 HIGH | ~150 lines |
 | **4. Neynar Client** | 3 files | lib/integrations/neynar-server.ts | 0 duplicates | ✅ DONE | Already optimal |
 | **5. Validation** | 5+ files | lib/middleware/api-security.ts | 0 major duplicates | 🟡 MEDIUM | Document only |

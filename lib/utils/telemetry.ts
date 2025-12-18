@@ -1,5 +1,6 @@
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/gmeow-utils'
+import { sanitizeAddress } from '@/lib/middleware/api-security'
 import { parseAbiItem, type AbiEvent, type Log } from 'viem'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Json } from '@/types/supabase'
@@ -191,12 +192,8 @@ function toSafeNumber(value: unknown): number {
   return 0
 }
 
-function normalizeAddressValue(value: unknown): `0x${string}` | null {
-  if (typeof value !== 'string') return null
-  const trimmed = value.trim().toLowerCase()
-  if (!/^0x[0-9a-f]{40}$/.test(trimmed)) return null
-  return trimmed as `0x${string}`
-}
+// Phase 8.5: Use centralized address validation from api-security.ts
+import { sanitizeAddress as normalizeAddressValue } from '@/lib/middleware/api-security'
 
 function getStartBlock(chain: ChainKey): bigint {
   const envKey = `CHAIN_START_BLOCK_${chain.toUpperCase()}`

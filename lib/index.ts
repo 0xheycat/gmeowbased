@@ -24,10 +24,12 @@ export * from './middleware/request-id'
 export * from './middleware/rate-limit'
 
 // ============================================================================
-// Validation
+// Validation (Phase 8.5 - Centralized Sanitization)
 // ============================================================================
 
 export * from './validation/api-schemas'
+// Phase 8.5: Centralized address/chain validation
+export { sanitizeAddress, sanitizeChain, sanitizeString, validateInput } from './middleware/api-security'
 
 // ============================================================================
 // Core Systems (Selective Exports)

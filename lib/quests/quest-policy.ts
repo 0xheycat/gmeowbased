@@ -47,6 +47,8 @@
  */
 
 import { QUEST_TYPES, type ChainKey } from '@/lib/contracts/gmeow-utils'
+// Phase 8.5: Use centralized address validation from api-security.ts
+import { sanitizeAddress as normalizeAddress } from '@/lib/middleware/api-security'
 
 type CreatorTier = 'standard' | 'partner' | 'admin'
 
@@ -183,15 +185,8 @@ function parseAddressList(raw: string | undefined | null): Set<string> {
     raw
       .split(',')
       .map((entry) => normalizeAddress(entry))
-      .filter((entry): entry is string => Boolean(entry)),
+      .filter((entry): entry is `0x${string}` => entry !== null),
   )
-}
-
-function normalizeAddress(value: string | null | undefined): string | null {
-  if (typeof value !== 'string') return null
-  const trimmed = value.trim()
-  if (!/^0x[a-fA-F0-9]{40}$/.test(trimmed)) return null
-  return trimmed.toLowerCase()
 }
 
 export type { CreatorTier, QuestPolicy }
