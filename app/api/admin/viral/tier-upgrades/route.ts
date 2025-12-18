@@ -41,6 +41,21 @@ type TierUpgrade = {
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
   const requestId = generateRequestId()
+  
+  // DEPRECATED: viral_tier_history table was dropped in Phase 3 migration
+  // This data should be queried from Subsquid indexer instead
+  // TODO: Implement Subsquid equivalent endpoint
+  return NextResponse.json(
+    { 
+      ok: false, 
+      error: 'endpoint_deprecated',
+      message: 'viral_tier_history table dropped - use Subsquid API instead',
+      migration: 'Phase 3: SUBSQUID-SUPABASE-MIGRATION-PLAN.md'
+    },
+    { status: 410, headers: { 'X-Request-ID': requestId } }
+  )
+  
+  /*
   const ip = getClientIp(req)
   const { success } = await rateLimit(ip, strictLimiter)
   
@@ -173,4 +188,5 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   }, {
     headers: { 'X-Request-ID': requestId }
   })
+  */
 })

@@ -281,7 +281,7 @@ export async function syncCastEngagement(
         viral_score: newScore,
         viral_tier: newTier.name.toLowerCase().replace(' ', '_'),
         viral_bonus_xp: (existingCast.viral_bonus_xp || 0) + additionalXp,
-        last_updated_at: new Date().toISOString(),
+        last_metrics_update: new Date().toISOString(),
       })
       .eq('cast_hash', castHash)
 
@@ -421,7 +421,7 @@ export async function getCastsNeedingSync(): Promise<string[]> {
       .from('badge_casts')
       .select('cast_hash')
       .gte('created_at', sevenDaysAgo.toISOString())
-      .order('last_updated_at', { ascending: true })
+      .order('last_metrics_update', { ascending: true })
       .limit(100)
 
     if (error) {
