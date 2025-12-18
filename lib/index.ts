@@ -48,6 +48,9 @@ export { getSupabaseAdminClient, getSupabaseEdgeClient } from './supabase/edge'
 // ============================================================================
 
 export * from './contracts'
+
+// RPC Client Pool (Phase 8.2 - Centralized Connection Pooling)
+export { getPublicClient, getClientByChainKey, resetClientPool } from './contracts/rpc-client-pool'
 export type { GMChainKey, ChainKey } from './contracts/gmeow-utils'
 
 // ============================================================================
