@@ -273,6 +273,7 @@ export async function getLegacyGMEvents(fid: number, limit = 30) {
     return [];
   }
 
+  // ⚠️ TODO: Replace with Subsquid getGMRankEvents()
   const { data, error } = await supabase
     .from('gmeow_rank_events')
     .select('*')

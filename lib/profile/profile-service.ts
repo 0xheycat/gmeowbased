@@ -131,6 +131,7 @@ async function fetchLeaderboardDataFromDB(fid: number) {
   const supabase = getSupabaseServerClient()
   if (!supabase) return null
 
+  // ⚠️ DEPRECATED - Replace with Subsquid getUserStatsByFID()
   // Query all_time period for profile display
   const { data, error } = await supabase
     .from('leaderboard_calculations')

@@ -89,6 +89,7 @@ async function fetchUserQuestHistory(address: string): Promise<UserQuestHistory>
   if (!supabase) return history
   
   try {
+    // ⚠️ DEPRECATED - Replace with Subsquid getGMRankEvents()
     const { data, error } = await supabase
       .from('gmeow_rank_events')
       .select('event_type, metadata, created_at, chain')
