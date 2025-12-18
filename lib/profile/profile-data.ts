@@ -1,4 +1,4 @@
-import { getContractAddress, CHAIN_IDS, type ChainKey, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
+import { getContractAddress, CHAIN_IDS, type ChainKey, STANDALONE_ADDRESSES, ALL_CHAIN_KEYS } from '@/lib/contracts/gmeow-utils'
 import { GM_CONTRACT_ABI, GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { buildFrameShareUrl } from '@/lib/api/share'
 import { calculateRankProgress } from '@/lib/leaderboard/rank'
@@ -50,7 +50,9 @@ export type ProfileOverviewData = {
   neynarScore: number | null
 }
 
-export const PROFILE_SUPPORTED_CHAINS: ChainKey[] = Object.keys(CHAIN_IDS) as ChainKey[]
+// Phase 8.9: Re-export ALL_CHAIN_KEYS as PROFILE_SUPPORTED_CHAINS for backward compatibility
+// (supports all 13 chains for viewing via Blockscout MCP)
+export const PROFILE_SUPPORTED_CHAINS = ALL_CHAIN_KEYS
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 

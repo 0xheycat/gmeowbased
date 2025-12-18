@@ -1140,7 +1140,8 @@ export function getQuestFieldConfig(key: QuestTypeKey | string | number): QuestF
 // Small convenience exports for front-end usage
 // -------------------------------
 // GM contract chains - Base only (for contract interactions)
-export const CHAIN_KEYS: GMChainKey[] = ['base']
+// Phase 8.9: Use Object.keys(CHAIN_IDS) instead of duplicate array
+export const CHAIN_KEYS: GMChainKey[] = Object.keys(CHAIN_IDS) as GMChainKey[]
 
 // Label map for UI (Blockscout-supported chains for OnchainStats frame viewing)
 export const CHAIN_LABEL: Record<ChainKey, string> = {
