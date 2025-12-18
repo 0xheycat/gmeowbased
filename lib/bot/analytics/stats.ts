@@ -54,7 +54,8 @@
  */
 
 // @edit-start 2025-11-12 — Bot stats aggregation helper
-import { PROFILE_SUPPORTED_CHAINS, fetchChainSnapshot, normalizeAddress } from '@/lib/profile/profile-data'
+import { PROFILE_SUPPORTED_CHAINS, fetchChainSnapshot } from '@/lib/profile/profile-data'
+import { sanitizeAddress as normalizeAddress } from '@/lib/middleware/api-security'
 import { calculateRankProgress } from '@/lib/leaderboard/rank'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'

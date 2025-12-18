@@ -94,6 +94,12 @@ export function getChainDisplayName(chainKey: string): string {
 
 // -------------------- Sanitization --------------------
 
+/**
+ * Phase 8.8 NOTE: Different from lib/middleware/api-security.ts sanitizeString
+ * - This version: Length limiting + type coercion (for frame params)
+ * - Security version: XSS protection (removes HTML, JS, event handlers)
+ * Both are legitimate - use security version for user input, this for frame data
+ */
 export function sanitizeString(val: unknown, maxLength = 200): string {
   if (typeof val !== 'string') return ''
   return val.slice(0, maxLength).trim()

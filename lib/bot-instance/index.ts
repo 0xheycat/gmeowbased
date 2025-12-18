@@ -10,7 +10,7 @@ import type { BotStatsConfig } from "@/lib/bot/config/types"
 import { DEFAULT_BOT_STATS_CONFIG } from "@/lib/bot/config/types"
 import { recordRankEvent } from "@/lib/utils/telemetry"
 import { resolveBotSignerUuid } from "@/lib/integrations/neynar-bot"
-import { normalizeAddress } from "@/lib/profile/profile-data"
+import { sanitizeAddress as normalizeAddress } from '@/lib/middleware/api-security'
 dotenv.config()
 
 const neynar = new NeynarAPIClient({ apiKey: process.env.NEXT_PUBLIC_NEYNAR_GLOBAL_API! } as any)

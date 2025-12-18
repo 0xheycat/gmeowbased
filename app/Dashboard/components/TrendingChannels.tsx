@@ -7,7 +7,8 @@
  * ✅ Professional Patterns: Twitter trending badges, GitHub activity dots, LinkedIn context
  */
 
-import { getTrendingChannels, formatNumber, truncateText, formatTimeAgo } from '@/lib/api/neynar-dashboard'
+import { getTrendingChannels, truncateText, formatTimeAgo } from '@/lib/api/neynar-dashboard'
+import { formatNumber } from '@/lib/utils/formatters'
 import { withRetry, RetryStrategies } from '@/lib/api/retry'
 import { TrendingBadge, ActivityIndicator, ContextBadge } from '@/components/dashboard-patterns'
 import { TagIcon } from '@/components/icons/tag-icon'
