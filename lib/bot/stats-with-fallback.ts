@@ -82,6 +82,7 @@
 
 import { localCache } from '@/lib/cache/server'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
+import type { Database } from '@/types/supabase'
 import { getUserStats as getSubsquidStats } from '@/lib/integrations/subsquid-client'
 import { computeBotUserStats, type BotUserStats } from '@/lib/bot/analytics/stats'
 

@@ -26,6 +26,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import type { Database } from '@/types/supabase'
 import { trackError } from './error-tracking'
 import { DEFAULT_PRIORITY_MAP, type NotificationPriority } from './priority'
 import { handleNotificationBatching, type NotificationBatchType, type NotificationPriority as BatchPriority } from '@/lib/notifications/notification-batching'

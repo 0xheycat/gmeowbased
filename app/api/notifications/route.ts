@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseEdgeClient } from '@/lib/supabase/edge'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import type { Database } from '@/types/supabase'
 import { 
   generateRequestId,
   checkIdempotency,
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseEdgeClient()
+    const supabase = getSupabaseServerClient()
     if (!supabase) {
       return NextResponse.json(
         { error: 'Database connection unavailable' },
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to client-friendly format
-    const notifications = (data || []).map(row => ({
+    const notifications = ((data || []) as Database['public']['Tables']['user_notification_history']['Row'][]).map(row => ({
       id: row.id,
       fid: row.fid,
       walletAddress: row.wallet_address,
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseEdgeClient()
+    const supabase = getSupabaseServerClient()
     if (!supabase) {
       return NextResponse.json(
         { error: 'Database connection unavailable' },
@@ -267,7 +268,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseEdgeClient()
+    const supabase = getSupabaseServerClient()
     if (!supabase) {
       return NextResponse.json(
         { error: 'Database connection unavailable' },

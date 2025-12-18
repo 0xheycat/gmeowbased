@@ -3,7 +3,7 @@ import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/g
 import { sanitizeAddress } from '@/lib/middleware/api-security'
 import { parseAbiItem, type AbiEvent, type Log } from 'viem'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Json } from '@/types/supabase'
+import type { Database, Json } from '@/types/supabase'
 import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 
 export type TelemetryMetric = {
@@ -747,8 +747,12 @@ export async function recordRankEvent(input: RankTelemetryEventInput): Promise<v
     metadata: (input.metadata ?? null) as Json,
   }
 
+  // DEPRECATED (Phase 3): gmeow_rank_events table dropped, now tracked in Subsquid
+  // This function is a no-op, kept for backward compatibility
+  // TODO Phase 6: Remove all recordRankEvent calls and delete this function
   try {
-    await supabase.from(RANK_EVENT_TABLE).insert(payload)
+    // await supabase.from(RANK_EVENT_TABLE).insert(payload)
+    console.log('[telemetry] recordRankEvent (DEPRECATED): gmeow_rank_events table dropped in Phase 3')
   } catch (error) {
     console.warn('[telemetry] recordRankEvent failed:', (error as Error)?.message || error)
   }

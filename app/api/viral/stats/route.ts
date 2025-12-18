@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import type { Database } from '@/types/supabase'
 import { getViralTier, calculateEngagementScore, type EngagementMetrics } from '@/lib/viral/viral-bonus'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
@@ -108,7 +109,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       .select('*')
       .eq('fid', fid)
       .order('viral_bonus_xp', { ascending: false })
-      .limit(50) // GI-11: Limit result size
+      .limit(50) as { data: Database['public']['Tables']['badge_casts']['Row'][] | null, error: any } // GI-11: Limit result size
     
     if (error) {
       console.error('[viral/stats] Database error:', error)

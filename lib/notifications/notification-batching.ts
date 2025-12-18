@@ -24,6 +24,7 @@
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import type { Database } from '@/types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ============================================================================
@@ -144,7 +145,7 @@ export async function getUserTimezone(
       .from('notification_preferences')
       .select('quiet_hours_timezone')
       .eq('fid', fid)
-      .single()
+      .single() as { data: Pick<Database['public']['Tables']['notification_preferences']['Row'], 'quiet_hours_timezone'>, error: any }
 
     if (!prefsError && prefs?.quiet_hours_timezone) {
       return prefs.quiet_hours_timezone
@@ -155,7 +156,7 @@ export async function getUserTimezone(
       .from('user_profiles')
       .select('metadata')
       .eq('fid', fid)
-      .single()
+      .single() as { data: Pick<Database['public']['Tables']['user_profiles']['Row'], 'metadata'>, error: any }
 
     if (!profileError && profile?.metadata) {
       const metadata = profile.metadata as any

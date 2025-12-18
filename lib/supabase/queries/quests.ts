@@ -6,6 +6,7 @@
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase';
+import type { Database } from '@/types/supabase'
 import type { Quest, UserQuestProgress, QuestWithProgress } from '../types/quest';
 import { getMockActiveQuests, getMockFeaturedQuests, getMockQuest } from '../mock-quest-data';
 
@@ -154,7 +155,7 @@ export async function getQuestBySlug(
     query = query.eq('slug', slug);
   }
   
-  const { data: quest, error: questError } = await query.single();
+  const { data: quest, error: questError } = await query.single() as { data: Database['public']['Tables']['unified_quests']['Row'], error: any };
   
   if (questError || !quest) {
     console.error('Failed to fetch quest:', questError);
@@ -169,7 +170,7 @@ export async function getQuestBySlug(
       .select('*')
       .eq('quest_id', quest.id)
       .eq('user_fid', userFid)
-      .single();
+      .single() as { data: Database['public']['Tables']['user_quest_progress']['Row'], error: any };
     
     userProgress = progress as unknown as UserQuestProgress || undefined;
   }
