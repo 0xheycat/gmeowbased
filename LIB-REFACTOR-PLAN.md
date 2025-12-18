@@ -1398,9 +1398,44 @@ await initializeCache() // Cleanup + warm cache
 - **Net reduction: 16 lines**
 - **Consolidation: 2 → 1 implementation**
 
-**Step 3**: Replace lib/supabase/edge.ts ServerCache → lib/cache/server.ts (30 min)
-- Replace ServerCache class with MemoryCache from lib/cache/server.ts
-- Update 8 usages in lib/supabase/
+**Step 3**: ✅ **COMPLETE** - Consolidate ServerCache implementations (30 min)
+
+**Files Updated** (December 18, 2025):
+1. ✅ lib/supabase/edge.ts - Removed ServerCache class (60 lines), added deprecation note
+2. ✅ lib/badges/badges.ts - Removed duplicate ServerCache class (60 lines)
+   - Migrated 3 cache instances to unified getCached()
+   - Added loadBadgeRegistrySync() for backward compatibility
+   - Converted getUserBadges() to use getCached with stale-while-revalidate
+   - Converted getBadgeByTier() to use getCached
+   - Updated cache invalidation to use unified invalidateCache()
+
+**Migration Changes**:
+```diff
+# lib/supabase/edge.ts
+- export class ServerCache<T> { ... } // 60 lines
++ // DEPRECATED: ServerCache moved to lib/cache/server.ts (Phase 8.1)
+
+# lib/badges/badges.ts
+- class ServerCache<T> { ... } // 60 lines
+- const badgeRegistryCache = new ServerCache<BadgeRegistry>(5 * 60 * 1000)
+- const userBadgesCache = new ServerCache<UserBadge[]>(2 * 60 * 1000)
+- const badgeByTierCache = new ServerCache<BadgeRegistry['badges'][0] | null>(5 * 60 * 1000)
++ import { getCached, invalidateCache } from '@/lib/cache/server'
++ // Use getCached() for all caching needs
+```
+
+**Benefits Gained**:
+- ✅ Stale-while-revalidate for badge loading (better UX)
+- ✅ Cache stampede prevention (concurrent badge requests)
+- ✅ Graceful degradation (never crashes)
+- ✅ Enhanced error handling
+- ✅ Unified cache statistics
+
+**Impact**:
+- ✅ 120 lines removed (2 ServerCache classes)
+- ✅ 0 TypeScript errors
+- ✅ Badge caching now production-ready
+- ✅ Backward compatible (loadBadgeRegistrySync() added)
 
 **Step 4**: Consolidate leaderboard/aggregator inline caches (45 min)
 - Replace `clientCache`, `chainAggregateCache`, `profileCache` with getCached calls
