@@ -156,13 +156,24 @@ import { fetchUserByFid } from '@/lib/integrations/neynar'
   - ✅ Removed: bot/local-cache.ts, 2x ServerCache classes, memoizeAsync()
   - ✅ All caching now uses lib/cache/* (no new inline caches)
 
-### Smart Contracts
-- `contracts/` (10 files) - Blockchain contract interactions
+### Smart Contracts (Phase 8.2 Complete - Dec 18, 2025)
+- `contracts/` (11 files) - Blockchain contract interactions
   - **Active Chain**: Base (GMChainKey)
   - **View-Only Chains**: 12 chains via Blockscout MCP (ChainKey)
   - Contract ABIs and addresses
   - Contract utility functions
   - Read/write operations
+  - `rpc-client-pool.ts` - **PRIMARY**: Centralized RPC client connection pooling
+    - Features: Connection reuse, automatic retry (3x), 30s timeout, 5-chain support
+    - Functions: getPublicClient(chainId), getClientByChainKey(chain)
+    - Use for: ALL blockchain read operations (replaces inline createPublicClient)
+    - **DO NOT**: Create new inline RPC clients - always use pool
+  
+  **Phase 8.2 Consolidation** (180+ lines reduced):
+  - ✅ 12 files migrated from inline createPublicClient() → centralized pool
+  - ✅ Connection pooling prevents duplicate RPC connections
+  - ✅ Single source for RPC configuration (no scattered RPC URLs)
+  - ✅ Rate limit protection (shared pool = fewer connections)
 
 ### Database
 - `supabase/` (5 files) - PostgreSQL database client
@@ -288,6 +299,10 @@ import { resolveBotSignerUuid } from '@/lib/integrations/neynar-bot'
 // Contracts (UPDATED PATHS)
 import { CONTRACT_ADDRESSES, CHAIN_IDS } from '@/lib/contracts/gmeow-utils'
 import { getGuildContract } from '@/lib/contracts/guild-contract'
+
+// RPC Client Pool (Phase 8.2 - ALWAYS USE THIS)
+import { getPublicClient, getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
+// ❌ NEVER: createPublicClient({ transport: http(rpc) }) - use pool instead!
 
 // Profile (UPDATED PATHS)
 import { normalizeAddress } from '@/lib/profile/profile-data'
