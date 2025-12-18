@@ -602,6 +602,12 @@ export async function processPendingNotifications(deps?: NotificationDependencie
       throw new Error('Supabase client not configured')
     }
 
+    // DEPRECATED (Phase 3): pending_viral_notifications view dropped
+    // Use Subsquid real-time events instead
+    console.warn('[processQueuedViralNotifications] DEPRECATED: pending_viral_notifications dropped in Phase 3')
+    return 0
+
+    /* Original implementation:
     // Query pending notifications from view
     // Source: scripts/sql/phase5.1-viral-realtime.sql
     const { data: pending, error } = await supabase
@@ -650,6 +656,7 @@ export async function processPendingNotifications(deps?: NotificationDependencie
     }
 
     return successCount
+    */
   } catch (error) {
     trackError('viral_notification_process_pending_failed', error as Error, {
       function: 'processPendingNotifications',

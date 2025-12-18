@@ -185,11 +185,14 @@ export async function getUserStatsWithFallback(
     if (!supabase) throw new Error('Supabase not configured')
 
     // Fetch user profile from Supabase
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = (await supabase
       .from('user_profiles')
       .select('*')
       .eq('fid', fid)
-      .single()
+      .single()) as {
+      data: Database['public']['Tables']['user_profiles']['Row']
+      error: any
+    }
 
     if (error || !profile) {
       throw new Error('User not found in Supabase')

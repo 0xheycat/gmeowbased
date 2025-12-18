@@ -472,14 +472,17 @@ export async function fetchPendingDigest(
       return null
     }
 
-    const { data, error } = await client
+    const { data, error } = (await client
       .from('notification_batch_queue')
       .select('*')
       .eq('fid', fid)
       .is('delivered_at', null)
       .lte('scheduled_for', new Date().toISOString())
       .order('priority', { ascending: true })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false })) as {
+      data: Database['public']['Tables']['notification_batch_queue']['Row'][]
+      error: any
+    }
 
     if (error || !data || data.length === 0) {
       return null
