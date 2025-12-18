@@ -164,44 +164,19 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
       interactionsData,
     ] = await Promise.all([
       // Query 1: User profile and XP stats
-      // ⚠️ DEPRECATED - Replace with Subsquid getGMRankEvents()
-      Promise.race([
-        supabase
-          .from('gmeow_rank_events')
-          .select('event_type, delta, created_at')
-          .eq('fid', fid)
-          .order('created_at', { ascending: false })
-          .limit(100)
-          .then(({ data, error }) => ({ data, error })),
-        timeout(QUERY_TIMEOUT, { data: null, error: { message: 'Timeout' } }),
-      ]),
+      // ⚠️ DEPRECATED (Phase 3): gmeow_rank_events table dropped - Use Subsquid instead
+      Promise.resolve({ data: null, error: null }),
+      // Original: supabase.from('gmeow_rank_events').select(...)
 
       // Query 2: Active quests
-      // ⚠️ DEPRECATED - Replace with Subsquid getGMRankEvents() filtered by type
-      Promise.race([
-        supabase
-          .from('gmeow_rank_events')
-          .select('event_type, metadata, created_at')
-          .eq('fid', fid)
-          .eq('event_type', 'quest-start')
-          .order('created_at', { ascending: false })
-          .limit(10)
-          .then(({ data, error }) => ({ data, error })),
-        timeout(QUERY_TIMEOUT, { data: null, error: { message: 'Timeout' } }),
-      ]),
+      // ⚠️ DEPRECATED (Phase 3): gmeow_rank_events table dropped - Use Subsquid instead
+      Promise.resolve({ data: null, error: null }),
+      // Original: supabase.from('gmeow_rank_events').select(...)
 
       // Query 3: Unseen achievements
-      Promise.race([
-        supabase
-          .from('viral_milestone_achievements')
-          .select('id, achievement_type, achieved_at, notification_sent')
-          .eq('fid', fid)
-          .eq('seen', false)
-          .order('achieved_at', { ascending: false })
-          .limit(5)
-          .then(({ data, error }) => ({ data, error })),
-        timeout(QUERY_TIMEOUT, { data: null, error: { message: 'Timeout' } }),
-      ]),
+      // ⚠️ DEPRECATED (Phase 3): viral_milestone_achievements table dropped - Use Subsquid instead
+      Promise.resolve({ data: null, error: null }),
+      // Original: supabase.from('viral_milestone_achievements').select(...)
 
       // Query 4: Guild membership (stub - implement when guilds DB ready)
       Promise.resolve({ data: null, error: null }),
@@ -211,18 +186,20 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
     ])
 
     // Process profile and XP data
+    // DEPRECATED (Phase 3): gmeow_rank_events table dropped
     let totalXP = 0
     let gmCount = 0
     let streak = 0
 
-    if (profileData.data && !profileData.error) {
-      for (const event of profileData.data) {
+    if (profileData.data && Array.isArray(profileData.data) && !profileData.error) {
+      const events = profileData.data as any[]
+      for (const event of events) {
         if (event.event_type === 'gm') gmCount++
         if (event.delta) totalXP += Number(event.delta) || 0
       }
 
       // Calculate streak (consecutive days)
-      const gmEvents = profileData.data.filter((e: any) => e.event_type === 'gm')
+      const gmEvents = events.filter((e: any) => e.event_type === 'gm')
       if (gmEvents.length > 0) {
         streak = calculateStreak(gmEvents.map((e: any) => new Date(e.created_at)))
       }
@@ -231,13 +208,15 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
     const level = calculateLevel(totalXP)
 
     // Process active quests
+    // DEPRECATED (Phase 3): gmeow_rank_events table dropped
     let hasActiveQuest = false
     let activeQuestId: number | undefined
     let activeQuestName: string | undefined
     let questProgress: number | undefined
 
-    if (questsData.data && !questsData.error && questsData.data.length > 0) {
-      const latestQuest = questsData.data[0]
+    const questsList = questsData.data as unknown as any[]
+    if (questsList && Array.isArray(questsList) && !questsData.error && questsList.length > 0) {
+      const latestQuest = questsList[0]
       try {
         const detail = typeof latestQuest.metadata === 'string'
           ? JSON.parse(latestQuest.metadata)
@@ -255,12 +234,14 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
     }
 
     // Process achievements
+    // DEPRECATED (Phase 3): viral_milestone_achievements table dropped
     let hasUnseenAchievement = false
     let latestAchievementId: string | undefined
     let latestAchievementType: string | undefined
 
-    if (achievementsData.data && !achievementsData.error && achievementsData.data.length > 0) {
-      const latest = achievementsData.data[0]
+    const achievementsList = achievementsData.data as unknown as any[]
+    if (achievementsList && Array.isArray(achievementsList) && !achievementsData.error && achievementsList.length > 0) {
+      const latest = achievementsList[0]
       hasUnseenAchievement = true
       latestAchievementId = latest.id
       latestAchievementType = latest.achievement_type

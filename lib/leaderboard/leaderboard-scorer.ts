@@ -308,36 +308,17 @@ export async function updateLeaderboardCalculation(
     return false
   }
 
-  // Get rank tier name
+  // DEPRECATED (Phase 3): leaderboard_calculations table dropped
+  // This function is a no-op, kept for backward compatibility
+  // Leaderboard data now comes from Subsquid
+  console.warn('[leaderboard-scorer] updateLeaderboard DEPRECATED: leaderboard_calculations dropped in Phase 3')
+  return true
+
+  /* ORIGINAL CODE (before Phase 3 migration):
   const { getImprovedRankTierByPoints } = await import('@/lib/leaderboard/rank')
   const tier = getImprovedRankTierByPoints(score.totalScore)
-
-  // Upsert into leaderboard_calculations
-  const { error } = await supabase.from('leaderboard_calculations').upsert(
-    {
-      address: score.address,
-      farcaster_fid: score.farcasterFid,
-      base_points: score.basePoints,
-      viral_xp: score.viralXP,
-      guild_bonus: score.guildBonus,
-      guild_bonus_points: score.guildBonusPoints,
-      referral_bonus: score.referralBonus,
-      streak_bonus: score.streakBonus,
-      badge_prestige: score.badgePrestige,
-      rank_tier: tier.name,
-      period,
-    },
-    {
-      onConflict: 'address,period',
-    }
-  )
-
-  if (error) {
-    console.error(`Failed to update leaderboard: ${error.message}`)
-    return false
-  }
-
-  return true
+  const { error } = await supabase.from('leaderboard_calculations').upsert(...)
+  */
 }
 
 /**
@@ -354,38 +335,16 @@ export async function recalculateGlobalRanks(
     return 0
   }
 
-  // Get all entries sorted by total_score DESC
-  const { data: entries, error } = await supabase
-    .from('leaderboard_calculations')
-    .select('address, total_score, global_rank')
-    .eq('period', period)
-    .order('total_score', { ascending: false })
+  // DEPRECATED (Phase 3): leaderboard_calculations table dropped
+  // This function is a no-op, kept for backward compatibility
+  // Rank calculation now handled by Subsquid
+  console.warn('[leaderboard-scorer] recalculateGlobalRanks DEPRECATED: leaderboard_calculations dropped in Phase 3')
+  return 0
 
-  if (error || !entries) {
-    console.error(`Failed to fetch leaderboard entries: ${error?.message}`)
-    return 0
-  }
-
-  // Calculate rank changes and update
-  let updateCount = 0
-  for (let i = 0; i < entries.length; i++) {
-    const newRank = i + 1
-    const oldRank = entries[i].global_rank || newRank
-    const rankChange = oldRank - newRank // Positive = moved up
-
-    await supabase
-      .from('leaderboard_calculations')
-      .update({
-        global_rank: newRank,
-        rank_change: rankChange,
-      })
-      .eq('address', entries[i].address)
-      .eq('period', period)
-
-    updateCount++
-  }
-
-  return updateCount
+  /* ORIGINAL CODE (before Phase 3 migration):
+  const { data: entries, error } = await supabase.from('leaderboard_calculations').select(...)
+  Calculate rank changes and update entries...
+  */
 }
 
 /**
