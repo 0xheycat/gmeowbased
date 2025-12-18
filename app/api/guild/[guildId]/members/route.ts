@@ -262,41 +262,50 @@ async function fetchLeaderboardStats(addresses: string[]): Promise<Record<string
   if (addresses.length === 0) return {}
   
   try {
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    // Fetch stats from Subsquid (replaces leaderboard_calculations)
+    const { getLeaderboardEntry } = await import('@/lib/subsquid-client')
     
-    const { data, error } = await supabase
-      .from('leaderboard_calculations')
-      .select('address, total_score, base_points, viral_xp, guild_bonus_points, is_guild_officer, global_rank, rank_tier')
-      .in('address', addresses)
-      .eq('period', 'all_time')
-    
-    if (error) {
-      console.error('[guild-members] Error fetching leaderboard stats:', error)
-      return {}
-    }
-    
-    // Build lookup map (address → stats)
+    // Build lookup map (address → stats) from Subsquid
     const statsMap: Record<string, any> = {}
-    for (const row of data || []) {
-      statsMap[row.address.toLowerCase()] = {
-        total_score: row.total_score || 0,
-        base_points: row.base_points || 0,
-        viral_xp: row.viral_xp || 0,
-        guild_bonus_points: row.guild_bonus_points || 0,
-        is_guild_officer: row.is_guild_officer || false,
-        global_rank: row.global_rank,
-        rank_tier: row.rank_tier,
+    
+    // Query Subsquid for each address in parallel
+    const statsPromises = addresses.map(async (address) => {
+      try {
+        const stats = await getLeaderboardEntry(address)
+        if (stats) {
+          statsMap[address.toLowerCase()] = {
+            total_score: stats.totalScore || 0,
+            base_points: stats.basePoints || 0,
+            viral_xp: stats.viralXP || 0,
+            guild_bonus_points: stats.guildBonusPoints || 0,
+            is_guild_officer: stats.isGuildOfficer || false,
+            global_rank: stats.rank,
+            rank_tier: getTierFromRank(stats.rank),
+          }
+        }
+      } catch (err) {
+        console.error(`[guild-members] Error fetching stats for ${address}:`, err)
       }
-    }
+    })
+    
+    await Promise.all(statsPromises)
     
     return statsMap
   } catch (error) {
     console.error('[guild-members] Error fetching leaderboard stats:', error)
     return {}
   }
+}
+
+// Helper function to determine rank tier
+function getTierFromRank(rank: number | null | undefined): string {
+  if (!rank) return 'unranked'
+  if (rank <= 10) return 'legendary'
+  if (rank <= 50) return 'master'
+  if (rank <= 100) return 'diamond'
+  if (rank <= 500) return 'platinum'
+  if (rank <= 1000) return 'gold'
+  return 'silver'
 }
 
 /**

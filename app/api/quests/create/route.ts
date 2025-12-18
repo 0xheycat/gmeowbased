@@ -167,25 +167,25 @@ export async function POST(request: NextRequest) {
     
     // 5. VERIFY CREATOR HAS SUFFICIENT POINTS
     const { data: leaderboardData, error: leaderboardError } = await supabase
-      .from('leaderboard_calculations')
-      .select('base_points')
+      .from('user_points_balances')
+      .select('total_points')
       .eq('fid', body.creator_fid)
       .single();
     
     if (leaderboardError || !leaderboardData) {
       return createErrorResponse({
         type: ErrorType.NOT_FOUND,
-        message: 'Creator not found in leaderboard',
+        message: 'Creator not found in points balances',
         statusCode: 404,
       });
     }
     
-    const creatorPoints = leaderboardData.base_points || 0;
+    const creatorPoints = leaderboardData.total_points || 0;
     
     if (creatorPoints < cost.total) {
       return createErrorResponse({
         type: ErrorType.VALIDATION,
-        message: 'Insufficient BASE POINTS to create quest',
+        message: 'Insufficient TOTAL POINTS to create quest',
         statusCode: 400,
         details: {
           required: cost.total,
@@ -254,9 +254,10 @@ export async function POST(request: NextRequest) {
     if (questError || !questData) {
       // ROLLBACK: Refund escrow if quest creation fails
       await supabase
-        .from('leaderboard_calculations')
+        .from('user_points_balances')
         .update({ 
           base_points: creatorPoints, // Restore original points
+          updated_at: new Date().toISOString()
         })
         .eq('fid', body.creator_fid);
       

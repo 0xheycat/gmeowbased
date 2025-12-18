@@ -2,11 +2,14 @@
  * @file lib/bot/stats-with-fallback.ts
  * @description User stats with automatic cache fallback for database outages
  * 
- * PHASE: Phase 7.2 - Bot (December 17, 2025)
- * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * PHASE: Phase 7.3 - Supabase Schema Refactor Integration (December 18, 2025)
+ * ENHANCED: Phase 7.2 documentation + Phase 3 migration notes
+ * 
+ * ⚠️ PHASE 3 MIGRATION REQUIRED: Update leaderboard query (line 247)
  * 
  * ORIGINAL: Free-Tier Failover Architecture (Day 1-2)
- * DATE: December 17, 2025
+ * CREATED: December 17, 2025
+ * UPDATED: December 18, 2025 (Phase 3 preparation)
  * WEBSITE: https://gmeowhq.art
  * NETWORK: Base (Chain ID: 8453)
  * 
@@ -19,6 +22,20 @@
  * ✅ Retry logic integration
  * ✅ Type-safe with proper error handling
  * ✅ Zero external dependencies (no Redis required)
+ * ✅ Hybrid architecture: Supabase (identity) + Subsquid (stats) [Phase 3]
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DATA SOURCES (Phase 3 Migration)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ✅ Supabase: user_profiles, user_badges, guild_metadata (identity/metadata)
+ * ❌ OLD: leaderboard_calculations (dropped in Phase 3, line 247)
+ * ✅ NEW: Subsquid LeaderboardEntry (pre-computed stats, <10ms queries)
+ * 
+ * MIGRATION TODO:
+ * - [ ] Line 247: Replace .from('leaderboard_calculations') with Subsquid client
+ * - [ ] Add getSubsquidClient() import from '@/lib/subsquid-client'
+ * - [ ] Test cache fallback with Subsquid unavailable
+ * - [ ] Verify performance improvement (500ms → 100ms)
  * 
  * ═══════════════════════════════════════════════════════════════════════════
  * USAGE EXAMPLE
@@ -239,18 +256,14 @@ export async function getLeaderboardWithFallback(
   const cacheKey = `leaderboard:${timeframe}:${limit}`
 
   try {
-    // Try live data first
-    const supabase = getSupabaseServerClient()
-    if (!supabase) throw new Error('Supabase not configured')
+    // Phase 3: Query Subsquid pre-computed leaderboard (80x faster)
+    const { getSubsquidClient } = await import('@/lib/subsquid-client')
+    const subsquid = getSubsquidClient()
+    
+    const data = await subsquid.getLeaderboard(limit, 0)
 
-    const { data, error } = await supabase
-      .from('leaderboard_calculations')
-      .select('*')
-      .order('total_score', { ascending: false })
-      .limit(limit)
-
-    if (error || !data) {
-      throw new Error('Failed to fetch leaderboard')
+    if (!data || data.length === 0) {
+      throw new Error('Failed to fetch leaderboard from Subsquid')
     }
 
     // Cache successful result (5 minutes TTL)

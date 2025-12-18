@@ -53,6 +53,19 @@ import { generateRequestId } from '@/lib/middleware/request-id'
 // ==========================================
 
 /**
+ * Helper function to determine rank tier
+ */
+function getTierFromRank(rank: number | null | undefined): string {
+  if (!rank) return 'unranked'
+  if (rank <= 10) return 'legendary'
+  if (rank <= 50) return 'master'
+  if (rank <= 100) return 'diamond'
+  if (rank <= 500) return 'platinum'
+  if (rank <= 1000) return 'gold'
+  return 'silver'
+}
+
+/**
  * Validate guild ID parameter
  */
 function validateGuildId(guildId: string): bigint | null {
@@ -88,37 +101,59 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
       process.env.SUPABASE_SERVICE_ROLE_KEY || ''
     )
     
-    console.log('[guild-api] Querying leaderboard_calculations table...')
-    // Query guild members with full leaderboard stats
-    const { data: members, error } = await supabase
-      .from('leaderboard_calculations')
-      .select(`
-        address, 
-        farcaster_fid,
-        is_guild_officer, 
-        base_points,
-        viral_xp,
-        guild_bonus_points,
-        total_score,
-        global_rank,
-        rank_tier,
-        guild_id, 
-        guild_name
-      `)
+    // First, get guild members from profiles table
+    console.log('[guild-api] Fetching guild members from profiles...')
+    const { data: guildProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('fid, wallet_address')
       .eq('guild_id', guildId.toString())
       .limit(limit)
     
-    console.log('[guild-api] getGuildMembers - Supabase query:', {
+    if (profilesError || !guildProfiles || guildProfiles.length === 0) {
+      console.log('[guild-api] No profiles found or error:', profilesError)
+      // Return empty array - will trigger fallback to leader-only member
+      return []
+    }
+    
+    console.log('[guild-api] Fetching leaderboard stats from Subsquid...')
+    // Query Subsquid for leaderboard stats for each member
+    const { getLeaderboardEntry } = await import('@/lib/subsquid-client')
+    
+    const membersWithStats = await Promise.all(
+      guildProfiles.map(async (profile) => {
+        try {
+          const stats = await getLeaderboardEntry(profile.wallet_address || profile.fid)
+          return stats ? {
+            address: profile.wallet_address,
+            farcaster_fid: profile.fid,
+            is_guild_officer: stats.isGuildOfficer || false,
+            base_points: stats.basePoints || 0,
+            viral_xp: stats.viralXP || 0,
+            guild_bonus_points: stats.guildBonusPoints || 0,
+            total_score: stats.totalScore || 0,
+            global_rank: stats.rank,
+            rank_tier: getTierFromRank(stats.rank),
+            guild_id: stats.guildId,
+            guild_name: stats.guildName
+          } : null
+        } catch (err) {
+          console.error(`[guild-api] Error fetching stats for profile ${profile.fid}:`, err)
+          return null
+        }
+      })
+    )
+    
+    const members = membersWithStats.filter((m): m is NonNullable<typeof m> => m !== null)
+    
+    console.log('[guild-api] getGuildMembers - Subsquid stats fetched:', {
       guildId: guildId.toString(),
-      membersFound: members?.length || 0,
-      error: error?.message,
-      hasError: !!error,
+      membersFound: members.length,
       membersIsArray: Array.isArray(members),
-      firstMember: members?.[0]
+      firstMember: members[0]
     })
     
-    // If we have members in the leaderboard, enrich with Farcaster and badges data
-    if (!error && members && members.length > 0) {
+    // If we have members, enrich with Farcaster and badges data
+    if (members.length > 0) {
       console.log('[guild-api] Found members in leaderboard, enriching...', members.length, 'members')
       // Get FIDs to fetch Farcaster profiles
       const fids = members.map(m => m.farcaster_fid).filter(Boolean)
@@ -227,7 +262,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
     // Fallback: Return guild leader as the only member with full structure
     // This happens when leaderboard hasn't been synced yet
     console.log('[guild-api] No members in leaderboard, returning leader as sole member:', leaderAddress)
-    console.log('[guild-api] Reason - members:', members?.length || 0, 'error:', error?.message || 'none')
+    console.log('[guild-api] Reason - members:', members.length)
     
     // Try to find FID for this address via Neynar verification lookup
     let fid: number | null = null
