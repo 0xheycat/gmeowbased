@@ -46,17 +46,15 @@
  * Quality Gates: GI-11 (Blockchain Integration), GI-8 (Security)
  */
 
-import { createPublicClient, http, parseAbi, type Address } from 'viem';
+import { parseAbi, type Address } from 'viem';
 import { base } from 'viem/chains';
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool';
 
 // Base Mainnet proxy contract (deployed Nov 28, 2025)
 const PROXY_CONTRACT_ADDRESS = '0x6A48B758ed42d7c934D387164E60aa58A92eD206' as Address;
 
-// Create Viem client for Base Mainnet
-const client = createPublicClient({
-  chain: base,
-  transport: http(process.env.RPC_BASE || process.env.NEXT_PUBLIC_RPC_BASE || 'https://mainnet.base.org'),
-});
+// Phase 8.2.2: Use centralized RPC client pool
+const client = getPublicClient(base.id);
 
 /**
  * Quest verification data types

@@ -85,8 +85,9 @@
  * @updated December 11, 2025 - Migrated to verified standalone contract
  */
 
-import { createPublicClient, http, type Address } from 'viem'
+import { type Address } from 'viem'
 import { base } from 'viem/chains'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 import {
   getReferralAddress,
   getReferralABI,
@@ -116,10 +117,8 @@ export interface ReferralData {
 // Public Client
 // ==========================================
 
-const publicClient = createPublicClient({
-  chain: base,
-  transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://mainnet.base.org'),
-})
+// Phase 8.2.2: Use centralized RPC client pool
+const publicClient = getPublicClient(base.id)
 
 // ==========================================
 // Read Functions

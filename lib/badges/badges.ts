@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
-import { createPublicClient, http, parseAbiItem, type AbiEvent } from 'viem'
+import { parseAbiItem, type AbiEvent } from 'viem'
 import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/gmeow-utils'
-import { getRpcUrl } from '@/lib/contracts/rpc'
+import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { BADGE_REGISTRY } from './badge-registry-data'
 import type { Json } from '@/types/supabase'
@@ -428,8 +428,8 @@ const EVT_BADGE_MINTED = parseAbiItem(
 ) as AbiEvent
 
 async function fetchMintLogsForChain(chain: ChainKey, address: `0x${string}`): Promise<MintedBadge[]> {
-  const rpc = getRpcUrl(chain)
-  const client = createPublicClient({ transport: http(rpc) })
+  // Phase 8.2.2: Use centralized RPC client pool
+  const client = getClientByChainKey(chain)
   
   // Add 10s timeout to prevent hanging
   const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>

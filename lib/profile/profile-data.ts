@@ -1,4 +1,3 @@
-import { createPublicClient, http } from 'viem'
 import { getContractAddress, CHAIN_IDS, type ChainKey, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { GM_CONTRACT_ABI, GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { buildFrameShareUrl } from '@/lib/api/share'
@@ -6,6 +5,7 @@ import { calculateRankProgress } from '@/lib/leaderboard/rank'
 import { fetchUserByAddress, fetchFidByAddress, fetchUserByFid } from '@/lib/integrations/neynar'
 import { getReferrer } from '@/lib/contracts/referral-contract'
 import { getCached } from '@/lib/cache/server'
+import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 
 // Type definitions
 export type ProfileChainSnapshot = {
@@ -53,11 +53,8 @@ export type ProfileOverviewData = {
 export const PROFILE_SUPPORTED_CHAINS: ChainKey[] = Object.keys(CHAIN_IDS) as ChainKey[]
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-//we only support base network for profile data fetching, delete others to reduce code size
-const PUBLIC_RPCS: Partial<Record<ChainKey, string>> = {
-  base: process.env.NEXT_PUBLIC_RPC_BASE || 'https://base-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg',
 
-}
+// Phase 8.2.2: Removed PUBLIC_RPCS - now using centralized rpc-client-pool.ts
 
 const PROFILE_CHAIN_CACHE_TTL = getNumberFromEnv('NEXT_PUBLIC_PROFILE_CHAIN_CACHE_TTL_MS', 30_000)
 const PROFILE_CHAIN_CACHE_LIMIT = getNumberFromEnv('NEXT_PUBLIC_PROFILE_CHAIN_CACHE_LIMIT', 64)
@@ -170,12 +167,10 @@ export async function fetchChainSnapshot(chain: ChainKey, userAddress: `0x${stri
 }
 
 async function fetchChainSnapshotInternal(chain: ChainKey, userAddress: `0x${string}`): Promise<ChainAggregation | null> {
-  const rpc = PUBLIC_RPCS[chain]
-  if (!rpc) return null
   // Only proceed if chain is supported by getContractAddress
   if (chain !== 'base') return null
   try {
-    const client = createPublicClient({ transport: http(rpc) })
+    const client = getClientByChainKey(chain)
     const contract = getContractAddress(chain)
 
     // Add 10s timeout to prevent hanging

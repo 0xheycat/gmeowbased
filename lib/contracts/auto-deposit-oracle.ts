@@ -59,11 +59,12 @@
  *   - Ignoring deposit transaction failures
  */
 
-import { createPublicClient, createWalletClient, http } from 'viem'
+import { createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base, optimism, celo } from 'viem/chains'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'
 import { getRpcUrl } from './rpc'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 
 const CHAIN_CONFIG = {
   base: base,
@@ -122,11 +123,8 @@ export async function ensureOracleBalance(chain: ChainKey, requiredPoints: bigin
   
   const rpcUrl = getRpcUrl(chain)
 
-  // Check current balance
-  const publicClient = createPublicClient({
-    chain: chainConfig,
-    transport: http(rpcUrl),
-  })
+  // Phase 8.2.2: Use centralized RPC client pool
+  const publicClient = getPublicClient(chainConfig.id)
 
   const currentBalance = await publicClient.readContract({
     address: contractAddress,
