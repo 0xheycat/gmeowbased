@@ -2234,66 +2234,298 @@ IMPROVEMENT: 74% reduction in infrastructure duplication
 
 ---
 
-## Phase 9: TYPE SAFETY & VALIDATION (AFTER CONSOLIDATION)
+## Phase 9: TYPE SAFETY & VALIDATION ✅ STARTED (December 18, 2025)
 
 ### 🎯 Goal: Strengthen TypeScript usage and runtime validation
 
-**Target Start**: December 21, 2025 (after Phase 8 complete)  
-**Estimated Duration**: 1 week (Dec 21-27)
+**Status**: 🔄 **IN PROGRESS**  
+**Started**: December 18, 2025 (immediately after Phase 8)  
+**Estimated Duration**: 1 week (Dec 18-24)  
+**Priority**: **HIGH** - Prevents runtime errors, improves developer experience
 
-### 8.1 Planned Improvements
-
-**Type Safety Enhancements**:
-1. **Add Zod schemas for all API inputs/outputs**
-   - Currently: Manual validation in some routes
-   - Target: 100% API routes with Zod validation
-   - Impact: Prevent runtime type errors, better API docs
-
-2. **Generate TypeScript types from database schema**
-   - Currently: Manual type definitions in supabase/types/
-   - Target: Auto-generated from Supabase schema
-   - Tool: supabase gen types typescript
-
-3. **Add branded types for critical IDs**
-   - Currently: `number` for FID, guildId, questId
-   - Target: Branded types (e.g., `type FID = number & { __brand: 'FID' }`)
-   - Impact: Prevent ID mixing bugs
-
-4. **Strict null checks enforcement**
-   - Currently: Some optional chaining without proper checks
-   - Target: Explicit null handling everywhere
-   - Impact: Eliminate "Cannot read property of undefined" errors
-
-**Runtime Validation**:
-1. **Add input sanitization layer**
-   - Currently: XSS prevention in api-security.ts
-   - Target: Comprehensive sanitization for all user inputs
-   - Tool: DOMPurify, validator.js
-
-2. **Add contract address validation**
-   - Currently: Manual checks in some places
-   - Target: Centralized address validation utility
-   - Impact: Prevent invalid address transactions
-
-3. **Add environment variable validation**
-   - Currently: Checked at runtime when used
-   - Target: Validate all env vars at startup
-   - Tool: Zod env schema
-
-### 8.2 Implementation Priorities
-
-**Week 1** (Dec 25-31):
-1. **Day 1**: Add Zod schemas to top 20 API routes
-2. **Day 2**: Generate Supabase types + integrate
-3. **Day 3**: Add branded types for IDs (FID, guildId, questId)
-4. **Day 4**: Add environment validation at startup
-5. **Day 5**: Add contract address validation utilities
-6. **Day 6**: Add comprehensive input sanitization
-7. **Day 7**: Testing, verification, documentation
+**Why Now**: Phase 8 consolidated infrastructure → perfect time to add type safety layer on top of clean foundation.
 
 ---
 
-## Phase 9: PERFORMANCE OPTIMIZATION (FUTURE)
+### 9.1 IMPLEMENTATION PLAN
+
+#### **Sub-Phase 9.1: Type Generation** (Day 1: Dec 18) 🔄
+**Goal**: Auto-generate TypeScript types from Supabase schema
+
+**Tasks**:
+- [ ] Generate types using `mcp_supabase_generate_typescript_types`
+- [ ] Replace manual types in `types/supabase.ts` with generated types
+- [ ] Update imports across codebase (estimated 50+ files)
+- [ ] Verify TypeScript: 0 errors
+
+**Impact**: Single source of truth for database types, auto-sync with schema changes
+
+---
+
+#### **Sub-Phase 9.2: Environment Validation** (Day 1: Dec 18) 🔜
+**Goal**: Validate all environment variables at startup
+
+**Tasks**:
+- [ ] Create `lib/config/env.ts` with Zod schema for all env vars
+- [ ] Add validation in `app/layout.tsx` or `middleware.ts`
+- [ ] Document required vs optional env vars
+- [ ] Add helpful error messages for missing vars
+
+**Current State**: 
+```typescript
+// Scattered across codebase
+process.env.NEYNAR_API_KEY!
+process.env.SUPABASE_URL!
+process.env.PRIVATE_KEY! // No validation!
+```
+
+**Target State**:
+```typescript
+// lib/config/env.ts
+import { z } from 'zod';
+
+const envSchema = z.object({
+  // Required
+  NEYNAR_API_KEY: z.string().min(1),
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_ANON_KEY: z.string().min(1),
+  PRIVATE_KEY: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+  
+  // Optional with defaults
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.string().default('3000'),
+});
+
+export const env = envSchema.parse(process.env);
+```
+
+**Impact**: Fail fast at startup, prevent production issues, clear documentation
+
+---
+
+#### **Sub-Phase 9.3: Branded Types** (Day 2: Dec 19) 🔜
+**Goal**: Add type safety for critical IDs to prevent mixing
+
+**Tasks**:
+- [ ] Create `lib/types/branded.ts` with branded types
+- [ ] Add helper functions for safe conversions
+- [ ] Update top 10 highest-traffic functions
+- [ ] Add JSDoc documentation
+
+**Current State**:
+```typescript
+function getUserByFid(fid: number) // Can pass guildId by mistake!
+function getGuild(guildId: number) // Can pass questId by mistake!
+```
+
+**Target State**:
+```typescript
+// lib/types/branded.ts
+type Brand<K, T> = K & { __brand: T };
+
+export type FID = Brand<number, 'FID'>;
+export type GuildId = Brand<number, 'GuildId'>;
+export type QuestId = Brand<number, 'QuestId'>;
+export type Address = Brand<string, 'Address'>;
+
+// Helper functions
+export const toFID = (n: number): FID => n as FID;
+export const toGuildId = (n: number): GuildId => n as GuildId;
+export const toQuestId = (n: number): QuestId => n as QuestId;
+export const toAddress = (s: string): Address => s as Address;
+
+// Usage
+function getUserByFid(fid: FID) // Type-safe!
+getUserByFid(123) // ❌ Error: number not assignable to FID
+getUserByFid(toFID(123)) // ✅ OK
+```
+
+**Impact**: Prevent ID mixing bugs at compile time, self-documenting code
+
+---
+
+#### **Sub-Phase 9.4: API Route Validation** (Day 3-4: Dec 20-21) 🔜
+**Goal**: Add Zod schemas to top 10 highest-traffic API routes
+
+**Target Routes** (by traffic):
+1. `/api/profile/[fid]` - Profile fetching
+2. `/api/leaderboard` - Leaderboard data
+3. `/api/quests` - Quest listing
+4. `/api/quests/[id]/complete` - Quest completion
+5. `/api/tips/record` - Tip recording
+6. `/api/notifications` - Notification listing
+7. `/api/guilds/[id]` - Guild details
+8. `/api/cast/badge-share/route` - Badge sharing
+9. `/api/neynar/webhook` - Webhook handling
+10. `/api/admin/*` - Admin endpoints
+
+**Pattern**:
+```typescript
+// Before
+export async function POST(request: Request) {
+  const body = await request.json();
+  const { fid, questId } = body; // No validation!
+}
+
+// After
+import { z } from 'zod';
+
+const RequestSchema = z.object({
+  fid: z.number().int().positive(),
+  questId: z.number().int().positive(),
+  metadata: z.object({
+    source: z.enum(['frame', 'web', 'bot']),
+  }).optional(),
+});
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  const validated = RequestSchema.parse(body); // Throws on invalid!
+  // validated is now type-safe
+}
+```
+
+**Impact**: Prevent invalid data from reaching business logic, better error messages
+
+---
+
+#### **Sub-Phase 9.5: Input Sanitization** (Day 5: Dec 22) 🔜
+**Goal**: Comprehensive XSS/injection prevention
+
+**Tasks**:
+- [ ] Install `dompurify` and `validator` packages
+- [ ] Enhance `lib/middleware/api-security.ts` with sanitization
+- [ ] Add sanitization helpers (sanitizeHtml, sanitizeUrl, etc.)
+- [ ] Apply to all user-generated content (cast text, usernames, etc.)
+
+**Current State**:
+```typescript
+// lib/middleware/api-security.ts (basic XSS prevention)
+export function sanitizeInput(input: string): string {
+  return input.replace(/[<>]/g, '');
+}
+```
+
+**Target State**:
+```typescript
+import DOMPurify from 'isomorphic-dompurify';
+import validator from 'validator';
+
+export function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] });
+}
+
+export function sanitizeUrl(url: string): string | null {
+  return validator.isURL(url) ? validator.escape(url) : null;
+}
+
+export function sanitizeUsername(username: string): string {
+  return validator.escape(username).slice(0, 50);
+}
+```
+
+**Impact**: Prevent XSS attacks, SQL injection, protect user data
+
+---
+
+#### **Sub-Phase 9.6: Address Validation** (Day 6: Dec 23) 🔜
+**Goal**: Centralized contract address validation
+
+**Tasks**:
+- [ ] Create `lib/contracts/validation.ts`
+- [ ] Add isValidAddress, isValidTxHash helpers
+- [ ] Add checksum validation for addresses
+- [ ] Update contract interaction code
+
+**Target State**:
+```typescript
+// lib/contracts/validation.ts
+import { isAddress, getAddress } from 'viem';
+
+export function validateAddress(address: string): Address {
+  if (!isAddress(address)) {
+    throw new Error(`Invalid address: ${address}`);
+  }
+  return getAddress(address) as Address; // Checksum format
+}
+
+export function validateTxHash(hash: string): `0x${string}` {
+  if (!/^0x[a-fA-F0-9]{64}$/.test(hash)) {
+    throw new Error(`Invalid tx hash: ${hash}`);
+  }
+  return hash as `0x${string}`;
+}
+```
+
+**Impact**: Prevent invalid contract interactions, normalize addresses
+
+---
+
+#### **Sub-Phase 9.7: Testing & Documentation** (Day 7: Dec 24) 🔜
+**Goal**: Verify all type safety improvements
+
+**Tasks**:
+- [ ] Run TypeScript compilation: 0 errors
+- [ ] Test API routes with invalid inputs (should reject)
+- [ ] Test env validation (missing vars should fail startup)
+- [ ] Update documentation (lib/README.md, type guides)
+- [ ] Create Phase 9 completion summary
+
+**Verification Checklist**:
+- [ ] TypeScript: 0 errors
+- [ ] All Zod schemas tested
+- [ ] Branded types preventing ID mixing
+- [ ] Environment validation working
+- [ ] Sanitization applied to user inputs
+- [ ] Address validation preventing invalid txs
+
+---
+
+### 9.2 EXPECTED OUTCOMES
+
+**Type Safety**:
+- ✅ Auto-generated database types (single source of truth)
+- ✅ Branded types prevent ID mixing (FID ≠ GuildId)
+- ✅ Environment variables validated at startup
+- ✅ Zod schemas on 10+ API routes
+
+**Security**:
+- ✅ Comprehensive input sanitization (XSS prevention)
+- ✅ Address validation (prevent invalid transactions)
+- ✅ Better error messages for invalid inputs
+
+**Developer Experience**:
+- ✅ Clear type errors at compile time
+- ✅ Self-documenting code (branded types)
+- ✅ Faster debugging (fail fast with Zod)
+- ✅ Better IDE autocomplete
+
+**Metrics**:
+- **Lines Added**: ~800 lines (schemas, validation, types)
+- **Files Created**: 3 new files (env.ts, branded.ts, validation.ts)
+- **Files Updated**: 50+ files (type imports, validations)
+- **TypeScript Errors**: 0 (maintained)
+- **Runtime Errors**: -80% (prevented by validation)
+
+---
+
+### 9.3 LESSONS FROM PHASE 8
+
+**Apply Same Patterns**:
+- ✅ Single source of truth (generated types)
+- ✅ Clear naming (no duplicate validation files)
+- ✅ Comprehensive documentation
+- ✅ Update lib/README.md with Phase 9 sections
+
+**Quality Gates**:
+- ✅ TypeScript: 0 errors throughout
+- ✅ Test all validations
+- ✅ Document breaking changes
+- ✅ Update migration guides
+
+---
+
+## Phase 10: PERFORMANCE OPTIMIZATION (FUTURE)
 
 ### 🎯 Goal: Optimize hot paths and reduce response times
 
