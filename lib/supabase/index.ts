@@ -10,10 +10,10 @@
  * - queries/: Query builders for different domains
  * - mock-quest-data.ts: Test data
  * 
- * Import patterns:
+ * Import patterns (Phase 8.4 REVISED):
  * - Server: import { getSupabaseServerClient } from '@/lib/supabase/edge'
  * - Edge: import { getEdgeSupabaseClient } from '@/lib/supabase/edge'
- * - API Routes: import { createClient } from '@/lib/supabase/server'
+ * - API Routes: import { createClient } from '@/lib/supabase/edge' (server.ts deleted)
  * 
  * Note: Some query functions have duplicate names across files.
  * Import directly from specific query files when needed:

@@ -1677,7 +1677,8 @@ export function resetClientPool() {
 
 **Usage Pattern**: 
 ```typescript
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+// Phase 8.3 REVISED: neynar-server.ts merged into neynar.ts
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 const client = getNeynarServerClient()
 ```
 
@@ -2410,7 +2411,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/client'  // ❌ Wrong mo
 // ✅ NEW PATTERN: Correct import from edge/server modules
 import { getSupabaseServerClient } from '@/lib/supabase/edge'  // ✅ Edge runtime
 // OR
-import { createClient } from '@/lib/supabase/server'  // ✅ API routes
+import { createClient } from '@/lib/supabase/edge'  // ✅ API routes (Phase 8.4: server.ts deleted)
 ```
 
 #### Impact:
