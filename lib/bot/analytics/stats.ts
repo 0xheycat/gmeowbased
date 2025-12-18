@@ -100,49 +100,29 @@ type TipAggregateRow = {
   sum?: number | string | null
 }
 
-// DEPRECATED (Phase 3): gmeow_rank_events table dropped, use Subsquid
+// Phase 6: Replaced with Subsquid tip events query
 async function fetchTipPoints(address: `0x${string}`, days?: number): Promise<number | null> {
-  console.warn('[fetchTipPoints] DEPRECATED: gmeow_rank_events table dropped in Phase 3')
-  return null
-
-  /* Original implementation:
-  if (!isSupabaseConfigured()) return null
-  const supabase = getSupabaseServerClient()
-  if (!supabase) return null
-
   try {
-    let query = supabase
-      .from('gmeow_rank_events')
-      .select('sum:delta')
-      .eq('wallet_address', address)
-      .eq('event_type', 'tip')
-    if (typeof days === 'number' && days > 0) {
-      const cutoffIso = new Date(Date.now() - days * DAY_MS).toISOString()
-      query = query.gte('created_at', cutoffIso)
+    const { getTipEvents } = await import('@/lib/subsquid-client')
+    
+    // Calculate cutoff date if days specified
+    const since = days ? new Date(Date.now() - days * DAY_MS) : undefined
+    
+    // Query Subsquid for tip events
+    const tipEvents = await getTipEvents(address, since)
+    
+    if (!tipEvents || tipEvents.length === 0) {
+      return 0
     }
-
-    const { data, error } = await query.maybeSingle()
-
-    if (error) {
-      console.warn('[bot-stats] tips lookup failed:', error.message)
-      return null
-    }
-
-    if (!data) return 0
-    const aggregate = data as TipAggregateRow
-    const sumValue =
-      typeof aggregate.sum === 'number'
-        ? aggregate.sum
-        : aggregate.sum
-        ? Number(aggregate.sum)
-        : 0
-
-    return Number.isFinite(sumValue) ? sumValue : 0
+    
+    // Sum up tip amounts
+    const total = tipEvents.reduce((sum, event) => sum + event.amount, 0)
+    
+    return Number.isFinite(total) ? total : 0
   } catch (error) {
-    console.warn('[bot-stats] tips lookup error:', (error as Error)?.message || error)
-    return null
+    console.error('[fetchTipPoints] Subsquid query failed:', error)
+    return null // Fallback
   }
-  */
 }
 
 function pickPrimaryChain(summaries: ChainSnapshotSummary[]): ChainKey {
