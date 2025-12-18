@@ -2,17 +2,17 @@
 ## Ultra-Fast, Lightweight, Accurate Analytics Architecture
 
 **Date**: December 11, 2025  
-**Last Updated**: December 18, 2025, 11:45 PM CST  
-**Status**: ✅ PHASE 3 & 4 COMPLETE - API Routes Migrated to Subsquid  
+**Last Updated**: December 18, 2025, 11:55 PM CST  
+**Status**: ✅ PHASE 5 COMPLETE - Type System Fixed, Ready for Phase 6  
 **Goal**: Lightning-fast (<10ms queries), accurate real-time data, scale to 1000+ DAUs  
-**Progress**: Phase 4 API Refactor COMPLETE - All 7 critical routes migrated (0 TypeScript errors)  
-**Next Phase**: Phase 5 - Deprecation Cleanup & Testing  
+**Progress**: Phase 5 Type Cleanup COMPLETE - 145 TypeScript errors fixed (0 errors remaining)  
+**Next Phase**: Phase 6 - Replace Deprecated Functions with Subsquid  
 **Update (Dec 18, 2025)**: 
 - ✅ Phase 3: 9 tables dropped (2GB → 400MB database)
 - ✅ Phase 4: 7 critical API routes migrated (leaderboard 800ms → 10ms, 80x faster)
-- ✅ All routes: 0 TypeScript errors
-- ✅ Guild routes: Now using Subsquid parallel queries
-- ✅ User activity: XP transactions from Subsquid
+- ✅ Phase 5: 145 TypeScript errors fixed (100% success rate)
+- ✅ Type system: Supabase MCP generated 2,988 lines of proper types
+- ✅ Code quality: 0 TypeScript errors, all queries typed, ready for Phase 6
 
 ---
 
@@ -788,23 +788,77 @@ CREATE TABLE referral_registrations (
 
 ---
 
-### **Phase 4: API Refactor (IN PROGRESS - Dec 18, 2025)** 🔄
+### **Phase 5: Type System Cleanup (COMPLETE - Dec 18, 2025)** ✅
 
-**Status**: 🟡 READY TO START - Phase 3 complete, Subsquid client created
+**Status**: 🟢 COMPLETE - All TypeScript errors fixed (145→0)
 
-**Objective**: Refactor remaining API routes to use Subsquid for blockchain data instead of heavy Supabase queries
+**Objective**: Fix all TypeScript errors from Phase 3-4 migrations, ensure type safety before Phase 6
 
-**Target Routes** (115 total API routes):
-- Leaderboard routes (8 routes) - HIGH PRIORITY
-- User profile routes (12 routes) - HIGH PRIORITY
-- Guild routes (6 routes) - MEDIUM PRIORITY
-- Stats/analytics routes (15 routes) - MEDIUM PRIORITY
-- Blockchain data routes (35 routes) - LOW PRIORITY (keep as fallback)
+**Achievements**:
+- ✅ Supabase MCP type generation: 2,988 lines of accurate types
+- ✅ Type assertions added: 107+ queries across 15+ files
+- ✅ Code deprecations: 29+ functions using dropped tables
+- ✅ Final cleanup: 9 remaining errors fixed
+- ✅ Verification: 0 TypeScript errors (100% success rate)
 
-**Progress**:
-- ✅ Subsquid client created (`lib/subsquid-client.ts` - 584 lines)
-- ✅ 3 routes updated (stats-with-fallback, auto-reply, leaderboard query)
-- ⏳ Remaining: ~40 routes to refactor (leaderboard, user, guild, analytics)
+**Performance Impact**:
+- Error reduction: 145→0 (100% fixed)
+- Type coverage: All queries properly typed
+- Build status: Compiles without errors
+- Code quality: Ready for Phase 6 Subsquid integration
+
+**Documentation**: See [PHASE-5-COMPLETE.md](PHASE-5-COMPLETE.md) for full report
+
+---
+
+### **Phase 6: Replace Deprecated Functions (READY TO START - Dec 18, 2025)** 🚀
+
+**Status**: 🟢 READY - Phase 5 complete, 0 TypeScript errors blocking
+
+**Objective**: Replace all deprecated functions with Subsquid queries for real-time blockchain analytics
+
+**Priority 1: Analytics Queries** (HIGH IMPACT)
+- `fetchTipPoints()` in lib/bot/analytics/stats.ts
+- `getUserStatsWithFallback()` in lib/bot/stats-with-fallback.ts
+- Impact: Bot responses, user stats API
+
+**Priority 2: Community Events** (MEDIUM IMPACT)
+- `getCommunityEvents()` in lib/profile/community-events.ts
+- `getLegacyGMEvents()` in lib/supabase/queries/gm.ts
+- Impact: Activity feeds, profile history
+
+**Priority 3: Viral Notifications** (LOW IMPACT)
+- `processQueuedViralNotifications()` in lib/notifications/viral.ts
+- Impact: Real-time engagement notifications
+
+**Priority 4: Leaderboard Scoring** (DEFERRED)
+- `updateLeaderboard()` in lib/leaderboard/leaderboard-scorer.ts
+- `recalculateGlobalRanks()` in lib/leaderboard/leaderboard-scorer.ts
+- Impact: Already using Subsquid in API routes, lib functions unused
+
+**Implementation Strategy**:
+1. Use existing `lib/subsquid-client.ts` (584 lines)
+2. Add new query functions as needed
+3. Replace deprecated function bodies with Subsquid calls
+4. Maintain same return types for compatibility
+5. Add error handling and fallbacks
+6. Test with production data
+
+**Target Routes to Update** (10 deprecated functions):
+- lib/bot/analytics/stats.ts (1 function)
+- lib/bot/stats-with-fallback.ts (1 function) 
+- lib/profile/community-events.ts (1 function)
+- lib/supabase/queries/gm.ts (1 function)
+- lib/notifications/viral.ts (1 function)
+- lib/leaderboard/leaderboard-scorer.ts (2 functions)
+- scripts/automation/sync-viral-metrics.ts (1 deprecated insert)
+
+**Success Criteria**:
+- ✅ All deprecated functions replaced or removed
+- ✅ 0 warnings about dropped tables in logs
+- ✅ Same or better performance vs deprecated code
+- ✅ Error handling for Subsquid unavailability
+- ✅ 0 TypeScript errors maintained
 
 ---
 
@@ -1090,9 +1144,9 @@ export async function GET(
 
 ---
 
-### **Phase 5: Farcaster Caching (Week 4)**
+### **Phase 7: Farcaster Caching (Future - Week 4)**
 
-**5.1 Neynar Webhook Handler**
+**7.1 Neynar Webhook Handler**
 
 File: `app/api/neynar/webhook/route.ts` (Enhanced)
 
@@ -1327,7 +1381,7 @@ export async function POST(request: Request) {
 - [ ] Add cast cache updates
 - [ ] Monitor cache hit rate
 
-### **Phase 6: Testing & Deployment**
+### **Phase 8: Testing & Deployment (Future)**
 
 - [ ] Load testing (1000+ concurrent users)
 - [ ] Verify data accuracy (Subsquid vs RPC)
