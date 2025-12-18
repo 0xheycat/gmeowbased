@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DashboardTelemetryPayload } from '@/lib/utils/telemetry'
-import { readStorageCache, writeStorageCache } from '@/lib/utils/utils'
+import { readStorageCache, writeStorageCache } from '@/lib/cache/client'
 
 const CACHE_KEY = 'gmeowDashboardTelemetry_v1'
 const CACHE_TTL_MS = 60_000
