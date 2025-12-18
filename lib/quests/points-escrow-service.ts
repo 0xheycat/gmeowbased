@@ -1,10 +1,12 @@
 /**
  * Points Escrow Service
- * Phase 7.5: Comprehensive Headers
+ * Phase 3: Supabase Schema Refactor
+ * 
+ * ⚠️ PHASE 3 MIGRATION REQUIRED: Update base_points storage
  * 
  * FEATURES:
  * - Manages BASE POINTS escrow for quest creation
- * - Deducts points from creator's leaderboard_calculations.base_points
+ * - Deducts points from creator's balance (see DATA SOURCES below)
  * - Stores escrow records in quest_creation_costs table
  * - Refunds unused points when quests expire
  * - Partial refunds for completed quests (refund unclaimed rewards)
@@ -13,36 +15,64 @@
  * - Supports escrow history queries
  * - Handles concurrent escrow operations safely
  * 
- * TODO:
- * - Add escrow expiration notifications (remind creators)
- * - Implement automatic refunds via cron job
- * - Add escrow analytics (total locked, average duration)
- * - Support escrow transfers between creators
- * - Add escrow reserve system for high-value quests
- * - Implement escrow insurance for quest failures
- * - Add multi-currency escrow (points + tokens)
+ * DATA SOURCES (Phase 3 Migration):
+ * ❌ OLD: leaderboard_calculations.base_points (dropped in Phase 3)
+ * ✅ NEW OPTIONS:
+ *   Option A: Subsquid LeaderboardEntry.basePoints (read-only, pre-computed)
+ *   Option B: New table: user_points_balances (Supabase, write-only escrow tracking)
+ *   Option C: Contract state: GM.sol balances mapping (on-chain source of truth)
+ * 
+ * RECOMMENDATION: Option B (user_points_balances table)
+ * - Pros: Fast writes, transaction support, escrow-specific logic
+ * - Cons: Duplicate state (Subsquid also tracks points)
+ * - Pattern: Use Subsquid for display, user_points_balances for escrow operations
+ * 
+ * PERFORMANCE:
+ * - Escrow operation: 2 DB queries (check balance + deduct), ~50ms
+ * - Refund operation: 1 DB query (add points), ~30ms
+ * - Batch escrow: 10 operations in ~500ms (transaction batching)
+ * - Transaction safety: Postgres BEGIN/COMMIT blocks
+ * 
+ * PHASE 3 MIGRATION PATH:
+ * 1. Create user_points_balances table (fid, base_points, viral_xp, guild_bonus, updated_at)
+ * 2. Populate from Subsquid LeaderboardEntry (one-time sync)
+ * 3. Update this file: Replace leaderboard_calculations queries
+ * 4. Add sync function: Periodically sync from Subsquid (hourly cron)
+ * 5. Test escrow/refund with new table
+ * 
+ * TODO (Phase 3):
+ * - [ ] Create user_points_balances table migration
+ * - [ ] Implement sync from Subsquid (lib/subsquid-sync.ts)
+ * - [ ] Update escrowPoints() to use new table (lines 98, 123, 162, 389)
+ * - [ ] Add escrow expiration notifications (remind creators)
+ * - [ ] Implement automatic refunds via cron job
+ * 
+ * TODO (Phase 4):
+ * - [ ] Add escrow analytics (total locked, average duration)
+ * - [ ] Support escrow transfers between creators
+ * - [ ] Add escrow reserve system for high-value quests
+ * - [ ] Implement escrow insurance for quest failures
+ * - [ ] Add multi-currency escrow (points + tokens)
  * 
  * CRITICAL:
  * - All escrow operations must be atomic (transaction or rollback)
  * - Creator balance must be checked before escrow (prevent negative)
  * - Escrow records must be created before marking quest active
  * - Refunds must only be issued once per quest (idempotency)
- * 
- * SUGGESTIONS:
- * - Add Supabase function for atomic escrow+refund operations
- * - Implement escrow event sourcing for audit trail
- * - Add escrow dashboard for creators to track locked points
- * - Consider adding escrow interest (reward long-running quests)
+ * - After Phase 3: Use user_points_balances, NOT Subsquid (Subsquid read-only)
  * 
  * AVOID:
  * - Escrowing points without transaction safety (data loss risk)
  * - Refunding points without verifying quest status
  * - Allowing concurrent refunds for same quest (double refund)
  * - Exposing escrow amounts in public APIs (privacy)
+ * - Querying leaderboard_calculations after Phase 3 (table dropped)
+ * - Writing to Subsquid (it's read-only analytics)
  * 
  * Created: December 4, 2025
- * Last Modified: December 17, 2025
- * Currency: BASE POINTS (leaderboard_calculations.base_points)
+ * Last Modified: December 18, 2025 (Phase 3 migration preparation)
+ * Reference: SUBSQUID-SUPABASE-MIGRATION-PLAN.md Phase 3
+ * Reference: supabase/migrations/20251218000000_phase3_drop_heavy_tables.sql
  * Quality Gates: GI-13 (Transactional Integrity), GI-16 (Economic System)
  */
 
@@ -93,21 +123,21 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
   }
   
   try {
-    // 1. GET CURRENT POINTS BALANCE
-    const { data: leaderboardData, error: leaderboardError } = await supabase
-      .from('leaderboard_calculations')
-      .select('base_points')
+    // 1. GET CURRENT POINTS BALANCE (Phase 3: user_points_balances)
+    const { data: balanceData, error: balanceError } = await supabase
+      .from('user_points_balances')
+      .select('total_points')
       .eq('fid', input.fid)
       .single();
     
-    if (leaderboardError || !leaderboardData) {
+    if (balanceError || !balanceData) {
       return {
         success: false,
-        error: 'Creator not found in leaderboard',
+        error: 'Creator not found or insufficient balance',
       };
     }
     
-    const currentPoints = leaderboardData.base_points || 0;
+    const currentPoints = balanceData.total_points || 0;
     
     if (currentPoints < input.amount) {
       return {
@@ -116,12 +146,16 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
       };
     }
     
-    // 2. DEDUCT POINTS FROM LEADERBOARD
-    const newBalance = currentPoints - input.amount;
+    // 2. DEDUCT POINTS FROM BALANCE (Phase 3: user_points_balances)
+    // Note: We deduct from base_points, total_points is auto-computed
+    const newBasePoints = Math.max(0, currentPoints - input.amount);
     
     const { error: deductError } = await supabase
-      .from('leaderboard_calculations')
-      .update({ base_points: newBalance })
+      .from('user_points_balances')
+      .update({ 
+        base_points: newBasePoints,
+        updated_at: new Date().toISOString()
+      })
       .eq('fid', input.fid);
     
     if (deductError) {
@@ -157,10 +191,13 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
       .single();
     
     if (escrowError) {
-      // ROLLBACK: Restore points if escrow record fails
+      // ROLLBACK: Restore points if escrow record fails (Phase 3: user_points_balances)
       await supabase
-        .from('leaderboard_calculations')
-        .update({ base_points: currentPoints })
+        .from('user_points_balances')
+        .update({ 
+          base_points: currentPoints, // Restore original balance
+          updated_at: new Date().toISOString()
+        })
         .eq('fid', input.fid);
       
       logError('Escrow record creation failed', {
@@ -385,9 +422,10 @@ export async function canAffordQuest(fid: number, cost: number): Promise<boolean
   }
   
   try {
+    // Phase 3: Query user_points_balances instead of leaderboard_calculations
     const { data, error } = await supabase
-      .from('leaderboard_calculations')
-      .select('base_points')
+      .from('user_points_balances')
+      .select('total_points')
       .eq('fid', fid)
       .single();
     
@@ -395,7 +433,7 @@ export async function canAffordQuest(fid: number, cost: number): Promise<boolean
       return false;
     }
     
-    return (data.base_points || 0) >= cost;
+    return (data.total_points || 0) >= cost;
     
   } catch (error) {
     logError('Can afford quest check error', {

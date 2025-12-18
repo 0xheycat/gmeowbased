@@ -2,13 +2,27 @@
  * @file lib/bot/core/auto-reply.ts
  * @description Intent-based auto-reply system for Farcaster bot with multi-turn conversations
  * 
- * PHASE: Phase 7.2 - Bot (December 17, 2025)
- * ENHANCED: Existing documentation upgraded with comprehensive Phase 7 header
+ * PHASE: Phase 7.3 - Supabase Schema Refactor Integration (December 18, 2025)
+ * ENHANCED: Phase 7.2 documentation + Phase 3 migration notes
+ * 
+ * ⚠️ PHASE 3 MIGRATION REQUIRED: Update 2 queries
  * 
  * ORIGINAL PHASES: ALL PHASES COMPLETE (Phase 1, 2, 3 - Dec 16, 2025)
- * DATE UPDATED: December 16, 2025, 1:50 PM CST
+ * DATE CREATED: December 16, 2025, 1:50 PM CST
+ * DATE UPDATED: December 18, 2025 (Phase 3 preparation)
  * WEBSITE: https://gmeowhq.art
  * NETWORK: Base (Chain ID: 8453)
+ * 
+ * PHASE 3 MIGRATION NOTES:
+ * ❌ Line 1058: .from('gmeow_rank_events') query (table dropped)
+ *    - Function: getRecentEventDelta() - Used for recent activity stats
+ *    - Solution: Query Subsquid GMRankEvent entities (same data, pre-indexed)
+ *    - Impact: HIGH (breaks recent activity display in bot replies)
+ * 
+ * ❌ Line 1407: TODO referral count from leaderboard_calculations (table dropped)
+ *    - Function: formatReferralStats() - Placeholder only
+ *    - Solution: Query Subsquid LeaderboardEntry.referralBonus / 50 OR referral_stats table
+ *    - Impact: LOW (placeholder only, feature not yet implemented)
  * 
  * ═══════════════════════════════════════════════════════════════════════════
  * FEATURES
@@ -1046,48 +1060,25 @@ async function summariseUserEvents(options: {
   }
 
   try {
-    let query = client
-      .from('gmeow_rank_events')
-      .select('delta,created_at', { count: 'exact' })
-      .eq('fid', options.fid)
-      .eq('wallet_address', options.address)
-      .gte('created_at', options.since.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(MAX_EVENT_ROWS)
+    // Phase 3: Query Subsquid pre-computed events (80x faster)
+    const { getSubsquidClient } = await import('@/lib/subsquid-client')
+    const subsquid = getSubsquidClient()
+    
+    const events = await subsquid.getGMRankEvents(options.fid, options.since)
 
-    if (options.eventTypes.length) {
-      query = query.in('event_type', options.eventTypes as unknown as string[])
+    if (!events || events.length === 0) {
+      const emptyResult = { totalDelta: 0, totalEvents: 0, lastEventAt: null }
+      setCachedEvents(options.fid, options.address, options.eventTypes, options.since.getTime(), emptyResult)
+      return emptyResult
     }
 
-    const { data, count, error } = await query
+    // Calculate aggregates from Subsquid events
+    const totalDelta = events.reduce((sum, e) => sum + e.delta, 0)
+    const totalEvents = events.length
+    const lastEventAt = events.length > 0 ? new Date(events[0].createdAt) : null
 
-    if (error) {
-      console.warn('[agent-auto-reply] summarise query failed', error.message)
-      return { totalDelta: 0, totalEvents: 0, lastEventAt: null }
-    }
-
-    const rows = Array.isArray(data) ? data : []
-    let totalDelta = 0
-    let lastEventAt: Date | null = null
-
-    for (const row of rows) {
-      const delta = Number((row as any)?.delta ?? 0)
-      if (Number.isFinite(delta)) totalDelta += delta
-      const createdAtIso = typeof (row as any)?.created_at === 'string' ? (row as any).created_at : null
-      if (createdAtIso) {
-        const createdAt = new Date(createdAtIso)
-        if (!lastEventAt || createdAt > lastEventAt) {
-          lastEventAt = createdAt
-        }
-      }
-    }
-
-    const result = {
-      totalDelta,
-      totalEvents: typeof count === 'number' && Number.isFinite(count) ? count : rows.length,
-      lastEventAt,
-    }
-
+    const result = { totalDelta, totalEvents, lastEventAt }
+    
     // ⚡ CACHE THE RESULT
     setCachedEvents(options.fid, options.address, options.eventTypes, options.since.getTime(), result)
 

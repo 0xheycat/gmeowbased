@@ -49,22 +49,14 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    // Get aggregate statistics
-    const { data: stats, error: statsError } = await supabase
-      .from('leaderboard_calculations')
-      .select('total_score')
-      .eq('period', period)
-      .order('total_score', { ascending: false })
+    // Get aggregate statistics from Subsquid (replaces leaderboard_calculations)
+    const { getSubsquidClient } = await import('@/lib/subsquid-client')
+    const client = getSubsquidClient()
     
-    if (statsError) {
-      console.error('[Leaderboard Stats API] Error:', statsError)
-      return NextResponse.json(
-        { error: 'Failed to fetch statistics' },
-        { status: 500, headers: { 'X-Request-ID': requestId } }
-      )
-    }
+    // Fetch full leaderboard to calculate statistics
+    const leaderboardData = await client.getLeaderboard(10000, 0) // Get all entries
     
-    if (!stats || stats.length === 0) {
+    if (!leaderboardData || leaderboardData.length === 0) {
       return NextResponse.json({
         totalPilots: 0,
         averageScore: 0,
@@ -79,16 +71,16 @@ export async function GET(request: NextRequest) {
     }
     
     // Calculate statistics
-    const totalPilots = stats.length
-    const totalScore = stats.reduce((sum, entry) => sum + (entry.total_score || 0), 0)
+    const totalPilots = leaderboardData.length
+    const totalScore = leaderboardData.reduce((sum, entry) => sum + (entry.totalScore || 0), 0)
     const averageScore = totalScore / totalPilots
     
     // Calculate percentile thresholds
     const top1PercentIndex = Math.max(0, Math.floor(totalPilots * 0.01) - 1)
     const top10PercentIndex = Math.max(0, Math.floor(totalPilots * 0.10) - 1)
     
-    const top1PercentThreshold = stats[top1PercentIndex]?.total_score || 0
-    const top10PercentThreshold = stats[top10PercentIndex]?.total_score || 0
+    const top1PercentThreshold = leaderboardData[top1PercentIndex]?.totalScore || 0
+    const top10PercentThreshold = leaderboardData[top10PercentIndex]?.totalScore || 0
     
     const response: any = {
       totalPilots,
@@ -98,17 +90,12 @@ export async function GET(request: NextRequest) {
     }
     
     // If FID provided, calculate user's rank and percentile
-    if (fid) {
-      const { data: userEntry, error: userError } = await supabase
-        .from('leaderboard_calculations')
-        .select('total_score, global_rank')
-        .eq('period', period)
-        .eq('fid', fid)
-        .single()
+    if (fid !== undefined) {
+      const userEntry = await client.getUserStatsByFID(fid)
       
-      if (!userError && userEntry) {
-        response.yourRank = userEntry.global_rank || 0
-        response.yourPercentile = ((userEntry.global_rank || 0) / totalPilots) * 100
+      if (userEntry) {
+        response.yourRank = userEntry.rank || 0
+        response.yourPercentile = ((userEntry.rank || 0) / totalPilots) * 100
       }
     }
     

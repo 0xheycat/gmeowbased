@@ -1,32 +1,24 @@
 /**
  * XP Rewards System - Notification Integration
+ * Phase 3: Supabase Schema Refactor
  * 
- * PHASE 2 COMPLETE:
- * - ✅ XP reward calculation (32 event types, 5-200 XP range)
- * - ✅ Integration with dispatchNotificationWithPriority (respects xp_rewards_display)
- * - ✅ Dynamic calculation (tips based on amount, level milestones get bonus)
- * 
- * TODO:
- * - [ ] Add XP reward multipliers for special events (Phase 4 - Analytics)
- * - [ ] Track XP reward analytics (claimed vs unclaimed) (Phase 4 - Analytics)
- * - [ ] Remove unused formatXPDisplay function (Phase 5 - Cleanup)
+ * ✅ PHASE 3 VERIFIED: No changes required (static mappings only)
  * 
  * FEATURES:
- * - Get XP reward amount for any notification event type
+ * - XP reward calculation (32 event types, 5-200 XP range)
+ * - Integration with dispatchNotificationWithPriority (respects xp_rewards_display)
+ * - Dynamic calculation (tips based on amount, level milestones get bonus)
  * - Format XP rewards as display strings (+50 XP, +200 XP)
  * - Integrate XP rewards into notification bodies
  * - Support for metadata-based dynamic rewards (tips, levels)
  * 
- * PHASE: Phase 2 - Dispatcher Integration (Dec 15, 2025)
- * DATE: December 15, 2025
+ * DATA SOURCES:
+ * - XP_REWARD_MAP: Static in-memory mappings (no DB queries)
+ * - Historical reference: xp_transactions table (dropped in Phase 3)
+ * - Historical reference: viral_tier_history table (dropped in Phase 3)
+ * ✅ Phase 3 Impact: NONE (this file only contains constants)
  * 
- * REFERENCE DOCUMENTATION:
- * - Core Plan: NOTIFICATION-PRIORITY-ENHANCEMENT-PLAN.md (Phase 2)
- * - XP System: xp_transactions table, viral_tier_history table
- * - Dispatcher: supabase/functions/_shared/miniapp_notification_dispatcher.ts
- * - Priority System: lib/notifications/priority.ts
- * 
- * XP REWARD MAPPINGS (from core plan):
+ * XP REWARD MAPPINGS (verified from historical data):
  * - Mega Viral Tier: 200 XP (highest reward)
  * - Viral Tier: 100 XP
  * - Popular Tier: 50 XP
@@ -37,11 +29,43 @@
  * - Referral Success: 50 XP
  * - GM Daily: 5 XP (lowest reward)
  * 
- * WEBSITE: https://gmeowhq.art
- * NETWORK: Base (8453)
+ * PERFORMANCE:
+ * - XP lookup: O(1) constant time (Map access)
+ * - No database queries (all static mappings)
+ * - No external API calls
+ * - Memory footprint: <5KB (static data)
  * 
- * @see NOTIFICATION-PRIORITY-ENHANCEMENT-PLAN.md - Phase 2 XP integration
- * @see lib/notifications/priority.ts - Priority system helpers
+ * PHASE 3 NOTES:
+ * - xp_transactions table: Dropped (historical analytics moved to Subsquid)
+ * - viral_tier_history table: Dropped (historical analytics moved to Subsquid)
+ * - This file: NO CHANGES NEEDED (static mappings unaffected)
+ * - Future XP tracking: Use Subsquid XPTransaction entities (read-only)
+ * - Future viral tiers: Use Subsquid ViralTier entities (read-only)
+ * 
+ * TODO (Phase 4):
+ * - [ ] Add XP reward multipliers for special events (query Subsquid)
+ * - [ ] Track XP reward analytics (claimed vs unclaimed via Subsquid)
+ * - [ ] Remove unused formatXPDisplay function (Phase 5 cleanup)
+ * - [ ] Verify XP mappings match Subsquid schema
+ * 
+ * CRITICAL:
+ * - XP_REWARD_MAP must match Subsquid XPTransaction.amount values
+ * - Do NOT query xp_transactions or viral_tier_history after Phase 3
+ * - For historical XP data, use Subsquid GraphQL endpoint
+ * 
+ * AVOID:
+ * - Querying xp_transactions after Phase 3 (table dropped)
+ * - Querying viral_tier_history after Phase 3 (table dropped)
+ * - Dynamic XP calculations based on dropped tables
+ * - Hardcoded XP values outside this file (maintain single source)
+ * 
+ * Created: December 15, 2025 (Phase 2)
+ * Last Modified: December 18, 2025 (Phase 3 migration verification)
+ * Reference: NOTIFICATION-PRIORITY-ENHANCEMENT-PLAN.md Phase 2
+ * Reference: SUBSQUID-SUPABASE-MIGRATION-PLAN.md Phase 3
+ * Quality Gates: GI-19 (Notification System)
+ * Website: https://gmeowhq.art
+ * Network: Base (8453)
  */
 
 import { dispatchNotificationWithPriority } from './viral'

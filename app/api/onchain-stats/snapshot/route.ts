@@ -1,6 +1,10 @@
 // ============================================================================
 // Phase 4: Snapshot Population API
 // ============================================================================
+// ⚠️ DEPRECATED: This route writes to onchain_stats_snapshots table which was
+// dropped in Phase 3. Route kept for compatibility but will fail on insert.
+// TODO: Remove this route or migrate to new storage solution.
+// ============================================================================
 // Endpoint: POST /api/onchain-stats/snapshot
 // Purpose: Fetch current stats from Blockscout and store in snapshot table
 // Security: CRON_SECRET required + 10-layer protection
@@ -12,7 +16,7 @@
 // Process:
 //   1. Verify CRON_SECRET (automated calls only)
 //   2. Fetch current stats using getRichStats()
-//   3. Store in onchain_stats_snapshots table
+//   3. Store in onchain_stats_snapshots table (⚠️ TABLE DROPPED)
 //   4. Return snapshot data
 // ============================================================================
 

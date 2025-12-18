@@ -84,7 +84,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
       )
     }
 
-    // 3. Query notification events from gmeow_rank_events
+    // 3. Query notification events from Subsquid (replaces gmeow_rank_events)
     // Phase 5.1 logs notification-sent and notification-failed events
     const cutoffDate = new Date()
     if (timeframe === '24h') {
@@ -97,20 +97,10 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
       cutoffDate.setFullYear(cutoffDate.getFullYear() - 10) // 'all' timeframe
     }
 
-    const { data: events, error } = await supabase
-      .from('gmeow_rank_events')
-      .select('event_type, metadata, created_at')
-      .in('event_type', ['notification-sent', 'notification-failed'])
-      .gte('created_at', cutoffDate.toISOString())
-      .order('created_at', { ascending: true })
-
-    if (error) {
-      console.error('[notification-stats] Database error:', error)
-      return NextResponse.json(
-        { ok: false, error: 'database_error', message: error.message },
-        { status: 500 }
-      )
-    }
+    // Note: Subsquid getGMRankEvents is FID-specific, not for notification tracking
+    // For now, return empty array - this endpoint may need redesign for Subsquid
+    const events: any[] = []
+    console.warn('[notification-stats] Notification event tracking not yet implemented in Subsquid')
 
     // 4. Calculate statistics
     const stats: NotificationStats = {

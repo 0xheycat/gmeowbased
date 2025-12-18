@@ -101,16 +101,20 @@ export async function GET(
       ? depositEvents.reduce((sum, event) => sum + (event.amount || 0), 0)
       : 0
 
-    // 5. FETCH GLOBAL RANK (from leaderboard_calculations)
-    const { data: leaderboardData, error: leaderboardError } = await supabase
-      .from('leaderboard_calculations')
-      .select('global_rank, total_score')
-      .ilike('address', memberAddress)
-      .eq('period', 'all_time')
-      .single()
-
-    if (leaderboardError && leaderboardError.code !== 'PGRST116') {
-      console.error('[member-stats] Leaderboard query error:', leaderboardError)
+    // 5. FETCH GLOBAL RANK (from Subsquid)
+    const { getLeaderboardEntry } = await import('@/lib/subsquid-client')
+    let leaderboardData: { global_rank: number | null, total_score: number } | null = null
+    
+    try {
+      const stats = await getLeaderboardEntry(memberAddress)
+      if (stats) {
+        leaderboardData = {
+          global_rank: stats.rank || null,
+          total_score: stats.totalScore || 0
+        }
+      }
+    } catch (error) {
+      console.error('[member-stats] Subsquid query error:', error)
     }
 
     // 6. BUILD RESPONSE

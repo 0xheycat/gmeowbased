@@ -180,24 +180,19 @@ export async function GET(
     // TODO: Add profile visibility check when column is added to user_profiles
     // For now, all profiles are public
 
-    // Fetch activity from xp_transactions
-    const { data: transactions, error, count } = await supabase
-      .from('xp_transactions')
-      .select('*', { count: 'exact' })
-      .eq('user_fid', validatedFid)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
-
-    if (error) {
-      console.error('Activity fetch error:', error)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Failed to fetch activity data.' 
-        },
-        { status: 500 }
-      )
-    }
+    // Fetch activity from Subsquid (replaces xp_transactions)
+    const { getSubsquidClient } = await import('@/lib/subsquid-client')
+    const client = getSubsquidClient()
+    
+    // Get XP transactions from Subsquid
+    const sinceDate = new Date()
+    sinceDate.setMonth(sinceDate.getMonth() - 6) // Last 6 months
+    
+    const allTransactions = await client.getXPTransactions(validatedFid, sinceDate)
+    
+    // Apply pagination manually
+    const transactions = allTransactions.slice(offset, offset + limit)
+    const count = allTransactions.length
 
     // Transform data to match ActivityTimeline component interface
     const activities = (transactions || []).map((transaction: any) => ({
