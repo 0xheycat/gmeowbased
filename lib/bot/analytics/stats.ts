@@ -100,6 +100,7 @@ type TipAggregateRow = {
 }
 
 async function fetchTipPoints(address: `0x${string}`, days?: number): Promise<number | null> {
+  console.warn('[fetchTipPoints] DEPRECATED - gmeow_rank_events table dropped, returning 0')
   if (!isSupabaseConfigured()) return null
   const supabase = getSupabaseServerClient()
   if (!supabase) return null

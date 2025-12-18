@@ -164,6 +164,7 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
       interactionsData,
     ] = await Promise.all([
       // Query 1: User profile and XP stats
+      // ⚠️ DEPRECATED - Replace with Subsquid getGMRankEvents()
       Promise.race([
         supabase
           .from('gmeow_rank_events')
@@ -176,6 +177,7 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
       ]),
 
       // Query 2: Active quests
+      // ⚠️ DEPRECATED - Replace with Subsquid getGMRankEvents() filtered by type
       Promise.race([
         supabase
           .from('gmeow_rank_events')

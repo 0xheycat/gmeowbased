@@ -341,6 +341,7 @@ export async function awardAchievement(
       // Don't rollback achievement - XP update is secondary
     }
 
+    // ⚠️ DEPRECATED - Event logging disabled (table dropped)
     // Log to rank events
     await supabase.from('gmeow_rank_events').insert({
       fid,

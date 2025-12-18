@@ -305,6 +305,7 @@ export async function syncCastEngagement(
         // Don't throw - cast update succeeded, XP update is secondary
       }
 
+      // ⚠️ DEPRECATED - Event logging disabled (table dropped)
       // Log to rank events
       await supabase.from('gmeow_rank_events').insert({
         fid: existingCast.fid || 0,
