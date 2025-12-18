@@ -1,24 +1,66 @@
 /**
- * API Helpers - Cache Control & Response Utilities
+ * @file lib/notifications/api-helpers.ts
+ * @description Cache control and response utilities for notification APIs
  * 
- * Re-exports existing infrastructure to avoid duplication:
- * - Request-ID: lib/request-id.ts (existing)
- * - Idempotency: lib/idempotency.ts (Redis-backed, existing)
- * - Rate Limiting: lib/rate-limit.ts (Upstash Redis, existing)
+ * PHASE: Phase 7.7 - Notifications Module (December 18, 2025)
  * 
- * PHASE: Phase 2 - API Infrastructure (Dec 15, 2025)
- * DATE: December 15, 2025
+ * FEATURES:
+ *   - Re-export middleware utilities (request-id, idempotency, rate-limit)
+ *   - Cache-Control header generation (CDN optimization)
+ *   - Preferences endpoint caching (60s CDN, 120s stale)
+ *   - History endpoint caching (30s CDN, 60s stale)
+ *   - Stale-while-revalidate pattern (serve stale while refreshing)
+ *   - Centralized caching strategy (avoid duplication)
  * 
  * REFERENCE DOCUMENTATION:
- * - Core Plan: NOTIFICATION-PRIORITY-ENHANCEMENT-PLAN.md (Phase 2 API)
- * - Existing Infrastructure: lib/request-id.ts, lib/idempotency.ts, lib/rate-limit.ts
+ *   - Request-ID: lib/middleware/request-id.ts
+ *   - Idempotency: lib/middleware/idempotency.ts (Redis-backed)
+ *   - Rate Limiting: lib/middleware/rate-limit.ts (Upstash Redis)
+ *   - Cache Strategy: HTTP caching RFC 7234
+ *   - API Usage: app/api/user/notification-preferences/[fid]/route.ts
  * 
- * WEBSITE: https://gmeowhq.art
- * NETWORK: Base (8453)
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base (8453)
+ *   - Redis: Upstash for idempotency and rate limiting
+ *   - CDN: Vercel Edge Network for caching
  * 
- * @see lib/request-id.ts - Request-ID generation (existing)
- * @see lib/idempotency.ts - Redis-backed idempotency (existing)
- * @see lib/rate-limit.ts - Upstash Redis rate limiting (existing)
+ * TODO:
+ *   - [ ] Add dynamic cache TTL based on update frequency
+ *   - [ ] Implement cache invalidation API
+ *   - [ ] Add cache hit/miss tracking
+ *   - [ ] Support custom cache keys (user-specific, category-specific)
+ *   - [ ] Implement cache warming (pre-populate hot data)
+ *   - [ ] Add cache bypass headers (debugging, admin)
+ *   - [ ] Support cache tags (group invalidation)
+ *   - [ ] Add cache compression (gzip, brotli)
+ * 
+ * CRITICAL:
+ *   - Preferences cache = 60s (less frequently updated)
+ *   - History cache = 30s (more frequently updated)
+ *   - Always use stale-while-revalidate (better UX)
+ *   - s-maxage applies to CDN only (not browser)
+ *   - Re-exports avoid code duplication (DRY principle)
+ *   - All middleware uses Redis (Upstash) for consistency
+ * 
+ * SUGGESTIONS:
+ *   - Consider implementing cache versioning (bust on schema change)
+ *   - Add cache preloading for authenticated users
+ *   - Implement cache partitioning (hot vs cold data)
+ *   - Add cache monitoring dashboard (hit rate, eviction rate)
+ *   - Support cache multi-region replication
+ *   - Implement cache fallback (serve stale on Redis failure)
+ *   - Add cache analytics (popular endpoints, cache efficiency)
+ * 
+ * AVOID:
+ *   - ❌ DON'T duplicate middleware code (use re-exports)
+ *   - ❌ DON'T cache sensitive data (personal info, tokens)
+ *   - ❌ DON'T use overly long cache TTLs (stale data issues)
+ *   - ❌ DON'T forget stale-while-revalidate (better than no cache)
+ *   - ❌ DON'T cache POST/PUT/DELETE responses (only GET)
+ *   - ❌ DON'T mix s-maxage with max-age (use s-maxage for CDN)
+ *   - ❌ DON'T cache error responses (4xx, 5xx status codes)
+ *   - ❌ DON'T implement custom caching logic (use existing middleware)
  */
 
 // Re-export existing infrastructure (no duplication)

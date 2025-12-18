@@ -1,12 +1,65 @@
 /**
- * Silent Error Tracking for Production
+ * @file lib/notifications/error-tracking.ts
+ * @description Silent error tracking for production with development logging
  * 
- * Replaces console.error/warn with silent tracking in production.
- * Errors are still handled by return values (false, null, etc.)
- * Development: Full logging with context
- * Production: Silent (no console pollution)
+ * PHASE: Phase 7.7 - Notifications Module (December 18, 2025)
  * 
- * @module lib/notifications/error-tracking
+ * FEATURES:
+ *   - Silent error tracking in production (no console pollution)
+ *   - Full logging in development with timestamps and context
+ *   - Three severity levels (error, warning, info)
+ *   - Structured error context with function names and parameters
+ *   - Stack trace preservation for Error objects
+ *   - Graceful error handling (return false/null patterns)
+ *   - Future-ready for external monitoring services (Sentry, LogRocket)
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Error Handling: lib/middleware/error-handler.ts
+ *   - Used by: lib/notifications/history.ts, miniapp.ts, viral.ts
+ *   - Pattern: Fail gracefully with boolean return values
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - NO CONSOLE POLLUTION in production
+ *   - Development must have full error visibility
+ *   - Error context must be JSON-serializable
+ * 
+ * TODO:
+ *   - [ ] Add Sentry integration for production error tracking
+ *   - [ ] Implement error rate limiting (prevent spam)
+ *   - [ ] Add error categorization (transient vs permanent)
+ *   - [ ] Support custom error handlers per module
+ *   - [ ] Add error correlation IDs (trace across services)
+ *   - [ ] Implement error sampling (reduce volume in high-traffic)
+ *   - [ ] Add error alerting (Slack, Discord webhooks)
+ *   - [ ] Support error recovery suggestions
+ * 
+ * CRITICAL:
+ *   - Production mode MUST be silent (no console.error/warn/log)
+ *   - Error context must be JSON-serializable (no circular references)
+ *   - Stack traces only logged in development (security concern)
+ *   - Always return boolean/null after tracking (fail gracefully)
+ *   - Use trackError for errors, trackWarning for warnings, trackInfo for debug
+ *   - NODE_ENV check happens inside functions (not at module load)
+ * 
+ * SUGGESTIONS:
+ *   - Consider implementing error budgets (max errors per hour)
+ *   - Add error fingerprinting (deduplicate similar errors)
+ *   - Implement error context enrichment (user FID, request ID)
+ *   - Add error recovery metrics (success after retry)
+ *   - Support structured logging formats (JSON, logfmt)
+ *   - Implement error search and filtering dashboard
+ *   - Add error trend analysis (detect spikes)
+ * 
+ * AVOID:
+ *   - ❌ DON'T use console.error/warn/log directly (use track functions)
+ *   - ❌ DON'T include sensitive data in error context (PII, tokens)
+ *   - ❌ DON'T throw errors after tracking (use return false pattern)
+ *   - ❌ DON'T log errors synchronously (blocks request handling)
+ *   - ❌ DON'T track errors for expected failures (404, validation)
+ *   - ❌ DON'T include full request/response bodies (too large)
+ *   - ❌ DON'T track errors without context (include function name)
+ *   - ❌ DON'T ignore error types (differentiate Error vs unknown)
  */
 
 type ErrorContext = Record<string, unknown>
