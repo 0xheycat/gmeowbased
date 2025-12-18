@@ -1326,13 +1326,45 @@ await localCache.set('key', data, 5 * 60 * 1000)
 const result = await localCache.get<Data>('key')
 ```
 
+**Critical Features Added** (December 18, 2025):
+- ✅ **Stale-while-revalidate**: Serve cached data (>80% TTL), refresh in background
+- ✅ **Cache stampede prevention**: In-flight request deduplication
+- ✅ **Graceful degradation**: Redis fail → filesystem → fetcher
+- ✅ **Error handling**: Cache write failures don't block data return
+- ✅ **Input validation**: Prevent invalid namespace/key/ttl
+- ✅ **Staleness detection**: MemoryCache.getEntry() checks data age
+- ✅ **Cache initialization**: initializeCache() cleanup + warming
+- ✅ **Enhanced warming**: warmCache() with targets and error reporting
+
+**Production-Ready Features**:
+```typescript
+// Stale-while-revalidate (serve stale, refresh background)
+await getCached('users', 'profile:123', fetcher, {
+  ttl: 60,
+  staleWhileRevalidate: true // Serve stale if >48s old
+})
+
+// Cache stampede prevention (automatic)
+// 100 simultaneous requests → 1 fetch + 99 wait for result
+
+// Graceful degradation (automatic)
+// Redis error → try filesystem → fallback to fetcher
+
+// Cache initialization (call in server startup)
+import { initializeCache } from '@/lib/cache/server'
+await initializeCache() // Cleanup + warm cache
+```
+
 **Impact**: 
 - ✅ 0 TypeScript errors
 - ✅ 100% API compatibility with bot/local-cache.ts
 - ✅ Zero code changes needed in 12 bot files
 - ✅ Free-tier deployments support persistent caching
 - ✅ Bot automation no longer requires Redis ($10-25/month saved)
-- ✅ ~230 lines added to cache/server.ts (offset by 366 lines removed next)
+- ✅ Production-ready with error handling and validation
+- ✅ Cache stampede prevention (dedup concurrent requests)
+- ✅ Stale-while-revalidate (better UX, lower latency)
+- ✅ ~350 lines added to cache/server.ts (offset by 366 lines removed next)
 - ✅ Ready for Phase 8.1.2 migration (just change imports!)
 
 **Step 2**: 🚧 Migrate lib/bot/local-cache.ts → lib/cache/server.ts (1 hour)
