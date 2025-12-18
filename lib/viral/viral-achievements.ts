@@ -26,7 +26,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
-import type { Json } from '@/types/supabase'
+import type { Json, Database } from '@/types/supabase'
 
 // ============================================================================
 // Type Definitions
@@ -319,7 +319,7 @@ export async function awardAchievement(
         },
       })
       .select()
-      .single()
+      .single() as { data: Database['public']['Tables']['viral_milestone_achievements']['Row'], error: any }
 
     if (insertError) {
       // GI-7: Handle duplicate gracefully

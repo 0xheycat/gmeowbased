@@ -89,6 +89,7 @@
  */
 
 import { createClient } from '@/lib/supabase/edge'
+import type { Database } from '@/types/supabase'
 
 /**
  * Metric types tracked by the analytics system
@@ -201,7 +202,7 @@ export async function getBotHealthMetrics(window: MetricWindow = '24h'): Promise
       .from('bot_metrics')
       .select('*')
       .gte('created_at', cutoff.toISOString())
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) as { data: Database['public']['Tables']['bot_metrics']['Row'][] | null, error: any }
     
     if (error) {
       console.error('[bot-analytics] Failed to fetch metrics:', error)
@@ -312,7 +313,7 @@ export async function getRecentBotErrors(limit: number = 10): Promise<Array<{
       .select('*')
       .not('error_message', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .limit(limit) as { data: Database['public']['Tables']['bot_metrics']['Row'][] | null, error: any }
     
     if (error || !errors) {
       return []

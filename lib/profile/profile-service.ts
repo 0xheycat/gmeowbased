@@ -25,6 +25,7 @@
 
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { getCached, invalidateCache } from '@/lib/cache/server'
+import type { Database } from '@/types/supabase'
 import type { 
   ProfileData, 
   ProfileUpdateRequest,
@@ -110,7 +111,7 @@ async function fetchUserProfileFromDB(fid: number) {
     .from('user_profiles')
     .select('*')
     .eq('fid', fid)
-    .single()
+    .single() as { data: Database['public']['Tables']['user_profiles']['Row'], error: any }
 
   if (error || !data) return null
   return data

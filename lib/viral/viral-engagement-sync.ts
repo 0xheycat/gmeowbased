@@ -21,7 +21,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
-import type { Json } from '@/types/supabase'
+import type { Json, Database } from '@/types/supabase'
 import {
   calculateEngagementScore,
   getViralTier,
@@ -232,7 +232,7 @@ export async function syncCastEngagement(
       .from('badge_casts')
       .select('*')
       .eq('cast_hash', castHash)
-      .single()
+      .single() as { data: Database['public']['Tables']['badge_casts']['Row'], error: any }
 
     if (fetchError || !existingCast) {
       throw new EngagementSyncError(

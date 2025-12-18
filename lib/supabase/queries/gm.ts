@@ -11,6 +11,7 @@
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase';
+import type { Database } from '@/types/supabase'
 
 // Toggle for development/testing
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_GM === 'true' || false;

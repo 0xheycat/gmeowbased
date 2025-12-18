@@ -26,6 +26,7 @@ import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error
 import { calculateQuestCost, type QuestCostInput } from '@/lib/quests/cost-calculator';
 import { escrowPoints } from '@/lib/quests/points-escrow-service';
 import { getSupabaseServerClient } from '@/lib/supabase';
+import type { Database } from '@/types/supabase';
 import type { QuestCategory, QuestDifficulty } from '@/lib/supabase/types/quest';
 import type { QuestDraft } from '@/lib/quests/types';
 import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/middleware/idempotency';
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
       .from('user_points_balances')
       .select('total_points')
       .eq('fid', body.creator_fid)
-      .single();
+      .single() as { data: Database['public']['Tables']['user_points_balances']['Row'], error: any };
     
     if (leaderboardError || !leaderboardData) {
       return createErrorResponse({
@@ -249,7 +250,7 @@ export async function POST(request: NextRequest) {
         },
       } as any)
       .select()
-      .single();
+      .single() as { data: Database['public']['Tables']['unified_quests']['Row'], error: any };
     
     if (questError || !questData) {
       // ROLLBACK: Refund escrow if quest creation fails

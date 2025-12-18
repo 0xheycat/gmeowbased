@@ -58,6 +58,7 @@ import { PROFILE_SUPPORTED_CHAINS, fetchChainSnapshot } from '@/lib/profile/prof
 import { sanitizeAddress as normalizeAddress } from '@/lib/middleware/api-security'
 import { calculateRankProgress } from '@/lib/leaderboard/rank'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
+import type { Database } from '@/types/supabase'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'
 
 const DAY_MS = 24 * 60 * 60 * 1000

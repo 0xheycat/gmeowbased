@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import type { Database } from '@/types/supabase'
 import { WebhookPayloadSchema } from '@/lib/validation/api-schemas'
 import {
   calculateViralBonus,
@@ -189,7 +190,7 @@ async function updateCastMetrics(
       })
       .eq('cast_hash', castHash)
       .select('id, fid, badge_id')
-      .single()
+      .single() as { data: Pick<Database['public']['Tables']['badge_casts']['Row'], 'id' | 'fid' | 'badge_id'>, error: any }
     
     if (error) {
       console.error('[Webhook] Failed to update cast metrics:', error)
@@ -306,7 +307,7 @@ export async function POST(request: NextRequest) {
       .from('badge_casts')
       .select('*')
       .eq('cast_hash', cast_hash)
-      .single()
+      .single() as { data: Database['public']['Tables']['badge_casts']['Row'], error: any }
     
     if (fetchError || !existingCast) {
       console.warn(`[Webhook] Cast not found: ${cast_hash}`)

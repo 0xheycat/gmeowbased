@@ -4,7 +4,7 @@ import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/g
 import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { BADGE_REGISTRY } from './badge-registry-data'
-import type { Json } from '@/types/supabase'
+import type { Json, Database } from '@/types/supabase'
 import { getCached, invalidateCache } from '@/lib/cache/server'
 
 const BADGE_TABLE = (process.env.SUPABASE_BADGE_TEMPLATE_TABLE || 'badge_templates') as 'badge_templates'
@@ -621,7 +621,7 @@ export async function assignBadgeToUser(params: {
     .select('id, badge_id, assigned_at, minted, minted_at, tx_hash, chain, contract_address, token_id, metadata')
     .eq('fid', params.fid)
     .eq('badge_type', params.badgeType)
-    .maybeSingle()
+    .maybeSingle() as { data: Database['public']['Tables']['user_badges']['Row'] | null, error: any }
 
   if (existing && !checkError) {
     // Badge already assigned, return it
@@ -666,7 +666,7 @@ export async function assignBadgeToUser(params: {
     .from(USER_BADGES_TABLE)
     .insert(payload)
     .select()
-    .single()
+    .single() as { data: Database['public']['Tables']['user_badges']['Row'], error: any }
 
   if (error) {
     throw new Error(`Failed to assign badge: ${error.message}`)
@@ -730,7 +730,7 @@ export async function getUserBadges(fid: number): Promise<UserBadge[]> {
           return []
         }
 
-        return (data || []).map(row => ({
+        return ((data || []) as Database['public']['Tables']['user_badges']['Row'][]).map(row => ({
           id: row.id,
           fid: row.fid,
           badgeId: row.badge_id,
