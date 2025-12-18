@@ -508,6 +508,42 @@ export async function getRecentActivity(fid: number, days: number = 30): Promise
 }
 
 /**
+ * Get tip events for a user (for tip analytics)
+ * Phase 6: Replace fetchTipPoints() deprecated function
+ * 
+ * Note: This is a temporary implementation that queries by wallet.
+ * In production, this should be optimized with a dedicated wallet-based query.
+ * 
+ * @param walletAddress - User's wallet address (0x...)
+ * @param since - Optional date to filter events from
+ * @returns Array of tip events with amounts
+ */
+export async function getTipEvents(
+  walletAddress: string,
+  since?: Date
+): Promise<TipEvent[]> {
+  try {
+    // For now, return empty array since we need proper schema support
+    // TODO: Add wallet-based tip event query to Subsquid schema
+    // TODO: Add tipEvents entity to gmeow-indexer/schema.graphql
+    
+    // Temporary: We'll use stats calculation from leaderboard instead
+    console.warn('[getTipEvents] Direct tip queries not yet supported, using leaderboard stats')
+    return []
+  } catch (error) {
+    console.error('[getTipEvents] Subsquid query failed:', error)
+    return []
+  }
+}
+
+export interface TipEvent {
+  id: string
+  amount: number
+  timestamp: string
+  txHash: string
+}
+
+/**
  * Check if Subsquid is available (health check)
  */
 export async function isSubsquidAvailable(): Promise<boolean> {
