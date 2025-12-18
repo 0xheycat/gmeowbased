@@ -83,62 +83,11 @@ async function fetchUserQuestHistory(address: string): Promise<UserQuestHistory>
     totalCompleted: 0,
   }
   
-  if (!isSupabaseConfigured()) return history
-  
-  const supabase = getSupabaseServerClient()
-  if (!supabase) return history
-  
-  try {
-    // ⚠️ DEPRECATED - Replace with Subsquid getGMRankEvents()
-    const { data, error } = await supabase
-      .from('gmeow_rank_events')
-      .select('event_type, metadata, created_at, chain')
-      .eq('wallet_address', address)
-      .eq('event_type', 'quest-verify')
-      .order('created_at', { ascending: false })
-      .limit(100)
-    
-    if (error || !data) return history
-    
-    for (const event of data) {
-      history.totalCompleted++
-      
-      // Parse quest details from metadata
-      try {
-        const detail = typeof event.metadata === 'string' 
-          ? JSON.parse(event.metadata) 
-          : event.metadata
-        
-        if (detail?.questId) {
-          const questKey = `${event.chain}:${detail.questId}`
-          history.completed.add(questKey)
-        }
-        
-        if (detail?.questType) {
-          const currentCount = history.types.get(detail.questType) || 0
-          history.types.set(detail.questType, currentCount + 1)
-        }
-      } catch {
-        // Skip invalid metadata
-      }
-      
-      // Track chain usage
-      if (event.chain) {
-        const chainCount = history.chains.get(event.chain as ChainKey) || 0
-        history.chains.set(event.chain as ChainKey, chainCount + 1)
-      }
-      
-      // Track most recent completion
-      if (event.created_at && !history.lastCompleted) {
-        history.lastCompleted = new Date(event.created_at)
-      }
-    }
-    
-    return history
-  } catch (error) {
-    console.warn('[quest-recommendations] Failed to fetch history:', error)
-    return history
-  }
+  // ⚠️ PHASE 5: Quest completion history not implemented in Subsquid yet
+  // TODO: Implement quest-verify events in Subsquid indexer
+  // For now, return empty history (recommendations work without it)
+  console.warn('[fetchCompletionHistory] Quest history not available - table dropped, Subsquid implementation pending')
+  return history
 }
 
 async function fetchAvailableQuests(): Promise<Array<{

@@ -128,20 +128,43 @@ async function fetchUserProfileFromDB(fid: number) {
  * Note: farcaster_fid is INTEGER (different from user_profiles.fid BIGINT)
  */
 async function fetchLeaderboardDataFromDB(fid: number) {
-  const supabase = getSupabaseServerClient()
-  if (!supabase) return null
+  // ⚠️ PHASE 5: Replaced with Subsquid getLeaderboardEntry()
+  try {
+    const { getLeaderboardEntry } = await import('@/lib/subsquid-client')
+    const stats = await getLeaderboardEntry(fid)
+    
+    if (!stats) return null
+    
+    // Map Subsquid response to expected leaderboard format
+    return {
+      address: stats.wallet,
+      farcaster_fid: fid,
+      total_score: stats.totalScore,
+      base_points: stats.basePoints,
+      viral_xp: stats.viralXP,
+      guild_bonus: stats.guildBonus,
+      referral_bonus: stats.referralBonus,
+      streak_bonus: stats.streakBonus,
+      badge_prestige: stats.badgePrestige,
+      global_rank: stats.rank || 0,
+      rank_tier: getRankTier(stats.totalScore),
+      updated_at: stats.lastUpdated,
+    }
+  } catch (error) {
+    console.error('[fetchLeaderboardDataFromDB] Subsquid error:', error)
+    return null
+  }
+}
 
-  // ⚠️ DEPRECATED - Replace with Subsquid getUserStatsByFID()
-  // Query all_time period for profile display
-  const { data, error } = await supabase
-    .from('leaderboard_calculations')
-    .select('*')
-    .eq('farcaster_fid', fid)
-    .eq('period', 'all_time')
-    .single()
-
-  if (error || !data) return null
-  return data
+// Helper function to determine rank tier from score
+function getRankTier(score: number): string {
+  if (score >= 10000) return 'Legend'
+  if (score >= 5000) return 'Master'
+  if (score >= 2500) return 'Expert'
+  if (score >= 1000) return 'Veteran'
+  if (score >= 500) return 'Advanced'
+  if (score >= 100) return 'Intermediate'
+  return 'Rookie'
 }
 
 /**
