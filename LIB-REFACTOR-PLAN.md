@@ -1684,54 +1684,65 @@ const client = getNeynarServerClient()
 
 ---
 
-### 8.4 User Data Fetching Consolidation (HIGH PRIORITY) 🔴
+### 8.4 User Data Fetching Consolidation ✅ COMPLETE (December 18, 2025)
 
-#### Current Problem: 10+ Duplicate getUserX Functions
+#### Problem: Duplicate User Fetching Functions
+Multiple files with duplicate `getUserX` functions across API/database layers.
 
-**Duplicate Functions**:
-1. ❌ **lib/integrations/subsquid-client.ts**: `getUserStats`, `getUserNFTStats`
-2. ❌ **lib/integrations/neynar.ts**: `fetchUserByFid`, `fetchUserByAddress`, `fetchUserByUsername`, `fetchUsersByAddresses`
-3. ❌ **lib/api/farcaster/client.ts**: `getUserByFid`, `getUsersByFids`, `getUserCasts` ⚠️ **DUPLICATE of neynar.ts**
-4. ❌ **lib/bot/stats-with-fallback.ts**: `getUserStatsWithFallback` (orchestrator - KEEP)
-5. ❌ **lib/supabase/queries/gm.ts**: `getUserProfile` (database-only)
-6. ❌ **lib/supabase/queries/user.ts**: `getUserProfile`, `getUserProfiles` ⚠️ **DUPLICATE of gm.ts**
-7. ❌ **lib/supabase/queries/quests.ts**: `getUserActiveQuests`, `getUserCompletedQuests`
-8. ❌ **lib/supabase/queries/leaderboard.ts**: `getUserRankByWallet`
-9. ❌ **lib/notifications/notification-batching.ts**: `getUserTimezone`
+#### Solution: Establish Canonical Sources
 
-#### Consolidation Analysis:
+**Canonical User Data Sources**:
+1. ✅ **lib/integrations/neynar.ts** - Farcaster API (fetchUserByFid, fetchUsersByAddresses)
+2. ✅ **lib/supabase/queries/user.ts** - Database profiles (getUserProfile, getUserProfiles)
+3. ✅ **Domain-specific kept** - quests.ts, leaderboard.ts, subsquid-client.ts (different purposes)
 
-**Group 1: Farcaster User Data (API)**
-- ✅ **KEEP**: lib/integrations/neynar.ts (canonical Neynar API wrapper)
-- ❌ **DELETE**: lib/api/farcaster/client.ts (146 lines) - Complete duplicate
+#### Actions Taken:
 
-**Group 2: Supabase User Profiles**
-- ✅ **KEEP**: lib/supabase/queries/user.ts (`getUserProfile`, `getUserProfiles`)
-- ❌ **MERGE**: lib/supabase/queries/gm.ts `getUserProfile` → user.ts (duplicate)
-
-**Group 3: Domain-Specific Queries**
-- ✅ **KEEP**: lib/supabase/queries/quests.ts (quest-specific)
-- ✅ **KEEP**: lib/supabase/queries/leaderboard.ts (leaderboard-specific)
-- ✅ **KEEP**: lib/notifications/notification-batching.ts (notification-specific)
-- ✅ **KEEP**: lib/integrations/subsquid-client.ts (blockchain indexer)
-- ✅ **KEEP**: lib/bot/stats-with-fallback.ts (orchestrator with fallback logic)
-
-#### Consolidation Plan:
-
-**Step 1**: Delete lib/api/farcaster/client.ts (30 min)
+**Step 1**: ✅ Deleted lib/api/farcaster/client.ts (252 lines)
 - Complete duplicate of neynar.ts functions
-- Update 5+ imports to use lib/integrations/neynar.ts
-- **Impact**: 146 lines deleted
+- No imports found (safe deletion)
+- Functions: getUserByFid, getUsersByFids, getUserCasts
+- **Impact**: 252 lines deleted
 
-**Step 2**: Merge lib/supabase/queries/gm.ts getUserProfile → user.ts (20 min)
-- Move GM-specific logic to user.ts if needed
-- Update 3+ imports
-- **Impact**: Remove duplicate function
+**Step 2**: ✅ Deprecated getUserProfile in lib/supabase/queries/gm.ts
+- Added @deprecated warning pointing to queries/user.ts
+- No imports found (safe deprecation)
+- Will be removed in future cleanup
+- **Impact**: Duplicate marked for removal
 
-**Result**: 
-- **10 → 7 user fetch functions** (3 duplicates removed)
-- **~150 lines reduced**
-- **Clear data source hierarchy**: Neynar (API) → Supabase (DB) → Subsquid (Blockchain)
+**Step 3**: ✅ Updated lib/index.ts and lib/README.md
+- Exported canonical functions: fetchUserByFid, getUserProfile
+- Documented data source hierarchy
+- Added ❌ NEVER warnings against deleted patterns
+- Clear import patterns for developers
+
+#### Phase 8.4 Results:
+- ✅ **lib/api/farcaster/client.ts deleted** (252 lines)
+- ✅ **gm.ts getUserProfile deprecated** (duplicate marked)
+- ✅ **TypeScript: 0 errors** (verified)
+- ✅ **Documentation updated** (lib/index.ts, lib/README.md)
+- ✅ **Clear hierarchy**: Neynar (API) → Supabase (DB) → Subsquid (Blockchain)
+
+#### Data Source Hierarchy:
+```typescript
+// Farcaster API (Neynar)
+import { fetchUserByFid } from '@/lib/integrations/neynar'
+
+// Database Profiles (Supabase)
+import { getUserProfile } from '@/lib/supabase/queries/user'
+
+// Blockchain Stats (Subsquid)
+import { getUserStats } from '@/lib/integrations/subsquid-client'
+
+// ❌ DELETED: lib/api/farcaster/client.ts
+// ❌ DEPRECATED: gm.ts getUserProfile
+```
+
+#### Benefits:
+- **Single source of truth** for each data type
+- **Clear data layer separation** (API/DB/Blockchain)
+- **252 lines deleted** (complete duplicate removed)
+- **Prevents future duplication** (documented in README)
 
 ---
 

@@ -78,10 +78,15 @@ export async function getFidFromWallet(walletAddress: string): Promise<number | 
 }
 
 /**
+ * @deprecated Phase 8.4: Use getUserProfile from @/lib/supabase/queries/user instead
+ * This function is a duplicate and will be removed in future versions.
+ * 
  * Get user profile metadata
  * Used for display name, avatar, etc. in frames
  */
 export async function getUserProfile(fid: number) {
+  console.warn('[DEPRECATED] gm.ts getUserProfile is deprecated. Use @/lib/supabase/queries/user instead');
+  
   if (USE_MOCK_DATA) {
     console.log('[getUserProfile] Using mock data');
     return {

@@ -175,13 +175,22 @@ import { fetchUserByFid } from '@/lib/integrations/neynar'
   - ✅ Single source for RPC configuration (no scattered RPC URLs)
   - ✅ Rate limit protection (shared pool = fewer connections)
 
-### Database
+### Database (Phase 8.4 Complete - Dec 18, 2025)
 - `supabase/` (5 files) - PostgreSQL database client
   - Client-side operations
   - Server-side operations
   - Query builders
   - Type definitions
   - Mock data for testing
+  - `queries/user.ts` - **PRIMARY**: Canonical user profile queries
+    - Functions: getUserProfile(fid/wallet), getUserProfiles(fids/wallets)
+    - Use for: ALL database user profile lookups
+    - **DO NOT**: Create duplicate getUserProfile functions
+  
+  **Phase 8.4 Consolidation** (252+ lines reduced):
+  - ✅ Deleted lib/api/farcaster/client.ts (252 lines) - complete duplicate of neynar.ts
+  - ✅ Deprecated getUserProfile in gm.ts - use queries/user.ts instead
+  - ✅ Clear data source hierarchy: Neynar (API) → Supabase (DB) → Subsquid (Blockchain)
 
 ---
 
@@ -303,6 +312,11 @@ import { getGuildContract } from '@/lib/contracts/guild-contract'
 // RPC Client Pool (Phase 8.2 - ALWAYS USE THIS)
 import { getPublicClient, getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 // ❌ NEVER: createPublicClient({ transport: http(rpc) }) - use pool instead!
+
+// User Data Fetching (Phase 8.4 - CANONICAL SOURCES)
+import { fetchUserByFid, fetchUsersByAddresses } from '@/lib/integrations/neynar' // For Farcaster API
+import { getUserProfile, getUserProfiles } from '@/lib/supabase/queries/user' // For DB profiles
+// ❌ NEVER: lib/api/farcaster/client (deleted), gm.ts getUserProfile (deprecated)
 
 // Profile (UPDATED PATHS)
 import { normalizeAddress } from '@/lib/profile/profile-data'

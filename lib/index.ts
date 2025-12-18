@@ -43,6 +43,10 @@ export * from './cache'
 export { getSupabaseServerClient } from '@/lib/supabase/edge'
 export { getSupabaseAdminClient, getSupabaseEdgeClient } from './supabase/edge'
 
+// User Data Fetching (Phase 8.4 - Canonical Sources)
+export { fetchUserByFid, fetchUserByAddress, fetchUsersByAddresses } from './integrations/neynar'
+export { getUserProfile, getUserProfiles } from './supabase/queries/user'
+
 // ============================================================================
 // Contract Utilities
 // ============================================================================
