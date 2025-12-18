@@ -16,7 +16,7 @@
  * Logic: 100% reuse + improvements
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
 
 // ========================================
@@ -81,7 +81,7 @@ export function getSupabaseServerClient(): SupabaseClient<Database> | null {
   const url = config.url
   const key = config.serviceRoleKey || config.anonKey
 
-  cachedServerClient = createClient<Database>(url, key, {
+  cachedServerClient = createSupabaseClient<Database>(url, key, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -138,7 +138,7 @@ export function getSupabaseEdgeClient(): SupabaseClient<Database> | null {
   const url = config.url
   const key = config.anonKey // Edge Runtime uses Anon Key only
 
-  cachedEdgeClient = createClient<Database>(url, key, {
+  cachedEdgeClient = createSupabaseClient<Database>(url, key, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -201,7 +201,7 @@ export function getSupabaseAdminClient(): SupabaseClient<Database> | null {
   const url = process.env.SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  cachedAdminClient = createClient<Database>(url, serviceRoleKey, {
+  cachedAdminClient = createSupabaseClient<Database>(url, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -264,7 +264,7 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> | null {
     return null
   }
   
-  cachedBrowserClient = createClient<Database>(supabaseUrl, supabaseKey, {
+  cachedBrowserClient = createSupabaseClient<Database>(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -315,6 +315,24 @@ export async function testSupabaseConnection(): Promise<boolean> {
     console.error('[Supabase] Connection test failed:', error)
     return false
   }
+}
+
+// ========================================
+// Compatibility Exports (Phase 8.4 REVISED)
+// ========================================
+
+/**
+ * Alias for getSupabaseServerClient() for backwards compatibility
+ * This matches the old lib/supabase/server.ts API
+ * 
+ * @deprecated Use getSupabaseServerClient() directly for clarity
+ */
+export function createClient() {
+  const client = getSupabaseServerClient()
+  if (!client) {
+    throw new Error('Supabase not configured')
+  }
+  return client
 }
 
 // ========================================

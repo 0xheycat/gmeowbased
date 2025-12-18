@@ -107,7 +107,7 @@
  */
 
 import { getUserStats as getSubsquidUserStats } from '@/lib/integrations/subsquid-client'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/edge'
 
 /**
  * Leaderboard category types for filtered views

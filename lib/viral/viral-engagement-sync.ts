@@ -19,7 +19,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import type { Json } from '@/types/supabase'
 import {

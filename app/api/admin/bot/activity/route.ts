@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 import { generateRequestId } from '@/lib/middleware/request-id'
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { resolveBotFid } from '@/lib/integrations/neynar-bot'
 import { fetchFidByUsername, fetchUserByFid, type FarcasterUser } from '@/lib/integrations/neynar'
 import { extractHttpErrorMessage } from '@/lib/middleware/http-error'

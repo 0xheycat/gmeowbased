@@ -4,7 +4,7 @@ import type { Signer } from '@neynar/nodejs-sdk/build/api/models/signer'
 
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import {
   previewSecret,
   resolveBotFid,

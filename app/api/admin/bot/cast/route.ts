@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { generateRequestId } from '@/lib/middleware/request-id'
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { resolveBotSignerUuid } from '@/lib/integrations/neynar-bot'
 import { validateAdminRequest } from '@/lib/auth/admin'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'

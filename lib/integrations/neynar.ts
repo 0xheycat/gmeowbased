@@ -1,4 +1,62 @@
 // Unified Neynar helpers (Edge/Server/Client safe)
+// Phase 8.3 REVISED: Consolidated neynar-server.ts (getNeynarServerClient)
+
+import { Configuration, NeynarAPIClient } from '@neynar/nodejs-sdk'
+
+// ============================================================================
+// NeynarAPIClient Singleton (Phase 8.3 - from neynar-server.ts)
+// ============================================================================
+
+let cachedClient: NeynarAPIClient | null = null
+let cachedApiKey: string | null = null
+
+function resolveNeynarApiKey(): string | null {
+  return (
+    process.env.NEYNAR_API_KEY ||
+    process.env.NEYNAR_GLOBAL_API ||
+    process.env.NEXT_PUBLIC_NEYNAR_API_KEY ||
+    null
+  )
+}
+
+/**
+ * Get singleton NeynarAPIClient instance
+ * 
+ * @returns NeynarAPIClient instance
+ * @throws Error if no API key configured
+ * 
+ * @example
+ * ```typescript
+ * const client = getNeynarServerClient()
+ * const user = await client.fetchBulkUsers([1, 2, 3])
+ * ```
+ */
+export function getNeynarServerClient(): NeynarAPIClient {
+  const apiKey = resolveNeynarApiKey()
+  if (!apiKey) {
+    throw new Error('Missing Neynar API key. Set NEYNAR_API_KEY or NEYNAR_GLOBAL_API in your environment.')
+  }
+
+  if (!cachedClient || cachedApiKey !== apiKey) {
+    const config = new Configuration({ apiKey })
+    cachedClient = new NeynarAPIClient(config)
+    cachedApiKey = apiKey
+  }
+
+  return cachedClient
+}
+
+/**
+ * Reset the cached Neynar client (for testing or key rotation)
+ */
+export function resetNeynarClientCache() {
+  cachedClient = null
+  cachedApiKey = null
+}
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
 
 export interface ContractData {
   currentStreak: number

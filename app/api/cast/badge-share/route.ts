@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { resolveBotSignerUuid } from '@/lib/integrations/neynar-bot'
 import { getUserBadges } from '@/lib/badges/badges'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
