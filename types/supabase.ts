@@ -82,35 +82,80 @@ export type Database = {
         Row: {
           id: number
           title: string
+          description: string
           slug: string
           category: string
+          type: string
           creator_fid: number
+          creator_address: string
           reward_points: number
+          reward_mode: string
+          reward_token_address: string | null
+          reward_token_amount: number | null
+          reward_nft_address: string | null
+          reward_nft_token_id: number | null
+          creation_cost: number
+          creator_earnings_percent: number
           total_completions: number
+          total_earned_points: number
+          verification_data: Json
           status: string
+          max_completions: number | null
+          expiry_date: string | null
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: number
           title: string
+          description: string
           slug: string
           category: string
+          type: string
           creator_fid: number
+          creator_address: string
           reward_points?: number
+          reward_mode?: string
+          reward_token_address?: string | null
+          reward_token_amount?: number | null
+          reward_nft_address?: string | null
+          reward_nft_token_id?: number | null
+          creation_cost?: number
+          creator_earnings_percent?: number
           total_completions?: number
+          total_earned_points?: number
+          verification_data?: Json
           status?: string
+          max_completions?: number | null
+          expiry_date?: string | null
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: number
           title?: string
+          description?: string
           slug?: string
           category?: string
+          type?: string
           creator_fid?: number
+          creator_address?: string
           reward_points?: number
+          reward_mode?: string
+          reward_token_address?: string | null
+          reward_token_amount?: number | null
+          reward_nft_address?: string | null
+          reward_nft_token_id?: number | null
+          creation_cost?: number
+          creator_earnings_percent?: number
           total_completions?: number
+          total_earned_points?: number
+          verification_data?: Json
           status?: string
+          max_completions?: number | null
+          expiry_date?: string | null
           created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -707,6 +752,207 @@ export type Database = {
           deployment_tx?: string | null
           deployed_at?: string
           metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      referral_stats: {
+        Row: {
+          id: number
+          fid: number
+          address: string | null
+          username: string | null
+          avatar: string | null
+          total_referrals: number
+          successful_referrals: number
+          points_earned: number
+          conversion_rate: number
+          growth_rate: number
+          tier: string | null
+          rank: number | null
+          rank_change: number
+          created_at: string
+          updated_at: string
+          last_activity_at: string | null
+        }
+        Insert: {
+          id?: number
+          fid: number
+          address?: string | null
+          username?: string | null
+          avatar?: string | null
+          total_referrals?: number
+          successful_referrals?: number
+          points_earned?: number
+          conversion_rate?: number
+          growth_rate?: number
+          tier?: string | null
+          rank?: number | null
+          rank_change?: number
+          created_at?: string
+          updated_at?: string
+          last_activity_at?: string | null
+        }
+        Update: {
+          id?: number
+          fid?: number
+          address?: string | null
+          username?: string | null
+          avatar?: string | null
+          total_referrals?: number
+          successful_referrals?: number
+          points_earned?: number
+          conversion_rate?: number
+          growth_rate?: number
+          tier?: string | null
+          rank?: number | null
+          rank_change?: number
+          created_at?: string
+          updated_at?: string
+          last_activity_at?: string | null
+        }
+        Relationships: []
+      }
+      referral_activity: {
+        Row: {
+          id: number
+          fid: number
+          event_type: string
+          referral_code: string | null
+          referred_fid: number | null
+          points_awarded: number
+          metadata: Json | null
+          timestamp: string
+        }
+        Insert: {
+          id?: number
+          fid: number
+          event_type: string
+          referral_code?: string | null
+          referred_fid?: number | null
+          points_awarded?: number
+          metadata?: Json | null
+          timestamp?: string
+        }
+        Update: {
+          id?: number
+          fid?: number
+          event_type?: string
+          referral_code?: string | null
+          referred_fid?: number | null
+          points_awarded?: number
+          metadata?: Json | null
+          timestamp?: string
+        }
+        Relationships: []
+      }
+      referral_registrations: {
+        Row: {
+          id: number
+          fid: number
+          wallet_address: string
+          referral_code: string
+          referrer_fid: number | null
+          referrer_code: string | null
+          registration_tx: string | null
+          referrer_set_tx: string | null
+          block_number: number | null
+          registered_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          fid: number
+          wallet_address: string
+          referral_code: string
+          referrer_fid?: number | null
+          referrer_code?: string | null
+          registration_tx?: string | null
+          referrer_set_tx?: string | null
+          block_number?: number | null
+          registered_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          fid?: number
+          wallet_address?: string
+          referral_code?: string
+          referrer_fid?: number | null
+          referrer_code?: string | null
+          registration_tx?: string | null
+          referrer_set_tx?: string | null
+          block_number?: number | null
+          registered_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quest_completions: {
+        Row: {
+          id: number
+          quest_id: number
+          completer_fid: number
+          completer_address: string
+          verification_proof: Json
+          points_awarded: number
+          token_awarded: number | null
+          nft_awarded_token_id: number | null
+          completed_at: string
+        }
+        Insert: {
+          id?: number
+          quest_id: number
+          completer_fid: number
+          completer_address: string
+          verification_proof?: Json
+          points_awarded?: number
+          token_awarded?: number | null
+          nft_awarded_token_id?: number | null
+          completed_at?: string
+        }
+        Update: {
+          id?: number
+          quest_id?: number
+          completer_fid?: number
+          completer_address?: string
+          verification_proof?: Json
+          points_awarded?: number
+          token_awarded?: number | null
+          nft_awarded_token_id?: number | null
+          completed_at?: string
+        }
+        Relationships: []
+      }
+      points_transactions: {
+        Row: {
+          id: number
+          fid: number
+          amount: number
+          source: string
+          balance_after: number
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          fid: number
+          amount: number
+          source: string
+          balance_after: number
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          fid?: number
+          amount?: number
+          source?: string
+          balance_after?: number
+          metadata?: Json
           created_at?: string
         }
         Relationships: []

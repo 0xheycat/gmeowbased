@@ -95,7 +95,12 @@ export type LeaderboardScore = {
 export async function calculateLeaderboardScore(
   address: string
 ): Promise<LeaderboardScore | null> {
-  const supabase = getSupabaseServerClient()
+  // DEPRECATED: leaderboard_calculations table dropped in Phase 3
+  // Use Subsquid API instead: lib/subsquid-client.ts getLeaderboardEntry()
+  console.warn('[DEPRECATED] calculateLeaderboardScore() - use Subsquid API instead')
+  return null
+  
+  /* const supabase = getSupabaseServerClient()
   if (!supabase) {
     console.error('Supabase not configured')
     return null
@@ -198,6 +203,7 @@ export async function calculateLeaderboardScore(
     badgePrestige,
     totalScore,
   }
+  */
 }
 
 /**

@@ -305,9 +305,9 @@ export async function syncCastEngagement(
         // Don't throw - cast update succeeded, XP update is secondary
       }
 
-      // ⚠️ DEPRECATED - Event logging disabled (table dropped)
-      // Log to rank events
-      await supabase.from('gmeow_rank_events').insert({
+      // ⚠️ DEPRECATED - Event logging disabled (table dropped in Phase 3)
+      // gmeow_rank_events table was dropped - event logging moved to Subsquid
+      /* await supabase.from('gmeow_rank_events').insert({
         fid: existingCast.fid || 0,
         event_type: 'viral-bonus',
         chain: 'base',
@@ -327,7 +327,7 @@ export async function syncCastEngagement(
           new_score: newScore,
           xp_bonus: additionalXp,
         } as Json,
-      })
+      }) */
     }
 
     const tierUpgraded = newTier.name !== oldTier.name
