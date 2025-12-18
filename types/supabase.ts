@@ -231,7 +231,7 @@ export type Database = {
           viral_score: number
           viral_tier: string
           viral_bonus_xp: number
-          last_updated_at: string | null
+          last_metrics_update: string | null
         }
         Insert: {
           id?: string
@@ -247,7 +247,7 @@ export type Database = {
           viral_score?: number
           viral_tier?: string
           viral_bonus_xp?: number
-          last_updated_at?: string | null
+          last_metrics_update?: string | null
         }
         Update: {
           id?: string
@@ -263,7 +263,7 @@ export type Database = {
           viral_score?: number
           viral_tier?: string
           viral_bonus_xp?: number
-          last_updated_at?: string | null
+          last_metrics_update?: string | null
         }
         Relationships: []
       }
@@ -328,6 +328,384 @@ export type Database = {
           title?: string
           description?: string
           tone?: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          id: number
+          fid: number
+          badge_id: string
+          badge_type: string
+          tier: string
+          assigned_at: string
+          minted: boolean
+          minted_at: string | null
+          tx_hash: string | null
+          chain: string | null
+          contract_address: string | null
+          token_id: number | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          fid: number
+          badge_id: string
+          badge_type: string
+          tier?: string
+          assigned_at?: string
+          minted?: boolean
+          minted_at?: string | null
+          tx_hash?: string | null
+          chain?: string | null
+          contract_address?: string | null
+          token_id?: number | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          fid?: number
+          badge_id?: string
+          badge_type?: string
+          tier?: string
+          assigned_at?: string
+          minted?: boolean
+          minted_at?: string | null
+          tx_hash?: string | null
+          chain?: string | null
+          contract_address?: string | null
+          token_id?: number | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mint_queue: {
+        Row: {
+          id: string
+          fid: number
+          badge_type: string
+          tier: string
+          chain: string
+          status: string
+          priority: number
+          attempts: number
+          last_attempt: string | null
+          error: string | null
+          tx_hash: string | null
+          token_id: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          fid: number
+          badge_type: string
+          tier: string
+          chain: string
+          status?: string
+          priority?: number
+          attempts?: number
+          last_attempt?: string | null
+          error?: string | null
+          tx_hash?: string | null
+          token_id?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          fid?: number
+          badge_type?: string
+          tier?: string
+          chain?: string
+          status?: string
+          priority?: number
+          attempts?: number
+          last_attempt?: string | null
+          error?: string | null
+          tx_hash?: string | null
+          token_id?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quest_creators: {
+        Row: {
+          id: string
+          fid: number
+          total_quests_created: number
+          total_points_spent: number
+          active_quests: number
+          max_active_quests: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          fid: number
+          total_quests_created?: number
+          total_points_spent?: number
+          active_quests?: number
+          max_active_quests?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          fid?: number
+          total_quests_created?: number
+          total_points_spent?: number
+          active_quests?: number
+          max_active_quests?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bot_metrics: {
+        Row: {
+          id: string
+          date: string
+          total_users: number
+          active_users: number
+          new_users: number
+          total_quests_completed: number
+          total_points_earned: number
+          total_badges_earned: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          date: string
+          total_users?: number
+          active_users?: number
+          new_users?: number
+          total_quests_completed?: number
+          total_points_earned?: number
+          total_badges_earned?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          date?: string
+          total_users?: number
+          active_users?: number
+          new_users?: number
+          total_quests_completed?: number
+          total_points_earned?: number
+          total_badges_earned?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      frame_sessions: {
+        Row: {
+          id: string
+          fid: number
+          session_type: string
+          started_at: string
+          ended_at: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          fid: number
+          session_type: string
+          started_at?: string
+          ended_at?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          fid?: number
+          session_type?: string
+          started_at?: string
+          ended_at?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      guild_metadata: {
+        Row: {
+          guild_id: string
+          name: string
+          description: string | null
+          avatar_url: string | null
+          banner_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          guild_id: string
+          name: string
+          description?: string | null
+          avatar_url?: string | null
+          banner_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          guild_id?: string
+          name?: string
+          description?: string | null
+          avatar_url?: string | null
+          banner_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      guild_events: {
+        Row: {
+          id: string
+          guild_id: string
+          event_type: string
+          fid: number | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          guild_id: string
+          event_type: string
+          fid?: number | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          guild_id?: string
+          event_type?: string
+          fid?: number | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          fid: number
+          quest_completions: boolean
+          badge_unlocks: boolean
+          viral_milestones: boolean
+          guild_events: boolean
+          referral_rewards: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          fid: number
+          quest_completions?: boolean
+          badge_unlocks?: boolean
+          viral_milestones?: boolean
+          guild_events?: boolean
+          referral_rewards?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          fid?: number
+          quest_completions?: boolean
+          badge_unlocks?: boolean
+          viral_milestones?: boolean
+          guild_events?: boolean
+          referral_rewards?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_batch_queue: {
+        Row: {
+          id: string
+          batch_id: string
+          fid: number
+          category: string
+          title: string
+          description: string
+          tone: string
+          metadata: Json | null
+          status: string
+          attempts: number
+          sent_at: string | null
+          error: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          batch_id: string
+          fid: number
+          category: string
+          title: string
+          description: string
+          tone: string
+          metadata?: Json | null
+          status?: string
+          attempts?: number
+          sent_at?: string | null
+          error?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          batch_id?: string
+          fid?: number
+          category?: string
+          title?: string
+          description?: string
+          tone?: string
+          metadata?: Json | null
+          status?: string
+          attempts?: number
+          sent_at?: string | null
+          error?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_contracts: {
+        Row: {
+          id: string
+          fid: number
+          chain: string
+          contract_address: string
+          contract_type: string
+          deployment_tx: string | null
+          deployed_at: string
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          fid: number
+          chain: string
+          contract_address: string
+          contract_type: string
+          deployment_tx?: string | null
+          deployed_at?: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          fid?: number
+          chain?: string
+          contract_address?: string
+          contract_type?: string
+          deployment_tx?: string | null
+          deployed_at?: string
           metadata?: Json | null
           created_at?: string
         }
