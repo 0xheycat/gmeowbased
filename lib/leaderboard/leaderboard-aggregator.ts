@@ -10,12 +10,12 @@ import {
 import { fetchUsersByAddresses } from '@/lib/integrations/neynar'
 import { getRpcUrl } from '@/lib/contracts/rpc'
 import { trackWarning } from '@/lib/notifications/error-tracking'
+import { getCached, invalidateCachePattern } from '@/lib/cache/server'
 
 const EVT_QUEST_COMPLETED = parseAbiItem(
   'event QuestCompleted(uint256 indexed questId, address indexed user, uint256 pointsAwarded, uint256 fid, address rewardToken, uint256 tokenAmount)',
 )
-const AGGREGATE_CACHE_TTL = 120_000
-const PROFILE_CACHE_TTL = 300_000
+// Old cache TTLs removed in Phase 8.1.4 - migrated to unified cache system
 const LOG_CHUNK_SIZE = 120_000n
 const LOG_FETCH_CONCURRENCY = 4
 
@@ -41,6 +41,11 @@ function getStartBlock(chain: ChainKey): bigint {
   return 0n
 }
 
+// ========================================
+// RPC CLIENT POOL (Phase 8.1.4)
+// ========================================
+// Keep RPC clients in memory (not in unified cache)
+// These are stateful connections, not serializable data
 const clientCache = new Map<ChainKey, ReturnType<typeof createPublicClient>>()
 
 function getClient(chain: ChainKey) {
@@ -68,8 +73,13 @@ type ChainAggregateState = {
 
 type ProfileCacheEntry = { at: number; name: string; pfpUrl: string; fid: number }
 
-const chainAggregateCache = new Map<ChainKey, ChainAggregateState>()
-const profileCache = new Map<string, ProfileCacheEntry>()
+// ========================================
+// CACHE CONFIGURATION (Phase 8.1.4 - Unified Caching)
+// ========================================
+// Migrated from inline Map caches to lib/cache/server.ts
+// Benefits: Stale-while-revalidate, stampede prevention, graceful degradation
+const CHAIN_AGGREGATE_CACHE_TTL = 120 // 2 minutes (was AGGREGATE_CACHE_TTL 120_000ms)
+const PROFILE_CACHE_TTL_SEC = 300 // 5 minutes (was PROFILE_CACHE_TTL 300_000ms)
 
 const AGGREGATOR_DEBUG = process.env.DEBUG_LEADERBOARD_AGGREGATOR === '1'
 
@@ -149,13 +159,25 @@ async function fetchLogsInChunks(
 }
 
 async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState> {
+  // Phase 8.1.4: Use unified cache system with stale-while-revalidate
+  return await getCached(
+    'chain-aggregate',
+    chain,
+    async () => await loadChainAggregateInternal(chain),
+    { ttl: CHAIN_AGGREGATE_CACHE_TTL, backend: 'memory', staleWhileRevalidate: true }
+  )
+}
+
+async function loadChainAggregateInternal(chain: ChainKey): Promise<ChainAggregateState> {
   const now = Date.now()
-  const cached = chainAggregateCache.get(chain)
-  if (cached && now - cached.updatedAt < AGGREGATE_CACHE_TTL) {
-    cached.updatedAt = now
-    chainAggregateCache.set(chain, cached)
-    return cached
-  }
+  
+  // Get previous state from cache (for incremental updates)
+  const cached = await getCached<ChainAggregateState | null>(
+    'chain-aggregate-state',
+    chain,
+    async () => null,
+    { ttl: CHAIN_AGGREGATE_CACHE_TTL * 10, backend: 'memory' } // Keep state longer
+  ).catch(() => null)
 
   let client: ReturnType<typeof getClient>
   try {
@@ -220,7 +242,14 @@ async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState>
     rows,
   }
 
-  chainAggregateCache.set(chain, updatedState)
+  // Phase 8.1.4: Store state in unified cache for next incremental update
+  await getCached(
+    'chain-aggregate-state',
+    chain,
+    async () => updatedState,
+    { ttl: CHAIN_AGGREGATE_CACHE_TTL, backend: 'memory', force: true }
+  )
+  
   return updatedState
 }
 
@@ -246,15 +275,19 @@ async function resolveProfile(entry: RawAggregate) {
   }
 
   const key = profileCacheKey(entry.chain, entry.address)
-  const cached = profileCache.get(key)
-  const now = Date.now()
-  if (cached && now - cached.at < PROFILE_CACHE_TTL) {
-    return {
-      name: cached.name,
-      pfpUrl: cached.pfpUrl,
-      farcasterFid: cached.fid || entry.farcasterFid,
-    }
-  }
+  
+  // Phase 8.1.4: Use unified cache system
+  return await getCached(
+    'leaderboard-profile',
+    key,
+    async () => {
+      return await resolveProfileFromChain(entry)
+    },
+    { ttl: PROFILE_CACHE_TTL_SEC, backend: 'memory', staleWhileRevalidate: true }
+  )
+}
+
+async function resolveProfileFromChain(entry: RawAggregate) {
 
   try {
     const client = getClient(entry.chain)
@@ -277,12 +310,12 @@ async function resolveProfile(entry: RawAggregate) {
     const [name, , , pfpUrl, , , fidRaw] = profile
     const fidNumber = Number(fidRaw)
     const resolvedFid = Number.isFinite(fidNumber) && fidNumber > 0 ? fidNumber : entry.farcasterFid
-    const payload = { name: String(name || ''), pfpUrl: String(pfpUrl || ''), fid: resolvedFid }
-    profileCache.set(key, { at: Date.now(), ...payload })
-    return { name: payload.name, pfpUrl: payload.pfpUrl, farcasterFid: payload.fid }
+    return { 
+      name: String(name || ''), 
+      pfpUrl: String(pfpUrl || ''), 
+      farcasterFid: resolvedFid 
+    }
   } catch {
-    const fallback = { name: '', pfpUrl: '', fid: entry.farcasterFid }
-    profileCache.set(key, { at: Date.now(), ...fallback })
     return { name: '', pfpUrl: '', farcasterFid: entry.farcasterFid }
   }
 }
@@ -339,12 +372,17 @@ export async function enrichAggregatedRows(entries: RawAggregate[]): Promise<Enr
         row.farcasterFid = resolvedFid
       }
 
-      profileCache.set(profileCacheKey(row.chain, row.address), {
-        at: now,
-        name: row.name,
-        pfpUrl: row.pfpUrl,
-        fid: row.farcasterFid || 0,
-      })
+      // Phase 8.1.4: Update unified cache with Neynar enrichment
+      await getCached(
+        'leaderboard-profile',
+        profileCacheKey(row.chain, row.address),
+        async () => ({
+          name: row.name,
+          pfpUrl: row.pfpUrl,
+          farcasterFid: row.farcasterFid || 0,
+        }),
+        { ttl: PROFILE_CACHE_TTL_SEC, backend: 'memory', force: true }
+      ).catch(() => {}) // Fire and forget
     }
   } catch (err) {
     if (AGGREGATOR_DEBUG) {
@@ -387,8 +425,12 @@ function mapWithConcurrency<T, U>(items: T[], limit: number, iterator: (item: T,
   return Promise.all(Array.from({ length: workerCount }, () => worker())).then(() => results)
 }
 
-export function resetLeaderboardCaches() {
-  chainAggregateCache.clear()
-  profileCache.clear()
+export async function resetLeaderboardCaches() {
+  // Phase 8.1.4: Use unified cache invalidation
+  await invalidateCachePattern('chain-aggregate', '*')
+  await invalidateCachePattern('chain-aggregate-state', '*')
+  await invalidateCachePattern('leaderboard-profile', '*')
+  
+  // RPC clients stay in memory (stateful connections)
   clientCache.clear()
 }
