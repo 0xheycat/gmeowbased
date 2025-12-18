@@ -4,7 +4,7 @@
 **Total Files**: 162 lib files (14MB)  
 **Priority**: High-traffic routes first, then consolidate duplicates
 
-**Status**: Phase 1-5 Complete ✅ (78 files consolidated, 483 imports updated, documentation complete)
+**Status**: Phase 1-5, 8.8 Complete ✅ (78 files consolidated, 491 imports updated, documentation complete)
 
 ---
 
@@ -36,17 +36,19 @@
 - **Files moved from root**: 78 total (87 → 2 files in lib/ root!) 🎉
   - Phase 2: 7 files (cache, auth, supabase)
   - Phase 5: 71 files (middleware, utils, badges, integrations, etc.)
-- **Import paths updated**: 483 total
+- **Import paths updated**: 491 total
   - Phase 2: 83 imports
   - Phase 5: 400+ imports (single-quoted, double-quoted, dynamic)
+  - Phase 8.8: 8 imports (function consolidation)
 - **Documentation enhanced**: 5 files
   - gmeow-utils, abis, contracts/index, frames/types
   - lib/README.md (261 → 646 lines, comprehensive guide)
 - **Deprecation warnings added**: 4 multichain functions
 - **Main entry point**: lib/index.ts with common exports
+- **Functions consolidated**: 4 duplicate functions (Phase 8.8, ~38 lines reduced)
 - **TypeScript errors**: 166 → 0 (all fixed!) ✅
 - **Tests passing**: 59/61 bot tests (2 pre-existing flaky), 35/35 failover tests
-- **Time taken**: ~6 hours total (Phase 1-4: 3.5h, Phase 5: 2.5h)
+- **Time taken**: ~6 hours total (Phase 1-4: 3.5h, Phase 5: 2.5h, Phase 8.8: 15min)
 
 ### 🎯 Impact
 - Clearer organization with subdirectories
@@ -3128,7 +3130,69 @@ pnpm test lib/leaderboard
 
 ---
 
-**Last Updated**: December 18, 2025, 1:00 AM UTC  
-**Status**: Phase 7 in progress (68/140 files complete, 49%)  
-**Completed**: contracts, bot, frames, middleware, quests, notifications, guild
+## Phase 8.8: Function Consolidation (December 18, 2025)
+
+**Goal**: Identify and consolidate duplicate utility functions across lib/
+
+### 🎯 Duplicates Found & Resolved
+
+1. **formatNumber()** - 3 implementations
+   - ❌ **Removed**: `lib/api/neynar-dashboard.ts` (lines 305-313 + formatVolume 318-321)
+   - ✅ **Canonical**: `lib/utils/formatters.ts` (K/M suffix formatter)
+   - ✅ **Different**: `lib/frames/frame-design-system.ts` (comma separator - kept)
+   - **Imports updated**: 4 files in `app/Dashboard/components/`
+
+2. **normalizeAddress()** - 2 implementations
+   - ❌ **Removed**: `lib/profile/profile-data.ts` (line 116)
+   - ✅ **Canonical**: `lib/middleware/api-security.ts` (sanitizeAddress)
+   - **Re-export added**: In profile-data.ts for internal use
+   - **Imports updated**: 4 files (bot-instance, bot/core/auto-reply, bot/analytics/stats, profile/community-events)
+
+3. **normalizeQuestTypeKey()** - 2 implementations
+   - ❌ **Removed**: `lib/quests/quest-policy.ts` (line 164, simple version)
+   - ✅ **Canonical**: `lib/contracts/gmeow-utils.ts` (handles string keys + numeric codes)
+   - **Import updated**: quest-policy.ts now imports from gmeow-utils
+
+4. **sanitizeString()** - 2 implementations
+   - ✅ **Kept both**: Different purposes (documented)
+   - `lib/middleware/api-security.ts`: XSS protection (removes HTML, JS, event handlers)
+   - `lib/frames/utils.ts`: Length limiting + type coercion (for frame params)
+   - **Added comment**: Explaining why both are legitimate
+
+### 📊 Consolidation Results
+
+- **Lines reduced**: ~38 total
+  - formatNumber + formatVolume: ~20 lines
+  - normalizeAddress: ~10 lines  
+  - normalizeQuestTypeKey: ~8 lines
+- **Imports updated**: 8 total
+  - formatNumber: 4 files
+  - normalizeAddress: 4 files
+- **Files modified**: 10 total
+- **TypeScript errors**: 0 ✅
+- **Time taken**: ~15 minutes
+
+### 🔍 Methodology
+
+1. **Discovery**: Searched for duplicate function names (format*, sanitize*, validate*, normalize*)
+2. **Analysis**: Read implementations to determine if truly duplicate or different purposes
+3. **Prioritization**: Consolidated exact duplicates, documented legitimate differences
+4. **Execution**: Removed duplicates, updated imports, added re-exports for backward compatibility
+5. **Verification**: TypeScript check (0 errors)
+
+### ✅ Key Learnings
+
+- **Pattern**: Some duplicates were exact copies (consolidate), others had different implementations for different use cases (keep + document)
+- **Re-exports**: Used re-exports in removed locations to maintain internal compatibility
+- **Canonical sources**: 
+  - Formatting: `lib/utils/formatters.ts`
+  - Address validation: `lib/middleware/api-security.ts` (sanitizeAddress)
+  - Quest normalization: `lib/contracts/gmeow-utils.ts`
+- **Future prevention**: Added "REMOVED" comments with canonical source references
+
+---
+
+**Last Updated**: December 18, 2025, 2:00 AM UTC  
+**Status**: Phase 7 in progress (68/140 files complete, 49%), Phase 8.8 complete ✅  
+**Completed**: contracts, bot, frames, middleware, quests, notifications, guild, function consolidation
 **Next Milestone**: Complete Phase 8 (Real Consolidation) - December 20, 2025

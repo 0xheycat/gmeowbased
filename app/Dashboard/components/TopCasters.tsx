@@ -7,7 +7,8 @@
  * ✅ Professional Patterns: LinkedIn-style relevance badges, activity indicators
  */
 
-import { getTopCasters, formatNumber, formatTimeAgo } from '@/lib/api/neynar-dashboard'
+import { getTopCasters, formatTimeAgo } from '@/lib/api/neynar-dashboard'
+import { formatNumber } from '@/lib/utils/formatters'
 import { withRetry, RetryStrategies } from '@/lib/api/retry'
 import { ContextBadge, ActivityIndicator } from '@/components/dashboard-patterns'
 import { PeopleIcon } from '@/components/icons/people-icon'

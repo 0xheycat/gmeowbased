@@ -299,25 +299,7 @@ export async function getFeaturedFrames(limit: number = 8): Promise<FeaturedFram
 // UTILITY FUNCTIONS
 // ===========================
 
-/**
- * Format large numbers for display (1.2K, 45.3M)
- */
-export function formatNumber(num: number): string {
-  if (num >= 1_000_000) {
-    return `${(num / 1_000_000).toFixed(1)}M`
-  }
-  if (num >= 1_000) {
-    return `${(num / 1_000).toFixed(1)}K`
-  }
-  return num.toString()
-}
-
-/**
- * Format volume (USD) for display ($1.2K, $45.3M)
- */
-export function formatVolume(volume: number): string {
-  return formatNumber(volume)
-}
+// formatVolume removed - use formatNumber from lib/utils/formatters.ts
 
 /**
  * Format timestamp to relative time (2h ago, 1d ago)

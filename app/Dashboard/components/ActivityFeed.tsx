@@ -7,7 +7,8 @@
  * ✅ Professional Patterns: Twitter trending, GitHub activity dots, real-time indicators
  */
 
-import { getActivityFeed, formatNumber, formatTimeAgo, truncateText } from '@/lib/api/neynar-dashboard'
+import { getActivityFeed, formatTimeAgo, truncateText } from '@/lib/api/neynar-dashboard'
+import { formatNumber } from '@/lib/utils/formatters'
 import { withRetry, RetryStrategies } from '@/lib/api/retry'
 import { ActivityIndicator, ContextBadge } from '@/components/dashboard-patterns'
 import { TimelineIcon } from '@/components/icons/timeline-icon'

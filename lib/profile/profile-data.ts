@@ -113,12 +113,10 @@ export type ChainAggregation = {
   team?: TeamOverview | null
 }
 
-export function normalizeAddress(value: unknown): `0x${string}` | null {
-  if (typeof value !== 'string') return null
-  const trimmed = value.trim()
-  if (!/^0x[0-9a-fA-F]{40}$/.test(trimmed)) return null
-  return trimmed.toLowerCase() as `0x${string}`
-}
+// ❌ REMOVED (Phase 8.8): normalizeAddress moved to lib/middleware/api-security.ts (sanitizeAddress)
+// Re-export for internal use:
+import { sanitizeAddress } from '@/lib/middleware/api-security'
+const normalizeAddress = sanitizeAddress
 
 export function pickAddressFromSource(source: any): `0x${string}` | null {
   if (!source) return null

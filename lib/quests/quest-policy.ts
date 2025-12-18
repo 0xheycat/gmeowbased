@@ -46,7 +46,7 @@
  * Quality Gates: GI-15 (Access Control), GI-8 (Security)
  */
 
-import { QUEST_TYPES, type ChainKey } from '@/lib/contracts/gmeow-utils'
+import { QUEST_TYPES, type ChainKey, normalizeQuestTypeKey } from '@/lib/contracts/gmeow-utils'
 // Phase 8.5: Use centralized address validation from api-security.ts
 import { sanitizeAddress as normalizeAddress } from '@/lib/middleware/api-security'
 
@@ -161,13 +161,9 @@ export function isAssetAllowed(asset: AssetLike | null | undefined, policy: Ques
   return Boolean(asset.verified)
 }
 
-export function normalizeQuestTypeKey(value: keyof typeof QUEST_TYPES | string): keyof typeof QUEST_TYPES {
-  const key = String(value || '').toUpperCase()
-  if (key in QUEST_TYPES) {
-    return key as keyof typeof QUEST_TYPES
-  }
-  return 'GENERIC'
-}
+// ❌ REMOVED (Phase 8.8): normalizeQuestTypeKey moved to lib/contracts/gmeow-utils.ts
+// The gmeow-utils version handles both string keys AND numeric quest type codes
+// Now imported at top of file from '@/lib/contracts/gmeow-utils'
 
 function parseIdList(raw: string | undefined | null): Set<string> {
   if (!raw) return new Set()

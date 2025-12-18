@@ -57,7 +57,7 @@
  */
 
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
-import { normalizeAddress } from '@/lib/profile/profile-data'
+import { sanitizeAddress as normalizeAddress } from '@/lib/middleware/api-security'
 import { fetchUserByFid, type FarcasterUser } from '@/lib/integrations/neynar'
 import { CHAIN_KEYS, type ChainKey } from '@/lib/contracts/gmeow-utils'
 
