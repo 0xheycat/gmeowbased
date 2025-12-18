@@ -252,6 +252,11 @@ async function awardViralXp(
     console.error(`Failed to award XP to FID ${fid}:`, xpError.message)
   }
 
+  // DEPRECATED (Phase 3): xp_transactions table dropped
+  // XP tracking now handled by points_transactions
+  console.warn('[sync-viral-metrics] DEPRECATED: xp_transactions table dropped in Phase 3')
+
+  /* Original implementation:
   // Log XP transaction with metadata
   const { error: txError } = await supabase
     .from('xp_transactions')
@@ -270,6 +275,7 @@ async function awardViralXp(
   if (txError) {
     console.error(`Failed to log XP transaction for FID ${fid}:`, txError.message)
   }
+  */
 }
 
 // ============================================================================

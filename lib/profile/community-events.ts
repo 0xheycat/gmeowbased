@@ -415,6 +415,22 @@ export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOp
     }
   }
 
+  // DEPRECATED (Phase 3): gmeow_rank_events table dropped, use Subsquid
+  console.warn('[getCommunityEvents] DEPRECATED: gmeow_rank_events table dropped in Phase 3')
+  return {
+    events: [],
+    fetchedAt: new Date().toISOString(),
+    nextCursor: null,
+    meta: {
+      limit,
+      requestedTypes: appliedTypes,
+      appliedTypes,
+      since: sinceFilter,
+      supabaseConfigured: true,
+    },
+  }
+
+  /* Original implementation:
   let query = client
     .from(RANK_EVENT_TABLE)
     .select('id,created_at,event_type,chain,wallet_address,fid,quest_id,delta,total_points,previous_points,level,tier_name,tier_percent,metadata')
@@ -526,4 +542,5 @@ export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOp
       supabaseConfigured,
     },
   }
+  */
 }

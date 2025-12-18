@@ -100,8 +100,12 @@ type TipAggregateRow = {
   sum?: number | string | null
 }
 
+// DEPRECATED (Phase 3): gmeow_rank_events table dropped, use Subsquid
 async function fetchTipPoints(address: `0x${string}`, days?: number): Promise<number | null> {
-  console.warn('[fetchTipPoints] DEPRECATED - gmeow_rank_events table dropped, returning 0')
+  console.warn('[fetchTipPoints] DEPRECATED: gmeow_rank_events table dropped in Phase 3')
+  return null
+
+  /* Original implementation:
   if (!isSupabaseConfigured()) return null
   const supabase = getSupabaseServerClient()
   if (!supabase) return null
@@ -138,6 +142,7 @@ async function fetchTipPoints(address: `0x${string}`, days?: number): Promise<nu
     console.warn('[bot-stats] tips lookup error:', (error as Error)?.message || error)
     return null
   }
+  */
 }
 
 function pickPrimaryChain(summaries: ChainSnapshotSummary[]): ChainKey {

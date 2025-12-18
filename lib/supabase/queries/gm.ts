@@ -274,6 +274,12 @@ export async function getLegacyGMEvents(fid: number, limit = 30) {
     return [];
   }
 
+  // DEPRECATED (Phase 3): gmeow_rank_events table dropped
+  // Use Subsquid getGMRankEvents() instead
+  console.warn('[getLegacyGMEvents] DEPRECATED: gmeow_rank_events table dropped in Phase 3');
+  return [];
+
+  /* Original implementation:
   // ⚠️ TODO: Replace with Subsquid getGMRankEvents()
   const { data, error } = await supabase
     .from('gmeow_rank_events')
@@ -288,4 +294,5 @@ export async function getLegacyGMEvents(fid: number, limit = 30) {
   }
 
   return data || [];
+  */
 }
