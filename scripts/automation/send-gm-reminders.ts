@@ -6,7 +6,7 @@ config({ path: process.env.DOTENV_PATH || '.env.local', override: true })
 import { randomUUID } from 'node:crypto'
 import process from 'node:process'
 
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { isSupabaseConfigured } from '@/lib/supabase/edge'
 import {
   listActiveNotificationTokens,

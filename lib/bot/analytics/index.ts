@@ -88,7 +88,7 @@
  * - Network: Base (ChainID: 8453)
  */
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/edge'
 
 /**
  * Metric types tracked by the analytics system

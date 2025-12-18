@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { withErrorHandler, handleValidationError, handleNotFoundError, handleExternalApiError } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { generateRequestId } from '@/lib/middleware/request-id'

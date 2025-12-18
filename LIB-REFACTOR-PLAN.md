@@ -1693,8 +1693,11 @@ const client = getNeynarServerClient()
 
 ### 8.4 User Data Fetching Consolidation ✅ COMPLETE (December 18, 2025)
 
-#### Problem: Duplicate User Fetching Functions
+#### Problem: Duplicate User Fetching Functions + Duplicate Supabase File
 Multiple files with duplicate `getUserX` functions across API/database layers.
+Plus duplicate Supabase file pattern (similar to rate-limiter, rpc.ts, neynar-server.ts):
+- `lib/supabase/edge.ts` (325 lines) - Full Supabase client implementations
+- `lib/supabase/server.ts` (18 lines) - Just wrapper calling edge.ts
 
 #### Solution: Establish Canonical Sources
 
@@ -1723,12 +1726,20 @@ Multiple files with duplicate `getUserX` functions across API/database layers.
 - Added ❌ NEVER warnings against deleted patterns
 - Clear import patterns for developers
 
+**Step 4**: ✅ **REVISED** - Deleted lib/supabase/server.ts (18 lines)
+- Moved `createClient` function into edge.ts as compatibility export
+- Updated 2 imports (bot/analytics, frames/hybrid-calculator)
+- Updated lib/supabase/index.ts export
+- Single source: lib/supabase/edge.ts
+
 #### Phase 8.4 Results:
 - ✅ **lib/api/farcaster/client.ts deleted** (252 lines)
+- ✅ **lib/supabase/server.ts deleted** (18 lines) ← **REVISED**
 - ✅ **gm.ts getUserProfile deprecated** (duplicate marked)
 - ✅ **TypeScript: 0 errors** (verified)
 - ✅ **Documentation updated** (lib/index.ts, lib/README.md)
 - ✅ **Clear hierarchy**: Neynar (API) → Supabase (DB) → Subsquid (Blockchain)
+- ✅ **Total removed**: 270 lines (252 + 18)
 
 #### Data Source Hierarchy:
 ```typescript
@@ -1955,8 +1966,8 @@ Already fixed in Phase 7.6 Pattern Consolidation:
 |----------------|---------------|-----------|------------|----------|--------|
 | **1. Caching** | 10 files | lib/cache/server.ts | 6 duplicates | ✅ DONE | ~670 lines |
 | **2. RPC Clients** | 15+ files | lib/contracts/rpc-client-pool.ts | 15 duplicates + 1 file | ✅ DONE | ~239 lines |
-| **3. Neynar Client** | 3 files | lib/integrations/neynar-server.ts | 0 duplicates | ✅ DONE | Verified |
-| **4. User Fetching** | 10 functions | neynar.ts + queries/user.ts | 2 duplicates | ✅ DONE | ~252 lines |
+| **3. Neynar Client** | 2 files | lib/integrations/neynar.ts | 1 duplicate file | ✅ DONE | ~33 lines |
+| **4. User Fetching** | 10 functions | neynar.ts + queries/user.ts + edge.ts | 3 files | ✅ DONE | ~270 lines |
 | **5. Validation** | 5+ files | lib/middleware/api-security.ts | 3 duplicates | ✅ DONE | ~21 lines |
 | **6. Rate Limiting** | 2 files | lib/middleware/rate-limit.ts | 1 unused file | ✅ DONE | ~113 lines |
 | **3. User Fetching** | 10 functions | lib/integrations/neynar.ts + lib/supabase/queries/user.ts | 3 duplicates | 🔴 HIGH | ~150 lines |

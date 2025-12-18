@@ -3,7 +3,7 @@
  */
 
 export * from './neynar'
-export * from '@/lib/integrations/neynar-server'
+export * from '@/lib/integrations/neynar'
 export * from './neynar-bot'
 export * from './subsquid-client'
 export * from './wagmi'

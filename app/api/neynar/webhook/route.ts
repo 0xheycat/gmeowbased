@@ -71,7 +71,7 @@ import { generateRequestId } from '@/lib/middleware/request-id'
 
 import { loadBotStatsConfig } from '@/lib/bot/config'
 import { buildAgentAutoReply } from '@/lib/bot'
-import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib/integrations/neynar-bot'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot/frames/builder'

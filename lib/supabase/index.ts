@@ -26,9 +26,9 @@
 
 // Main client exports (previously root level files)
 // Note: Export selectively to avoid conflicts between client and server
+// Phase 8.4 REVISED: server.ts deleted, createClient now in edge.ts
 export { getSupabaseServerClient, isSupabaseConfigured } from './edge'  // supabase-server.ts
-export * from './edge'    // supabase.ts
-export { createClient } from './server'  // wrapper
+export * from './edge'    // supabase.ts (includes createClient)
 
 // Mock data
 export * from './mock-quest-data'

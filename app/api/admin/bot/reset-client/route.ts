@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 import { generateRequestId } from '@/lib/middleware/request-id'
-import { resetNeynarClientCache } from '@/lib/integrations/neynar-server'
+import { resetNeynarClientCache } from '@/lib/integrations/neynar'
 import { validateAdminRequest } from '@/lib/auth/admin'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
