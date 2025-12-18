@@ -18,7 +18,7 @@
  *   - Background processing every 5 seconds
  * 
  * REFERENCE DOCUMENTATION:
- *   - Local cache: lib/bot/local-cache.ts
+ *   - Unified cache: lib/cache/server.ts (Phase 8.1 consolidation)
  *   - Stats fallback: lib/bot/stats-with-fallback.ts
  *   - Free-tier architecture: FOUNDATION-REBUILD-ROADMAP.md
  * 
@@ -62,7 +62,7 @@
  * In-memory retry queue for failed operations (no external queue service required)
  */
 
-import { localCache } from './local-cache'
+import { localCache } from '@/lib/cache/server'
 import { promises as fs } from 'fs'
 import path from 'path'
 

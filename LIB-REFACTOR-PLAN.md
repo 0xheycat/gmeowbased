@@ -1367,10 +1367,36 @@ await initializeCache() // Cleanup + warm cache
 - ✅ ~350 lines added to cache/server.ts (offset by 366 lines removed next)
 - ✅ Ready for Phase 8.1.2 migration (just change imports!)
 
-**Step 2**: 🚧 Migrate lib/bot/local-cache.ts → lib/cache/server.ts (1 hour)
-- Move filesystem read/write logic to cache/server.ts
-- Update 12 imports in lib/bot/ files
-- Delete lib/bot/local-cache.ts
+**Step 2**: ✅ **COMPLETE** - Migrate lib/bot/local-cache.ts users (15 min)
+
+**Files Updated** (December 18, 2025):
+1. ✅ lib/bot/retry-queue.ts - Changed import to `@/lib/cache/server`
+2. ✅ lib/bot/stats-with-fallback.ts - Changed import to `@/lib/cache/server`
+3. ✅ scripts/cache-cleanup.ts - Changed import to `../lib/cache/server`
+
+**Migration Changes**:
+```diff
+- import { localCache } from './local-cache'
++ import { localCache } from '@/lib/cache/server'
+
+- import { localCache } from '../lib/bot/local-cache'
++ import { localCache } from '../lib/cache/server'
+```
+
+**Impact**:
+- ✅ 3 files migrated, 0 code changes (100% API compatible)
+- ✅ 366 lines deleted (lib/bot/local-cache.ts removed)
+- ✅ 0 TypeScript errors
+- ✅ Bot automation still works (same API)
+- ✅ Retry queue uses unified cache
+- ✅ Stats fallback uses unified cache
+- ✅ Cache cleanup script uses unified cache
+
+**Net Result**:
+- Added: ~350 lines (cache/server.ts enhancements)
+- Removed: 366 lines (lib/bot/local-cache.ts)
+- **Net reduction: 16 lines**
+- **Consolidation: 2 → 1 implementation**
 
 **Step 3**: Replace lib/supabase/edge.ts ServerCache → lib/cache/server.ts (30 min)
 - Replace ServerCache class with MemoryCache from lib/cache/server.ts
