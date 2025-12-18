@@ -71,7 +71,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Security Layer 3: Sanitize inputs
+    // Phase 8.5: sanitizeAddress now returns null for invalid addresses
     const address = sanitizeAddress(validation.data.address)
+    if (!address) {
+      return NextResponse.json(
+        { error: 'Invalid Ethereum address format' },
+        { status: 400, headers: { 'X-Request-ID': requestId } }
+      )
+    }
     const chain = sanitizeChain(validation.data.chain)
 
     // Initialize Supabase client
@@ -159,7 +166,7 @@ export async function POST(req: NextRequest) {
     // Remove old logic that never executed
     if (false) {
       const { error: _unusedError } = await supabase.from('onchain_stats_snapshots').insert({
-        address: address.toLowerCase(),
+        address: address?.toLowerCase() ?? '',
         chain,
         snapshot_date: new Date().toISOString().split('T')[0],
         portfolio_value_usd: stats.portfolioValueUSD,

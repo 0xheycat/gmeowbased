@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Sanitize inputs
-    const addresses = validation.data.addresses.map(sanitizeAddress)
+    // Sanitize inputs (Phase 8.5: sanitizeAddress now returns null for invalid addresses)
+    const addresses = validation.data.addresses.map(sanitizeAddress).filter((a): a is `0x${string}` => a !== null)
     const chain = sanitizeChain(validation.data.chain)
 
     console.log(`[Advanced Analytics] Processing ${addresses.length} addresses on ${chain}`)

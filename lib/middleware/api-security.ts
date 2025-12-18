@@ -154,9 +154,20 @@ export function sanitizeString(input: string): string {
     .trim()
 }
 
-export function sanitizeAddress(address: string): string {
-  // Ensure address is lowercase and properly formatted
-  return address.toLowerCase().trim()
+/**
+ * Sanitize and validate Ethereum address
+ * Phase 8.5: Enhanced with proper validation (0x + 40 hex chars)
+ * Canonical function - replaces normalizeAddress duplicates in:
+ * - lib/profile/profile-data.ts
+ * - lib/quests/quest-policy.ts  
+ * - lib/utils/telemetry.ts
+ */
+export function sanitizeAddress(address: unknown): `0x${string}` | null {
+  if (typeof address !== 'string') return null
+  const trimmed = address.trim().toLowerCase()
+  // Validate: 0x prefix + exactly 40 hex characters
+  if (!/^0x[0-9a-f]{40}$/.test(trimmed)) return null
+  return trimmed as `0x${string}`
 }
 
 export function sanitizeChain(chain: string): string {

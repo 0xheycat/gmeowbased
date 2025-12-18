@@ -84,8 +84,14 @@ export async function GET(req: NextRequest) {
       return validation.error
     }
 
-    // Sanitize inputs
+    // Sanitize inputs (Phase 8.5: sanitizeAddress now returns null for invalid)
     const sanitizedAddress = sanitizeAddress(validation.data.address)
+    if (!sanitizedAddress) {
+      return NextResponse.json(
+        { error: 'Invalid Ethereum address format' },
+        { status: 400, headers: { 'X-Request-ID': requestId } }
+      )
+    }
     const sanitizedChain = sanitizeChain(validation.data.chain)
 
     // Initialize Supabase client
