@@ -20,54 +20,9 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
 
 // ========================================
-// Server-Side Cache (from old foundation)
+// DEPRECATED: ServerCache moved to lib/cache/server.ts (Phase 8.1)
+// Use: import { ServerCache } from '@/lib/cache/server'
 // ========================================
-
-type CacheEntry<T> = {
-  data: T
-  timestamp: number
-}
-
-export class ServerCache<T> {
-  private cache = new Map<string, CacheEntry<T>>()
-  private ttl: number
-
-  constructor(ttlMs: number) {
-    this.ttl = ttlMs
-  }
-
-  get(key: string): T | null {
-    const entry = this.cache.get(key)
-    if (!entry) return null
-
-    const age = Date.now() - entry.timestamp
-    if (age > this.ttl) {
-      this.cache.delete(key)
-      return null
-    }
-
-    return entry.data
-  }
-
-  set(key: string, data: T): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-    })
-  }
-
-  clear(key?: string): void {
-    if (key) {
-      this.cache.delete(key)
-    } else {
-      this.cache.clear()
-    }
-  }
-
-  size(): number {
-    return this.cache.size
-  }
-}
 
 // ========================================
 // Configuration & Validation

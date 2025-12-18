@@ -5,6 +5,7 @@ import { getRpcUrl } from '@/lib/contracts/rpc'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { BADGE_REGISTRY } from './badge-registry-data'
 import type { Json } from '@/types/supabase'
+import { getCached, invalidateCache } from '@/lib/cache/server'
 
 const BADGE_TABLE = (process.env.SUPABASE_BADGE_TEMPLATE_TABLE || 'badge_templates') as 'badge_templates'
 const USER_BADGES_TABLE = 'user_badges'
@@ -14,59 +15,13 @@ const MINT_CACHE_TTL_MS = Number(process.env.BADGE_MINT_CACHE_TTL_MS ?? 30_000)
 const BADGE_MINT_LOOKBACK_BLOCKS = BigInt(process.env.BADGE_MINT_LOOKBACK_BLOCKS ?? 400_000)
 
 // ========================================
-// SERVER-SIDE CACHE done
+// CACHE CONFIGURATION (Phase 8.1 - Unified Caching)
 // ========================================
-
-type CacheEntry<T> = {
-  data: T
-  timestamp: number
-}
-
-class ServerCache<T> {
-  private cache = new Map<string, CacheEntry<T>>()
-  private ttl: number
-
-  constructor(ttlMs: number) {
-    this.ttl = ttlMs
-  }
-
-  get(key: string): T | null {
-    const entry = this.cache.get(key)
-    if (!entry) return null
-
-    const age = Date.now() - entry.timestamp
-    if (age > this.ttl) {
-      this.cache.delete(key)
-      return null
-    }
-
-    return entry.data
-  }
-
-  set(key: string, data: T): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-    })
-  }
-
-  clear(key?: string): void {
-    if (key) {
-      this.cache.delete(key)
-    } else {
-      this.cache.clear()
-    }
-  }
-
-  size(): number {
-    return this.cache.size
-  }
-}
-
-// Cache instances
-const badgeRegistryCache = new ServerCache<BadgeRegistry>(5 * 60 * 1000) // 5 minutes
-const userBadgesCache = new ServerCache<UserBadge[]>(2 * 60 * 1000) // 2 minutes
-const badgeByTierCache = new ServerCache<BadgeRegistry['badges'][0] | null>(5 * 60 * 1000) // 5 minutes
+// Migrated from inline ServerCache to lib/cache/server.ts
+// Benefits: Stale-while-revalidate, stampede prevention, graceful degradation
+const BADGE_REGISTRY_CACHE_TTL = 300 // 5 minutes (was 5 * 60 * 1000 ms)
+const USER_BADGES_CACHE_TTL = 120 // 2 minutes (was 2 * 60 * 1000 ms)
+const BADGE_BY_TIER_CACHE_TTL = 300 // 5 minutes (was 5 * 60 * 1000 ms)
 
 export type TierType = 'mythic' | 'legendary' | 'epic' | 'rare' | 'common'
 
@@ -574,20 +529,24 @@ export async function invalidateBadgeCaches() {
 /**
  * Load badge registry from embedded data with caching
  * Uses embedded BADGE_REGISTRY to avoid filesystem reads in production
+ * 
+ * Phase 8.1: Now uses unified cache system for consistency
  */
-export function loadBadgeRegistry(): BadgeRegistry {
-  const cached = badgeRegistryCache.get('registry')
-  if (cached) return cached
-  
-  try {
-    // Use embedded registry data instead of filesystem read
-    const registry = BADGE_REGISTRY
-    badgeRegistryCache.set('registry', registry)
-    return registry
-  } catch (error) {
-    console.error('Failed to load badge registry:', error)
-    throw new Error('Badge registry not found or invalid')
-  }
+export async function loadBadgeRegistry(): Promise<BadgeRegistry> {
+  return await getCached(
+    'badge-registry',
+    'embedded-data',
+    () => Promise.resolve(BADGE_REGISTRY),
+    { ttl: BADGE_REGISTRY_CACHE_TTL, backend: 'memory' }
+  )
+}
+
+/**
+ * Synchronous version for backward compatibility
+ * Returns embedded registry without cache (already in memory)
+ */
+export function loadBadgeRegistrySync(): BadgeRegistry {
+  return BADGE_REGISTRY
 }
 
 /**
@@ -605,7 +564,7 @@ export function getTierFromScore(score: number): TierType {
  * Get tier configuration from registry
  */
 export function getTierConfig(tier: TierType): BadgeRegistry['tiers'][TierType] {
-  const registry = loadBadgeRegistry()
+  const registry = loadBadgeRegistrySync()
   return registry.tiers[tier]
 }
 
@@ -613,24 +572,25 @@ export function getTierConfig(tier: TierType): BadgeRegistry['tiers'][TierType] 
  * Get badge definition from registry by ID
  */
 export function getBadgeFromRegistry(badgeId: string): BadgeRegistry['badges'][number] | null {
-  const registry = loadBadgeRegistry()
+  const registry = loadBadgeRegistrySync()
   return registry.badges.find(b => b.id === badgeId) || null
 }
 
 /**
  * Get badge definition from registry by tier with caching
+ * Phase 8.1: Now uses unified cache system
  */
-export function getBadgeByTier(tier: TierType): BadgeRegistry['badges'][number] | null {
-  const cacheKey = `tier:${tier}`
-  const cached = badgeByTierCache.get(cacheKey)
-  if (cached !== undefined) return cached
-  
-  const registry = loadBadgeRegistry()
-  // Find first auto-assign badge for this tier
-  const badge = registry.badges.find(b => b.tier === tier && b.autoAssign && b.assignmentRule === 'neynar_score_tier') || null
-  
-  badgeByTierCache.set(cacheKey, badge)
-  return badge
+export async function getBadgeByTier(tier: TierType): Promise<BadgeRegistry['badges'][number] | null> {
+  return await getCached(
+    'badge-by-tier',
+    tier,
+    async () => {
+      const registry = loadBadgeRegistrySync()
+      // Find first auto-assign badge for this tier
+      return registry.badges.find(b => b.tier === tier && b.autoAssign && b.assignmentRule === 'neynar_score_tier') || null
+    },
+    { ttl: BADGE_BY_TIER_CACHE_TTL, backend: 'memory' }
+  )
 }
 
 /**
@@ -739,64 +699,68 @@ export async function getUserBadges(fid: number): Promise<UserBadge[]> {
     return []
   }
   
-  const cacheKey = `user:${fid}`
-  const cached = userBadgesCache.get(cacheKey)
-  if (cached) return cached
-  
-  const supabase = getSupabaseServerClient()
-  if (!supabase) return []
+  return await getCached(
+    'user-badges',
+    `fid:${fid}`,
+    async () => {
+      const supabase = getSupabaseServerClient()
+      if (!supabase) return []
 
-  try {
-    // Add timeout wrapper to prevent hanging (5 second timeout)
-    const fetchPromise = supabase
-      .from(USER_BADGES_TABLE)
-      .select('*')
-      .eq('fid', fid)
-      .order('assigned_at', { ascending: false })
-    
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Supabase query timeout after 5s')), 5000)
-    )
-    
-    const { data, error } = await Promise.race([fetchPromise, timeoutPromise])
+      try {
+        // Add timeout wrapper to prevent hanging (5 second timeout)
+        const fetchPromise = supabase
+          .from(USER_BADGES_TABLE)
+          .select('*')
+          .eq('fid', fid)
+          .order('assigned_at', { ascending: false })
+        
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Supabase query timeout after 5s')), 5000)
+        )
+        
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise])
 
-    if (error) {
-      console.error('Failed to fetch user badges:', {
-        message: error.message || 'Unknown error',
-        details: error.toString?.() || String(error),
-        hint: (error as any).hint || '',
-        code: (error as any).code || ''
-      })
-      return []
+        if (error) {
+          console.error('Failed to fetch user badges:', {
+            message: error.message || 'Unknown error',
+            details: error.toString?.() || String(error),
+            hint: (error as any).hint || '',
+            code: (error as any).code || ''
+          })
+          return []
+        }
+
+        return (data || []).map(row => ({
+          id: row.id,
+          fid: row.fid,
+          badgeId: row.badge_id,
+          badgeType: row.badge_type,
+          tier: row.tier as TierType,
+          assignedAt: row.assigned_at,
+          minted: row.minted,
+          mintedAt: row.minted_at,
+          txHash: row.tx_hash,
+          chain: row.chain,
+          contractAddress: row.contract_address,
+          tokenId: row.token_id,
+          metadata: row.metadata || {},
+        }))
+      } catch (error) {
+        console.error('Failed to fetch user badges:', {
+          message: error instanceof Error ? error.message : 'TypeError: fetch failed',
+          details: error instanceof Error ? error.stack || error.toString() : String(error),
+          hint: '',
+          code: ''
+        })
+        return []
+      }
+    },
+    { 
+      ttl: USER_BADGES_CACHE_TTL, 
+      backend: 'memory',
+      staleWhileRevalidate: true // Better UX for badge loading
     }
-
-    const badges = (data || []).map(row => ({
-      id: row.id,
-      fid: row.fid,
-      badgeId: row.badge_id,
-      badgeType: row.badge_type,
-      tier: row.tier as TierType,
-      assignedAt: row.assigned_at,
-      minted: row.minted,
-      mintedAt: row.minted_at,
-      txHash: row.tx_hash,
-      chain: row.chain,
-      contractAddress: row.contract_address,
-      tokenId: row.token_id,
-      metadata: row.metadata || {},
-    }))
-    
-    userBadgesCache.set(cacheKey, badges)
-    return badges
-  } catch (error) {
-    console.error('Failed to fetch user badges:', {
-      message: error instanceof Error ? error.message : 'TypeError: fetch failed',
-      details: error instanceof Error ? error.stack || error.toString() : String(error),
-      hint: '',
-      code: ''
-    })
-    return []
-  }
+  )
 }
 
 /**
@@ -829,8 +793,8 @@ export async function updateBadgeMintStatus(params: {
     throw new Error(`Failed to update badge mint status: ${error.message}`)
   }
   
-  // Invalidate cache after mint
-  userBadgesCache.clear(`user:${params.fid}`)
+  // Invalidate cache after mint (Phase 8.1: unified cache system)
+  await invalidateCache('user-badges', `fid:${params.fid}`)
 }
 
 // ========================================
