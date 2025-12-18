@@ -138,13 +138,23 @@ import { fetchUserByFid } from '@/lib/integrations/neynar'
   - Admin role verification
   - JWT token handling
 
-### Caching Layer
-- `cache/` (6 files) - Multi-level caching system
-  - Generic cache interface
-  - Storage implementations
-  - Frame-specific cache
-  - Contract data cache
-  - Neynar API cache
+### Caching Layer (Phase 8.1 Complete - Dec 18, 2025)
+- `cache/` (6 files) - **Unified Multi-Level Caching System**
+  - `server.ts` - **PRIMARY**: 3-tier cache (L1 memory, L2 Redis/KV, L3 filesystem)
+    - Features: Stale-while-revalidate, stampede prevention, graceful degradation
+    - Use for: API routes, server components, database queries
+  - `client.ts` - Browser-side caching (localStorage, sessionStorage, memory)
+    - CacheStorage class + simple helpers (readStorageCache, writeStorageCache)
+    - Use for: Client components, hooks, user preferences
+  - `frame.ts` - Frame-specific cache (Upstash Redis)
+  - `contract-cache.ts` - Contract data caching
+  - `neynar-cache.ts` - Neynar API caching
+  - `index.ts` - Organized exports with documentation
+  
+  **Phase 8.1 Consolidation** (670+ lines reduced):
+  - ✅ 9 inline Map caches → unified getCached() system
+  - ✅ Removed: bot/local-cache.ts, 2x ServerCache classes, memoizeAsync()
+  - ✅ All caching now uses lib/cache/* (no new inline caches)
 
 ### Smart Contracts
 - `contracts/` (10 files) - Blockchain contract interactions

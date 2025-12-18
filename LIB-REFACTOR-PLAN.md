@@ -1508,15 +1508,54 @@ await initializeCache() // Cleanup + warm cache
 - ✅ TTL configuration preserved (env vars still work)
 - ✅ 100% API compatible
 
-**Step 6**: Merge lib/utils/utils.ts cache → lib/cache/client.ts (30 min)
-- Move 3 localStorage helpers to cache/client.ts
-- Update 5+ imports across codebase
+**Step 6**: ✅ **COMPLETE** - Merge lib/utils/utils.ts cache → lib/cache/client.ts (30 min)
+
+**Files Updated** (December 18, 2025):
+1. ✅ lib/cache/client.ts - Added 3 storage cache helper functions
+   - readStorageCache<T>(key, maxAgeMs) - Read with TTL check
+   - writeStorageCache<T>(key, value) - Write with timestamp
+   - clearStorageCache(key) - Clear single entry
+2. ✅ lib/utils/utils.ts - Removed implementations, added re-exports
+   - Functions moved to lib/cache/client.ts
+   - Re-exported for backward compatibility (Phase 9 cleanup)
+3. ✅ lib/api/dashboard-hooks.ts - Updated import to lib/cache/client
+
+**Migration Changes**:
+```diff
+# lib/cache/client.ts
++ // SIMPLE STORAGE CACHE HELPERS (Phase 8.1.6)
++ export function readStorageCache<T>(key, maxAgeMs) { ... }
++ export function writeStorageCache<T>(key, value) { ... }
++ export function clearStorageCache(key) { ... }
+
+# lib/utils/utils.ts
+- const STORAGE_PREFIX = 'gmeow_cache::'
+- export function readStorageCache<T>(...) { ... } // ~50 lines
++ // Re-export for backward compatibility
++ export { readStorageCache, writeStorageCache, clearStorageCache } from '@/lib/cache/client'
+
+# lib/api/dashboard-hooks.ts
+- import { readStorageCache } from '@/lib/utils/utils'
++ import { readStorageCache } from '@/lib/cache/client'
+```
+
+**Benefits Gained**:
+- ✅ Better organization (all cache utilities in cache/*)
+- ✅ Consistent location for client-side caching
+- ✅ Works alongside CacheStorage class (same file)
+- ✅ Backward compatible via re-exports
+
+**Impact**:
+- ✅ 3 functions moved (~50 lines)
+- ✅ 1 direct import updated
+- ✅ 0 TypeScript errors
+- ✅ 100% backward compatible
 
 **Result**: 
 - **6 → 1 cache implementation** (server + specialized wrappers)
-- **~500 lines reduced**
-- **Unified caching strategy** (L1/L2, TTL, invalidation)
-- **20+ imports updated**
+- **~670 lines reduced** (Phase 8.1.1-8.1.6 total)
+- **Unified caching strategy** (L1/L2/L3, TTL, invalidation)
+- **3+ imports updated directly** (many still use re-exports)
 
 ---
 
