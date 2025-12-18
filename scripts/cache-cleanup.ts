@@ -18,7 +18,7 @@
  * ```
  */
 
-import { localCache } from '../lib/bot/local-cache'
+import { localCache } from '../lib/cache/server'
 
 async function main() {
   console.log('[CacheCleanup] Starting cache cleanup...')
