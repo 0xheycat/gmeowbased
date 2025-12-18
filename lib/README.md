@@ -95,10 +95,13 @@ import { fetchUserByFid } from '@/lib/integrations/neynar'
   - `badge-registry-data.ts` - Badge definitions
   - `rarity-tiers.ts` - Rarity system
 
-### Integrations (7 files)
+### Integrations (6 files - Phase 8.3 Complete - Dec 18, 2025)
 - `integrations/` - **External service integrations**
-  - `neynar.ts` - Neynar API client (19+ imports)
-  - `neynar-server.ts` - Server-side Neynar (9+ imports)
+  - `neynar.ts` - **PRIMARY**: Neynar API client + NeynarAPIClient (28+ imports)
+    - Phase 8.3: Consolidated neynar-server.ts (33 lines removed)
+    - Functions: getNeynarServerClient, fetchUserByFid, fetchUsersByAddresses
+    - Use for: ALL Neynar operations
+    - **DO NOT**: Create separate neynar-server.ts file
   - `neynar-bot.ts` - Bot signer management (7+ imports)
   - `subsquid-client.ts` - Blockchain indexer (6+ imports)
   - `wagmi.ts` - Wallet integration
@@ -189,12 +192,22 @@ import { fetchUserByFid } from '@/lib/integrations/neynar'
   - ✅ Single source for RPC configuration (no scattered RPC URLs)
   - ✅ Rate limit protection (shared pool = fewer connections)
 
-### Database (Phase 8.4 Complete - Dec 18, 2025)
-- `supabase/` (5 files) - PostgreSQL database client
-  - Client-side operations
-  - Server-side operations
-  - Query builders
-  - Type definitions
+### Database (Phase 8.4 REVISED Complete - Dec 18, 2025)
+- `supabase/` (4 files) - PostgreSQL database client
+  - `edge.ts` - **PRIMARY**: Server + Edge + Browser clients
+    - Phase 8.4: Consolidated server.ts (18 lines removed)
+    - Functions: getSupabaseServerClient, getSupabaseEdgeClient, createClient
+    - Use for: ALL Supabase operations
+    - **DO NOT**: Create separate server.ts file
+  - `queries/` - Database query functions
+  - `types/` - Type definitions
+  - `mock-quest-data.ts` - Test data
+  
+  **Phase 8.4 Consolidation** (270 lines reduced):
+  - ✅ lib/api/farcaster/client.ts deleted (252 lines)
+  - ✅ lib/supabase/server.ts deleted (18 lines)
+  - ✅ Single source for user data fetching
+  - ✅ Single source for Supabase clients
   - Mock data for testing
   - `queries/user.ts` - **PRIMARY**: Canonical user profile queries
     - Functions: getUserProfile(fid/wallet), getUserProfiles(fids/wallets)
@@ -419,7 +432,7 @@ These files have the most imports and should be modified carefully:
 
 // Integrations
 '@/lib/neynar' → '@/lib/integrations/neynar'
-'@/lib/neynar-server' → '@/lib/integrations/neynar-server'
+'@/lib/neynar-server' → '@/lib/integrations/neynar' (Phase 8.3: neynar-server.ts deleted)
 '@/lib/neynar-bot' → '@/lib/integrations/neynar-bot'
 '@/lib/subsquid-client' → '@/lib/integrations/subsquid-client'
 '@/lib/wagmi' → '@/lib/integrations/wagmi'
@@ -575,7 +588,7 @@ pnpm test __tests__/integration/ --run
   1. `middleware/` (10 files) - Error handling, rate limiting, security
   2. `utils/` (12 files) - Common utilities and helpers
   3. `badges/` (6 files) - Badge system and artwork
-  4. `integrations/` (7 files) - External service integrations
+  4. `integrations/` (6 files) - External service integrations (Phase 8.3: neynar-server.ts deleted)
   5. `leaderboard/` (6 files) - Ranking and leaderboard
   6. `viral/` (4 files) - Viral engagement tracking
   7. `api/` (6 files) - API utilities
@@ -619,7 +632,7 @@ pnpm test __tests__/integration/ --run
 | `middleware/` | 10 | Request handling, errors, security | error-handler, request-id, rate-limit |
 | `utils/` | 12 | Common utilities | utils, formatters, telemetry, accessibility |
 | `contracts/` | 10 | Smart contract interactions | gmeow-utils, guild-contract, abis |
-| `integrations/` | 7 | External services | neynar, subsquid-client, neynar-bot |
+| `integrations/` | 6 | External services | neynar, subsquid-client, neynar-bot (Phase 8.3) |
 | `frames/` | 15 | Frame rendering system | hybrid-calculator, frame-design-system |
 | `profile/` | 11 | User profiles | profile-data, community-events |
 | `quests/` | 11 | Quest tracking | quest definitions, validation |
