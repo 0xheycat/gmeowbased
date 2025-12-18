@@ -341,9 +341,9 @@ export async function awardAchievement(
       // Don't rollback achievement - XP update is secondary
     }
 
-    // ⚠️ DEPRECATED - Event logging disabled (table dropped)
-    // Log to rank events
-    await supabase.from('gmeow_rank_events').insert({
+    // ⚠️ DEPRECATED - Event logging disabled (table dropped in Phase 3)
+    // gmeow_rank_events table was dropped - event logging moved to Subsquid
+    /* await supabase.from('gmeow_rank_events').insert({
       fid,
       event_type: 'achievement',
       chain: 'base',
@@ -361,7 +361,7 @@ export async function awardAchievement(
         cast_hash: castHash,
         xp_awarded: config.xpReward,
       } as Json,
-    })
+    }) */
 
     // GI-10: Send notification async (non-blocking)
     const notification: AchievementNotification = {
