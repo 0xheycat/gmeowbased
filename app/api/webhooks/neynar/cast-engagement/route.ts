@@ -377,8 +377,8 @@ export async function POST(request: NextRequest) {
     // GI-13: Track milestone events
     if (viralBonus.tier.name !== 'None') {
       await trackEvent('cast_viral_milestone', {
-        fid: existingCast.fid,
-        castHash: cast_hash,
+        fid: String(existingCast.fid),
+        castHash: String(cast_hash),
         tier: viralBonus.tier.name,
         totalXp: viralBonus.xp,
         incrementalXp: incrementalXP,

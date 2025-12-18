@@ -622,19 +622,16 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       try {
         const supabase = getSupabaseServerClient()
         if (supabase) {
+          // badge_casts table doesn't have deleted_at column - use hard delete
           const { error } = await supabase
             .from('badge_casts')
-            .update({ 
-              deleted_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
+            .delete()
             .eq('cast_hash', castHash)
-            .is('deleted_at', null)  // Only update if not already marked deleted
           
           if (error) {
-            console.warn('[webhook] Failed to mark cast as deleted:', error)
+            console.warn('[webhook] Failed to delete cast:', error)
           } else {
-            console.log('[webhook] Cast marked as deleted:', castHash.slice(0, 10))
+            console.log('[webhook] Cast deleted:', castHash.slice(0, 10))
           }
           
           // Track cast deletion

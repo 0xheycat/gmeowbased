@@ -173,7 +173,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
           score,
           tier: tier.name,
           tierEmoji: tier.emoji,
-          bonusXp: cast.viral_bonus_xp,
+          bonusXp: cast.viral_bonus_xp || 0,
           createdAt: cast.created_at,
         }
       })

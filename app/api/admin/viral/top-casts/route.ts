@@ -143,8 +143,8 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
           enrichedCasts.push({
             cast_hash: cast.cast_hash,
             fid: cast.fid,
-            viral_score: cast.viral_score,
-            viral_tier: cast.viral_tier,
+            viral_score: cast.viral_score ?? 0,
+            viral_tier: cast.viral_tier || 'none',
             likes_count: cast.likes_count ?? 0,
             recasts_count: cast.recasts_count ?? 0,
             replies_count: cast.replies_count ?? 0,

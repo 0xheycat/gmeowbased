@@ -299,8 +299,8 @@ async function getSupabaseStats(fid: number) {
     // Quest completions (base_points)
     supabase
       .from('quest_completions')
-      .select('reward_points')
-      .eq('fid', fid),
+      .select('points_awarded')
+      .eq('completer_fid', fid),
     
     // Viral engagement (viral_xp from badge_casts)
     supabase
@@ -315,17 +315,13 @@ async function getSupabaseStats(fid: number) {
       .eq('fid', fid)
       .in('source', ['tip_earned', 'tip_given']),
     
-    // Guild membership bonus (guild_bonus_points)
-    supabase
-      .from('guild_members')
-      .select('role, points_contributed, guild:guilds(level)')
-      .eq('fid', fid)
-      .eq('is_active', true)
+    // Guild membership bonus (guild_bonus_points) - TODO: Implement when guild_members table exists
+    Promise.resolve({ data: null, error: null })
   ])
   
   // Calculate quest completions
   const questCompletions = questData.data?.reduce(
-    (sum, quest) => sum + (quest.reward_points || 0), 
+    (sum, quest) => sum + (quest.points_awarded || 0), 
     0
   ) || 0
   

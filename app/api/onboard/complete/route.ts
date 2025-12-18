@@ -230,7 +230,7 @@ export const POST = withErrorHandler(async (request: Request) => {
           } else {
             console.error(`[Onboarding] Instant mint failed, falling back to queue:`, mintResult.error)
             // Fallback to mint queue
-            await supabase.from('mint_queue').insert({
+            await (supabase as any).from('mint_queue').insert({
               fid,
               wallet_address: address,
               badge_type: badgeDef.badgeType,
@@ -241,7 +241,7 @@ export const POST = withErrorHandler(async (request: Request) => {
           }
         } else {
           // Use mint queue for non-Mythic users
-          await supabase.from('mint_queue').insert({
+          await (supabase as any).from('mint_queue').insert({
             fid,
             wallet_address: address || null,
             badge_type: badgeDef.badgeType,

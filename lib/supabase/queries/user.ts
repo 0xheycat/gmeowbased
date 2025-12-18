@@ -39,7 +39,7 @@ export async function getUserProfile(
   try {
     let query = supabase
       .from('user_profiles')
-      .select('fid, wallet_address, display_name, pfp_url')
+      .select('fid, wallet_address, display_name, avatar_url')
     
     // Prefer wallet address lookup
     if (walletAddress && walletAddress !== '0x0') {
@@ -66,7 +66,7 @@ export async function getUserProfile(
       fid: data.fid,
       wallet_address: data.wallet_address || '',
       display_name: data.display_name,
-      pfp_url: data.pfp_url,
+      pfp_url: data.avatar_url,
       username: data.display_name || `user-${data.fid}`, // Use display_name as username fallback
     }
   } catch (err) {

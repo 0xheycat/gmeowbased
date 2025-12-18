@@ -21,6 +21,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import type { Json } from '@/types/supabase'
 import {
   calculateEngagementScore,
   getViralTier,
@@ -306,17 +307,25 @@ export async function syncCastEngagement(
 
       // Log to rank events
       await supabase.from('gmeow_rank_events').insert({
-        fid: existingCast.fid,
+        fid: existingCast.fid || 0,
         event_type: 'viral-bonus',
-        event_detail: `Cast engagement increased: +${additionalXp} XP (${oldTier.name} → ${newTier.name})`,
-        points: additionalXp,
+        chain: 'base',
+        wallet_address: '0x0000000000000000000000000000000000000000',
+        quest_id: null,
+        delta: additionalXp,
+        total_points: 0,
+        previous_points: null,
+        level: 0,
+        tier_name: newTier.name,
+        tier_percent: 0,
         metadata: {
           cast_hash: castHash,
           old_tier: oldTier.name,
           new_tier: newTier.name,
           old_score: existingCast.viral_score || 0,
           new_score: newScore,
-        },
+          xp_bonus: additionalXp,
+        } as Json,
       })
     }
 

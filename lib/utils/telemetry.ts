@@ -756,7 +756,7 @@ export async function recordRankEvent(input: RankTelemetryEventInput): Promise<v
     level: toRounded(input.level, 0),
     tier_name: input.tierName,
     tier_percent: (() => {
-      if (!Number.isFinite(input.tierPercent)) return null
+      if (!Number.isFinite(input.tierPercent)) return 0
       if (input.event === 'stats-query') {
         return Math.max(0, Math.min(100, Number((input.tierPercent as number).toFixed(2))))
       }

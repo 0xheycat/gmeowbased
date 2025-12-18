@@ -130,18 +130,16 @@ export function applyTemplate(
     target_fid?: number
     channel_id?: string
     cast_hash?: string
-  }
+  }  
 ): TemplateData {
-  const templateData = template.template_data as TemplateData
+  const templateData = template.task_presets as unknown as TemplateData
   
   // Apply customizations
   const applied: TemplateData = {
     ...templateData,
     title: customizations?.title || templateData.title,
     description: customizations?.description || templateData.description
-  }
-  
-  // Apply task customizations
+  }  // Apply task customizations
   if (customizations) {
     applied.tasks = applied.tasks.map(task => {
       const verification = { ...task.verification }
@@ -239,10 +237,10 @@ export interface TemplateMetadata {
  * Extract template metadata for cards
  */
 export function getTemplateMetadata(template: QuestTemplate): TemplateMetadata {
-  const data = template.template_data as TemplateData
+  const data = (template.task_presets || {}) as unknown as TemplateData
   
   // Format estimated time
-  const minutes = data.estimated_time_minutes
+  const minutes = data.estimated_time_minutes || 0
   let estimatedTime = ''
   if (minutes < 60) {
     estimatedTime = `${minutes} min`
@@ -264,9 +262,9 @@ export function getTemplateMetadata(template: QuestTemplate): TemplateMetadata {
   // Auto-generate tags
   const tags: string[] = []
   tags.push(template.difficulty)
-  if (template.cost_points === 0) tags.push('free')
-  if (data.tasks.length <= 2) tags.push('quick')
-  if (data.reward_xp >= 200) tags.push('high-reward')
+  if (template.default_reward_points === 0) tags.push('free')
+  if (data.tasks?.length && data.tasks.length <= 2) tags.push('quick')
+  if (template.default_reward_xp >= 200) tags.push('high-reward')
   
   return {
     id: template.id,
@@ -274,7 +272,7 @@ export function getTemplateMetadata(template: QuestTemplate): TemplateMetadata {
     description: template.description || '',
     category: template.category,
     difficulty: template.difficulty,
-    cost: template.cost_points,
+    cost: template.default_reward_points,
     estimatedTime,
     taskCount: data.tasks.length,
     rewardXp: data.reward_xp,

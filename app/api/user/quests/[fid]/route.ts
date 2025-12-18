@@ -123,22 +123,8 @@ export async function GET(
       })
     }
 
-    // Check profile visibility
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('profile_visibility')
-      .eq('fid', fid)
-      .single()
-
-    if (!profile || profile.profile_visibility === 'private') {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Profile not found or private.' 
-        },
-        { status: 404 }
-      )
-    }
+    // TODO: Add profile visibility check when column is added to user_profiles
+    // For now, all profiles are public
 
     // Build query for user_quest_progress with quest details
     let query = supabase

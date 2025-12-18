@@ -205,17 +205,18 @@ async function auditProfileChange(
   }
 
   try {
-    await supabase.from('audit_logs').insert({
-      entity_type: 'profile',
-      entity_id: fid.toString(),
-      action,
-      actor_fid: requesterFid,
-      changes: changes || {},
-      metadata: {
-        ip,
-        timestamp: new Date().toISOString(),
-      },
-    });
+    // TODO: Create audit_logs table and enable audit logging
+    // await supabase.from('audit_logs').insert({
+    //   entity_type: 'profile',
+    //   entity_id: fid.toString(),
+    //   action,
+    //   actor_fid: requesterFid,
+    //   changes: changes || {},
+    //   metadata: {
+    //     ip,
+    //     timestamp: new Date().toISOString(),
+    //   },
+    // });
   } catch (error) {
     // Non-blocking: audit log failure should not break the request
     logError(error as Error, {

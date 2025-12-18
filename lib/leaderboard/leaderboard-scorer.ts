@@ -97,8 +97,7 @@ export async function calculateLeaderboardScore(
 
   const viralXP = viralData?.reduce((sum: number, row: any) => sum + (row.viral_bonus_xp || 0), 0) || 0
 
-  // 4. Guild bonus deprecated (guild_members table removed)
-  // TODO: Implement guild level bonus from guild_metadata if needed
+  // 4. Guild bonus - guild_members table doesn't exist, skip for now
   const guildBonus = 0
 
   // 4.5. Get guild bonus points (10% member + 5% officer)

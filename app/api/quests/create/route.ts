@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    // 8. INSERT UNIFIED QUEST
+    // 8. INSERT UNIFIED QUEST (with tasks as JSON)
     const { data: questData, error: questError } = await supabase
       .from('unified_quests')
       .insert({
@@ -228,6 +228,7 @@ export async function POST(request: NextRequest) {
         type: 'custom',
         difficulty: body.difficulty,
         estimated_time_minutes: parseInt(body.estimated_time) || 30,
+        tasks: body.tasks as any, // Store tasks as JSON
         creator_fid: body.creator_fid,
         creator_address: body.creator_address,
         reward_points: body.reward_points,
@@ -272,31 +273,9 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    // 9. INSERT QUEST TASKS
-    const tasksToInsert = body.tasks.map((task, index) => ({
-      quest_id: questData.id,
-      title: task.title,
-      description: task.description || '',
-      type: task.type === 'social' ? 'follow_user' : 'custom',
-      verification_data: task.verification_data,
-      order: index,
-      required: task.required,
-      status: 'pending' as const,
-    }));
-    
-    const { error: tasksError } = await supabase
-      .from('quest_tasks')
-      .insert(tasksToInsert);
-    
-    if (tasksError) {
-      logError('Task creation failed', {
-        error: tasksError,
-        quest_id: questData.id,
-      });
-      
-      // NOTE: Quest already created, but tasks failed
-      // Admin can manually fix or we handle in error queue
-    }
+    // 9. TASKS STORED AS JSON (no separate quest_tasks table)
+    // Tasks are already stored in the unified_quests.tasks column above
+    // No separate insert needed
     
     // 10. UPDATE TEMPLATE USAGE (if used)
     if (body.template_id) {

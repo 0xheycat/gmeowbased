@@ -153,7 +153,7 @@ export async function recordGmReminderSent(input: RecordReminderInput): Promise<
     .update({
       last_gm_reminder_sent_at: reminderIso,
       last_gm_reference_at: gmReferenceIso,
-      last_gm_context: input.context ?? null,
+      last_gm_context: (input.context ?? null) as any,
       last_seen_at: reminderIso,
     })
     .eq('token', input.token)
