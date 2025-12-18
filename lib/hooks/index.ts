@@ -5,7 +5,8 @@
  */
 
 export * from './use-auth'
-export * from './use-measure'
+// Phase 8.8: Consolidated use-measure.ts (1-line wrapper) into index.ts
+export { default as useMeasure } from 'react-use/lib/useMeasure'
 export * from './use-quest-draft-autosave'
 export * from './useComparisonExport'
 export * from './useDebounce'
