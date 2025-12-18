@@ -167,7 +167,7 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
       Promise.race([
         supabase
           .from('gmeow_rank_events')
-          .select('event_type, points_delta, created_at')
+          .select('event_type, delta, created_at')
           .eq('fid', fid)
           .order('created_at', { ascending: false })
           .limit(100)
@@ -179,7 +179,7 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
       Promise.race([
         supabase
           .from('gmeow_rank_events')
-          .select('event_type, event_detail, created_at')
+          .select('event_type, metadata, created_at')
           .eq('fid', fid)
           .eq('event_type', 'quest-start')
           .order('created_at', { ascending: false })
@@ -192,7 +192,7 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
       Promise.race([
         supabase
           .from('viral_milestone_achievements')
-          .select('id, achievement_type, achieved_at, seen')
+          .select('id, achievement_type, achieved_at, notification_sent')
           .eq('fid', fid)
           .eq('seen', false)
           .order('achieved_at', { ascending: false })
@@ -204,18 +204,8 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
       // Query 4: Guild membership (stub - implement when guilds DB ready)
       Promise.resolve({ data: null, error: null }),
 
-      // Query 5: Frame interactions history
-      Promise.race([
-        supabase
-          .from('bot_interactions')
-          .select('interaction_type, metadata, created_at')
-          .eq('fid', fid)
-          .eq('interaction_type', 'frame-view')
-          .order('created_at', { ascending: false })
-          .limit(20)
-          .then(({ data, error }) => ({ data, error })),
-        timeout(QUERY_TIMEOUT, { data: null, error: { message: 'Timeout' } }),
-      ]),
+      // Query 5: Frame interactions history - bot_interactions table deprecated
+      Promise.resolve({ data: null, error: null }),
     ])
 
     // Process profile and XP data
@@ -226,7 +216,7 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
     if (profileData.data && !profileData.error) {
       for (const event of profileData.data) {
         if (event.event_type === 'gm') gmCount++
-        if (event.points_delta) totalXP += Number(event.points_delta) || 0
+        if (event.delta) totalXP += Number(event.delta) || 0
       }
 
       // Calculate streak (consecutive days)
@@ -247,9 +237,9 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
     if (questsData.data && !questsData.error && questsData.data.length > 0) {
       const latestQuest = questsData.data[0]
       try {
-        const detail = typeof latestQuest.event_detail === 'string'
-          ? JSON.parse(latestQuest.event_detail)
-          : latestQuest.event_detail
+        const detail = typeof latestQuest.metadata === 'string'
+          ? JSON.parse(latestQuest.metadata)
+          : latestQuest.metadata
 
         if (detail && detail.questId) {
           hasActiveQuest = true
@@ -278,28 +268,9 @@ async function buildUserContextFromDB(fid: number): Promise<UserContext> {
     const isGuildMember = false
     const isGuildOfficer = false
 
-    // Process frame interactions
-    let frameInteractionCount = 0
-    let lastFrameType: BotFrameType | undefined
-
-    if (interactionsData.data && !interactionsData.error) {
-      frameInteractionCount = interactionsData.data.length
-
-      if (interactionsData.data.length > 0) {
-        const latest = interactionsData.data[0]
-        try {
-          const meta = typeof latest.metadata === 'string'
-            ? JSON.parse(latest.metadata)
-            : latest.metadata
-
-          if (meta && meta.frameType) {
-            lastFrameType = meta.frameType as BotFrameType
-          }
-        } catch {
-          // Invalid JSON - ignore
-        }
-      }
-    }
+    // Process frame interactions - bot_interactions table deprecated
+    const frameInteractionCount = 0
+    const lastFrameType: BotFrameType | undefined = undefined
 
     return {
       hasActiveQuest,

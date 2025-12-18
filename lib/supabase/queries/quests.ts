@@ -179,7 +179,7 @@ export async function getQuestBySlug(
   
   // Check if locked (viral XP requirement)
   let isLocked = false;
-  if (userFid && quest.min_viral_xp_required > 0) {
+  if (userFid && quest.min_viral_xp_required && quest.min_viral_xp_required > 0) {
     const { data: leaderboard } = await (supabase as any)
       .from('leaderboard_weekly')
       .select('viral_xp')
@@ -342,7 +342,7 @@ export async function completeQuestTask(
     {
       p_user_fid: userFid,
       p_quest_id: questId,
-      p_status: 'in_progress',
+      p_task_index: 0,
     }
   );
   
@@ -366,7 +366,7 @@ export async function checkViralXpRequirement(userFid: number, questId: number) 
   
   const { data, error } = await supabase.rpc('user_meets_viral_xp_requirement', {
     p_user_fid: userFid,
-    p_required_xp: 0,
+    p_quest_id: 0, // Pass quest ID if checking specific quest requirement
   });
   
   if (error) {

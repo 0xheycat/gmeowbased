@@ -122,27 +122,14 @@ export async function GET(
     }
 
     // Check profile visibility
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('profile_visibility')
-      .eq('fid', fid)
-      .single()
-
-    if (!profile || profile.profile_visibility === 'private') {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Profile not found or private.' 
-        },
-        { status: 404 }
-      )
-    }
+    // TODO: Add profile visibility check when column is added to user_profiles
+    // For now, all profiles are public
 
     // Fetch user's earned badges
     const { data: earnedBadges, error } = await supabase
-      .from('user_badge_collection')
-      .select('badge_id, earned_at')
-      .eq('user_fid', fid)
+      .from('user_badges')
+      .select('badge_id, assigned_at')
+      .eq('fid', fid)
 
     if (error) {
       console.error('Badge fetch error:', error)

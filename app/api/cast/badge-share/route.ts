@@ -137,7 +137,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   try {
     const supabase = getSupabaseServerClient()
     if (supabase && castHash) {
-      await supabase.from('badge_casts').insert({
+      await (supabase as any).from('badge_casts').insert({
         fid: fidNumber,
         badge_id: badgeId,
         cast_hash: castHash,

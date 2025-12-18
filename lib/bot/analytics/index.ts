@@ -238,7 +238,7 @@ export async function getBotHealthMetrics(window: MetricWindow = '24h'): Promise
     // Calculate response time percentiles
     const responseTimes = metrics
       .filter(m => m.response_time_ms != null && m.response_time_ms > 0)
-      .map(m => m.response_time_ms)
+      .map(m => m.response_time_ms!)
       .sort((a, b) => a - b)
     
     const avgResponseTimeMs = responseTimes.length > 0
@@ -320,10 +320,10 @@ export async function getRecentBotErrors(limit: number = 10): Promise<Array<{
     
     return errors.map(e => ({
       type: e.metric_type as BotMetricType,
-      errorMessage: e.error_message,
+      errorMessage: e.error_message || '',
       timestamp: new Date(e.created_at),
-      fid: e.fid,
-      castHash: e.cast_hash,
+      fid: e.fid ?? undefined,
+      castHash: e.cast_hash ?? undefined,
     }))
   } catch (error) {
     console.error('[bot-analytics] Failed to fetch recent errors:', error)

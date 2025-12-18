@@ -26,6 +26,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import type { Json } from '@/types/supabase'
 
 // ============================================================================
 // Type Definitions
@@ -344,12 +345,21 @@ export async function awardAchievement(
     await supabase.from('gmeow_rank_events').insert({
       fid,
       event_type: 'achievement',
-      event_detail: `Unlocked: ${config.name}`,
-      points: config.xpReward,
+      chain: 'base',
+      wallet_address: '0x0000000000000000000000000000000000000000',
+      quest_id: null,
+      delta: config.xpReward,
+      total_points: 0,
+      previous_points: null,
+      level: 0,
+      tier_name: 'none',
+      tier_percent: 0,
       metadata: {
         achievement_type: achievementType,
+        achievement_name: config.name,
         cast_hash: castHash,
-      },
+        xp_awarded: config.xpReward,
+      } as Json,
     })
 
     // GI-10: Send notification async (non-blocking)
@@ -451,9 +461,9 @@ export async function getUserAchievementDetails(
       id: row.id,
       fid: row.fid,
       achievementType: row.achievement_type as AchievementType,
-      achievedAt: new Date(row.achieved_at),
-      castHash: row.cast_hash,
-      xpAwarded: row.metadata?.xp_awarded || 0,
+      achievedAt: new Date(row.achieved_at || new Date()),
+      castHash: row.cast_hash || undefined,
+      xpAwarded: (typeof row.metadata === 'object' && row.metadata && 'xp_awarded' in row.metadata ? row.metadata.xp_awarded as number : null) || 0,
       ...ACHIEVEMENTS[row.achievement_type as AchievementType],
     }))
   } catch (error) {

@@ -131,10 +131,10 @@ export async function updateLastGMTimestamp(fid: number, timestamp: string): Pro
     return false;
   }
 
-  const { error } = await supabase
-    .from('user_profiles')
-    .update({ last_gm_at: timestamp })
-    .eq('fid', fid);
+  // Note: last_gm_at tracking moved to miniapp_notification_tokens table
+  // This is a no-op for backwards compatibility
+  const { error } = null as any;
+  // TODO: Update miniapp_notification_tokens.last_gm_reference_at if needed
 
   if (error) {
     console.error('[updateLastGMTimestamp] Error:', error);

@@ -6,7 +6,7 @@
  * Date: December 17, 2025
  */
 
-import { getSupabaseServerClient } from './client'
+import { getSupabaseServerClient } from './edge'
 
 // Export standard createClient function for API routes
 export function createClient() {

@@ -4,8 +4,9 @@ import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/g
 import { getRpcUrl } from '@/lib/contracts/rpc'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { BADGE_REGISTRY } from './badge-registry-data'
+import type { Json } from '@/types/supabase'
 
-const BADGE_TABLE = process.env.SUPABASE_BADGE_TEMPLATE_TABLE || 'badge_templates'
+const BADGE_TABLE = (process.env.SUPABASE_BADGE_TEMPLATE_TABLE || 'badge_templates') as 'badge_templates'
 const USER_BADGES_TABLE = 'user_badges'
 const BADGE_BUCKET = process.env.SUPABASE_BADGE_BUCKET || 'badge-art'
 const TEMPLATE_CACHE_TTL_MS = Number(process.env.BADGE_TEMPLATE_CACHE_TTL_MS ?? 15_000)
@@ -100,19 +101,19 @@ export type BadgeRegistry = {
 }
 
 export type UserBadge = {
-  id: string
+  id: number // Changed from string to match database bigint
   fid: number
   badgeId: string
   badgeType: string
   tier: TierType
   assignedAt: string
-  minted: boolean
+  minted: boolean | null // Changed to nullable to match database
   mintedAt?: string | null
   txHash?: string | null
   chain?: string | null
   contractAddress?: string | null
   tokenId?: number | null
-  metadata?: Record<string, unknown>
+  metadata?: Json // Changed to match Supabase Json type
 }
 
 export type BadgeTemplate = {
@@ -369,7 +370,7 @@ export async function createBadgeTemplate(input: BadgeTemplateInput): Promise<Ba
     image_url: input.imageUrl ?? null,
     art_path: input.artPath ?? null,
     active: input.active ?? true,
-    metadata: input.metadata ?? null,
+    metadata: (input.metadata ?? null) as any,
   }
 
   const { data, error } = await supabase.from(BADGE_TABLE).insert(payload).select().maybeSingle()
@@ -665,7 +666,7 @@ export async function assignBadgeToUser(params: {
   if (existing && !checkError) {
     // Badge already assigned, return it
     return {
-      id: String(existing.id),
+      id: Number(existing.id),
       fid: params.fid,
       badgeId: existing.badge_id,
       badgeType: params.badgeType,

@@ -182,12 +182,16 @@ export async function GET(
       })
     }
 
-    // Fetch tier distribution
-    const { data: tierData, error: tierError } = await supabase
+    // Fetch tier distribution (row-based data)
+    const { data: tierRows, error: tierError } = await supabase
       .from('referral_tier_distribution')
-      .select('bronze, silver, gold')
+      .select('tier, count')
       .eq('fid', fid)
-      .single()
+
+    const tierData = tierRows?.reduce((acc, row) => {
+      acc[row.tier] = row.count
+      return acc
+    }, {} as Record<string, number>)
 
     if (tierError && tierError.code !== 'PGRST116') {
       logError('Database query failed (tier)', {
@@ -198,12 +202,16 @@ export async function GET(
       })
     }
 
-    // Fetch period comparison
-    const { data: comparisonData, error: comparisonError } = await supabase
+    // Fetch period comparison (row-based data)
+    const { data: comparisonRows, error: comparisonError } = await supabase
       .from('referral_period_comparison')
-      .select('this_week, last_week, this_month, last_month')
+      .select('period, referrals, points')
       .eq('fid', fid)
-      .single()
+
+    const comparisonData = comparisonRows?.reduce((acc, row) => {
+      acc[row.period] = row.referrals || 0
+      return acc
+    }, {} as Record<string, number>)
 
     if (comparisonError && comparisonError.code !== 'PGRST116') {
       logError('Database query failed (comparison)', {
@@ -216,7 +224,7 @@ export async function GET(
 
     // Calculate peak day from timeline
     const peakDay = timelineData?.reduce(
-      (max, day) => (day.referrals > max.count ? { date: day.date, count: day.referrals } : max),
+      (max, day) => ((day.referrals || 0) > max.count ? { date: day.date, count: day.referrals || 0 } : max),
       { date: new Date().toISOString().split('T')[0], count: 0 }
     ) || { date: new Date().toISOString().split('T')[0], count: 0 }
 

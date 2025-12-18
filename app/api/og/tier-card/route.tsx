@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
         // Get user profile from Supabase
         const { data: profile } = await supabase
           .from('user_profiles')
-          .select('fid, username, pfp_url, neynar_tier, neynar_score')
+          .select('fid, display_name, avatar_url, neynar_tier, neynar_score')
           .eq('fid', fid)
           .single()
 
@@ -113,8 +113,8 @@ export async function GET(request: NextRequest) {
           userData = {
             fid: fidParam,
             tier: (profile.neynar_tier as TierType) || 'common',
-            username: profile.username || `user${fid}`,
-            avatar: profile.pfp_url || undefined,
+            username: profile.display_name || `user${fid}`,
+            avatar: profile.avatar_url || undefined,
             score: profile.neynar_score || 0,
             badgeName: badgeMetadata?.name || `${TIER_CONFIG[profile.neynar_tier as TierType || 'common']?.label} Badge`,
           }

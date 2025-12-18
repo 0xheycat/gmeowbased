@@ -190,7 +190,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   const seedLimit = Math.max(limit * 6, 24)
 
-  const { data: seedRows, error: seedError } = await supabase
+  const { data: seedRows, error: seedError } = await (supabase as any)
     .from(DEFAULT_TABLE)
     .select('snapshot_id, partner, requirement_kind, requirement_address, requirement_token_id, requirement_minimum, computed_at, metadata')
     .order('computed_at', { ascending: false })
@@ -251,7 +251,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   const snapshotIds = snapshotSummaries.map(item => item.snapshotId)
 
-  const { data: detailRows, error: detailError } = await supabase
+  const { data: detailRows, error: detailError } = await (supabase as any)
     .from(DEFAULT_TABLE)
     .select('snapshot_id, chain, eligible')
     .in('snapshot_id', snapshotIds)

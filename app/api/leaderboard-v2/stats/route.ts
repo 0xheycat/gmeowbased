@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     
     // Calculate statistics
     const totalPilots = stats.length
-    const totalScore = stats.reduce((sum, entry) => sum + entry.total_score, 0)
+    const totalScore = stats.reduce((sum, entry) => sum + (entry.total_score || 0), 0)
     const averageScore = totalScore / totalPilots
     
     // Calculate percentile thresholds
@@ -107,8 +107,8 @@ export async function GET(request: NextRequest) {
         .single()
       
       if (!userError && userEntry) {
-        response.yourRank = userEntry.global_rank
-        response.yourPercentile = (userEntry.global_rank / totalPilots) * 100
+        response.yourRank = userEntry.global_rank || 0
+        response.yourPercentile = ((userEntry.global_rank || 0) / totalPilots) * 100
       }
     }
     

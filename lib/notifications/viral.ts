@@ -616,23 +616,24 @@ export async function processPendingNotifications(deps?: NotificationDependencie
 
     // GI-10: Process notifications with rate limit awareness
     for (const item of pending) {
-      const notification: ViralNotification =
-        item.notification_type === 'tier_upgrade'
-          ? {
-              type: 'tier_upgrade',
-              fid: item.fid,
-              castHash: item.cast_hash,
-              oldTier: 'unknown', // Not stored in view
-              newTier: item.tier,
-              xpBonus: item.xp_bonus || 0,
-            }
-          : {
-              type: 'achievement',
-              fid: item.fid,
-              achievementType: item.achievement_type,
-              castHash: item.cast_hash,
-              xpBonus: item.xp_bonus || 0,
-            }
+      // Detect notification type from item properties
+      const isTierUpgrade = 'old_tier' in item && 'new_tier' in item
+      const notification: ViralNotification = isTierUpgrade
+        ? {
+            type: 'tier_upgrade',
+            fid: (item as any).fid || 0,
+            castHash: (item as any).cast_hash || '',
+            oldTier: (item as any).old_tier || 'unknown',
+            newTier: (item as any).new_tier || 'unknown',
+            xpBonus: (item as any).xp_bonus_awarded || 0,
+          }
+        : {
+            type: 'achievement',
+            fid: (item as any).fid || 0,
+            achievementType: (item as any).achievement_type || 'unknown',
+            castHash: (item as any).cast_hash || '',
+            xpBonus: 0, // Not stored in viral_milestone_achievements
+          }
 
       const result = await dispatchViralNotification(notification, deps)
       

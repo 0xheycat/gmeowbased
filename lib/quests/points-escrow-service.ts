@@ -144,9 +144,13 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
       .insert({
         creator_fid: input.fid,
         points_escrowed: input.amount,
-        quest_title: input.questData.title,
-        quest_category: input.questData.category,
-        quest_slug: input.questData.slug || null,
+        total_cost: input.amount,
+        breakdown: {
+          title: input.questData.title,
+          category: input.questData.category,
+          slug: input.questData.slug || null,
+        },
+        quest_id: 0, // Placeholder, will be updated
         is_refunded: false,
       })
       .select('id')
@@ -216,7 +220,7 @@ export async function refundPoints(questId: number): Promise<RefundResult> {
     // 1. GET QUEST DATA
     const { data: questData, error: questError } = await supabase
       .from('unified_quests')
-      .select('creator_fid, reward_points, completion_count')
+      .select('creator_fid, reward_points, total_completions')
       .eq('id', questId)
       .single();
     
@@ -231,7 +235,7 @@ export async function refundPoints(questId: number): Promise<RefundResult> {
     const { data: escrowData, error: escrowError } = await supabase
       .from('quest_creation_costs')
       .select('id, points_escrowed, is_refunded')
-      .eq('quest_id', String(questId))
+      .eq('quest_id', questId)
       .single();
     
     if (escrowError || !escrowData) {
@@ -250,7 +254,7 @@ export async function refundPoints(questId: number): Promise<RefundResult> {
     
     // 3. CALCULATE REFUND AMOUNT
     const totalEscrowed = escrowData.points_escrowed;
-    const totalSpent = questData.reward_points * (questData.completion_count || 0);
+    const totalSpent = questData.reward_points * (questData.total_completions || 0);
     const refundAmount = Math.max(0, totalEscrowed - totalSpent);
     
     if (refundAmount === 0) {
@@ -267,9 +271,10 @@ export async function refundPoints(questId: number): Promise<RefundResult> {
     }
     
     // 4. REFUND POINTS TO CREATOR
-    const { error: refundError } = await supabase.rpc('increment_base_points', {
-      user_fid: questData.creator_fid,
-      points: refundAmount,
+    const { error: refundError } = await supabase.rpc('increment_user_points', {
+      p_fid: questData.creator_fid,
+      p_amount: refundAmount,
+      p_source: 'quest_escrow_refund',
     });
     
     if (refundError) {
@@ -331,7 +336,7 @@ export async function calculateRefund(questId: number): Promise<number | null> {
   try {
     const { data: questData, error: questError } = await supabase
       .from('unified_quests')
-      .select('reward_points, completion_count')
+      .select('reward_points, total_completions')
       .eq('id', questId)
       .single();
     
@@ -342,7 +347,7 @@ export async function calculateRefund(questId: number): Promise<number | null> {
     const { data: escrowData, error: escrowError } = await supabase
       .from('quest_creation_costs')
       .select('points_escrowed, is_refunded')
-      .eq('quest_id', String(questId))
+      .eq('quest_id', questId)
       .single();
     
     if (escrowError || !escrowData || escrowData.is_refunded) {
@@ -350,7 +355,7 @@ export async function calculateRefund(questId: number): Promise<number | null> {
     }
     
     const totalEscrowed = escrowData.points_escrowed;
-    const totalSpent = questData.reward_points * (questData.completion_count || 0);
+    const totalSpent = questData.reward_points * (questData.total_completions || 0);
     const refundAmount = Math.max(0, totalEscrowed - totalSpent);
     
     return refundAmount;

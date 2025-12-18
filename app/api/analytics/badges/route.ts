@@ -175,7 +175,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const topFids = topUsers.map((u) => u.fid)
     const { data: profiles } = await supabase
       .from('user_profiles')
-      .select('fid, username, display_name')
+      .select('fid, display_name')
       .in('fid', topFids)
 
     const profileMap = new Map(profiles?.map((p) => [p.fid, p]) || [])
@@ -184,8 +184,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       const profile = profileMap.get(user.fid)
       return {
         fid: user.fid,
-        username: profile?.username || `user-${user.fid}`,
-        displayName: profile?.display_name || profile?.username || `User ${user.fid}`,
+        username: profile?.display_name || `user-${user.fid}`,
+        displayName: profile?.display_name || `User ${user.fid}`,
         badges: {
           mythic: user.mythic,
           legendary: user.legendary,

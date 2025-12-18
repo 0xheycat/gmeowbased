@@ -91,7 +91,7 @@ async function fetchUserQuestHistory(address: string): Promise<UserQuestHistory>
   try {
     const { data, error } = await supabase
       .from('gmeow_rank_events')
-      .select('event_type, event_detail, created_at, chain')
+      .select('event_type, metadata, created_at, chain')
       .eq('wallet_address', address)
       .eq('event_type', 'quest-verify')
       .order('created_at', { ascending: false })
@@ -102,11 +102,11 @@ async function fetchUserQuestHistory(address: string): Promise<UserQuestHistory>
     for (const event of data) {
       history.totalCompleted++
       
-      // Parse quest details from event_detail
+      // Parse quest details from metadata
       try {
-        const detail = typeof event.event_detail === 'string' 
-          ? JSON.parse(event.event_detail) 
-          : event.event_detail
+        const detail = typeof event.metadata === 'string' 
+          ? JSON.parse(event.metadata) 
+          : event.metadata
         
         if (detail?.questId) {
           const questKey = `${event.chain}:${detail.questId}`
@@ -118,13 +118,13 @@ async function fetchUserQuestHistory(address: string): Promise<UserQuestHistory>
           history.types.set(detail.questType, currentCount + 1)
         }
       } catch {
-        // Skip invalid event_detail
+        // Skip invalid metadata
       }
       
       // Track chain usage
       if (event.chain) {
-        const chainCount = history.chains.get(event.chain) || 0
-        history.chains.set(event.chain, chainCount + 1)
+        const chainCount = history.chains.get(event.chain as ChainKey) || 0
+        history.chains.set(event.chain as ChainKey, chainCount + 1)
       }
       
       // Track most recent completion
@@ -159,11 +159,11 @@ async function fetchAvailableQuests(): Promise<Array<{
     const now = new Date().toISOString()
     
     const { data, error } = await supabase
-      .from('quests')
-      .select('id, quest_name, chain, quest_type, reward_amount, spots_remaining, expires_at, is_active')
-      .eq('is_active', true)
-      .or(`expires_at.is.null,expires_at.gt.${now}`)
-      .order('reward_amount', { ascending: false })
+      .from('unified_quests')
+      .select('id, title, category, type, reward_points, max_completions, expiry_date, status')
+      .eq('status', 'active')
+      .or(`expiry_date.is.null,expiry_date.gt.${now}`)
+      .order('reward_points', { ascending: false })
       .limit(50)
     
     if (error || !data) return []

@@ -139,7 +139,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
             old_tier: upgrade.old_tier,
             new_tier: upgrade.new_tier,
             xp_bonus_awarded: upgrade.xp_bonus_awarded,
-            changed_at: upgrade.changed_at,
+            changed_at: upgrade.changed_at || new Date().toISOString(),
             username: userInfo?.username,
             display_name: userInfo?.display_name,
             avatar_url: userInfo?.avatar_url,
@@ -156,7 +156,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
             old_tier: u.old_tier,
             new_tier: u.new_tier,
             xp_bonus_awarded: u.xp_bonus_awarded,
-            changed_at: u.changed_at,
+            changed_at: u.changed_at || new Date().toISOString(),
           }))
         )
       }

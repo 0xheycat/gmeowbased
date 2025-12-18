@@ -27,8 +27,8 @@ export async function getGuildMetadata(guildId: string | number) {
 
   try {
     const { data, error } = await supabase
-      .from('guilds')
-      .select('guild_id, name, description, avatar_url, created_at, updated_at')
+      .from('guild_metadata')
+      .select('guild_id, name, description, banner, created_at, updated_at')
       .eq('guild_id', String(guildId))
       .maybeSingle()
 
@@ -46,7 +46,7 @@ export async function getGuildMetadata(guildId: string | number) {
       guildId: data.guild_id,
       name: data.name || `Guild #${guildId}`,
       description: data.description || null,
-      avatarUrl: data.avatar_url || null,
+      avatarUrl: data.banner || null,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     }
@@ -70,7 +70,7 @@ export async function getGuildsMetadata(guildIds: (string | number)[]) {
 
   try {
     const { data, error } = await supabase
-      .from('guilds')
+      .from('guild_metadata')
       .select('guild_id, name, description, avatar_url')
       .in('guild_id', guildIds.map(String))
 

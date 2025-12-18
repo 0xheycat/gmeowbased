@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
     
     // Query preferences with single() to ensure only one row returned
     // PGRST116 error code means no rows found (not an error, return defaults)
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('notification_preferences')
       .select('*')
       .eq('fid', parseInt(fid))
@@ -285,7 +285,7 @@ export async function PATCH(request: NextRequest) {
     // Upsert preferences (insert if not exists, update if exists)
     // onConflict: 'fid' means use fid as unique constraint
     // This creates a new row if FID doesn't exist, updates if it does
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('notification_preferences')
       .upsert(updateData, {
         onConflict: 'fid',

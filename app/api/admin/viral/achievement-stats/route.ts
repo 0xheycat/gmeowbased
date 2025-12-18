@@ -119,7 +119,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
       achievementCounts.set(achievement.achievement_type, currentCount + 1)
 
       // Weekly timeline (ISO week start - Monday)
-      const date = new Date(achievement.achieved_at)
+      const date = new Date(achievement.achieved_at || Date.now())
       const weekStart = getWeekStart(date)
       const weekKey = weekStart.toISOString().split('T')[0]
 
