@@ -63,8 +63,7 @@ import { createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base, optimism, celo } from 'viem/chains'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'
-import { getRpcUrl } from './rpc'
-import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
+import { getRpcUrl, getPublicClient } from '@/lib/contracts/rpc-client-pool'
 
 const CHAIN_CONFIG = {
   base: base,
