@@ -49,12 +49,15 @@ import { fetchUserByFid } from '@/lib/integrations/neynar'
 
 ## 🎯 NEW: Consolidated Structure (December 17, 2025)
 
-### Middleware (10 files - Phase 8.5 Complete - Dec 18, 2025)
+### Middleware (9 files - Phase 8.6 Complete - Dec 18, 2025)
 - `middleware/` - **Request handling, error management, security**
   - `error-handler.ts` - Centralized error handling (65+ imports)
   - `request-id.ts` - Request tracking (117+ imports)
-  - `rate-limit.ts` - Rate limiting (81+ imports)
-  - `rate-limiter.ts` - Limiter implementation
+  - `rate-limit.ts` - **PRIMARY**: Rate limiting (Upstash Redis)
+    - Inbound API rate limiting (protect our APIs from abuse)
+    - Functions: rateLimit, checkRateLimit, apiLimiter, strictLimiter
+    - Use for: ALL rate limiting needs (both inbound and custom logic)
+    - **DO NOT**: Create separate rate limiter files
   - `idempotency.ts` - Duplicate request prevention
   - `api-security.ts` - **PRIMARY**: API validation and sanitization
     - Functions: sanitizeAddress (Ethereum), sanitizeChain, sanitizeString, validateInput

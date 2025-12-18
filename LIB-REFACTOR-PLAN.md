@@ -1825,30 +1825,75 @@ if (!address) {
 
 ---
 
-### 8.6 Rate Limiting Consolidation (ALREADY ANALYZED)
+### 8.6 Rate Limiting Consolidation ✅ COMPLETE (December 18, 2025)
 
-#### Current Implementations (2 files):
+#### Problem: Unused RateLimiter Class
+**Initial Analysis**: Found 2 rate limiting files:
+1. `rate-limit.ts` (293 lines) - Upstash Redis, production-ready
+2. `rate-limiter.ts` (113 lines) - In-memory RateLimiter class
 
-1. **lib/middleware/rate-limit.ts** (293 lines) ✅ **CANONICAL**
-   - Upstash Redis sliding window
-   - 3 limiters: `apiLimiter` (60/min), `strictLimiter` (10/min), `webhookLimiter` (500/5min)
-   - Functions: `rateLimit`, `checkRateLimit`
-   - **Status**: Production-ready, Redis-backed
+**Discovery**: RateLimiter class was **NEVER IMPORTED** in actual codebase:
+- ❌ Zero imports found (no `import { RateLimiter }` anywhere)
+- ❌ Only referenced in docs/migration (planning docs, not production)
+- ❌ `new RateLimiter()` only in example code
+- ✅ rate-limit.ts provides all needed functionality
 
-2. **lib/middleware/rate-limiter.ts** (113 lines) ⚠️ **DIFFERENT PURPOSE**
-   - In-memory sliding window for **external API calls** (Etherscan, Neynar)
-   - Class: `NotificationRateLimiter` (used by lib/notifications/viral.ts)
-   - **Decision**: KEEP (different use case: outbound vs inbound)
+#### Solution: Delete Unused Code
 
-3. **lib/notifications/viral.ts** - NotificationRateLimiter usage (lines 100-150)
-   - Rate limit Neynar API calls (1 per 30s per token)
-   - **Decision**: KEEP (uses rate-limiter.ts correctly)
+**Actions Taken**:
 
-#### Consolidation Plan:
+**Step 1**: ✅ Deleted lib/middleware/rate-limiter.ts (113 lines)
+- Removed unused RateLimiter class
+- No breaking changes (nothing imported it)
 
-**No consolidation needed** - rate-limit.ts (inbound) and rate-limiter.ts (outbound) serve different purposes.
+**Step 2**: ✅ Updated exports
+- lib/middleware/index.ts: Removed `export * from './rate-limiter'`
+- lib/README.md: Updated middleware section (10 → 9 files)
 
-**Action**: Add comprehensive headers documenting the difference (Phase 7).
+**Step 3**: ✅ Documentation updates
+- Clarified rate-limit.ts is the single source for all rate limiting
+- Added ❌ NEVER warnings against creating separate rate limiter files
+
+#### Phase 8.6 Results:
+
+✅ **113 lines removed** (unused RateLimiter class deleted)
+✅ **Single source of truth**: lib/middleware/rate-limit.ts
+✅ **TypeScript**: 0 errors (nothing broke)
+✅ **No breaking changes**: File was never imported
+
+#### Rate Limiting Architecture:
+
+**lib/middleware/rate-limit.ts** (293 lines) - **CANONICAL SOURCE**:
+- Purpose: Rate limit **all** API requests (inbound/outbound/custom)
+- Backend: Upstash Redis (distributed, persistent)
+- Features:
+  - Pre-configured limiters: apiLimiter (60/min), strictLimiter (10/min), webhookLimiter (500/5min)
+  - Custom rate limiting: `checkRateLimit()` for flexible configs
+  - Helper functions: `rateLimit()`, `getClientIp()`, `getClientIdentifier()`
+- Use cases: 
+  - Protect our APIs from abuse
+  - Custom rate limits per feature
+  - Webhook throttling
+
+**Pattern**:
+```typescript
+// Use pre-configured limiters
+import { apiLimiter, rateLimit } from '@/lib/middleware/rate-limit'
+const result = await rateLimit(ip, apiLimiter)
+
+// Or custom configuration
+import { checkRateLimit } from '@/lib/middleware/rate-limit'
+const result = await checkRateLimit({
+  identifier: userId,
+  maxRequests: 5,
+  windowSeconds: 60,
+  namespace: 'custom'
+})
+
+// ❌ NEVER: Create separate rate limiter files
+```
+
+**Impact**: Confusing duplicate naming eliminated, single clear source for all rate limiting.
 
 ---
 
@@ -1906,6 +1951,7 @@ Already fixed in Phase 7.6 Pattern Consolidation:
 | **3. Neynar Client** | 3 files | lib/integrations/neynar-server.ts | 0 duplicates | ✅ DONE | Verified |
 | **4. User Fetching** | 10 functions | neynar.ts + queries/user.ts | 2 duplicates | ✅ DONE | ~252 lines |
 | **5. Validation** | 5+ files | lib/middleware/api-security.ts | 3 duplicates | ✅ DONE | ~21 lines |
+| **6. Rate Limiting** | 2 files | lib/middleware/rate-limit.ts | 1 unused file | ✅ DONE | ~113 lines |
 | **3. User Fetching** | 10 functions | lib/integrations/neynar.ts + lib/supabase/queries/user.ts | 3 duplicates | 🔴 HIGH | ~150 lines |
 | **4. Neynar Client** | 3 files | lib/integrations/neynar-server.ts | 0 duplicates | ✅ DONE | Already optimal |
 | **5. Validation** | 5+ files | lib/middleware/api-security.ts | 0 major duplicates | 🟡 MEDIUM | Document only |
