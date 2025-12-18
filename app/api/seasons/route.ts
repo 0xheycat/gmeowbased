@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
 import { CONTRACT_ADDRESSES, CHAIN_IDS, ALL_CHAIN_IDS, normalizeToGMChain, GM_CONTRACT_ABI, gmContractHasFunction, type ChainKey, type GMChainKey } from '@/lib/contracts/gmeow-utils'
-import { getRpcUrl } from '@/lib/contracts/rpc'
+import { getRpcUrl } from '@/lib/contracts/rpc-client-pool'
 import { SeasonQuerySchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler, handleValidationError, handleExternalApiError } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'

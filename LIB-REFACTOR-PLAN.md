@@ -1559,13 +1559,20 @@ await initializeCache() // Cleanup + warm cache
 
 ---
 
-### 8.2 RPC Client Consolidation ✅ COMPLETE (December 19, 2025)
+### 8.2 RPC Client Consolidation ✅ COMPLETE (December 18, 2025)
 
-#### Problem: 15+ Files Created RPC Clients Inline
-**Pattern**: `createPublicClient({ transport: http(rpc) })` repeated everywhere
+#### Problem: Duplicate RPC Files + Inline Client Creation
+**Pattern 1**: `createPublicClient({ transport: http(rpc) })` repeated in 15+ files
+**Pattern 2**: Two separate RPC files with similar purposes:
+- `lib/contracts/rpc.ts` (59 lines) - Just getRpcUrl function
+- `lib/contracts/rpc-client-pool.ts` (213 lines) - RPC client pool + imports rpc.ts
 
-#### Solution: Centralized RPC Client Pool
-Created **lib/contracts/rpc-client-pool.ts** (213 lines)
+#### Solution: Consolidate into Single RPC Client Pool
+**Actions**:
+1. Merged `getRpcUrl` from rpc.ts into rpc-client-pool.ts
+2. Deleted lib/contracts/rpc.ts (59 lines)
+3. Updated 5 imports to use rpc-client-pool.ts
+4. Single source: **lib/contracts/rpc-client-pool.ts** (now 245 lines)
 - Connection pooling with Map<chainId, PublicClient>
 - Automatic retry (3 attempts, 1s delay)
 - Timeout: 30s per request
@@ -1947,7 +1954,7 @@ Already fixed in Phase 7.6 Pattern Consolidation:
 | Infrastructure | Current Files | Canonical | Duplicates | Priority | Impact |
 |----------------|---------------|-----------|------------|----------|--------|
 | **1. Caching** | 10 files | lib/cache/server.ts | 6 duplicates | ✅ DONE | ~670 lines |
-| **2. RPC Clients** | 15+ files | lib/contracts/rpc-client-pool.ts | 15 duplicates | ✅ DONE | ~180 lines |
+| **2. RPC Clients** | 15+ files | lib/contracts/rpc-client-pool.ts | 15 duplicates + 1 file | ✅ DONE | ~239 lines |
 | **3. Neynar Client** | 3 files | lib/integrations/neynar-server.ts | 0 duplicates | ✅ DONE | Verified |
 | **4. User Fetching** | 10 functions | neynar.ts + queries/user.ts | 2 duplicates | ✅ DONE | ~252 lines |
 | **5. Validation** | 5+ files | lib/middleware/api-security.ts | 3 duplicates | ✅ DONE | ~21 lines |

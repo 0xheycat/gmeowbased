@@ -13,7 +13,7 @@ import {
   type GMChainKey,
 } from '@/lib/contracts/gmeow-utils'
 import { fetchAggregatedRaw, type RawAggregate } from '@/lib/leaderboard/leaderboard-aggregator'
-import { getRpcUrl } from '@/lib/contracts/rpc'
+import { getRpcUrl } from '@/lib/contracts/rpc-client-pool'
 
 const DEFAULT_TABLE = process.env.SUPABASE_PARTNER_SNAPSHOT_TABLE || 'partner_snapshots'
 const INSERT_BATCH_SIZE = 400

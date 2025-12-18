@@ -171,7 +171,7 @@ import { fetchUserByFid } from '@/lib/integrations/neynar'
   - ✅ All caching now uses lib/cache/* (no new inline caches)
 
 ### Smart Contracts (Phase 8.2 Complete - Dec 18, 2025)
-- `contracts/` (11 files) - Blockchain contract interactions
+- `contracts/` (10 files) - Blockchain contract interactions (Phase 8.2: rpc.ts consolidated)
   - **Active Chain**: Base (GMChainKey)
   - **View-Only Chains**: 12 chains via Blockscout MCP (ChainKey)
   - Contract ABIs and addresses
@@ -414,7 +414,7 @@ These files have the most imports and should be modified carefully:
 '@/lib/contract-mint' → '@/lib/contracts/contract-mint'
 '@/lib/auto-deposit-oracle' → '@/lib/contracts/auto-deposit-oracle'
 '@/lib/nft-metadata' → '@/lib/contracts/nft-metadata'
-'@/lib/rpc' → '@/lib/contracts/rpc'
+'@/lib/rpc' → '@/lib/contracts/rpc-client-pool' (Phase 8.2: rpc.ts deleted, use rpc-client-pool)
 '@/lib/abis' → '@/lib/contracts/abis'
 
 // Integrations
