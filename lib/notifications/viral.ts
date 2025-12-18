@@ -602,10 +602,42 @@ export async function processPendingNotifications(deps?: NotificationDependencie
       throw new Error('Supabase client not configured')
     }
 
-    // DEPRECATED (Phase 3): pending_viral_notifications view dropped
-    // Use Subsquid real-time events instead
-    console.warn('[processQueuedViralNotifications] DEPRECATED: pending_viral_notifications dropped in Phase 3')
-    return 0
+    // Phase 6: Use Subsquid for viral milestones
+    try {
+      const { getViralMilestones } = await import('@/lib/subsquid-client')
+      
+      // Query Subsquid for recent viral milestones (last hour)
+      const since = new Date(Date.now() - 60 * 60 * 1000)
+      const milestones = await getViralMilestones({ since, limit: 50 })
+      
+      if (!milestones || milestones.length === 0) {
+        return 0
+      }
+      
+      let successCount = 0
+      
+      // Process each milestone
+      for (const milestone of milestones) {
+        // Send notification based on milestone type
+        // Note: Deduplication handled by rate limiter and Neynar API
+        const result = await dispatchViralNotification({
+          type: 'achievement',
+          fid: milestone.fid,
+          achievementType: milestone.milestoneType,
+          castHash: milestone.castHash,
+          xpBonus: milestone.value,
+        })
+        
+        if (result.success) {
+          successCount++
+        }
+      }
+      
+      return successCount
+    } catch (error) {
+      console.error('[processQueuedViralNotifications] Subsquid query failed:', error)
+      return 0
+    }
 
     /* Original implementation:
     // Query pending notifications from view
