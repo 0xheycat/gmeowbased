@@ -1,3 +1,77 @@
+/**
+ * @file lib/notifications/miniapp.ts
+ * @description Farcaster MiniApp notification token management for push notifications
+ * 
+ * PHASE: Phase 7.7 - Notifications Module (December 18, 2025)
+ * 
+ * FEATURES:
+ *   - Upsert notification tokens (register/update user tokens)
+ *   - Mark tokens as disabled/removed (opt-out management)
+ *   - Record GM reminder tracking (last_gm_reminder_sent_at)
+ *   - List active notification tokens (enabled status only)
+ *   - Refresh token metadata (context updates)
+ *   - Track last event and event timestamps (audit trail)
+ *   - Support wallet address and client FID association
+ *   - GM context storage (JSONB for flexibility)
+ *   - Automatic status management (enabled/disabled/removed)
+ *   - Silent error tracking in production
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Database Schema: miniapp_notification_tokens table (types/supabase.ts)
+ *   - Neynar Docs: https://docs.neynar.com/docs/send-notifications-to-mini-app-users
+ *   - API Reference: https://docs.neynar.com/reference/publish-frame-notifications
+ *   - Viral Dispatcher: lib/notifications/viral.ts
+ *   - Error Tracking: lib/notifications/error-tracking.ts
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (for wallet address tracking)
+ *   - NO EMOJIS in production code
+ *   - Supabase client must be configured (isSupabaseConfigured check)
+ *   - Token format: UUID from Neynar MiniApp API
+ *   - Notification URL format: Warpcast deep link (farcaster://...)
+ * 
+ * TODO:
+ *   - [ ] Add token expiration policy (auto-disable after 90 days inactive)
+ *   - [ ] Implement token refresh mechanism (renew before expiry)
+ *   - [ ] Add token analytics (usage stats, delivery rates)
+ *   - [ ] Support multiple tokens per user (multi-device)
+ *   - [ ] Implement token migration (upgrade old tokens)
+ *   - [ ] Add token validation (verify with Neynar API)
+ *   - [ ] Support token tags (categories, preferences)
+ *   - [ ] Add bulk token operations (disable all, refresh all)
+ * 
+ * CRITICAL:
+ *   - Tokens are unique (upsert on conflict uses onConflict: 'token')
+ *   - Status enum: 'enabled' | 'disabled' | 'removed' (case-sensitive)
+ *   - last_gm_reference_at tracks user's last GM cast (not reminder sent time)
+ *   - last_gm_reminder_sent_at tracks bot reminder dispatch time
+ *   - last_gm_context stores reminder state (JSONB for flexibility)
+ *   - Always use ensureSupabase() for client initialization
+ *   - Use toIsoDate() for consistent timestamp formatting
+ *   - Token status 'removed' means permanent opt-out (don't re-enable)
+ * 
+ * SUGGESTIONS:
+ *   - Consider implementing token health checks (verify delivery)
+ *   - Add token usage metrics (notifications sent, delivery rate)
+ *   - Implement token rotation for security (refresh every 30 days)
+ *   - Add token preference management (frequency, categories)
+ *   - Support token groups (family, team, guild members)
+ *   - Implement token failover (retry with backup notification URL)
+ *   - Add token audit logging (track all status changes)
+ *   - Support token export (user data portability)
+ * 
+ * AVOID:
+ *   - ❌ DON'T re-enable tokens with status 'removed' (permanent opt-out)
+ *   - ❌ DON'T store sensitive data in last_gm_context (use references)
+ *   - ❌ DON'T bypass ensureSupabase() (causes inconsistent error handling)
+ *   - ❌ DON'T use Date objects directly (use toIsoDate() for ISO strings)
+ *   - ❌ DON'T allow tokens without fid (required for user identification)
+ *   - ❌ DON'T expose notification_url to clients (internal routing only)
+ *   - ❌ DON'T update last_seen_at on every operation (throttle to 1/hour)
+ *   - ❌ DON'T forget to track event context (last_event, last_event_at)
+ */
+
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { trackError } from './error-tracking'
 import type { Json } from '@/types/supabase'

@@ -1,3 +1,76 @@
+/**
+ * @file lib/notifications/history.ts
+ * @description Notification history persistence and retrieval using user_notification_history table
+ * 
+ * PHASE: Phase 7.7 - Notifications Module (December 18, 2025)
+ * 
+ * FEATURES:
+ *   - Save notifications to persistent history (user_notification_history table)
+ *   - Fetch notifications with filtering (category, read/dismissed status)
+ *   - Mark notifications as read/dismissed with timestamp tracking
+ *   - Auto-cleanup old notifications (max 100 per user)
+ *   - Support both FID and wallet address identification
+ *   - Notification count aggregation (unread, by category)
+ *   - Comprehensive error tracking with silent production mode
+ *   - Type-safe notification categories (11 types)
+ *   - Notification tones for UI styling (7 severity levels)
+ *   - Flexible metadata storage (JSONB for extensibility)
+ * 
+ * REFERENCE DOCUMENTATION:
+ *   - Database Schema: user_notification_history table (types/supabase.ts)
+ *   - Error Tracking: lib/notifications/error-tracking.ts
+ *   - API Usage: app/api/user/notifications/[fid]/route.ts
+ *   - Batching System: lib/notifications/notification-batching.ts
+ * 
+ * REQUIREMENTS:
+ *   - Website: https://gmeowhq.art
+ *   - Network: Base blockchain (for wallet address tracking)
+ *   - NO EMOJIS in production code
+ *   - NO HARDCODED COLORS (use tone for styling)
+ *   - Supabase client must be configured (isSupabaseConfigured check)
+ *   - Either fid OR walletAddress required (not both)
+ * 
+ * TODO:
+ *   - [ ] Add bulk operations (markAllAsRead, dismissByCriteria)
+ *   - [ ] Implement notification expiration policy (auto-delete after 30 days)
+ *   - [ ] Add notification search/filtering by text content
+ *   - [ ] Support notification threading (parent/child relationships)
+ *   - [ ] Add notification importance scoring (ML-based)
+ *   - [ ] Implement cross-device notification sync
+ *   - [ ] Add notification delivery receipts (sent/delivered/read)
+ *   - [ ] Support rich media attachments (images, embeds)
+ * 
+ * CRITICAL:
+ *   - MAX_HISTORY_PER_USER = 100 enforced via cleanupOldNotifications
+ *   - Always lowercase wallet addresses before storage (address.toLowerCase())
+ *   - Metadata must be typed as Json for Supabase JSONB compatibility
+ *   - read_at and dismissed_at are mutually exclusive states (dismissed = removed from UI)
+ *   - Category must match NotificationCategory enum (11 types)
+ *   - Tone must match NotificationTone enum (7 types)
+ *   - Error tracking uses silent mode in production (no console.error pollution)
+ *   - Use ensureSupabase() for client initialization with proper error handling
+ * 
+ * SUGGESTIONS:
+ *   - Consider implementing notification priority queue (high-priority first)
+ *   - Add notification deduplication (same title/category within 5 min)
+ *   - Implement read receipts with timestamp precision (milliseconds)
+ *   - Add notification analytics (open rate, click-through rate)
+ *   - Support notification preferences per category (opt-in/opt-out)
+ *   - Add notification templates for consistent messaging
+ *   - Implement push notification integration (FCM, APNs)
+ *   - Add notification archiving (export to JSON/CSV)
+ * 
+ * AVOID:
+ *   - ❌ DON'T store large blobs in metadata (use reference URLs instead)
+ *   - ❌ DON'T save notifications without fid or walletAddress
+ *   - ❌ DON'T use console.error directly (use trackError for silent production)
+ *   - ❌ DON'T forget to cleanup old notifications (leads to bloat)
+ *   - ❌ DON'T mix read and dismissed states (dismissed = permanent removal)
+ *   - ❌ DON'T use uppercase wallet addresses (always lowercase)
+ *   - ❌ DON'T return sensitive data in metadata (sanitize before storage)
+ *   - ❌ DON'T allow unlimited history per user (enforce MAX_HISTORY_PER_USER)
+ */
+
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { trackError } from '@/lib/notifications/error-tracking'
 import type { Json } from '@/types/supabase'

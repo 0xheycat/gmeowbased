@@ -1167,12 +1167,426 @@ git revert HEAD~1
 
 ---
 
-## Phase 8: TYPE SAFETY & VALIDATION (NEXT MAJOR PHASE)
+## Phase 8: REAL CONSOLIDATION - Eliminate Duplicates (CRITICAL) 🔴
+
+### 🎯 Goal: Merge duplicate caching, rate limiting, and auth patterns across rebuild modules
+
+**Target Start**: December 18-20, 2025 (URGENT)  
+**Estimated Duration**: 2-3 days  
+**Priority**: **CRITICAL** - Prevents future confusion and maintenance burden
+
+### Why This Matters
+
+**Current Problem**: 10 rebuild phases (Dashboard, Guild, Profile, Referral, Leaderboard, Quests, Bot, Frame, Notifications, Viral) introduced **duplicate patterns** that cause:
+1. **Confusion**: Developers don't know which cache/limiter/auth to use
+2. **Maintenance burden**: Bug fixes must be applied to 3+ copies
+3. **Performance issues**: Some caches are in-memory only (lost on serverless cold start)
+4. **Security gaps**: Not all auth patterns use same security middleware
+
+**Solution**: Consolidate to **ONE canonical implementation** per pattern, delete duplicates
+
+---
+
+### 8.0 COMPLETE INFRASTRUCTURE AUDIT
+
+**Scope**: Analyze ALL infrastructure patterns across 10 rebuild modules for duplicates
+
+#### Infrastructure Categories Analyzed:
+1. ✅ **Caching** (10 implementations found)
+2. ✅ **RPC Clients** (Viem createPublicClient - 15+ usages)
+3. ✅ **Neynar Integration** (API client patterns)
+4. ✅ **User Data Fetching** (10+ getUserX functions)
+5. ✅ **Validation & Sanitization** (scattered patterns)
+
+---
+
+### 8.1 Caching Consolidation (HIGH PRIORITY) 🔴
+
+#### Current Duplicate Implementations (10 files):
+
+1. **lib/cache/server.ts** (382 lines) ✅ **CANONICAL**
+   - L1: In-memory cache (Map with TTL)
+   - L2: Redis/Vercel KV external cache
+   - Functions: `getCached`, `invalidateCache`, `clearAllCache`, `getCacheStats`
+   - **Status**: Most complete, production-ready
+
+2. **lib/cache/client.ts** - Browser-side caching
+   - Purpose: Client components only
+   - **Decision**: KEEP (different runtime)
+
+3. **lib/cache/contract-cache.ts** (186 lines)
+   - Purpose: Contract data caching (NFT metadata, token balances)
+   - Uses: lib/cache/server.ts under the hood
+   - **Decision**: KEEP (domain-specific wrapper)
+
+4. **lib/cache/frame.ts** - Frame image caching
+   - Purpose: Frame generation performance
+   - **Decision**: KEEP (specialized use case)
+
+5. **lib/cache/neynar-cache.ts** - Neynar API response caching
+   - Purpose: Rate limit compliance (Neynar 150req/min)
+   - **Decision**: KEEP (API-specific)
+
+6. **lib/bot/local-cache.ts** (366 lines) ❌ **DUPLICATE**
+   - Filesystem-based cache for bot automation
+   - **Consolidation**: Merge into lib/cache/server.ts as "filesystem backend" option
+   - **Impact**: 1 file deleted, 366 lines reduced
+
+7. **lib/supabase/edge.ts** - ServerCache class (lines 31-90)
+   - In-memory cache for Supabase clients
+   - **Consolidation**: Use lib/cache/server.ts MemoryCache instead
+   - **Impact**: 60 lines reduced
+
+8. **lib/leaderboard/leaderboard-aggregator.ts** - 3 inline caches ❌ **DUPLICATE**
+   - `clientCache`, `chainAggregateCache`, `profileCache` (lines 44-72)
+   - **Consolidation**: Replace with lib/cache/server.ts
+   - **Impact**: 3 Map instances → 1 unified cache
+
+9. **lib/profile/profile-data.ts** - Inline caching logic
+   - Functions with "WithoutCache" suffix (lines 220, 323, 375)
+   - **Consolidation**: Use lib/cache/server.ts getCached wrapper
+   - **Impact**: Remove 3 manual cache bypass patterns
+
+10. **lib/utils/utils.ts** - localStorage cache helpers ❌ **DUPLICATE**
+    - `readStorageCache`, `writeStorageCache`, `clearStorageCache` (lines 22-60)
+    - **Consolidation**: Merge into lib/cache/client.ts
+    - **Impact**: 40 lines reduced
+
+#### Consolidation Plan:
+
+**Step 1**: Enhance lib/cache/server.ts with filesystem backend (1 hour)
+```typescript
+// Add to lib/cache/server.ts
+export type CacheBackend = 'memory' | 'redis' | 'filesystem'
+
+export async function getCached<T>(
+  namespace: string,
+  key: string,
+  fetcher: () => Promise<T>,
+  options: CacheOptions & { backend?: CacheBackend } = {}
+): Promise<T>
+```
+
+**Step 2**: Migrate lib/bot/local-cache.ts → lib/cache/server.ts (1 hour)
+- Move filesystem read/write logic to cache/server.ts
+- Update 12 imports in lib/bot/ files
+- Delete lib/bot/local-cache.ts
+
+**Step 3**: Replace lib/supabase/edge.ts ServerCache → lib/cache/server.ts (30 min)
+- Replace ServerCache class with MemoryCache from lib/cache/server.ts
+- Update 8 usages in lib/supabase/
+
+**Step 4**: Consolidate leaderboard/aggregator inline caches (45 min)
+- Replace `clientCache`, `chainAggregateCache`, `profileCache` with getCached calls
+- Remove 3 Map instances, use unified cache
+- Update resetLeaderboardCaches() to use invalidateCachePattern()
+
+**Step 5**: Consolidate profile/data cache bypass patterns (30 min)
+- Remove "WithoutCache" functions
+- Use getCached with { forceRefresh: true } option
+
+**Step 6**: Merge lib/utils/utils.ts cache → lib/cache/client.ts (30 min)
+- Move 3 localStorage helpers to cache/client.ts
+- Update 5+ imports across codebase
+
+**Result**: 
+- **6 → 1 cache implementation** (server + specialized wrappers)
+- **~500 lines reduced**
+- **Unified caching strategy** (L1/L2, TTL, invalidation)
+- **20+ imports updated**
+
+---
+
+### 8.2 RPC Client Consolidation (HIGH PRIORITY) 🔴
+
+#### Current Problem: 15+ Files Create RPC Clients Inline
+
+**Pattern**: `createPublicClient({ transport: http(rpc) })` repeated everywhere
+
+**Files with Inline RPC Client Creation**:
+1. ❌ **lib/badges/badges.ts** (line 477)
+2. ❌ **lib/leaderboard/leaderboard-scorer.ts** (lines 160, 212) - 2 instances
+3. ❌ **lib/contracts/referral-contract.ts** (line 119)
+4. ❌ **lib/contracts/gmeow-utils.ts** (line 850)
+5. ❌ **lib/contracts/contract-mint.ts** (line 177)
+6. ❌ **lib/contracts/guild-contract.ts** (line 131)
+7. ❌ **lib/contracts/auto-deposit-oracle.ts** (line 126)
+8. ❌ **lib/leaderboard/leaderboard-aggregator.ts** (lines 44-56) - Has cache but duplicates pattern
+9. ❌ **lib/quests/onchain-verification.ts** (line 56)
+10. ❌ **lib/profile/profile-data.ts** (line 226)
+11. ❌ **lib/profile/partner-snapshot.ts** (lines 140-148) - Has cache but duplicates
+12. ❌ **lib/utils/telemetry.ts** (lines 112-236) - Has cache but duplicates
+13. ❌ **lib/onchain-stats/data-source-router-rpc-only.ts** (line 182)
+14. ⚠️ **lib/profile/team.ts** (line 54) - Uses wagmi getPublicClient (different pattern)
+15. ⚠️ **lib/integrations/wagmi.ts** (line 111) - Uses wagmi (correct for wallet connections)
+
+#### Impact:
+- **15+ duplicate implementations**
+- **No shared RPC client pool** (new connection per call)
+- **Rate limit issues** (Alchemy/Infura limits hit faster)
+- **Performance**: Cold start creates 15+ HTTP transports
+- **Maintenance**: RPC URL change requires 15+ file updates
+
+#### Consolidation Plan:
+
+**Step 1**: Create centralized RPC client factory (1 hour)
+```typescript
+// NEW: lib/contracts/rpc-client-pool.ts
+import { createPublicClient, http, type PublicClient, type Chain } from 'viem'
+import { base } from 'viem/chains'
+
+type RPCClientCache = Map<number, PublicClient>
+const clientPool: RPCClientCache = new Map()
+
+export function getPublicClient(chainId: number = base.id): PublicClient {
+  const cached = clientPool.get(chainId)
+  if (cached) return cached
+
+  const rpc = getRpcUrl(chainId) // from existing lib/contracts/rpc.ts
+  const client = createPublicClient({ transport: http(rpc) })
+  
+  clientPool.set(chainId, client)
+  return client
+}
+
+export function resetClientPool() {
+  clientPool.clear()
+}
+```
+
+**Step 2**: Replace all inline `createPublicClient` calls (2 hours)
+- Update 15 files to use `getPublicClient(chainId)`
+- Remove 3 duplicate cache implementations (leaderboard-aggregator, partner-snapshot, telemetry)
+- Update 40+ imports
+
+**Step 3**: Keep wagmi-based clients separate (team.ts, integrations/wagmi.ts)
+- Different use case: wallet connections vs read-only
+- No consolidation needed
+
+**Result**: 
+- **15 → 1 RPC client implementation** (+ wagmi for wallets)
+- **Shared connection pool** (better performance)
+- **~200 lines reduced** (remove 3 duplicate caches)
+- **Centralized rate limit handling**
+- **Single RPC URL configuration point**
+
+---
+
+### 8.3 Neynar Client Consolidation (MEDIUM PRIORITY) 🟡
+
+#### Current Status: ✅ ALREADY CONSOLIDATED
+
+**Analysis**:
+- ✅ **lib/integrations/neynar-server.ts** - Canonical (NeynarAPIClient wrapper with cache)
+- ✅ **lib/integrations/neynar.ts** - Generic fetch utilities (Edge/Server/Client safe)
+- ✅ **lib/integrations/neynar-bot.ts** - Environment resolvers
+
+**Usage Pattern**: 
+```typescript
+import { getNeynarServerClient } from '@/lib/integrations/neynar-server'
+const client = getNeynarServerClient()
+```
+
+**Files Using Neynar** (all use correct pattern):
+- lib/notifications/viral.ts ✅
+- lib/leaderboard/leaderboard-scorer.ts ✅
+- lib/leaderboard/leaderboard-aggregator.ts ✅
+- lib/bot/core/auto-reply.ts ✅
+
+**Result**: **NO CONSOLIDATION NEEDED** - Already following best practices
+
+---
+
+### 8.4 User Data Fetching Consolidation (HIGH PRIORITY) 🔴
+
+#### Current Problem: 10+ Duplicate getUserX Functions
+
+**Duplicate Functions**:
+1. ❌ **lib/integrations/subsquid-client.ts**: `getUserStats`, `getUserNFTStats`
+2. ❌ **lib/integrations/neynar.ts**: `fetchUserByFid`, `fetchUserByAddress`, `fetchUserByUsername`, `fetchUsersByAddresses`
+3. ❌ **lib/api/farcaster/client.ts**: `getUserByFid`, `getUsersByFids`, `getUserCasts` ⚠️ **DUPLICATE of neynar.ts**
+4. ❌ **lib/bot/stats-with-fallback.ts**: `getUserStatsWithFallback` (orchestrator - KEEP)
+5. ❌ **lib/supabase/queries/gm.ts**: `getUserProfile` (database-only)
+6. ❌ **lib/supabase/queries/user.ts**: `getUserProfile`, `getUserProfiles` ⚠️ **DUPLICATE of gm.ts**
+7. ❌ **lib/supabase/queries/quests.ts**: `getUserActiveQuests`, `getUserCompletedQuests`
+8. ❌ **lib/supabase/queries/leaderboard.ts**: `getUserRankByWallet`
+9. ❌ **lib/notifications/notification-batching.ts**: `getUserTimezone`
+
+#### Consolidation Analysis:
+
+**Group 1: Farcaster User Data (API)**
+- ✅ **KEEP**: lib/integrations/neynar.ts (canonical Neynar API wrapper)
+- ❌ **DELETE**: lib/api/farcaster/client.ts (146 lines) - Complete duplicate
+
+**Group 2: Supabase User Profiles**
+- ✅ **KEEP**: lib/supabase/queries/user.ts (`getUserProfile`, `getUserProfiles`)
+- ❌ **MERGE**: lib/supabase/queries/gm.ts `getUserProfile` → user.ts (duplicate)
+
+**Group 3: Domain-Specific Queries**
+- ✅ **KEEP**: lib/supabase/queries/quests.ts (quest-specific)
+- ✅ **KEEP**: lib/supabase/queries/leaderboard.ts (leaderboard-specific)
+- ✅ **KEEP**: lib/notifications/notification-batching.ts (notification-specific)
+- ✅ **KEEP**: lib/integrations/subsquid-client.ts (blockchain indexer)
+- ✅ **KEEP**: lib/bot/stats-with-fallback.ts (orchestrator with fallback logic)
+
+#### Consolidation Plan:
+
+**Step 1**: Delete lib/api/farcaster/client.ts (30 min)
+- Complete duplicate of neynar.ts functions
+- Update 5+ imports to use lib/integrations/neynar.ts
+- **Impact**: 146 lines deleted
+
+**Step 2**: Merge lib/supabase/queries/gm.ts getUserProfile → user.ts (20 min)
+- Move GM-specific logic to user.ts if needed
+- Update 3+ imports
+- **Impact**: Remove duplicate function
+
+**Result**: 
+- **10 → 7 user fetch functions** (3 duplicates removed)
+- **~150 lines reduced**
+- **Clear data source hierarchy**: Neynar (API) → Supabase (DB) → Subsquid (Blockchain)
+
+---
+
+### 8.5 Validation & Sanitization Consolidation (MEDIUM PRIORITY) 🟡
+
+#### Current Status: ⚠️ PARTIALLY CONSOLIDATED
+
+**Canonical**: lib/middleware/api-security.ts
+- ✅ `validateInput<T>` (Zod schema validation)
+- ✅ `sanitizeString` (XSS prevention)
+- ✅ `sanitizeAddress` (Ethereum address normalization)
+- ✅ `sanitizeChain` (Chain name validation)
+
+**Other Implementations**:
+1. ⚠️ **lib/notifications/priority.ts**: `validatePrioritySettings` (domain-specific, KEEP)
+2. ⚠️ **lib/middleware/request-id.ts**: Request ID validation (domain-specific, KEEP)
+3. ⚠️ **lib/middleware/idempotency.ts**: Idempotency key validation (domain-specific, KEEP)
+4. ⚠️ **lib/bot/local-cache.ts** (line 220): Directory traversal prevention (security-critical, KEEP)
+5. ✅ **lib/profile/profile-data.ts**: `normalizeAddress` - Uses sanitizeAddress internally
+6. ✅ **lib/bot/core/auto-reply.ts**: Uses normalizeAddress from profile-data
+
+#### Analysis:
+**NO MAJOR CONSOLIDATION NEEDED** - Domain-specific validation is appropriate
+
+**Minor Cleanup**:
+- Ensure all address normalization uses lib/middleware/api-security.ts `sanitizeAddress`
+- Document validation hierarchy in headers
+
+---
+
+### 8.6 Rate Limiting Consolidation (ALREADY ANALYZED)
+
+#### Current Implementations (2 files):
+
+1. **lib/middleware/rate-limit.ts** (293 lines) ✅ **CANONICAL**
+   - Upstash Redis sliding window
+   - 3 limiters: `apiLimiter` (60/min), `strictLimiter` (10/min), `webhookLimiter` (500/5min)
+   - Functions: `rateLimit`, `checkRateLimit`
+   - **Status**: Production-ready, Redis-backed
+
+2. **lib/middleware/rate-limiter.ts** (113 lines) ⚠️ **DIFFERENT PURPOSE**
+   - In-memory sliding window for **external API calls** (Etherscan, Neynar)
+   - Class: `NotificationRateLimiter` (used by lib/notifications/viral.ts)
+   - **Decision**: KEEP (different use case: outbound vs inbound)
+
+3. **lib/notifications/viral.ts** - NotificationRateLimiter usage (lines 100-150)
+   - Rate limit Neynar API calls (1 per 30s per token)
+   - **Decision**: KEEP (uses rate-limiter.ts correctly)
+
+#### Consolidation Plan:
+
+**No consolidation needed** - rate-limit.ts (inbound) and rate-limiter.ts (outbound) serve different purposes.
+
+**Action**: Add comprehensive headers documenting the difference (Phase 7).
+
+---
+
+### 8.3 Authentication Consolidation (HIGH PRIORITY) 🔴
+
+#### Current Implementations (2 files):
+
+1. **lib/auth/api-key.ts** (200 lines) ✅ **CANONICAL**
+   - Admin auth: `checkAdminAuth` (3 methods: header, cookie, query param)
+   - Bot auth: `checkBotAuth` (API key validation)
+   - User auth: `checkUserAuth` (FID validation)
+   - Frame auth: `checkFrameAuth` (Farcaster frame validation)
+   - **Status**: Complete, production-ready
+
+2. **lib/auth/admin.ts** (156 lines) ⚠️ **JWT SESSION MANAGEMENT**
+   - JWT creation: `createAdminSessionToken`
+   - JWT verification: `verifyAdminSessionToken`
+   - Middleware: `requireAdminAuth` (Next.js middleware)
+   - **Decision**: KEEP (different concern: session management vs API auth)
+
+3. **lib/middleware/error-handler.ts** - Auth error helpers (lines 139-154)
+   - `handleAuthError` (401 Unauthorized)
+   - `handleAuthorizationError` (403 Forbidden)
+   - **Decision**: KEEP (error response formatting)
+
+#### Consolidation Plan:
+
+**No consolidation needed** - api-key.ts (stateless auth) and admin.ts (session management) are complementary.
+
+**Action**: 
+1. Add cross-references in headers (Phase 7)
+2. Document when to use each method
+
+---
+
+### 8.4 Supabase Client Consolidation (COMPLETED ✅ Phase 7.6)
+
+Already fixed in Phase 7.6 Pattern Consolidation:
+- ✅ lib/guild/event-logger.ts → getSupabaseAdminClient
+- ✅ lib/storage/image-upload-service.ts → getSupabaseBrowserClient
+- ✅ lib/profile/profile-service.ts → @/lib/supabase/edge
+- ✅ lib/leaderboard/leaderboard-scorer.ts → @/lib/supabase/edge
+- ✅ lib/viral/*.ts → @/lib/supabase/edge
+
+**Result**: All files now use centralized Supabase clients from lib/supabase/
+
+---
+
+### 8.7 COMPLETE INFRASTRUCTURE CONSOLIDATION SUMMARY
+
+| Infrastructure | Current Files | Canonical | Duplicates | Priority | Impact |
+|----------------|---------------|-----------|------------|----------|--------|
+| **1. Caching** | 10 files | lib/cache/server.ts | 6 duplicates | 🔴 HIGH | ~500 lines |
+| **2. RPC Clients** | 15+ files | NEW: lib/contracts/rpc-client-pool.ts | 15 duplicates | 🔴 HIGH | ~200 lines |
+| **3. User Fetching** | 10 functions | lib/integrations/neynar.ts + lib/supabase/queries/user.ts | 3 duplicates | 🔴 HIGH | ~150 lines |
+| **4. Neynar Client** | 3 files | lib/integrations/neynar-server.ts | 0 duplicates | ✅ DONE | Already optimal |
+| **5. Validation** | 5+ files | lib/middleware/api-security.ts | 0 major duplicates | 🟡 MEDIUM | Document only |
+| **6. Rate Limiting** | 2 files | lib/middleware/rate-limit.ts | 0 (different purposes) | 🟡 MEDIUM | Document only |
+| **7. Authentication** | 2 files | lib/auth/api-key.ts + admin.ts | 0 (complementary) | 🟡 MEDIUM | Document only |
+| **8. Supabase Client** | 8 files | lib/supabase/edge.ts | 0 (fixed Phase 7.6) | ✅ DONE | Pattern unified |
+
+**CRITICAL FINDINGS**:
+- **31 duplicate implementations found** across 8 infrastructure categories
+- **Top 3 priorities**: Caching (6 dupes), RPC Clients (15 dupes), User Fetching (3 dupes)
+- **Total consolidation impact**: ~850 lines reduced, 60+ imports updated
+
+**Revised Timeline** (Phase 8):
+- **8.1 Caching**: 4-6 hours (6 files consolidated)
+- **8.2 RPC Clients**: 3-4 hours (15 files updated, 1 new pool)
+- **8.3 User Fetching**: 1-2 hours (2 files deleted, 3 duplicates removed)
+- **8.4-8.7 Documentation**: 1-2 hours (headers, cross-references)
+- **Total**: **9-14 hours** (2 days of focused work)
+
+**Result After Phase 8**: 
+- **31 → 8 infrastructure implementations** (74% reduction)
+- **~850-1000 lines removed**
+- **60+ imports updated**
+- **Single source of truth** for each infrastructure pattern
+- **Prevents future duplication** (clear canonical patterns documented)
+
+---
+
+## Phase 9: TYPE SAFETY & VALIDATION (AFTER CONSOLIDATION)
 
 ### 🎯 Goal: Strengthen TypeScript usage and runtime validation
 
-**Target Start**: December 25, 2025 (after Phase 7 complete)  
-**Estimated Duration**: 1 week (Dec 25-31)
+**Target Start**: December 21, 2025 (after Phase 8 complete)  
+**Estimated Duration**: 1 week (Dec 21-27)
 
 ### 8.1 Planned Improvements
 
@@ -1362,19 +1776,24 @@ git revert HEAD~1
 December 2025:
 ├─ Week 3 (Dec 15-21)
 │  ├─ Phase 1-6: Structure & Consolidation ✅ COMPLETE (12.5h)
-│  ├─ Phase 7.1-7.2: contracts/ + bot/ headers ✅ COMPLETE (2h)
-│  └─ Phase 7.3-7.10: Remaining headers 🚧 IN PROGRESS (5 days)
+│  ├─ Phase 7.1-7.8: Headers (68/140 files) ✅ COMPLETE (4h)
+│  ├─ Phase 8: REAL CONSOLIDATION 🚧 IN PROGRESS (Dec 18-20)
+│  │   ├─ 8.1: Caching consolidation (6 → 1 implementation)
+│  │   ├─ 8.2: Rate limiting documentation
+│  │   ├─ 8.3: Auth documentation
+│  │   └─ Result: ~500 lines reduced, 30+ imports updated
+│  └─ Phase 7.9-7.14: Remaining headers (Dec 21-23)
 │
-└─ Week 4 (Dec 22-31)
-   ├─ Phase 7: Complete headers (Dec 22-24)
-   └─ Phase 8: Type Safety & Validation (Dec 25-31)
+└─ Week 4 (Dec 24-31)
+   ├─ Phase 7: Complete final headers (Dec 24)
+   └─ Phase 9: Type Safety & Validation (Dec 25-31)
 
 January 2026:
-├─ Week 1-2: Phase 9 - Performance Optimization
-└─ Week 3-4: Phase 10 - Testing & Reliability (Part 1)
+├─ Week 1-2: Phase 10 - Performance Optimization
+└─ Week 3-4: Phase 11 - Testing & Reliability (Part 1)
 
 February 2026:
-└─ Week 1-2: Phase 10 - Testing & Reliability (Part 2)
+└─ Week 1-2: Phase 11 - Testing & Reliability (Part 2)
 ```
 
 ### Success Metrics by Phase
@@ -1414,28 +1833,35 @@ February 2026:
 
 ## 📋 Quick Reference: What's Next?
 
-### ✅ Completed (Dec 15-17, 2025)
+### ✅ Completed (Dec 15-18, 2025)
 - Phase 1: Quick wins (backup deletion, README, indexes)
 - Phase 2: Cache/Auth/Supabase consolidation
 - Phase 3: Chain type documentation
 - Phase 4: Main entry point (lib/index.ts)
 - Phase 5: Massive root consolidation (71 files moved)
 - Phase 6: Category-specific deep refactoring
-- Phase 7.1-7.2: contracts/ and bot/ headers (23 files)
+- Phase 7.1-7.8: Comprehensive headers (68/140 files, 49%)
+  - contracts/ (10), bot/ (13), frames/ (16), middleware/ (9), quests/ (11), notifications/ (9), guild/ (2)
 
-### 🚧 Current Focus (Dec 18-24, 2025)
-- **Phase 7.3-7.10**: Complete comprehensive headers for ~115 remaining files
-  - Priority: frames/, middleware/, supabase/, quests/, notifications/
-  - Format: Consistent header with TODO, CRITICAL, SUGGESTIONS, AVOID
-  - Goal: 100% lib/ files documented by Dec 24
+### 🚧 Current Focus (Dec 18-20, 2025) - CRITICAL
+- **Phase 8: REAL CONSOLIDATION** (Eliminate Duplicates)
+  - 8.1: Caching consolidation (10 → 4 implementations, ~500 lines reduced)
+    - Merge lib/bot/local-cache.ts → lib/cache/server.ts
+    - Replace lib/supabase/edge.ts ServerCache → MemoryCache
+    - Consolidate leaderboard/aggregator inline caches
+    - Merge lib/utils/utils.ts cache → lib/cache/client.ts
+  - 8.2: Rate limiting documentation (2 files, different purposes)
+  - 8.3: Authentication documentation (2 files, complementary)
+  - Result: ~500 lines reduced, 30+ imports updated, prevents future confusion
 
-### ⏭️ Next Up (Dec 25-31, 2025)
-- **Phase 8**: Type Safety & Validation
+### ⏭️ Next Up (Dec 21-31, 2025)
+- **Phase 7.9-7.14**: Complete remaining headers (~72 files)
+  - supabase/ (15+), profile/ (11), badges/ (6), leaderboard/ (6), viral/ (4), api/ (6), others (~24)
+- **Phase 9**: Type Safety & Validation (Dec 25-31)
   - Add Zod schemas to all API routes
   - Generate TypeScript types from Supabase schema
   - Add branded types for IDs (FID, guildId, questId)
   - Add environment variable validation at startup
-  - Add comprehensive input sanitization
 
 ### 🔮 Future Phases (Jan-Feb 2026)
 - **Phase 9**: Performance Optimization (Jan 2026)
@@ -1817,7 +2243,7 @@ pnpm test lib/leaderboard
 
 ---
 
-**Last Updated**: December 18, 2025, 12:00 AM UTC  
-**Status**: Phase 7 in progress (59/140 files complete, 42%)  
-**Next Milestone**: Complete Phase 7 by December 24, 2025
-**Next Category**: notifications/ (9 files)
+**Last Updated**: December 18, 2025, 1:00 AM UTC  
+**Status**: Phase 7 in progress (68/140 files complete, 49%)  
+**Completed**: contracts, bot, frames, middleware, quests, notifications, guild
+**Next Milestone**: Complete Phase 8 (Real Consolidation) - December 20, 2025
