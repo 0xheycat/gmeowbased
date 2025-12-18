@@ -1,11 +1,15 @@
 /**
  * Viral Achievement System
  * 
+ * ⚠️ DEPRECATED (Phase 3): viral_milestone_achievements table dropped
+ * All functions in this file are deprecated and return mock/no-op values
+ * Achievement data now tracked in Subsquid
+ * 
  * Tracks and awards viral milestones like first viral cast, 10 viral casts,
  * 100 shares, and mega viral master.
  * 
  * Source: Custom achievement logic for Gmeowbased viral system
- * Database: viral_milestone_achievements table
+ * Database: viral_milestone_achievements table (DROPPED in Phase 3)
  * MCP Verified: November 17, 2025
  * Approved by: @heycat on November 17, 2025
  * 
@@ -21,6 +25,7 @@
  * - GI-11: Safe calculations, data validation
  * - GI-13: Complete documentation
  * 
+ * @deprecated Use Subsquid for achievement tracking
  * @module lib/viral-achievements
  */
 
@@ -135,22 +140,10 @@ export async function getUserAchievements(
       return []
     }
 
-    const supabase = deps?.supabase || getSupabaseServerClient()
-    if (!supabase) {
-      throw new Error('Supabase client not configured')
-    }
-
-    const { data, error } = await supabase
-      .from('viral_milestone_achievements')
-      .select('achievement_type')
-      .eq('fid', fid)
-
-    if (error) {
-      console.error('[Achievements] Error fetching user achievements:', error)
-      return []
-    }
-
-    return (data?.map((row) => row.achievement_type as AchievementType) || [])
+    // DEPRECATED (Phase 3): viral_milestone_achievements table dropped
+    console.warn(`[Achievements] getUserAchievements DEPRECATED: viral_milestone_achievements table dropped (fid=${fid})`)
+    return []
+    /* Original: await supabase.from('viral_milestone_achievements').select(...) */
   } catch (error) {
     console.error('[Achievements] Error in getUserAchievements:', error)
     return []
@@ -303,86 +296,19 @@ export async function awardAchievement(
       throw new Error('Supabase client not configured')
     }
 
-    const config = ACHIEVEMENTS[achievementType]
-
-    // GI-7: Insert achievement (UNIQUE constraint prevents duplicates)
-    const { error: insertError } = await supabase
-      .from('viral_milestone_achievements')
-      .insert({
-        fid,
-        achievement_type: achievementType,
-        cast_hash: castHash,
-        metadata: {
-          xp_awarded: config.xpReward,
-          achievement_name: config.name,
-          timestamp: new Date().toISOString(),
-        },
-      })
-      .select()
-      .single() as { data: Database['public']['Tables']['viral_milestone_achievements']['Row'], error: any }
-
-    if (insertError) {
-      // GI-7: Handle duplicate gracefully
-      if (insertError.code === '23505') {
-        console.log(`[Achievements] User ${fid} already has ${achievementType}`)
-        return false
-      }
-      throw insertError
-    }
-
-    // GI-11: Award XP (atomic increment)
-    const { error: xpError } = await supabase.rpc('increment_user_xp', {
-      p_fid: fid,
-      p_xp_amount: config.xpReward,
-    })
-
-    if (xpError) {
-      console.error('[Achievements] Failed to award XP:', xpError)
-      // Don't rollback achievement - XP update is secondary
-    }
-
-    // ⚠️ DEPRECATED - Event logging disabled (table dropped in Phase 3)
-    // gmeow_rank_events table was dropped - event logging moved to Subsquid
-    /* await supabase.from('gmeow_rank_events').insert({
-      fid,
-      event_type: 'achievement',
-      chain: 'base',
-      wallet_address: '0x0000000000000000000000000000000000000000',
-      quest_id: null,
-      delta: config.xpReward,
-      total_points: 0,
-      previous_points: null,
-      level: 0,
-      tier_name: 'none',
-      tier_percent: 0,
-      metadata: {
-        achievement_type: achievementType,
-        achievement_name: config.name,
-        cast_hash: castHash,
-        xp_awarded: config.xpReward,
-      } as Json,
-    }) */
-
-    // GI-10: Send notification async (non-blocking)
-    const notification: AchievementNotification = {
-      type: 'achievement',
-      fid,
-      achievementType,
-      castHash,
-      xpBonus: config.xpReward,
-    }
-
-    // Fire and forget - don't block on notification
-    if (notificationFn) {
-      notificationFn(notification).catch((error: Error) => {
-        console.error('[Achievements] Notification dispatch failed:', error)
-      })
-    }
-
-    console.log(
-      `[Achievements] Awarded ${achievementType} to user ${fid} (+${config.xpReward} XP)`
-    )
+    // DEPRECATED (Phase 3): viral_milestone_achievements table dropped
+    // This function is a no-op, kept for backward compatibility
+    // Achievement tracking now handled by Subsquid
+    console.warn(`[Achievements] awardAchievement DEPRECATED: viral_milestone_achievements table dropped in Phase 3 (fid=${fid}, type=${achievementType})`)
     return true
+
+    /* ORIGINAL CODE (before Phase 3 migration):
+    const config = ACHIEVEMENTS[achievementType]
+    const { error: insertError } = await supabase.from('viral_milestone_achievements').insert(...)
+    const { error: xpError } = await supabase.rpc('increment_user_xp', ...)
+    const notification: AchievementNotification = { ... }
+    notificationFn(notification)
+    */
   } catch (error) {
     console.error('[Achievements] Error awarding achievement:', error)
     return false
@@ -443,30 +369,10 @@ export async function getUserAchievementDetails(
   deps?: AchievementDependencies
 ): Promise<Array<UserAchievement & AchievementConfig>> {
   try {
-    const supabase = deps?.supabase || getSupabaseServerClient()
-    if (!supabase) {
-      throw new Error('Supabase client not configured')
-    }
-
-    const { data, error } = await supabase
-      .from('viral_milestone_achievements')
-      .select('*')
-      .eq('fid', fid)
-      .order('achieved_at', { ascending: false })
-
-    if (error || !data) {
-      return []
-    }
-
-    return data.map((row) => ({
-      id: row.id,
-      fid: row.fid,
-      achievementType: row.achievement_type as AchievementType,
-      achievedAt: new Date(row.achieved_at || new Date()),
-      castHash: row.cast_hash || undefined,
-      xpAwarded: (typeof row.metadata === 'object' && row.metadata && 'xp_awarded' in row.metadata ? row.metadata.xp_awarded as number : null) || 0,
-      ...ACHIEVEMENTS[row.achievement_type as AchievementType],
-    }))
+    // DEPRECATED (Phase 3): viral_milestone_achievements table dropped
+    console.warn(`[Achievements] getUserAchievementDetails DEPRECATED: viral_milestone_achievements table dropped (fid=${fid})`)
+    return []
+    /* Original: await supabase.from('viral_milestone_achievements').select('*')... */
   } catch (error) {
     console.error('[Achievements] Error fetching achievement details:', error)
     return []
