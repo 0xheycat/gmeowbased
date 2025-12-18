@@ -274,10 +274,39 @@ export async function getLegacyGMEvents(fid: number, limit = 30) {
     return [];
   }
 
-  // DEPRECATED (Phase 3): gmeow_rank_events table dropped
-  // Use Subsquid getGMRankEvents() instead
-  console.warn('[getLegacyGMEvents] DEPRECATED: gmeow_rank_events table dropped in Phase 3');
-  return [];
+  // Phase 6: Use Subsquid for GM rank events
+  try {
+    const { getRankEvents } = await import('@/lib/subsquid-client');
+    
+    // Query Subsquid for GM events
+    const fidNumber = typeof fid === 'string' ? parseInt(fid) : fid;
+    const events = await getRankEvents({
+      fid: fidNumber,
+      limit,
+      types: ['gm'], // Only GM events
+    });
+    
+    // Map to GMEventRow format
+    return events.map(event => ({
+      id: event.id,
+      fid: event.fid.toString(),
+      created_at: event.createdAt,
+      event_type: event.eventType,
+      chain: 'base',
+      wallet_address: event.wallet,
+      quest_id: event.questId || null,
+      delta: event.delta,
+      total_points: event.totalPoints,
+      previous_points: event.previousPoints,
+      level: event.level,
+      tier_name: event.tierName,
+      tier_percent: event.tierPercent,
+      metadata: event.metadata,
+    }));
+  } catch (error) {
+    console.error('[getLegacyGMEvents] Subsquid query failed:', error);
+    return [];
+  }
 
   /* Original implementation:
   // ⚠️ TODO: Replace with Subsquid getGMRankEvents()

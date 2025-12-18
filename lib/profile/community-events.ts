@@ -415,19 +415,74 @@ export async function fetchRecentCommunityEvents(options: FetchCommunityEventsOp
     }
   }
 
-  // DEPRECATED (Phase 3): gmeow_rank_events table dropped, use Subsquid
-  console.warn('[getCommunityEvents] DEPRECATED: gmeow_rank_events table dropped in Phase 3')
-  return {
-    events: [],
-    fetchedAt: new Date().toISOString(),
-    nextCursor: null,
-    meta: {
+  // Phase 6: Use Subsquid for rank events
+  try {
+    const { getRankEvents } = await import('@/lib/subsquid-client')
+    
+    // Query Subsquid for rank events
+    const events = await getRankEvents({
       limit,
-      requestedTypes: appliedTypes,
-      appliedTypes,
-      since: sinceFilter,
-      supabaseConfigured: true,
-    },
+      types: appliedTypes.length > 0 ? appliedTypes : undefined,
+      since: sinceFilter ? new Date(sinceFilter) : undefined,
+    })
+    
+    // Map Subsquid events to CommunityEventSummary format
+    const mappedEvents: CommunityEventSummary[] = events.map(event => {
+      const actor: CommunityEventActor = {
+        fid: event.fid,
+        username: null, // TODO: Enrich with Farcaster data
+        displayName: null,
+        walletAddress: event.wallet as `0x${string}`,
+      }
+      
+      return {
+        id: event.id,
+        eventType: sanitizeEventType(event.eventType) || 'gm',
+        headline: `${actor.walletAddress?.slice(0, 6)}...${actor.walletAddress?.slice(-4)} - ${event.eventType}`,
+        context: `Delta: ${event.delta}`,
+        emphasis: event.delta > 0 ? 'positive' : 'neutral',
+        createdAt: event.createdAt,
+        cursor: `${event.createdAt}#${event.id}`,
+        chain: 'base',
+        questId: event.questId || null,
+        delta: event.delta,
+        totalPoints: event.totalPoints,
+        previousTotal: event.previousPoints,
+        level: event.level,
+        tierName: event.tierName,
+        tierPercent: event.tierPercent,
+        actor,
+        metadata: event.metadata || null,
+        cta: null,
+      }
+    })
+    
+    return {
+      events: mappedEvents,
+      fetchedAt: new Date().toISOString(),
+      nextCursor: mappedEvents.length > 0 ? mappedEvents[0]?.cursor : null,
+      meta: {
+        limit,
+        requestedTypes: appliedTypes,
+        appliedTypes,
+        since: sinceFilter,
+        supabaseConfigured: true,
+      },
+    }
+  } catch (error) {
+    console.error('[getCommunityEvents] Subsquid query failed:', error)
+    return {
+      events: [],
+      fetchedAt: new Date().toISOString(),
+      nextCursor: null,
+      meta: {
+        limit,
+        requestedTypes: appliedTypes,
+        appliedTypes,
+        since: sinceFilter,
+        supabaseConfigured: true,
+      },
+    }
   }
 
   /* Original implementation:

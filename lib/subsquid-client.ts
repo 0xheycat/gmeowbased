@@ -544,6 +544,47 @@ export interface TipEvent {
 }
 
 /**
+ * Get rank events for community activity feeds
+ * Phase 6 Priority 2: Replace getCommunityEvents() and getLegacyGMEvents()
+ * 
+ * @param options - Query options (FID, limit, event types, since date)
+ * @returns Array of rank events (GM, tips, quests, etc.)
+ */
+export async function getRankEvents(options: {
+  fid?: number
+  limit?: number
+  types?: string[]
+  since?: Date
+}): Promise<GMRankEvent[]> {
+  try {
+    const client = getSubsquidClient()
+    
+    // If FID provided, use the existing getGMRankEvents method
+    if (options.fid) {
+      const sinceDate = options.since || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      const allEvents = await client.getGMRankEvents(options.fid, sinceDate)
+      
+      // Filter by event types if specified
+      if (options.types && options.types.length > 0) {
+        return allEvents
+          .filter(event => options.types!.includes(event.eventType))
+          .slice(0, options.limit || 100)
+      }
+      
+      return allEvents.slice(0, options.limit || 100)
+    }
+    
+    // If no FID, we need a global query (not yet supported in schema)
+    // Return empty array for now
+    console.warn('[getRankEvents] Global rank event queries not yet supported')
+    return []
+  } catch (error) {
+    console.error('[getRankEvents] Subsquid query failed:', error)
+    return []
+  }
+}
+
+/**
  * Check if Subsquid is available (health check)
  */
 export async function isSubsquidAvailable(): Promise<boolean> {
