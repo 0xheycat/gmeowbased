@@ -1,9 +1,9 @@
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/gmeow-utils'
-import { getRpcUrl } from '@/lib/contracts/rpc'
-import { createPublicClient, http, parseAbiItem, type AbiEvent, type Log } from 'viem'
+import { parseAbiItem, type AbiEvent, type Log } from 'viem'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Json } from '@/types/supabase'
+import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 
 export type TelemetryMetric = {
   value: number
@@ -109,7 +109,7 @@ export type RankTelemetryEventInput = {
 let cache: CacheBucket | null = null
 let dashboardCache: DashboardCacheBucket | null = null
 
-const telemetryClientCache = new Map<ChainKey, ReturnType<typeof createPublicClient>>()
+// Phase 8.2.2: Removed telemetryClientCache - using centralized rpc-client-pool.ts
 
 const EVT_POINTS_TIPPED = parseAbiItem(
   'event PointsTipped(address indexed from, address indexed to, uint256 points, uint256 fid)',
@@ -218,24 +218,9 @@ function getStartBlock(chain: ChainKey): bigint {
   return 0n
 }
 
+// Phase 8.2.2: Replaced with centralized RPC client pool
 function getTelemetryClient(chain: ChainKey) {
-  const cached = telemetryClientCache.get(chain)
-  if (cached) return cached
-
-  let rpc = ''
-  try {
-    rpc = getRpcUrl(chain)
-  } catch {
-    rpc = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_BASE || ''
-  }
-
-  if (!rpc) {
-    throw new Error(`RPC URL not configured for chain ${chain}`)
-  }
-
-  const client = createPublicClient({ transport: http(rpc) })
-  telemetryClientCache.set(chain, client)
-  return client
+  return getClientByChainKey(chain)
 }
 
 function allocateToBucket(daily: number[], timestampMs: number, value: number, now: number) {

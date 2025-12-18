@@ -1,4 +1,4 @@
-import { createPublicClient, http, parseAbiItem, type Log } from 'viem'
+import { parseAbiItem, type Log } from 'viem'
 import {
   CHAIN_KEYS,
   CONTRACT_ADDRESSES,
@@ -8,9 +8,9 @@ import {
   type GMChainKey,
 } from '@/lib/contracts/gmeow-utils'
 import { fetchUsersByAddresses } from '@/lib/integrations/neynar'
-import { getRpcUrl } from '@/lib/contracts/rpc'
 import { trackWarning } from '@/lib/notifications/error-tracking'
 import { getCached, invalidateCachePattern } from '@/lib/cache/server'
+import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 
 const EVT_QUEST_COMPLETED = parseAbiItem(
   'event QuestCompleted(uint256 indexed questId, address indexed user, uint256 pointsAwarded, uint256 fid, address rewardToken, uint256 tokenAmount)',
@@ -42,25 +42,9 @@ function getStartBlock(chain: ChainKey): bigint {
 }
 
 // ========================================
-// RPC CLIENT POOL (Phase 8.1.4)
+// RPC CLIENT (Phase 8.2.2)
 // ========================================
-// Keep RPC clients in memory (not in unified cache)
-// These are stateful connections, not serializable data
-const clientCache = new Map<ChainKey, ReturnType<typeof createPublicClient>>()
-
-function getClient(chain: ChainKey) {
-  const cached = clientCache.get(chain)
-  if (cached) return cached
-  let rpc = ''
-  try {
-    rpc = getRpcUrl(chain)
-  } catch {
-    rpc = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_BASE || ''
-  }
-  const client = createPublicClient({ transport: http(rpc) })
-  clientCache.set(chain, client)
-  return client
-}
+// Use centralized RPC client pool from rpc-client-pool.ts
 
 type AggregateBucket = { points: bigint; completed: number; fid: number }
 
@@ -119,7 +103,7 @@ export type EnrichedRow = {
 }
 
 async function fetchLogsInChunks(
-  client: ReturnType<typeof getClient>,
+  client: ReturnType<typeof getClientByChainKey>,
   address: `0x${string}`,
   fromBlock: bigint,
   toBlock: bigint,
@@ -179,11 +163,11 @@ async function loadChainAggregateInternal(chain: ChainKey): Promise<ChainAggrega
     { ttl: CHAIN_AGGREGATE_CACHE_TTL * 10, backend: 'memory' } // Keep state longer
   ).catch(() => null)
 
-  let client: ReturnType<typeof getClient>
+  let client: ReturnType<typeof getClientByChainKey>
   try {
-    client = getClient(chain)
+    client = getClientByChainKey(chain)
   } catch (error) {
-    trackWarning('leaderboard_client_creation_failed', { function: 'getOrCreateClient', chain, error: String(error) })
+    trackWarning('leaderboard_client_creation_failed', { function: 'getClientByChainKey', chain, error: String(error) })
     throw error
   }
   const contractAddr = CONTRACT_ADDRESSES[chain as GMChainKey]
@@ -290,7 +274,7 @@ async function resolveProfile(entry: RawAggregate) {
 async function resolveProfileFromChain(entry: RawAggregate) {
 
   try {
-    const client = getClient(entry.chain)
+    const client = getClientByChainKey(entry.chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
       Promise.race([
         promise,
@@ -431,6 +415,6 @@ export async function resetLeaderboardCaches() {
   await invalidateCachePattern('chain-aggregate-state', '*')
   await invalidateCachePattern('leaderboard-profile', '*')
   
-  // RPC clients stay in memory (stateful connections)
-  clientCache.clear()
+  // Phase 8.2.2: RPC clients now in centralized pool (lib/contracts/rpc-client-pool.ts)
+  // No need to clear local cache - pool is shared
 }

@@ -60,11 +60,12 @@
  *   - Minting same badge twice without checking ownership
  */
 
-import { createPublicClient, createWalletClient, http, parseAbi, decodeEventLog } from 'viem'
+import { createWalletClient, http, parseAbi, decodeEventLog } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base, optimism, celo } from 'viem/chains'
 import type { ChainKey } from './gmeow-utils'
 import { getRpcUrl } from '@/lib/contracts/rpc'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 import { getBadgeFromRegistry, type MintQueueEntry } from '@/lib/badges/badges'
 import { ensureOracleBalance } from '@/lib/contracts/auto-deposit-oracle'
 
@@ -173,11 +174,8 @@ export async function mintBadgeOnChain(mint: MintQueueEntry): Promise<{
   const gmContractAddress = getGMContractAddress(chain)
   const rpcUrl = getRpcUrl(chain)
 
-  // Create clients
-  const publicClient = createPublicClient({
-    chain: chainConfig,
-    transport: http(rpcUrl),
-  })
+  // Phase 8.2.2: Use centralized RPC client pool
+  const publicClient = getPublicClient(chainConfig.id)
 
   const walletClient = createWalletClient({
     account,

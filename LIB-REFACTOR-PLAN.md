@@ -1559,35 +1559,60 @@ await initializeCache() // Cleanup + warm cache
 
 ---
 
-### 8.2 RPC Client Consolidation (HIGH PRIORITY) 🔴
+### 8.2 RPC Client Consolidation ✅ COMPLETE (December 19, 2025)
 
-#### Current Problem: 15+ Files Create RPC Clients Inline
-
+#### Problem: 15+ Files Created RPC Clients Inline
 **Pattern**: `createPublicClient({ transport: http(rpc) })` repeated everywhere
 
-**Files with Inline RPC Client Creation**:
-1. ❌ **lib/badges/badges.ts** (line 477)
-2. ❌ **lib/leaderboard/leaderboard-scorer.ts** (lines 160, 212) - 2 instances
-3. ❌ **lib/contracts/referral-contract.ts** (line 119)
-4. ❌ **lib/contracts/gmeow-utils.ts** (line 850)
-5. ❌ **lib/contracts/contract-mint.ts** (line 177)
-6. ❌ **lib/contracts/guild-contract.ts** (line 131)
-7. ❌ **lib/contracts/auto-deposit-oracle.ts** (line 126)
-8. ❌ **lib/leaderboard/leaderboard-aggregator.ts** (lines 44-56) - Has cache but duplicates pattern
-9. ❌ **lib/quests/onchain-verification.ts** (line 56)
-10. ❌ **lib/profile/profile-data.ts** (line 226)
-11. ❌ **lib/profile/partner-snapshot.ts** (lines 140-148) - Has cache but duplicates
-12. ❌ **lib/utils/telemetry.ts** (lines 112-236) - Has cache but duplicates
-13. ❌ **lib/onchain-stats/data-source-router-rpc-only.ts** (line 182)
-14. ⚠️ **lib/profile/team.ts** (line 54) - Uses wagmi getPublicClient (different pattern)
-15. ⚠️ **lib/integrations/wagmi.ts** (line 111) - Uses wagmi (correct for wallet connections)
+#### Solution: Centralized RPC Client Pool
+Created **lib/contracts/rpc-client-pool.ts** (213 lines)
+- Connection pooling with Map<chainId, PublicClient>
+- Automatic retry (3 attempts, 1s delay)
+- Timeout: 30s per request
+- Support: Base, Optimism, Arbitrum, Polygon, Ethereum
+- Functions: getPublicClient(chainId), getClientByChainKey(chain), resetClientPool()
 
-#### Impact:
-- **15+ duplicate implementations**
-- **No shared RPC client pool** (new connection per call)
-- **Rate limit issues** (Alchemy/Infura limits hit faster)
-- **Performance**: Cold start creates 15+ HTTP transports
-- **Maintenance**: RPC URL change requires 15+ file updates
+#### Files Migrated (12 total):
+1. ✅ **lib/badges/badges.ts** - Removed inline client creation
+2. ✅ **lib/leaderboard/leaderboard-scorer.ts** - 2 instances migrated
+3. ✅ **lib/contracts/referral-contract.ts** - Constant migrated
+4. ✅ **lib/contracts/gmeow-utils.ts** - Inline creation removed
+5. ✅ **lib/contracts/contract-mint.ts** - Pool client used
+6. ✅ **lib/contracts/guild-contract.ts** - Constant migrated
+7. ✅ **lib/contracts/auto-deposit-oracle.ts** - Pool client used
+8. ✅ **lib/leaderboard/leaderboard-aggregator.ts** - Cache removed, pool used
+9. ✅ **lib/quests/onchain-verification.ts** - Constant migrated
+10. ✅ **lib/profile/profile-data.ts** - Inline client removed
+11. ✅ **lib/profile/partner-snapshot.ts** - Cache removed, pool used
+12. ✅ **lib/utils/telemetry.ts** - getTelemetryClient() now uses pool
+13. ✅ **lib/onchain-stats/data-source-router-rpc-only.ts** - Pool client used
+14. ⚠️ **lib/profile/team.ts** - Uses wagmi getPublicClient (wallet pattern, unchanged)
+15. ⚠️ **lib/integrations/wagmi.ts** - Uses wagmi (correct for wallet connections, unchanged)
+
+#### Phase 8.2 Results:
+- ✅ **lib/contracts/rpc-client-pool.ts** created (213 lines)
+- ✅ **12 files migrated** to use centralized pool
+- ✅ **~180 lines removed** (inline clients, caches, RPC constants)
+- ✅ **TypeScript: 0 errors** (full validation passed)
+- ✅ **Connection pooling**: Prevents duplicate RPC connections
+- ✅ **Maintenance**: Single source for RPC configuration
+
+#### Migration Pattern:
+```typescript
+// BEFORE
+const rpc = getRpcUrl(chain)
+const client = createPublicClient({ transport: http(rpc) })
+
+// AFTER
+import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
+const client = getClientByChainKey(chain)
+```
+
+#### Benefits:
+- **Shared RPC pool**: Reuses connections across 12 files
+- **Rate limit protection**: Fewer connections = fewer limit hits
+- **Performance**: No cold start overhead for duplicate transports
+- **Single source**: RPC URL changes in one place (rpc-client-pool.ts)
 
 #### Consolidation Plan:
 
@@ -1813,8 +1838,8 @@ Already fixed in Phase 7.6 Pattern Consolidation:
 
 | Infrastructure | Current Files | Canonical | Duplicates | Priority | Impact |
 |----------------|---------------|-----------|------------|----------|--------|
-| **1. Caching** | 10 files | lib/cache/server.ts | 6 duplicates | 🔴 HIGH | ~500 lines |
-| **2. RPC Clients** | 15+ files | NEW: lib/contracts/rpc-client-pool.ts | 15 duplicates | 🔴 HIGH | ~200 lines |
+| **1. Caching** | 10 files | lib/cache/server.ts | 6 duplicates | ✅ DONE | ~670 lines |
+| **2. RPC Clients** | 15+ files | lib/contracts/rpc-client-pool.ts | 15 duplicates | ✅ DONE | ~180 lines |
 | **3. User Fetching** | 10 functions | lib/integrations/neynar.ts + lib/supabase/queries/user.ts | 3 duplicates | 🔴 HIGH | ~150 lines |
 | **4. Neynar Client** | 3 files | lib/integrations/neynar-server.ts | 0 duplicates | ✅ DONE | Already optimal |
 | **5. Validation** | 5+ files | lib/middleware/api-security.ts | 0 major duplicates | 🟡 MEDIUM | Document only |

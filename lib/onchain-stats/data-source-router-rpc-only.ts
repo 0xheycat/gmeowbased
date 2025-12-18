@@ -28,8 +28,9 @@ import { BlockscoutClient } from './blockscout-client'
 import { formatEther } from 'viem'
 import type { Address } from 'viem'
 import type { PublicClient } from 'viem'
-import { createPublicClient, http } from 'viem'
+import { http } from 'viem'
 import { base, mainnet, optimism, arbitrum, polygon, gnosis, celo, scroll, zkSync } from 'viem/chains'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 
 type ChainKey = 'base' | 'ethereum' | 'optimism' | 'arbitrum' | 'polygon' | 'gnosis' | 'celo' | 'scroll' | 'unichain' | 'soneium' | 'zksync' | 'zora' | 'op'
 
@@ -177,12 +178,9 @@ export class DataSourceRouter {
       chainKey === 'op' ? 'optimism' : chainKey as 'base' | 'ethereum' | 'optimism' | 'arbitrum' | 'polygon' | 'gnosis' | 'celo' | 'scroll' | 'unichain' | 'soneium' | 'zksync' | 'zora'
     )
     
-    // Lightweight RPC client for balance only
+    // Phase 8.2.2: Use centralized RPC client pool
     const config = CHAIN_CONFIGS[chainKey]
-    this.rpcClient = createPublicClient({
-      chain: config.chain as any,
-      transport: http(config.rpc, { batch: true, timeout: 10_000 }),
-    })
+    this.rpcClient = getPublicClient(config.chain.id)
   }
 
   /**

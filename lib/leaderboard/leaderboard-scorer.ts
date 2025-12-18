@@ -13,8 +13,9 @@
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
-import { createPublicClient, http, parseAbiItem } from 'viem'
+import { parseAbiItem } from 'viem'
 import { base } from 'viem/chains'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI } from '@/lib/contracts/gmeow-utils'
 import { fetchUserByFid } from '@/lib/integrations/neynar'
 import {
@@ -156,11 +157,8 @@ export async function calculateLeaderboardScore(
  */
 async function getQuestPointsFromContract(address: string): Promise<number> {
   try {
-    const rpcUrl = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_BASE || 'https://mainnet.base.org'
-    const client = createPublicClient({
-      chain: base,
-      transport: http(rpcUrl),
-    })
+    // Phase 8.2.2: Use centralized RPC client pool
+    const client = getPublicClient(base.id)
 
     const contractAddress = CONTRACT_ADDRESSES.base
     const startBlock = BigInt(process.env.CHAIN_START_BLOCK_BASE || '0')
@@ -208,11 +206,8 @@ async function getQuestPointsFromContract(address: string): Promise<number> {
  */
 async function getStreakBonusFromContract(address: string): Promise<number> {
   try {
-    const rpcUrl = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_BASE || 'https://mainnet.base.org'
-    const client = createPublicClient({
-      chain: base,
-      transport: http(rpcUrl),
-    })
+    // Phase 8.2.2: Use centralized RPC client pool
+    const client = getPublicClient(base.id)
 
     const contractAddress = CONTRACT_ADDRESSES.base
 

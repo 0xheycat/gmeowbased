@@ -1,7 +1,8 @@
 import { performance } from 'node:perf_hooks'
 
-import { createPublicClient, erc20Abi, erc721Abi, erc1155Abi, http } from 'viem'
+import { erc20Abi, erc721Abi, erc1155Abi } from 'viem'
 import type { Address } from 'viem'
+import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import {
@@ -137,18 +138,7 @@ type BalanceResult = {
   reason: string | null
 }
 
-type ClientCache = Map<ChainKey, ReturnType<typeof createPublicClient>>
-
-const clientCache: ClientCache = new Map()
-
-function getClient(chain: ChainKey) {
-  const cached = clientCache.get(chain)
-  if (cached) return cached
-  const rpcUrl = getRpcUrl(chain)
-  const client = createPublicClient({ transport: http(rpcUrl) })
-  clientCache.set(chain, client)
-  return client
-}
+// Phase 8.2.2: Removed inline clientCache - using centralized rpc-client-pool.ts
 
 async function mapWithConcurrency<T, U>(items: T[], limit: number, iteratee: (item: T, index: number) => Promise<U>): Promise<U[]> {
   if (items.length === 0) return []
@@ -171,7 +161,7 @@ async function mapWithConcurrency<T, U>(items: T[], limit: number, iteratee: (it
 
 async function resolvePointsBalance(chain: ChainKey, address: Address, minimum: bigint): Promise<BalanceResult> {
   try {
-    const client = getClient(chain)
+    const client = getClientByChainKey(chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
       Promise.race([
         promise,
@@ -198,7 +188,7 @@ async function resolvePointsBalance(chain: ChainKey, address: Address, minimum: 
 
 async function resolveErc20Balance(chain: ChainKey, token: Address, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
-    const client = getClient(chain)
+    const client = getClientByChainKey(chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
       Promise.race([
         promise,
@@ -223,7 +213,7 @@ async function resolveErc20Balance(chain: ChainKey, token: Address, user: Addres
 
 async function resolveErc721Balance(chain: ChainKey, token: Address, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
-    const client = getClient(chain)
+    const client = getClientByChainKey(chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
       Promise.race([
         promise,
@@ -248,7 +238,7 @@ async function resolveErc721Balance(chain: ChainKey, token: Address, user: Addre
 
 async function resolveErc1155Balance(chain: ChainKey, token: Address, tokenId: bigint, user: Address, minimum: bigint): Promise<BalanceResult> {
   try {
-    const client = getClient(chain)
+    const client = getClientByChainKey(chain)
     const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
       Promise.race([
         promise,

@@ -97,7 +97,6 @@
 import {
   encodeFunctionData,
   parseEther,
-  createPublicClient,
   http,
   erc20Abi,
   erc721Abi,
@@ -105,7 +104,9 @@ import {
   type AbiFunction,
   type Address,
 } from 'viem'
+import { base } from 'viem/chains'
 import { trackWarning } from '@/lib/notifications/error-tracking'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 
 // Import ABIs from centralized source (single source of truth)
 import {
@@ -847,9 +848,8 @@ export async function checkTokenAllowanceAndBalance(
   spender: `0x${string}`,
   rpcUrl?: string,
 ) {
-  const client = createPublicClient({
-    transport: http(rpcUrl || (process.env.NEXT_PUBLIC_RPC_BASE as string) || ''),
-  })
+  // Phase 8.2.2: Use centralized RPC client pool (ignore rpcUrl param - pool uses env)
+  const client = getPublicClient(base.id)
 
   const rpcTimeout = <T,>(promise: Promise<T>, fallback: T): Promise<T> =>
     Promise.race([
