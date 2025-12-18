@@ -3161,6 +3161,7 @@ pnpm test lib/leaderboard
 
 ### 📊 Consolidation Results
 
+**Batch 1 - Duplicate Functions:**
 - **Lines reduced**: ~38 total
   - formatNumber + formatVolume: ~20 lines
   - normalizeAddress: ~10 lines  
@@ -3169,8 +3170,18 @@ pnpm test lib/leaderboard
   - formatNumber: 4 files
   - normalizeAddress: 4 files
 - **Files modified**: 10 total
+
+**Batch 2 - Tiny Wrappers:**
+- **Files deleted**: 1 (use-measure.ts - 1-line re-export)
+- **Consolidated into**: lib/hooks/index.ts
+- **Imports updated**: 1 file
+
+**Total Phase 8.8:**
+- **Lines reduced**: ~40
+- **Files deleted**: 1
+- **Imports updated**: 9
 - **TypeScript errors**: 0 ✅
-- **Time taken**: ~15 minutes
+- **Time taken**: ~20 minutes
 
 ### 🔍 Methodology
 
