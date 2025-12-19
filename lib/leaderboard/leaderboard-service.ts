@@ -133,7 +133,7 @@ export async function getLeaderboard(options: {
   // Map Subsquid response to expected format
   const data = rawData.map(entry => ({
     address: entry.wallet,
-    farcaster_fid: entry.fid,
+    farcaster_fid: entry.fid ?? null,
     total_score: entry.totalScore || 0,
     base_points: entry.basePoints || 0,
     viral_xp: entry.viralXP || 0,
@@ -146,8 +146,8 @@ export async function getLeaderboard(options: {
     nft_points: 0, // TODO: Add to Subsquid schema
     global_rank: entry.rank,
     is_guild_officer: entry.isGuildOfficer || false,
-    guild_id: entry.guildId,
-    guild_name: entry.guildName,
+    guild_id: entry.guildId ?? null,
+    guild_name: entry.guildName ?? null,
     period: period,
   }))
   
@@ -160,6 +160,7 @@ export async function getLeaderboard(options: {
       if (!entry.farcaster_fid) {
         return {
           ...entry,
+          farcaster_fid: null,
           username: null,
           display_name: null,
           pfp_url: null,
@@ -170,6 +171,7 @@ export async function getLeaderboard(options: {
         const neynarUser = await fetchUserByFid(entry.farcaster_fid)
         return {
           ...entry,
+          farcaster_fid: entry.farcaster_fid ?? null,
           username: neynarUser?.username || null,
           display_name: neynarUser?.displayName || null,
           pfp_url: neynarUser?.pfpUrl || null,
@@ -178,6 +180,7 @@ export async function getLeaderboard(options: {
         console.error(`Failed to fetch Neynar user for FID ${entry.farcaster_fid}:`, error)
         return {
           ...entry,
+          farcaster_fid: entry.farcaster_fid ?? null,
           username: null,
           display_name: null,
           pfp_url: null,

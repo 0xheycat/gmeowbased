@@ -19,7 +19,8 @@
  */
 
 import redis from './redis-client'
-import { getUserStats } from '@/lib/subsquid-client'
+import { getLeaderboardEntry } from '@/lib/subsquid-client'
+import type { UserStats } from '@/lib/subsquid-client'
 
 // Cache configuration
 const USER_STATS_PREFIX = 'user:stats:'
@@ -58,7 +59,7 @@ export async function getCachedUserStats(walletAddress: string) {
     
     // Cache miss - fetch from Subsquid
     console.log(`[Cache] User stats MISS: ${walletAddress}, fetching from Subsquid...`)
-    const data = await getUserStats(walletAddress)
+    const data = await getLeaderboardEntry(walletAddress)
     
     // Store in cache
     await redis.setex(key, USER_STATS_TTL, JSON.stringify(data))
@@ -71,7 +72,7 @@ export async function getCachedUserStats(walletAddress: string) {
     
     // Fallback to direct query on any cache error
     console.log(`[Cache] Falling back to direct Subsquid query: ${walletAddress}`)
-    return await getUserStats(walletAddress)
+    return await getLeaderboardEntry(walletAddress)
   }
 }
 
@@ -137,7 +138,7 @@ export async function warmUserStatsCache(walletAddress: string): Promise<void> {
     console.log(`[Cache] Warming up user stats cache: ${walletAddress}`)
     
     // Fetch fresh data
-    const data = await getUserStats(walletAddress)
+    const data = await getLeaderboardEntry(walletAddress)
     
     // Store in cache
     const key = getUserStatsKey(walletAddress)
