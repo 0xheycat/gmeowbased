@@ -65,7 +65,7 @@ redis.on('ready', () => {
   console.log('[Redis] Redis client ready')
 })
 
-redis.on('error', (err) => {
+redis.on('error', (err: Error) => {
   console.error('[Redis] Redis client error:', err.message)
 })
 
@@ -73,7 +73,7 @@ redis.on('close', () => {
   console.log('[Redis] Redis connection closed')
 })
 
-redis.on('reconnecting', (delay) => {
+redis.on('reconnecting', (delay: number) => {
   console.log(`[Redis] Reconnecting in ${delay}ms`)
 })
 

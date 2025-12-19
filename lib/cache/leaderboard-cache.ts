@@ -19,7 +19,8 @@
  */
 
 import redis from './redis-client'
-import { getLeaderboard } from '@/lib/subsquid-client'
+import { getSubsquidClient } from '@/lib/subsquid-client'
+import type { LeaderboardEntry } from '@/lib/subsquid-client'
 
 // Cache configuration
 const LEADERBOARD_KEY = 'leaderboard:top100'
@@ -46,7 +47,8 @@ export async function getCachedLeaderboard(limit = 100) {
     
     // Cache miss - fetch from Subsquid
     console.log('[Cache] Leaderboard MISS, fetching from Subsquid...')
-    const data = await getLeaderboard(limit)
+    const client = getSubsquidClient()
+    const data = await client.getLeaderboard(limit)
     
     // Store in cache
     await redis.setex(
@@ -63,7 +65,8 @@ export async function getCachedLeaderboard(limit = 100) {
     
     // Fallback to direct query on any cache error
     console.log('[Cache] Falling back to direct Subsquid query')
-    return await getLeaderboard(limit)
+    const client = getSubsquidClient()
+    return await client.getLeaderboard(limit)
   }
 }
 
@@ -103,7 +106,8 @@ export async function warmLeaderboardCache(limit = 100): Promise<void> {
     console.log('[Cache] Warming up leaderboard cache...')
     
     // Fetch fresh data
-    const data = await getLeaderboard(limit)
+    const client = getSubsquidClient()
+    const data = await client.getLeaderboard(limit)
     
     // Store in cache
     await redis.setex(
