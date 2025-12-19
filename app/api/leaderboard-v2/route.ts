@@ -6,6 +6,7 @@ import {
   addRateLimitHeaders,
 } from '@/lib/middleware/rate-limit'
 import { generateRequestId } from '@/lib/middleware/request-id'
+import redis from '@/lib/cache/redis-client'
 
 export const runtime = 'nodejs'
 export const revalidate = 300 // 5 minutes
@@ -86,14 +87,45 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    // Fetch leaderboard data
-    const result = await getLeaderboard({
-      period,
-      page,
-      perPage: pageSize,
-      search,
-      orderBy,
-    })
+    // Phase 7 Priority 2: Implement caching
+    // Cache key based on query parameters
+    const cacheKey = `leaderboard:v2:${period}:${page}:${pageSize}:${search || 'all'}:${orderBy}`
+    const cacheTTL = 300 // 5 minutes (matches revalidate)
+    
+    // Try cache first
+    let result
+    let cacheHit = false
+    
+    try {
+      const cached = await redis.get(cacheKey)
+      if (cached) {
+        console.log(`[Cache] Leaderboard V2 HIT: ${cacheKey}`)
+        result = JSON.parse(cached)
+        cacheHit = true
+      }
+    } catch (cacheError) {
+      console.error('[Cache] Leaderboard V2 cache read error:', cacheError)
+    }
+    
+    // Cache miss - fetch from database
+    if (!result) {
+      console.log(`[Cache] Leaderboard V2 MISS: ${cacheKey}`)
+      result = await getLeaderboard({
+        period,
+        page,
+        perPage: pageSize,
+        search,
+        orderBy,
+      })
+      
+      // Store in cache
+      try {
+        await redis.setex(cacheKey, cacheTTL, JSON.stringify(result))
+        console.log(`[Cache] Stored leaderboard V2: ${cacheKey} (TTL: ${cacheTTL}s)`)
+      } catch (cacheError) {
+        console.error('[Cache] Failed to store leaderboard V2:', cacheError)
+      }
+    }
     
     // Transform response to match expected format
     const response = {
@@ -106,11 +138,12 @@ export async function GET(request: NextRequest) {
       },
     }
     
-    // Return with rate limit headers
+    // Return with rate limit headers and cache status
     const nextResponse = NextResponse.json(response, {
       status: 200,
       headers: {
         'X-Request-ID': requestId,
+        'X-Cache-Status': cacheHit ? 'HIT' : 'MISS',
         'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       },
     })
