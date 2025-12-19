@@ -58,6 +58,8 @@ import {
     NFTTransfer,
     ReferralCode,
     ReferralUse,
+    TipEvent,
+    ViralMilestone,
 } from './model'
 
 // Import ABIs for event decoding
@@ -91,6 +93,10 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const nftTransfers: NFTTransfer[] = []
     const referralCodes = new Map<string, ReferralCode>()
     const referralUses: ReferralUse[] = []
+    
+    // Phase 7: Tip events and milestones
+    const tipEvents: any[] = [] // TipEvent type
+    const viralMilestones: any[] = [] // ViralMilestone type
     
     // Collect addresses to load
     const userAddresses = new Set<string>()
@@ -235,6 +241,43 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 blockNumber: block.header.height,
                                 txHash: log.transaction?.id || '',
                             }))
+                        }
+                    }
+                    
+                    // Phase 7: Handle PointsTipped event
+                    else if (topic === coreInterface.getEvent('PointsTipped')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const fromAddr = decoded.args.from.toLowerCase()
+                            const toAddr = decoded.args.to.toLowerCase()
+                            const points = decoded.args.points || 0n
+                            
+                            // Get or create both users
+                            let fromUser = getOrCreateUser(users, fromAddr, blockTime)
+                            let toUser = getOrCreateUser(users, toAddr, blockTime)
+                            
+                            // Update tip totals
+                            fromUser.totalTipsGiven = (fromUser.totalTipsGiven || 0n) + points
+                            toUser.totalTipsReceived = (toUser.totalTipsReceived || 0n) + points
+                            
+                            // Create tip event
+                            tipEvents.push({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                from: fromUser,
+                                to: toUser,
+                                amount: points,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                                isFirstTip: false, // Will be computed in second pass
+                                dailyTipCount: 0,
+                            })
+                            
+                            ctx.log.info(`💰 Tip: ${fromAddr.slice(0,6)} → ${toAddr.slice(0,6)} (${points} points)`)
                         }
                     }
                 }
@@ -572,6 +615,18 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
         ctx.log.info(`💾 Saved ${nftMints.length} NFT mints`)
     }
     
+    // Phase 7: Save tip events
+    if (tipEvents.length > 0) {
+        await ctx.store.insert(tipEvents.map(t => new TipEvent(t)))
+        ctx.log.info(`💾 Saved ${tipEvents.length} tip events`)
+    }
+    
+    // Phase 7: Save viral milestones
+    if (viralMilestones.length > 0) {
+        await ctx.store.insert(viralMilestones.map(m => new ViralMilestone(m)))
+        ctx.log.info(`💾 Saved ${viralMilestones.length} viral milestones`)
+    }
+    
     if (nftTransfers.length > 0) {
         await ctx.store.insert(nftTransfers)
         ctx.log.info(`💾 Saved ${nftTransfers.length} NFT transfers`)
@@ -605,6 +660,11 @@ function getOrCreateUser(
             currentStreak: 0,
             lastGMTimestamp: 0n,
             lifetimeGMs: 0,
+            // Phase 7: Tip tracking
+            totalTipsGiven: 0n,
+            totalTipsReceived: 0n,
+            // Phase 7: Milestones
+            milestoneCount: 0,
             createdAt: new Date(Number(timestamp) * 1000),
             updatedAt: new Date(Number(timestamp) * 1000),
         })

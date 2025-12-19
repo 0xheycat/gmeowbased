@@ -1,4 +1,5 @@
 # User XP & Streaks (from Core contract)
+# Phase 7: Enhanced with tip tracking and milestones
 type User @entity {
   id: ID! # wallet address (lowercase)
   totalXP: BigInt!
@@ -8,6 +9,17 @@ type User @entity {
   badges: [BadgeMint!] @derivedFrom(field: "user")
   guilds: [GuildMember!] @derivedFrom(field: "user")
   gmEvents: [GMEvent!] @derivedFrom(field: "user")
+  
+  # Phase 7: Tip tracking
+  tipsGiven: [TipEvent!] @derivedFrom(field: "from")
+  tipsReceived: [TipEvent!] @derivedFrom(field: "to")
+  totalTipsGiven: BigInt!
+  totalTipsReceived: BigInt!
+  
+  # Phase 7: Milestones
+  milestones: [ViralMilestone!] @derivedFrom(field: "user")
+  milestoneCount: Int!
+  
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -130,4 +142,68 @@ type DailyStats @entity {
   totalXPAwarded: BigInt!
   newGuilds: Int!
   badgesMinted: Int!
+}
+
+# Phase 7: Tip Events (for tip analytics)
+type TipEvent @entity {
+  id: ID! # txHash-logIndex
+  from: User!
+  to: User!
+  amount: BigInt!
+  timestamp: DateTime!
+  blockNumber: Int! @index
+  txHash: String! @index
+  
+  # Computed analytics
+  isFirstTip: Boolean!
+  dailyTipCount: Int!
+}
+
+# Phase 7: Viral Milestones (for achievement tracking)
+type ViralMilestone @entity {
+  id: ID! # userId-milestoneType-timestamp
+  user: User!
+  milestoneType: String! @index # "first_gm", "7_day_streak", "100_tips_received", etc.
+  value: BigInt!
+  timestamp: DateTime!
+  castHash: String
+  notificationSent: Boolean!
+  
+  # Context
+  previousValue: BigInt
+  requiredValue: BigInt!
+  category: String! @index # "gm", "tips", "badges", "guilds"
+}
+
+# Phase 7: Daily User Stats (pre-computed per-user metrics)
+type DailyUserStats @entity {
+  id: ID! # userId-YYYY-MM-DD
+  user: User!
+  date: String! @index
+  
+  # Daily metrics
+  gmsCompleted: Int!
+  tipsGiven: BigInt!
+  tipsReceived: BigInt!
+  xpEarned: BigInt!
+  guildsJoined: Int!
+  badgesMinted: Int!
+  
+  # Computed
+  streakDay: Int!
+  rank: Int
+}
+
+# Phase 7: Hourly Leaderboard Snapshots (for historical tracking)
+type HourlyLeaderboardSnapshot @entity {
+  id: ID! # YYYY-MM-DD-HH
+  timestamp: DateTime!
+  
+  # Snapshot metadata
+  totalUsers: Int!
+  averagePoints: BigInt!
+  medianPoints: BigInt!
+  
+  # Top 100 entries (JSON serialized for efficient storage)
+  entriesJSON: String! # [{rank, userId, totalPoints}, ...]
 }
