@@ -520,16 +520,66 @@ export async function getRecentActivity(fid: number, days: number = 30): Promise
  */
 export async function getTipEvents(
   walletAddress: string,
-  since?: Date
+  since?: Date,
+  limit: number = 50
 ): Promise<TipEvent[]> {
   try {
-    // For now, return empty array since we need proper schema support
-    // TODO: Add wallet-based tip event query to Subsquid schema
-    // TODO: Add tipEvents entity to gmeow-indexer/schema.graphql
+    const sinceISO = since ? since.toISOString() : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
     
-    // Temporary: We'll use stats calculation from leaderboard instead
-    console.warn('[getTipEvents] Direct tip queries not yet supported, using leaderboard stats')
-    return []
+    const query = `
+      query GetTipEvents($address: String!, $since: String!, $limit: Int!) {
+        tipEvents(
+          where: {
+            OR: [
+              { from: { id_eq: $address } }
+              { to: { id_eq: $address } }
+            ]
+            timestamp_gte: $since
+          }
+          orderBy: timestamp_DESC
+          limit: $limit
+        ) {
+          id
+          from { id }
+          to { id }
+          amount
+          timestamp
+          txHash
+        }
+      }
+    `
+    
+    const response = await fetch(SUBSQUID_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        variables: {
+          address: walletAddress.toLowerCase(),
+          since: sinceISO,
+          limit
+        }
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+    
+    const json = await response.json()
+    
+    if (json.errors) {
+      throw new Error(json.errors[0]?.message || 'GraphQL error')
+    }
+    
+    return (json.data?.tipEvents || []).map((event: any) => ({
+      id: event.id,
+      from: event.from.id,
+      to: event.to.id,
+      amount: Number(event.amount),
+      timestamp: event.timestamp,
+      txHash: event.txHash
+    }))
   } catch (error) {
     console.error('[getTipEvents] Subsquid query failed:', error)
     return []
@@ -574,10 +624,62 @@ export async function getRankEvents(options: {
       return allEvents.slice(0, options.limit || 100)
     }
     
-    // If no FID, we need a global query (not yet supported in schema)
-    // Return empty array for now
-    console.warn('[getRankEvents] Global rank event queries not yet supported')
-    return []
+    // Global query - get recent GM events without FID filter
+    const sinceISO = (options.since || new Date(Date.now() - 24 * 60 * 60 * 1000)).toISOString()
+    const limit = options.limit || 100
+    
+    const query = `
+      query GetRecentGMEvents($since: String!, $limit: Int!) {
+        gmEvents(
+          where: { timestamp_gte: $since }
+          orderBy: timestamp_DESC
+          limit: $limit
+        ) {
+          id
+          user { id }
+          timestamp
+          xpAwarded
+          streakDay
+          txHash
+        }
+      }
+    `
+    
+    const response = await fetch(SUBSQUID_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        variables: { since: sinceISO, limit }
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+    
+    const json = await response.json()
+    
+    if (json.errors) {
+      throw new Error(json.errors[0]?.message || 'GraphQL error')
+    }
+    
+    // Map to GMRankEvent format
+    return (json.data?.gmEvents || []).map((event: any) => ({
+      id: event.id,
+      fid: 0, // Not available in global query
+      wallet: event.user.id,
+      eventType: 'GM',
+      delta: Number(event.xpAwarded),
+      totalPoints: 0, // Not tracked
+      previousPoints: 0,
+      level: 0,
+      tierName: null,
+      tierPercent: 0,
+      questId: null,
+      metadata: null,
+      createdAt: event.timestamp
+    }))
   } catch (error) {
     console.error('[getRankEvents] Subsquid query failed:', error)
     return []
@@ -594,19 +696,58 @@ export async function getRankEvents(options: {
 export async function getViralMilestones(options: {
   since?: Date
   limit?: number
+  userId?: string
 }): Promise<ViralMilestone[]> {
   try {
-    // For now, derive milestones from rank events
-    // TODO: Add dedicated viral_milestones tracking to schema
-    
-    const sinceDate = options.since || new Date(Date.now() - 60 * 60 * 1000) // Last hour
+    const sinceISO = options.since ? options.since.toISOString() : new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
     const limit = options.limit || 50
     
-    // Query recent high-value events that might be viral milestones
-    // This is a simplified implementation - production would track specific milestone types
-    console.warn('[getViralMilestones] Using simplified milestone detection, add dedicated tracking')
+    const whereClause = options.userId 
+      ? `where: { user: { id_eq: "${options.userId.toLowerCase()}" }, timestamp_gte: "${sinceISO}" }`
+      : `where: { timestamp_gte: "${sinceISO}" }`
     
-    return []
+    const query = `
+      query GetViralMilestones {
+        viralMilestones(
+          ${whereClause}
+          orderBy: timestamp_DESC
+          limit: ${limit}
+        ) {
+          id
+          user { id }
+          milestoneType
+          value
+          timestamp
+          castHash
+          notificationSent
+        }
+      }
+    `
+    
+    const response = await fetch(SUBSQUID_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+    
+    const json = await response.json()
+    
+    if (json.errors) {
+      throw new Error(json.errors[0]?.message || 'GraphQL error')
+    }
+    
+    return (json.data?.viralMilestones || []).map((milestone: any) => ({
+      id: milestone.id,
+      fid: 0, // TODO: Add FID to schema
+      milestoneType: milestone.milestoneType,
+      value: Number(milestone.value),
+      timestamp: milestone.timestamp,
+      castHash: milestone.castHash
+    }))
   } catch (error) {
     console.error('[getViralMilestones] Subsquid query failed:', error)
     return []
