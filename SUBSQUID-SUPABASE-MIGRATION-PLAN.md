@@ -830,6 +830,53 @@ CREATE TABLE referral_registrations (
 
 **Detailed Report**: See `PHASE-6-COMPLETE.md`
 
+---
+
+### **Phase 7: Performance Optimization & Caching (🚀 READY TO START - Dec 19, 2025)** 🎯
+
+**Status**: 🟢 READY - Phase 6 complete, deprecated functions replaced
+
+**Duration**: 4 weeks (Dec 19 - Jan 15, 2026)  
+**Risk Level**: 🟡 Medium (new infrastructure components)
+
+**Objective**: Enhance performance through schema improvements, caching layers, and code cleanup
+
+**Priority 1: Subsquid Schema Enhancements** (Week 1)
+- Add TipEvents entity (make getTipEvents() fully functional)
+- Add ViralMilestones entity (make getViralMilestones() fully functional)
+- Add aggregation tables (DailyUserStats, HourlyLeaderboardSnapshot)
+- Impact: Complete data coverage, faster queries
+
+**Priority 2: Caching Layer** (Week 2)
+- Setup Redis infrastructure (Docker)
+- Cache leaderboard data (15-minute TTL, <5ms response)
+- Cache user stats (5-minute TTL)
+- Cache community events (3-minute TTL)
+- Target: 90%+ cache hit rate
+
+**Priority 3: Code Cleanup** (Week 3)
+- Archive deprecated files (viral-achievements.ts, leaderboard-scorer.ts)
+- Remove unused functions
+- Update import references
+- Clean console warnings
+
+**Priority 4: Farcaster Caching** (Week 4)
+- Enhanced Neynar webhook handler
+- Cache Farcaster profiles (24-hour TTL)
+- Cache cast data (7-day TTL)
+- Target: 80% cache hit rate for Farcaster
+
+**Success Metrics**:
+- ✅ API response times: <10ms (leaderboard), <50ms (user stats)
+- ✅ Cache hit rate: 90%+ (Subsquid), 80%+ (Farcaster)
+- ✅ 0 deprecated files remaining
+- ✅ 0 console warnings about dropped tables
+- ✅ Subsquid query time: <100ms
+
+**Detailed Plan**: See `PHASE-7-PERFORMANCE-OPTIMIZATION-PLAN.md`
+
+---
+
 **Priority 1: Analytics Queries** (HIGH IMPACT)
 - `fetchTipPoints()` in lib/bot/analytics/stats.ts
 - `getUserStatsWithFallback()` in lib/bot/stats-with-fallback.ts
