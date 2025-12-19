@@ -86,6 +86,15 @@ import { syncCastEngagement } from '@/lib/viral/viral-engagement-sync'
 import { notifyWithXPReward } from '@/lib/notifications'
 // Phase 1: Bot Analytics - Track webhook metrics for health monitoring
 import { recordBotMetric } from '@/lib/bot/analytics'
+// Phase 7 Priority 4: Webhook Caching Layer
+import {
+  isWebhookProcessed,
+  markWebhookProcessed,
+  getCachedCast,
+  setCachedCast,
+  getCachedMention,
+  setCachedMention,
+} from '@/lib/cache/webhook-cache'
 
 export const runtime = 'nodejs'
 
@@ -608,6 +617,35 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const eventType = event.type || event.event_type
   
   // ========================================================================
+  // Phase 7 Priority 4: Webhook Deduplication
+  // ========================================================================
+  // Check if webhook was already processed (idempotency)
+  // Target: 95%+ hit rate for duplicate webhooks
+  // Reference: PHASE-7-PERFORMANCE-OPTIMIZATION-PLAN.md
+  const idempotencyKey = event.idempotency_key
+  if (idempotencyKey) {
+    const wasProcessed = await isWebhookProcessed(idempotencyKey)
+    if (wasProcessed) {
+      // Track deduplicated webhook
+      recordBotMetric({
+        type: 'webhook_processed',
+        timestamp: new Date(),
+        metadata: { 
+          eventType,
+          deduplicated: true,
+          idempotencyKey: idempotencyKey.slice(0, 10)
+        }
+      }).catch(err => console.warn('[bot-analytics] Failed to record dedup:', err))
+      
+      return NextResponse.json({ 
+        ok: true, 
+        cached: true,
+        message: 'webhook already processed'
+      }, { headers: { 'X-Request-ID': requestId, 'X-Cache-Status': 'HIT' } })
+    }
+  }
+  
+  // ========================================================================
   // Handle cast.deleted event
   // ========================================================================
   // When a cast is deleted, mark it in badge_casts table (soft delete)
@@ -868,12 +906,17 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       responseTimeMs: totalResponseTime,
     }).catch(err => console.warn('[bot-analytics] Failed to record webhook_processed:', err))
 
+    // Phase 7 Priority 4: Mark webhook as processed (deduplication)
+    if (idempotencyKey) {
+      await markWebhookProcessed(idempotencyKey)
+    }
+
     return NextResponse.json({ 
       ok: true, 
       hash: response.cast?.hash ?? null, 
       meta: replyMeta,
       frameEmbedded: frameEmbeds.length > 0
-    }, { headers: { 'X-Request-ID': requestId } })
+    }, { headers: { 'X-Request-ID': requestId, 'X-Cache-Status': 'MISS' } })
   } catch (error: any) {
     const isDuplicate = error?.status === 409 || error?.response?.status === 409
     

@@ -40,6 +40,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getRedisInfo, checkRedisHealth } from '@/lib/cache/redis-client'
+import { getWebhookCacheStats } from '@/lib/cache/webhook-cache'
+import { getNeynarCacheStats } from '@/lib/cache/neynar-cache'
+import { getNotificationCacheStats } from '@/lib/cache/notification-cache'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic' // Always fresh data
@@ -75,9 +78,23 @@ export async function GET(request: NextRequest) {
     // Get Redis info
     const info = await getRedisInfo()
     
+    // Get webhook cache stats (Phase 7 Priority 4)
+    const webhookStats = await getWebhookCacheStats()
+    
+    // Get Neynar cache stats (Upstash Redis)
+    const neynarStats = await getNeynarCacheStats()
+    
+    // Get notification cache stats (Phase 7 Priority 4)
+    const notificationStats = await getNotificationCacheStats()
+    
     return NextResponse.json({
       success: true,
-      data: info,
+      data: {
+        ...info,
+        webhookCache: webhookStats,
+        neynarCache: neynarStats,
+        notificationCache: notificationStats,
+      },
       timestamp: new Date().toISOString(),
     })
     
