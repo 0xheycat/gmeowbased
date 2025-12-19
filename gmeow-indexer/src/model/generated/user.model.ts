@@ -2,6 +2,8 @@ import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, B
 import {BadgeMint} from "./badgeMint.model"
 import {GuildMember} from "./guildMember.model"
 import {GMEvent} from "./gmEvent.model"
+import {TipEvent} from "./tipEvent.model"
+import {ViralMilestone} from "./viralMilestone.model"
 
 @Entity_()
 export class User {
@@ -32,6 +34,24 @@ export class User {
 
     @OneToMany_(() => GMEvent, e => e.user)
     gmEvents!: GMEvent[]
+
+    @OneToMany_(() => TipEvent, e => e.from)
+    tipsGiven!: TipEvent[]
+
+    @OneToMany_(() => TipEvent, e => e.to)
+    tipsReceived!: TipEvent[]
+
+    @BigIntColumn_({nullable: false})
+    totalTipsGiven!: bigint
+
+    @BigIntColumn_({nullable: false})
+    totalTipsReceived!: bigint
+
+    @OneToMany_(() => ViralMilestone, e => e.user)
+    milestones!: ViralMilestone[]
+
+    @IntColumn_({nullable: false})
+    milestoneCount!: number
 
     @DateTimeColumn_({nullable: false})
     createdAt!: Date

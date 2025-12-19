@@ -76,11 +76,12 @@ import { resolveBotFid, resolveBotSignerUuid, resolveWebhookSecret } from '@/lib
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { selectFrameForIntent, formatFrameEmbedForCast } from '@/lib/bot/frames/builder'
 // Phase 5.1: Real-time Viral Notifications
-// Source: lib/viral-engagement-sync.ts, lib/viral-achievements.ts
+// Source: lib/viral-engagement-sync.ts
 // MCP Verified: November 17, 2025
 // Approved by: @heycat on November 17, 2025
 import { syncCastEngagement } from '@/lib/viral/viral-engagement-sync'
-import { checkAndAwardAchievements } from '@/lib/viral/viral-achievements'
+// Phase 7 Priority 3: viral-achievements.ts DEPRECATED
+// Achievement tracking now handled by Subsquid ViralMilestone entities
 // Phase 4: Priority System Integration - replaced dispatchViralNotification with notifyWithXPReward
 import { notifyWithXPReward } from '@/lib/notifications'
 // Phase 1: Bot Analytics - Track webhook metrics for health monitoring
@@ -524,19 +525,15 @@ async function handleViralEngagementSync(
       })
     }
 
-    // Check and award achievements
+    // Phase 7 Priority 3: Achievement awarding DEPRECATED
+    // Achievements now tracked in Subsquid ViralMilestone entities
+    // Detection logic will be implemented in Subsquid processor
+    // TODO: Implement milestone detection in gmeow-indexer/src/main.ts
     if (badgeCast.fid) {
-      const achievementsAwarded = await checkAndAwardAchievements(
-        badgeCast.fid,
-        castHash
-      )
-
-      if (achievementsAwarded > 0) {
-        console.log('[webhook] Awarded achievements:', {
-          fid: badgeCast.fid,
-          count: achievementsAwarded,
-        })
-      }
+      console.log('[webhook] Milestone detection pending Subsquid implementation:', {
+        fid: badgeCast.fid,
+        castHash,
+      })
     }
   } catch (error) {
     console.error('[webhook] Viral engagement sync error:', error)

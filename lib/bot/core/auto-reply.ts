@@ -420,7 +420,7 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
     const clarifyingText = generateClarifyingQuestion(detectionWithConfidence)
     
     // Store clarifying question state for multi-step conversation
-    const { setConversationState } = require('@/lib/bot-cache')
+    const { setConversationState } = require('@/lib/cache/server')
     setConversationState(input.fid, {
       expectingAnswer: true,
       pendingQuestion: clarifyingText,
