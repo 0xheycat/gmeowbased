@@ -81,8 +81,8 @@ export async function getCachedRecentGMEvents(limit = 50) {
     
     // Cache miss - fetch from Subsquid
     console.log(`[Cache] GM events MISS (limit: ${limit}), fetching from Subsquid...`)
-    // TODO: Need global GM events query. For now return empty array.
-    const data: any[] = []
+    const { getRankEvents } = await import('@/lib/subsquid-client')
+    const data = await getRankEvents({ limit })
     
     // Store in cache
     await redis.setex(key, EVENTS_TTL, JSON.stringify(data))
@@ -95,8 +95,8 @@ export async function getCachedRecentGMEvents(limit = 50) {
     
     // Fallback to direct query on any cache error
     console.log('[Cache] Falling back to direct Subsquid query')
-    // TODO: Need global GM events query
-    return []
+    const { getRankEvents } = await import('@/lib/subsquid-client')
+    return await getRankEvents({ limit })
   }
 }
 
@@ -162,8 +162,8 @@ export async function getCachedTipEvents(address: string, limit = 50) {
     
     // Cache miss - fetch from Subsquid
     console.log(`[Cache] Tip events MISS: ${address} (limit: ${limit}), fetching from Subsquid...`)
-    // getTipEvents returns empty array for now (needs schema support)
-    const data: any[] = []
+    const { getTipEvents } = await import('@/lib/subsquid-client')
+    const data = await getTipEvents(address, undefined, limit)
     
     // Store in cache
     await redis.setex(key, EVENTS_TTL, JSON.stringify(data))
@@ -176,8 +176,8 @@ export async function getCachedTipEvents(address: string, limit = 50) {
     
     // Fallback to direct query on any cache error
     console.log(`[Cache] Falling back to direct Subsquid query: ${address}`)
-    // getTipEvents returns empty array for now
-    return []
+    const { getTipEvents } = await import('@/lib/subsquid-client')
+    return await getTipEvents(address, undefined, limit)
   }
 }
 

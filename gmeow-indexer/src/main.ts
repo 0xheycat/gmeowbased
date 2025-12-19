@@ -225,6 +225,10 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             
                             // Get or create user
                             let user = getOrCreateUser(users, userAddr, blockTime)
+                            const oldXP = user.totalXP
+                            const oldGMCount = user.lifetimeGMs
+                            const oldStreak = user.currentStreak
+                            
                             user.totalXP += points
                             user.currentStreak = Number(streak)
                             user.lastGMTimestamp = blockTime
@@ -241,6 +245,27 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 blockNumber: block.header.height,
                                 txHash: log.transaction?.id || '',
                             }))
+                            
+                            // Phase 7: Check for GM milestones
+                            if (oldGMCount === 0) {
+                                // First GM milestone
+                                viralMilestones.push({
+                                    id: `${userAddr}-first_gm-${blockTime}`,
+                                    user: user,
+                                    milestoneType: 'first_gm',
+                                    value: 1n,
+                                    timestamp: new Date(Number(blockTime) * 1000),
+                                    castHash: null,
+                                    notificationSent: false,
+                                    previousValue: 0n,
+                                    requiredValue: 1n,
+                                    category: 'gm'
+                                })
+                                user.milestoneCount += 1
+                            }
+                            checkMilestone(viralMilestones, user, 'gm_count', oldGMCount, user.lifetimeGMs, blockTime, 'gm')
+                            checkMilestone(viralMilestones, user, 'xp_earned', Number(oldXP), Number(user.totalXP), blockTime, 'gm')
+                            checkMilestone(viralMilestones, user, 'streak_days', oldStreak, user.currentStreak, blockTime, 'gm')
                         }
                     }
                     
@@ -273,9 +298,14 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 timestamp: new Date(Number(blockTime) * 1000),
                                 blockNumber: block.header.height,
                                 txHash: log.transaction?.id || '',
-                                isFirstTip: false, // Will be computed in second pass
-                                dailyTipCount: 0,
+                                isFirstTip: tipEvents.filter(t => t.from.id === fromAddr).length === 0,
+                                dailyTipCount: tipEvents.filter(t => t.from.id === fromAddr).length + 1,
                             })
+                            
+                            // Phase 7: Check for tip milestones
+                            const oldTipsReceived = (toUser.totalTipsReceived || 0n) - points
+                            checkMilestone(viralMilestones, toUser, 'tips_received', Number(oldTipsReceived), Number(toUser.totalTipsReceived), blockTime, 'tips')
+                            checkMilestone(viralMilestones, fromUser, 'tips_given', Number(fromUser.totalTipsGiven - points), Number(fromUser.totalTipsGiven), blockTime, 'tips')
                             
                             ctx.log.info(`💰 Tip: ${fromAddr.slice(0,6)} → ${toAddr.slice(0,6)} (${points} points)`)
                         }
@@ -671,4 +701,48 @@ function getOrCreateUser(
         users.set(addr, user)
     }
     return user
+}
+
+// Phase 7: Milestone detection helper
+function checkMilestone(
+    milestones: any[],
+    user: User,
+    type: string,
+    oldValue: number,
+    newValue: number,
+    timestamp: bigint,
+    category: string
+): void {
+    // Define milestone thresholds
+    const thresholds: Record<string, number[]> = {
+        'tips_received': [10, 50, 100, 500, 1000],
+        'tips_given': [10, 50, 100, 500, 1000],
+        'gm_count': [1, 7, 30, 100, 365],
+        'xp_earned': [100, 500, 1000, 5000, 10000],
+        'streak_days': [3, 7, 14, 30, 100]
+    }
+    
+    const milestoneThresholds = thresholds[type] || []
+    
+    // Check if we crossed any milestone threshold
+    for (const threshold of milestoneThresholds) {
+        if (oldValue < threshold && newValue >= threshold) {
+            const milestoneId = `${user.id}-${type}-${threshold}-${timestamp}`
+            milestones.push({
+                id: milestoneId,
+                user: user,
+                milestoneType: `${type}_${threshold}`,
+                value: BigInt(newValue),
+                timestamp: new Date(Number(timestamp) * 1000),
+                castHash: null,
+                notificationSent: false,
+                previousValue: BigInt(oldValue),
+                requiredValue: BigInt(threshold),
+                category: category
+            })
+            
+            // Increment user milestone count
+            user.milestoneCount += 1
+        }
+    }
 }
