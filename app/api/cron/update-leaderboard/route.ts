@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { recalculateGlobalRanks } from '@/lib/leaderboard/leaderboard-scorer'
 import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency'
 import { generateRequestId } from '@/lib/middleware/request-id'
+
+// Phase 7 Priority 3: recalculateGlobalRanks DEPRECATED
+// Rank calculation now handled by Subsquid in real-time
+// This cron job is now a no-op
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes
@@ -62,25 +65,19 @@ export async function POST(request: NextRequest) {
       return returnCachedResponse(idempotencyResult)
     }
     
-    // Update all periods in parallel for performance
-    const [dailyResult, weeklyResult, allTimeResult] = await Promise.all([
-      recalculateGlobalRanks('daily'),
-      recalculateGlobalRanks('weekly'),
-      recalculateGlobalRanks('all_time'),
-    ])
+    // Phase 7 Priority 3: Leaderboard calculation now handled by Subsquid
+    // No manual recalculation needed - Subsquid updates in real-time
+    console.log('[Leaderboard Cron] DEPRECATED: Subsquid handles leaderboard updates automatically')
     
     const duration = Date.now() - startTime
     
     const result = {
       success: true,
-      message: 'Leaderboard updated successfully',
+      message: 'Leaderboard cron deprecated - Subsquid handles updates automatically',
       timestamp: new Date().toISOString(),
       duration: `${duration}ms`,
-      periods: {
-        daily: { updated: dailyResult },
-        weekly: { updated: weeklyResult },
-        all_time: { updated: allTimeResult },
-      },
+      deprecated: true,
+      note: 'Ranks are computed in real-time by Subsquid indexer',
     }
     
     console.log('[Leaderboard Cron] Update complete:', result)

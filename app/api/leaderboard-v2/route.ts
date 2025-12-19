@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getLeaderboard } from '@/lib/leaderboard/leaderboard-scorer'
+import { getLeaderboard } from '@/lib/leaderboard/leaderboard-service'
 import {
   checkLeaderboardRateLimit,
   createRateLimitResponse,
