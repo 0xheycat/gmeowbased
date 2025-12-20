@@ -11,7 +11,7 @@
 
 'use client'
 
-import { type ViralTierConfig } from '@/lib/viral/viral-bonus'
+import { type ViralTierConfig } from '@/lib/scoring/unified-calculator'
 
 type ViralTierBadgeProps = {
   tier: ViralTierConfig
