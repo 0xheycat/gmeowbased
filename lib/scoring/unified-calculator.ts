@@ -713,6 +713,22 @@ export function estimateNextTier(
   }
 }
 
+/**
+ * Format engagement metrics into human-readable string
+ * 
+ * @param metrics - Engagement metrics to format
+ * @returns Formatted string (e.g., "5 likes, 2 recasts, 3 replies")
+ */
+export function formatEngagementMetrics(metrics: EngagementMetrics): string {
+  const parts: string[] = []
+  
+  if (metrics.likes > 0) parts.push(`${metrics.likes} like${metrics.likes !== 1 ? 's' : ''}`)
+  if (metrics.recasts > 0) parts.push(`${metrics.recasts} recast${metrics.recasts !== 1 ? 's' : ''}`)
+  if (metrics.replies > 0) parts.push(`${metrics.replies} repl${metrics.replies !== 1 ? 'ies' : 'y'}`)
+  
+  return parts.join(', ') || 'No engagement yet'
+}
+
 // ============================================================================
 // DISPLAY FORMATTING
 // ============================================================================
