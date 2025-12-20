@@ -27,6 +27,7 @@ import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay
 import { getGMStats, type GMStats } from '@/lib/integrations/subsquid-client'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI, type ChainKey } from '@/lib/contracts/gmeow-utils'
 import { Tooltip } from '@/components/ui/tooltip'
+import { calculateRankProgress, type RankProgress } from '@/lib/scoring/unified-calculator'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import WbSunnyIcon from '@mui/icons-material/WbSunny'
@@ -77,6 +78,7 @@ export function GMButton({
   const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
   const [timeRemaining, setTimeRemaining] = useState<string>('')
   const [cooldownProgress, setCooldownProgress] = useState<number>(0)
+  const [rankProgress, setRankProgress] = useState<RankProgress | null>(null)
   
   const targetChainId = CHAIN_IDS[chain]
   const contractAddress = CONTRACT_ADDRESSES[chain]
@@ -133,6 +135,13 @@ export function GMButton({
           walletAddress: address 
         })
         setGmStats(stats)
+        
+        // Calculate rank progress from total XP (10 XP per GM)
+        if (stats) {
+          const totalXP = stats.totalGMs * 10
+          const progress = calculateRankProgress(totalXP)
+          setRankProgress(progress)
+        }
       } catch (error) {
         console.error('[GMButton] Error fetching GM stats:', error)
       } finally {
@@ -242,6 +251,11 @@ export function GMButton({
       console.log('[GMButton] Updated stats:', updatedStats)
       setGmStats(updatedStats)
 
+      // Recalculate rank progress
+      const newTotalXP = updatedStats.totalGMs * 10
+      const newProgress = calculateRankProgress(newTotalXP)
+      setRankProgress(newProgress)
+
       // Refetch on-chain lastGMTime
       refetchLastGMTime()
 
@@ -249,7 +263,6 @@ export function GMButton({
       const baseReward = 10
       const streakBonus = Math.min(updatedStats.currentStreak * 2, 50) // Max +50 XP from streak
       const gmReward = baseReward + streakBonus
-      const newTotalXP = updatedStats.totalGMs * 10 // Estimate: 10 XP per GM
 
       console.log('[GMButton] Showing XP celebration:', {
         gmReward,
@@ -403,7 +416,7 @@ export function GMButton({
             )}
 
             {/* Stats Grid */}
-            {gmStats && (
+            {gmStats && rankProgress && (
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-slate-800/50 rounded-xl p-4">
                   <div className="text-2xl font-bold text-white">
@@ -416,6 +429,29 @@ export function GMButton({
                     {(gmStats.totalGMs * 10).toLocaleString()}
                   </div>
                   <div className="text-sm text-slate-400">Total XP</div>
+                </div>
+                {/* Rank tier */}
+                <div className="bg-slate-800/50 rounded-xl p-4">
+                  <div className="text-lg font-bold text-white">
+                    {rankProgress.currentTier.name}
+                  </div>
+                  <div className="text-sm text-slate-400">Current Rank</div>
+                </div>
+                {/* Level progress */}
+                <div className="bg-slate-800/50 rounded-xl p-4">
+                  <div className="text-lg font-bold text-white">
+                    Level {rankProgress.level}
+                  </div>
+                  <div className="text-sm text-slate-400">
+                    {rankProgress.xpIntoLevel}/{rankProgress.xpForLevel} XP
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-2 h-1 bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                      style={{ width: `${(rankProgress.xpIntoLevel / rankProgress.xpForLevel) * 100}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -568,19 +604,42 @@ export function GMButton({
         )}
 
         {/* Stats */}
-        {gmStats && (
-          <div className="flex gap-3 mb-4">
-            <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3">
-              <div className="text-xl font-bold text-slate-900 dark:text-white">
-                {gmStats.totalGMs}
+        {gmStats && rankProgress && (
+          <div className="space-y-3 mb-4">
+            {/* XP Stats Row */}
+            <div className="flex gap-3">
+              <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3">
+                <div className="text-xl font-bold text-slate-900 dark:text-white">
+                  {gmStats.totalGMs}
+                </div>
+                <div className="text-xs text-slate-600 dark:text-slate-400">Total GMs</div>
               </div>
-              <div className="text-xs text-slate-600 dark:text-slate-400">Total GMs</div>
+              <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3">
+                <div className="text-xl font-bold text-slate-900 dark:text-white">
+                  {(gmStats.totalGMs * 10).toLocaleString()}
+                </div>
+                <div className="text-xs text-slate-600 dark:text-slate-400">Total XP</div>
+              </div>
             </div>
-            <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3">
-              <div className="text-xl font-bold text-slate-900 dark:text-white">
-                {(gmStats.totalGMs * 10).toLocaleString()}
+            {/* Rank & Level Row */}
+            <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {rankProgress.currentTier.name}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    Level {rankProgress.level} • {rankProgress.xpIntoLevel}/{rankProgress.xpForLevel} XP
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-slate-600 dark:text-slate-400">Total XP</div>
+              {/* Level progress bar */}
+              <div className="h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                  style={{ width: `${(rankProgress.xpIntoLevel / rankProgress.xpForLevel) * 100}%` }}
+                />
+              </div>
             </div>
           </div>
         )}
