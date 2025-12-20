@@ -912,32 +912,59 @@ export interface StatsCalculationResult {
 }
 
 /**
+ * ProfileStats interface (from lib/profile/types.ts)
+ * Used by legacy calculateStats wrapper
+ */
+export interface ProfileStats {
+  // Points & XP (from leaderboard_calculations)
+  viral_xp: number
+  base_points: number
+  guild_bonus: number
+  referral_bonus: number
+  streak_bonus: number
+  badge_prestige: number
+  total_score: number
+  
+  // Progression
+  level: number
+  global_rank: number
+  rank_tier: string
+  streak: number
+  
+  // Activity Metrics
+  quest_completions: number
+  badge_count: number
+  viral_casts: number
+  
+  // Time-based
+  member_since: string
+  last_active: string
+}
+
+/**
  * Calculate stats for profile display (legacy wrapper)
  * 
  * This is a COMPATIBILITY WRAPPER for the old stats-calculator.ts API.
  * Used by ProfileStats component until it's refactored to use calculateCompleteStats.
  * 
+ * IMPORTANT: This accepts the FULL ProfileStats interface but only uses
+ * the fields needed for calculation. This maintains backward compatibility
+ * with existing code.
+ * 
  * @deprecated Migrate to calculateCompleteStats for new code
  */
-export function calculateStats(stats: {
-  total_score: number
-  base_points: number
-  viral_xp: number
-  quest_completions: number
-  badge_count: number
-  streak_bonus: number
-  rank_tier?: string
-}): StatsCalculationResult {
-  // Calculate level from total_score
+export function calculateStats(stats: ProfileStats): StatsCalculationResult {
+  // Calculate level from total_score (UNIFIED SYSTEM)
   const levelData = calculateLevelProgress(stats.total_score)
   
-  // Calculate rank tier
+  // Calculate rank tier from total_score (UNIFIED SYSTEM - uses total_score NOT base_points)
   const tier = getRankTierByPoints(stats.total_score)
   
-  // Calculate streak from streak_bonus (assume 100 points per day)
-  const streak = Math.floor(stats.streak_bonus / 100)
+  // Calculate streak from streak_bonus (10 points per day - matching old system)
+  const POINTS_PER_DAY = 10
+  const streak = Math.floor(stats.streak_bonus / POINTS_PER_DAY)
   
-  // Create rank progress object
+  // Create rank progress object (UNIFIED FORMAT)
   const rankProgress: RankProgress = {
     ...levelData,
     currentTier: tier,
@@ -948,7 +975,7 @@ export function calculateStats(stats: {
     pointsToNext: levelData.xpToNextLevel,
   }
   
-  // Format numbers for display
+  // Format numbers for display (UNIFIED FORMATTERS)
   const formattedStats = {
     base_points: formatNumber(stats.base_points),
     viral_xp: formatNumber(stats.viral_xp),
@@ -961,7 +988,7 @@ export function calculateStats(stats: {
     level: levelData.level,
     levelPercent: levelData.levelPercent,
     xpToNextLevel: levelData.xpToNextLevel,
-    rankTier: stats.rank_tier || tier.name,
+    rankTier: stats.rank_tier || tier.name, // Prefer pre-calculated tier if available
     streak,
     totalScore: stats.total_score,
     formattedStats,
