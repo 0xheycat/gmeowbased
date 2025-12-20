@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto'
 import { parseAbiItem, type AbiEvent } from 'viem'
 import { CHAIN_KEYS, CONTRACT_ADDRESSES, type ChainKey } from '@/lib/contracts/gmeow-utils'
 import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
@@ -6,6 +5,21 @@ import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/ed
 import { BADGE_REGISTRY } from './badge-registry-data'
 import type { Json, Database } from '@/types/supabase'
 import { getCached, invalidateCache } from '@/lib/cache/server'
+
+// Use crypto.randomUUID() for browser/edge compatibility
+const randomUUID = (() => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return () => crypto.randomUUID()
+  }
+  // Fallback for environments without crypto.randomUUID
+  return () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0
+      const v = c === 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }
+})()
 
 const BADGE_TABLE = (process.env.SUPABASE_BADGE_TEMPLATE_TABLE || 'badge_templates') as 'badge_templates'
 const USER_BADGES_TABLE = 'user_badges'
