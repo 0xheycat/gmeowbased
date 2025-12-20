@@ -128,3 +128,74 @@ Ensure ALL functions from deprecated files are available in `lib/scoring/unified
 3. Commit after each successful migration
 4. Document any issues or special cases
 
+---
+
+## ⚠️ PHASE 2 MIGRATION CHECKLIST (Use for EVERY file migration)
+
+Before migrating any file import, you MUST:
+
+### 1. Read Current Import Statement
+```bash
+grep "from '@/lib/leaderboard/rank'" <file_path>
+grep "from '@/lib/viral/viral-bonus'" <file_path>
+grep "from '@/lib/profile/stats-calculator'" <file_path>
+```
+
+### 2. Verify Function Exists in Unified Calculator
+```bash
+grep "^export function <function_name>" lib/scoring/unified-calculator.ts
+grep "^export (interface|type) <type_name>" lib/scoring/unified-calculator.ts
+```
+
+### 3. Check Function Signature Match
+- Open `lib/scoring/unified-calculator.ts`
+- Find the function definition (line number from grep)
+- Compare parameters and return type with old file
+- ✅ Signature matches → Safe to migrate
+- ❌ Signature differs → Document in special cases
+
+### 4. Update Import Statement (One file at a time)
+```typescript
+// BEFORE
+import { calculateRankProgress } from '@/lib/leaderboard/rank'
+
+// AFTER  
+import { calculateRankProgress } from '@/lib/scoring/unified-calculator'
+```
+
+### 5. Handle Function Name Changes
+- `getImprovedRankTierByPoints` → `getRankTierByPoints` (simplified)
+- Update ALL function calls in the file
+- Search for all occurrences: `grep "<old_name>" <file_path>`
+
+### 6. Type Check After Migration
+```bash
+npx tsc --noEmit <file_path> 2>&1 | grep "error TS"
+```
+- ✅ No errors → Commit
+- ❌ Has errors → Fix before proceeding
+
+### 7. Verify Unified System Integration
+- [ ] Uses unified calculator functions (not inline calculations)
+- [ ] Interfaces match ProfileStats/RankProgress/ViralTier
+- [ ] No breaking changes to component API
+- [ ] Formatters use unified formatters (formatNumber, formatPoints, formatXp)
+- [ ] 0 TypeScript errors
+
+### 8. Commit After Each Successful Migration
+```bash
+git add <file_path>
+git commit -m "migrate: <file_name> to unified calculator
+
+- Changed: <function_names> → @/lib/scoring/unified-calculator
+- Verified: Type checking passed
+- Status: ✅ No breaking changes"
+```
+
+### 9. Document Special Cases
+If migration requires special handling:
+- Interface mismatch → Update PHASE-2-AUDIT-REPORT.md
+- Function signature differs → Document workaround
+- Component needs refactor → Mark as future task
+
+---
