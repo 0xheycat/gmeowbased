@@ -33,17 +33,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
-import { generateRequestId } from '@/lib/middleware/request-id'
-import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import { getCached } from '@/lib/cache/server'
+import { createClient } from '@/lib/supabase/edge'
 import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
+import { FIDSchema } from '@/lib/validation/api-schemas'
+import { getUserQuestHistory } from '@/lib/subsquid-client'
 
 export const dynamic = 'force-dynamic'
 
 // ============================================================================
 // VALIDATION SCHEMAS
 // ============================================================================
-
-const FIDSchema = z.coerce.number().int().positive()
 
 const QuerySchema = z.object({
   status: z.enum(['all', 'completed', 'in-progress']).optional().default('all'),
@@ -60,8 +60,6 @@ export async function GET(
   request: NextRequest,
   context?: { params: Promise<{ fid: string }> }
 ) {
-  const requestId = generateRequestId()
-
   try {
     // Next.js 15: Await params before accessing
     const params = await context?.params
@@ -84,15 +82,13 @@ export async function GET(
     }
 
     // 2. Input Validation
-    const fidResult = FIDSchema.safeParse(params.fid)
+    const fidResult = FIDSchema.safeParse(parseInt(params.fid, 10))
     if (!fidResult.success) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid FID. Must be a positive integer.' 
-        },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: 'Invalid FID. Must be a positive integer.',
+        statusCode: 400,
+      })
     }
 
     const fid = fidResult.data
@@ -101,160 +97,161 @@ export async function GET(
     const searchParams = Object.fromEntries(request.nextUrl.searchParams)
     const queryResult = QuerySchema.safeParse(searchParams)
     if (!queryResult.success) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid query parameters.',
-          details: queryResult.error.issues 
-        },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: 'Invalid query parameters.',
+        statusCode: 400,
+      })
     }
 
     const { status, sort, limit, offset } = queryResult.data
 
-    // 3. Database Query
-    const supabase = getSupabaseServerClient()
-    if (!supabase) {
-      return createErrorResponse({
-        type: ErrorType.INTERNAL,
-        message: 'Database connection unavailable.',
-        statusCode: 503,
-      })
-    }
+    // 3. Cached Database Query with TRUE HYBRID pattern
+    const result = await getCached(
+      'user-quests',
+      `${fid}:${status}:${sort}:${limit}:${offset}`,
+      async () => {
+        const supabase = createClient()
 
-    // TODO: Add profile visibility check when column is added to user_profiles
-    // For now, all profiles are public
+        // LAYER 1: Off-chain (Supabase) - Get user's wallet address
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('wallet_address')
+          .eq('fid', fid)
+          .single()
 
-    // Build query for user_quest_progress with quest details
-    let query = supabase
-      .from('user_quest_progress')
-      .select(`
-        id,
-        user_fid,
-        quest_id,
-        status,
-        progress_percentage,
-        started_at,
-        completed_at,
-        last_activity_at,
-        unified_quests!inner (
-          id,
-          slug,
-          title,
-          description,
-          difficulty,
-          image_url,
-          points_reward,
-          xp_reward,
-          status
-        )
-      `)
-      .eq('user_fid', fid)
+        // Handle case where profile doesn't exist or has no wallet
+        if (profileError || !profile || !profile.wallet_address) {
+          return { quests: [], total: 0 }
+        }
 
-    // Filter by status
-    if (status === 'completed') {
-      query = query.eq('status', 'completed')
-    } else if (status === 'in-progress') {
-      query = query.eq('status', 'in-progress')
-    }
+        const userAddress = profile.wallet_address.toLowerCase()
 
-    // Sort
-    if (sort === 'recent') {
-      query = query.order('last_activity_at', { ascending: false })
-    } else if (sort === 'oldest') {
-      query = query.order('started_at', { ascending: true })
-    } else if (sort === 'xp_earned') {
-      // Join with unified_quests to sort by XP
-      query = query.order('completed_at', { ascending: false, nullsFirst: false })
-    }
+        // LAYER 2: On-chain (Subsquid) - Get quest completions from blockchain
+        const onChainCompletions = await getUserQuestHistory(userAddress, 100)
 
-    // Pagination
-    query = query.range(offset, offset + limit - 1)
+        // Extract quest IDs from on-chain data
+        const questIds = onChainCompletions.map(c => c.quest.id)
 
-    const { data: progressData, error, count } = await query
+        if (questIds.length === 0) {
+          return { quests: [], total: 0 }
+        }
 
-    if (error) {
-      console.error('Quest fetch error:', error)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Failed to fetch quest data.' 
-        },
-        { status: 500 }
-      )
-    }
+        // LAYER 3: Off-chain (Supabase) - Get quest metadata and progress tracking
+        let progressQuery = supabase
+          .from('user_quest_progress')
+          .select(`
+            id,
+            user_fid,
+            quest_id,
+            status,
+            progress_percentage,
+            started_at,
+            completed_at,
+            last_activity_at,
+            unified_quests!inner (
+              id,
+              slug,
+              title,
+              description,
+              difficulty,
+              status,
+              cover_image_url,
+              badge_image_url
+            )
+          `)
+          .eq('user_fid', fid)
+          .in('quest_id', questIds.map(id => parseInt(id)))
 
-    // Transform data to match QuestActivity component interface
-    const quests = (progressData || []).map((progress: any) => ({
-      id: progress.quest_id.toString(),
-      quest_id: progress.quest_id,
-      title: progress.unified_quests?.title || 'Untitled Quest',
-      description: progress.unified_quests?.description || '',
-      difficulty: progress.unified_quests?.difficulty || 'medium',
-      xp_earned: progress.status === 'completed' ? progress.unified_quests?.xp_reward || 0 : 0,
-      points_earned: progress.status === 'completed' ? progress.unified_quests?.points_reward || 0 : 0,
-      status: progress.status,
-      completed_at: progress.completed_at,
-      image_url: progress.unified_quests?.image_url,
-      slug: progress.unified_quests?.slug,
-      progress_percentage: progress.progress_percentage,
-    }))
+        // Filter by status
+        if (status === 'completed') {
+          progressQuery = progressQuery.eq('status', 'completed')
+        } else if (status === 'in-progress') {
+          progressQuery = progressQuery.eq('status', 'in-progress')
+        }
 
-    // Get total count for pagination
-    const { count: totalCount } = await supabase
-      .from('user_quest_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_fid', fid)
+        const { data: progressData, error: progressError } = await progressQuery
 
-    // Professional pagination Link header (GitHub pattern)
-    const baseUrl = request.url.split('?')[0]
-    const linkHeaders: string[] = []
-    
-    if (offset + limit < (totalCount || 0)) {
-      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${offset + limit}>; rel="next"`)
-    }
-    if (offset > 0) {
-      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${Math.max(0, offset - limit)}>; rel="prev"`)
-    }
-    linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=0>; rel="first"`)
-    if (totalCount) {
-      const lastOffset = Math.floor(totalCount / limit) * limit
-      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${lastOffset}>; rel="last"`)
-    }
+        if (progressError) {
+          console.error('Quest progress fetch error:', progressError)
+        }
 
-    // Generate request ID for tracking (Stripe/Twitter pattern)
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        // LAYER 4: Calculated - Merge on-chain and off-chain data
+        const mergedQuests = onChainCompletions.map(completion => {
+          const progressInfo = progressData?.find(
+            p => p.quest_id.toString() === completion.quest.id
+          )
+
+          // Calculate progress percentage from on-chain data if not in Supabase
+          const progressPercentage = progressInfo?.progress_percentage || 
+            (completion.pointsAwarded > 0 ? 100 : 0)
+
+          return {
+            id: completion.quest.id,
+            quest_id: parseInt(completion.quest.id), // ✅ Convert to number
+            quest_slug: progressInfo?.unified_quests?.slug || '', // ✅ Renamed for component
+            quest_title: progressInfo?.unified_quests?.title || `Quest ${completion.quest.id}`, // ✅ Renamed
+            quest_image_url: progressInfo?.unified_quests?.cover_image_url, // ✅ Renamed for component
+            difficulty: progressInfo?.unified_quests?.difficulty || 'medium',
+            xp_earned: 0, // XP rewards tracked off-chain in separate system
+            points_earned: completion.pointsAwarded, // From blockchain
+            status: progressInfo?.status || 'completed',
+            completed_at: progressInfo?.completed_at || completion.timestamp,
+            progress_percentage: progressPercentage,
+            // Additional metadata (not used by QuestActivity but useful for other consumers)
+            description: progressInfo?.unified_quests?.description || '',
+            badge_image_url: progressInfo?.unified_quests?.badge_image_url,
+            blockchain_data: {
+              txHash: completion.txHash,
+              blockNumber: completion.blockNumber,
+              timestamp: completion.timestamp,
+              pointsAwarded: completion.pointsAwarded,
+            },
+          }
+        })
+
+        // Apply sorting (Calculated)
+        let sortedQuests = [...mergedQuests]
+        if (sort === 'recent') {
+          sortedQuests.sort((a, b) => 
+            new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime()
+          )
+        } else if (sort === 'oldest') {
+          sortedQuests.sort((a, b) => 
+            new Date(a.blockchain_data.timestamp).getTime() - new Date(b.blockchain_data.timestamp).getTime()
+          )
+        } else if (sort === 'xp_earned') {
+          sortedQuests.sort((a, b) => b.xp_earned - a.xp_earned)
+        }
+
+        // Apply pagination (Calculated)
+        const paginatedQuests = sortedQuests.slice(offset, offset + limit)
+
+        return {
+          quests: paginatedQuests,
+          total: sortedQuests.length,
+        }
+      },
+      { ttl: 60 }
+    )
 
     return NextResponse.json(
       {
         success: true,
-        quests,
+        quests: result.quests,
         pagination: {
-          total: totalCount || 0,
+          total: result.total,
           limit,
           offset,
-          hasMore: (offset + limit) < (totalCount || 0),
+          hasMore: (offset + limit) < result.total,
         },
-        meta: {
-          timestamp: new Date().toISOString(),
-          version: '1.0',
-          request_id: requestId,
-        }
       },
       { 
         status: 200,
         headers: {
           'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-          'X-API-Version': '1.0',
-          'X-Content-Type-Options': 'nosniff',
-          'X-Frame-Options': 'DENY',
-          'X-Request-ID': requestId,
           'X-RateLimit-Limit': '60',
           'X-RateLimit-Remaining': String(rateLimitResult.remaining ?? 59),
-          'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + 60),
-          'Link': linkHeaders.join(', '),
-          'Server-Timing': `db;dur=${Date.now()}`,
         }
       }
     )

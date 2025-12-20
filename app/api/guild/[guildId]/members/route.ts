@@ -42,15 +42,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { apiLimiter } from '@/lib/middleware/rate-limit'
-import { createPublicClient, http, type Address } from 'viem'
-import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
+import { getCached } from '@/lib/cache/server'
+import { rateLimit, apiLimiter, getClientIp } from '@/lib/middleware/rate-limit'
+import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
+import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
-import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { fetchUsersByAddresses, type FarcasterUser } from '@/lib/integrations/neynar'
 import type { Badge } from '@/components/guild/badges/BadgeIcon'
-import { createClient } from '@supabase/supabase-js'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -112,15 +110,7 @@ interface GuildMember {
 // 4. Helper Functions
 // ==========================================
 
-/**
- * Get public client for reading contract
- */
-function getPublicClient() {
-  return createPublicClient({
-    chain: base,
-    transport: http(),
-  })
-}
+
 
 /**
  * Assign badges to member based on role and achievements
@@ -309,32 +299,64 @@ function getTierFromRank(rank: number | null | undefined): string {
 }
 
 /**
- * Get guild data
+ * Get guild data from Supabase (TRUE HYBRID)
  */
-async function getGuildData(guildId: bigint) {
-  const client = getPublicClient()
-  
+async function getGuildData(guildId: string) {
   try {
-    const guildData = await client.readContract({
-      address: STANDALONE_ADDRESSES.base.guild as Address,
-      abi: GUILD_ABI_JSON,
-      functionName: 'getGuildInfo',
-      args: [guildId],
-    }) as any
+    const supabase = createClient()
     
-    // Handle both tuple array and object format
-    const [name, leader, totalPoints, memberCount, active, level] = Array.isArray(guildData) 
-      ? guildData 
-      : [guildData.name, guildData.leader, guildData.totalPoints, guildData.memberCount, guildData.active, guildData.level]
+    // Get guild metadata
+    const { data: guildData, error: guildError } = await supabase
+      .from('guild_metadata')
+      .select('guild_id, name, description, banner')
+      .eq('guild_id', guildId)
+      .single()
     
-    if (!name || !active) return null
+    if (guildError || !guildData) {
+      console.error('[guild-members] Guild not found:', guildError)
+      return null
+    }
+    
+    // Get guild events to calculate leader and stats
+    const { data: events, error: eventsError } = await supabase
+      .from('guild_events')
+      .select('event_type, actor_address, amount')
+      .eq('guild_id', guildId)
+      .order('created_at', { ascending: false })
+      .limit(1000)
+    
+    if (eventsError) {
+      console.error('[guild-members] Error fetching events:', eventsError)
+    }
+    
+    // Calculate stats from events
+    let leader = ''
+    let totalPoints = 0
+    let memberCount = 0
+    const memberSet = new Set<string>()
+    
+    for (const event of events || []) {
+      if (event.event_type === 'GUILD_CREATED') {
+        leader = event.actor_address
+      } else if (event.event_type === 'MEMBER_JOINED') {
+        memberSet.add(event.actor_address)
+      } else if (event.event_type === 'MEMBER_LEFT') {
+        memberSet.delete(event.actor_address)
+      } else if (event.event_type === 'POINTS_DEPOSITED') {
+        totalPoints += event.amount || 0
+      } else if (event.event_type === 'POINTS_CLAIMED') {
+        totalPoints -= event.amount || 0
+      }
+    }
+    
+    memberCount = memberSet.size
     
     return {
-      name: name as string,
-      leader: leader as string,
-      totalPoints: BigInt(totalPoints || 0),
-      memberCount: Number(memberCount || 0),
-      active: active as boolean,
+      name: guildData.name,
+      leader,
+      totalPoints: BigInt(totalPoints),
+      memberCount,
+      active: true,
     }
   } catch (error) {
     console.error('[guild-members] getGuildData error:', error)
@@ -343,79 +365,93 @@ async function getGuildData(guildId: bigint) {
 }
 
 /**
- * Get all addresses that are in this guild
- * Uses Supabase guild_events to track MEMBER_JOINED and MEMBER_LEFT events
+ * Get all members with roles and points from Supabase (TRUE HYBRID)
  */
-async function getGuildMembers(guildId: bigint): Promise<GuildMember[]> {
-  const client = getPublicClient()
+async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
   const guildData = await getGuildData(guildId)
   
   if (!guildData || !guildData.active) {
     return []
   }
 
-  // Initialize Supabase client (server-side with service role key)
-  const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabase = createClient()
 
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('[guild-members] Missing Supabase credentials')
-    console.error('[guild-members] SUPABASE_URL:', supabaseUrl ? 'present' : 'missing')
-    console.error('[guild-members] SUPABASE_SERVICE_ROLE_KEY:', supabaseKey ? 'present' : 'missing')
+  // Query guild_events for member tracking
+  const { data: events, error: eventsError } = await supabase
+    .from('guild_events')
+    .select('event_type, actor_address, target_address, amount, created_at')
+    .eq('guild_id', guildId)
+    .order('created_at', { ascending: true })
+
+  if (eventsError) {
+    console.error('[guild-members] Error fetching events:', eventsError)
     return []
   }
 
-  const supabase = createClient(supabaseUrl, supabaseKey)
-
-  // Query guild_events for all MEMBER_JOINED events
-  const { data: joinEvents, error: joinError } = await supabase
-    .from('guild_events')
-    .select('actor_address, created_at')
-    .eq('guild_id', guildId.toString())
-    .eq('event_type', 'MEMBER_JOINED')
-    .order('created_at', { ascending: true })
-
-  if (joinError) {
-    console.error('[guild-members] Error fetching join events:', joinError)
-  }
-
-  // Query guild_events for all MEMBER_LEFT events
-  const { data: leaveEvents, error: leaveError } = await supabase
-    .from('guild_events')
-    .select('actor_address, created_at')
-    .eq('guild_id', guildId.toString())
-    .eq('event_type', 'MEMBER_LEFT')
-    .order('created_at', { ascending: true })
-
-  if (leaveError) {
-    console.error('[guild-members] Error fetching leave events:', leaveError)
-  }
-
-  // Build member list (joined - left)
-  const memberMap = new Map<string, { joinedAt: string }>()
+  // Build member list with points and roles from events
+  const memberMap = new Map<string, { 
+    joinedAt: string
+    points: number
+    role: 'owner' | 'officer' | 'member'
+  }>()
+  const officers = new Set<string>()
+  let ownerAddress = ''
   
-  // Add all joins
-  if (joinEvents && joinEvents.length > 0) {
-    for (const event of joinEvents) {
-      const address = event.actor_address.toLowerCase()
+  // Process events chronologically
+  for (const event of events || []) {
+    const address = event.actor_address.toLowerCase()
+    
+    if (event.event_type === 'GUILD_CREATED') {
+      ownerAddress = address
+      memberMap.set(address, {
+        joinedAt: event.created_at || new Date().toISOString(),
+        points: 0,
+        role: 'owner'
+      })
+    } else if (event.event_type === 'MEMBER_JOINED') {
       if (!memberMap.has(address)) {
-        memberMap.set(address, { joinedAt: event.created_at })
+        memberMap.set(address, {
+          joinedAt: event.created_at || new Date().toISOString(),
+          points: 0,
+          role: 'member'
+        })
+      }
+    } else if (event.event_type === 'MEMBER_LEFT') {
+      memberMap.delete(address)
+    } else if (event.event_type === 'MEMBER_PROMOTED') {
+      const target = event.target_address?.toLowerCase()
+      if (target && memberMap.has(target)) {
+        officers.add(target)
+        const member = memberMap.get(target)!
+        member.role = 'officer'
+      }
+    } else if (event.event_type === 'MEMBER_DEMOTED') {
+      const target = event.target_address?.toLowerCase()
+      if (target && memberMap.has(target)) {
+        officers.delete(target)
+        const member = memberMap.get(target)!
+        member.role = 'member'
+      }
+    } else if (event.event_type === 'POINTS_DEPOSITED') {
+      if (memberMap.has(address)) {
+        const member = memberMap.get(address)!
+        member.points += event.amount || 0
+      }
+    } else if (event.event_type === 'POINTS_CLAIMED') {
+      if (memberMap.has(address)) {
+        const member = memberMap.get(address)!
+        member.points -= event.amount || 0
       }
     }
   }
 
-  // Remove all leaves
-  if (leaveEvents && leaveEvents.length > 0) {
-    for (const event of leaveEvents) {
-      const address = event.actor_address.toLowerCase()
-      memberMap.delete(address)
-    }
-  }
-
-  // Ensure guild owner is included (even if no MEMBER_JOINED event)
-  const ownerAddress = guildData.leader.toLowerCase()
-  if (!memberMap.has(ownerAddress)) {
-    memberMap.set(ownerAddress, { joinedAt: new Date().toISOString() })
+  // Ensure guild owner is included
+  if (ownerAddress && !memberMap.has(ownerAddress)) {
+    memberMap.set(ownerAddress, {
+      joinedAt: new Date().toISOString(),
+      points: 0,
+      role: 'owner'
+    })
   }
 
   // Convert to member array
@@ -423,47 +459,13 @@ async function getGuildMembers(guildId: bigint): Promise<GuildMember[]> {
   const memberAddresses: string[] = []
 
   for (const [address, data] of memberMap.entries()) {
-    try {
-      // Get member points
-      const memberPoints = await client.readContract({
-        address: getContractAddress('base'),
-        abi: GM_CONTRACT_ABI,
-        functionName: 'pointsBalance',
-        args: [address as Address],
-      }) as bigint
-
-      // Determine role
-      let role: 'owner' | 'officer' | 'member' = 'member'
-      if (address === ownerAddress) {
-        role = 'owner'
-      } else {
-        // Check if officer using correct ABI function name: isOfficer (not isGuildOfficer)
-        try {
-          const isOfficerResult = await client.readContract({
-            address: STANDALONE_ADDRESSES.base.guild as Address,
-            abi: GUILD_ABI_JSON,
-            functionName: 'isOfficer',
-            args: [guildId, address as Address],
-          }) as boolean
-          
-          if (isOfficerResult) {
-            role = 'officer'
-          }
-        } catch (error) {
-          console.error(`[guild-members] Error checking officer status for ${address}:`, error)
-        }
-      }
-
-      members.push({
-        address,
-        role,
-        points: memberPoints.toString(),
-        joinedAt: data.joinedAt,
-      })
-      memberAddresses.push(address)
-    } catch (error) {
-      console.error(`[guild-members] Error fetching data for ${address}:`, error)
-    }
+    members.push({
+      address,
+      role: data.role,
+      points: data.points.toString(),
+      joinedAt: data.joinedAt,
+    })
+    memberAddresses.push(address)
   }
 
   // Fetch Farcaster profiles for all members in bulk
@@ -528,55 +530,7 @@ function paginateMembers(members: GuildMember[], limit: number, offset: number) 
   return { items, total }
 }
 
-/**
- * Create success response with cache headers
- */
-function createSuccessResponse(data: any) {
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`
-  
-  return NextResponse.json(
-    {
-      success: true,
-      ...data,
-      timestamp: Date.now(),
-    },
-    {
-      status: 200,
-      headers: {
-        'Cache-Control': 's-maxage=60, stale-while-revalidate=120',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-Request-ID': requestId,
-        'X-API-Version': '1.0.0',
-      },
-    }
-  )
-}
 
-/**
- * Create error response (no sensitive data)
- */
-function createErrorResponse(message: string, status: number = 400) {
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`
-  
-  return NextResponse.json(
-    {
-      success: false,
-      message,
-      timestamp: Date.now(),
-    },
-    {
-      status,
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-Request-ID': requestId,
-        'X-API-Version': '1.0.0',
-      },
-    }
-  )
-}
 
 // ==========================================
 // 5. GET Handler
@@ -587,99 +541,112 @@ export async function GET(
   { params }: { params: Promise<{ guildId: string }> }
 ) {
   const startTime = Date.now()
+  const requestId = generateRequestId()
 
   try {
     // Await params in Next.js 15
     const { guildId } = await params
     
-    // 1. RATE LIMITING
-    if (!apiLimiter) {
-      return createErrorResponse('Rate limiting not configured', 503)
-    }
-    
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
-    const rateLimitKey = `${RATE_LIMIT_CONFIG.identifier}:${clientIp}`
-    const rateLimitResult = await apiLimiter.limit(rateLimitKey)
+    // 1. RATE LIMITING (use lib/ infrastructure)
+    const clientIp = getClientIp(req)
+    const rateLimitResult = await rateLimit(clientIp, apiLimiter)
     
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Rate limit exceeded. Please try again later.',
-          timestamp: Date.now(),
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': String(RATE_LIMIT_CONFIG.maxRequests),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Date.now() + RATE_LIMIT_CONFIG.windowMs),
-          },
-        }
-      )
+      return createErrorResponse({
+        type: ErrorType.RATE_LIMIT,
+        message: 'Too many requests. Please try again later.',
+        statusCode: 429,
+        requestId,
+      })
     }
 
     // 2. INPUT VALIDATION
-    const { searchParams } = new URL(req.url)
-    const queryResult = QuerySchema.safeParse({
-      limit: searchParams.get('limit'),
-      offset: searchParams.get('offset'),
+    const url = new URL(req.url)
+    const queryParams = QuerySchema.parse({
+      limit: url.searchParams.get('limit') || '50',
+      offset: url.searchParams.get('offset') || '0',
     })
 
-    if (!queryResult.success) {
-      return createErrorResponse(
-        `Invalid query parameters: ${queryResult.error.issues.map((i) => i.message).join(', ')}`,
-        400
-      )
-    }
-
-    const { limit, offset } = queryResult.data
-
-    // Validate guildId
-    const guildIdNum = BigInt(guildId)
-    if (guildIdNum <= 0n) {
-      return createErrorResponse('Invalid guild ID', 400)
-    }
-
-    // 3. FETCH MEMBERS
-    const allMembers = await getGuildMembers(guildIdNum)
-    
-    if (allMembers.length === 0) {
-      return createErrorResponse('Guild not found or has no members', 404)
-    }
-
-    // 4. PAGINATE
-    const { items, total } = paginateMembers(allMembers, limit, offset)
-
-    // 5. AUDIT LOGGING
-    console.log('[guild-members] Member list fetched:', {
+    // 3. FETCH MEMBERS (with caching - TRUE HYBRID)
+    const allMembers = await getCached(
+      'guild-members',
       guildId,
-      total,
-      limit,
-      offset,
-      timestamp: new Date().toISOString(),
-    })
-
-    const duration = Date.now() - startTime
-
-    return createSuccessResponse({
-      members: items,
-      pagination: {
-        limit,
-        offset,
-        total,
-      },
-      performance: {
-        duration,
-      },
-    })
-  } catch (error: any) {
-    console.error('[guild-members] Error:', error)
-
-    // 10. ERROR MASKING
-    return createErrorResponse(
-      'Failed to fetch guild members. Please try again later.',
-      500
+      async () => await getGuildMembers(guildId),
+      { ttl: 60 }
     )
+
+    if (!allMembers || allMembers.length === 0) {
+      return createErrorResponse({
+        type: ErrorType.NOT_FOUND,
+        message: 'Guild not found or has no members',
+        statusCode: 404,
+        requestId,
+      })
+    }
+
+    // 4. PAGINATION
+    const { items, total } = paginateMembers(
+      allMembers,
+      queryParams.limit,
+      queryParams.offset
+    )
+
+    // 5. SUCCESS RESPONSE
+    const duration = Date.now() - startTime
+    return NextResponse.json(
+      {
+        success: true,
+        members: items,
+        pagination: {
+          limit: queryParams.limit,
+          offset: queryParams.offset,
+          total,
+        },
+        meta: {
+          duration: `${duration}ms`,
+          cache: 'L1/L2/L3 (60s TTL)',
+        },
+        timestamp: Date.now(),
+      },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          'X-Request-ID': requestId,
+        },
+      }
+    )
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('[guild-members] Internal error:', {
+      message: errorMessage,
+      stack: errorStack,
+      guildId: await params.then(p => p.guildId),
+    })
+    
+    return createErrorResponse({
+      type: ErrorType.INTERNAL,
+      message: 'Failed to fetch guild members. Please try again.',
+      statusCode: 500,
+      requestId,
+      details: process.env.NODE_ENV === 'development' ? { error: errorMessage } : undefined,
+    })
   }
+}
+
+// ==========================================
+// OPTIONS Handler (CORS)
+// ==========================================
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400',
+    },
+  })
 }

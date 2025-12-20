@@ -58,8 +58,14 @@ import {
     NFTTransfer,
     ReferralCode,
     ReferralUse,
+    ReferrerSet,
     TipEvent,
     ViralMilestone,
+    Quest,
+    QuestCompletion,
+    PointsTransaction,
+    TreasuryOperation,
+    BadgeStake,
 } from './model'
 
 // Import ABIs for event decoding
@@ -67,6 +73,9 @@ import coreAbiJson from '../abi/GmeowCore.abi.json'
 import guildAbiJson from '../abi/GmeowGuildStandalone.abi.json'
 import referralAbiJson from '../abi/GmeowReferralStandalone.abi.json'
 import nftAbiJson from '../abi/GmeowNFT.abi.json'
+
+// Import webhook utility
+import { sendWebhook, createWebhookEvent } from './webhook'
 
 // Create interfaces for event decoding
 const coreInterface = new ethers.Interface(coreAbiJson)
@@ -98,10 +107,20 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const tipEvents: any[] = [] // TipEvent type
     const viralMilestones: any[] = [] // ViralMilestone type
     
+    // Phase 8: Quest system
+    const quests = new Map<string, Quest>()
+    const questCompletions: QuestCompletion[] = []
+    
+    // Phase 8.2: Points & Treasury system
+    const pointsTransactions: any[] = [] // PointsTransaction type
+    const treasuryOperations: any[] = [] // TreasuryOperation type
+    const badgeStakes: any[] = [] // BadgeStake type (Phase 8.3)
+    
     // Collect addresses to load
     const userAddresses = new Set<string>()
     const guildIds = new Set<string>()
     const referralCodeStrings = new Set<string>()
+    const questIds = new Set<string>()
     
     // First pass: collect addresses and IDs
     for (let block of ctx.blocks) {
@@ -118,6 +137,20 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                         if (decoded) {
                             const userAddr = decoded.args.user.toLowerCase()
                             userAddresses.add(userAddr)
+                        }
+                    }
+                    // Phase 8: Collect quest IDs
+                    else if (topic === coreInterface.getEvent('QuestAdded')?.topicHash ||
+                             topic === coreInterface.getEvent('QuestAddedERC20')?.topicHash ||
+                             topic === coreInterface.getEvent('OnchainQuestAdded')?.topicHash ||
+                             topic === coreInterface.getEvent('QuestCompleted')?.topicHash ||
+                             topic === coreInterface.getEvent('QuestClosed')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        if (decoded && decoded.args.questId) {
+                            questIds.add(decoded.args.questId.toString())
                         }
                     }
                 } else if (log.address === GUILD_ADDRESS) {
@@ -200,6 +233,17 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
         ctx.log.info(`📥 Loaded ${existingCodes.length} existing referral codes`)
     }
     
+    // Phase 8: Load existing quests
+    if (questIds.size > 0) {
+        const existingQuests = await ctx.store.findBy(Quest, {
+            id: In([...questIds])
+        })
+        for (let quest of existingQuests) {
+            quests.set(quest.id, quest)
+        }
+        ctx.log.info(`📥 Loaded ${existingQuests.length} existing quests`)
+    }
+    
     // Second pass: process events
     for (let block of ctx.blocks) {
         const blockTime = BigInt(block.header.timestamp) / 1000n
@@ -225,11 +269,11 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             
                             // Get or create user
                             let user = getOrCreateUser(users, userAddr, blockTime)
-                            const oldXP = user.totalXP
+                            const oldPoints = user.totalPoints
                             const oldGMCount = user.lifetimeGMs
                             const oldStreak = user.currentStreak
                             
-                            user.totalXP += points
+                            user.totalPoints += points
                             user.currentStreak = Number(streak)
                             user.lastGMTimestamp = blockTime
                             user.lifetimeGMs += 1
@@ -240,7 +284,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 id: `${log.transaction?.id}-${log.logIndex}`,
                                 user,
                                 timestamp: blockTime,
-                                xpAwarded: points,
+                                pointsAwarded: points,
                                 streakDay: Number(streak),
                                 blockNumber: block.header.height,
                                 txHash: log.transaction?.id || '',
@@ -264,7 +308,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 user.milestoneCount += 1
                             }
                             checkMilestone(viralMilestones, user, 'gm_count', oldGMCount, user.lifetimeGMs, blockTime, 'gm')
-                            checkMilestone(viralMilestones, user, 'xp_earned', Number(oldXP), Number(user.totalXP), blockTime, 'gm')
+                            checkMilestone(viralMilestones, user, 'points_earned', Number(oldPoints), Number(user.totalPoints), blockTime, 'gm')
                             checkMilestone(viralMilestones, user, 'streak_days', oldStreak, user.currentStreak, blockTime, 'gm')
                         }
                     }
@@ -308,6 +352,424 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             checkMilestone(viralMilestones, fromUser, 'tips_given', Number(fromUser.totalTipsGiven - points), Number(fromUser.totalTipsGiven), blockTime, 'tips')
                             
                             ctx.log.info(`💰 Tip: ${fromAddr.slice(0,6)} → ${toAddr.slice(0,6)} (${points} points)`)
+                        }
+                    }
+                    
+                    // Phase 8.2: Handle PointsDeposited event
+                    else if (topic === coreInterface.getEvent('PointsDeposited')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const userAddr = decoded.args.who.toLowerCase()
+                            const amount = decoded.args.amount || 0n
+                            
+                            pointsTransactions.push({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                transactionType: 'DEPOSIT',
+                                user: userAddr,
+                                amount,
+                                from: log.transaction?.from?.toLowerCase() || null,
+                                to: userAddr,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            })
+                            
+                            // Send webhook notification
+                            sendWebhook(createWebhookEvent(
+                                'PointsDeposited',
+                                { user: userAddr, amount: amount.toString(), from: log.transaction?.from?.toLowerCase() },
+                                new Date(Number(blockTime) * 1000),
+                                log.transaction?.id || '',
+                                block.header.height
+                            )).catch(err => ctx.log.warn(`Webhook failed: ${err}`))
+                            
+                            ctx.log.info(`💳 Points Deposited: ${userAddr.slice(0,6)} (+${amount})`)
+                        }
+                    }
+                    
+                    // Phase 8.2: Handle PointsWithdrawn event
+                    else if (topic === coreInterface.getEvent('PointsWithdrawn')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const userAddr = decoded.args.who.toLowerCase()
+                            const amount = decoded.args.amount || 0n
+                            
+                            pointsTransactions.push({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                transactionType: 'WITHDRAW',
+                                user: userAddr,
+                                amount,
+                                from: userAddr,
+                                to: decoded.args.to?.toLowerCase() || null,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            })
+                            
+                            ctx.log.info(`💸 Points Withdrawn: ${userAddr.slice(0,6)} (-${amount})`)
+                        }
+                    }
+                    
+                    // Phase 8.2: Handle ERC20EscrowDeposited event
+                    else if (topic === coreInterface.getEvent('ERC20EscrowDeposited')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const token = decoded.args.token.toLowerCase()
+                            const from = decoded.args.from.toLowerCase()
+                            const amount = decoded.args.amount || 0n
+                            const questId = decoded.args.questId
+                            
+                            treasuryOperations.push({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                operationType: 'ESCROW_DEPOSIT',
+                                token,
+                                amount,
+                                from,
+                                to: null,
+                                questId: questId ? BigInt(questId) : null,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            })
+                            
+                            ctx.log.info(`🔒 ERC20 Escrow: ${from.slice(0,6)} → Quest #${questId} (${amount})`)
+                        }
+                    }
+                    
+                    // Phase 8.2: Handle ERC20Payout event
+                    else if (topic === coreInterface.getEvent('ERC20Payout')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const token = decoded.args.token.toLowerCase()
+                            const to = decoded.args.to.toLowerCase()
+                            const amount = decoded.args.amount || 0n
+                            const questId = decoded.args.questId
+                            
+                            treasuryOperations.push({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                operationType: 'PAYOUT',
+                                token,
+                                amount,
+                                from: CORE_ADDRESS,
+                                to,
+                                questId: questId ? BigInt(questId) : null,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            })
+                            
+                            ctx.log.info(`💰 ERC20 Payout: Quest #${questId} → ${to.slice(0,6)} (${amount})`)
+                        }
+                    }
+                    
+                    // Phase 8.2: Handle ERC20Refund event
+                    else if (topic === coreInterface.getEvent('ERC20Refund')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const token = decoded.args.token.toLowerCase()
+                            const to = decoded.args.to.toLowerCase()
+                            const amount = decoded.args.amount || 0n
+                            const questId = decoded.args.questId
+                            
+                            treasuryOperations.push({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                operationType: 'REFUND',
+                                token,
+                                amount,
+                                from: CORE_ADDRESS,
+                                to,
+                                questId: questId ? BigInt(questId) : null,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            })
+                            
+                            ctx.log.info(`↩️ ERC20 Refund: Quest #${questId} → ${to.slice(0,6)} (${amount})`)
+                        }
+                    }
+                    
+                    // Phase 8.3: Handle StakedForBadge event
+                    else if (topic === coreInterface.getEvent('StakedForBadge')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const who = decoded.args.who.toLowerCase()
+                            const points = decoded.args.points || 0n
+                            const badgeId = decoded.args.badgeId || 0n
+                            
+                            // Create a new stake record
+                            badgeStakes.push({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                user: who,
+                                badgeId,
+                                stakeType: 'STAKED',
+                                stakedAt: new Date(Number(blockTime) * 1000),
+                                unstakedAt: null,
+                                isActive: true,
+                                rewardsEarned: 0n,
+                                lastRewardClaim: null,
+                                isPowerBadge: false, // Will be updated by PowerBadgeSet event
+                                powerMultiplier: null,
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            })
+                            
+                            // Send webhook notification
+                            sendWebhook(createWebhookEvent(
+                                'StakedForBadge',
+                                { user: who, badgeId: badgeId.toString(), points: points.toString() },
+                                new Date(Number(blockTime) * 1000),
+                                log.transaction?.id || '',
+                                block.header.height
+                            )).catch(err => ctx.log.warn(`Webhook failed: ${err}`))
+                            
+                            ctx.log.info(`🎖️ Badge Staked: ${who.slice(0,6)} staked Badge #${badgeId} (${points} points)`)
+                        }
+                    }
+                    
+                    // Phase 8.3: Handle UnstakedForBadge event
+                    else if (topic === coreInterface.getEvent('UnstakedForBadge')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const who = decoded.args.who.toLowerCase()
+                            const points = decoded.args.points || 0n
+                            const badgeId = decoded.args.badgeId || 0n
+                            
+                            // Create an unstake record
+                            badgeStakes.push({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                user: who,
+                                badgeId,
+                                stakeType: 'UNSTAKED',
+                                stakedAt: null,
+                                unstakedAt: new Date(Number(blockTime) * 1000),
+                                isActive: false,
+                                rewardsEarned: 0n, // TODO: Calculate from contract state
+                                lastRewardClaim: null,
+                                isPowerBadge: false,
+                                powerMultiplier: null,
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            })
+                            
+                            ctx.log.info(`🎖️ Badge Unstaked: ${who.slice(0,6)} unstaked Badge #${badgeId} (${points} points)`)
+                        }
+                    }
+                    
+                    // Phase 8: Handle QuestAdded event
+                    else if (topic === coreInterface.getEvent('QuestAdded')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            const creator = decoded.args.creator.toLowerCase()
+                            const questType = decoded.args.questType || 0
+                            const rewardPoints = decoded.args.rewardPoints || 0n
+                            
+                            let quest = new Quest({
+                                id: questId,
+                                questType: questType === 0 ? 'social' : questType === 1 ? 'onchain' : 'erc20',
+                                creator,
+                                contractAddress: CORE_ADDRESS,
+                                rewardPoints,
+                                rewardToken: null,
+                                rewardTokenAmount: null,
+                                onchainType: null,
+                                targetAsset: null,
+                                targetAmount: null,
+                                targetData: null,
+                                createdAt: new Date(Number(blockTime) * 1000),
+                                createdBlock: block.header.height,
+                                closedAt: null,
+                                closedBlock: null,
+                                isActive: true,
+                                totalCompletions: 0,
+                                totalPointsAwarded: 0n,
+                                totalTokensAwarded: 0n,
+                                txHash: log.transaction?.id || '',
+                            })
+                            quests.set(questId, quest)
+                            
+                            ctx.log.info(`🎯 Quest Added: #${questId} by ${creator.slice(0,6)} (${rewardPoints} points)`)
+                        }
+                    }
+                    
+                    // Phase 8: Handle QuestAddedERC20 event
+                    else if (topic === coreInterface.getEvent('QuestAddedERC20')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            const creator = decoded.args.creator.toLowerCase()
+                            const rewardToken = decoded.args.rewardToken.toLowerCase()
+                            const rewardAmount = decoded.args.rewardAmount || 0n
+                            const questType = decoded.args.questType || 0
+                            
+                            let quest = new Quest({
+                                id: questId,
+                                questType: 'erc20',
+                                creator,
+                                contractAddress: CORE_ADDRESS,
+                                rewardPoints: 0n,
+                                rewardToken,
+                                rewardTokenAmount: rewardAmount,
+                                onchainType: null,
+                                targetAsset: null,
+                                targetAmount: null,
+                                targetData: null,
+                                createdAt: new Date(Number(blockTime) * 1000),
+                                createdBlock: block.header.height,
+                                closedAt: null,
+                                closedBlock: null,
+                                isActive: true,
+                                totalCompletions: 0,
+                                totalPointsAwarded: 0n,
+                                totalTokensAwarded: 0n,
+                                txHash: log.transaction?.id || '',
+                            })
+                            quests.set(questId, quest)
+                            
+                            ctx.log.info(`🎯 ERC20 Quest Added: #${questId} (${rewardAmount} ${rewardToken.slice(0,6)})`)
+                        }
+                    }
+                    
+                    // Phase 8: Handle OnchainQuestAdded event
+                    else if (topic === coreInterface.getEvent('OnchainQuestAdded')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            const onchainType = decoded.args.onchainType || 0
+                            const asset = decoded.args.asset.toLowerCase()
+                            const requiredAmount = decoded.args.requiredAmount || 0n
+                            const callData = decoded.args.callData || ''
+                            
+                            let quest = quests.get(questId)
+                            if (quest) {
+                                quest.questType = 'onchain'
+                                quest.onchainType = onchainType
+                                quest.targetAsset = asset
+                                quest.targetAmount = requiredAmount
+                                quest.targetData = callData
+                            }
+                            
+                            ctx.log.info(`🎯 Onchain Quest Added: #${questId} (type ${onchainType})`)
+                        }
+                    }
+                    
+                    // Phase 8: Handle QuestCompleted event (CRITICAL)
+                    else if (topic === coreInterface.getEvent('QuestCompleted')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            const userAddr = decoded.args.user.toLowerCase()
+                            const pointsAwarded = decoded.args.pointsAwarded || 0n
+                            const fid = decoded.args.fid || 0n
+                            const rewardToken = decoded.args.rewardToken?.toLowerCase() || null
+                            const tokenAmount = decoded.args.tokenAmount || 0n
+                            
+                            // Get or create user
+                            let user = getOrCreateUser(users, userAddr, blockTime)
+                            
+                            // Get quest
+                            let quest = quests.get(questId)
+                            if (quest) {
+                                quest.totalCompletions += 1
+                                quest.totalPointsAwarded += pointsAwarded
+                                if (tokenAmount > 0n) {
+                                    quest.totalTokensAwarded += tokenAmount
+                                }
+                            }
+                            
+                            // Create quest completion
+                            questCompletions.push(new QuestCompletion({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                quest: quest || undefined,
+                                user,
+                                pointsAwarded,
+                                tokenReward: tokenAmount > 0n ? tokenAmount : null,
+                                rewardToken,
+                                fid,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            // Check for quest completion milestones
+                            const userCompletions = questCompletions.filter(qc => qc.user?.id === userAddr).length
+                            checkMilestone(viralMilestones, user, 'quests_completed', userCompletions - 1, userCompletions, blockTime, 'quests')
+                            
+                            // Send webhook notification
+                            sendWebhook(createWebhookEvent(
+                                'QuestCompleted',
+                                { user: userAddr, questId, pointsAwarded: pointsAwarded.toString(), fid },
+                                new Date(Number(blockTime) * 1000),
+                                log.transaction?.id || '',
+                                block.header.height
+                            )).catch(err => ctx.log.warn(`Webhook failed: ${err}`))
+                            
+                            ctx.log.info(`✅ Quest Completed: #${questId} by ${userAddr.slice(0,6)} (${pointsAwarded} points)`)
+                        }
+                    }
+                    
+                    // Phase 8: Handle QuestClosed event
+                    else if (topic === coreInterface.getEvent('QuestClosed')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            
+                            let quest = quests.get(questId)
+                            if (quest) {
+                                quest.isActive = false
+                                quest.closedAt = new Date(Number(blockTime) * 1000)
+                                quest.closedBlock = block.header.height
+                            }
+                            
+                            ctx.log.info(`🚫 Quest Closed: #${questId}`)
                         }
                     }
                 }
@@ -442,6 +904,88 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             }
                         }
                     }
+                    
+                    // Phase 8: Handle GuildQuestCreated event
+                    else if (topic === guildInterface.getEvent('GuildQuestCreated')?.topicHash) {
+                        const decoded = guildInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            const guildId = decoded.args.guildId.toString()
+                            const creator = decoded.args.creator.toLowerCase()
+                            const rewardPoints = decoded.args.rewardPoints || 0n
+                            
+                            let quest = new Quest({
+                                id: questId,
+                                questType: 'guild',
+                                creator,
+                                contractAddress: GUILD_ADDRESS,
+                                rewardPoints,
+                                rewardToken: null,
+                                rewardTokenAmount: null,
+                                onchainType: null,
+                                targetAsset: guildId, // Store guildId in targetAsset for guild quests
+                                targetAmount: null,
+                                targetData: null,
+                                createdAt: new Date(Number(blockTime) * 1000),
+                                createdBlock: block.header.height,
+                                closedAt: null,
+                                closedBlock: null,
+                                isActive: true,
+                                totalCompletions: 0,
+                                totalPointsAwarded: 0n,
+                                totalTokensAwarded: 0n,
+                                txHash: log.transaction?.id || '',
+                            })
+                            quests.set(questId, quest)
+                            
+                            ctx.log.info(`🛡️ Guild Quest Created: #${questId} for Guild #${guildId}`)
+                        }
+                    }
+                    
+                    // Phase 8: Handle GuildRewardClaimed event (Guild quest completion)
+                    else if (topic === guildInterface.getEvent('GuildRewardClaimed')?.topicHash) {
+                        const decoded = guildInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId?.toString() || 'unknown'
+                            const guildId = decoded.args.guildId.toString()
+                            const claimer = decoded.args.claimer.toLowerCase()
+                            const reward = decoded.args.reward || 0n
+                            
+                            // Get or create user
+                            let user = getOrCreateUser(users, claimer, blockTime)
+                            
+                            // Get quest
+                            let quest = quests.get(questId)
+                            if (quest) {
+                                quest.totalCompletions += 1
+                                quest.totalPointsAwarded += reward
+                            }
+                            
+                            // Create quest completion
+                            questCompletions.push(new QuestCompletion({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                quest: quest || undefined,
+                                user,
+                                pointsAwarded: reward,
+                                tokenReward: null,
+                                rewardToken: null,
+                                fid: 0n, // Guild quests don't have FID
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            ctx.log.info(`🛡️ Guild Reward Claimed: Quest #${questId} by ${claimer.slice(0,6)} in Guild #${guildId}`)
+                        }
+                    }
                 }
                 
                 // Badge/NFT events
@@ -556,6 +1100,31 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                         }
                     }
                     
+                    // Phase 8.4: Handle ReferrerSet
+                    else if (topic === referralInterface.getEvent('ReferrerSet')?.topicHash) {
+                        const decoded = referralInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const user = decoded.args.user.toLowerCase()
+                            const referrer = decoded.args.referrer.toLowerCase()
+                            
+                            // Create ReferrerSet record for chain tracking
+                            ctx.store.insert(new ReferrerSet({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                user,
+                                referrer,
+                                timestamp: blockTime,
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            ctx.log.info(`Referrer set: ${user.slice(0, 6)}... → ${referrer.slice(0, 6)}...`)
+                        }
+                    }
+                    
                     // Handle ReferralRewardClaimed
                     else if (topic === referralInterface.getEvent('ReferralRewardClaimed')?.topicHash) {
                         const decoded = referralInterface.parseLog({
@@ -601,6 +1170,83 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             }
                         }
                     }
+                    
+                    // Phase 8: Referral contract also has quest events (same as Core)
+                    else if (topic === referralInterface.getEvent('QuestAdded')?.topicHash) {
+                        const decoded = referralInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            const creator = decoded.args.creator.toLowerCase()
+                            const questType = decoded.args.questType || 0
+                            const rewardPoints = decoded.args.rewardPoints || 0n
+                            
+                            let quest = new Quest({
+                                id: questId,
+                                questType: questType === 0 ? 'social' : questType === 1 ? 'onchain' : 'erc20',
+                                creator,
+                                contractAddress: REFERRAL_ADDRESS,
+                                rewardPoints,
+                                rewardToken: null,
+                                rewardTokenAmount: null,
+                                onchainType: null,
+                                targetAsset: null,
+                                targetAmount: null,
+                                targetData: null,
+                                createdAt: new Date(Number(blockTime) * 1000),
+                                createdBlock: block.header.height,
+                                closedAt: null,
+                                closedBlock: null,
+                                isActive: true,
+                                totalCompletions: 0,
+                                totalPointsAwarded: 0n,
+                                totalTokensAwarded: 0n,
+                                txHash: log.transaction?.id || '',
+                            })
+                            quests.set(questId, quest)
+                            
+                            ctx.log.info(`🔗 Referral Quest Added: #${questId}`)
+                        }
+                    }
+                    
+                    else if (topic === referralInterface.getEvent('QuestCompleted')?.topicHash) {
+                        const decoded = referralInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            const userAddr = decoded.args.user.toLowerCase()
+                            const pointsAwarded = decoded.args.pointsAwarded || 0n
+                            
+                            let user = getOrCreateUser(users, userAddr, blockTime)
+                            let quest = quests.get(questId)
+                            
+                            if (quest) {
+                                quest.totalCompletions += 1
+                                quest.totalPointsAwarded += pointsAwarded
+                            }
+                            
+                            questCompletions.push(new QuestCompletion({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                quest: quest || undefined,
+                                user,
+                                pointsAwarded,
+                                tokenReward: null,
+                                rewardToken: null,
+                                fid: 0n,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            ctx.log.info(`🔗 Referral Quest Completed: #${questId} by ${userAddr.slice(0,6)}`)
+                        }
+                    }
                 }
                 
             } catch (e) {
@@ -613,6 +1259,17 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     if (users.size > 0) {
         await ctx.store.upsert([...users.values()])
         ctx.log.info(`💾 Saved ${users.size} users`)
+    }
+    
+    // Phase 8: Save quests and completions
+    if (quests.size > 0) {
+        await ctx.store.upsert([...quests.values()])
+        ctx.log.info(`💾 Saved ${quests.size} quests`)
+    }
+    
+    if (questCompletions.length > 0) {
+        await ctx.store.insert(questCompletions)
+        ctx.log.info(`💾 Saved ${questCompletions.length} quest completions`)
     }
     
     if (gmEvents.length > 0) {
@@ -672,6 +1329,24 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
         ctx.log.info(`💾 Saved ${referralUses.length} referral uses`)
     }
     
+    // Phase 8.2: Save points transactions
+    if (pointsTransactions.length > 0) {
+        await ctx.store.insert(pointsTransactions.map(p => new PointsTransaction(p)))
+        ctx.log.info(`💾 Saved ${pointsTransactions.length} points transactions`)
+    }
+    
+    // Phase 8.2: Save treasury operations
+    if (treasuryOperations.length > 0) {
+        await ctx.store.insert(treasuryOperations.map(t => new TreasuryOperation(t)))
+        ctx.log.info(`💾 Saved ${treasuryOperations.length} treasury operations`)
+    }
+    
+    // Phase 8.3: Save badge stakes
+    if (badgeStakes.length > 0) {
+        await ctx.store.insert(badgeStakes.map(b => new BadgeStake(b)))
+        ctx.log.info(`💾 Saved ${badgeStakes.length} badge stakes`)
+    }
+    
     ctx.log.info(`✅ Batch complete: ${startBlock} to ${endBlock}`)
 })
 
@@ -686,7 +1361,7 @@ function getOrCreateUser(
     if (!user) {
         user = new User({
             id: addr,
-            totalXP: 0n,
+            totalPoints: 0n,
             currentStreak: 0,
             lastGMTimestamp: 0n,
             lifetimeGMs: 0,

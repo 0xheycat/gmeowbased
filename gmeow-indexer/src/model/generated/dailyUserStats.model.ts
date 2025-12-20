@@ -28,7 +28,7 @@ export class DailyUserStats {
     tipsReceived!: bigint
 
     @BigIntColumn_({nullable: false})
-    xpEarned!: bigint
+    pointsEarned!: bigint
 
     @IntColumn_({nullable: false})
     guildsJoined!: number

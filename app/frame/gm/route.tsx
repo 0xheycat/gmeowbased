@@ -6,6 +6,8 @@ import { NextResponse } from 'next/server'
 import { sanitizeFID } from '@/lib/frames/frame-validation'
 import { buildDynamicFrameImageUrl } from '@/lib/api/share'
 import * as Ne from '@/lib/integrations/neynar'
+import { getGMEvents } from '@/lib/subsquid-client'
+import { getCached } from '@/lib/cache/server'
 
 export const runtime = 'nodejs'
 export const revalidate = 300 // 5 minutes
@@ -18,31 +20,21 @@ type GMData = {
 
 async function fetchGMData(fid: number): Promise<GMData> {
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    // Get GM events from Subsquid (on-chain data)
+    const gmEvents = await getGMEvents(fid, new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) // Last year
     
-    const { data: gmEvents, error } = await supabase
-      .from('gmeow_rank_events')
-      .select('created_at, chain')
-      .eq('fid', fid)
-      .eq('event_type', 'gm')
-      .order('created_at', { ascending: false })
-    
-    if (error || !gmEvents || gmEvents.length === 0) {
+    if (!gmEvents || gmEvents.length === 0) {
       return { gmCount: 0, streak: 0, lastGMDate: null }
     }
     
     const gmCount = gmEvents.length
-    const lastGMDate = new Date(gmEvents[0].created_at)
+    const lastGMDate = new Date(gmEvents[0].createdAt)
     
     // Calculate streak
     const uniqueDates = Array.from(
       new Set(
         gmEvents.map(event => {
-          const d = new Date(event.created_at)
+          const d = new Date(event.createdAt)
           return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
         })
       )
@@ -91,10 +83,15 @@ export async function GET(req: Request) {
     }
   }
   
-  // Fetch GM data
+  // Fetch GM data with caching (5 min TTL)
   let gmData: GMData = { gmCount: 0, streak: 0, lastGMDate: null }
   if (fid) {
-    gmData = await fetchGMData(fid)
+    gmData = await getCached(
+      'gm-frame',
+      `fid:${fid}`,
+      async () => fetchGMData(fid),
+      { ttl: 300 } // 5 minutes cache
+    )
   }
   
   const { gmCount, streak, lastGMDate } = gmData

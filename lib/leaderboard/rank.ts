@@ -1,3 +1,24 @@
+/**
+ * ⚠️ DEPRECATION WARNING (December 20, 2025)
+ * 
+ * This file is DEPRECATED and will be removed in a future release.
+ * 
+ * ALL calculation logic has been consolidated into:
+ * → lib/scoring/unified-calculator.ts
+ * 
+ * Migration Guide:
+ * - Import from '@/lib/scoring/unified-calculator' instead
+ * - calculateLevelProgress() → Same function name, same API
+ * - getRankTierByPoints() → Same function name, same API
+ * - applyRankMultiplier() → Same function name, same API
+ * - IMPROVED_RANK_TIERS → Same constant name
+ * 
+ * This file is kept temporarily for backward compatibility.
+ * New code MUST NOT import from this file.
+ * 
+ * See: lib/scoring/README.md for migration instructions
+ */
+
 import { clamp } from '@/lib/utils/utils'
 
 export type RankTier = {
@@ -74,8 +95,11 @@ export function calculateLevelProgress(points: number) {
   let n = Math.floor(raw)
   if (n < 0) n = 0
 
-  while (getTotalXpToReachLevel(n + 1) <= normalized) n += 1
-  while (n > 0 && getTotalXpToReachLevel(n) > normalized) n -= 1
+  // Refine level calculation (FIXED: off-by-one bug - December 20, 2025)
+  // User is at level (n+1) if they have >= XP to reach level (n+1)
+  // and < XP to reach level (n+2)
+  while (getTotalXpToReachLevel(n + 2) <= normalized) n += 1
+  while (n > 0 && getTotalXpToReachLevel(n + 1) > normalized) n -= 1
 
   const level = n + 1
   const levelFloor = getTotalXpToReachLevel(level)

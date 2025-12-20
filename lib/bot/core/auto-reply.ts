@@ -232,6 +232,8 @@ function getIntentEmoji(intent: AgentIntentType): string {
     'referral': '🤝',
     'badges': '🎖️',
     'achievements': '🏅',
+    'points-flow': '💸',
+    'treasury': '🏦',
   }
   return emojiMap[intent] || '✨'
 }
@@ -251,6 +253,8 @@ export type AgentIntentType =
   | 'referral'
   | 'badges'
   | 'achievements'
+  | 'points-flow'
+  | 'treasury'
 
 export type TimeframeSpec = {
   label: string
@@ -518,9 +522,27 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
     }
     case 'quests': {
       const timeframe = intent.timeframe ?? buildDefaultTimeframe(DEFAULT_QUEST_WINDOW_DAYS, 'the last 14 days', 'last 14d')
-      const summary = await summariseUserEvents({ fid: input.fid, address, eventTypes: ['quest-verify'], since: timeframe.since })
-      summaryMeta.events = summary
-      replyText = buildQuestMessage(handle, stats, timeframe, summary, neynarScore, isQuestion, disclaimer)
+      
+      // Phase 8.1: Use Subsquid for quest completions
+      const { getUserQuestHistory } = await import('@/lib/subsquid-client')
+      const completions = await getUserQuestHistory(address, 50)
+      
+      // Filter by timeframe
+      const recentCompletions = completions.filter(c => 
+        new Date(c.timestamp) >= new Date(timeframe.since)
+      )
+      
+      // Calculate summary from Subsquid data
+      const questSummary = {
+        totalEvents: recentCompletions.length,
+        totalDelta: recentCompletions.reduce((sum, c) => sum + Number(c.pointsAwarded), 0),
+        eventsByType: { 'quest-completion': recentCompletions.length }
+      }
+      
+      summaryMeta.events = questSummary
+      summaryMeta.questCompletions = recentCompletions
+      
+      replyText = buildQuestMessage(handle, stats, timeframe, questSummary as any, neynarScore, isQuestion, disclaimer)
       break
     }
     case 'quest-recommendations': {
@@ -584,6 +606,70 @@ export async function buildAgentAutoReply(input: AgentAutoReplyInput, config: Bo
       saveConversationState(input.fid, '', [], 'achievements', {
         lastAchievements: [] // TODO: Populate from achievements table
       })
+      break
+    }
+    case 'points-flow': {
+      // Phase 8.2: Points transaction history
+      const { getPointsTransactions } = await import('@/lib/subsquid-client')
+      const transactions = await getPointsTransactions(address, { limit: 10 })
+      
+      // Calculate stats from transactions
+      const deposits = transactions.filter(t => t.transactionType === 'DEPOSIT')
+      const withdrawals = transactions.filter(t => t.transactionType === 'WITHDRAW')
+      const totalDeposits = deposits.reduce((sum, t) => sum + t.amount, 0n)
+      const totalWithdrawals = withdrawals.reduce((sum, t) => sum + t.amount, 0n)
+      
+      if (transactions.length === 0) {
+        replyText = `Hey ${handle}! 💰 You don't have any points transactions yet. Points are deposited when you complete quests or receive rewards!`
+      } else {
+        replyText = `💰 **Points Flow for ${handle}**\n\n`
+        replyText += `📊 **Summary:**\n`
+        replyText += `• Total Deposits: ${totalDeposits.toLocaleString()} points\n`
+        replyText += `• Total Withdrawals: ${totalWithdrawals.toLocaleString()} points\n`
+        replyText += `• Net Balance: ${(totalDeposits - totalWithdrawals).toLocaleString()} points\n\n`
+        
+        if (deposits.length > 0) {
+          replyText += `📥 **Recent Deposits:**\n`
+          deposits.slice(0, 3).forEach(t => {
+            replyText += `• +${t.amount.toLocaleString()} points\n`
+          })
+        }
+        
+        replyText += `\n🔗 View full history: https://gmeowhq.art/profile`
+      }
+      
+      summaryMeta.pointsTransactions = transactions
+      break
+    }
+    case 'treasury': {
+      // Phase 8.2: Treasury operations (quest escrow, payouts, refunds)
+      const { getTreasuryOperations } = await import('@/lib/subsquid-client')
+      const operations = await getTreasuryOperations({ limit: 20 })
+      
+      if (operations.length === 0) {
+        replyText = `Hey ${handle}! 🏦 No treasury operations found yet. Treasury tracks quest escrow, payouts, and refunds!`
+      } else {
+        const escrows = operations.filter(op => op.operationType === 'ESCROW_DEPOSIT')
+        const payouts = operations.filter(op => op.operationType === 'PAYOUT')
+        const refunds = operations.filter(op => op.operationType === 'REFUND')
+        
+        replyText = `🏦 **Treasury Operations**\n\n`
+        replyText += `📊 **Summary:**\n`
+        replyText += `• Escrow Deposits: ${escrows.length}\n`
+        replyText += `• Quest Payouts: ${payouts.length}\n`
+        replyText += `• Refunds: ${refunds.length}\n\n`
+        
+        if (payouts.length > 0) {
+          replyText += `💰 **Recent Payouts:**\n`
+          payouts.slice(0, 3).forEach(op => {
+            replyText += `• Quest #${op.questId}: ${op.amount.toLocaleString()} tokens\n`
+          })
+        }
+        
+        replyText += `\n🔗 View all operations: https://gmeowhq.art/quests/manage`
+      }
+      
+      summaryMeta.treasuryOperations = operations
       break
     }
     case 'stats':
@@ -812,6 +898,20 @@ function detectIntentWithConfidence(
       { regex: /\bunlocked?\b/g, weight: 0.25 },
       { regex: /\btrophies\b/g, weight: 0.25 },
       { regex: /(earned|completed?)\s+achievements?/g, weight: 0.3 }
+    ],
+    'points-flow': [
+      { regex: /where\s+(did|do)\s+my\s+points\s+(come|came)\s+from/g, weight: 0.4 },
+      { regex: /points?\s+(history|transactions?|flow|source)/g, weight: 0.35 },
+      { regex: /(deposit|withdraw|escrow)\s+points?/g, weight: 0.3 },
+      { regex: /\bpoints?\s+breakdown/g, weight: 0.3 },
+      { regex: /how\s+(did|do)\s+i\s+(get|earn)\s+points?/g, weight: 0.25 }
+    ],
+    treasury: [
+      { regex: /\btreasury\b/g, weight: 0.4 },
+      { regex: /\bescrow\b/g, weight: 0.35 },
+      { regex: /quest\s+(payout|refund|revenue)/g, weight: 0.35 },
+      { regex: /(erc20|token)\s+(escrow|payout)/g, weight: 0.3 },
+      { regex: /financial\s+summary/g, weight: 0.3 }
     ]
   }
   
@@ -924,6 +1024,8 @@ function generateClarifyingQuestion(detection: IntentDetectionWithConfidence): s
     referral: 'Check referral rewards',
     badges: 'See your badge collection',
     achievements: 'View achievements',
+    'points-flow': 'View points history',
+    'treasury': 'Check treasury operations',
   }
   
   options.push(intentLabels[type] || type)

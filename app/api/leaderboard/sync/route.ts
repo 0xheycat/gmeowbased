@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { syncSupabaseLeaderboard } from '@/lib/leaderboard/leaderboard-sync'
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
+import { getSupabaseAdminClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { generateRequestId } from '@/lib/middleware/request-id'
 
 const SYNC_TOKEN = process.env.SUPABASE_SYNC_TOKEN || process.env.CRON_SECRET || process.env.SYNC_LEADERBOARD_TOKEN
 
@@ -14,27 +13,25 @@ function isAuthorized(req: Request): boolean {
 }
 
 export const POST = withErrorHandler(async (req: Request) => {
-  const requestId = generateRequestId()
-  
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ ok: false, reason: 'supabase_not_configured' }, { status: 500, headers: { 'X-Request-ID': requestId } })
+    return NextResponse.json({ ok: false, reason: 'supabase_not_configured' }, { status: 500 })
   }
 
   if (!SYNC_TOKEN) {
-    return NextResponse.json({ ok: false, reason: 'sync_token_missing' }, { status: 500, headers: { 'X-Request-ID': requestId } })
+    return NextResponse.json({ ok: false, reason: 'sync_token_missing' }, { status: 500 })
   }
 
   if (!isAuthorized(req)) {
-    return NextResponse.json({ ok: false, reason: 'unauthorized' }, { status: 401, headers: { 'X-Request-ID': requestId } })
+    return NextResponse.json({ ok: false, reason: 'unauthorized' }, { status: 401 })
   }
 
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   if (!supabase) {
-    return NextResponse.json({ ok: false, reason: 'supabase_client_init_failed' }, { status: 500, headers: { 'X-Request-ID': requestId } })
+    return NextResponse.json({ ok: false, reason: 'supabase_client_init_failed' }, { status: 500 })
   }
 
   const result = await syncSupabaseLeaderboard({ supabase })
-  return NextResponse.json({ ok: true, ...result }, { headers: { 'X-Request-ID': requestId } })
+  return NextResponse.json({ ok: true, ...result })
 })
 
 export const runtime = 'nodejs'

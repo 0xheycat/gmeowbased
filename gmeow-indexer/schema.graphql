@@ -1,8 +1,8 @@
-# User XP & Streaks (from Core contract)
+# User Points & Streaks (from Core contract)
 # Phase 7: Enhanced with tip tracking and milestones
 type User @entity {
   id: ID! # wallet address (lowercase)
-  totalXP: BigInt!
+  totalPoints: BigInt!
   currentStreak: Int!
   lastGMTimestamp: BigInt!
   lifetimeGMs: Int!
@@ -29,7 +29,7 @@ type GMEvent @entity {
   id: ID! # txHash-logIndex
   user: User!
   timestamp: BigInt!
-  xpAwarded: BigInt!
+  pointsAwarded: BigInt!
   streakDay: Int!
   blockNumber: Int! @index
   txHash: String! @index
@@ -133,13 +133,23 @@ type ReferralUse @entity {
   txHash: String! @index
 }
 
+# Phase 8.4: Referral Chain Tracking
+type ReferrerSet @entity {
+  id: ID! # txHash-logIndex
+  user: String! @index # the user who set their referrer
+  referrer: String! @index # the referrer address
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
 # Daily Aggregations (for analytics)
 type DailyStats @entity {
   id: ID! # date-YYYY-MM-DD
   date: String! @index
   totalGMs: Int!
   uniqueUsers: Int!
-  totalXPAwarded: BigInt!
+  totalPointsAwarded: BigInt!
   newGuilds: Int!
   badgesMinted: Int!
 }
@@ -185,7 +195,7 @@ type DailyUserStats @entity {
   gmsCompleted: Int!
   tipsGiven: BigInt!
   tipsReceived: BigInt!
-  xpEarned: BigInt!
+  pointsEarned: BigInt!
   guildsJoined: Int!
   badgesMinted: Int!
   
@@ -206,4 +216,119 @@ type HourlyLeaderboardSnapshot @entity {
   
   # Top 100 entries (JSON serialized for efficient storage)
   entriesJSON: String! # [{rank, userId, totalPoints}, ...]
+}
+
+# Phase 8: Quest System (from Core/Guild/Referral contracts)
+type Quest @entity {
+  id: ID! # questId from contract
+  questType: String! @index # "social", "onchain", "erc20", "guild"
+  creator: String! @index # wallet address
+  contractAddress: String! @index # which contract (core/guild/referral)
+  
+  # Rewards
+  rewardPoints: BigInt!
+  rewardToken: String # ERC20 token address (if ERC20 quest)
+  rewardTokenAmount: BigInt # ERC20 token amount per completion
+  
+  # Onchain quest specifics
+  onchainType: Int # 0=ERC20_HOLD, 1=ERC721_HOLD, 2=CONTRACT_CALL
+  targetAsset: String # target contract address for onchain validation
+  targetAmount: BigInt # required amount/tokenId
+  targetData: String # calldata for CONTRACT_CALL type
+  
+  # Lifecycle
+  createdAt: DateTime!
+  createdBlock: Int! @index
+  closedAt: DateTime
+  closedBlock: Int
+  isActive: Boolean! @index
+  
+  # Stats
+  totalCompletions: Int!
+  totalPointsAwarded: BigInt!
+  totalTokensAwarded: BigInt!
+  
+  # Relations
+  completions: [QuestCompletion!] @derivedFrom(field: "quest")
+  
+  # Metadata
+  txHash: String! @index
+}
+
+type QuestCompletion @entity {
+  id: ID! # txHash-logIndex
+  quest: Quest!
+  user: User!
+  
+  # Rewards received
+  pointsAwarded: BigInt!
+  tokenReward: BigInt # ERC20 reward amount (if applicable)
+  rewardToken: String # ERC20 token address (if applicable)
+  
+  # User context
+  fid: BigInt! # Farcaster ID
+  
+  # Metadata
+  timestamp: DateTime!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# Phase 8.2: Points & Treasury System
+type PointsTransaction @entity {
+  id: ID! # txHash-logIndex
+  transactionType: String! @index # "DEPOSIT", "WITHDRAW"
+  user: String! @index # wallet address
+  amount: BigInt!
+  
+  # Context
+  from: String # source address (for deposits)
+  to: String # destination address (for withdrawals)
+  
+  # Metadata
+  timestamp: DateTime!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+type TreasuryOperation @entity {
+  id: ID! # txHash-logIndex
+  operationType: String! @index # "ESCROW_DEPOSIT", "PAYOUT", "REFUND"
+  token: String! @index # ERC20 token address
+  amount: BigInt!
+  
+  # Participants
+  from: String! @index # depositor/payer
+  to: String # recipient (for payouts/refunds)
+  questId: BigInt # associated quest (if applicable)
+  
+  # Metadata
+  timestamp: DateTime!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# Phase 8.3: Badge Staking System
+type BadgeStake @entity {
+  id: ID! # txHash-logIndex (for stake/unstake events)
+  user: String! @index # wallet address
+  badgeId: BigInt! # NFT token ID
+  stakeType: String! @index # "STAKED", "UNSTAKED"
+  
+  # Staking details
+  stakedAt: DateTime # when staked (null if unstaked)
+  unstakedAt: DateTime # when unstaked (null if still staked)
+  isActive: Boolean! @index # true if currently staked
+  
+  # Rewards tracking
+  rewardsEarned: BigInt # accumulated rewards while staked
+  lastRewardClaim: DateTime # last time rewards were calculated
+  
+  # Power badge info (if applicable)
+  isPowerBadge: Boolean! # true if this badge grants power
+  powerMultiplier: Int # bonus multiplier (1-100)
+  
+  # Metadata
+  blockNumber: Int! @index
+  txHash: String! @index
 }

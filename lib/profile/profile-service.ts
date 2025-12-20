@@ -25,6 +25,11 @@
 
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { getCached, invalidateCache } from '@/lib/cache/server'
+import { 
+  calculateLevelProgress, 
+  getRankTierByPoints,
+  calculateCompleteStats 
+} from '@/lib/scoring/unified-calculator'
 import type { Database } from '@/types/supabase'
 import type { 
   ProfileData, 
@@ -157,15 +162,10 @@ async function fetchLeaderboardDataFromDB(fid: number) {
   }
 }
 
-// Helper function to determine rank tier from score
+// Helper function to determine rank tier from score (using unified calculator)
 function getRankTier(score: number): string {
-  if (score >= 10000) return 'Legend'
-  if (score >= 5000) return 'Master'
-  if (score >= 2500) return 'Expert'
-  if (score >= 1000) return 'Veteran'
-  if (score >= 500) return 'Advanced'
-  if (score >= 100) return 'Intermediate'
-  return 'Rookie'
+  const tier = getRankTierByPoints(score)
+  return tier.name
 }
 
 /**
@@ -203,20 +203,26 @@ async function countUserBadges(fid: number): Promise<number> {
 }
 
 /**
- * Count user's viral badge casts
+ * Count user's viral badge casts and aggregate viral bonus XP
+ * 
+ * LAYER 2 (Supabase): Aggregate off-chain viral bonus XP
  */
-async function countViralCasts(fid: number): Promise<number> {
+async function aggregateViralBonusXP(fid: number): Promise<number> {
   const supabase = getSupabaseServerClient()
   if (!supabase) return 0
 
-  // badge_casts table not yet in Database types
-  const { count, error } = await (supabase as any)
+  // badge_casts table: fid, cast_hash, badge_id, viral_bonus_xp, created_at
+  const { data, error } = await (supabase as any)
     .from('badge_casts')
-    .select('*', { count: 'exact', head: true })
+    .select('viral_bonus_xp')
     .eq('fid', fid)
 
-  if (error) return 0
-  return count || 0
+  if (error || !data) return 0
+
+  // Sum all viral_bonus_xp
+  return data.reduce((sum: number, row: { viral_bonus_xp: number | null }) => {
+    return sum + (row.viral_bonus_xp || 0)
+  }, 0)
 }
 
 // ============================================================================
@@ -226,15 +232,27 @@ async function countViralCasts(fid: number): Promise<number> {
 /**
  * Fetch complete profile data for a user
  * 
+ * HYBRID ARCHITECTURE (3 LAYERS):
+ * 
+ * LAYER 1 (Subsquid - On-Chain):
+ * - getLeaderboardEntry(): XP, streak, badges, rank from blockchain
+ * 
+ * LAYER 2 (Supabase - Off-Chain):
+ * - user_profiles: display_name, bio, avatar, social links
+ * - badge_casts: viral_bonus_xp aggregation
+ * - quest_completions, user_badges: activity counts
+ * 
+ * LAYER 3 (Calculations - Derived):
+ * - calculateLevelProgress(): level, levelPercent, xpToNextLevel
+ * - getRankTierByPoints(): rankTier, rankTierIcon, tierTagline
+ * 
  * Data Flow:
  * 1. Check cache (180s TTL)
- * 2. Fetch from user_profiles table
- * 3. Fetch from leaderboard_calculations table
- * 4. Fetch fresh Neynar data
- * 5. Count quests/badges/casts
- * 6. Merge all data sources
- * 7. Calculate derived stats (level from lib/rank.ts)
- * 8. Return ProfileData
+ * 2. LAYER 1: Fetch on-chain data from Subsquid
+ * 3. LAYER 2: Fetch off-chain data from Supabase (parallel)
+ * 4. LAYER 3: Calculate derived metrics using lib/rank.ts
+ * 5. Merge all 3 layers into ProfileData
+ * 6. Return complete profile
  * 
  * @param fid - Farcaster ID
  * @returns ProfileData or null if user not found
@@ -244,23 +262,27 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
     'profile',
     `fid:${fid}`,
     async () => {
-      // Fetch database records
-      const [userProfile, leaderboard, neynarUser, questCount, badgeCount, viralCount] = await Promise.all([
+      // LAYER 1: Subsquid (On-Chain Data)
+      const [userProfile, leaderboard, neynarUser, questCount, badgeCount, viralBonusXP] = await Promise.all([
         fetchUserProfileFromDB(fid),
-        fetchLeaderboardDataFromDB(fid),
+        fetchLeaderboardDataFromDB(fid), // Already uses Subsquid getLeaderboardEntry
         fetchNeynarUser(fid),
         countQuestCompletions(fid),
         countUserBadges(fid),
-        countViralCasts(fid),
+        aggregateViralBonusXP(fid), // LAYER 2: Supabase viral bonus aggregation
       ])
 
       if (!userProfile) return null
 
+      // Get verified addresses from Neynar (always fresh)
+      const verifiedAddresses = neynarUser?.verified_addresses || []
+      const primaryAddress = verifiedAddresses[0] || userProfile.wallet_address || ''
+
       // Build wallet data (Base chain only)
       const wallet: WalletData = {
-        address: leaderboard?.address || userProfile.wallet_address || '',
+        address: primaryAddress,
         ens_name: null, // TODO: Fetch ENS if needed
-        is_verified: (userProfile.verified_addresses?.length || 0) > 0,
+        is_verified: verifiedAddresses.length > 0,
       }
 
       // Parse social links from JSONB (type assertion needed due to Database types)
@@ -272,62 +294,72 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
         website: links.website || null,
       }
 
-      // Calculate level from total_score (uses lib/rank.ts)
-      // TODO: Import calculateLevelProgress from lib/rank.ts
-      const totalScore = leaderboard?.total_score || 0
-      const level = Math.floor(Math.sqrt(totalScore / 100)) + 1 // Simplified, replace with lib/rank.ts
+      // LAYER 3: Calculate derived metrics using lib/rank.ts
+      const totalScore = (leaderboard?.total_score || 0) + viralBonusXP
+      const levelProgress = calculateLevelProgress(totalScore)
+      const rankTier = getRankTierByPoints(totalScore)
       const streak = Math.floor((leaderboard?.streak_bonus || 0) / 10) // 10 points per streak day
 
-      // Build complete profile data
+      // Build complete profile data (merged from all 3 layers)
       const profileData: ProfileData = {
-        // Identity
+        // Identity (LAYER 2: Supabase + Neynar)
         fid,
         username: neynarUser?.username || `fid:${fid}`,
         display_name: userProfile.display_name || neynarUser?.display_name || neynarUser?.username || `User ${fid}`,
         bio: userProfile.bio || neynarUser?.bio || null,
         
-        // Images
+        // Images (LAYER 2: Supabase)
         avatar_url: userProfile.avatar_url || neynarUser?.pfp_url || null,
         cover_image_url: userProfile.cover_image_url || null,
         
-        // Wallet
+        // Wallet (LAYER 1: Subsquid + LAYER 2: Supabase)
         wallet,
         
-        // Social
+        // Social (LAYER 2: Supabase)
         social_links: socialLinks,
         
-        // Stats (from leaderboard_calculations)
+        // Stats (HYBRID: All 3 layers)
         stats: {
-          // Points & XP
-          viral_xp: leaderboard?.viral_xp || 0,
+          // LAYER 1 (Subsquid): On-chain points
           base_points: leaderboard?.base_points || 0,
           guild_bonus: leaderboard?.guild_bonus || 0,
           referral_bonus: leaderboard?.referral_bonus || 0,
           streak_bonus: leaderboard?.streak_bonus || 0,
           badge_prestige: leaderboard?.badge_prestige || 0,
+          
+          // LAYER 2 (Supabase): Off-chain viral XP
+          viral_xp: viralBonusXP,
+          
+          // LAYER 3 (Calculated): Total score from all sources
           total_score: totalScore,
           
-          // Progression
-          level,
+          // LAYER 3 (Calculated): Level progression
+          level: levelProgress.level,
+          
+          // LAYER 1 (Subsquid): Rank
           global_rank: leaderboard?.global_rank || 0,
-          rank_tier: leaderboard?.rank_tier || 'Rookie',
+          
+          // LAYER 3 (Calculated): Rank tier
+          rank_tier: rankTier.name,
+          
+          // LAYER 1 (Subsquid): Streak
           streak,
           
-          // Activity
+          // LAYER 2 (Supabase): Activity counts
           quest_completions: questCount,
           badge_count: badgeCount,
-          viral_casts: viralCount,
+          viral_casts: 0, // Deprecated: use badge_count instead
           
           // Time
           member_since: userProfile.onboarded_at || userProfile.created_at || new Date().toISOString(),
           last_active: leaderboard?.updated_at || new Date().toISOString(),
         },
         
-        // Neynar Score
+        // Neynar Score (LAYER 2: Supabase)
         neynar_score: userProfile.neynar_score || null,
         neynar_tier: userProfile.neynar_tier || null,
         
-        // Metadata (type assertion needed due to Database types)
+        // Metadata (LAYER 2: Supabase)
         metadata: (userProfile.metadata || {}) as Record<string, unknown>,
         
         // Timestamps

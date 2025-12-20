@@ -2,65 +2,61 @@
  * Referral Stats API
  * GET /api/referral/[fid]/stats - Fetch user's referral statistics
  * 
+ * Hybrid Pattern:
+ * - Subsquid: getReferralNetworkStats() for on-chain referral count & timing
+ * - Supabase: referral_stats table for computed rewards & metadata
+ * - Calculated: Tier badges based on referral count
+ * 
  * Security: 10-layer pattern (rate limiting, validation, sanitization, error masking)
  * MCP Verified: December 6, 2025
+ * TRUE HYBRID: December 19, 2025
  * 
  * Features:
  * - Referral code lookup
- * - Total referrals count
+ * - Total referrals count (on-chain)
  * - Points earned from referrals
  * - Tier badge status (Bronze/Silver/Gold)
  * - Active referrals tracking
- * 
- * Security Layers:
- * 1. Rate Limiting (60 req/min per IP via Upstash Redis)
- * 2. Request Validation (Zod schema for FID)
- * 3. Authentication (Public read, no auth required)
- * 4. RBAC (Public endpoint, no role check)
- * 5. Input Sanitization (FID validation, XSS prevention)
- * 6. SQL Injection Prevention (Parameterized contract calls)
- * 7. CSRF Protection (SameSite cookies, Origin validation)
- * 8. Privacy Controls (Only public referral data)
- * 9. Audit Logging (All requests logged)
- * 10. Error Masking (No sensitive contract data exposed)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getCached } from '@/lib/cache/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { createClient } from '@/lib/supabase/edge'
 import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler'
-import { 
-  getReferralCode, 
-  getReferralStats, 
-  getReferralTier,
-  getReferrer
-} from '@/lib/contracts/referral-contract'
-import type { Address } from 'viem'
-import { generateRequestId } from '@/lib/middleware/request-id'
+import { FIDSchema } from '@/lib/validation/api-schemas'
+import { getReferralNetworkStats } from '@/lib/subsquid-client'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// FID validation schema
-const FIDParamsSchema = z.object({
-  fid: z.string().regex(/^\d+$/, 'FID must be numeric').transform(Number),
-})
-
 // Tier names for UI display
 const TIER_NAMES = ['None', 'Bronze', 'Silver', 'Gold'] as const
 
+/**
+ * Calculate tier level based on successful referral count
+ */
+function calculateTierLevel(totalReferred: number): number {
+  if (totalReferred >= 10) return 3 // Gold
+  if (totalReferred >= 5) return 2  // Silver
+  if (totalReferred >= 1) return 1  // Bronze
+  return 0 // None
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  context: { params: Promise<{ fid: string }> }
 ) {
-  const requestId = generateRequestId()
-
   const startTime = Date.now()
   const clientIp = getClientIp(request)
-  const fid = params.fid
 
   try {
-    // ===== SECURITY LAYER 1: RATE LIMITING =====
+    // Await params (Next.js 15)
+    const params = await context.params
+    const fid = params.fid
+
+    // 1. Rate Limiting
     const rateLimitResult = await rateLimit(clientIp, apiLimiter)
     
     if (!rateLimitResult.success) {
@@ -76,137 +72,148 @@ export async function GET(
         type: ErrorType.RATE_LIMIT,
         message: 'Too many requests. Please try again later.',
         statusCode: 429,
-        details: {
-          limit: rateLimitResult.limit,
-          remaining: 0,
-          reset: rateLimitResult.reset,
-        },
       })
     }
 
-    // ===== SECURITY LAYER 2: REQUEST VALIDATION =====
-    const validationResult = FIDParamsSchema.safeParse({ fid })
+    // 2. Input Validation
+    const fidNumber = parseInt(fid, 10)
+    const fidResult = FIDSchema.safeParse(fidNumber)
     
-    if (!validationResult.success) {
+    if (!fidResult.success) {
       logError('Invalid FID', {
         endpoint: `/api/referral/${fid}/stats`,
         ip: clientIp,
         method: 'GET',
-        error: validationResult.error.flatten(),
+        error: fidResult.error.flatten(),
       })
       
       return createErrorResponse({
         type: ErrorType.VALIDATION,
         message: 'Invalid FID format',
         statusCode: 400,
-        details: validationResult.error.flatten(),
+        details: fidResult.error.flatten(),
       })
     }
 
-    const validatedFid = validationResult.data.fid
+    const validatedFid = fidResult.data
 
-    // ===== SECURITY LAYER 5: INPUT SANITIZATION =====
-    // Get address from FID (you'll need to implement FID → address lookup)
-    // For now, using FID directly (in production, use Neynar API)
-    const searchParams = request.nextUrl.searchParams
-    const address = searchParams.get('address')
+    // 3. Get cached referral stats with hybrid data
+    const statsData = await getCached(
+      'referral-stats',
+      `fid:${validatedFid}`,
+      async () => {
+        const supabase = createClient()
 
-    if (!address) {
-      return createErrorResponse({
-        type: ErrorType.VALIDATION,
-        message: 'Address parameter required',
-        statusCode: 400,
-        details: { field: 'address', message: 'Address must be provided as query parameter' },
-      })
-    }
+        // LAYER 1: Off-chain (Supabase) - Get user profile
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('fid, wallet_address')
+          .eq('fid', validatedFid)
+          .single()
 
-    // Validate address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      return createErrorResponse({
-        type: ErrorType.VALIDATION,
-        message: 'Invalid Ethereum address',
-        statusCode: 400,
-        details: { field: 'address', message: 'Address must be valid Ethereum address' },
-      })
-    }
+        // Handle case where profile doesn't exist or has no wallet
+        if (profileError || !profile) {
+          return {
+            fid: validatedFid,
+            address: null,
+            totalReferred: 0,
+            successfulReferrals: 0,
+            pointsEarned: 0,
+            conversionRate: 0,
+            tier: { level: 0, name: 'None', progress: 0 },
+            timing: { firstReferral: null, lastReferral: null },
+          }
+        }
 
-    // ===== SECURITY LAYER 6: CONTRACT CALLS (Parameterized) =====
-    const userAddress = address as Address
+        const address = profile.wallet_address?.toLowerCase() || null
 
-    // Fetch referral data from contract
-    const [code, stats, tier, referrerAddress] = await Promise.all([
-      getReferralCode(userAddress),
-      getReferralStats(userAddress),
-      getReferralTier(userAddress),
-      getReferrer(userAddress),
-    ])
+        // If no wallet address, return empty stats
+        if (!address) {
+          return {
+            fid: validatedFid,
+            address: null,
+            totalReferred: 0,
+            successfulReferrals: 0,
+            pointsEarned: 0,
+            conversionRate: 0,
+            tier: { level: 0, name: 'None', progress: 0 },
+            timing: { firstReferral: null, lastReferral: null },
+          }
+        }
 
-    // ===== SECURITY LAYER 8: PRIVACY CONTROLS =====
-    // Only return public referral data
-    const responseData = {
-      fid: validatedFid,
-      address: userAddress,
-      code: code || null,
-      hasCode: !!code,
-      totalReferred: Number(stats.totalReferred),
-      pointsEarned: Number(stats.totalPointsEarned),
-      tier: {
-        level: tier,
-        name: TIER_NAMES[tier] || 'None',
-        progress: calculateTierProgress(Number(stats.totalReferred), tier),
+        // LAYER 2: On-chain (Subsquid) - Get referral network stats
+        const networkStats = await getReferralNetworkStats(address)
+
+        // LAYER 3: Off-chain (Supabase) - Get computed referral rewards & metadata
+        const { data: referralStats } = await supabase
+          .from('referral_stats')
+          .select('points_earned, successful_referrals, total_referrals, tier, conversion_rate')
+          .eq('fid', validatedFid)
+          .single()
+
+        // LAYER 4: Calculated - Determine tier based on successful referral count
+        const successfulReferrals = referralStats?.successful_referrals || 0
+        const tier = calculateTierLevel(successfulReferrals)
+        const tierProgress = calculateTierProgress(successfulReferrals, tier)
+
+        return {
+          fid: validatedFid,
+          address: profile.wallet_address,
+          totalReferred: networkStats.totalReferrals, // On-chain count
+          successfulReferrals, // Off-chain computed
+          pointsEarned: referralStats?.points_earned || 0, // Off-chain computed (50 per referral)
+          conversionRate: referralStats?.conversion_rate || 0,
+          tier: {
+            level: tier,
+            name: TIER_NAMES[tier] || 'None',
+            progress: tierProgress,
+          },
+          timing: {
+            firstReferral: networkStats.firstReferral ? new Date(Number(networkStats.firstReferral) * 1000).toISOString() : null,
+            lastReferral: networkStats.lastReferral ? new Date(Number(networkStats.lastReferral) * 1000).toISOString() : null,
+          },
+        }
       },
-      referrer: {
-        address: referrerAddress || null,
-        hasReferrer: !!referrerAddress,
-      },
-    }
+      { ttl: 60 } // Cache for 1 minute
+    )
 
-    // ===== SECURITY LAYER 9: AUDIT LOGGING =====
+    // 4. Audit Logging
     const duration = Date.now() - startTime
     console.log('[API] GET /api/referral/[fid]/stats', {
       fid: validatedFid,
-      address: userAddress,
-      ip: clientIp,
       success: true,
       duration: `${duration}ms`,
-      rateLimit: {
-        remaining: rateLimitResult.remaining,
-        reset: rateLimitResult.reset,
-      },
+      cacheHit: duration < 10, // < 10ms suggests cache hit
     })
 
-    // ===== SECURITY LAYER 7: RESPONSE HEADERS (CSRF Protection) =====
-    const response = NextResponse.json(
+    // 5. Return response
+    return NextResponse.json(
       {
         success: true,
-        data: responseData,
+        data: statsData,
+        meta: {
+          timestamp: new Date().toISOString(),
+          cached: duration < 10,
+        },
       },
       {
         status: 200,
         headers: {
           'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-          'X-RateLimit-Limit': String(rateLimitResult.limit || 60),
-          'X-RateLimit-Remaining': String(rateLimitResult.remaining || 60),
-          'X-RateLimit-Reset': String(rateLimitResult.reset || Date.now() + 60000),
-          'X-Request-ID': `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         },
       }
     )
-
-    return response
   } catch (error) {
-    // ===== SECURITY LAYER 10: ERROR MASKING =====
     const duration = Date.now() - startTime
     
     logError(error instanceof Error ? error : String(error), {
-      endpoint: `/api/referral/${fid}/stats`,
+      endpoint: `/api/referral/stats`,
       ip: clientIp,
       method: 'GET',
-      fid,
       duration: `${duration}ms`,
     })
 
-    // Don't expose internal errors
+    // Error masking
     return createErrorResponse({
       type: ErrorType.INTERNAL,
       message: 'Failed to fetch referral stats',

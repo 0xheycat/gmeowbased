@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import { createClient } from '@/lib/supabase/edge'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached } from '@/lib/cache/server'
 import { LeaderboardQuerySchema } from '@/lib/validation/api-schemas'
-import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -23,14 +22,12 @@ type LeaderboardEntry = {
 }
 
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
-  const requestId = generateRequestId()
   const ip = getClientIp(request as NextRequest)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { 
-      status: 429,
-      headers: { 'X-Request-ID': requestId }
+      status: 429
     })
   }
 
@@ -44,8 +41,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
 
   if (!queryValidation.success) {
     return NextResponse.json({ error: 'validation_error', issues: queryValidation.error.issues }, { 
-      status: 400,
-      headers: { 'X-Request-ID': requestId }
+      status: 400
     })
   }
 
@@ -58,7 +54,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
   const cacheKey = `chain:${chain}:limit:${limit}:offset:${offset}:season:${season}`
   
   const result = await getCached('viral-leaderboard', cacheKey, async () => {
-    const supabase = getSupabaseServerClient()
+    const supabase = createClient()
     if (!supabase) throw new Error('Database connection failed')
     
     const query = supabase.from('badge_casts').select('fid, viral_bonus_xp, tier')
@@ -118,6 +114,5 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
 
   const response = NextResponse.json(result)
   response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')
-  response.headers.set('X-Request-ID', requestId)
   return response
 }))

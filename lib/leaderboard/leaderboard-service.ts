@@ -36,6 +36,8 @@
 
 import { getSubsquidClient } from '@/lib/subsquid-client'
 import { fetchUserByFid, fetchUserByUsername } from '@/lib/integrations/neynar'
+import { createClient } from '@/lib/supabase/edge'
+import { calculateLevelProgress, getRankTierByPoints } from '@/lib/leaderboard/rank'
 
 export type LeaderboardEntry = {
   address: string
@@ -58,6 +60,17 @@ export type LeaderboardEntry = {
   username?: string | null
   display_name?: string | null
   pfp_url?: string | null
+  // Supabase enrichment (custom profile data)
+  bio?: string | null
+  avatar_url?: string | null
+  social_links?: Record<string, string> | null
+  viral_bonus_xp?: number
+  // Calculated fields (derived from total_score)
+  level?: number
+  levelPercent?: number
+  xpToNextLevel?: number
+  rankTier?: string
+  rankTierIcon?: string
 }
 
 export type LeaderboardResponse = {
@@ -153,28 +166,118 @@ export async function getLeaderboard(options: {
   
   const count = data.length
 
-  // Enrich data with Neynar usernames and PFPs (parallel fetching)
+  // ========================================
+  // LAYER 2: SUPABASE ENRICHMENT
+  // ========================================
+  // Get custom profile data and viral bonus XP
+  const fids = data.map(entry => entry.farcaster_fid).filter((fid): fid is number => fid !== null)
+  
+  let profileData: Map<number, { display_name?: string; bio?: string; avatar_url?: string; social_links?: any }> = new Map()
+  let viralBonusData: Map<number, number> = new Map()
+  
+  if (fids.length > 0) {
+    try {
+      const supabase = createClient()
+      
+      // Query user_profiles for custom profile data
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('fid, display_name, bio, avatar_url, social_links')
+        .in('fid', fids)
+      
+      if (profiles) {
+        profiles.forEach(profile => {
+          if (profile.fid) {
+            profileData.set(profile.fid, {
+              display_name: profile.display_name ?? undefined,
+              bio: profile.bio ?? undefined,
+              avatar_url: profile.avatar_url ?? undefined,
+              social_links: profile.social_links ?? undefined
+            })
+          }
+        })
+      }
+      
+      // Aggregate viral_bonus_xp from badge_casts
+      const { data: viralCasts } = await supabase
+        .from('badge_casts')
+        .select('fid, viral_bonus_xp')
+        .in('fid', fids)
+      
+      if (viralCasts) {
+        viralCasts.forEach(cast => {
+          if (cast.fid && cast.viral_bonus_xp) {
+            const current = viralBonusData.get(cast.fid) || 0
+            viralBonusData.set(cast.fid, current + cast.viral_bonus_xp)
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch Supabase profile data:', error)
+    }
+  }
+
+  // ========================================
+  // LAYER 3: NEYNAR + CALCULATION ENRICHMENT
+  // ========================================
+  // Enrich data with Neynar usernames, Supabase custom profiles, and calculated metrics
   const enrichedData = await Promise.all(
     data.map(async (entry) => {
       // Skip if no FID
       if (!entry.farcaster_fid) {
+        // Calculate derived metrics even without FID
+        const levelInfo = calculateLevelProgress(entry.total_score)
+        const tierInfo = getRankTierByPoints(entry.total_score)
+        
         return {
           ...entry,
           farcaster_fid: null,
           username: null,
           display_name: null,
           pfp_url: null,
+          bio: null,
+          avatar_url: null,
+          social_links: null,
+          viral_bonus_xp: 0,
+          level: levelInfo.level,
+          levelPercent: levelInfo.levelPercent,
+          xpToNextLevel: levelInfo.xpToNextLevel,
+          rankTier: tierInfo.name,
+          rankTierIcon: tierInfo.icon,
         }
       }
 
+      // Get Supabase custom profile data
+      const profileInfo = profileData.get(entry.farcaster_fid)
+      const viralBonus = viralBonusData.get(entry.farcaster_fid) || 0
+      
+      // Calculate derived metrics (level, rank tier)
+      const totalScore = entry.total_score + viralBonus
+      const levelInfo = calculateLevelProgress(totalScore)
+      const tierInfo = getRankTierByPoints(totalScore)
+
       try {
+        // Fetch Neynar data
         const neynarUser = await fetchUserByFid(entry.farcaster_fid)
+        
         return {
           ...entry,
           farcaster_fid: entry.farcaster_fid ?? null,
+          // Neynar data (username, display name, pfp)
           username: neynarUser?.username || null,
-          display_name: neynarUser?.displayName || null,
-          pfp_url: neynarUser?.pfpUrl || null,
+          display_name: profileInfo?.display_name || neynarUser?.displayName || null,
+          pfp_url: profileInfo?.avatar_url || neynarUser?.pfpUrl || null,
+          // Supabase custom profile data
+          bio: profileInfo?.bio || null,
+          avatar_url: profileInfo?.avatar_url || null,
+          social_links: profileInfo?.social_links || null,
+          viral_bonus_xp: viralBonus,
+          // Calculated fields
+          level: levelInfo.level,
+          levelPercent: levelInfo.levelPercent,
+          xpToNextLevel: levelInfo.xpToNextLevel,
+          rankTier: tierInfo.name,
+          rankTierIcon: tierInfo.icon,
         }
       } catch (error) {
         console.error(`Failed to fetch Neynar user for FID ${entry.farcaster_fid}:`, error)
@@ -182,8 +285,17 @@ export async function getLeaderboard(options: {
           ...entry,
           farcaster_fid: entry.farcaster_fid ?? null,
           username: null,
-          display_name: null,
-          pfp_url: null,
+          display_name: profileInfo?.display_name || null,
+          pfp_url: profileInfo?.avatar_url || null,
+          bio: profileInfo?.bio || null,
+          avatar_url: profileInfo?.avatar_url || null,
+          social_links: profileInfo?.social_links || null,
+          viral_bonus_xp: viralBonus,
+          level: levelInfo.level,
+          levelPercent: levelInfo.levelPercent,
+          xpToNextLevel: levelInfo.xpToNextLevel,
+          rankTier: tierInfo.name,
+          rankTierIcon: tierInfo.icon,
         }
       }
     })

@@ -24,11 +24,12 @@ import { z } from 'zod';
 import { rateLimit, getClientIp, apiLimiter, strictLimiter } from '@/lib/middleware/rate-limit';
 import { createErrorResponse, ErrorType, logError, withErrorHandler } from '@/lib/middleware/error-handler';
 import { validateAdminRequest } from '@/lib/auth/admin';
-import { getSupabaseServerClient } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/edge';
 import { fetchProfileData, updateProfileData, type ProfileData } from '@/lib/profile/profile-service';
 import DOMPurify from 'isomorphic-dompurify';
 import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/middleware/idempotency';
-import { generateRequestId } from '@/lib/middleware/request-id';
+import { getCached } from '@/lib/cache/server';
+import { FIDSchema as LibFIDSchema } from '@/lib/validation/api-schemas';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,12 +37,7 @@ export const dynamic = 'force-dynamic';
 // LAYER 2: Request Validation Schemas
 // ============================================================================
 
-/**
- * FID validation schema
- */
-const FIDSchema = z.object({
-  fid: z.string().regex(/^\d+$/, 'FID must be numeric').transform(Number),
-});
+// Using FIDSchema from @/lib/validation/api-schemas
 
 /**
  * Profile update schema with strict validation
@@ -145,12 +141,7 @@ async function checkProfilePrivacy(
   fid: number,
   requesterFid?: number
 ): Promise<{ allowed: boolean; reason?: string }> {
-  const supabase = getSupabaseServerClient();
-  
-  // Null-safety check for Supabase client
-  if (!supabase) {
-    return { allowed: false, reason: 'database_unavailable' };
-  }
+  const supabase = createClient();
 
   // Get profile privacy settings
   const { data: profile, error } = await supabase
@@ -196,13 +187,7 @@ async function auditProfileChange(
   requesterFid?: number,
   ip?: string
 ) {
-  const supabase = getSupabaseServerClient();
-  
-  // Null-safety check for Supabase client
-  if (!supabase) {
-    console.error('Audit log failed: Supabase client unavailable');
-    return;
-  }
+  const supabase = createClient();
 
   try {
     // TODO: Create audit_logs table and enable audit logging
@@ -238,16 +223,16 @@ export const GET = withErrorHandler(async (
   request: NextRequest,
   context?: { params: Promise<{ fid: string }> }
 ) => {
-  const requestId = generateRequestId();
   const startTime = Date.now();
   
   // Next.js 15: Await params before accessing
   const params = await context?.params;
   if (!params?.fid) {
-    return NextResponse.json(
-      { success: false, error: 'FID parameter is required' },
-      { status: 400 }
-    );
+    return createErrorResponse({
+      type: ErrorType.VALIDATION,
+      message: 'FID parameter is required',
+      statusCode: 400,
+    });
   }
 
   // LAYER 1: Rate Limiting (60 req/min)
@@ -262,17 +247,16 @@ export const GET = withErrorHandler(async (
   }
 
   // LAYER 2: Request Validation
-  const validation = FIDSchema.safeParse({ fid: params.fid });
+  const validation = LibFIDSchema.safeParse(parseInt(params.fid));
   if (!validation.success) {
     return createErrorResponse({
       type: ErrorType.VALIDATION,
       message: 'Invalid FID format',
-      details: validation.error.issues,
       statusCode: 400,
     });
   }
 
-  const { fid } = validation.data;
+  const fid = validation.data;
 
   // LAYER 3: Authentication (optional for GET)
   const auth = await validateAdminRequest(request);
@@ -305,16 +289,11 @@ export const GET = withErrorHandler(async (
   // LAYER 10: Error Masking (no sensitive data exposed)
   const responseTime = Date.now() - startTime;
   
-  // Professional Platform Headers (Twitter, GitHub, LinkedIn, Stripe patterns)
+  // Professional Platform Headers
   const headers = {
     'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
     'X-RateLimit-Limit': '60',
-    'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-    'X-RateLimit-Reset': String(rateLimitResult.reset),
-    'X-Request-ID': `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-    'ETag': Buffer.from(JSON.stringify(profile)).toString('base64').substring(0, 32),
+    'X-RateLimit-Remaining': String(rateLimitResult.remaining ?? 59),
   }
   
   return NextResponse.json({
@@ -370,17 +349,16 @@ export const PUT = withErrorHandler(async (
   }
 
   // LAYER 2: Request Validation (FID)
-  const fidValidation = FIDSchema.safeParse({ fid: params.fid });
+  const fidValidation = LibFIDSchema.safeParse(parseInt(params.fid));
   if (!fidValidation.success) {
     return createErrorResponse({
       type: ErrorType.VALIDATION,
       message: 'Invalid FID format',
-      details: fidValidation.error.issues,
       statusCode: 400,
     });
   }
 
-  const { fid } = fidValidation.data;
+  const fid = fidValidation.data;
 
   // Enterprise Enhancement: Check Idempotency Key
   const idempotencyKey = getIdempotencyKey(request);
@@ -465,12 +443,8 @@ export const PUT = withErrorHandler(async (
   
   // Professional Platform Headers
   const headers = {
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
     'X-RateLimit-Limit': '20',
-    'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-    'X-RateLimit-Reset': String(rateLimitResult.reset),
-    'X-Request-ID': `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+    'X-RateLimit-Remaining': String(rateLimitResult.remaining ?? 19),
   }
   
   const responseData = {

@@ -73,6 +73,12 @@ export interface QuestCardProps {
   backdropOpacity?: number;
   /** Show Material Design separator tick */
   showSeparator?: boolean;
+  /** Total completion count (from backend) */
+  completionCount?: number;
+  /** Today's completion count for Hot indicator */
+  completionsToday?: number;
+  /** Completion trend direction */
+  completionTrend?: 'up' | 'down' | 'stable';
 }
 
 export default function QuestCard({
@@ -91,7 +97,13 @@ export default function QuestCard({
   showFeaturedBadge = false,
   backdropOpacity = 0.15,
   showSeparator = true,
+  completionCount,
+  completionsToday,
+  completionTrend,
 }: QuestCardProps) {
+
+  // Hot quest: >10 completions today
+  const isHot = completionsToday && completionsToday > 10;
 
   return (
     <Link href={`/quests/${slug || id}`} className="block group">
@@ -136,9 +148,25 @@ export default function QuestCard({
             </div>
             
             {/* XP Badge - Top Right */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-yellow-500/90 text-yellow-900 border border-yellow-400 backdrop-blur-sm shadow-lg">
-              <EmojiEventsIcon className="w-4 h-4" />
-              <span>{xpReward} XP</span>
+            <div className="flex flex-col gap-2 items-end">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-yellow-500/90 text-yellow-900 border border-yellow-400 backdrop-blur-sm shadow-lg">
+                <EmojiEventsIcon className="w-4 h-4" />
+                <span>{xpReward} XP</span>
+              </div>
+              
+              {/* Hot Badge */}
+              {isHot && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/90 text-white border border-red-400 backdrop-blur-sm shadow-lg animate-pulse">
+                  🔥 Hot
+                </span>
+              )}
+              
+              {/* Trending Badge */}
+              {completionTrend === 'up' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/90 text-white border border-green-400 backdrop-blur-sm shadow-lg">
+                  📈 Trending
+                </span>
+              )}
             </div>
           </div>
 
@@ -181,6 +209,14 @@ export default function QuestCard({
         <div className="p-6 space-y-4 bg-white dark:bg-gray-800">
           {/* Stats Row */}
           <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+            {completionCount !== undefined && completionCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <EmojiEventsIcon className="w-4 h-4 text-primary-500" />
+                <span className="font-medium text-primary-600 dark:text-primary-400">
+                  {completionCount.toLocaleString()} completed
+                </span>
+              </div>
+            )}
             {participantCount !== undefined && (
               <div className="flex items-center gap-1.5">
                 <PeopleIcon className="w-4 h-4" />

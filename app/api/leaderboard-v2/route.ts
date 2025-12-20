@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getLeaderboard } from '@/lib/leaderboard/leaderboard-service'
-import {
-  checkLeaderboardRateLimit,
-  createRateLimitResponse,
-  addRateLimitHeaders,
-} from '@/lib/middleware/rate-limit'
-import { generateRequestId } from '@/lib/middleware/request-id'
-import redis from '@/lib/cache/redis-client'
+import { rateLimit, apiLimiter, getClientIp } from '@/lib/middleware/rate-limit'
+import { getCached } from '@/lib/cache/server'
+import { createErrorResponse } from '@/lib/middleware/error-handler'
 
 export const runtime = 'nodejs'
 export const revalidate = 300 // 5 minutes
@@ -14,10 +10,8 @@ export const revalidate = 300 // 5 minutes
 /**
  * GET /api/leaderboard-v2
  * 
- * Fetch leaderboard data from leaderboard_calculations table
- * New V2.2 leaderboard with 6-source scoring aggregation
- * 
- * Rate Limit: 60 requests per minute per IP
+ * Fetch leaderboard data with hybrid Subsquid + Supabase pattern
+ * Uses lib/ infrastructure for caching, rate limiting, and error handling
  * 
  * Query Parameters:
  * - period: 'daily' | 'weekly' | 'all_time' (default: 'all_time')
@@ -38,25 +32,21 @@ export const revalidate = 300 // 5 minutes
  * }
  */
 export async function GET(request: NextRequest) {
-  const requestId = generateRequestId()
-  
   try {
-    // Skip rate limiting in development
-    const isDevelopment = process.env.NODE_ENV === 'development'
+    // 1. Rate limiting
+    const ip = getClientIp(request)
+    const { success } = await rateLimit(ip, apiLimiter)
     
-    // Check rate limit first (skip in dev)
-    let rateLimitResult = null
-    if (!isDevelopment) {
-      rateLimitResult = await checkLeaderboardRateLimit(request)
-      
-      if (!rateLimitResult.allowed) {
-        return createRateLimitResponse(rateLimitResult)
-      }
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded' },
+        { status: 429 }
+      )
     }
-    
+
     const searchParams = request.nextUrl.searchParams
     
-    // Parse query parameters
+    // 2. Parse and validate query parameters
     const period = (searchParams.get('period') || 'all_time') as 'daily' | 'weekly' | 'all_time'
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '15'), 100)
@@ -72,7 +62,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Validate orderBy
-    if (!['total_score', 'base_points', 'viral_xp', 'guild_bonus', 'referral_bonus', 'streak_bonus', 'badge_prestige', 'tip_points', 'nft_points'].includes(orderBy)) {
+    const validOrderBy = ['total_score', 'base_points', 'viral_xp', 'guild_bonus', 'referral_bonus', 'streak_bonus', 'badge_prestige', 'tip_points', 'nft_points']
+    if (!validOrderBy.includes(orderBy)) {
       return NextResponse.json(
         { error: 'Invalid orderBy parameter' },
         { status: 400 }
@@ -87,47 +78,23 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    // Phase 7 Priority 2: Implement caching
-    // Cache key based on query parameters
-    const cacheKey = `leaderboard:v2:${period}:${page}:${pageSize}:${search || 'all'}:${orderBy}`
-    const cacheTTL = 300 // 5 minutes (matches revalidate)
+    // 3. Get cached data with lib/ infrastructure
+    const result = await getCached(
+      'leaderboard-v2',              // namespace
+      `${period}:${page}:${pageSize}:${search || 'all'}:${orderBy}`, // key
+      async () => {                  // fetcher
+        return await getLeaderboard({
+          period,
+          page,
+          perPage: pageSize,
+          search,
+          orderBy,
+        })
+      },
+      { ttl: 300 }                   // 5 minutes cache
+    )
     
-    // Try cache first
-    let result
-    let cacheHit = false
-    
-    try {
-      const cached = await redis.get(cacheKey)
-      if (cached) {
-        console.log(`[Cache] Leaderboard V2 HIT: ${cacheKey}`)
-        result = JSON.parse(cached)
-        cacheHit = true
-      }
-    } catch (cacheError) {
-      console.error('[Cache] Leaderboard V2 cache read error:', cacheError)
-    }
-    
-    // Cache miss - fetch from database
-    if (!result) {
-      console.log(`[Cache] Leaderboard V2 MISS: ${cacheKey}`)
-      result = await getLeaderboard({
-        period,
-        page,
-        perPage: pageSize,
-        search,
-        orderBy,
-      })
-      
-      // Store in cache
-      try {
-        await redis.setex(cacheKey, cacheTTL, JSON.stringify(result))
-        console.log(`[Cache] Stored leaderboard V2: ${cacheKey} (TTL: ${cacheTTL}s)`)
-      } catch (cacheError) {
-        console.error('[Cache] Failed to store leaderboard V2:', cacheError)
-      }
-    }
-    
-    // Transform response to match expected format
+    // 4. Transform response to match expected format
     const response = {
       data: result.data,
       pagination: {
@@ -138,30 +105,19 @@ export async function GET(request: NextRequest) {
       },
     }
     
-    // Return with rate limit headers and cache status
-    const nextResponse = NextResponse.json(response, {
+    // 5. Return with cache headers
+    return NextResponse.json(response, {
       status: 200,
       headers: {
-        'X-Request-ID': requestId,
-        'X-Cache-Status': cacheHit ? 'HIT' : 'MISS',
         'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       },
     })
     
-    // Add rate limit headers in production
-    if (rateLimitResult) {
-      return addRateLimitHeaders(nextResponse, rateLimitResult)
-    }
-    
-    return nextResponse
   } catch (error) {
-    console.error('[Leaderboard V2 API] Error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch leaderboard data' },
-      { 
-        status: 500,
-        headers: { 'X-Request-ID': requestId }
-      }
-    )
+    return createErrorResponse({
+      type: 'internal_error' as any,
+      message: error instanceof Error ? error.message : 'Failed to fetch leaderboard data',
+      statusCode: 500,
+    })
   }
 }

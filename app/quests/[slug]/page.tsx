@@ -22,6 +22,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { getQuestBySlug } from '@/lib/supabase/queries/quests';
 import { QuestProgress } from '@/components/quests';
 import { QuestVerification } from '@/components/quests/QuestVerification';
+import { QuestAnalytics } from '@/components/quests/QuestAnalytics';
 import type { Quest, QuestTask } from '@/lib/supabase/types/quest';
 
 interface QuestDetailPageProps {
@@ -339,6 +340,14 @@ export default async function QuestDetailPage({ params }: QuestDetailPageProps) 
                 </div>
               </div>
             )}
+            
+            {/* Quest Analytics */}
+            <QuestAnalytics
+              questId={quest.id.toString()}
+              completionCount={quest.completion_count || 0}
+              participantCount={quest.participant_count}
+              recentCompleters={[]}
+            />
             
             {/* Quest Creator */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
