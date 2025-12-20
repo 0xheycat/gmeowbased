@@ -884,3 +884,95 @@ export function calculateCompleteStats(input: {
     lifetimeGMs: input.lifetimeGMs,
   }
 }
+
+// ============================================================================
+// LEGACY COMPATIBILITY WRAPPERS (ProfileStats Component)
+// ============================================================================
+
+/**
+ * Legacy stats calculation result type (for ProfileStats component)
+ * 
+ * @deprecated Use calculateCompleteStats instead (new unified API)
+ */
+export interface StatsCalculationResult {
+  level: number
+  levelPercent: number
+  xpToNextLevel: number
+  rankTier: string
+  streak: number
+  totalScore: number
+  formattedStats: {
+    base_points: string
+    viral_xp: string
+    total_score: string
+    quest_completions: string
+    badge_count: string
+  }
+  rankProgress: RankProgress
+}
+
+/**
+ * Calculate stats for profile display (legacy wrapper)
+ * 
+ * This is a COMPATIBILITY WRAPPER for the old stats-calculator.ts API.
+ * Used by ProfileStats component until it's refactored to use calculateCompleteStats.
+ * 
+ * @deprecated Migrate to calculateCompleteStats for new code
+ */
+export function calculateStats(stats: {
+  total_score: number
+  base_points: number
+  viral_xp: number
+  quest_completions: number
+  badge_count: number
+  streak_bonus: number
+  rank_tier?: string
+}): StatsCalculationResult {
+  // Calculate level from total_score
+  const levelData = calculateLevelProgress(stats.total_score)
+  
+  // Calculate rank tier
+  const tier = getRankTierByPoints(stats.total_score)
+  
+  // Calculate streak from streak_bonus (assume 100 points per day)
+  const streak = Math.floor(stats.streak_bonus / 100)
+  
+  // Create rank progress object
+  const rankProgress: RankProgress = {
+    ...levelData,
+    currentTier: tier,
+    percent: levelData.levelPercent,
+    currentFloor: levelData.levelFloor,
+    nextTarget: levelData.nextLevelTarget,
+    pointsIntoTier: levelData.xpIntoLevel,
+    pointsToNext: levelData.xpToNextLevel,
+  }
+  
+  // Format numbers for display
+  const formattedStats = {
+    base_points: formatNumber(stats.base_points),
+    viral_xp: formatNumber(stats.viral_xp),
+    total_score: formatNumber(stats.total_score),
+    quest_completions: formatNumber(stats.quest_completions),
+    badge_count: formatNumber(stats.badge_count),
+  }
+  
+  return {
+    level: levelData.level,
+    levelPercent: levelData.levelPercent,
+    xpToNextLevel: levelData.xpToNextLevel,
+    rankTier: stats.rank_tier || tier.name,
+    streak,
+    totalScore: stats.total_score,
+    formattedStats,
+    rankProgress,
+  }
+}
+
+/**
+ * Calculate activity rate (quests per day)
+ */
+export function calculateActivityRate(questCompletions: number, memberSince: string): number {
+  const days = Math.max(1, getMemberAgeDays(memberSince))
+  return questCompletions / days
+}
