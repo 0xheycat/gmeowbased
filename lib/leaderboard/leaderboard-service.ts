@@ -37,7 +37,7 @@
 import { getSubsquidClient } from '@/lib/subsquid-client'
 import { fetchUserByFid, fetchUserByUsername } from '@/lib/integrations/neynar'
 import { createClient } from '@/lib/supabase/edge'
-import { calculateLevelProgress, getRankTierByPoints } from '@/lib/leaderboard/rank'
+import { calculateLevelProgress, getRankTierByPoints } from '@/lib/scoring/unified-calculator'
 
 export type LeaderboardEntry = {
   address: string
