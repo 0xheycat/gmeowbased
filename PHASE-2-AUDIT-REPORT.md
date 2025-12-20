@@ -103,8 +103,21 @@ Ensure ALL functions from deprecated files are available in `lib/scoring/unified
 ### Added to Unified Calculator (Phase 2)
 1. ✅ `formatEngagementMetrics` (line ~760)
 2. ✅ `StatsCalculationResult` interface (line ~910)
-3. ✅ `calculateStats` legacy wrapper (line ~930)
-4. ✅ `calculateActivityRate` (line ~985)
+3. ✅ `ProfileStats` interface (line ~930) - Full 23-field interface
+4. ✅ `calculateStats` legacy wrapper (line ~963) - **FIXED to match unified system**
+5. ✅ `calculateActivityRate` (line ~1014)
+
+### Critical Fixes Applied
+- ✅ **Interface Matching**: calculateStats now accepts FULL ProfileStats (23 fields)
+- ✅ **Streak Calculation**: Fixed from 100 pts/day → 10 pts/day (matches original)
+- ✅ **Rank Tier Source**: Uses total_score (UNIFIED SYSTEM) not base_points
+- ✅ **Type Safety**: Added ProfileStats interface to avoid circular imports
+
+### Unified System Principles Verified
+1. ✅ Core calculations use unified functions (calculateLevelProgress, getRankTierByPoints)
+2. ✅ Formatters use unified functions (formatNumber, formatPoints)
+3. ✅ Rank tier calculated from total_score (not base_points)
+4. ✅ All interfaces match existing type definitions
 
 ---
 
