@@ -1,7 +1,7 @@
 import { getContractAddress, CHAIN_IDS, type ChainKey, STANDALONE_ADDRESSES, ALL_CHAIN_KEYS } from '@/lib/contracts/gmeow-utils'
 import { GM_CONTRACT_ABI, GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { buildFrameShareUrl } from '@/lib/api/share'
-import { calculateRankProgress } from '@/lib/leaderboard/rank'
+import { calculateRankProgress } from '@/lib/scoring/unified-calculator'
 import { fetchUserByAddress, fetchFidByAddress, fetchUserByFid } from '@/lib/integrations/neynar'
 import { getReferrer } from '@/lib/contracts/referral-contract'
 import { getCached } from '@/lib/cache/server'
