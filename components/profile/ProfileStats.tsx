@@ -26,7 +26,7 @@
  */
 
 import type { ProfileStats as ProfileStatsType } from '@/lib/profile/types'
-import { calculateStats, formatLastActive } from '@/lib/profile/stats-calculator'
+import { calculateStats, formatLastActive } from '@/lib/scoring/unified-calculator'
 
 // Icons from components/icons
 import { TrendArrowUpIcon } from '@/components/icons/trend-arrow-up-icon'
