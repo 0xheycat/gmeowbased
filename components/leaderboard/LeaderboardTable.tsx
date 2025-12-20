@@ -25,7 +25,7 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 import StarIcon from '@mui/icons-material/Star'
 import { cn } from '@/lib/utils/utils'
 import { Button } from '@/components/ui/button'
-import { getImprovedRankTierByPoints } from '@/lib/leaderboard/rank'
+import { getRankTierByPoints } from '@/lib/scoring/unified-calculator'
 import { motion } from 'framer-motion'
 import { BadgeDisplay, BadgeDisplaySkeleton } from './BadgeDisplay'
 import { useLeaderboardBadges } from '@/lib/hooks/useLeaderboardBadges'
@@ -190,7 +190,7 @@ export function LeaderboardTable({
       sortable: false,
       headerClassName: 'min-w-[200px]',
       render: (row) => {
-        const tier = getImprovedRankTierByPoints(row.total_score)
+        const tier = getRankTierByPoints(row.total_score)
         const userBadges = row.farcaster_fid ? badgesByFid[row.farcaster_fid] || [] : []
         return (
           <div className="flex items-center gap-3">
@@ -336,7 +336,7 @@ export function LeaderboardTable({
 
   // Mobile card render
   const mobileCardRender = (row: LeaderboardEntry) => {
-    const tier = getImprovedRankTierByPoints(row.total_score)
+    const tier = getRankTierByPoints(row.total_score)
     return (
       <div className="space-y-3">
         {/* Header */}
