@@ -7,26 +7,21 @@
  * - Updates referral_registrations table
  * - Calculates and updates referral_stats table
  * - Updates referral_timeline for daily tracking
- * - Updates leaderboard_calculations.referral_bonus
  * 
  * Called by GitHub Actions workflow daily at 2:00 AM UTC
  * Idempotency: Prevents double execution on retry
  * Key format: cron-sync-referrals-YYYYMMDD-HH (24h cache TTL)
  * 
- * Updated: December 11, 2025
- * Status: ✅ Priority 4 Complete
+ * Updated: December 19, 2025
+ * Status: ✅ Fixed - Uses user_profiles instead of dropped leaderboard_calculations
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdminClient } from '@/lib/supabase/edge';
 import { createPublicClient, http, parseAbiItem } from 'viem';
 import { base } from 'viem/chains';
 import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency';
-import { generateRequestId } from '@/lib/middleware/request-id';
 import type { Address } from 'viem';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Contract address for GmeowReferralStandalone
 const REFERRAL_CONTRACT_ADDRESS = '0x9E7c32C1fB3a2c08e973185181512a442b90Ba44' as Address;
@@ -53,7 +48,6 @@ interface ReferralStats {
 }
 
 export async function POST(request: NextRequest) {
-  const requestId = generateRequestId();
   const startTime = Date.now();
 
   try {
@@ -64,7 +58,7 @@ export async function POST(request: NextRequest) {
     if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Invalid or missing cron secret' },
-        { status: 401, headers: { 'X-Request-ID': requestId } }
+        { status: 401 }
       );
     }
 
@@ -80,7 +74,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Initialize clients
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = getSupabaseAdminClient();
+    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Failed to initialize Supabase client' },
+        { status: 500 }
+      );
+    }
     
     // Use Subsquid RPC (faster and more reliable than public RPC)
     const rpcUrl = process.env.RPC_BASE_HTTP || process.env.NEXT_PUBLIC_RPC_BASE || 'https://mainnet.base.org';
@@ -201,16 +202,15 @@ export async function POST(request: NextRequest) {
 
       const totalReferrals = referrals?.length || 0;
 
-      // Check how many referrals have activity (successful conversion - base_points > 0)
+      // Check how many referrals have activity (successful conversion - has user_profile)
       let successfulReferrals = 0;
       if (referrals && referrals.length > 0) {
         const referredFids = referrals.map((r) => r.fid);
 
         const { data: activityData, error: activityError } = await supabase
-          .from('leaderboard_calculations')
-          .select('farcaster_fid')
-          .in('farcaster_fid', referredFids)
-          .gt('base_points', 0);
+          .from('user_profiles')
+          .select('fid')
+          .in('fid', referredFids);
 
         if (!activityError && activityData) {
           successfulReferrals = activityData.length;
@@ -268,25 +268,6 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Referral Sync] Updated ${statsUpdated} referrer stats`);
 
-    // 10. Update leaderboard_calculations.referral_bonus
-    let leaderboardUpdated = 0;
-    for (const stat of stats) {
-      const { error: leaderboardError } = await supabase
-        .from('leaderboard_calculations')
-        .update({
-          referral_bonus: stat.total_rewards,
-        })
-        .eq('farcaster_fid', stat.fid);
-
-      if (leaderboardError) {
-        console.error(`Failed to update leaderboard for FID ${stat.fid}:`, leaderboardError);
-      } else {
-        leaderboardUpdated++;
-      }
-    }
-
-    console.log(`[Referral Sync] Updated ${leaderboardUpdated} leaderboard entries`);
-
     // 11. Calculate aggregate metrics
     const totalReferrals = stats.reduce((sum, s) => sum + s.total_referrals, 0);
     const totalSuccessful = stats.reduce((sum, s) => sum + s.successful_referrals, 0);
@@ -315,7 +296,6 @@ export async function POST(request: NextRequest) {
       stats: {
         total_referrers: uniqueFids.length,
         stats_updated: statsUpdated,
-        leaderboard_updated: leaderboardUpdated,
         failed: errors.length,
         total_referrals: totalReferrals,
         successful_referrals: totalSuccessful,
@@ -330,7 +310,7 @@ export async function POST(request: NextRequest) {
     // Store result for idempotency (24h cache TTL)
     await storeIdempotency(idempotencyKey, response, 200);
     
-    return NextResponse.json(response, { headers: { 'X-Request-ID': requestId } });
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Referral sync error:', error);
     return NextResponse.json(
@@ -339,7 +319,7 @@ export async function POST(request: NextRequest) {
         message: error instanceof Error ? error.message : 'Unknown error',
         duration: `${Date.now() - startTime}ms`,
       },
-      { status: 500, headers: { 'X-Request-ID': requestId } }
+      { status: 500 }
     );
   }
 }

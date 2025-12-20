@@ -14,16 +14,14 @@
  * FEATURES
  * ═══════════════════════════════════════════════════════════════════════════
  * ✅ Hybrid scoring (Subsquid blockchain + Supabase off-chain)
- * ✅ 9 scoring components:
- *    • basePoints - Core activity multiplier (Neynar score * 100)
- *    • viralXP - Engagement from badge casts (recasts×10 + replies×5 + likes×2)
- *    • guildBonus - Active guild membership multiplier (10% + 5% officer)
- *    • referralBonus - Successful referral rewards (50 XP per referral)
- *    • streakBonus - GM streak consistency bonus (days × 5 XP)
- *    • badgePrestige - NFT badge collection value (100 XP per badge)
- *    • tipPoints - Tip participation score (10 XP per tip)
- *    • nftPoints - OnchainStats NFT ownership (100 XP per NFT)
- *    • guildBonusPoints - Guild activity bonus (calculated separately)
+ * ✅ 7 scoring components (aligned with COMPLETE-CALCULATION-SYSTEM.md):
+ *    • blockchainPoints - On-chain points from Subsquid User.totalPoints (GM + Quests + Tips)
+ *    • viralXP - Off-chain engagement from Supabase badge_casts.viral_bonus_xp
+ *    • streakDays - Current GM streak (metadata, NOT scored as points - see contract)
+ *    • guildBonus - Guild membership value (calculated from guild level)
+ *    • referralBonus - Referral rewards (calculated from referral count)
+ *    • badgePrestige - NFT badge collection prestige
+ *    • totalScore - blockchainPoints + viralXP (primary scoring metric)
  * ✅ Category-specific leaderboards (8 categories: base, viral, guild, referral, streak, badge, tip, nft)
  * ✅ Batch calculation support for efficient leaderboard generation
  * ✅ Parallel data fetching (Subsquid + Supabase queries run concurrently)
@@ -43,10 +41,12 @@
  * ═══════════════════════════════════════════════════════════════════════════
  * REFERENCE DOCUMENTATION
  * ═══════════════════════════════════════════════════════════════════════════
+ * CURRENT: /COMPLETE-CALCULATION-SYSTEM.md (Dec 20, 2025 - Authoritative source)
  * Core: /FARCASTER-BOT-ENHANCEMENT-PLAN-PART-2.md (Sec 4.1-4.8: XP Formulas)
  * Priority: /FARCASTER-BOT-ENHANCEMENT-PLAN-PART-3.md (Sec 8.1: Critical Blocker)
  * Usage: /HYBRID-CALCULATOR-USAGE-GUIDE.md (375 lines, integration specs)
  * Status: /PHASE-1-WEEK-1-2-COMPLETE.md
+ * Schema: /SUBSQUID-SCHEMA-FIX-COMPLETE.md (Points terminology, not XP)
  * Instructions: /.config/Code/User/prompts/farcaster.instructions.md
  * Related: lib/bot-stats.ts (original stats engine, now deprecated for scoring)
  * 
@@ -108,6 +108,12 @@
 
 import { getUserStats as getSubsquidUserStats } from '@/lib/integrations/subsquid-client'
 import { createClient } from '@/lib/supabase/edge'
+import { 
+  calculateEngagementScore,
+  calculateViralBonus,
+  formatPoints,
+  calculateCompleteStats
+} from '@/lib/scoring/unified-calculator'
 
 /**
  * Leaderboard category types for filtered views
@@ -135,17 +141,16 @@ export type GuildRole = 'owner' | 'officer' | 'member'
 
 /**
  * Score breakdown by component
+ * Aligned with COMPLETE-CALCULATION-SYSTEM.md
  */
 export interface ScoreBreakdown {
-  basePoints: number          // Quest completions (Supabase)
-  viralXP: number             // Badge cast engagement (Supabase)
-  guildBonus: number          // Guild level * 100 (Subsquid)
-  referralBonus: number       // Referral count * 50 (Subsquid)
-  streakBonus: number         // GM streak * 10 (Subsquid)
-  badgePrestige: number       // Badge count * 25 (Subsquid)
-  tipPoints: number           // Tip activity (Supabase)
-  nftPoints: number           // NFT rewards (Subsquid)
-  guildBonusPoints: number    // 10% member + 5% officer (Supabase)
+  blockchainPoints: number    // Subsquid User.totalPoints (GM + Quests + Tips on-chain)
+  viralXP: number             // Supabase badge_casts.viral_bonus_xp (engagement scoring)
+  streakDays: number          // Current streak in days (metadata only, NOT scored directly)
+  guildBonus: number          // Guild membership value (if applicable)
+  referralBonus: number       // Referral rewards (if applicable)
+  badgePrestige: number       // Badge collection value (if applicable)
+  totalScore: number          // blockchainPoints + viralXP (final score)
 }
 
 export interface LeaderboardScore {
@@ -216,7 +221,17 @@ export interface BadgeCollectionStats {
 
 /**
  * Calculate complete leaderboard score for a user
- * Combines Subsquid blockchain data + Supabase off-chain data
+ * 
+ * CALCULATION FLOW (per COMPLETE-CALCULATION-SYSTEM.md):
+ * 1. Fetch blockchain points: Subsquid User.totalPoints (on-chain GM + Quests + Tips)
+ * 2. Fetch viral bonus: Supabase badge_casts.viral_bonus_xp (off-chain engagement)
+ * 3. Calculate total: blockchainPoints + viralXP = totalScore
+ * 4. Derive level: from totalScore using quadratic formula (rank.ts)
+ * 5. Derive rank tier: from totalScore using 12-tier system (rank.ts)
+ * 
+ * NOTE: Streak is stored in User.currentStreak but NOT scored as points directly.
+ * Contract applies streak as MULTIPLIER (7d=+15%, 30d=+30%, 100d=+60%) to GM rewards,
+ * which is already included in User.totalPoints.
  */
 export async function calculateHybridScore(
   fid: number,
@@ -228,43 +243,29 @@ export async function calculateHybridScore(
     getSupabaseStats(fid)
   ])
   
-  // Calculate Subsquid-sourced components (60% of total score)
-  const streakBonus = subsquidData.currentStreak * 10
-  const badgePrestige = subsquidData.badgeCount * 25
-  const referralBonus = subsquidData.referralCount * 50
-  const nftPoints = subsquidData.nftRewards || 0
-  const guildBonus = subsquidData.guildLevel * 100
+  // Use unified calculator for complete stats calculation
+  const stats = calculateCompleteStats({
+    blockchainPoints: subsquidData.totalPoints || 0,
+    currentStreak: subsquidData.currentStreak || 0,
+    lastGMTimestamp: null, // Not available in current data
+    lifetimeGMs: 0, // Not available in current data
+    viralXP: supabaseData.castEngagement || 0,
+    questPoints: 0, // Included in blockchainPoints
+    guildPoints: 0, // Included in blockchainPoints
+    referralPoints: 0, // Included in blockchainPoints
+  })
   
-  // Calculate Supabase-sourced components (40% of total score)
-  const basePoints = supabaseData.questCompletions
-  const viralXP = supabaseData.castEngagement
-  const tipPoints = supabaseData.tipActivity
-  const guildBonusPoints = calculateGuildMemberBonus(supabaseData)
-  
-  // Sum all components
-  const totalScore = 
-    basePoints + 
-    viralXP + 
-    guildBonus + 
-    referralBonus + 
-    streakBonus + 
-    badgePrestige + 
-    tipPoints + 
-    nftPoints + 
-    guildBonusPoints
-  
+  // Map to LeaderboardScore format
   return {
-    totalScore,
+    totalScore: stats.scores.totalScore,
     breakdown: {
-      basePoints,
-      viralXP,
-      guildBonus,
-      referralBonus,
-      streakBonus,
-      badgePrestige,
-      tipPoints,
-      nftPoints,
-      guildBonusPoints,
+      blockchainPoints: stats.scores.blockchainPoints,
+      viralXP: stats.scores.viralXP,
+      streakDays: stats.streak,
+      guildBonus: subsquidData.guildLevel * 100,
+      referralBonus: subsquidData.referralCount * 50,
+      badgePrestige: subsquidData.badgeCount * 25,
+      totalScore: stats.scores.totalScore,
     },
     fid,
     walletAddress,
@@ -273,127 +274,66 @@ export async function calculateHybridScore(
 
 /**
  * Get Subsquid blockchain stats for a user
- * Returns: GM streaks, badges, guild membership, referrals, NFTs
+ * Queries User entity: totalPoints, currentStreak, badgeCount, etc.
+ * 
+ * IMPORTANT: User.totalPoints already includes:
+ * - Base GM rewards (gmPointReward from contract)
+ * - Streak bonus multiplier (7d=+15%, 30d=+30%, 100d=+60%)
+ * - Quest completion rewards
+ * - Tip earnings
  */
 async function getSubsquidStats(walletAddress: string) {
   const stats = await getSubsquidUserStats(walletAddress)
   
   return {
-    currentStreak: stats?.currentStreak || 0,
-    badgeCount: stats?.badgeCount || 0,
-    referralCount: 0, // Referral count not in UserStats type
-    nftRewards: 0, // NFT mints not in UserStats type
-    guildLevel: stats?.guildMemberships || 0,
+    totalPoints: Number(stats?.totalPoints || 0),  // Primary scoring metric
+    currentStreak: stats?.currentStreak || 0,      // Metadata (streak days)
+    badgeCount: stats?.badgeCount || 0,            // Badge count for prestige
+    referralCount: 0,  // TODO: Add when referral tracking implemented
+    guildLevel: stats?.guildMemberships || 0,      // Guild level
   }
 }
 
 /**
  * Get Supabase off-chain stats for a user
- * Returns: Quest completions, viral engagement, tip activity, guild bonuses
+ * 
+ * PRIMARY METRIC: Viral engagement XP from badge_casts
+ * - Engagement score: (recasts×10) + (replies×5) + (likes×2)
+ * - Viral tiers: mega_viral(100→500XP), viral(50→250XP), popular(20→100XP), etc.
+ * - Stored in: badge_casts.viral_bonus_xp
+ * 
+ * NOTE: Quest completions and tips are tracked ON-CHAIN (in Subsquid User.totalPoints)
+ * This function only fetches OFF-CHAIN social engagement data.
  */
 async function getSupabaseStats(fid: number) {
   const supabase = createClient()
   
-  // Fetch all off-chain data in parallel
-  const [questData, viralData, tipData, guildData] = await Promise.all([
-    // Quest completions (base_points)
-    supabase
-      .from('quest_completions')
-      .select('points_awarded')
-      .eq('completer_fid', fid),
-    
-    // Viral engagement (viral_xp from badge_casts)
-    supabase
-      .from('badge_casts')
-      .select('viral_bonus_xp, viral_score')
-      .eq('fid', fid),
-    
-    // Tip activity (tip_points)
-    supabase
-      .from('points_transactions')
-      .select('amount')
-      .eq('fid', fid)
-      .in('source', ['tip_earned', 'tip_given']),
-    
-    // Guild membership bonus (guild_bonus_points) - TODO: Implement when guild_members table exists
-    Promise.resolve({ data: null, error: null })
-  ])
+  // Fetch viral engagement data (primary off-chain metric)
+  const { data: viralData } = await supabase
+    .from('badge_casts')
+    .select('viral_bonus_xp')
+    .eq('fid', fid)
   
-  // Calculate quest completions
-  const questCompletions = questData.data?.reduce(
-    (sum, quest) => sum + (quest.points_awarded || 0), 
-    0
-  ) || 0
-  
-  // Calculate viral engagement
-  const castEngagement = viralData.data?.reduce(
-    (sum, cast) => sum + (cast.viral_bonus_xp || 0) + (cast.viral_score || 0), 
-    0
-  ) || 0
-  
-  // Calculate tip activity
-  const tipActivity = tipData.data?.reduce(
-    (sum, tip) => sum + (tip.amount || 0), 
+  // Calculate total viral XP from all badge casts
+  const castEngagement = viralData?.reduce(
+    (sum, cast) => sum + (cast.viral_bonus_xp || 0), 
     0
   ) || 0
   
   return {
-    questCompletions,
-    castEngagement,
-    tipActivity,
-    guildMemberships: guildData.data || [],
+    castEngagement,  // Viral bonus XP (off-chain social engagement)
   }
 }
 
-/**
- * Calculate guild member bonus points
- * 10% of guild points for members, 5% additional for officers
- */
-function calculateGuildMemberBonus(supabaseData: any): number {
-  let bonus = 0
-  
-  for (const membership of supabaseData.guildMemberships) {
-    const pointsContributed = membership.points_contributed || 0
-    
-    // 10% bonus for being a member
-    bonus += Math.floor(pointsContributed * 0.1)
-    
-    // Additional 5% for officers
-    if (membership.role === 'officer' || membership.role === 'owner') {
-      bonus += Math.floor(pointsContributed * 0.05)
-    }
-  }
-  
-  return bonus
-}
-
-/**
- * Calculate NFT points from NFT holdings
- * Different NFTs may have different point values
- */
-function calculateNFTPoints(nftMints: any[]): number {
-  // Basic calculation: 100 points per NFT
-  // TODO: Add rarity-based scoring when metadata available
-  return nftMints.length * 100
-}
-
-/**
- * Calculate guild level from membership data
- * Higher tier guilds give more bonus points
- */
-function calculateGuildLevel(guilds: any[]): number {
-  if (!guilds || guilds.length === 0) return 0
-  
-  // Get highest guild level from user's memberships
-  return guilds.reduce((maxLevel, guild) => {
-    const level = guild.guild?.level || 0
-    return Math.max(maxLevel, level)
-  }, 0)
-}
+// NOTE: Guild bonus calculation removed - guild points are tracked on-chain
+// and included in User.totalPoints via Subsquid indexer.
 
 /**
  * Calculate category-specific scores
  * Used for leaderboard category tabs
+ * 
+ * NOTE: Most categories now use on-chain data (Subsquid User.totalPoints)
+ * Only 'viral_legends' uses off-chain Supabase data
  */
 export async function calculateCategoryScore(
   category: string,
@@ -403,25 +343,19 @@ export async function calculateCategoryScore(
   const fullScore = await calculateHybridScore(fid, walletAddress)
   
   switch (category) {
-    case 'quest_masters':
-      return fullScore.breakdown.basePoints
     case 'viral_legends':
       return fullScore.breakdown.viralXP
-    case 'guild_heroes':
-      return fullScore.breakdown.guildBonus + fullScore.breakdown.guildBonusPoints
-    case 'referral_champions':
-      return fullScore.breakdown.referralBonus
     case 'streak_kings':
-      return fullScore.breakdown.streakBonus
+      return fullScore.breakdown.streakDays  // Days, not points
     case 'badge_collectors':
       return fullScore.breakdown.badgePrestige
-    case 'tip_lords':
-      return fullScore.breakdown.tipPoints
-    case 'nft_holders':
-      return fullScore.breakdown.nftPoints
+    case 'guild_heroes':
+      return fullScore.breakdown.guildBonus
+    case 'referral_champions':
+      return fullScore.breakdown.referralBonus
     case 'all_pilots':
     default:
-      return fullScore.totalScore
+      return fullScore.totalScore  // blockchainPoints + viralXP
   }
 }
 

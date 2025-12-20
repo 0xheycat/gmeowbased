@@ -491,7 +491,7 @@ export async function fetchPendingDigest(
     const grouped = new Map<NotificationBatchType, DigestNotification>()
 
     for (const item of data) {
-      const type = item.notification_type as NotificationBatchType
+      const type = (item as any).notification_type as NotificationBatchType
       if (grouped.has(type)) {
         const existing = grouped.get(type)!
         existing.count++
@@ -499,7 +499,7 @@ export async function fetchPendingDigest(
         grouped.set(type, {
           type,
           count: 1,
-          latestPayload: item.payload as NotificationPayload,
+          latestPayload: (item as any).payload as NotificationPayload,
         })
       }
     }
@@ -508,7 +508,7 @@ export async function fetchPendingDigest(
       fid,
       notifications: Array.from(grouped.values()),
       totalCount: data.length,
-      scheduledFor: new Date(data[0].scheduled_for),
+      scheduledFor: new Date((data[0] as any).scheduled_for),
     }
   } catch (error) {
     console.error('[Batching] Error fetching pending digest:', error)

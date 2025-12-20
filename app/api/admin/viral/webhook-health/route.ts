@@ -83,7 +83,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     
     // Get recent GM rank events (webhook events are tracked here)
     // Note: Subsquid getGMRankEvents expects FID, but webhook events don't have FID
-    // For now, return empty array - this endpoint may need redesign for Subsquid
+    // Fixme, return empty array - this endpoint may need redesign for Subsquid
     const webhookEvents: any[] = []
     console.warn('[webhook-health] Webhook event tracking not yet implemented in Subsquid')
 

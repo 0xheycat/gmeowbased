@@ -1,4 +1,24 @@
 /**
+ * ⚠️ DEPRECATION WARNING (December 20, 2025)
+ * 
+ * This file is DEPRECATED and will be removed in a future release.
+ * 
+ * ALL calculation logic has been consolidated into:
+ * → lib/scoring/unified-calculator.ts
+ * 
+ * Migration Guide:
+ * - Import from '@/lib/scoring/unified-calculator' instead
+ * - calculateCompleteStats() → New unified function (replaces calculateStats)
+ * - formatNumber() → Same function name, same API
+ * - formatPoints() → New enhanced formatting function
+ * 
+ * This file is kept temporarily for backward compatibility.
+ * New code MUST NOT import from this file.
+ * 
+ * See: lib/scoring/README.md for migration instructions
+ */
+
+/**
  * Profile Stats Calculator
  * 
  * Calculates derived statistics for profile display:

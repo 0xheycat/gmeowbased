@@ -1,4 +1,26 @@
 /**
+ * ⚠️ DEPRECATION WARNING (December 20, 2025)
+ * 
+ * This file is DEPRECATED and will be removed in a future release.
+ * 
+ * ALL viral engagement calculation logic has been consolidated into:
+ * → lib/scoring/unified-calculator.ts
+ * 
+ * Migration Guide:
+ * - Import from '@/lib/scoring/unified-calculator' instead
+ * - calculateEngagementScore() → Same function name, same API
+ * - getViralTier() → Same function name, same API
+ * - calculateViralBonus() → Same function name, same API
+ * - ENGAGEMENT_WEIGHTS → Same constant name
+ * - VIRAL_TIERS → Same constant name
+ * 
+ * This file is kept temporarily for backward compatibility.
+ * New code MUST NOT import from this file.
+ * 
+ * See: lib/scoring/README.md for migration instructions
+ */
+
+/**
  * Viral Bonus Calculator
  * 
  * Calculates engagement scores and viral bonus XP for badge share casts.

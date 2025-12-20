@@ -11,7 +11,7 @@ import { getQuestBySlug } from '@/lib/supabase/queries/quests';
 import { QuestDetailsQuerySchema } from '@/lib/validation/api-schemas';
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit';
 import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler';
-import { generateRequestId } from '@/lib/middleware/request-id';
+import { getCached } from '@/lib/cache/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +20,6 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   const startTime = Date.now();
-  const requestId = generateRequestId();
   const clientIp = getClientIp(request);
   const questSlug = params.slug;
   
@@ -40,7 +39,6 @@ export async function GET(
         type: ErrorType.RATE_LIMIT,
         message: 'Too many requests. Please try again later.',
         statusCode: 429,
-        requestId,
         details: {
           limit: rateLimitResult.limit,
           remaining: 0,
@@ -58,7 +56,6 @@ export async function GET(
         type: ErrorType.VALIDATION,
         message: 'User FID is required',
         statusCode: 400,
-        requestId,
         details: { required: 'userFid query parameter' },
       });
     }
@@ -73,7 +70,6 @@ export async function GET(
         type: ErrorType.VALIDATION,
         message: 'Invalid user FID',
         statusCode: 400,
-        requestId,
         details: validationResult.error.flatten(),
       });
     }
@@ -84,13 +80,19 @@ export async function GET(
         type: ErrorType.VALIDATION,
         message: 'Invalid quest slug format',
         statusCode: 400,
-        requestId,
         details: { expected: 'string slug' },
       });
     }
     
-    // 4. FETCH QUEST WITH PROGRESS
-    const result = await getQuestBySlug(questSlug, validationResult.data.userFid);
+    // 4. CACHED QUEST FETCH WITH PROGRESS
+    const result = await getCached(
+      'quest-details',
+      `${questSlug}:${validationResult.data.userFid}`,
+      async () => {
+        return await getQuestBySlug(questSlug, validationResult.data.userFid);
+      },
+      { ttl: 60 }
+    );
     
     if (!result) {
       return createErrorResponse({
@@ -115,18 +117,19 @@ export async function GET(
     });
     
     // 6. RESPONSE WITH RATE LIMIT HEADERS
-    const response = NextResponse.json({
-      success: true,
-      data: result,
-    });
-    
-    // Add rate limit headers
-    response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit || 60));
-    response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining || 60));
-    response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset || Date.now() + 60000));
-    response.headers.set('X-Request-ID', requestId);
-    
-    return response;
+    return NextResponse.json(
+      {
+        success: true,
+        data: result,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          'X-RateLimit-Limit': String(rateLimitResult.limit || 60),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining || 60),
+        },
+      }
+    );
     
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -158,7 +161,6 @@ export async function GET(
       type: ErrorType.INTERNAL,
       message: 'Failed to fetch quest details',
       statusCode: 500,
-      requestId,
       details: process.env.NODE_ENV === 'development' ? {
         error: error instanceof Error ? error.message : String(error)
       } : undefined,

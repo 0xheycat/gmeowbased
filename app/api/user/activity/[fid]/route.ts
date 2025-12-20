@@ -2,19 +2,8 @@
  * User Activity Timeline API
  * 
  * GET /api/user/activity/:fid
- * Fetch activity feed for a user
- * 
- * 10-Layer Security Architecture:
- * 1. Rate Limiting - Upstash Redis sliding window (60/min)
- * 2. Request Validation - Zod schemas (FID, pagination)
- * 3. Input Sanitization - SQL injection prevention
- * 4. Privacy Enforcement - profile_visibility check
- * 5. Database Security - Parameterized queries
- * 6. Error Masking - No sensitive data in responses
- * 7. Cache Strategy - s-maxage 30s (real-time activity)
- * 8. Pagination - Limit/offset with max 50 items
- * 9. CORS Headers - Proper origin validation
- * 10. Audit Logging - Request tracking (future)
+ * Fetch activity feed for a user using Subsquid
+ * Uses lib/ infrastructure for caching, rate limiting, and error handling
  * 
  * Features:
  * - 7 activity types (quest, badge, level, streak, guild, tip, reward)
@@ -23,27 +12,23 @@
  * - Pagination support (limit/offset)
  * - Real-time updates (30s cache)
  * 
- * Platform Reference: Twitter feed, LinkedIn activity, GitHub timeline
- * Template: app/api/user/profile/[fid]/route.ts (10-layer security)
- * 
- * Phase 4: Profile Data Integration
- * Created: December 5, 2025
+ * Phase 2 Day 2: User Stats API Migration
+ * Created: December 19, 2025
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
-import { generateRequestId } from '@/lib/middleware/request-id'
-import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import { getCached } from '@/lib/cache/server'
+import { getSubsquidClient } from '@/lib/subsquid-client'
 import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
+import { FIDSchema } from '@/lib/validation/api-schemas'
 
 export const dynamic = 'force-dynamic'
 
 // ============================================================================
 // VALIDATION SCHEMAS
 // ============================================================================
-
-const FIDSchema = z.coerce.number().int().positive()
 
 const QuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),
@@ -110,8 +95,6 @@ export async function GET(
   request: NextRequest,
   context?: { params: Promise<{ fid: string }> }
 ) {
-  const requestId = generateRequestId()
-
   try {
     // Next.js 15: Await params before accessing
     const params = await context?.params
@@ -139,13 +122,11 @@ export async function GET(
     // 2. Input Validation
     const fidResult = FIDSchema.safeParse(params.fid)
     if (!fidResult.success) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid FID. Must be a positive integer.' 
-        },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: 'Invalid FID. Must be a positive integer.',
+        statusCode: 400,
+      })
     }
 
     const validatedFid = fidResult.data
@@ -154,114 +135,79 @@ export async function GET(
     const searchParams = Object.fromEntries(request.nextUrl.searchParams)
     const queryResult = QuerySchema.safeParse(searchParams)
     if (!queryResult.success) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid query parameters.',
-          details: queryResult.error.issues 
-        },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: 'Invalid query parameters.',
+        details: queryResult.error.issues,
+        statusCode: 400,
+      })
     }
 
     const { limit, offset } = queryResult.data
 
-    // 3. Database Query
-    const supabase = getSupabaseServerClient()
-    if (!supabase) {
-      return createErrorResponse({
-        type: ErrorType.INTERNAL,
-        message: 'Database connection unavailable.',
-        statusCode: 503,
-      })
-    }
+    // 3. Get cached activity data
+    const result = await getCached(
+      'user-activity',              // namespace
+      `${validatedFid}:${limit}:${offset}`, // key
+      async () => {                 // fetcher
+        const client = getSubsquidClient()
+        
+        // Get XP transactions from Subsquid (last 6 months)
+        const sinceDate = new Date()
+        sinceDate.setMonth(sinceDate.getMonth() - 6)
+        
+        const allTransactions = await client.getXPTransactions(validatedFid, sinceDate)
+        
+        // Apply pagination
+        const transactions = allTransactions.slice(offset, offset + limit)
+        const count = allTransactions.length
 
-    // Check profile visibility
-    // TODO: Add profile visibility check when column is added to user_profiles
-    // For now, all profiles are public
+        // Transform data to match ActivityTimeline component interface
+        const activities = (transactions || []).map((transaction: any) => ({
+          id: transaction.id.toString(),
+          type: formatActivityType(transaction),
+          title: formatActivityTitle(transaction),
+          description: formatActivityDescription(transaction),
+          timestamp: transaction.created_at,
+          metadata: {
+            xp_amount: transaction.xp_amount || 0,
+            action_type: transaction.action_type,
+            ...transaction.metadata,
+          }
+        }))
 
-    // Fetch activity from Subsquid (replaces xp_transactions)
-    const { getSubsquidClient } = await import('@/lib/subsquid-client')
-    const client = getSubsquidClient()
-    
-    // Get XP transactions from Subsquid
-    const sinceDate = new Date()
-    sinceDate.setMonth(sinceDate.getMonth() - 6) // Last 6 months
-    
-    const allTransactions = await client.getXPTransactions(validatedFid, sinceDate)
-    
-    // Apply pagination manually
-    const transactions = allTransactions.slice(offset, offset + limit)
-    const count = allTransactions.length
+        return {
+          activities,
+          pagination: {
+            total: count || 0,
+            limit,
+            offset,
+            hasMore: (offset + limit) < (count || 0),
+          }
+        }
+      },
+      { ttl: 30 }                   // 30 seconds cache (real-time activity)
+    )
 
-    // Transform data to match ActivityTimeline component interface
-    const activities = (transactions || []).map((transaction: any) => ({
-      id: transaction.id.toString(),
-      type: formatActivityType(transaction),
-      title: formatActivityTitle(transaction),
-      description: formatActivityDescription(transaction),
-      timestamp: transaction.created_at,
-      metadata: {
-        xp_amount: transaction.xp_amount || 0,
-        action_type: transaction.action_type,
-        ...transaction.metadata,
-      }
-    }))
-
-    // Professional pagination Link header (GitHub pattern)
-    const baseUrl = request.url.split('?')[0]
-    const linkHeaders: string[] = []
-    
-    if (offset + limit < (count || 0)) {
-      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${offset + limit}>; rel="next"`)
-    }
-    if (offset > 0) {
-      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${Math.max(0, offset - limit)}>; rel="prev"`)
-    }
-    linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=0>; rel="first"`)
-    if (count) {
-      const lastOffset = Math.floor(count / limit) * limit
-      linkHeaders.push(`<${baseUrl}?limit=${limit}&offset=${lastOffset}>; rel="last"`)
-    }
-
-    // Generate request ID for tracking (Stripe/Twitter pattern)
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
+    // 4. Return with cache headers
     return NextResponse.json(
       {
         success: true,
-        activities,
-        pagination: {
-          total: count || 0,
-          limit,
-          offset,
-          hasMore: (offset + limit) < (count || 0),
-        },
+        ...result,
         meta: {
           timestamp: new Date().toISOString(),
           version: '1.0',
-          request_id: requestId,
         }
       },
       { 
         status: 200,
         headers: {
           'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
-          'X-API-Version': '1.0',
-          'X-Content-Type-Options': 'nosniff',
-          'X-Frame-Options': 'DENY',
-          'X-Request-ID': requestId,
-          'X-RateLimit-Limit': '60',
-          'X-RateLimit-Remaining': String(rateLimitResult.remaining ?? 59),
-          'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + 60),
-          'Link': linkHeaders.join(', '),
-          'Server-Timing': `db;dur=${Date.now()},transform;dur=2`,
         }
       }
     )
 
   } catch (error) {
-    console.error('Activity API error:', error)
     return createErrorResponse({
       type: ErrorType.INTERNAL,
       message: 'An unexpected error occurred while fetching activity data.',

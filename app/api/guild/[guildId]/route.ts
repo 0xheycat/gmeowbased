@@ -41,11 +41,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { strictLimiter } from '@/lib/middleware/rate-limit'
-import { getGuild, getGuildStats, getUserGuild, isGuildOfficer } from '@/lib/contracts/guild-contract'
-import { createPublicClient, http, type Address } from 'viem'
-import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI } from '@/lib/contracts/gmeow-utils'
+import { getCached } from '@/lib/cache/server'
+import { rateLimit, strictLimiter, getClientIp } from '@/lib/middleware/rate-limit'
+import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
+import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
 
 // ==========================================
@@ -79,8 +78,192 @@ function validateGuildId(guildId: string): bigint | null {
 }
 
 /**
- * Get guild members from Supabase leaderboard_calculations
- * Fallback: If no members in leaderboard, return guild leader as sole member
+ * Fetch guild data from Supabase (TRUE HYBRID LAYER 1+2)
+ */
+async function fetchGuildFromSupabase(guildId: string): Promise<{
+  guild: {
+    id: string
+    name: string
+    description: string
+    banner: string
+    leader: string
+    totalPoints: number
+    memberCount: number
+    level: number
+    active: boolean
+    treasury: number
+  }
+  members: Array<{
+    address: string
+    isOfficer: boolean
+    points: string
+    farcaster?: any
+    badges?: any
+    leaderboardStats?: any
+  }>
+} | null> {
+  try {
+    const supabase = createClient()
+    
+    // LAYER 1: Get guild metadata from Supabase
+    const { data: guildData, error: guildError } = await supabase
+      .from('guild_metadata')
+      .select('guild_id, name, description, banner, created_at')
+      .eq('guild_id', guildId)
+      .single()
+    
+    if (guildError || !guildData) {
+      console.error('[guild-detail] Guild not found:', guildError)
+      return null
+    }
+    
+    // LAYER 2: Get guild events for stats calculation
+    const { data: events, error: eventsError } = await supabase
+      .from('guild_events')
+      .select('event_type, actor_address, target_address, amount, created_at')
+      .eq('guild_id', guildId)
+      .order('created_at', { ascending: false })
+      .limit(1000)
+    
+    if (eventsError) {
+      console.error('[guild-detail] Error fetching events:', eventsError)
+    }
+    
+    // LAYER 3 (CALCULATED): Aggregate guild stats from events
+    let leaderAddress = ''
+    let totalPoints = 0
+    let memberCount = 0
+    const memberSet = new Set<string>()
+    const memberPoints = new Map<string, number>()
+    const officers = new Set<string>()
+    
+    for (const event of events || []) {
+      const { event_type, actor_address, target_address, amount } = event
+      
+      if (event_type === 'GUILD_CREATED') {
+        leaderAddress = actor_address
+        officers.add(actor_address)
+      } else if (event_type === 'MEMBER_JOINED') {
+        memberSet.add(actor_address)
+      } else if (event_type === 'MEMBER_LEFT') {
+        memberSet.delete(actor_address)
+      } else if (event_type === 'MEMBER_PROMOTED') {
+        officers.add(target_address!)
+      } else if (event_type === 'MEMBER_DEMOTED') {
+        officers.delete(target_address!)
+      } else if (event_type === 'POINTS_DEPOSITED') {
+        totalPoints += amount || 0
+        const currentPoints = memberPoints.get(actor_address) || 0
+        memberPoints.set(actor_address, currentPoints + (amount || 0))
+      } else if (event_type === 'POINTS_CLAIMED') {
+        totalPoints -= amount || 0
+      }
+    }
+    
+    memberCount = memberSet.size
+    
+    // Calculate guild level based on total points
+    const level = calculateGuildLevel(totalPoints)
+    
+    // Get member profiles from user_profiles
+    const memberAddresses = Array.from(memberSet)
+    const { data: profiles, error: profilesError } = await supabase
+      .from('user_profiles')
+      .select('fid, wallet_address, verified_addresses, display_name, avatar_url')
+      .in('wallet_address', memberAddresses)
+      .limit(50)
+    
+    if (profilesError) {
+      console.error('[guild-detail] Error fetching profiles:', profilesError)
+    }
+    
+    // Get member badges
+    const fids = (profiles || []).map(p => p.fid).filter(Boolean)
+    const { data: badges, error: badgesError } = await supabase
+      .from('user_badges')
+      .select('fid, badge_id, tier, badge_type')
+      .in('fid', fids)
+    
+    if (badgesError) {
+      console.error('[guild-detail] Error fetching badges:', badgesError)
+    }
+    
+    const badgesByFid = new Map<number, any[]>()
+    for (const badge of badges || []) {
+      if (!badgesByFid.has(badge.fid)) {
+        badgesByFid.set(badge.fid, [])
+      }
+      badgesByFid.get(badge.fid)!.push(badge)
+    }
+    
+    // Enrich members with profile data
+    const members = (profiles || []).map(profile => {
+      const userBadges = badgesByFid.get(profile.fid) || []
+      const transformedBadges = userBadges.map(b => ({
+        id: b.badge_id,
+        name: b.badge_id.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        rarity: b.tier,
+        category: b.badge_type,
+      }))
+      
+      return {
+        address: profile.wallet_address || '',
+        isOfficer: officers.has(profile.wallet_address || ''),
+        points: (memberPoints.get(profile.wallet_address || '') || 0).toString(),
+        farcaster: {
+          fid: profile.fid,
+          username: profile.display_name || profile.wallet_address,
+          displayName: profile.display_name || '',
+          pfpUrl: profile.avatar_url || '',
+        },
+        badges: transformedBadges,
+        leaderboardStats: {
+          base_points: memberPoints.get(profile.wallet_address || '') || 0,
+          viral_xp: 0,
+          guild_bonus_points: 0,
+          total_score: memberPoints.get(profile.wallet_address || '') || 0,
+          global_rank: null,
+          rank_tier: getTierFromRank(null),
+          is_guild_officer: officers.has(profile.wallet_address || ''),
+        }
+      }
+    })
+    
+    return {
+      guild: {
+        id: guildData.guild_id,
+        name: guildData.name,
+        description: guildData.description || '',
+        banner: guildData.banner || '',
+        leader: leaderAddress,
+        totalPoints,
+        memberCount,
+        level,
+        active: true,
+        treasury: totalPoints,
+      },
+      members
+    }
+  } catch (error) {
+    console.error('[guild-detail] fetchGuildFromSupabase error:', error)
+    return null
+  }
+}
+
+/**
+ * Calculate guild level from total points
+ */
+function calculateGuildLevel(points: number): number {
+  if (points < 1000) return 1
+  if (points < 2000) return 2
+  if (points < 5000) return 3
+  if (points < 10000) return 4
+  return 5
+}
+
+/**
+ * Legacy function kept for compatibility (deprecated - do not use)
+ * @deprecated Use fetchGuildFromSupabase instead
  */
 async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: number = 50): Promise<Array<{
   address: string
@@ -90,7 +273,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
   badges?: any
   leaderboardStats?: any
 }>> {
-  console.log('[guild-api] getGuildMembers called - guildId:', guildId.toString(), 'leader:', leaderAddress)
+  console.log('[guild-api] getGuildMembers called (DEPRECATED) - guildId:', guildId.toString(), 'leader:', leaderAddress)
   
   try {
     // Import Supabase client
@@ -461,51 +644,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
   }
 }
 
-/**
- * Create success response
- */
-function createSuccessResponse(data: any, requestId: string, cacheMaxAge: number = 60) {
-  return NextResponse.json(
-    {
-      success: true,
-      ...data,
-      timestamp: Date.now(),
-    },
-    {
-      status: 200,
-      headers: {
-        'Cache-Control': `public, s-maxage=${cacheMaxAge}, stale-while-revalidate=${cacheMaxAge * 2}`,
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-API-Version': '1.0.0',
-        'X-Request-ID': requestId,
-      },
-    }
-  )
-}
 
-/**
- * Create error response
- */
-function createErrorResponse(message: string, requestId: string, status: number = 400) {
-  return NextResponse.json(
-    {
-      success: false,
-      message,
-      timestamp: Date.now(),
-    },
-    {
-      status,
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-API-Version': '1.0.0',
-        'X-Request-ID': requestId,
-      },
-    }
-  )
-}
 
 // ==========================================
 // GET Handler
@@ -521,109 +660,107 @@ export async function GET(
   try {
     const { guildId: guildIdParam } = params
     
-    // 1. RATE LIMITING
-    if (!strictLimiter) {
-      return NextResponse.json(
-        { success: false, message: 'Rate limiting not configured', timestamp: Date.now() },
-        { status: 503 }
-      )
-    }
-    
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
-    const rateLimitKey = `guild:get:${clientIp}`
-    const rateLimitResult = await strictLimiter.limit(rateLimitKey)
+    // 1. RATE LIMITING (use lib/ infrastructure)
+    const clientIp = getClientIp(req)
+    const rateLimitResult = await rateLimit(clientIp, strictLimiter)
     
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Rate limit exceeded. Please try again later.',
-          timestamp: Date.now(),
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': rateLimitResult.limit?.toString() || '60',
-            'X-RateLimit-Remaining': rateLimitResult.remaining?.toString() || '0',
-            'X-RateLimit-Reset': rateLimitResult.reset?.toString() || Date.now().toString(),
-            'Retry-After': '3600',
-          },
-        }
-      )
+      return createErrorResponse({
+        type: ErrorType.RATE_LIMIT,
+        message: 'Too many requests. Please try again later.',
+        statusCode: 429,
+        requestId,
+      })
     }
 
     // 2. REQUEST VALIDATION
     const guildId = validateGuildId(guildIdParam)
     if (!guildId) {
-      return createErrorResponse('Invalid guild ID format', requestId, 400)
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: 'Invalid guild ID format',
+        statusCode: 400,
+        requestId,
+      })
     }
 
-    // 3. FETCH GUILD DATA
-    const [guild, stats] = await Promise.all([
-      getGuild(guildId),
-      getGuildStats(guildId),
-    ])
+    // 3. FETCH GUILD DATA (with caching - TRUE HYBRID)
+    const result = await getCached(
+      'guild-detail',
+      guildIdParam,
+      async () => await fetchGuildFromSupabase(guildIdParam),
+      { ttl: 60 }
+    )
     
-    if (!guild) {
-      return createErrorResponse('Guild not found', requestId, 404)
+    if (!result) {
+      return createErrorResponse({
+        type: ErrorType.NOT_FOUND,
+        message: 'Guild not found',
+        statusCode: 404,
+        requestId,
+      })
     }
 
-    // 4. FETCH MEMBERS (with limit)
-    const memberLimit = 50 // Prevent excessive data fetching
-    const members = await getGuildMembers(guildId, guild.leader, memberLimit)
-
-    // 5. PREPARE RESPONSE
+    // 4. PREPARE RESPONSE (match frontend Guild interface)
     const response = {
       guild: {
-        id: guildId.toString(),
-        name: guild.name,
-        leader: guild.leader,
-        totalPoints: guild.totalPoints.toString(),
-        memberCount: guild.memberCount.toString(),
-        level: guild.level,
-        active: guild.active,
-        treasury: stats?.treasuryPoints.toString() || '0',
+        id: result.guild.id,
+        name: result.guild.name,
+        description: result.guild.description,
+        banner: result.guild.banner,
+        leader: result.guild.leader,
+        totalPoints: result.guild.totalPoints.toString(),
+        memberCount: result.guild.memberCount.toString(),
+        level: result.guild.level,
+        active: result.guild.active,
+        treasury: result.guild.treasury.toString(),
       },
-      members,
+      members: result.members,
       meta: {
-        membersFetched: members.length,
-        totalMembers: Number(guild.memberCount),
-        hasMore: members.length < Number(guild.memberCount),
+        membersFetched: result.members.length,
+        totalMembers: result.guild.memberCount,
+        hasMore: result.members.length < result.guild.memberCount,
       },
     }
 
-    // 6. AUDIT LOGGING
-    console.log('[guild-api] Guild fetched:', {
-      guildId: guildId.toString(),
-      memberCount: guild.memberCount.toString(),
-      membersFetched: members.length,
-      membersData: members,
+    // 5. AUDIT LOGGING
+    console.log('[guild-detail] Guild fetched:', {
+      guildId: result.guild.id,
+      memberCount: result.guild.memberCount,
+      membersFetched: result.members.length,
       timestamp: new Date().toISOString(),
     })
 
-    // 7. SUCCESS RESPONSE
+    // 6. SUCCESS RESPONSE
     const duration = Date.now() - startTime
-    return createSuccessResponse(
+    return NextResponse.json(
       {
+        success: true,
         ...response,
         serverTiming: {
           total: `${duration}ms`,
-          contractRead: '< 200ms',
-          membersFetch: '< 100ms per member',
+          cache: 'L1/L2/L3 (60s TTL)',
+          supabaseQuery: '< 100ms',
         },
+        timestamp: Date.now(),
       },
-      requestId,
-      60 // Cache for 60 seconds
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          'X-Request-ID': requestId,
+        },
+      }
     )
   } catch (error) {
-    // 10. ERROR MASKING
-    console.error('[guild-api] Internal error:', error)
+    console.error('[guild-detail] Internal error:', error)
     
-    return createErrorResponse(
-      'An unexpected error occurred. Please try again later.',
+    return createErrorResponse({
+      type: ErrorType.INTERNAL,
+      message: 'An unexpected error occurred. Please try again later.',
+      statusCode: 500,
       requestId,
-      500
-    )
+    })
   }
 }
 

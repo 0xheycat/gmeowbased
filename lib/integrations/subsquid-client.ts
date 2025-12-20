@@ -27,10 +27,10 @@ const client = new GraphQLClient(SUBSQUID_ENDPOINT, {
 
 export interface UserStats {
   address: string;
-  totalXP: number;
-  available: number; // Available XP for spending
-  locked: bigint; // Locked XP (can't be spent yet)
-  total: bigint; // Total XP lifetime
+  totalPoints: number;  // Renamed from totalXP (Dec 20, 2025 schema fix)
+  available: number; // Available points for spending
+  locked: bigint; // Locked points (can't be spent yet)
+  total: bigint; // Total points lifetime
   level: number;
   tier: string;
   currentStreak: number;
@@ -178,7 +178,7 @@ export async function getUserStats(walletAddress: string): Promise<UserStats | n
     query GetUserStats($address: String!) {
       users(where: { id_eq: $address }, limit: 1) {
         id
-        totalXP
+        totalPoints
         currentStreak
         lastGMTimestamp
         lifetimeGMs
@@ -213,16 +213,16 @@ export async function getUserStats(walletAddress: string): Promise<UserStats | n
     const user = data.users[0];
     const leaderboard = data.leaderboardEntries?.[0] || null;
     
-    // Calculate level and tier from totalXP (client-side calculation)
-    const totalXP = Number(user.totalXP || 0);
-    const { level, tier } = calculateLevelAndTier(totalXP);
+    // Calculate level and tier from totalPoints (client-side calculation)
+    const totalPoints = Number(user.totalPoints || 0);
+    const { level, tier } = calculateLevelAndTier(totalPoints);
 
     return {
       address: user.id,
-      totalXP,
-      available: totalXP, // Simplified: all XP available (locked XP logic TBD)
+      totalPoints,
+      available: totalPoints, // Simplified: all points available (locked logic TBD)
       locked: 0n,
-      total: BigInt(totalXP),
+      total: BigInt(totalPoints),
       level,
       tier,
       currentStreak: user.currentStreak || 0,
@@ -241,19 +241,19 @@ export async function getUserStats(walletAddress: string): Promise<UserStats | n
 }
 
 /**
- * Calculate level and tier from total XP
+ * Calculate level and tier from total points
  * This matches the rank calculation logic from the smart contract
  */
-function calculateLevelAndTier(totalXP: number): { level: number; tier: string } {
-  // Level calculation: XP / 1000 (rounded down)
-  const level = Math.max(1, Math.floor(totalXP / 1000));
+function calculateLevelAndTier(totalPoints: number): { level: number; tier: string } {
+  // Level calculation: Points / 1000 (rounded down)
+  const level = Math.max(1, Math.floor(totalPoints / 1000));
   
   // Tier thresholds (matching contract logic)
   const tier = 
-    totalXP >= 100000 ? 'Diamond' :
-    totalXP >= 50000 ? 'Platinum' :
-    totalXP >= 25000 ? 'Gold' :
-    totalXP >= 10000 ? 'Silver' :
+    totalPoints >= 100000 ? 'Diamond' :
+    totalPoints >= 50000 ? 'Platinum' :
+    totalPoints >= 25000 ? 'Gold' :
+    totalPoints >= 10000 ? 'Silver' :
     'Bronze';
   
   return { level, tier };

@@ -2,20 +2,18 @@ import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { QuestClaimSchema } from '@/lib/validation/api-schemas'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { generateRequestId } from '@/lib/middleware/request-id'
 
 // Demo in-memory store; swap to DB/KV in prod
 const claims = new Map<string, { at: number; metaHash: string | null }>()
 
 export const POST = withErrorHandler(async (req: Request) => {
-  const requestId = generateRequestId();
   const ip = getClientIp(req);
   const { success } = await rateLimit(ip, apiLimiter);
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429, headers: { 'X-Request-ID': requestId } }
+      { status: 429 }
     )
   }
 
@@ -49,8 +47,5 @@ export const POST = withErrorHandler(async (req: Request) => {
     }
     claims.set(key, { at: Date.now(), metaHash: metaHashNormalized })
     // Place to enqueue fulfillment/job
-    return NextResponse.json(
-      { ok: true, metaHash: metaHashNormalized },
-      { headers: { 'X-Request-ID': requestId } }
-    )
+    return NextResponse.json({ ok: true, metaHash: metaHashNormalized })
 })

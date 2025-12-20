@@ -15,7 +15,7 @@ export class User {
     id!: string
 
     @BigIntColumn_({nullable: false})
-    totalXP!: bigint
+    totalPoints!: bigint
 
     @IntColumn_({nullable: false})
     currentStreak!: number

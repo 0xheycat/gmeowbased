@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import { createClient } from '@/lib/supabase/edge'
 import type { Database } from '@/types/supabase'
 import { getViralTier, calculateEngagementScore, type EngagementMetrics } from '@/lib/viral/viral-bonus'
 import { FIDSchema } from '@/lib/validation/api-schemas'
@@ -7,7 +7,6 @@ import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached } from '@/lib/cache/server'
-import { generateRequestId } from '@/lib/middleware/request-id'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -47,17 +46,13 @@ type TierBreakdown = {
 }
 
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
-  const requestId = generateRequestId()
   const ip = getClientIp(request as NextRequest)
   const { success } = await rateLimit(ip, apiLimiter)
   
   if (!success) {
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { 
-        status: 429,
-        headers: { 'X-Request-ID': requestId }
-      }
+      { status: 429 }
     )
   }
 
@@ -68,10 +63,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     if (!fidParam) {
       return NextResponse.json(
         { error: 'Bad Request', message: 'Missing fid parameter' },
-        { 
-          status: 400,
-          headers: { 'X-Request-ID': requestId }
-        }
+        { status: 400 }
       )
     }
     
@@ -82,10 +74,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     if (!fidValidation.success) {
       return NextResponse.json(
         { error: 'Bad Request', message: 'Invalid fid parameter', details: fidValidation.error.flatten() },
-        { 
-          status: 400,
-          headers: { 'X-Request-ID': requestId }
-        }
+        { status: 400 }
       )
     }
     
@@ -94,7 +83,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       'viral-stats',
       `fid:${fid}`,
       async () => {
-        const supabase = getSupabaseServerClient()
+        const supabase = createClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -118,7 +107,6 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
         { 
           status: 500,
           headers: { 
-            'X-Request-ID': requestId,
             'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240'
           }
         }
@@ -142,7 +130,6 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
         message: 'No badge casts found. Share your first badge to start earning viral XP!',
       }, {
         headers: { 
-          'X-Request-ID': requestId,
           'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240'
         }
       })
@@ -219,7 +206,6 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     )
 
     const response = NextResponse.json(result)
-    response.headers.set('X-Request-ID', requestId)
     response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')
     return response
 }))

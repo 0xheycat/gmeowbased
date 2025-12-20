@@ -20,13 +20,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { apiLimiter } from '@/lib/middleware/rate-limit'
-import { createPublicClient, http } from 'viem'
-import { base } from 'viem/chains'
-import type { Address } from 'viem'
-import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES, type ChainKey, CHAIN_IDS } from '@/lib/contracts/gmeow-utils'
+import { getCached } from '@/lib/cache/server'
+import { rateLimit, apiLimiter, getClientIp } from '@/lib/middleware/rate-limit'
+import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
+import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
-import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import type { Badge } from '@/components/guild/badges'
 
 // ==========================================
@@ -58,14 +56,16 @@ type QueryParams = z.infer<typeof QuerySchema>
 // ==========================================
 
 interface Guild {
-  id: bigint
-  chain: ChainKey
+  id: string
+  chain: 'base'
   name: string
   leader: string
-  totalPoints: bigint
-  memberCount: bigint
+  totalPoints: number
+  memberCount: number
   level: number
   active: boolean
+  description?: string
+  banner?: string
   achievements?: Badge[] // Guild-level achievement badges
 }
 
@@ -203,88 +203,95 @@ function sanitizeSearch(search: string): string {
 
 /**
  * Calculate guild level based on points
+ * LAYER 3: Calculated
  */
-function calculateGuildLevel(points: bigint): number {
-  if (points < 1000n) return 1
-  if (points < 2000n) return 2
-  if (points < 5000n) return 3
-  if (points < 10000n) return 4
+function calculateGuildLevel(points: number): number {
+  if (points < 1000) return 1
+  if (points < 2000) return 2
+  if (points < 5000) return 3
+  if (points < 10000) return 4
   return 5
 }
 
 /**
- * Fetch guilds from a specific chain
+ * Fetch guilds with TRUE HYBRID pattern
+ * LAYER 1: Off-chain (Supabase) - Guild metadata
+ * LAYER 2: Off-chain (Supabase) - Guild events for stats
+ * LAYER 3: Calculated - Stats aggregation + achievements
  */
-async function fetchGuildsFromChain(
-  chain: ChainKey,
-  maxGuilds: number = 200
-): Promise<Guild[]> {
+async function fetchGuildsFromSupabase(): Promise<Guild[]> {
   try {
-    const client = createPublicClient({
-      chain: base, // Use base as default, can be extended
-      transport: http(),
-    })
+    const supabase = createClient()
 
-    // Use Guild contract address, not Core
-    const contractAddress = STANDALONE_ADDRESSES.base.guild
-    
-    // Get total guild count
-    const nextGuildId = await client.readContract({
-      address: contractAddress,
-      abi: GM_CONTRACT_ABI,
-      functionName: 'nextGuildId',
-      args: [],
-    }) as bigint
+    // LAYER 1: Get all guild metadata
+    const { data: guilds, error: guildsError } = await supabase
+      .from('guild_metadata')
+      .select('guild_id, name, description, banner, created_at')
 
-    if (!nextGuildId || nextGuildId === 0n) {
+    if (guildsError || !guilds) {
+      console.error('[guild/list] Failed to fetch guild metadata:', guildsError)
       return []
     }
 
-    // Fetch guild data in batches
-    const guildCount = Math.min(Number(nextGuildId), maxGuilds)
-    const guildIds = Array.from({ length: guildCount }, (_, i) => BigInt(i + 1))
+    // LAYER 2: Get guild events for stats calculation
+    const { data: events, error: eventsError } = await supabase
+      .from('guild_events')
+      .select('guild_id, event_type, actor_address, amount')
 
-    const contracts = guildIds.map((id) => ({
-      address: contractAddress as Address,
-      abi: GUILD_ABI_JSON as any,
-      functionName: 'getGuildInfo' as const,
-      args: [id],
-    }))
-
-    const results = await client.multicall({ contracts })
-
-    const guilds: Guild[] = []
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i]
-      if (result.status !== 'success' || !result.result) continue
-
-      // Parse tuple response: [name, leader, totalPoints, memberCount, level, requiredPoints, treasury]
-      const guildInfo = result.result as any[]
-      const name = (guildInfo[0] as string) || ''
-      const leader = (guildInfo[1] as Address) || ''
-      const totalPoints = (guildInfo[2] as bigint) || 0n
-      const memberCount = (guildInfo[3] as bigint) || 0n
-      const level = (guildInfo[4] as bigint) || 0n
-
-      // Skip inactive or empty guilds (but allow 0 points - new guilds start at 0)
-      const active = name && name.length > 0
-      if (!active || !name) continue
-
-      guilds.push({
-        id: guildIds[i],
-        chain,
-        name,
-        leader,
-        totalPoints,
-        memberCount,
-        level: Number(level), // Use level from contract
-        active,
-      })
+    if (eventsError) {
+      console.error('[guild/list] Failed to fetch guild events:', eventsError)
     }
 
-    return guilds
+    const allEvents = events || []
+
+    // LAYER 3: Calculate stats from events
+    const guildStatsMap = new Map<string, { memberCount: number; totalPoints: number; leader: string }>()
+
+    for (const event of allEvents) {
+      const guildId = event.guild_id
+      if (!guildStatsMap.has(guildId)) {
+        guildStatsMap.set(guildId, { memberCount: 0, totalPoints: 0, leader: '' })
+      }
+      const stats = guildStatsMap.get(guildId)!
+
+      if (event.event_type === 'MEMBER_JOINED') {
+        stats.memberCount++
+        if (!stats.leader && event.actor_address) {
+          stats.leader = event.actor_address
+        }
+      } else if (event.event_type === 'MEMBER_LEFT') {
+        stats.memberCount = Math.max(0, stats.memberCount - 1)
+      } else if (event.event_type === 'POINTS_DEPOSITED') {
+        stats.totalPoints += Number(event.amount || 0)
+      } else if (event.event_type === 'POINTS_CLAIMED') {
+        stats.totalPoints = Math.max(0, stats.totalPoints - Number(event.amount || 0))
+      } else if (event.event_type === 'GUILD_CREATED' && event.actor_address) {
+        stats.leader = event.actor_address
+      }
+    }
+
+    // LAYER 3: Build guild list with calculated stats
+    const guildList: Guild[] = guilds.map((guild) => {
+      const stats = guildStatsMap.get(guild.guild_id) || { memberCount: 0, totalPoints: 0, leader: '' }
+      const level = calculateGuildLevel(stats.totalPoints)
+
+      return {
+        id: guild.guild_id,
+        chain: 'base' as const,
+        name: guild.name || 'Unknown Guild',
+        leader: stats.leader || '',
+        totalPoints: stats.totalPoints,
+        memberCount: stats.memberCount,
+        level,
+        active: true, // All guilds in DB are active
+        description: guild.description || undefined,
+        banner: guild.banner || undefined,
+      }
+    })
+
+    return guildList
   } catch (error) {
-    console.error(`[guild/list] Error fetching guilds from ${chain}:`, error)
+    console.error('[guild/list] Error fetching guilds:', error)
     return []
   }
 }
@@ -304,22 +311,23 @@ function filterGuilds(guilds: Guild[], search?: string): Guild[] {
 
 /**
  * Sort guilds by specified criteria
+ * LAYER 3: Calculated
  */
 function sortGuilds(guilds: Guild[], sortBy: QueryParams['sortBy']): Guild[] {
   const sorted = [...guilds]
 
   switch (sortBy) {
     case 'members':
-      sorted.sort((a, b) => Number(b.memberCount - a.memberCount))
+      sorted.sort((a, b) => b.memberCount - a.memberCount)
       break
     case 'points':
-      sorted.sort((a, b) => Number(b.totalPoints - a.totalPoints))
+      sorted.sort((a, b) => b.totalPoints - a.totalPoints)
       break
     case 'level':
-      sorted.sort((a, b) => b.level - a.level || Number(b.totalPoints - a.totalPoints))
+      sorted.sort((a, b) => b.level - a.level || b.totalPoints - a.totalPoints)
       break
     case 'recent':
-      sorted.sort((a, b) => Number(b.id - a.id)) // Newer guilds first
+      sorted.sort((a, b) => parseInt(b.id) - parseInt(a.id)) // Newer guilds first
       break
   }
 
@@ -337,57 +345,6 @@ function paginateGuilds(guilds: Guild[], limit: number, offset: number) {
   return { items, total, hasMore }
 }
 
-/**
- * Create success response with cache headers
- */
-function createSuccessResponse(data: any, requestId: string) {
-  return NextResponse.json(
-    {
-      success: true,
-      ...data,
-      timestamp: Date.now(),
-    },
-    {
-      status: 200,
-      headers: {
-        'Cache-Control': 's-maxage=60, stale-while-revalidate=120',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-Request-ID': requestId,
-        'X-API-Version': '1.0.0',
-      },
-    }
-  )
-}
-
-/**
- * Create error response (no sensitive data)
- */
-function createErrorResponse(message: string, status: number = 400, requestId?: string) {
-  const headers: Record<string, string> = {
-    'Cache-Control': 'no-store, no-cache, must-revalidate',
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'X-API-Version': '1.0.0',
-  }
-  
-  if (requestId) {
-    headers['X-Request-ID'] = requestId
-  }
-  
-  return NextResponse.json(
-    {
-      success: false,
-      message,
-      timestamp: Date.now(),
-    },
-    {
-      status,
-      headers,
-    }
-  )
-}
-
 // ==========================================
 // 5. GET Handler
 // ==========================================
@@ -395,36 +352,21 @@ function createErrorResponse(message: string, status: number = 400, requestId?: 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
   const requestId = generateRequestId()
+  const clientIp = getClientIp(req)
 
   try {
-    // 1. RATE LIMITING
-    if (!apiLimiter) {
-      return createErrorResponse('Rate limiting not configured', 503)
-    }
-    
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
-    const rateLimitKey = `${RATE_LIMIT_CONFIG.identifier}:${clientIp}`
-    const rateLimitResult = await apiLimiter.limit(rateLimitKey)
-    
+    // LAYER 1: Rate Limiting
+    const rateLimitResult = await rateLimit(clientIp, apiLimiter)
+
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Rate limit exceeded. Please try again later.',
-          timestamp: Date.now(),
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': '60',
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Date.now() + 60000),
-          },
-        }
-      )
+      return createErrorResponse({
+        type: ErrorType.RATE_LIMIT,
+        message: 'Rate limit exceeded. Please try again later.',
+        statusCode: 429,
+      })
     }
 
-    // 2. INPUT VALIDATION
+    // LAYER 2: Input Validation
     const { searchParams } = new URL(req.url)
     const queryResult = QuerySchema.safeParse({
       chain: searchParams.get('chain'),
@@ -435,65 +377,86 @@ export async function GET(req: NextRequest) {
     })
 
     if (!queryResult.success) {
-      return createErrorResponse(
-        `Invalid query parameters: ${queryResult.error.issues.map((i) => i.message).join(', ')}`,
-        400,
-        requestId
-      )
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: `Invalid query parameters: ${queryResult.error.issues.map((i) => i.message).join(', ')}`,
+        statusCode: 400,
+      })
     }
 
     const { chain, search, sortBy, limit, offset } = queryResult.data
 
-    // 3. FETCH GUILDS (Base chain only)
-    const allGuilds = await fetchGuildsFromChain('base', 200)
+    // LAYER 3: Fetch with caching (TRUE HYBRID)
+    const cacheKey = `guild-list:${chain}:${search || 'all'}:${sortBy}:${limit}:${offset}`
+    const allGuilds = await getCached(
+      'guild-list',
+      cacheKey,
+      async () => await fetchGuildsFromSupabase(),
+      { ttl: 60 }
+    )
 
-    // 4. FILTER AND SORT
+    // LAYER 3: Filter and sort (Calculated)
     const filtered = filterGuilds(allGuilds, search ?? undefined)
     const sorted = sortGuilds(filtered, sortBy)
 
-    // 5. PAGINATE
+    // LAYER 3: Paginate
     const { items, total, hasMore } = paginateGuilds(sorted, limit, offset)
 
-    // 6. FORMAT RESPONSE
+    // LAYER 4: Format response - match frontend interface
     const guilds = items.map((guild) => ({
-      id: guild.id.toString(),
-      chain: guild.chain,
+      id: guild.id,
       name: guild.name,
-      leader: guild.leader,
-      totalPoints: guild.totalPoints.toString(),
-      memberCount: guild.memberCount.toString(),
+      description: guild.description || '',
+      chain: guild.chain,
+      memberCount: guild.memberCount,
+      treasury: guild.totalPoints, // Frontend expects 'treasury'
       level: guild.level,
-      active: guild.active,
-      achievements: assignGuildAchievements(guild), // Add guild-level badges
+      xp: guild.totalPoints, // Frontend expects 'xp'
+      owner: guild.leader, // Frontend expects 'owner'
+      avatarUrl: guild.banner || undefined,
+      achievements: assignGuildAchievements(guild),
     }))
 
     const duration = Date.now() - startTime
 
-    return createSuccessResponse({
-      guilds,
-      pagination: {
-        limit,
-        offset,
-        total,
-        hasMore,
+    return NextResponse.json(
+      {
+        success: true,
+        guilds,
+        pagination: {
+          limit,
+          offset,
+          total,
+          hasMore,
+        },
+        filters: {
+          chain,
+          search: search || null,
+          sortBy,
+        },
+        performance: {
+          duration,
+        },
+        timestamp: Date.now(),
       },
-      filters: {
-        chain,
-        search: search || null,
-        sortBy,
-      },
-      performance: {
-        duration,
-      },
-    }, requestId)
+      {
+        status: 200,
+        headers: {
+          'X-Request-ID': requestId,
+          'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=120',
+          'X-RateLimit-Limit': rateLimitResult.limit?.toString() || '60',
+          'X-RateLimit-Remaining': rateLimitResult.remaining?.toString() || '0',
+          'Server-Timing': `total;dur=${duration}`,
+        },
+      }
+    )
   } catch (error: any) {
     console.error('[guild/list] Error:', error)
 
-    // 4. ERROR MASKING
-    return createErrorResponse(
-      'Failed to fetch guild list. Please try again later.',
-      500,
-      requestId
-    )
+    return createErrorResponse({
+      type: ErrorType.INTERNAL,
+      message: 'Failed to fetch guild list. Please try again later.',
+      statusCode: 500,
+    })
   }
 }

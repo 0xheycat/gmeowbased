@@ -20,12 +20,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { apiLimiter } from '@/lib/middleware/rate-limit'
-import { createPublicClient, http, type Address } from 'viem'
-import { base } from 'viem/chains'
-import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES, type ChainKey } from '@/lib/contracts/gmeow-utils'
+import { getCached } from '@/lib/cache/server'
+import { rateLimit, apiLimiter, getClientIp } from '@/lib/middleware/rate-limit'
+import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
+import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
-import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -56,14 +55,16 @@ type QueryParams = z.infer<typeof QuerySchema>
 
 interface LeaderboardGuild {
   rank: number
-  id: bigint
-  chain: ChainKey
+  id: string
+  chain: 'base'
   name: string
   leader: string
-  totalPoints: bigint
-  memberCount: bigint
+  totalPoints: number
+  memberCount: number
   level: number
   score: number // Calculated based on metric
+  description?: string
+  banner?: string
 }
 
 // ==========================================
@@ -72,102 +73,117 @@ interface LeaderboardGuild {
 
 /**
  * Calculate guild level based on points
+ * LAYER 3: Calculated
  */
-function calculateGuildLevel(points: bigint): number {
-  if (points < 1000n) return 1
-  if (points < 2000n) return 2
-  if (points < 5000n) return 3
-  if (points < 10000n) return 4
+function calculateGuildLevel(points: number): number {
+  if (points < 1000) return 1
+  if (points < 2000) return 2
+  if (points < 5000) return 3
+  if (points < 10000) return 4
   return 5
 }
 
 /**
- * Fetch guilds from a specific chain
+ * Fetch guilds with TRUE HYBRID pattern
+ * LAYER 1: Off-chain (Supabase) - Guild metadata
+ * LAYER 2: Off-chain (Supabase) - Guild events for activity tracking
+ * LAYER 3: Calculated - Stats aggregation from events
  */
-async function fetchGuildsFromChain(chain: ChainKey, maxGuilds: number = 200): Promise<LeaderboardGuild[]> {
+async function fetchGuildsFromSupabase(): Promise<LeaderboardGuild[]> {
   try {
-    const client = createPublicClient({
-      chain: base,
-      transport: http(),
-    })
+    const supabase = createClient()
 
-    const contractAddress = STANDALONE_ADDRESSES.base.guild // Use Guild contract
+    // LAYER 1: Get all guild metadata
+    const { data: guilds, error: guildsError } = await supabase
+      .from('guild_metadata')
+      .select('guild_id, name, description, banner, created_at')
 
-    // Get total guild count
-    const nextGuildId = (await client.readContract({
-      address: contractAddress as Address,
-      abi: GM_CONTRACT_ABI,
-      functionName: 'nextGuildId',
-      args: [],
-    })) as bigint
-
-    if (!nextGuildId || nextGuildId === 0n) {
+    if (guildsError || !guilds) {
+      console.error('[guild/leaderboard] Failed to fetch guild metadata:', guildsError)
       return []
     }
 
-    // Fetch guild data
-    const guildCount = Math.min(Number(nextGuildId), maxGuilds)
-    const guildIds = Array.from({ length: guildCount }, (_, i) => BigInt(i + 1))
+    // LAYER 2: Get guild events to calculate stats
+    const { data: events, error: eventsError } = await supabase
+      .from('guild_events')
+      .select('guild_id, event_type, actor_address, amount')
 
-    const contracts = guildIds.map((id) => ({
-      address: contractAddress as Address,
-      abi: GUILD_ABI_JSON as any,
-      functionName: 'getGuildInfo' as const,
-      args: [id],
-    }))
-
-    const results = await client.multicall({ contracts })
-
-    const guilds: LeaderboardGuild[] = []
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i]
-      if (result.status !== 'success' || !result.result) continue
-
-      // Parse tuple response: [name, leader, totalPoints, memberCount, level, requiredPoints, treasury]
-      const guildInfo = result.result as any[]
-      const name = (guildInfo[0] as string) || ''
-      const leader = (guildInfo[1] as Address) || ''
-      const totalPoints = (guildInfo[2] as bigint) || 0n
-      const memberCount = (guildInfo[3] as bigint) || 0n
-      const level = Number((guildInfo[4] as bigint) || 0n)
-
-      // Skip inactive or empty guilds
-      const active = name && name.length > 0
-      if (!active || !name || totalPoints === 0n) continue
-
-      guilds.push({
-        rank: 0, // Will be calculated after sorting
-        id: guildIds[i],
-        chain,
-        name,
-        leader,
-        totalPoints,
-        memberCount,
-        level,
-        score: Number(totalPoints), // Default score is points
-      })
+    if (eventsError) {
+      console.error('[guild/leaderboard] Failed to fetch guild events:', eventsError)
     }
 
-    return guilds
+    const allEvents = events || []
+
+    // LAYER 3: Calculate stats from events
+    const guildStatsMap = new Map<string, { memberCount: number; totalPoints: number; leader: string }>()
+
+    // Process events to calculate member counts and total points
+    for (const event of allEvents) {
+      const guildId = event.guild_id
+      if (!guildStatsMap.has(guildId)) {
+        guildStatsMap.set(guildId, { memberCount: 0, totalPoints: 0, leader: '' })
+      }
+      const stats = guildStatsMap.get(guildId)!
+
+      if (event.event_type === 'MEMBER_JOINED') {
+        stats.memberCount++
+        if (!stats.leader && event.actor_address) {
+          stats.leader = event.actor_address // First member is likely the leader
+        }
+      } else if (event.event_type === 'MEMBER_LEFT') {
+        stats.memberCount = Math.max(0, stats.memberCount - 1)
+      } else if (event.event_type === 'POINTS_DEPOSITED') {
+        stats.totalPoints += Number(event.amount || 0)
+      } else if (event.event_type === 'POINTS_CLAIMED') {
+        stats.totalPoints = Math.max(0, stats.totalPoints - Number(event.amount || 0))
+      } else if (event.event_type === 'GUILD_CREATED' && event.actor_address) {
+        stats.leader = event.actor_address
+      }
+    }
+
+    // LAYER 3: Build leaderboard entries
+    const leaderboardGuilds: LeaderboardGuild[] = guilds
+      .map((guild) => {
+        const stats = guildStatsMap.get(guild.guild_id) || { memberCount: 0, totalPoints: 0, leader: '' }
+        const level = calculateGuildLevel(stats.totalPoints)
+
+        return {
+          rank: 0, // Will be calculated after sorting
+          id: guild.guild_id,
+          chain: 'base' as const,
+          name: guild.name || 'Unknown Guild',
+          leader: stats.leader || '',
+          totalPoints: stats.totalPoints,
+          memberCount: stats.memberCount,
+          level,
+          score: stats.totalPoints, // Default score is points
+          description: guild.description || undefined,
+          banner: guild.banner || undefined,
+        }
+      })
+      .filter((g) => g.name && g.totalPoints > 0) // Only active guilds
+
+    return leaderboardGuilds
   } catch (error) {
-    console.error(`[guild/leaderboard] Error fetching guilds from ${chain}:`, error)
+    console.error('[guild/leaderboard] Error fetching guilds:', error)
     return []
   }
 }
 
 /**
  * Calculate score based on metric
+ * LAYER 3: Calculated
  */
 function calculateScore(guild: LeaderboardGuild, metric: QueryParams['metric']): number {
   switch (metric) {
     case 'points':
-      return Number(guild.totalPoints)
+      return guild.totalPoints
     case 'members':
-      return Number(guild.memberCount)
+      return guild.memberCount
     case 'level':
-      return guild.level * 1000 + Number(guild.totalPoints) // Level priority, then points
+      return guild.level * 1000 + guild.totalPoints // Level priority, then points
     default:
-      return Number(guild.totalPoints)
+      return guild.totalPoints
   }
 }
 
@@ -193,58 +209,12 @@ function rankGuilds(guilds: LeaderboardGuild[], metric: QueryParams['metric']): 
 
 /**
  * Filter by time period (placeholder - would need timestamp tracking)
+ * TODO: Implement time-based filtering using guild_events.created_at
  */
 function filterByPeriod(guilds: LeaderboardGuild[], period: QueryParams['period']): LeaderboardGuild[] {
-  // Note: This would require timestamp tracking in the contract
+  // Note: Time-based filtering would require filtering guild_events by created_at
   // For now, return all guilds (treat all periods as all-time)
-  // TODO: Implement time-based filtering when contract supports it
   return guilds
-}
-
-/**
- * Create success response with cache headers
- */
-function createSuccessResponse(data: any, requestId: string) {
-  return NextResponse.json(
-    {
-      success: true,
-      ...data,
-      timestamp: Date.now(),
-    },
-    {
-      status: 200,
-      headers: {
-        'X-Request-ID': requestId,
-        'Cache-Control': 's-maxage=120, stale-while-revalidate=240',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-API-Version': '1.0.0',
-      },
-    }
-  )
-}
-
-/**
- * Create error response (no sensitive data)
- */
-function createErrorResponse(message: string, requestId: string, status: number = 400) {
-  return NextResponse.json(
-    {
-      success: false,
-      message,
-      timestamp: Date.now(),
-    },
-    {
-      status,
-      headers: {
-        'X-Request-ID': requestId,
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-API-Version': '1.0.0',
-      },
-    }
-  )
 }
 
 // ==========================================
@@ -254,37 +224,21 @@ function createErrorResponse(message: string, requestId: string, status: number 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
   const requestId = generateRequestId()
+  const clientIp = getClientIp(req)
 
   try {
-    // 1. RATE LIMITING
-    if (!apiLimiter) {
-      return createErrorResponse('Rate limiting not configured', requestId, 503)
-    }
-
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
-    const rateLimitKey = `${RATE_LIMIT_CONFIG.identifier}:${clientIp}`
-    const rateLimitResult = await apiLimiter.limit(rateLimitKey)
+    // LAYER 1: Rate Limiting
+    const rateLimitResult = await rateLimit(clientIp, apiLimiter)
 
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Rate limit exceeded. Please try again later.',
-          timestamp: Date.now(),
-        },
-        {
-          status: 429,
-          headers: {
-            'X-Request-ID': requestId,
-            'X-RateLimit-Limit': '60',
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Date.now() + 60000),
-          },
-        }
-      )
+      return createErrorResponse({
+        type: ErrorType.RATE_LIMIT,
+        message: 'Rate limit exceeded. Please try again later.',
+        statusCode: 429,
+      })
     }
 
-    // 2. INPUT VALIDATION
+    // LAYER 2: Input Validation
     const { searchParams } = new URL(req.url)
     const rawParams = {
       metric: searchParams.get('metric') || undefined,
@@ -295,60 +249,86 @@ export async function GET(req: NextRequest) {
     const queryResult = QuerySchema.safeParse(rawParams)
 
     if (!queryResult.success) {
-      return createErrorResponse(
-        `Invalid query parameters: ${queryResult.error.issues.map((i) => i.message).join(', ')}`,
-        requestId,
-        400
-      )
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: `Invalid query parameters: ${queryResult.error.issues.map((i) => i.message).join(', ')}`,
+        statusCode: 400,
+      })
     }
 
     const { metric, period, chain, limit } = queryResult.data
 
-    // 3. FETCH GUILDS (Base chain only)
-    const allGuilds = await fetchGuildsFromChain('base', 200)
+    // LAYER 3: Fetch with caching (TRUE HYBRID)
+    const cacheKey = `guild-leaderboard:${metric}:${period}:${limit}`
+    const allGuilds = await getCached(
+      'guild-leaderboard',
+      cacheKey,
+      async () => await fetchGuildsFromSupabase(),
+      { ttl: 120 }
+    )
 
-    // 4. FILTER BY PERIOD
+    // LAYER 3: Filter by period
     const filtered = filterByPeriod(allGuilds, period)
 
-    // 5. RANK AND LIMIT
+    // LAYER 3: Rank and limit (Calculated)
     const ranked = rankGuilds(filtered, metric)
     const topGuilds = ranked.slice(0, limit)
 
-    // 6. FORMAT RESPONSE
+    // LAYER 4: Format response (match frontend interface)
     const leaderboard = topGuilds.map((guild) => ({
       rank: guild.rank,
-      id: guild.id.toString(),
+      id: guild.id,
       chain: guild.chain,
       name: guild.name,
       leader: guild.leader,
-      totalPoints: guild.totalPoints.toString(),
-      memberCount: guild.memberCount.toString(),
+      points: guild.totalPoints,
+      memberCount: guild.memberCount,
       level: guild.level,
       score: guild.score,
+      description: guild.description,
+      banner: guild.banner,
     }))
 
     const duration = Date.now() - startTime
 
-    return createSuccessResponse({
-      leaderboard,
-      filters: {
-        metric,
-        period,
-        chain,
-        limit,
+    return NextResponse.json(
+      {
+        success: true,
+        leaderboard,
+        guilds: leaderboard, // Alias for component compatibility
+        filters: {
+          metric,
+          period,
+          chain,
+          limit,
+        },
+        stats: {
+          totalGuilds: allGuilds.length,
+          topGuildScore: topGuilds[0]?.score || 0,
+        },
+        performance: {
+          duration,
+        },
+        timestamp: Date.now(),
       },
-      stats: {
-        totalGuilds: allGuilds.length,
-        topGuildScore: topGuilds[0]?.score || 0,
-      },
-      performance: {
-        duration,
-      },
-    }, requestId)
+      {
+        status: 200,
+        headers: {
+          'X-Request-ID': requestId,
+          'Cache-Control': 'public, max-age=120, s-maxage=120, stale-while-revalidate=240',
+          'X-RateLimit-Limit': rateLimitResult.limit?.toString() || '60',
+          'X-RateLimit-Remaining': rateLimitResult.remaining?.toString() || '0',
+          'Server-Timing': `total;dur=${duration}`,
+        },
+      }
+    )
   } catch (error: any) {
     console.error('[guild/leaderboard] Error:', error)
 
-    // 4. ERROR MASKING
-    return createErrorResponse('Failed to fetch guild leaderboard. Please try again later.', requestId, 500)
+    return createErrorResponse({
+      type: ErrorType.INTERNAL,
+      message: 'Failed to fetch guild leaderboard. Please try again later.',
+      statusCode: 500,
+    })
   }
 }

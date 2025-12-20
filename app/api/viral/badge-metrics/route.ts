@@ -17,10 +17,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import { createClient } from '@/lib/supabase/edge'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
-import { generateRequestId } from '@/lib/middleware/request-id'
+import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 
 type BadgeMetric = {
   badgeId: string
@@ -39,7 +39,16 @@ type BadgeMetric = {
 }
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
-  const requestId = generateRequestId()
+  const ip = getClientIp(request)
+  const { success } = await rateLimit(ip, apiLimiter)
+  
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    )
+  }
+
   const { searchParams } = new URL(request.url)
     
     // GI-11: Input validation with defaults
@@ -52,7 +61,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     if (!fidParam) {
       return NextResponse.json(
         { error: 'Bad Request', message: 'Missing required parameter: fid' },
-        { status: 400, headers: { 'X-Request-ID': requestId } }
+        { status: 400 }
       )
     }
     
@@ -63,18 +72,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     if (!fidValidation.success) {
       return NextResponse.json(
         { error: 'Bad Request', message: 'Invalid fid parameter', issues: fidValidation.error.issues },
-        { status: 400, headers: { 'X-Request-ID': requestId } }
+        { status: 400 }
       )
     }
     
     // GI-11: Safe database connection
-    const supabase = getSupabaseServerClient()
+    const supabase = createClient()
     
     if (!supabase) {
       console.error('[Badge Metrics] Database connection failed')
       return NextResponse.json(
         { error: 'Internal Error', message: 'Database connection failed' },
-        { status: 500, headers: { 'X-Request-ID': requestId } }
+        { status: 500 }
       )
     }
     
@@ -90,7 +99,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       console.error('[Badge Metrics] Database query error:', error)
       return NextResponse.json(
         { error: 'Internal Error', message: 'Failed to fetch badge metrics' },
-        { status: 500, headers: { 'X-Request-ID': requestId } }
+        { status: 500 }
       )
     }
     
@@ -105,7 +114,6 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         message: 'No badges shared yet. Share your first badge to start tracking performance!',
       }, {
         headers: { 
-          'X-Request-ID': requestId,
           'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240'
         }
       })
@@ -201,7 +209,6 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       fid,
     }, {
       headers: { 
-        'X-Request-ID': requestId,
         'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240'
       }
     })

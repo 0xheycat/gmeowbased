@@ -18,7 +18,7 @@ export class GMEvent {
     timestamp!: bigint
 
     @BigIntColumn_({nullable: false})
-    xpAwarded!: bigint
+    pointsAwarded!: bigint
 
     @IntColumn_({nullable: false})
     streakDay!: number
