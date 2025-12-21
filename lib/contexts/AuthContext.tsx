@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { useAccount } from 'wagmi'
 import { fetchUserByFid, fetchUserByAddress, type FarcasterUser } from '@/lib/integrations/neynar-client'
 import { getMiniappContext } from '@/lib/miniapp/miniappEnv'
+import { getAllWalletsForFID, syncWalletsFromNeynar } from '@/lib/integrations/neynar-wallet-sync'
 
 /**
  * Unified Authentication Context
@@ -25,6 +26,9 @@ export interface AuthContextType {
   fid: number | null
   address: `0x${string}` | undefined
   profile: FarcasterUser | null
+  
+  // Multi-wallet cache (3-layer hybrid system)
+  cachedWallets: string[]
   
   // Auth state
   isAuthenticated: boolean
@@ -54,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isMiniappSession, setIsMiniappSession] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [cachedWallets, setCachedWallets] = useState<string[]>([])
   
   // Wagmi wallet state
   const { address, isConnected } = useAccount()
@@ -108,6 +113,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /**
    * Auto-authenticate on mount and when dependencies change
    * MCP best practice: Check auth state before starting flows
+   * 
+   * MULTI-WALLET CACHING:
+   * When user connects wallet or miniapp context changes, this automatically:
+   * 1. Syncs wallet data from Neynar API
+   * 2. Caches all wallets (primary + custody + verified) in AuthContext
+   * 3. Makes wallets available via cachedWallets or useWallets() hook
+   * 
+   * Used by 3-layer hybrid system:
+   * - Real-time: Auto-sync on wallet connection (here)
+   * - On-demand: Profile fetch triggers background sync
+   * - Batch: Cron job syncs active users every 6 hours
    */
   useEffect(() => {
     authenticate()
@@ -165,6 +181,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profileData = await fetchUserByFid(contextFid)
         setProfile(profileData)
         
+        // Sync multi-wallet cache (3-layer hybrid system)
+        try {
+          await syncWalletsFromNeynar(contextFid, false)
+          const wallets = await getAllWalletsForFID(contextFid)
+          setCachedWallets(wallets)
+          console.log('[AuthProvider] Cached', wallets.length, 'wallets for FID', contextFid)
+        } catch (err) {
+          console.warn('[AuthProvider] Multi-wallet sync failed:', err)
+        }
+        
         setIsLoading(false)
         return
       }
@@ -192,6 +218,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             username: profileData.username,
             address,
           })
+          
+          // Sync multi-wallet cache (3-layer hybrid system)
+          try {
+            await syncWalletsFromNeynar(profileData.fid, false)
+            const wallets = await getAllWalletsForFID(profileData.fid)
+            setCachedWallets(wallets)
+            console.log('[AuthProvider] Cached', wallets.length, 'wallets for FID', profileData.fid)
+          } catch (err) {
+            console.warn('[AuthProvider] Multi-wallet sync failed:', err)
+          }
         } else {
           // Wallet connected but no Farcaster profile found
           setFid(null)
@@ -227,6 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setFid(null)
     setProfile(null)
     setError(null)
+    setCachedWallets([])
     
     // Note: Don't clear miniappContext (it's read-only from SDK)
     // Wallet disconnect handled by Wagmi
@@ -236,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fid,
     address,
     profile,
+    cachedWallets,
     isAuthenticated: !!fid || !!address,
     authMethod: fid && isMiniappSession ? 'miniapp' : isConnected ? 'wallet' : null,
     miniappContext,
@@ -273,4 +311,31 @@ export function useAuthContext() {
     throw new Error('useAuthContext must be used within AuthProvider')
   }
   return context
+}
+
+/**
+ * Convenience hook to access cached wallet addresses
+ * 
+ * Returns all wallet addresses for authenticated user (primary + custody + verified).
+ * Automatically synced from Neynar via 3-layer hybrid system.
+ * 
+ * @returns {string[]} Array of lowercase wallet addresses
+ * 
+ * @example
+ * ```tsx
+ * function ActivityFeed() {
+ *   const wallets = useWallets()
+ *   
+ *   // Use cached wallets for Subsquid queries
+ *   const activities = await Promise.all(
+ *     wallets.map(wallet => getPointsTransactions(wallet))
+ *   )
+ *   
+ *   return <ActivityList items={activities.flat()} />
+ * }
+ * ```
+ */
+export function useWallets(): string[] {
+  const { cachedWallets } = useAuthContext()
+  return cachedWallets
 }

@@ -21,6 +21,8 @@ import { createClient } from '@/lib/supabase/edge'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
+import { getBadgeStakesByAddress } from '@/lib/subsquid-client'
+import { getViralTier } from '@/lib/scoring/unified-calculator'
 
 type BadgeMetric = {
   badgeId: string
@@ -36,6 +38,10 @@ type BadgeMetric = {
     replies: number
   }
   lastCastAt: string
+  // Layer 1 (Subsquid): On-chain badge data
+  isStaked: boolean
+  stakedAt: string | null
+  mintedOnChain: boolean
 }
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
@@ -87,7 +93,34 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       )
     }
     
-    // GI-11: Query badge_casts with aggregations
+    // LAYER 1 (Subsquid): Get user's wallet address for on-chain queries
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('verified_addresses')
+      .eq('fid', fid)
+      .single()
+    
+    const primaryAddress = profile?.verified_addresses?.[0]
+    
+    // LAYER 1 (Subsquid): Fetch on-chain badge stakes
+    let badgeStakes: any[] = []
+    if (primaryAddress) {
+      try {
+        badgeStakes = await getBadgeStakesByAddress(primaryAddress)
+      } catch (error) {
+        console.error('[Badge Metrics] Subsquid badge stakes error:', error)
+        // Non-blocking: continue with Supabase data only
+      }
+    }
+    
+    // Build badge stake map for quick lookup
+    const stakeMap = new Map(
+      badgeStakes
+        .filter(s => s.isActive)
+        .map(s => [s.badgeId.toString(), s])
+    )
+    
+    // LAYER 2 (Supabase): Query badge_casts with aggregations
     // Note: badge_casts.badge_id is TEXT (not UUID reference to user_badges)
     const { data: casts, error } = await supabase
       .from('badge_casts')
@@ -159,22 +192,34 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       }
     }
     
-    // Convert map to array with formatted data
-    let badges: BadgeMetric[] = Array.from(badgeMap.values()).map(badge => ({
-      badgeId: badge.badgeId,
-      badgeName: formatBadgeName(badge.badgeId),
-      badgeImage: undefined, // TODO: Query user_badges table for image URL
-      castCount: badge.castCount,
-      totalViralXp: badge.totalViralXp,
-      averageXp: badge.castCount > 0 ? badge.totalViralXp / badge.castCount : 0,
-      topTier: badge.topTier,
-      engagementBreakdown: {
-        likes: badge.totalLikes,
-        recasts: badge.totalRecasts,
-        replies: badge.totalReplies,
-      },
-      lastCastAt: badge.lastCastAt,
-    }))
+    // LAYER 3 (Calculated): Convert map to array with formatted data + unified-calculator
+    let badges: BadgeMetric[] = Array.from(badgeMap.values()).map(badge => {
+      // Get on-chain stake data for this badge
+      const stakeInfo = stakeMap.get(badge.badgeId)
+      
+      // LAYER 3: Calculate viral tier using unified-calculator (no inline logic)
+      const viralTier = getViralTier(badge.totalViralXp)
+      
+      return {
+        badgeId: badge.badgeId,
+        badgeName: formatBadgeName(badge.badgeId),
+        badgeImage: undefined, // TODO: Query user_badges table for image URL
+        castCount: badge.castCount,
+        totalViralXp: badge.totalViralXp,
+        averageXp: badge.castCount > 0 ? badge.totalViralXp / badge.castCount : 0,
+        topTier: viralTier.name, // ← LAYER 3: Use unified-calculator tier
+        engagementBreakdown: {
+          likes: badge.totalLikes,
+          recasts: badge.totalRecasts,
+          replies: badge.totalReplies,
+        },
+        lastCastAt: badge.lastCastAt,
+        // LAYER 1 (Subsquid): On-chain badge data
+        isStaked: !!stakeInfo,
+        stakedAt: stakeInfo?.stakedAt || null,
+        mintedOnChain: !!stakeInfo, // If stake exists, badge was minted
+      }
+    })
     
     // Sort badges based on sortBy parameter
     badges.sort((a, b) => {
