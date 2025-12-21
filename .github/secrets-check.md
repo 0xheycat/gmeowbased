@@ -9,6 +9,8 @@ This file tracks which secrets are configured for GitHub Actions workflows.
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
 - [ ] `SUPABASE_ANON_KEY` - Supabase anon key
 - [ ] `NEYNAR_API_KEY` - Neynar API key for bot & notifications
+- [ ] `CRON_SECRET` - Authentication token for cron API endpoints
+- [ ] `NEXT_PUBLIC_BASE_URL` - Production deployment URL (https://gmeowhq.art)
 
 ### ✅ RPC Endpoints (Required for blockchain interactions)
 - [ ] `RPC_BASE` - Base mainnet RPC endpoint
