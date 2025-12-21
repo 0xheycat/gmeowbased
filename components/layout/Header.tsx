@@ -10,6 +10,7 @@ import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ProfileDropdown } from '@/components/layout/ProfileDropdown'
 import { NotificationBell } from '@/components/notifications'
+import { WalletCacheIndicator } from '@/components/WalletCacheDemo'
 
 export function Header() {
   const pathname = usePathname()
@@ -96,6 +97,9 @@ export function Header() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3 sm:gap-4">
+          {/* Multi-Wallet Cache Indicator */}
+          <WalletCacheIndicator />
+          
           {/* Wallet Connection Button - Reown AppKit */}
           <appkit-button />
 
