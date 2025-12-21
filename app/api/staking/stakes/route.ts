@@ -25,7 +25,7 @@ import { createClient } from '@/lib/supabase/edge'
 import { getCached } from '@/lib/cache/server'
 import { logError } from '@/lib/middleware/error-handler'
 
-export const runtime = 'edge'
+// Note: Using Node.js runtime because getCached uses fs/path (not available in edge)
 export const dynamic = 'force-dynamic'
 
 interface BadgeMetadata {
