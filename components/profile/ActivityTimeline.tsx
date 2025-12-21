@@ -31,6 +31,10 @@ export interface ActivityItem {
     tip_amount?: number
     reward_points?: number
     xp_earned?: number
+    xp_amount?: number
+    action_type?: string
+    source?: 'on-chain' | 'off-chain' // TRUE HYBRID: Layer 1 vs Layer 2
+    txHash?: string // On-chain transaction hash
   } | null
 }
 
@@ -247,9 +251,22 @@ export default function ActivityTimeline({
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
-                  <h4 className="text-sm font-semibold text-white line-clamp-1">
-                    {activity.title}
-                  </h4>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-white line-clamp-1">
+                      {activity.title}
+                    </h4>
+                    {/* Layer Source Badge (TRUE HYBRID) */}
+                    {activity.metadata?.source && (
+                      <span className={clsx(
+                        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0",
+                        activity.metadata.source === 'on-chain'
+                          ? "bg-blue-500/20 text-blue-400 border border-blue-400/30"
+                          : "bg-purple-500/20 text-purple-400 border border-purple-400/30"
+                      )}>
+                        {activity.metadata.source === 'on-chain' ? '⛓️ On-Chain' : '💬 Off-Chain'}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-white/40 shrink-0">
                     {relativeTime}
                   </span>
@@ -261,17 +278,34 @@ export default function ActivityTimeline({
                   </p>
                 )}
 
-                {detail && (
-                  <div
-                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium backdrop-blur"
-                    style={{
-                      backgroundColor: `${config.color}20`,
-                      color: config.color,
-                    }}
-                  >
-                    {detail}
-                  </div>
-                )}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {detail && (
+                    <div
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium backdrop-blur"
+                      style={{
+                        backgroundColor: `${config.color}20`,
+                        color: config.color,
+                      }}
+                    >
+                      {detail}
+                    </div>
+                  )}
+                  
+                  {/* Transaction Hash Link (if on-chain) */}
+                  {activity.metadata?.source === 'on-chain' && activity.metadata?.txHash && (
+                    <a
+                      href={`https://basescan.org/tx/${activity.metadata.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      View Tx
+                    </a>
+                  )}
+                </div>
               </div>
 
               {/* Hide connector line for last item */}

@@ -27,6 +27,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { copyToClipboardSafe } from '@/lib/api/share'
+import { useWallets } from '@/lib/contexts/AuthContext'
 import type { ProfileData } from '@/lib/profile/types'
 
 // Icons from components/icons
@@ -42,9 +43,12 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profile, isOwner = false, onEditClick }: ProfileHeaderProps) {
   const [copyStatus, setCopyStatus] = useState(false)
+  const [showAllWallets, setShowAllWallets] = useState(false)
+  const cachedWallets = useWallets() // Get cached wallets if viewing own profile
 
-  const handleCopyAddress = async () => {
-    const success = await copyToClipboardSafe(profile.wallet.address)
+  const handleCopyAddress = async (address?: string) => {
+    const addressToCopy = address || profile.wallet.address
+    const success = await copyToClipboardSafe(addressToCopy)
     if (success) {
       setCopyStatus(true)
       setTimeout(() => setCopyStatus(false), 2500)
@@ -152,28 +156,62 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
           </p>
         )}
 
-        {/* Wallet Address */}
-        <div className="mb-4">
-          <button
-            onClick={handleCopyAddress}
-            className="inline-flex items-center gap-2 px-3 py-2 min-h-[44px] bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors group"
-          >
-            <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-              {formatAddress(profile.wallet.address)}
-            </span>
-            {copyStatus ? (
-              <CheckIcon className="w-4 h-4 text-green-500" />
-            ) : (
-              <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-              </svg>
+        {/* Wallet Address - Primary */}
+        <div className="mb-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleCopyAddress()}
+              className="inline-flex items-center gap-2 px-3 py-2 min-h-[44px] bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors group"
+            >
+              <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                {formatAddress(profile.wallet.address)}
+              </span>
+              {copyStatus ? (
+                <CheckIcon className="w-4 h-4 text-green-500" />
+              ) : (
+                <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+              )}
+            </button>
+            {profile.wallet.ens_name && (
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                ({profile.wallet.ens_name})
+              </span>
             )}
-          </button>
-          {profile.wallet.ens_name && (
-            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-              ({profile.wallet.ens_name})
-            </span>
+            
+            {/* Show All Wallets Button (owner only, if multiple wallets cached) */}
+            {isOwner && cachedWallets.length > 1 && (
+              <button
+                onClick={() => setShowAllWallets(!showAllWallets)}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                {showAllWallets ? 'Hide' : `+${cachedWallets.length - 1} more`}
+              </button>
+            )}
+          </div>
+          
+          {/* Additional Wallets (owner only, when expanded) */}
+          {isOwner && showAllWallets && cachedWallets.length > 1 && (
+            <div className="pl-4 space-y-1 border-l-2 border-gray-200 dark:border-gray-700">
+              {cachedWallets
+                .filter(w => w.toLowerCase() !== profile.wallet.address.toLowerCase())
+                .map((wallet, i) => (
+                  <button
+                    key={wallet}
+                    onClick={() => handleCopyAddress(wallet)}
+                    className="flex items-center gap-2 px-2 py-1 text-xs font-mono text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 rounded transition-colors"
+                  >
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                    {formatAddress(wallet)}
+                    <span className="text-gray-400">#{i + 2}</span>
+                  </button>
+                ))}
+            </div>
           )}
         </div>
 
