@@ -64,17 +64,17 @@ export function GuildAnalytics({ guildId }: GuildAnalyticsProps) {
         // Transform API response to match component interface
         const transformedStats: GuildStats = {
           totalPoints: parseInt(data.analytics?.stats?.totalPoints || '0'),
-          pointsGrowth7d: 0, // Not provided by API yet
+          pointsGrowth7d: data.analytics?.stats?.pointsGrowth7d || 0,
           totalMembers: data.analytics?.stats?.totalMembers || 0,
-          membersGrowth7d: 0, // Not provided by API yet
+          membersGrowth7d: data.analytics?.stats?.membersGrowth7d || 0,
           treasury: parseInt(data.analytics?.stats?.treasuryBalance || '0'),
-          treasuryGrowth7d: 0, // Not provided by API yet
+          treasuryGrowth7d: data.analytics?.stats?.treasuryGrowth7d || 0,
           topContributors: (data.analytics?.topContributors || []).map((c: any) => ({
             address: c.address,
             username: `${c.address.slice(0, 6)}...${c.address.slice(-4)}`,
             points: parseInt(c.points || '0')
           })),
-          recentActivity: [] // Not provided by API yet
+          recentActivity: data.analytics?.recentActivity || []
         }
         
         setStats(transformedStats)
