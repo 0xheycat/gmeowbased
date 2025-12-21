@@ -66,6 +66,7 @@ import {
     PointsTransaction,
     TreasuryOperation,
     BadgeStake,
+    PowerBadge,
 } from './model'
 
 // Import ABIs for event decoding
@@ -115,6 +116,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const pointsTransactions: any[] = [] // PointsTransaction type
     const treasuryOperations: any[] = [] // TreasuryOperation type
     const badgeStakes: any[] = [] // BadgeStake type (Phase 8.3)
+    const powerBadges: any[] = [] // PowerBadge type (Phase 8.3)
     
     // Collect addresses to load
     const userAddresses = new Set<string>()
@@ -264,16 +266,20 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                         
                         if (decoded) {
                             const userAddr = decoded.args.user.toLowerCase()
-                            const points = decoded.args.rewardPoints || decoded.args.pointsEarned || 0n
-                            const streak = decoded.args.newStreak || decoded.args.streak || 0n
+                            // Contract emits GMSent(user, reward, newStreak) but ABI expects (user, streak, pointsEarned)
+                            // So we need to swap: streak field contains points, pointsEarned contains streak
+                            const points = decoded.args.rewardPoints || decoded.args.streak || 0n
+                            const streak = decoded.args.newStreak || decoded.args.pointsEarned || 0n
                             
                             // Get or create user
                             let user = getOrCreateUser(users, userAddr, blockTime)
-                            const oldPoints = user.totalPoints
+                            const oldPoints = user.totalEarnedFromGMs
                             const oldGMCount = user.lifetimeGMs
                             const oldStreak = user.currentStreak
                             
-                            user.totalPoints += points
+                            // Update both pointsBalance (current) and totalEarnedFromGMs (cumulative earned)
+                            user.pointsBalance += points
+                            user.totalEarnedFromGMs += points
                             user.currentStreak = Number(streak)
                             user.lastGMTimestamp = blockTime
                             user.lifetimeGMs += 1
@@ -308,7 +314,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 user.milestoneCount += 1
                             }
                             checkMilestone(viralMilestones, user, 'gm_count', oldGMCount, user.lifetimeGMs, blockTime, 'gm')
-                            checkMilestone(viralMilestones, user, 'points_earned', Number(oldPoints), Number(user.totalPoints), blockTime, 'gm')
+                            checkMilestone(viralMilestones, user, 'points_earned', Number(oldPoints), Number(user.totalEarnedFromGMs), blockTime, 'gm')
                             checkMilestone(viralMilestones, user, 'streak_days', oldStreak, user.currentStreak, blockTime, 'gm')
                         }
                     }
@@ -366,6 +372,10 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             const userAddr = decoded.args.who.toLowerCase()
                             const amount = decoded.args.amount || 0n
                             
+                            // Update user points balance
+                            let user = getOrCreateUser(users, userAddr, blockTime)
+                            user.pointsBalance += amount
+                            
                             pointsTransactions.push({
                                 id: `${log.transaction?.id}-${log.logIndex}`,
                                 transactionType: 'DEPOSIT',
@@ -401,6 +411,10 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                         if (decoded) {
                             const userAddr = decoded.args.who.toLowerCase()
                             const amount = decoded.args.amount || 0n
+                            
+                            // Update user points balance
+                            let user = getOrCreateUser(users, userAddr, blockTime)
+                            user.pointsBalance -= amount
                             
                             pointsTransactions.push({
                                 id: `${log.transaction?.id}-${log.logIndex}`,
@@ -583,6 +597,32 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                         }
                     }
                     
+                    // Phase 8.3: Handle PowerBadgeSet event
+                    else if (topic === coreInterface.getEvent('PowerBadgeSet')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const fid = decoded.args.fid
+                            const hasPowerBadge = decoded.args.hasPowerBadge
+                            const setBy = log.transaction?.from?.toLowerCase() || ''
+                            
+                            powerBadges.push({
+                                id: fid.toString(),
+                                fid,
+                                isPowerBadge: hasPowerBadge,
+                                setBy,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            })
+                            
+                            ctx.log.info(`🔥 Power Badge ${hasPowerBadge ? 'Granted' : 'Revoked'}: FID ${fid} by ${setBy.slice(0,6)}`)
+                        }
+                    }
+                    
                     // Phase 8: Handle QuestAdded event
                     else if (topic === coreInterface.getEvent('QuestAdded')?.topicHash) {
                         const decoded = coreInterface.parseLog({
@@ -710,6 +750,9 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             
                             // Get or create user
                             let user = getOrCreateUser(users, userAddr, blockTime)
+                            
+                            // Update user points balance
+                            user.pointsBalance += pointsAwarded
                             
                             // Get quest
                             let quest = quests.get(questId)
@@ -1347,6 +1390,12 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
         ctx.log.info(`💾 Saved ${badgeStakes.length} badge stakes`)
     }
     
+    // Phase 8.3: Save power badges
+    if (powerBadges.length > 0) {
+        await ctx.store.upsert(powerBadges.map(p => new PowerBadge(p)))
+        ctx.log.info(`💾 Saved ${powerBadges.length} power badges`)
+    }
+    
     ctx.log.info(`✅ Batch complete: ${startBlock} to ${endBlock}`)
 })
 
@@ -1361,7 +1410,8 @@ function getOrCreateUser(
     if (!user) {
         user = new User({
             id: addr,
-            totalPoints: 0n,
+            pointsBalance: 0n, // Current spendable balance
+            totalEarnedFromGMs: 0n, // Cumulative earned from GM events
             currentStreak: 0,
             lastGMTimestamp: 0n,
             lifetimeGMs: 0,

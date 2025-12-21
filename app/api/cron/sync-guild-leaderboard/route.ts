@@ -16,7 +16,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/supabase/edge';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient as _unused, http as _unused2 } from 'viem';
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool';
 import type { Address } from 'viem';
 import { base } from 'viem/chains';
 import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency';
@@ -55,10 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Initialize clients
-    const publicClient = createPublicClient({
-      chain: base,
-      transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL)
-    });
+    const publicClient = getPublicClient(); // Using RPC client pool
 
     const supabase = getSupabaseAdminClient();
     

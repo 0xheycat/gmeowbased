@@ -11,7 +11,7 @@ const ink = {
   network: 'ink',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://ink-mainnet.g.alchemy.com/v2/AQYbCkrkuEDaD_hCDse6ezP2W-zUCEFe'] },
+    default: { http: [process.env.RPC_INK || 'https://rpc.inkonchain.com'] },
     public: { http: ['https://rpc-gel-sepolia.inkonchain.com'] },
   },
 }
@@ -22,7 +22,7 @@ const unichain = {
   network: 'unichain',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://unichain-mainnet.g.alchemy.com/v2/AQYbCkrkuEDaD_hCDse6ezP2W-zUCEFe'] },
+    default: { http: [process.env.RPC_UNICHAIN || 'https://mainnet.unichain.org'] },
     public: { http: ['https://sepolia.unichain.org'] },
   },
 }

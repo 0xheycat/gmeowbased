@@ -5,6 +5,8 @@ import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withTiming } from '@/lib/middleware/timing'
 import { getCached } from '@/lib/cache/server'
 import { LeaderboardQuerySchema } from '@/lib/validation/api-schemas'
+import { getLeaderboardEntry } from '@/lib/subsquid-client'
+import { calculateLevelProgress, getRankTierByPoints, formatPoints } from '@/lib/scoring/unified-calculator'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,6 +21,12 @@ type LeaderboardEntry = {
   viralCasts: number
   topTier: string
   topTierEmoji: string
+  // On-chain data (Subsquid)
+  blockchainPoints: number
+  totalScore: number
+  level: number
+  rankTier: string
+  globalRank: number | null
 }
 
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
@@ -57,6 +65,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     const supabase = createClient()
     if (!supabase) throw new Error('Database connection failed')
     
+    // LAYER 2: Supabase - Get viral engagement data (off-chain)
     const query = supabase.from('badge_casts').select('fid, viral_bonus_xp, tier')
     const { data: casts, error } = await query
     
@@ -69,6 +78,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       return { leaderboard: [], totalUsers: 0, chain, season, message: 'No viral casts found yet.' }
     }
     
+    // LAYER 3: Calculated - Aggregate viral stats per user
     const fidStats = new Map<number, { totalXp: number; castCount: number; topTier: string }>()
     
     casts.forEach(cast => {
@@ -90,24 +100,77 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       }
     })
     
+    // Sort by viral XP and paginate
     const sortedEntries = Array.from(fidStats.entries())
       .map(([fid, stats]) => ({ fid, totalViralXp: stats.totalXp, viralCasts: stats.castCount, topTier: stats.topTier }))
       .sort((a, b) => b.totalViralXp - a.totalViralXp)
       .slice(offset, offset + limit)
     
+    // Get FIDs for profile lookup
+    const fids = sortedEntries.map(e => e.fid)
+    
+    // LAYER 2: Supabase - Get user profiles for enrichment
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('fid, display_name, avatar_url, verified_addresses')
+      .in('fid', fids)
+    
+    const profileMap = new Map(profiles?.map(p => [p.fid, p]) || [])
+    
+    // LAYER 1: Subsquid - Get on-chain stats for each user
+    const onChainStatsPromises = sortedEntries.map(async (entry) => {
+      const profile = profileMap.get(entry.fid)
+      if (!profile?.verified_addresses?.[0]) return null
+      
+      try {
+        const stats = await getLeaderboardEntry(profile.verified_addresses[0])
+        return { fid: entry.fid, stats }
+      } catch (error) {
+        console.error(`Failed to get stats for FID ${entry.fid}:`, error)
+        return null
+      }
+    })
+    
+    const onChainResults = await Promise.all(onChainStatsPromises)
+    const onChainMap = new Map(
+      onChainResults
+        .filter((r): r is { fid: number; stats: any } => r !== null && r.stats !== null)
+        .map(r => [r.fid, r.stats])
+    )
+    
     const tierEmojis: Record<string, string> = { mythic: '👑', legendary: '🌟', epic: '⚡', rare: '💎', common: '🎖️' }
     
-    const leaderboard: LeaderboardEntry[] = sortedEntries.map((entry, index) => ({
-      rank: offset + index + 1,
-      fid: entry.fid,
-      username: null,
-      displayName: null,
-      pfpUrl: null,
-      totalViralXp: entry.totalViralXp,
-      viralCasts: entry.viralCasts,
-      topTier: entry.topTier,
-      topTierEmoji: tierEmojis[entry.topTier] || '🎖️',
-    }))
+    // LAYER 3: Calculated - Merge all layers and calculate derived stats
+    const leaderboard: LeaderboardEntry[] = sortedEntries.map((entry, index) => {
+      const profile = profileMap.get(entry.fid)
+      const onChainStats = onChainMap.get(entry.fid)
+      
+      // Calculate total score (blockchain + viral XP)
+      const blockchainPoints = onChainStats?.totalXp || 0
+      const totalScore = blockchainPoints + entry.totalViralXp
+      
+      // Calculate level and rank tier using unified calculator
+      const levelData = calculateLevelProgress(totalScore)
+      const rankTier = getRankTierByPoints(totalScore)
+      
+      return {
+        rank: offset + index + 1,
+        fid: entry.fid,
+        username: null, // Not in user_profiles schema
+        displayName: profile?.display_name || null,
+        pfpUrl: profile?.avatar_url || null,
+        totalViralXp: entry.totalViralXp,
+        viralCasts: entry.viralCasts,
+        topTier: entry.topTier,
+        topTierEmoji: tierEmojis[entry.topTier] || '🎖️',
+        // On-chain stats
+        blockchainPoints,
+        totalScore,
+        level: levelData.level,
+        rankTier: rankTier.name,
+        globalRank: onChainStats?.rank || null,
+      }
+    })
     
     return { leaderboard, totalUsers: fidStats.size, hasMore: offset + limit < fidStats.size, chain, season }
   }, { ttl: 180 })

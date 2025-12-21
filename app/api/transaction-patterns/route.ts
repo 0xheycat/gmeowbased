@@ -286,7 +286,8 @@ export async function GET(request: NextRequest) {
       }
 
       // Step 7: Store pattern analysis in database
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      // NOTE: transaction_patterns table not in typed schema, using manual client
+      const supabaseUrl = process.env.SUPABASE_URL!
       const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
       
       if (!supabaseUrl || !supabaseServiceKey) {

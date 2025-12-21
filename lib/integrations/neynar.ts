@@ -1,6 +1,10 @@
-// Unified Neynar helpers (Edge/Server/Client safe)
+// Unified Neynar helpers (SERVER-ONLY)
 // Phase 8.3 REVISED: Consolidated neynar-server.ts (getNeynarServerClient)
+// 
+// ⚠️ WARNING: This file is SERVER-ONLY. Do not import from client components.
+// For client-side usage, import from '@/lib/integrations/neynar-client' instead.
 
+import 'server-only'
 import { Configuration, NeynarAPIClient } from '@neynar/nodejs-sdk'
 
 // ============================================================================

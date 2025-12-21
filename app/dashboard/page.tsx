@@ -26,7 +26,7 @@ import { TrendingTokensSkeleton } from './components/skeletons/TrendingTokensSke
 import { TopCastersSkeleton } from './components/skeletons/TopCastersSkeleton'
 import { TrendingChannelsSkeleton } from './components/skeletons/TrendingChannelsSkeleton'
 import { ActivityFeedSkeleton } from './components/skeletons/ActivityFeedSkeleton'
-import { DashboardGMSection } from '@/app/Dashboard/components/DashboardGMSection'
+import { DashboardGMSection } from '@/app/dashboard/components/DashboardGMSection'
 import { StakingDashboard } from './components/StakingDashboard'
 
 export default async function DashboardPage() {

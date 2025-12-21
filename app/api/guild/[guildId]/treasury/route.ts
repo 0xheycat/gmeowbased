@@ -52,6 +52,7 @@ import { rateLimit, apiLimiter, getClientIp } from '@/lib/middleware/rate-limit'
 import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { createClient } from '@/lib/supabase/edge'
+import { getGuildDepositAnalytics } from '@/lib/subsquid-client'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -100,19 +101,33 @@ interface GuildEvent {
   metadata: any
 }
 
+interface UserProfile {
+  fid: number
+  display_name: string | null
+  verified_addresses: string[] | null
+}
+
 // ==========================================
 // 4. Helper Functions
 // ==========================================
 
 /**
- * Get guild treasury balance from guild_events from guild_events
- * Treasury = SUM(POINTS_DEPOSITED) - SUM(POINTS_CLAIMED)
+ * Get guild treasury balance (HYBRID: Subsquid + Supabase)
+ * LAYER 1: Subsquid - On-chain deposit verification
+ * LAYER 2: Supabase - Off-chain event tracking
+ * LAYER 3: Calculated - Balance = deposits - claims, verified against on-chain
  */
 async function getTreasuryBalance(guildId: string): Promise<string> {
   const supabase = createClient()
   
   try {
-    // Query all POINTS_DEPOSITED and POINTS_CLAIMED events
+    // LAYER 1: Get on-chain deposit analytics (all time)
+    const onChainAnalytics = await getGuildDepositAnalytics(
+      new Date(0), // From genesis
+      new Date()   // To now
+    )
+
+    // LAYER 2: Query all POINTS_DEPOSITED and POINTS_CLAIMED events
     const { data: events, error } = await supabase
       .from('guild_events')
       .select('event_type, amount')
@@ -128,18 +143,31 @@ async function getTreasuryBalance(guildId: string): Promise<string> {
       return '0'
     }
 
-    // Calculate balance: deposits - claims
-    let balance = 0
+    // LAYER 3: Calculate off-chain balance
+    let offChainBalance = 0
     for (const event of events) {
       const amount = event.amount || 0
       if (event.event_type === 'POINTS_DEPOSITED') {
-        balance += amount
+        offChainBalance += amount
       } else if (event.event_type === 'POINTS_CLAIMED') {
-        balance -= amount
+        offChainBalance -= amount
       }
     }
 
-    return balance.toString()
+    // Use on-chain data as source of truth, fall back to off-chain
+    const onChainBalance = onChainAnalytics.total7d || 0
+    const finalBalance = onChainBalance > 0 ? onChainBalance : offChainBalance
+
+    // Log discrepancies for debugging
+    if (Math.abs(offChainBalance - onChainBalance) > 100) {
+      console.warn('[guild-treasury] Balance mismatch:', {
+        guildId,
+        offChain: offChainBalance,
+        onChain: onChainBalance,
+      })
+    }
+
+    return finalBalance.toString()
   } catch (error) {
     console.error('[guild-treasury] getTreasuryBalance error:', error)
     return '0'
@@ -153,13 +181,10 @@ async function getTreasuryTransactions(guildId: string): Promise<TreasuryTransac
   const supabase = createClient()
 
   try {
-    // Query guild_events with user_profiles join for username
+    // Query guild_events - NO JOIN since there's no FK relationship
     const { data: events, error } = await supabase
       .from('guild_events')
-      .select(`
-        *,
-        user_profiles!inner(display_name, fid)
-      `)
+      .select('*')
       .eq('guild_id', guildId)
       .in('event_type', ['POINTS_DEPOSITED', 'POINTS_CLAIMED'])
       .order('created_at', { ascending: false })
@@ -174,16 +199,42 @@ async function getTreasuryTransactions(guildId: string): Promise<TreasuryTransac
       return []
     }
 
-    // Convert events to TreasuryTransaction format
-    const transactions: TreasuryTransaction[] = (events as any[]).map(event => ({
-      id: event.id.toString(),
-      type: event.event_type === 'POINTS_DEPOSITED' ? 'deposit' : 'claim',
-      amount: event.amount || 0,  // Return as number
-      from: event.event_type === 'POINTS_DEPOSITED' ? event.actor_address : '',
-      username: event.user_profiles?.display_name || `FID ${event.user_profiles?.fid || 'Unknown'}`,
-      timestamp: event.created_at,
-      status: 'completed' as const,
-    }))
+    // Type assertion for events
+    const typedEvents = events as GuildEvent[]
+
+    // Get unique actor addresses for profile lookup
+    const actorAddresses = [...new Set(typedEvents.map(e => e.actor_address).filter(Boolean))]
+    
+    // Fetch user profiles by verified addresses (bulk lookup)
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('fid, display_name, verified_addresses')
+      .contains('verified_addresses', actorAddresses)
+    
+    // Type assertion for profiles
+    const typedProfiles = (profiles || []) as UserProfile[]
+
+    // Build address -> profile map
+    const addressToProfile = new Map<string, UserProfile>()
+    typedProfiles.forEach(profile => {
+      profile.verified_addresses?.forEach((addr: string) => {
+        addressToProfile.set(addr.toLowerCase(), profile)
+      })
+    })
+
+    // Convert events to TreasuryTransaction format with profile lookup
+    const transactions: TreasuryTransaction[] = typedEvents.map(event => {
+      const profile = addressToProfile.get(event.actor_address?.toLowerCase())
+      return {
+        id: event.id.toString(),
+        type: event.event_type === 'POINTS_DEPOSITED' ? 'deposit' : 'claim',
+        amount: event.amount || 0,
+        from: event.event_type === 'POINTS_DEPOSITED' ? event.actor_address : '',
+        username: profile?.display_name || `Address ${event.actor_address?.slice(0, 8)}...`,
+        timestamp: event.created_at,
+        status: 'completed' as const,
+      }
+    })
 
     console.log('[guild-treasury] Loaded transactions from guild_events:', transactions.length)
     return transactions

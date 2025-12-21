@@ -63,7 +63,8 @@
     "contracts:verify": "./scripts/verify-contracts.sh",
     "contracts:verify:all": "./scripts/verify-all-contracts.sh",
     "contracts:validate": "npx tsx ./scripts/validate-bytecode.ts",
-    "contracts:test": "tsx ./scripts/test-contracts-professional.ts"
+    "contracts:test": "tsx ./scripts/test-contracts-professional.ts",
+    "oracle:monitor": "tsx ./scripts/oracle-balance-monitor.ts"
   },
   "dependencies": {
     "@coinbase/onchainkit": "^0.36.4",
@@ -146,6 +147,7 @@
     "react-window": "^2.2.3",
     "recharts": "^2.14.1",
     "satori": "^0.18.3",
+    "server-only": "^0.0.1",
     "supabase": "2.67.2",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.3.1",

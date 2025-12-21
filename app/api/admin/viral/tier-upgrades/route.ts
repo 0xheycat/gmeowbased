@@ -20,11 +20,9 @@ import { generateRequestId } from '@/lib/middleware/request-id'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { NeynarAPIClient } from '@neynar/nodejs-sdk'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AdminQuerySchema } from '@/lib/validation/api-schemas'
-
-const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
 type TierUpgrade = {
   id: string
@@ -131,7 +129,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
       const fids = [...new Set(upgrades.map((u) => u.fid))]
       
       try {
-        const client = new NeynarAPIClient({ apiKey: NEYNAR_API_KEY })
+        const client = getNeynarServerClient()
         const usersResponse = await client.fetchBulkUsers({ fids })
         
         const userMap = new Map(

@@ -93,7 +93,7 @@ export default function NotificationsPage() {
     
     if (!fid) {
       const timer = setTimeout(() => {
-        router.push('/Dashboard')
+        router.push('/dashboard')
       }, 500)
       return () => clearTimeout(timer)
     }

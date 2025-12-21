@@ -16,7 +16,7 @@
 import { useState } from 'react'
 import { XPEventOverlay } from '@/components/XPEventOverlay'
 import type { XpEventKind } from '@/components/XPEventOverlay'
-import { calculateRankProgress } from '@/lib/leaderboard/rank'
+import { calculateRankProgress } from '@/lib/scoring/unified-calculator'
 
 const EVENT_TYPES: XpEventKind[] = [
   'gm',

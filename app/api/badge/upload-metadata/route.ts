@@ -4,22 +4,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdminClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase credentials')
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(request: NextRequest) {
   const requestId = generateRequestId()
 
   try {
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database configuration error' },
+        { status: 500, headers: { 'X-Request-ID': requestId } }
+      )
+    }
+
     const { metadata, tokenId } = await request.json()
 
     if (!metadata || typeof tokenId !== 'number') {

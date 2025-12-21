@@ -8,20 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { generateRequestId } from '@/lib/middleware/request-id'
-
-// Initialize Supabase client
-function getSupabaseClient() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Supabase configuration missing')
-  }
-
-  return createClient(supabaseUrl, supabaseServiceKey)
-}
+import { getSupabaseAdminClient } from '@/lib/supabase/edge'
 
 export async function GET(
   req: NextRequest,
@@ -42,14 +30,21 @@ export async function GET(
     }
 
     // Fetch guild metadata from database
-    const supabase = getSupabaseClient()
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, message: 'Database error' },
+        { status: 500, headers: { 'X-Request-ID': requestId } }
+      )
+    }
+
     const { data, error } = await supabase
       .from('guild_metadata')
-      .select('*')
+      .select('guild_id, name, description, banner')
       .eq('guild_id', guildId)
       .single()
 
-    if (error) {
+    if (error || !data) {
       // Guild metadata doesn't exist yet
       return NextResponse.json(
         { success: false, message: 'Guild metadata not found' },

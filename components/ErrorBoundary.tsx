@@ -107,7 +107,7 @@ export function QuestWizardErrorBoundary({ children }: { children: ReactNode }) 
             <button
               onClick={() => {
                 localStorage.removeItem('quest-wizard-draft')
-                window.location.href = '/Quest'
+                window.location.href = '/quests'
               }}
               className="rounded-xl border px-6 py-3 min-h-[44px] text-sm font-medium transition-colors hover:bg-muted"
             >

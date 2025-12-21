@@ -114,8 +114,8 @@ export async function GET(request: NextRequest) {
           const userEntry = await client.getUserStatsByFID(fid)
           
           if (userEntry) {
-            response.yourRank = userEntry.rank || 0
-            response.yourPercentile = ((userEntry.rank || 0) / totalPilots) * 100
+            response.yourRank = (userEntry as any).rank || 0
+            response.yourPercentile = (((userEntry as any).rank || 0) / totalPilots) * 100
           }
         }
         

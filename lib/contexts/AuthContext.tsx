@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { useAccount } from 'wagmi'
-import { fetchUserByFid, fetchUserByAddress, type FarcasterUser } from '@/lib/integrations/neynar'
+import { fetchUserByFid, fetchUserByAddress, type FarcasterUser } from '@/lib/integrations/neynar-client'
 import { getMiniappContext } from '@/lib/miniapp/miniappEnv'
 
 /**

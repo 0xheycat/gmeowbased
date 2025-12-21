@@ -8,7 +8,7 @@ import { createPublicClient, http, parseAbi } from 'viem'
 import { base } from 'viem/chains'
 
 const BADGE_CONTRACT = '0xF13d6f70Af6cf6C47Cd3aFb545d906309eebD1b9' as `0x${string}`
-const RPC_URL = process.env.RPC_BASE || 'https://base-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg'
+const RPC_URL = process.env.RPC_BASE_HTTP || process.env.RPC_BASE || 'https://mainnet.base.org'
 const ORACLE_WALLET = '0x8870C155666809609176260F2B65a626C000D773'
 
 const abi = parseAbi([

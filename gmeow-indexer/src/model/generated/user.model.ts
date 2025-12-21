@@ -15,7 +15,10 @@ export class User {
     id!: string
 
     @BigIntColumn_({nullable: false})
-    totalPoints!: bigint
+    pointsBalance!: bigint
+
+    @BigIntColumn_({nullable: false})
+    totalEarnedFromGMs!: bigint
 
     @IntColumn_({nullable: false})
     currentStreak!: number

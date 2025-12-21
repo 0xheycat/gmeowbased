@@ -244,7 +244,7 @@ export async function fetchUserStats(params: {
       // Subsquid
       currentStreak: subsquidData?.currentStreak || 0,
       lifetimeGMs: subsquidData?.lifetimeGMs || 0,
-      totalXP: subsquidData?.totalXP || 0,
+      totalXP: Number(subsquidData?.total || 0),
       badgeCount: 0, // TODO: Query badges separately
       referralCodes: 0, // TODO: Query referrals separately
       guildRole: null, // TODO: Query guild membership separately

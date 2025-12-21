@@ -28,7 +28,7 @@ export default function ProfileRedirectPage() {
     }
 
     // If not authenticated, redirect to dashboard
-    router.push('/Dashboard')
+    router.push('/dashboard')
   }, [router, fid, isAuthenticated, isLoading])
 
   return (

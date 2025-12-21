@@ -16,6 +16,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
+import { useStakeBadge, useUnstakeBadge } from '@/lib/contracts/use-badge-staking'
 import Image from 'next/image'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import LockIcon from '@mui/icons-material/Lock'
@@ -35,6 +36,8 @@ interface StakedBadge {
 
 export function StakingDashboard({ userWallet }: { userWallet?: string }) {
   const { address } = useAccount()
+  const { unstakeBadge, isPending: isUnstaking, isConfirming: isUnstakeConfirming, isSuccess: unstakeSuccess } = useUnstakeBadge()
+  const { stakeBadge, isPending: isStaking, isConfirming: isStakeConfirming, isSuccess: stakeSuccess } = useStakeBadge()
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [stakedBadges, setStakedBadges] = useState<StakedBadge[]>([])
@@ -95,6 +98,45 @@ export function StakingDashboard({ userWallet }: { userWallet?: string }) {
         setIsLoading(false)
       })
   }, [walletAddress])
+
+  // Reload data on successful transactions
+  useEffect(() => {
+    if (stakeSuccess || unstakeSuccess) {
+      // Reload staking data after 2 seconds (allow indexer to catch up)
+      setTimeout(() => {
+        setIsLoading(true)
+        Promise.all([
+          fetch(`/api/staking/stakes?user=${walletAddress}`).then(r => r.json()),
+          fetch(`/api/staking/badges?user=${walletAddress}`).then(r => r.json()),
+        ])
+          .then(([stakesData, badgesData]) => {
+            if (stakesData.stakes) {
+              const mapped = stakesData.stakes.map((s: any) => ({
+                id: s.badgeId,
+                name: s.badge.name,
+                image: s.badge.imageUrl,
+                stakedAmount: 1,
+                rewardsEarned: parseFloat(s.rewardsEarned) / 1e18,
+                apy: 15.2,
+                stakedAt: new Date(s.stakedAt),
+              }))
+              setStakedBadges(mapped)
+            }
+            if (stakesData.stats) {
+              setStats({
+                totalStaked: stakesData.stats.activeBadges,
+                totalRewards: parseFloat(stakesData.stats.totalRewards) / 1e18,
+                avgApy: 15.2,
+              })
+            }
+            if (badgesData.badges) {
+              setAvailableBadges(badgesData.badges.filter((b: any) => b.canStake))
+            }
+          })
+          .finally(() => setIsLoading(false))
+      }, 2000)
+    }
+  }, [stakeSuccess, unstakeSuccess, walletAddress])
 
   const totalStaked = stats.totalStaked
   const totalRewards = stats.totalRewards
@@ -226,9 +268,10 @@ export function StakingDashboard({ userWallet }: { userWallet?: string }) {
                 {/* Unstake Button */}
                 <button
                   className="w-full mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled
+                  onClick={() => unstakeBadge(BigInt(badge.id))}
+                  disabled={isUnstaking || isUnstakeConfirming}
                 >
-                  Unstake (Coming Soon)
+                  {isUnstaking || isUnstakeConfirming ? 'Unstaking...' : 'Unstake'}
                 </button>
               </div>
             ))}
@@ -282,25 +325,15 @@ export function StakingDashboard({ userWallet }: { userWallet?: string }) {
                 {/* Stake Button */}
                 <button
                   className="w-full px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled
+                  onClick={() => stakeBadge(BigInt(badge.id))}
+                  disabled={isStaking || isStakeConfirming}
                 >
-                  Stake (Coming Soon)
+                  {isStaking || isStakeConfirming ? 'Staking...' : 'Stake'}
                 </button>
               </div>
             ))}
           </div>
         )}
-      </div>
-
-      {/* Info Banner */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
-          ℹ️ Staking Coming in Phase 8.3
-        </h3>
-        <p className="text-sm text-blue-700 dark:text-blue-300">
-          Badge staking functionality will be enabled after Phase 8.3 (Staking Events) is complete. 
-          This includes on-chain staking contracts, event indexing, and reward distribution.
-        </p>
       </div>
     </div>
   )

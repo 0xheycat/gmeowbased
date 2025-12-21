@@ -24,6 +24,7 @@ import { createClient } from '@/lib/supabase/edge'
 import { BADGE_REGISTRY } from '@/lib/badges/badge-registry-data'
 import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
+import { getBadgeStakesByAddress } from '@/lib/subsquid-client'
 
 export const dynamic = 'force-dynamic'
 
@@ -91,14 +92,34 @@ export async function GET(
 
     const { tier } = queryResult.data
 
-    // 3. Get cached badge data
+    // 3. Get cached badge data (TRUE HYBRID: Subsquid + Supabase + Calculated)
     const result = await getCached(
       'user-badges',                // namespace
       `${fid}:${tier}`,             // key
       async () => {                 // fetcher
         const supabase = createClient()
 
-        // Fetch user's earned badges
+        // LAYER 1: Subsquid - Get user wallet and on-chain badge stakes
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('verified_addresses')
+          .eq('fid', fid)
+          .single()
+
+        let onChainBadgeStakes: any[] = []
+        if (profile?.verified_addresses && profile.verified_addresses.length > 0) {
+          const primaryAddress = profile.verified_addresses[0]
+          onChainBadgeStakes = await getBadgeStakesByAddress(primaryAddress)
+        }
+
+        // Create map of on-chain staked badges
+        const stakedBadgeIds = new Set(
+          onChainBadgeStakes
+            .filter(stake => stake.isActive)
+            .map(stake => stake.badgeId)
+        )
+
+        // LAYER 2: Supabase - Fetch user's earned badges (off-chain tracking)
         const { data: earnedBadges, error } = await supabase
           .from('user_badges')
           .select('badge_id, assigned_at')
@@ -109,13 +130,16 @@ export async function GET(
           throw new Error('Failed to fetch badge data')
         }
 
-        // Create a set of earned badge IDs for quick lookup
+        // Create maps for earned badges
         const earnedBadgeIds = new Set((earnedBadges || []).map((b: any) => b.badge_id))
         const earnedBadgeMap = new Map((earnedBadges || []).map((b: any) => [b.badge_id, b.assigned_at] as const))
 
-        // Combine with BADGE_REGISTRY to get all badges with earned status
+        // LAYER 3: Calculated - Combine badge registry with earned + staked status
         const allBadges = Object.entries(BADGE_REGISTRY).map(([badgeId, badgeData]: [string, any]) => {
           const earned = earnedBadgeIds.has(badgeId)
+          const staked = stakedBadgeIds.has(badgeId)
+          const stake = onChainBadgeStakes.find(s => s.badgeId === badgeId && s.isActive)
+          
           return {
             id: badgeId,
             badge_id: badgeId,
@@ -128,6 +152,10 @@ export async function GET(
             locked: !earned,
             requirements: (badgeData.requirements as string | undefined) || null,
             points_bonus: (badgeData.points_bonus as number | undefined) || 0,
+            // On-chain stake info
+            staked,
+            stake_amount: stake?.amount || 0,
+            stake_duration: stake ? Math.floor((Date.now() - new Date(stake.stakedAt).getTime()) / (1000 * 60 * 60 * 24)) : 0,
           }
         })
 
@@ -137,10 +165,11 @@ export async function GET(
           filteredBadges = allBadges.filter(badge => badge.tier === tier)
         }
 
-        // Calculate statistics
+        // Calculate statistics (including on-chain stake data)
         const stats = {
           total_badges: allBadges.length,
           earned_count: earnedBadgeIds.size,
+          staked_count: stakedBadgeIds.size,
           completion_percentage: Math.round((earnedBadgeIds.size / allBadges.length) * 100),
           by_tier: {
             mythic: allBadges.filter(b => b.tier === 'mythic' && b.earned).length,
