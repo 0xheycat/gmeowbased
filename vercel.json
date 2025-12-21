@@ -2,5 +2,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "crons": [
+    {
+      "path": "/api/cron/sync-neynar-wallets",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }
