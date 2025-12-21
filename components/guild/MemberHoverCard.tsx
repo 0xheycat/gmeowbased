@@ -282,6 +282,19 @@ export default function MemberHoverCard({
                 </div>
               )}
 
+              {/* Guild Rank */}
+              {stats?.guildRank && (
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 flex items-center justify-center">
+                    <span className="text-xs font-bold text-purple-500">#</span>
+                  </div>
+                  <span className="text-gray-400">Guild rank</span>
+                  <span className="text-purple-400 font-bold">
+                    #{stats.guildRank.toLocaleString()}
+                  </span>
+                </div>
+              )}
+
               {/* Global Rank */}
               {member.leaderboardStats?.global_rank && (
                 <div className="flex items-center gap-2 text-sm">
