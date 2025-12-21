@@ -1,0 +1,61 @@
+name: Guild Member Stats Sync (Hourly)
+
+on:
+  schedule:
+    # Run every hour at :15 (offset from main guild sync)
+    - cron: '15 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync-guild-member-stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Sync guild member statistics
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DEPLOYMENT_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art' }}
+        run: |
+          echo "👥 Starting guild member stats sync..."
+          
+          # Call cron API endpoint
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "$DEPLOYMENT_URL/api/cron/sync-guild-members")
+          
+          # Extract HTTP status code (last line)
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "📊 Response status: $http_code"
+          echo "📄 Response body: $body"
+          
+          # Check if request was successful
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Guild member stats synced successfully!"
+            
+            # Parse and display results (if jq is available)
+            if command -v jq &> /dev/null; then
+              echo "📈 Sync summary:"
+              echo "  Total members: $(echo "$body" | jq -r '.stats.total_members')"
+              echo "  Updated: $(echo "$body" | jq -r '.stats.updated')"
+              echo "  Failed: $(echo "$body" | jq -r '.stats.failed')"
+              echo "  Guilds processed: $(echo "$body" | jq -r '.stats.guilds_processed')"
+              echo "⏱️  Duration: $(echo "$body" | jq -r '.duration')"
+            fi
+          else
+            echo "❌ Guild member stats sync failed with status $http_code"
+            echo "$body"
+            exit 1
+          fi
+      
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "⚠️  Guild member stats sync failed. Check the logs above for details."
+          echo "This may require manual intervention."
