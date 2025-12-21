@@ -1,0 +1,62 @@
+name: Neynar Wallet Sync (Every 6 Hours)
+
+on:
+  schedule:
+    # Run every 6 hours (0:00, 6:00, 12:00, 18:00 UTC)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync-neynar-wallets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Sync Neynar wallets for active users
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DEPLOYMENT_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art' }}
+        run: |
+          echo "👛 Starting Neynar wallet sync..."
+          echo "📍 Target: $DEPLOYMENT_URL/api/cron/sync-neynar-wallets"
+          
+          # Call cron API endpoint
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "$DEPLOYMENT_URL/api/cron/sync-neynar-wallets")
+          
+          # Extract HTTP status code (last line)
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "📊 Response status: $http_code"
+          echo "📄 Response body: $body"
+          
+          # Check if request was successful
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Wallet sync completed successfully!"
+            
+            # Parse and display results (if jq is available)
+            if command -v jq &> /dev/null; then
+              echo "📈 Sync summary:"
+              echo "  Total users: $(echo "$body" | jq -r '.stats.total')"
+              echo "  ✅ Synced: $(echo "$body" | jq -r '.stats.synced')"
+              echo "  ⏭️  Skipped: $(echo "$body" | jq -r '.stats.skipped')"
+              echo "  ❌ Failed: $(echo "$body" | jq -r '.stats.failed')"
+              echo "⏱️  Duration: $(echo "$body" | jq -r '.duration')"
+            fi
+          else
+            echo "❌ Wallet sync failed with status $http_code"
+            echo "$body"
+            exit 1
+          fi
+          
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "🚨 Wallet sync job failed!"
+          echo "Check logs above for details"

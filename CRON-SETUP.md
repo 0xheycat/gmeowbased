@@ -1,8 +1,8 @@
-# Cron Job Setup Guide
+# Cron Job Setup Guide - GitHub Actions
 
 ## Overview
 
-The Neynar wallet sync cron job automatically updates multi-wallet configurations for active users every 6 hours.
+The Neynar wallet sync cron job automatically updates multi-wallet configurations for active users every 6 hours using **GitHub Actions**.
 
 **Endpoint**: `/api/cron/sync-neynar-wallets`  
 **Schedule**: Every 6 hours (`0 */6 * * *`)  
@@ -13,56 +13,64 @@ The Neynar wallet sync cron job automatically updates multi-wallet configuration
 
 ## Deployment Steps
 
-### 1. Set Environment Variable
+### 1. Verify GitHub Secret
 
-Add to your Vercel project settings:
+The `CRON_SECRET` from `.env.local` must be added to GitHub repository secrets.
 
+**Current value in `.env.local`**:
 ```bash
-CRON_SECRET=<your-secret-token>
+CRON_SECRET=sb_publishable_6tAPtzvPnF-2GLR4kg3c-Q_JeIyqixs
 ```
 
-**Generate secret**:
-```bash
-openssl rand -base64 32
+**Add to GitHub**:
+1. Go to GitHub Repository → Settings → Secrets and variables → Actions
+2. Verify `CRON_SECRET` exists (it should match `.env.local`)
+3. If missing, click "New repository secret":
+   - Name: `CRON_SECRET`
+   - Value: `sb_publishable_6tAPtzvPnF-2GLR4kg3c-Q_JeIyqixs`
+
+### 2. Workflow Configuration
+
+The workflow is configured in `.github/workflows/neynar-wallet-sync.yml`:
+
+```yaml
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours (0:00, 6:00, 12:00, 18:00 UTC)
+  workflow_dispatch:  # Allows manual trigger
 ```
 
-Or use any secure random string generator.
-
-### 2. Verify Configuration
-
-The `vercel.json` file already includes:
-
-```json
-{
-  "crons": [{
-    "path": "/api/cron/sync-neynar-wallets",
-    "schedule": "0 */6 * * *"
-  }]
-}
-```
-
-### 3. Deploy to Vercel
+### 3. Deploy to GitHub
 
 ```bash
+git add .github/workflows/neynar-wallet-sync.yml
+git commit -m "feat: add GitHub Actions cron for Neynar wallet sync"
 git push origin main
 ```
 
-Vercel will automatically:
-- Detect the cron configuration
-- Schedule the job
-- Run it every 6 hours starting from deployment
+GitHub Actions will automatically:
+- Detect the workflow file
+- Schedule the cron job
+- Run it every 6 hours (0:00, 6:00, 12:00, 18:00 UTC)
+- Call your production URL at `https://gmeowhq.art/api/cron/sync-neynar-wallets`
 
 ### 4. Verify Setup
 
-**Via Vercel Dashboard**:
-1. Go to your project → Settings → Cron Jobs
-2. Verify the job is listed and enabled
-3. Check execution logs after first run
+**Via GitHub Actions**:
+1. Go to your repository → Actions tab
+2. Find "Neynar Wallet Sync (Every 6 Hours)" workflow
+3. Check scheduled runs in the workflow history
 
-**Manual Test** (optional):
+**Manual Test** (trigger workflow manually):
+1. Go to Actions → Neynar Wallet Sync workflow
+2. Click "Run workflow" button
+3. Monitor the job execution in real-time
+
+**Manual API Test** (from terminal):
 ```bash
-curl -X GET https://your-app.vercel.app/api/cron/sync-neynar-wallets \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
+curl -X POST https://gmeowhq.art/api/cron/sync-neynar-wallets \
+  -H "Authorization: Bearer sb_publishable_6tAPtzvPnF-2GLR4kg3c-Q_JeIyqixs" \
+  -H "Content-Type: application/json"
 ```
 
 ---
