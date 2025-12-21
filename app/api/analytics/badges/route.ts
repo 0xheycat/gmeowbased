@@ -3,6 +3,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
+import { getBadgeMintAnalytics } from '@/lib/subsquid-client'
 
 /**
  * Badge Analytics Endpoint
@@ -33,9 +34,22 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     // Calculate 24 hours ago timestamp
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
     // ========================================
-    // 1. New badges in last 24 hours
+    // LAYER 1 (Subsquid): On-chain badge mint analytics
+    // ========================================
+    let onChainMintStats: { daily: number[], last24h: number, previous24h: number, total7d: number } | null = null
+    
+    try {
+      onChainMintStats = await getBadgeMintAnalytics(sevenDaysAgo)
+    } catch (error) {
+      console.error('[Badge Analytics] Subsquid mint analytics error:', error)
+      // Non-blocking: continue with Supabase data only
+    }
+
+    // ========================================
+    // LAYER 2 (Supabase): New badges in last 24 hours (off-chain tracking)
     // ========================================
     const { data: recentBadges, error: recentError } = await supabase
       .from('user_badges')
@@ -50,7 +64,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const newBadgesCount = recentBadges?.length || 0
 
     // ========================================
-    // 2. Badge distribution (pie chart data)
+    // LAYER 2 (Supabase): Badge distribution (pie chart data)
     // ========================================
     const { data: allBadges, error: distributionError } = await supabase
       .from('user_badges')
@@ -104,7 +118,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     // ========================================
-    // 3. Top 20 users by tier (Mythic first)
+    // LAYER 3 (Calculated): Top 20 users by tier (Mythic first)
     // ========================================
     
     // Get users with badge counts per tier
@@ -199,7 +213,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     })
 
     // ========================================
-    // Response
+    // Response (TRUE HYBRID: All 3 layers)
     // ========================================
     return NextResponse.json(
       {
@@ -214,6 +228,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
               badgeType: b.badge_type,
               assignedAt: b.assigned_at,
             })) || [],
+            // LAYER 1 (Subsquid): On-chain mint statistics
+            onChainMints: onChainMintStats ? {
+              last24h: onChainMintStats.last24h,
+              previous24h: onChainMintStats.previous24h,
+              last7d: onChainMintStats.total7d,
+              dailyBreakdown: onChainMintStats.daily,
+              trend: onChainMintStats.last24h > onChainMintStats.previous24h ? 'up' : 
+                     onChainMintStats.last24h < onChainMintStats.previous24h ? 'down' : 'stable',
+            } : null,
           },
           distribution: distributionWithPercentages,
           topUsers: topUsersWithProfiles,

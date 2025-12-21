@@ -30,6 +30,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
+import { getReferrerHistory } from '@/lib/subsquid-client'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -45,15 +46,31 @@ const ActivityQuerySchema = z.object({
 
 interface Activity {
   id: string
-  type: 'registered' | 'referred' | 'reward' | 'badge'
+  type: 'registered' | 'referred' | 'reward' | 'badge' | 'referral_set' // Layer 1: on-chain event
   timestamp: string
+  source: 'onchain' | 'offchain' // Layer 1 vs Layer 2 indicator
   data: {
     code?: string
     referredFid?: number
     referredUsername?: string
     points?: number
     badgeName?: string
+    // Layer 1: On-chain referral event data
+    txHash?: string
+    user?: string
+    referrer?: string
   }
+}
+
+interface ReferralActivityRow {
+  id: number
+  fid: number
+  event_type: string
+  referral_code: string | null
+  referred_fid: number | null
+  points_awarded: number | null
+  metadata: Record<string, any> | null
+  timestamp: string
 }
 
 export async function GET(
@@ -159,9 +176,40 @@ export async function GET(
       })
     }
 
-    // Query activity events from database
-    // Note: This is a mock implementation - adapt to your actual database schema
-    const { data: activities, error } = await supabase
+    // Get user's wallet address for on-chain queries
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('wallet_address')
+      .eq('fid', fid)
+      .single()
+
+    const userAddress = profile?.wallet_address
+
+    // ===== LAYER 1: SUBSQUID ON-CHAIN REFERRAL EVENTS =====
+    let onChainEvents: Activity[] = []
+    if (userAddress) {
+      try {
+        const referralHistory = await getReferrerHistory(userAddress, limit * 2)
+        
+        onChainEvents = referralHistory.map((event) => ({
+          id: event.id,
+          type: 'referral_set' as const,
+          timestamp: new Date(Number(event.timestamp) * 1000).toISOString(),
+          source: 'onchain' as const,
+          data: {
+            txHash: event.txHash,
+            user: event.user,
+            referrer: event.referrer,
+          },
+        }))
+      } catch (subsquidError) {
+        // Non-blocking: Continue with Supabase data only if Subsquid fails
+        console.warn(`[Referral Activity] Subsquid error for FID ${fid}:`, subsquidError)
+      }
+    }
+
+    // ===== LAYER 2: SUPABASE OFF-CHAIN ACTIVITY =====
+    const { data: offChainActivities, error } = await supabase
       .from('referral_activity')
       .select('*')
       .eq('fid', fid)
@@ -183,6 +231,28 @@ export async function GET(
       })
     }
 
+    // Map off-chain activities to Activity interface
+    const offChainMapped: Activity[] = ((offChainActivities || []) as ReferralActivityRow[]).map((activity) => ({
+      id: activity.id.toString(),
+      type: activity.event_type === 'code_registered' ? 'registered' :
+            activity.event_type === 'referral_completed' ? 'referred' :
+            activity.event_type === 'points_earned' ? 'reward' :
+            activity.event_type === 'milestone_reached' ? 'badge' : 'reward',
+      timestamp: activity.timestamp,
+      source: 'offchain' as const,
+      data: {
+        code: activity.referral_code ?? undefined,
+        referredFid: activity.referred_fid ?? undefined,
+        points: activity.points_awarded ?? undefined,
+        ...(activity.metadata || {}),
+      },
+    }))
+
+    // ===== LAYER 3: MERGE AND SORT BY TIMESTAMP =====
+    const allActivities = [...onChainEvents, ...offChainMapped]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(offset, offset + limit)
+
     // ===== SECURITY LAYER 7: CSRF PROTECTION =====
     // GET method - read-only, no CSRF risk
 
@@ -196,7 +266,9 @@ export async function GET(
       fid,
       limit,
       offset,
-      resultCount: activities?.length || 0,
+      resultCount: allActivities.length,
+      onChainCount: onChainEvents.length,
+      offChainCount: offChainMapped.length,
       duration: Date.now() - startTime,
     })
 
@@ -205,12 +277,17 @@ export async function GET(
     return NextResponse.json(
       {
         success: true,
-        activities: activities || [],
+        activities: allActivities,
         fid,
+        metadata: {
+          onChainEvents: onChainEvents.length,
+          offChainEvents: offChainMapped.length,
+          totalEvents: onChainEvents.length + offChainMapped.length,
+        },
         pagination: {
           limit,
           offset,
-          hasMore: activities ? activities.length === limit : false,
+          hasMore: allActivities.length === limit,
         },
         timestamp: new Date().toISOString(),
       },

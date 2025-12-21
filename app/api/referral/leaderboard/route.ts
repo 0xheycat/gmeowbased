@@ -31,6 +31,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
+import { getReferrerHistory, getReferralNetworkStats } from '@/lib/subsquid-client'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -49,10 +50,13 @@ interface LeaderboardEntry {
   username?: string
   avatar?: string
   totalReferrals: number
+  onChainReferrals?: number // Layer 1: On-chain referral count from Subsquid
   pointsEarned: bigint
   tier: number
   rank: number
   rankChange: number
+  firstReferral?: bigint // Layer 1: Timestamp of first referral on-chain
+  lastReferral?: bigint // Layer 1: Timestamp of last referral on-chain
 }
 
 export async function GET(request: NextRequest) {
@@ -197,6 +201,42 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // ===== LAYER 1: SUBSQUID ON-CHAIN DATA =====
+    // Fetch on-chain referral events for each leaderboard entry
+    const enrichedData = await Promise.all(
+      (data || []).map(async (entry) => {
+        try {
+          if (!entry.address) {
+            return {
+              ...entry,
+              onChainReferrals: 0,
+              firstReferral: null,
+              lastReferral: null,
+            }
+          }
+
+          // Get on-chain referral network stats
+          const networkStats = await getReferralNetworkStats(entry.address)
+          
+          return {
+            ...entry,
+            onChainReferrals: networkStats?.totalReferrals || 0,
+            firstReferral: networkStats?.firstReferral || null,
+            lastReferral: networkStats?.lastReferral || null,
+          }
+        } catch (subsquidError) {
+          // Non-blocking: Continue with Supabase data only if Subsquid fails
+          console.warn(`[Referral Leaderboard] Subsquid error for ${entry.address}:`, subsquidError)
+          return {
+            ...entry,
+            onChainReferrals: 0,
+            firstReferral: null,
+            lastReferral: null,
+          }
+        }
+      })
+    )
+
     // ===== SECURITY LAYER 7: CSRF PROTECTION =====
     // GET method - read-only, no CSRF risk
 
@@ -210,7 +250,7 @@ export async function GET(request: NextRequest) {
       period,
       page,
       pageSize,
-      resultCount: data?.length || 0,
+      resultCount: enrichedData?.length || 0,
       totalCount: count || 0,
       duration: Date.now() - startTime,
     })
@@ -220,7 +260,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        entries: data || [],
+        entries: enrichedData || [],
         pagination: {
           currentPage: page,
           pageSize,

@@ -274,6 +274,22 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
 
       if (!userProfile) return null
 
+      // Sync wallet addresses from Neynar to database (background, non-blocking)
+      if (neynarUser?.verified_addresses || neynarUser?.custody_address) {
+        const supabase = getSupabaseServerClient()
+        if (supabase) {
+          // Fire and forget - don't await to avoid blocking profile fetch
+          void supabase
+            .from('user_profiles')
+            .update({
+              custody_address: neynarUser.custody_address || null,
+              verified_addresses: neynarUser.verified_addresses || null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('fid', fid)
+        }
+      }
+
       // Get verified addresses from Neynar (always fresh)
       const verifiedAddresses = neynarUser?.verified_addresses || []
       const primaryAddress = verifiedAddresses[0] || userProfile.wallet_address || ''

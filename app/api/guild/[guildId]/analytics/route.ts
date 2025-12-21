@@ -125,6 +125,12 @@ interface AnalyticsData {
   topContributors: TopContributor[]
   stats: GuildStats
   recentActivity: RecentActivity[]
+  // LAYER 1 (Subsquid): Real-time on-chain deposit analytics
+  realtimeDeposits: {
+    last24h: number
+    last7d: number
+    dailyBreakdown: number[]
+  } | null
 }
 
 // ==========================================
@@ -296,6 +302,18 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
         points: item.points.toString(),
       }))
 
+      // LAYER 1 (Subsquid): Get real-time on-chain deposit events (last 7 days)
+      // This supplements the cached data with fresh blockchain events
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      let realtimeDeposits: { daily: number[], last24h: number, previous24h: number, total7d: number } | null = null
+      
+      try {
+        realtimeDeposits = await getGuildDepositAnalytics(sevenDaysAgo)
+      } catch (error) {
+        console.error('[Guild Analytics] Subsquid deposit analytics error:', error)
+        // Non-blocking: continue with cached data only
+      }
+
       // Get recent activity from guild_events (not cached)
       const { data: recentEvents } = await supabase
         .from('guild_events')
@@ -336,6 +354,12 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
           treasuryGrowth7d: cache.treasury_7d_growth || 0,
         },
         recentActivity,
+        // LAYER 1 (Subsquid): Real-time on-chain deposit analytics
+        realtimeDeposits: realtimeDeposits ? {
+          last24h: realtimeDeposits.last24h,
+          last7d: realtimeDeposits.total7d,
+          dailyBreakdown: realtimeDeposits.daily,
+        } : null,
       }
     }
 
@@ -440,6 +464,8 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
         treasuryGrowth7d,
       },
       recentActivity,
+      // Fallback path: no real-time data (cache miss)
+      realtimeDeposits: null,
     }
   } catch (error) {
     console.error('[Guild Analytics] Error:', error)

@@ -20,9 +20,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { getCached } from '@/lib/cache/server'
-import { getSubsquidClient } from '@/lib/subsquid-client'
+import { getPointsTransactions } from '@/lib/subsquid-client'
+import { createClient } from '@/lib/supabase/edge'
 import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
+import { getAllWalletsForFID } from '@/lib/integrations/neynar-wallet-sync'
 
 export const dynamic = 'force-dynamic'
 
@@ -120,7 +122,7 @@ export async function GET(
     }
 
     // 2. Input Validation
-    const fidResult = FIDSchema.safeParse(params.fid)
+    const fidResult = FIDSchema.safeParse(parseInt(params.fid, 10))
     if (!fidResult.success) {
       return createErrorResponse({
         type: ErrorType.VALIDATION,
@@ -150,40 +152,98 @@ export async function GET(
       'user-activity',              // namespace
       `${validatedFid}:${limit}:${offset}`, // key
       async () => {                 // fetcher
-        const client = getSubsquidClient()
-        
-        // Get XP transactions from Subsquid (last 6 months)
-        const sinceDate = new Date()
-        sinceDate.setMonth(sinceDate.getMonth() - 6)
-        
-        const allTransactions = await client.getXPTransactions(validatedFid, sinceDate)
-        
-        // Apply pagination
-        const transactions = allTransactions.slice(offset, offset + limit)
-        const count = allTransactions.length
+        const supabase = createClient()
+        if (!supabase) {
+          throw new Error('Supabase client not available')
+        }
 
-        // Transform data to match ActivityTimeline component interface
-        const activities = (transactions || []).map((transaction: any) => ({
-          id: transaction.id.toString(),
-          type: formatActivityType(transaction),
-          title: formatActivityTitle(transaction),
-          description: formatActivityDescription(transaction),
-          timestamp: transaction.created_at,
-          metadata: {
-            xp_amount: transaction.xp_amount || 0,
-            action_type: transaction.action_type,
-            ...transaction.metadata,
+        // Get ALL user's wallet addresses using utility function
+        const uniqueWallets = await getAllWalletsForFID(validatedFid)
+
+        if (uniqueWallets.length === 0) {
+          return {
+            activities: [],
+            pagination: { total: 0, limit, offset, hasMore: false },
           }
-        }))
+        }
+
+        // ===== LAYER 1: SUBSQUID - ON-CHAIN POINTS TRANSACTIONS =====
+        const sinceDate = new Date()
+        sinceDate.setMonth(sinceDate.getMonth() - 6) // Last 6 months
+        
+        // Query blockchain data for ALL user wallets
+        const allPointsTransactions = await Promise.all(
+          uniqueWallets.map(wallet => getPointsTransactions(wallet, { limit: 1000 }))
+        )
+        const pointsTransactions = allPointsTransactions.flat()
+
+        // Filter to transactions after sinceDate
+        const recentTransactions = pointsTransactions.filter(tx => 
+          new Date(tx.timestamp) >= sinceDate
+        )
+
+        // ===== LAYER 2: SUPABASE - OFF-CHAIN VIRAL BONUS XP =====
+        const { data: viralCasts } = await supabase
+          .from('badge_casts')
+          .select('fid, viral_bonus_xp, created_at, tier')
+          .eq('fid', validatedFid)
+          .gte('created_at', sinceDate.toISOString())
+          .order('created_at', { ascending: false })
+
+        // ===== LAYER 3: CALCULATE & MERGE ACTIVITIES =====
+        const activities: any[] = []
+
+        // Add on-chain points transactions
+        recentTransactions.forEach((tx) => {
+          activities.push({
+            id: tx.id,
+            type: tx.transactionType === 'DEPOSIT' ? 'reward' : 'quest',
+            title: tx.transactionType === 'DEPOSIT' ? `Earned Points (+${tx.amount})` : `Quest Completed (+${tx.amount})`,
+            description: undefined,
+            timestamp: new Date(tx.timestamp).toISOString(),
+            metadata: {
+              xp_amount: Number(tx.amount),
+              action_type: tx.transactionType,
+              source: 'on-chain',
+              txHash: tx.txHash,
+            },
+          })
+        })
+
+        // Add off-chain viral XP bonuses
+        viralCasts?.forEach((cast) => {
+          if (cast.viral_bonus_xp && cast.viral_bonus_xp > 0) {
+            activities.push({
+              id: `viral-${cast.created_at}`,
+              type: 'badge',
+              title: `Viral Engagement (+${cast.viral_bonus_xp} XP)`,
+              description: `${cast.tier} tier achievement`,
+              timestamp: cast.created_at,
+              metadata: {
+                xp_amount: cast.viral_bonus_xp,
+                action_type: 'VIRAL_BONUS',
+                source: 'off-chain',
+                tier: cast.tier,
+              },
+            })
+          }
+        })
+
+        // Sort by timestamp (newest first) and apply pagination
+        const sortedActivities = activities
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        
+        const paginatedActivities = sortedActivities.slice(offset, offset + limit)
+        const count = sortedActivities.length
 
         return {
-          activities,
+          activities: paginatedActivities,
           pagination: {
-            total: count || 0,
+            total: count,
             limit,
             offset,
-            hasMore: (offset + limit) < (count || 0),
-          }
+            hasMore: (offset + limit) < count,
+          },
         }
       },
       { ttl: 30 }                   // 30 seconds cache (real-time activity)
