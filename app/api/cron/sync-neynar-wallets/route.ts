@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/edge'
 import { syncWalletsFromNeynar } from '@/lib/integrations/neynar-wallet-sync'
 
 export const dynamic = 'force-dynamic'
