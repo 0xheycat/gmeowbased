@@ -9,8 +9,13 @@ const ONCHAINKIT_RPC_BASE_URL = 'https://api.developer.coinbase.com/rpc/v1'
 const ONCHAINKIT_JSONRPC_VERSION = '2.0'
 const ONCHAINKIT_VERSION_HEADER = process.env.ONCHAINKIT_VERSION ?? '1.1.2'
 
+// NOTE: Alchemy APIs below are for specialized NFT/pricing services, not RPC
+// These are optional - if ALCHEMY_API_KEY is not set, features gracefully degrade
+// For RPC calls, use Subsquid RPC (RPC_BASE_HTTP) or public RPCs
+// For block explorer data, use Routescan API (ROUTESCAN_API_KEY)
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY ?? process.env.NEXT_PUBLIC_ALCHEMY_API_KEY ?? ''
 const ALCHEMY_ORIGIN = process.env.ALCHEMY_ORIGIN ?? 'https://www.alchemy.com'
+const ROUTESCAN_API_KEY = process.env.ROUTESCAN_API_KEY ?? ''
 
 const DEFAULT_CHAIN_SET: ChainKey[] = ['base', 'op', 'celo']
 const DEFAULT_NFT_CHAIN_SET: ChainKey[] = ['base', 'op']

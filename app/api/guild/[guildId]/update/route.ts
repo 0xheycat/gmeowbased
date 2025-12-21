@@ -27,10 +27,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { strictLimiter } from '@/lib/middleware/rate-limit'
-import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { getGuild } from '@/lib/contracts/guild-contract'
+import { getSupabaseAdminClient } from '@/lib/supabase/edge'
 
 // Validation schema
 const GuildUpdateSchema = z.object({
@@ -38,18 +38,6 @@ const GuildUpdateSchema = z.object({
   description: z.string().max(500).optional(),
   banner: z.string().url().max(500).optional().or(z.literal('')),
 })
-
-// Initialize Supabase client
-function getSupabaseClient() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Supabase configuration missing')
-  }
-
-  return createClient(supabaseUrl, supabaseServiceKey)
-}
 
 export async function PUT(
   req: NextRequest,
@@ -116,7 +104,13 @@ export async function PUT(
     // }
 
     // 6. Update guild metadata in database
-    const supabase = getSupabaseClient()
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, message: 'Database error' },
+        { status: 500, headers: { 'X-Request-ID': requestId } }
+      )
+    }
     
     // Check if guild metadata exists
     const { data: existing } = await supabase
@@ -151,20 +145,24 @@ export async function PUT(
     }
 
     // 7. Fetch updated data
-    const { data: updatedGuild } = await supabase
+    const { data: updatedGuild, error: fetchError } = await supabase
       .from('guild_metadata')
-      .select('*')
+      .select('guild_id, name, description, banner')
       .eq('guild_id', guildId)
       .single()
+
+    if (fetchError || !updatedGuild) {
+      throw new Error('Failed to fetch updated guild data')
+    }
 
     return NextResponse.json(
       {
         success: true,
         guild: {
           id: guildId,
-          name: updatedGuild?.name || guild.name,
-          description: updatedGuild?.description || '',
-          banner: updatedGuild?.banner || '',
+          name: updatedGuild.name || guild.name,
+          description: updatedGuild.description || '',
+          banner: updatedGuild.banner || '',
         },
         timestamp: Date.now(),
       },

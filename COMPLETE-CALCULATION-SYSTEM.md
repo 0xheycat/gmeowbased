@@ -16,7 +16,7 @@ The calculation system has **3 calculation layers** and **4 source files**:
 4. **`lib/profile/profile-service.ts`** - Data fetching & aggregation (MAIN ORCHESTRATOR)
 
 ### Data Sources:
-1. **LAYER 1 (Blockchain)**: Subsquid indexer → `User.totalPoints` (on-chain)
+1. **LAYER 1 (Blockchain)**: Subsquid indexer → `User.pointsBalance` (current spendable balance) + `User.totalEarnedFromGMs` (cumulative GM rewards)
 2. **LAYER 2 (Off-chain)**: Supabase → `badge_casts.viral_bonus_xp` (social engagement)
 3. **LAYER 3 (Calculated)**: Application logic → Level, Rank, Multipliers
 
@@ -26,13 +26,15 @@ The calculation system has **3 calculation layers** and **4 source files**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ STEP 1: FETCH BLOCKCHAIN POINTS (Subsquid)                     │
+│ STEP 1: FETCH BLOCKCHAIN BALANCE (Subsquid)                    │
 ├─────────────────────────────────────────────────────────────────┤
 │ Query: User entity by wallet address                           │
-│ Field: User.totalPoints (BigInt)                               │
-│ Source: GM events, Quest completions, Tips (on-chain)          │
+│ Fields:                                                         │
+│   - User.pointsBalance (BigInt) - Current spendable balance    │
+│   - User.totalEarnedFromGMs (BigInt) - Cumulative GM rewards   │
+│ Source: GM events, Quest completions, Deposits, Withdrawals    │
 │                                                                 │
-│ Result: blockchainPoints = Number(user.totalPoints)            │
+│ Result: currentBalance = Number(user.pointsBalance)            │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -54,10 +56,10 @@ The calculation system has **3 calculation layers** and **4 source files**:
 │ STEP 3: CALCULATE TOTAL SCORE (Application)                    │
 ├─────────────────────────────────────────────────────────────────┤
 │ Formula:                                                        │
-│   totalScore = blockchainPoints + viralBonusXP                 │
+│   totalScore = currentBalance + viralBonusXP                   │
 │                                                                 │
 │ Example:                                                        │
-│   blockchainPoints = 1000 (from GM events)                     │
+│   currentBalance = 1000 (from pointsBalance)                   │
 │   viralBonusXP = 250 (viral tier bonus)                        │
 │   totalScore = 1250                                            │
 └─────────────────────────────────────────────────────────────────┘
@@ -159,13 +161,14 @@ The calculation system has **3 calculation layers** and **4 source files**:
 │ Response Structure:                                             │
 │ {                                                               │
 │   stats: {                                                      │
-│     // SOURCE: Blockchain (Subsquid User.totalPoints)          │
-│     base_points: 1000,                                         │
+│     // SOURCE: Blockchain (Subsquid User.pointsBalance)        │
+│     points_balance: 1000,  // Primary: Current spendable balance│
+│     base_points: 1000,     // Deprecated: Use points_balance   │
 │                                                                 │
 │     // SOURCE: Supabase (SUM of badge_casts.viral_bonus_xp)    │
 │     viral_xp: 250,                                             │
 │                                                                 │
-│     // CALCULATED: base_points + viral_xp                      │
+│     // CALCULATED: points_balance + viral_xp                   │
 │     total_score: 1250,                                         │
 │                                                                 │
 │     // CALCULATED: from total_score using rank.ts              │
@@ -211,7 +214,8 @@ async getUserStatsByWallet(wallet: string) {
     query GetUserByWallet($wallet: String!) {
       users(where: { id_eq: $wallet }) {
         id                    # Wallet address
-        totalPoints           # ✅ Blockchain points (GM + Quests + Tips)
+        pointsBalance         # ✅ Current spendable balance (matches contract)
+        totalEarnedFromGMs    # ✅ Cumulative earned from GM events only
         currentStreak         # Streak days
         lifetimeGMs           # Total GM count
         lastGMTimestamp       # Last GM time
@@ -224,7 +228,7 @@ async getUserStatsByWallet(wallet: string) {
   
   return {
     wallet: user.id,
-    totalPoints: Number(user.totalPoints || 0),
+    totalPoints: Number(user.pointsBalance || 0),  # Current balance
     currentStreak: user.currentStreak || 0,
     lifetimeGMs: user.lifetimeGMs || 0,
   }
@@ -309,15 +313,16 @@ const totalScore = (leaderboard?.total_score || 0) + viralBonusXP
 // leaderboard.total_score is NULL because Subsquid query fails
 
 // SHOULD BE:
-const blockchainPoints = Number(subsquidUser?.totalPoints || 0)  // From Subsquid
+const currentBalance = Number(subsquidUser?.pointsBalance || 0)  // From Subsquid (current spendable balance)
 const viralXP = viralBonusXP  // From Supabase (already calculated)
-const totalScore = blockchainPoints + viralXP
+const totalScore = currentBalance + viralXP
 
 // Breakdown for response:
 stats: {
-  base_points: blockchainPoints,   // ✅ Actual on-chain points
-  viral_xp: viralXP,               // ✅ Social engagement bonus
-  total_score: totalScore,         // ✅ Combined total
+  points_balance: currentBalance,   // ✅ Primary: Current spendable balance
+  base_points: currentBalance,      // ⚠️ Deprecated: Use points_balance instead
+  viral_xp: viralXP,                // ✅ Social engagement bonus
+  total_score: totalScore,          // ✅ Combined total
 }
 ```
 

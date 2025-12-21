@@ -4,7 +4,7 @@ import { base } from 'viem/chains'
 async function checkRecentDeposits() {
   const client = createPublicClient({
     chain: base,
-    transport: http('https://base-mainnet.g.alchemy.com/v2/AQYbCkrkuEDaD_hCDse6ezP2W-zUCEFe'),
+    transport: http(process.env.RPC_BASE_HTTP || 'https://mainnet.base.org'),
   })
 
   const currentBlock = await client.getBlockNumber()

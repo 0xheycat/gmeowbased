@@ -18,7 +18,7 @@ import {
   SHARED_COLORS,
   buildFooterText,
 } from '@/lib/frames/frame-design-system'
-import { formatXp } from '@/lib/leaderboard/rank'
+import { formatXp } from '@/lib/scoring/unified-calculator'
 import { withFrameImageCache, getStringParam, getNumericParam } from '@/lib/frames/image-cache-helper'
 
 export const runtime = 'nodejs'

@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/edge'
 import type { Database } from '@/types/supabase'
-import { getViralTier, calculateEngagementScore, type EngagementMetrics } from '@/lib/viral/viral-bonus'
+import { 
+  getViralTier, 
+  calculateEngagementScore, 
+  calculateLevelProgress,
+  getRankTierByPoints,
+  formatPoints,
+  type EngagementMetrics 
+} from '@/lib/scoring/unified-calculator'
+import { getLeaderboardEntry } from '@/lib/subsquid-client'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
@@ -45,6 +53,25 @@ type TierBreakdown = {
   active: number
 }
 
+type ViralStats = {
+  fid: number
+  // Layer 2: Supabase (off-chain viral engagement)
+  totalViralXp: number
+  totalCasts: number
+  topCasts: ViralCastStat[]
+  tierBreakdown: TierBreakdown
+  averageXpPerCast: number
+  // Layer 1: Subsquid (blockchain stats)
+  blockchainPoints: number
+  globalRank: number | null
+  currentStreak: number
+  // Layer 3: Calculated (unified-calculator)
+  totalScore: number
+  level: number
+  rankTier: string
+  message?: string
+}
+
 export const GET = withTiming(withErrorHandler(async (request: Request) => {
   const ip = getClientIp(request as NextRequest)
   const { success } = await rateLimit(ip, apiLimiter)
@@ -85,20 +112,34 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       async () => {
         const supabase = createClient()
     
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Internal Error', message: 'Database connection failed' },
-        { status: 500 }
-      )
-    }
+        if (!supabase) {
+          throw new Error('Database connection failed')
+        }
+
+        // LAYER 2: Supabase - Get user's wallet for Subsquid lookup
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('verified_addresses')
+          .eq('fid', fid)
+          .single()
+
+        // LAYER 1: Subsquid - Get blockchain stats (on-chain)
+        let blockchainStats = null
+        if (profile?.verified_addresses?.[0]) {
+          try {
+            blockchainStats = await getLeaderboardEntry(profile.verified_addresses[0])
+          } catch (error) {
+            console.error('[viral/stats] Failed to fetch blockchain stats:', error)
+          }
+        }
     
-    // GI-11: Fetch user's badge casts with metrics
-    const { data: casts, error } = await supabase
-      .from('badge_casts')
-      .select('*')
-      .eq('fid', fid)
-      .order('viral_bonus_xp', { ascending: false })
-      .limit(50) as { data: Database['public']['Tables']['badge_casts']['Row'][] | null, error: any } // GI-11: Limit result size
+        // LAYER 2: Supabase - Fetch user's badge casts with metrics (off-chain)
+        const { data: casts, error } = await supabase
+          .from('badge_casts')
+          .select('*')
+          .eq('fid', fid)
+          .order('viral_bonus_xp', { ascending: false })
+          .limit(50) as { data: Database['public']['Tables']['badge_casts']['Row'][] | null, error: any } // GI-11: Limit result size
     
     if (error) {
       console.error('[viral/stats] Database error:', error)
@@ -114,8 +155,14 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     }
     
     if (!casts || casts.length === 0) {
-      // GI-13: Return empty state with helpful message
-      return NextResponse.json({
+      // LAYER 3: Calculate stats even with no viral XP
+      const blockchainPoints = blockchainStats?.totalScore || 0
+      const totalScore = blockchainPoints + 0 // No viral XP yet
+      const levelData = calculateLevelProgress(totalScore)
+      const rankTier = getRankTierByPoints(totalScore)
+      
+      // GI-13: Return empty state with helpful message + blockchain data
+      return {
         fid,
         totalViralXp: 0,
         totalCasts: 0,
@@ -127,12 +174,17 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
           engaging: 0,
           active: 0,
         },
+        averageXpPerCast: 0,
+        // Layer 1: Blockchain
+        blockchainPoints,
+        globalRank: blockchainStats?.rank || null,
+        currentStreak: Math.floor((blockchainStats?.streakBonus || 0) / 10), // 10 points per streak day
+        // Layer 3: Calculated
+        totalScore,
+        level: levelData.level,
+        rankTier: rankTier.name,
         message: 'No badge casts found. Share your first badge to start earning viral XP!',
-      }, {
-        headers: { 
-          'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240'
-        }
-      })
+      }
     }
     
     // Calculate total viral XP
@@ -193,14 +245,29 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       else if (tier.name === 'Active') tierBreakdown.active++
     })
     
-    return {
-      fid,
-      totalViralXp,
-      totalCasts: casts.length,
-      topCasts,
-      tierBreakdown,
-      averageXpPerCast: casts.length > 0 ? Math.round(totalViralXp / casts.length) : 0,
-    }
+    // LAYER 3: Calculated - Use unified-calculator for total score, level, rank
+        const blockchainPoints = blockchainStats?.totalScore || 0
+        const totalScore = blockchainPoints + totalViralXp
+        const levelData = calculateLevelProgress(totalScore)
+        const rankTier = getRankTierByPoints(totalScore)
+
+        return {
+          fid,
+          // Layer 2: Viral engagement (off-chain)
+          totalViralXp,
+          totalCasts: casts.length,
+          topCasts,
+          tierBreakdown,
+          averageXpPerCast: casts.length > 0 ? Math.round(totalViralXp / casts.length) : 0,
+          // Layer 1: Blockchain (on-chain)
+          blockchainPoints,
+          globalRank: blockchainStats?.rank || null,
+          currentStreak: Math.floor((blockchainStats?.streakBonus || 0) / 10), // 10 points per streak day
+          // Layer 3: Calculated (unified-calculator)
+          totalScore,
+          level: levelData.level,
+          rankTier: rankTier.name,
+        }
       },
       { ttl: 120 }
     )

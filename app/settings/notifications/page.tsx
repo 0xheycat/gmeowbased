@@ -58,7 +58,7 @@ export default function NotificationSettingsPage() {
   // Execute redirect separately
   useEffect(() => {
     if (shouldRedirect) {
-      router.push('/Dashboard')
+      router.push('/dashboard')
     }
   }, [shouldRedirect, router])
 

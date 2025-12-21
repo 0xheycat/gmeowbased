@@ -19,11 +19,9 @@ import { generateRequestId } from '@/lib/middleware/request-id'
 import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-limit'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { validateAdminRequest } from '@/lib/auth/admin'
-import { NeynarAPIClient } from '@neynar/nodejs-sdk'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AdminQuerySchema } from '@/lib/validation/api-schemas'
-
-const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
 type ViralCast = {
   cast_hash: string
@@ -120,11 +118,11 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     // 4. Enrich with user data from Neynar (batch lookup)
     const enrichedCasts: ViralCast[] = []
 
-    if (casts && casts.length > 0 && NEYNAR_API_KEY) {
+    if (casts && casts.length > 0) {
       const fids = [...new Set(casts.map((c: { fid: number }) => c.fid))]
 
       try {
-        const client = new NeynarAPIClient({ apiKey: NEYNAR_API_KEY })
+        const client = getNeynarServerClient()
         const usersResponse = await client.fetchBulkUsers({ fids })
 
         const userMap = new Map(

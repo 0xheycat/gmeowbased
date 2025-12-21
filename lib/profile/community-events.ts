@@ -309,13 +309,13 @@ function deriveCta(row: RankEventRow): { label: string; href: string } | null {
 
   if (eventType === 'quest-verify' || eventType === 'quest-create') {
     if (questId != null) {
-      return { label: 'Review quest', href: `/Quest/leaderboard${chain ? `/${chain}` : ''}?quest=${questId}` }
+      return { label: 'Review quest', href: `/quests/leaderboard${chain ? `/${chain}` : ''}?quest=${questId}` }
     }
-    return { label: 'Open quests', href: '/Quest' }
+    return { label: 'Open quests', href: '/quests' }
   }
 
   if (eventType === 'gm') {
-    return { label: 'View streaks', href: '/Quest' }
+    return { label: 'View streaks', href: '/quests' }
   }
 
   if (eventType === 'tip') {
@@ -323,7 +323,7 @@ function deriveCta(row: RankEventRow): { label: string; href: string } | null {
   }
 
   if (eventType === 'stats-query') {
-    return { label: 'Open dashboard', href: '/Dashboard' }
+    return { label: 'Open dashboard', href: '/dashboard' }
   }
 
   return null

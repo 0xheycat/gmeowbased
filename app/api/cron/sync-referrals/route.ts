@@ -18,7 +18,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/supabase/edge';
-import { createPublicClient, http, parseAbiItem } from 'viem';
+import { createPublicClient as _unused, http as _unused2, parseAbiItem } from 'viem';
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool';
 import { base } from 'viem/chains';
 import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency';
 import type { Address } from 'viem';
@@ -83,13 +84,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Use Subsquid RPC (faster and more reliable than public RPC)
-    const rpcUrl = process.env.RPC_BASE_HTTP || process.env.NEXT_PUBLIC_RPC_BASE || 'https://mainnet.base.org';
-    
-    const publicClient = createPublicClient({
-      chain: base,
-      transport: http(rpcUrl),
-    });
+    // Use centralized RPC client pool (Subsquid RPC or configured fallback)
+    const publicClient = getPublicClient();
 
     console.log(`[Referral Sync] Starting blockchain event sync...`);
 

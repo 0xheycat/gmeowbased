@@ -25,7 +25,7 @@ import gm, {
   type GMChainKey,
 } from '@/lib/contracts/gmeow-utils'
 import { getReferralCode } from '@/lib/contracts/referral-contract'
-import { calculateRankProgress } from '@/lib/leaderboard/rank'
+import { calculateRankProgress } from '@/lib/scoring/unified-calculator'
 import { getChainIconUrl } from '@/lib/utils/icons'
 import { buildDynamicFrameImageUrl } from '@/lib/api/share'
 import {

@@ -45,7 +45,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { strictLimiter } from '@/lib/middleware/rate-limit'
-import { createPublicClient, http, type Address } from 'viem'
+import { createPublicClient as _unused_createPublicClient, http as _unused_http, type Address } from 'viem'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 import { base } from 'viem/chains'
 import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { 
@@ -97,21 +98,14 @@ const GUILD_CREATION_COST = 100n
 // 4. Helper Functions
 // ==========================================
 
-/**
- * Create public client for contract reads
- */
-function getPublicClient() {
-  return createPublicClient({
-    chain: base,
-    transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://mainnet.base.org'),
-  })
-}
+// Using centralized RPC client pool from lib/contracts/rpc-client-pool.ts
+// No inline client creation needed - import getPublicClient at top
 
 /**
  * Check user's points balance
  */
 async function getUserPoints(address: Address): Promise<bigint> {
-  const client = getPublicClient()
+  const client = getPublicClient() // From RPC client pool
   
   try {
     // Check points on Core contract (points are managed by Core)

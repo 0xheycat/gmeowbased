@@ -42,7 +42,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { strictLimiter } from '@/lib/middleware/rate-limit'
-import { createPublicClient, http, type Address } from 'viem'
+import { createPublicClient as _unused_createPublicClient, http as _unused_http, type Address } from 'viem'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 import { base } from 'viem/chains'
 import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { generateRequestId } from '@/lib/middleware/request-id'
@@ -75,15 +76,7 @@ type RequestBody = z.infer<typeof BodySchema>
 // 3. Helper Functions
 // ==========================================
 
-/**
- * Get public client for reading contract
- */
-function getPublicClient() {
-  return createPublicClient({
-    chain: base,
-    transport: http(),
-  })
-}
+// Using centralized RPC client pool - getPublicClient imported from '@/lib/contracts/rpc-client-pool'
 
 /**
  * Get guild data

@@ -162,78 +162,47 @@ export interface SubsquidResponse<T> {
 // GRAPHQL QUERIES
 // ============================================================================
 
-const LEADERBOARD_QUERY = `
-  query GetLeaderboard($limit: Int!, $offset: Int!) {
-    leaderboardEntries(
+// Query users with actual Subsquid schema (on-chain data only)
+const USERS_QUERY = `
+  query GetUsers($limit: Int!, $offset: Int!) {
+    users(
       limit: $limit
       offset: $offset
-      orderBy: totalScore_DESC
+      orderBy: pointsBalance_DESC
     ) {
       id
-      wallet
-      fid
-      rank
-      totalScore
-      basePoints
-      viralXP
-      guildBonus
-      guildBonusPoints
-      referralBonus
-      streakBonus
-      badgePrestige
-      guildId
-      guildName
-      isGuildOfficer
-      updatedAt
+      pointsBalance
+      totalEarnedFromGMs
+      currentStreak
+      lifetimeGMs
+      lastGMTimestamp
+      totalTipsGiven
+      totalTipsReceived
+      milestoneCount
     }
   }
 `
 
-const USER_STATS_BY_WALLET_QUERY = `
-  query GetUserStatsByWallet($wallet: String!) {
-    leaderboardEntries(where: { wallet_eq: $wallet }) {
+// Query user by wallet (on-chain data only)
+const USER_BY_WALLET_QUERY = `
+  query GetUserByWallet($wallet: String!) {
+    users(where: { id_eq: $wallet }, limit: 1) {
       id
-      wallet
-      fid
-      rank
-      totalScore
-      basePoints
-      viralXP
-      guildBonus
-      guildBonusPoints
-      referralBonus
-      streakBonus
-      badgePrestige
-      guildId
-      guildName
-      isGuildOfficer
-      updatedAt
+      pointsBalance
+      totalEarnedFromGMs
+      currentStreak
+      lifetimeGMs
+      lastGMTimestamp
+      totalTipsGiven
+      totalTipsReceived
+      milestoneCount
     }
   }
 `
 
-const USER_STATS_BY_FID_QUERY = `
-  query GetUserStatsByFID($fid: Int!) {
-    leaderboardEntries(where: { fid_eq: $fid }) {
-      id
-      wallet
-      fid
-      rank
-      totalScore
-      basePoints
-      viralXP
-      guildBonus
-      guildBonusPoints
-      referralBonus
-      streakBonus
-      badgePrestige
-      guildId
-      guildName
-      isGuildOfficer
-      updatedAt
-    }
-  }
-`
+// NOTE: FID is NOT stored in Subsquid (off-chain metadata)
+// To query by FID: First lookup wallet address from Supabase user_profiles, then use USER_BY_WALLET_QUERY
+
 
 const GM_RANK_EVENTS_QUERY = `
   query GetGMRankEvents($fid: Int!, $since: String!) {
@@ -352,80 +321,47 @@ export class SubsquidClient {
   }
 
   /**
-   * Get leaderboard (top N users)
+   * Get users ordered by totalPoints (raw on-chain data)
+   * Returns: Array of User entities with on-chain fields only
+   * Calculation layer must compute: rank, viralXP, guildBonus, etc.
    */
-  async getLeaderboard(limit: number = 100, offset: number = 0): Promise<LeaderboardEntry[]> {
-    const data = await this.query<{ leaderboardEntries: LeaderboardEntry[] }>(
-      LEADERBOARD_QUERY,
+  async getLeaderboard(limit: number = 100, offset: number = 0) {
+    const data = await this.query<{ users: any[] }>(
+      USERS_QUERY,
       { limit, offset }
     )
 
-    return data?.leaderboardEntries || []
+    return data?.users || []
   }
 
   /**
-   * Get user stats by wallet address
+   * Get user by wallet address (raw on-chain data)
+   * Returns: User entity with on-chain fields only (totalPoints, currentStreak, etc.)
+   * Calculation layer must compute: totalScore, viralXP, rank, etc.
    */
-  async getUserStatsByWallet(wallet: string): Promise<UserStats | null> {
+  async getUserStatsByWallet(wallet: string) {
     // Normalize wallet address
     const normalizedWallet = wallet.toLowerCase()
 
-    const data = await this.query<{ leaderboardEntries: LeaderboardEntry[] }>(
-      USER_STATS_BY_WALLET_QUERY,
+    const data = await this.query<{ users: any[] }>(
+      USER_BY_WALLET_QUERY,
       { wallet: normalizedWallet }
     )
 
-    const entry = data?.leaderboardEntries?.[0]
-    if (!entry) return null
-
-    return {
-      wallet: entry.wallet,
-      fid: entry.fid,
-      totalScore: entry.totalScore,
-      basePoints: entry.basePoints,
-      viralXP: entry.viralXP,
-      guildBonus: entry.guildBonus,
-      guildBonusPoints: entry.guildBonusPoints,
-      referralBonus: entry.referralBonus,
-      streakBonus: entry.streakBonus,
-      badgePrestige: entry.badgePrestige,
-      rank: entry.rank,
-      guildId: entry.guildId,
-      guildName: entry.guildName,
-      isGuildOfficer: entry.isGuildOfficer,
-      lastUpdated: entry.updatedAt,
-    }
+    return data?.users?.[0] || null
   }
 
   /**
-   * Get user stats by FID
+   * Get user stats by FID - NOT SUPPORTED
+   * FID is off-chain metadata, not stored in Subsquid.
+   * 
+   * To query by FID:
+   * 1. Query Supabase user_profiles to get wallet address(es) for FID
+   * 2. Call getUserStatsByWallet(wallet)
    */
-  async getUserStatsByFID(fid: number): Promise<UserStats | null> {
-    const data = await this.query<{ leaderboardEntries: LeaderboardEntry[] }>(
-      USER_STATS_BY_FID_QUERY,
-      { fid }
-    )
-
-    const entry = data?.leaderboardEntries?.[0]
-    if (!entry) return null
-
-    return {
-      wallet: entry.wallet,
-      fid: entry.fid,
-      totalScore: entry.totalScore,
-      basePoints: entry.basePoints,
-      viralXP: entry.viralXP,
-      guildBonus: entry.guildBonus,
-      guildBonusPoints: entry.guildBonusPoints,
-      referralBonus: entry.referralBonus,
-      streakBonus: entry.streakBonus,
-      badgePrestige: entry.badgePrestige,
-      rank: entry.rank,
-      guildId: entry.guildId,
-      guildName: entry.guildName,
-      isGuildOfficer: entry.isGuildOfficer,
-      lastUpdated: entry.updatedAt,
-    }
+  async getUserStatsByFID(fid: number) {
+    console.warn('getUserStatsByFID: FID not stored in Subsquid. Use Supabase to resolve FID -> wallet first.')
+    return null
   }
 
   /**
@@ -1872,6 +1808,50 @@ export async function getBadgeStakeByBadgeId(
   }
 }
 
+/**
+ * Get Power Badge status for a specific FID
+ * Phase 8.3: PowerBadgeSet event tracking
+ * @param fid - Farcaster ID
+ * @returns PowerBadge record or null
+ */
+export async function getPowerBadge(fid: string): Promise<any | null> {
+  const query = `
+    query GetPowerBadge($fid: String!) {
+      powerBadges(
+        where: { id_eq: $fid },
+        limit: 1
+      ) {
+        id
+        fid
+        isPowerBadge
+        setBy
+        timestamp
+        blockNumber
+        txHash
+      }
+    }
+  `
+
+  try {
+    const client = getSubsquidClient()
+    const data = await client['query']<{ powerBadges: any[] }>(query, { fid })
+    return data?.powerBadges?.[0] || null
+  } catch (error) {
+    logError('Failed to fetch power badge', { error, fid })
+    return null
+  }
+}
+
+/**
+ * Check if a FID has Power Badge status
+ * @param fid - Farcaster ID
+ * @returns true if has power badge, false otherwise
+ */
+export async function isPowerBadge(fid: string): Promise<boolean> {
+  const powerBadge = await getPowerBadge(fid)
+  return powerBadge?.isPowerBadge === true
+}
+
 // ============================================================================
 // Phase 8.4: Referral Chain Tracking
 // ============================================================================
@@ -2035,4 +2015,163 @@ export async function getGMEvents(fid: number, since?: Date): Promise<GMRankEven
     types: ['gm'], // Only GM events
     since: since || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
   })
+}
+
+/**
+ * Get guild membership by wallet address
+ * 
+ * @param address - Wallet address
+ * @returns Array of guild memberships
+ */
+export async function getGuildMembershipByAddress(address: string): Promise<any[]> {
+  const normalizedAddress = address.toLowerCase()
+  
+  const query = `
+    query GetGuildMembership($address: String!) {
+      guildMembers(where: { user: { id_eq: $address }, isActive_eq: true }) {
+        id
+        joinedAt
+        role
+        pointsContributed
+        isActive
+        guild {
+          id
+          owner
+          totalMembers
+          totalPoints
+        }
+      }
+    }
+  `
+  
+  try {
+    const response = await fetch(SUBSQUID_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        variables: { address: normalizedAddress }
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.errors) {
+      throw new Error(result.errors[0]?.message || 'GraphQL query failed')
+    }
+    
+    return result.data?.guildMembers || []
+  } catch (error) {
+    logError('Failed to fetch guild membership', { error, address })
+    return []
+  }
+}
+
+/**
+ * Get referral code by owner address
+ * 
+ * @param address - Wallet address of referral code owner
+ * @returns Referral code data or null
+ */
+export async function getReferralCodeByOwner(address: string): Promise<any | null> {
+  const normalizedAddress = address.toLowerCase()
+  
+  const query = `
+    query GetReferralCode($owner: String!) {
+      referralCodes(where: { owner_eq: $owner }, limit: 1) {
+        id
+        owner
+        createdAt
+        totalUses
+        totalRewards
+      }
+    }
+  `
+  
+  try {
+    const response = await fetch(SUBSQUID_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        variables: { owner: normalizedAddress }
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.errors) {
+      throw new Error(result.errors[0]?.message || 'GraphQL query failed')
+    }
+    
+    const codes = result.data?.referralCodes || []
+    return codes.length > 0 ? codes[0] : null
+  } catch (error) {
+    logError('Failed to fetch referral code', { error, address })
+    return null
+  }
+}
+
+/**
+ * Get badge stakes by wallet address
+ * 
+ * @param address - Wallet address
+ * @returns Array of active badge stakes
+ */
+export async function getBadgeStakesByAddress(address: string): Promise<any[]> {
+  const normalizedAddress = address.toLowerCase()
+  
+  const query = `
+    query GetBadgeStakes($address: String!) {
+      badgeStakes(where: { user_eq: $address, isActive_eq: true }) {
+        id
+        user
+        badgeId
+        stakeType
+        stakedAt
+        unstakedAt
+        isActive
+        rewardsEarned
+        lastRewardClaim
+        isPowerBadge
+        powerMultiplier
+        blockNumber
+        txHash
+      }
+    }
+  `
+  
+  try {
+    const response = await fetch(SUBSQUID_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        variables: { address: normalizedAddress }
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
+    const result = await response.json()
+    
+    if (result.errors) {
+      throw new Error(result.errors[0]?.message || 'GraphQL query failed')
+    }
+    
+    return result.data?.badgeStakes || []
+  } catch (error) {
+    logError('Failed to fetch badge stakes', { error, address })
+    return []
+  }
 }

@@ -26,8 +26,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { type Address, createPublicClient, http } from 'viem'
-import { base } from 'viem/chains'
+import { type Address } from 'viem'
 import { WorkspacePremiumIcon, MilitaryTechIcon, MoreIcon } from '@/components/icons'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import { ConfirmDialog } from '@/components/dialogs'
@@ -113,42 +112,43 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
       setDialogMessage('Transaction confirmed! Updating member role...')
       setDialogOpen(true)
       
-      // Check officer status from contract and update UI
+      // Refetch guild data from API to update officer status
       setTimeout(async () => {
         try {
-          const client = createPublicClient({ chain: base, transport: http() })
+          const response = await fetch(`/api/guild/${guildId}`)
+          if (!response.ok) throw new Error('Failed to fetch guild data')
           
-          // Check if member is now an officer
-          const isOfficer = await client.readContract({
-            address: STANDALONE_ADDRESSES.base.guild as Address,
-            abi: GUILD_ABI_JSON,
-            functionName: 'guildOfficers', // Correct: view function to check officer status
-            args: [BigInt(guildId), targetMemberAddress as Address]
-          })
-          
-          // Update member role in state
-          setMembers(prev => prev.map(m => 
+          const data = await response.json()
+          const updatedMember = data.members?.find((m: any) => 
             m.address.toLowerCase() === targetMemberAddress.toLowerCase()
-              ? { ...m, role: isOfficer ? 'officer' : 'member' }
-              : m
-          ))
+          )
           
-          setDialogMessage(`${isOfficer ? '🎉 Quest complete! Member promoted to Officer rank!' : '📊 Member demoted to Member rank. Keep striving!'}`)
-          
-          // Trigger XP celebration for management action
-          const payload: XpEventPayload = {
-            event: 'guild',
-            chainKey: 'base',
-            xpEarned: 15,
-            totalPoints: 0, // Will be calculated by overlay
-            headline: isOfficer ? 'Member Promoted! 🏆' : 'Role Updated 📊',
-            tierTagline: '+15 XP Earned',
-            shareLabel: 'Share',
-            visitLabel: 'View Guild',
-            visitUrl: `/guild/${guildId}`,
+          if (updatedMember) {
+            // Update member role in state
+            setMembers(prev => prev.map(m => 
+              m.address.toLowerCase() === targetMemberAddress.toLowerCase()
+                ? { ...m, role: updatedMember.role }
+                : m
+            ))
+            
+            const isOfficer = updatedMember.role === 'officer'
+            setDialogMessage(`${isOfficer ? '🎉 Quest complete! Member promoted to Officer rank!' : '📊 Member demoted to Member rank. Keep striving!'}`)
+            
+            // Trigger XP celebration for management action
+            const payload: XpEventPayload = {
+              event: 'guild',
+              chainKey: 'base',
+              xpEarned: 15,
+              totalPoints: 0, // Will be calculated by overlay
+              headline: isOfficer ? 'Member Promoted! 🏆' : 'Role Updated 📊',
+              tierTagline: '+15 XP Earned',
+              shareLabel: 'Share',
+              visitLabel: 'View Guild',
+              visitUrl: `/guild/${guildId}`,
+            }
+            setXpPayload(payload)
+            setTimeout(() => setXpOverlayOpen(true), 100)
           }
-          setXpPayload(payload)
-          setTimeout(() => setXpOverlayOpen(true), 100)
           
           setCurrentAction(null)
           setTargetMemberAddress(null)

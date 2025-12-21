@@ -233,57 +233,36 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
       return []
     }
 
-    // LAYER 2: Get guild events for stats calculation
-    const { data: events, error: eventsError } = await supabase
-      .from('guild_events')
-      .select('guild_id, event_type, actor_address, amount')
+    // LAYER 2: Get cached guild stats (from cron sync - updated every 6 hours)
+    const { data: cachedStats, error: statsError } = await supabase
+      .from('guild_stats_cache')
+      .select('guild_id, member_count, total_points, level, treasury_balance, is_active, leader_address')
 
-    if (eventsError) {
-      console.error('[guild/list] Failed to fetch guild events:', eventsError)
+    if (statsError) {
+      console.error('[guild/list] Failed to fetch guild stats cache:', statsError)
     }
 
-    const allEvents = events || []
-
-    // LAYER 3: Calculate stats from events
-    const guildStatsMap = new Map<string, { memberCount: number; totalPoints: number; leader: string }>()
-
-    for (const event of allEvents) {
-      const guildId = event.guild_id
-      if (!guildStatsMap.has(guildId)) {
-        guildStatsMap.set(guildId, { memberCount: 0, totalPoints: 0, leader: '' })
-      }
-      const stats = guildStatsMap.get(guildId)!
-
-      if (event.event_type === 'MEMBER_JOINED') {
-        stats.memberCount++
-        if (!stats.leader && event.actor_address) {
-          stats.leader = event.actor_address
-        }
-      } else if (event.event_type === 'MEMBER_LEFT') {
-        stats.memberCount = Math.max(0, stats.memberCount - 1)
-      } else if (event.event_type === 'POINTS_DEPOSITED') {
-        stats.totalPoints += Number(event.amount || 0)
-      } else if (event.event_type === 'POINTS_CLAIMED') {
-        stats.totalPoints = Math.max(0, stats.totalPoints - Number(event.amount || 0))
-      } else if (event.event_type === 'GUILD_CREATED' && event.actor_address) {
-        stats.leader = event.actor_address
+    // Build stats map from cache
+    const statsMap = new Map<string, any>()
+    if (cachedStats) {
+      for (const stat of cachedStats) {
+        statsMap.set(stat.guild_id, stat)
       }
     }
 
-    // LAYER 3: Build guild list with calculated stats
+    // Build guild list from metadata + cached stats
     const guildList: Guild[] = guilds.map((guild) => {
-      const stats = guildStatsMap.get(guild.guild_id) || { memberCount: 0, totalPoints: 0, leader: '' }
-      const level = calculateGuildLevel(stats.totalPoints)
+      const stats = statsMap.get(guild.guild_id)
 
       return {
         id: guild.guild_id,
         chain: 'base' as const,
         name: guild.name || 'Unknown Guild',
-        leader: stats.leader || '',
-        totalPoints: stats.totalPoints,
-        memberCount: stats.memberCount,
-        level,
-        active: true, // All guilds in DB are active
+        leader: stats?.leader_address || '',
+        totalPoints: stats?.total_points || 0,
+        memberCount: stats?.member_count || 0,
+        level: stats?.level || 1,
+        active: stats?.is_active !== false,
         description: guild.description || undefined,
         banner: guild.banner || undefined,
       }

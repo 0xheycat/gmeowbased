@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { NeynarAPIClient } from '@neynar/nodejs-sdk'
+import { getNeynarServerClient } from '@/lib/integrations/neynar'
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { 
   getTierFromScore, 
@@ -13,8 +13,6 @@ import {
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { notifyWithXPReward } from '@/lib/notifications'
-
-const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY
 
 export const dynamic = 'force-dynamic'
 
@@ -65,15 +63,7 @@ export const POST = withErrorHandler(async (request: Request) => {
     const { fid, address, neynarScore } = validationResult.data
 
     // 2. Verify FID exists via Neynar
-    if (!NEYNAR_API_KEY) {
-      console.error('[Onboard Complete] Neynar API key not configured')
-      return NextResponse.json(
-        { success: false, error: 'Service configuration error' },
-        { status: 500, headers: { 'X-Request-ID': requestId } }
-      )
-    }
-
-    const neynar = new NeynarAPIClient({ apiKey: NEYNAR_API_KEY })
+    const neynar = getNeynarServerClient()
     let neynarUser: any
     try {
       const userResult = await neynar.fetchBulkUsers({ fids: [fid] })

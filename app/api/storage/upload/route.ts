@@ -23,11 +23,10 @@ import { z } from 'zod'
 import { checkIdempotency, storeIdempotency, returnCachedResponse, getIdempotencyKey } from '@/lib/middleware/idempotency'
 import { generateRequestId } from '@/lib/middleware/request-id'
 
-// Lazy initialization of Supabase client with config validation
+// Lazy initialization of Supabase client
 let supabase: ReturnType<typeof createClient> | null = null;
 
 function getSupabaseClient() {
-  // Use SUPABASE_URL (server-side) not NEXT_PUBLIC_SUPABASE_URL (client-side)
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -38,7 +37,6 @@ function getSupabaseClient() {
   if (!supabase) {
     supabase = createClient(supabaseUrl, supabaseServiceKey);
   }
-
   return supabase;
 }
 

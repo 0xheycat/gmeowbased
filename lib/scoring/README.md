@@ -22,31 +22,39 @@ This unified calculation library consolidates ALL scoring logic from:
 ┌─────────────────────────────────────────────────────────────┐
 │ LAYER 1: Blockchain (Subsquid Indexer)                     │
 ├─────────────────────────────────────────────────────────────┤
-│ • GM rewards (with streak multiplier applied in contract)  │
-│ • GM streak tracking (User.currentStreak)                  │
-│ • NFT badge ownership (minted badges)                      │
-│ • Guild membership (guild join events)                     │
+│ ONLY RAW ON-CHAIN EVENTS:                                  │
+│ • GM transaction events (User.totalPoints = raw sum)       │
+│ • Badge mint events (NFT ownership)                        │
+│ • Guild deposit events (treasury transactions)             │
+│ • Streak tracking (User.currentStreak from contract)       │
 │                                                             │
-│ Storage: Subsquid User.totalPoints                         │
+│ ❌ NOT XP calculations                                      │
+│ ❌ NOT level progression                                    │
+│ ❌ NOT rank tier assignment                                 │
+│                                                             │
+│ Storage: Subsquid database (indexed events)                │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ LAYER 2: Off-Chain (Supabase Database)                     │
 ├─────────────────────────────────────────────────────────────┤
+│ WEBSITE & BOT ACTIVITY:                                    │
 │ • Quest completions (user_quest_progress, via website)     │
 │ • Viral bonus XP (badge_casts.viral_bonus_xp)             │
 │ • Guild activity (guild_members, via website)              │
 │ • Referral rewards (referrals, via bot API calls)          │
+│ • User profiles (display_name, avatar_url, addresses)      │
 │                                                             │
 │ Storage: Supabase tables                                   │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ LAYER 3: Application Logic (This File)                     │
+│ LAYER 3: Application Logic (unified-calculator.ts)         │
 ├─────────────────────────────────────────────────────────────┤
-│ • Total score = Layer1 + Layer2                            │
-│ • Level progression (quadratic formula)                    │
-│ • Rank tier assignment (12-tier system)                    │
+│ ALL SCORING CALCULATIONS HAPPEN HERE:                      │
+│ • Total score = Layer1.totalPoints + Layer2.viralXP + ...  │
+│ • Level progression (quadratic formula from total)         │
+│ • Rank tier assignment (12-tier system from total)         │
 │ • Multiplier application (rank-based XP boost)             │
 │ • Display formatting (human-readable numbers)              │
 │                                                             │

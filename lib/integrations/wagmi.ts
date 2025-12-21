@@ -22,8 +22,9 @@ import { getPublicClient } from '@wagmi/core'
 import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector'
 import { injected, coinbaseWallet, walletConnect } from 'wagmi/connectors'
 
-const RPC_BASE = process.env.NEXT_PUBLIC_RPC_BASE ?? process.env.RPC_BASE ?? 'https://mainnet.base.org'
-const RPC_OPTIMISM = process.env.NEXT_PUBLIC_RPC_OPTIMISM ?? process.env.RPC_OPTIMISM ?? 'https://opt-mainnet.g.alchemy.com/v2/_ScddWNDeydEhhrjEHgsNRv6nAoaJpgE'
+// Use Subsquid RPC (from env) or public RPCs as fallback
+const RPC_BASE = process.env.NEXT_PUBLIC_RPC_BASE ?? process.env.RPC_BASE ?? process.env.RPC_BASE_HTTP ?? 'https://mainnet.base.org'
+const RPC_OPTIMISM = process.env.NEXT_PUBLIC_RPC_OPTIMISM ?? process.env.RPC_OPTIMISM ?? 'https://mainnet.optimism.io'
 const RPC_CELO = process.env.NEXT_PUBLIC_RPC_CELO ?? process.env.RPC_CELO ?? 'https://forno.celo.org'
 const RPC_UNICHAIN = process.env.NEXT_PUBLIC_RPC_UNICHAIN ?? process.env.RPC_UNICHAIN ?? 'https://mainnet.unichain.org'
 const RPC_INK = process.env.NEXT_PUBLIC_RPC_INK ?? process.env.RPC_INK ?? 'https://rpc.inkonchain.com'

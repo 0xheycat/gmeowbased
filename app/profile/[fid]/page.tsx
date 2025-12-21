@@ -7,12 +7,15 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { useDialog } from '@/components/dialogs'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
+import { ProfileBalanceCard } from '@/components/profile/ProfileBalanceCard'
 import { SocialLinks } from '@/components/profile/SocialLinks'
 import { ProfileTabs } from '@/components/profile/ProfileTabs'
 import { QuestActivity } from '@/components/profile/QuestActivity'
 import { BadgeCollection } from '@/components/profile/BadgeCollection'
 import { ActivityTimeline } from '@/components/profile/ActivityTimeline'
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal'
+import { ClaimRewardsModal } from '@/components/rewards/ClaimRewardsModal'
+import { ClaimHistory } from '@/components/rewards/ClaimHistory'
 import { ErrorDialog } from '@/components/dialogs'
 import { profileSectionVariants, profileSectionTransition } from '@/components/profile/animations'
 import type { ProfileData } from '@/lib/profile/types'
@@ -77,6 +80,22 @@ export default function ProfilePage() {
   const [badgesLoading, setBadgesLoading] = useState(false)
   const [questsLoading, setQuestsLoading] = useState(false)
   const [activitiesLoading, setActivitiesLoading] = useState(false)
+  
+  // Rewards data (Gaming Platform Pattern)
+  const [rewardsData, setRewardsData] = useState<{
+    totalScore: number
+    pointsBalance: number
+    pendingRewards: number
+    viralXp: number
+    guildBonus: number
+    referralBonus: number
+    streakBonus: number
+    badgePrestige: number
+    canClaim: boolean
+    hoursUntilClaim?: number
+  } | null>(null)
+  const [rewardsLoading, setRewardsLoading] = useState(false)
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false)
 
   // Memoize tab configs for performance (LinkedIn pattern)
   // Using SVG icons instead of emojis for professional appearance
@@ -197,6 +216,49 @@ export default function ProfilePage() {
     void fetchBadges()
   }, [fid, activeTab])
 
+  // Fetch rewards data when profile is loaded
+  useEffect(() => {
+    async function fetchRewards() {
+      if (!profile?.wallet?.address) return
+
+      try {
+        setRewardsLoading(true)
+        
+        // Get leaderboard data (has pending rewards)
+        const leaderboardRes = await fetch(`/api/leaderboard-v2?search=${profile.wallet.address}&period=all_time`)
+        if (leaderboardRes.ok) {
+          const leaderboardData = await leaderboardRes.json()
+          const userEntry = leaderboardData.data?.[0]
+          
+          if (userEntry) {
+            // Get claim eligibility
+            const claimRes = await fetch(`/api/rewards/claim?address=${profile.wallet.address}`)
+            const claimData = claimRes.ok ? await claimRes.json() : { can_claim: false }
+            
+            setRewardsData({
+              totalScore: userEntry.total_score || 0,
+              pointsBalance: userEntry.points_balance || 0,
+              pendingRewards: userEntry.pending_rewards || 0,
+              viralXp: userEntry.viral_xp || 0,
+              guildBonus: userEntry.guild_bonus || 0,
+              referralBonus: userEntry.referral_bonus || 0,
+              streakBonus: userEntry.streak_bonus || 0,
+              badgePrestige: userEntry.badge_prestige || 0,
+              canClaim: claimData.can_claim || false,
+              hoursUntilClaim: claimData.hours_until_claim,
+            })
+          }
+        }
+      } catch (err) {
+        console.error('Rewards fetch error:', err)
+      } finally {
+        setRewardsLoading(false)
+      }
+    }
+
+    void fetchRewards()
+  }, [profile])
+  
   // Fetch activity when activity tab is active
   useEffect(() => {
     async function fetchActivity() {
@@ -238,11 +300,35 @@ export default function ProfilePage() {
             transition={profileSectionTransition}
             className="space-y-6"
           >
+            {/* Balance Card (Gaming Platform Pattern) */}
+            {rewardsLoading ? (
+              <div className="h-96 animate-pulse rounded-xl bg-white/5" />
+            ) : rewardsData && (
+              <ProfileBalanceCard
+                totalScore={rewardsData.totalScore}
+                pointsBalance={rewardsData.pointsBalance}
+                pendingRewards={rewardsData.pendingRewards}
+                viralXp={rewardsData.viralXp}
+                guildBonus={rewardsData.guildBonus}
+                referralBonus={rewardsData.referralBonus}
+                streakBonus={rewardsData.streakBonus}
+                badgePrestige={rewardsData.badgePrestige}
+                canClaim={rewardsData.canClaim}
+                hoursUntilClaim={rewardsData.hoursUntilClaim}
+                onClaim={() => setIsClaimModalOpen(true)}
+              />
+            )}
+            
             <ProfileStats stats={profile.stats} />
             <SocialLinks
               socialLinks={profile.social_links}
               wallet={profile.wallet}
             />
+            
+            {/* Claim History */}
+            {profile.wallet?.address && (
+              <ClaimHistory walletAddress={profile.wallet.address} />
+            )}
           </motion.div>
         )
 
@@ -440,6 +526,29 @@ export default function ProfilePage() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Claim Rewards Modal (Gaming Platform Pattern) */}
+      {rewardsData && profile?.wallet?.address && (
+        <ClaimRewardsModal
+          isOpen={isClaimModalOpen}
+          onClose={() => setIsClaimModalOpen(false)}
+          pendingRewards={rewardsData.pendingRewards}
+          viralXp={rewardsData.viralXp}
+          guildBonus={rewardsData.guildBonus}
+          referralBonus={rewardsData.referralBonus}
+          streakBonus={rewardsData.streakBonus}
+          badgePrestige={rewardsData.badgePrestige}
+          onSuccess={() => {
+            // Refresh rewards data after successful claim
+            setRewardsData({
+              ...rewardsData,
+              pointsBalance: rewardsData.pointsBalance + rewardsData.pendingRewards,
+              pendingRewards: 0,
+              canClaim: false,
+            })
+          }}
+        />
+      )}
 
       {/* Error Dialog */}
       <ErrorDialog

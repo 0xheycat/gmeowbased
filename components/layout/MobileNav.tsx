@@ -10,9 +10,9 @@ import { motion } from 'framer-motion'
 
 const navItems = [
   { href: '/', label: 'Home', icon: HomeIcon },
-  { href: '/Quest', label: 'Quests', icon: SportsEsportsIcon },
+  { href: '/quests', label: 'Quests', icon: SportsEsportsIcon },
   { href: '/leaderboard', label: 'Leaderboard', icon: EmojiEventsIcon },
-  { href: '/Dashboard', label: 'Dashboard', icon: DashboardIcon },
+  { href: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
 ]
 
 export function MobileNav() {

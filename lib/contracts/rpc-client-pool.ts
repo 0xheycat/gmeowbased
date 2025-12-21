@@ -86,8 +86,7 @@ export function getRpcUrl(chain: ChainKey): string {
       process.env.RPC_BASE ||
       process.env.BASE_RPC ||
       process.env.NEXT_PUBLIC_RPC_BASE ||
-      'https://base-mainnet.g.alchemy.com/v2/A6u4vxXFMPMk07zeChjbziq1Ch0Wcrjg'
-    )
+      process.env.RPC_BASE_HTTP) ?? 'https://mainnet.base.org'
   }
   throw new Error(`Unsupported chain configuration: ${chain}`)
 }

@@ -11,7 +11,7 @@ const ink = {
   name: 'Ink',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://ink-mainnet.g.alchemy.com/v2/AQYbCkrkuEDaD_hCDse6ezP2W-zUCEFe'] },
+    default: { http: [process.env.RPC_INK || 'https://rpc.inkonchain.com'] },
   },
 }
 

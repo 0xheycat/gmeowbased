@@ -9,7 +9,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import BoltIcon from '@mui/icons-material/Bolt'
 import PersonIcon from '@mui/icons-material/Person'
 import LogoutIcon from '@mui/icons-material/Logout'
-import { fetchUserByAddress, type FarcasterUser } from '@/lib/integrations/neynar'
+import { fetchUserByAddress, type FarcasterUser } from '@/lib/integrations/neynar-client'
 import { formatNumber } from '@/lib/utils/formatters'
 
 export function ProfileDropdown() {

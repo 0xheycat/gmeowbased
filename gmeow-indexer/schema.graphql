@@ -2,7 +2,8 @@
 # Phase 7: Enhanced with tip tracking and milestones
 type User @entity {
   id: ID! # wallet address (lowercase)
-  totalPoints: BigInt!
+  pointsBalance: BigInt! # Current spendable balance (matches contract pointsBalance)
+  totalEarnedFromGMs: BigInt! # Cumulative earned from GM events only
   currentStreak: Int!
   lastGMTimestamp: BigInt!
   lifetimeGMs: Int!
@@ -329,6 +330,19 @@ type BadgeStake @entity {
   powerMultiplier: Int # bonus multiplier (1-100)
   
   # Metadata
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# Phase 8.3.1: Power Badge Tracking
+type PowerBadge @entity {
+  id: ID! # fid (Farcaster ID)
+  fid: BigInt! @index
+  isPowerBadge: Boolean! # power status
+  setBy: String! # admin who set this
+  
+  # Metadata
+  timestamp: DateTime!
   blockNumber: Int! @index
   txHash: String! @index
 }
