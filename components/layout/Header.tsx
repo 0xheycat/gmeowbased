@@ -99,9 +99,6 @@ export function Header() {
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Multi-Wallet Cache Indicator */}
           <WalletCacheIndicator />
-          
-          {/* Wallet Connection Button - Reown AppKit */}
-          <appkit-button />
 
           {/* Notification Bell with Dropdown */}
           <NotificationBell />

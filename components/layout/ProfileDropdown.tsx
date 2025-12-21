@@ -96,13 +96,9 @@ export function ProfileDropdown() {
 
   if (!isConnected || !address) {
     return (
-      <Link
-        href="/profile"
-        className="flex h-10 items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-white/5 px-4 text-sm font-medium text-slate-950 dark:text-white/70 transition-colors hover:border-accent-green/30 hover:bg-accent-green/10 hover:text-slate-950 dark:hover:text-slate-900 dark:text-white backdrop-blur-xl backdrop-saturate-150"
-      >
-        <PersonIcon sx={{ fontSize: 18 }} />
-        <span className="hidden sm:inline">Connect</span>
-      </Link>
+      <div className="flex items-center gap-2">
+        <appkit-button />
+      </div>
     )
   }
 
@@ -200,6 +196,13 @@ export function ProfileDropdown() {
 
             {/* Menu items */}
             <div className="p-2">
+              {/* Wallet Management */}
+              <div className="mb-2 px-3 py-2">
+                <appkit-button />
+              </div>
+              
+              <div className="border-t border-slate-200 dark:border-white/10 my-2" />
+              
               <Link
                 href="/profile"
                 onClick={() => setIsOpen(false)}
@@ -224,17 +227,6 @@ export function ProfileDropdown() {
                 <BoltIcon sx={{ fontSize: 18 }} />
                 Leaderboard
               </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false)
-                  // Trigger wallet disconnect - you can add this logic
-                }}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-950 dark:text-white/80 transition-colors hover:bg-slate-50/90 dark:bg-slate-900/90 hover:text-slate-900 dark:text-white backdrop-blur-xl backdrop-saturate-150"
-              >
-                <LogoutIcon sx={{ fontSize: 18 }} />
-                Disconnect
-              </button>
             </div>
 
             {/* Footer */}
