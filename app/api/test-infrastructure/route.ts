@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/edge'
 import { getOnChainUserStats } from '@/lib/subsquid-client'
 import { calculateCompleteStats } from '@/lib/scoring/unified-calculator'
 
@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
     // ═══════════════════════════════════════════════════════════════════════
     const onChainResults = await Promise.all(
       allWallets.map(async (wallet) => {
+        if (!wallet) return null
         try {
           return await getOnChainUserStats(wallet) // ✅ NEW FUNCTION
         } catch (err) {
