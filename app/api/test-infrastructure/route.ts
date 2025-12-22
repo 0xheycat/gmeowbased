@@ -96,25 +96,43 @@ export async function GET(request: NextRequest) {
     // ═══════════════════════════════════════════════════════════════════════
     const routeTests = {
       guild: {
-        detail: { url: `${baseUrl}/api/guild/${testGuildId}`, status: 'untested', hasDeprecatedFn: false },
-        members: { url: `${baseUrl}/api/guild/${testGuildId}/members`, status: 'untested', hasDeprecatedFn: false },
-        memberStats: { url: `${baseUrl}/api/guild/${testGuildId}/member-stats?address=${allWallets[0]}`, status: 'untested', hasDeprecatedFn: false }
+        detail: { url: `${baseUrl}/api/guild/${testGuildId}`, status: 'untested', data: null, error: null },
+        members: { url: `${baseUrl}/api/guild/${testGuildId}/members`, status: 'untested', data: null, error: null },
+        memberStats: { url: `${baseUrl}/api/guild/${testGuildId}/member-stats?address=${allWallets[0]}`, status: 'untested', data: null, error: null }
       },
       viral: {
-        stats: { url: `${baseUrl}/api/viral/stats?fid=${testFID}`, status: 'untested', hasDeprecatedFn: false },
-        leaderboard: { url: `${baseUrl}/api/viral/leaderboard`, status: 'untested', hasDeprecatedFn: false },
-        badgeMetrics: { url: `${baseUrl}/api/viral/badge-metrics?fid=${testFID}`, status: 'untested', hasDeprecatedFn: false }
+        stats: { url: `${baseUrl}/api/viral/stats?fid=${testFID}`, status: 'untested', data: null, error: null },
+        leaderboard: { url: `${baseUrl}/api/viral/leaderboard`, status: 'untested', data: null, error: null },
+        badgeMetrics: { url: `${baseUrl}/api/viral/badge-metrics?fid=${testFID}`, status: 'untested', data: null, error: null }
       }
     }
 
-    // Test each route
+    // Test each route and capture actual response data
     for (const [category, routes] of Object.entries(routeTests)) {
       for (const [name, config] of Object.entries(routes)) {
         try {
           const res = await fetch(config.url, { method: 'GET', headers: { 'Content-Type': 'application/json' } })
+          const responseData = await res.json()
+          
           config.status = res.ok ? '✅ PASS' : `❌ FAIL (${res.status})`
+          
+          if (res.ok) {
+            // Capture sample data for validation
+            config.data = {
+              hasData: !!responseData.data || !!responseData,
+              sampleKeys: Object.keys(responseData).slice(0, 10),
+              metadata: responseData.metadata || null,
+              // Show first item if it's an array
+              sample: Array.isArray(responseData.data) 
+                ? responseData.data[0] 
+                : (responseData.data || responseData)
+            }
+          } else {
+            config.error = responseData.error || responseData.message || 'Unknown error'
+          }
         } catch (err: any) {
-          config.status = `❌ ERROR: ${err.message}`
+          config.status = `❌ ERROR`
+          config.error = err.message
         }
       }
     }
