@@ -1,63 +1,76 @@
 /**
- * Subsquid GraphQL Client
- * Phase 3.2: Hybrid Architecture Implementation
+ * Subsquid GraphQL Client - LAYER 1 (Blockchain Data Only)
  * 
- * PURPOSE:
- * Query pre-computed analytics from Subsquid indexer (replaces Supabase heavy tables)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CRITICAL: 3-LAYER ARCHITECTURE COMPLIANCE
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * This file is LAYER 1 ONLY - On-chain blockchain data from Subsquid indexer.
+ * 
+ * ✅ ALLOWED (Layer 1 - Blockchain):
+ *    - User.totalPoints (GM rewards with streak multiplier from contract)
+ *    - User.pointsBalance (current spendable balance)
+ *    - User.totalEarnedFromGMs (cumulative GM rewards)
+ *    - User.currentStreak (streak counter from contract)
+ *    - User.lifetimeGMs (total GM count)
+ *    - GMEvent, PointsTransaction, BadgeStake, QuestCompletion events
+ *    - Guild deposits, referral events, tip events
+ *    - All on-chain timestamps, block numbers, transaction hashes
+ * 
+ * ❌ FORBIDDEN (Layer 2 - Off-chain / Layer 3 - Calculated):
+ *    - viralXP → Layer 2 (Supabase badge_casts.viral_bonus_xp)
+ *    - rank → Layer 3 (Calculated by unified-calculator.ts)
+ *    - level → Layer 3 (Calculated by unified-calculator.ts)
+ *    - totalScore → Layer 3 (Calculated: blockchain + viral + quests)
+ *    - guildBonus, referralBonus → Layer 2 or Layer 3
+ *    - Any FID-based queries → Layer 2 (FID is off-chain metadata)
+ *    - Any calculation logic → Layer 3 (use lib/scoring/unified-calculator.ts)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * USAGE IN ROUTES
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * // Step 1: Get on-chain data (Layer 1)
+ * const onChain = await getLeaderboardEntry(address)
+ * 
+ * // Step 2: Get off-chain data (Layer 2 - in route, not here!)
+ * const { data: viralXP } = await supabase.from('badge_casts')...
+ * 
+ * // Step 3: Calculate derived metrics (Layer 3 - in route, not here!)
+ * import { calculateCompleteStats } from '@/lib/scoring/unified-calculator'
+ * const stats = calculateCompleteStats({
+ *   blockchainPoints: Number(onChain.totalPoints),
+ *   viralXP: viralXP || 0,
+ *   ...
+ * })
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * DATA SOURCE:
+ * - Subsquid Indexer: https://squid.subsquid.io/gmeow-indexer/graphql (production)
+ * - Subsquid Indexer: http://localhost:4350/graphql (local dev)
  * 
  * FEATURES:
- * ✅ Leaderboard queries (rankings, scores, stats)
- * ✅ User stats queries (FID or wallet lookup)
- * ✅ GM rank events (activity history)
- * ✅ Points transactions (historical on-chain points data)
- * ✅ Guild stats (member counts, points)
+ * ✅ User on-chain stats (totalPoints, currentStreak, lifetimeGMs)
+ * ✅ GM events (activity history with timestamps)
+ * ✅ Points transactions (deposits, withdrawals)
+ * ✅ Badge stakes (NFT staking events)
+ * ✅ Quest completions (on-chain quest events)
+ * ✅ Guild events (deposits, withdrawals)
+ * ✅ Referral events (on-chain referrer tracking)
+ * ✅ Tip events (on-chain tip transfers)
  * ✅ Error handling with fallbacks
  * ✅ Type-safe GraphQL queries
  * 
- * DATA SOURCES:
- * - Subsquid Indexer: http://localhost:4350/graphql (local dev)
- * - Subsquid Indexer: https://squid.subsquid.io/gmeow-indexer/graphql (production)
- * - Replaces: leaderboard_calculations, xp_transactions, gmeow_rank_events, viral_tier_history
- * 
  * PERFORMANCE:
- * - Leaderboard query: <10ms (pre-computed, indexed)
- * - User stats query: <20ms (wallet or FID lookup)
- * - Activity events: <30ms (last 30 days filtered)
- * - Cache: Redis 5-min TTL recommended
- * 
- * HYBRID PATTERN:
- * 1. Query Subsquid for stats (fast, pre-computed)
- * 2. Enrich with Supabase user_profiles (FID, display name, pfp)
- * 3. Merge results for complete user experience
- * 
- * TODO (Phase 3.3):
- * - [ ] Add Redis caching layer
- * - [ ] Implement WebSocket subscriptions for real-time updates
- * - [ ] Add batch query optimization
- * - [ ] Monitor query performance (Datadog/Sentry)
- * 
- * TODO (Phase 4):
- * - [ ] Add daily stats queries (DailyStats entities)
- * - [ ] Implement viral tier calculations
- * - [ ] Add guild analytics queries
- * - [ ] Multi-chain aggregation
- * 
- * CRITICAL:
- * - Always handle Subsquid unavailable (return null, fallback to cache)
- * - DO NOT write to Subsquid (read-only analytics)
- * - Validate wallet addresses before queries (prevent injection)
- * - Log all query errors for monitoring
- * 
- * AVOID:
- * - Querying Supabase for analytics (use Subsquid)
- * - Synchronous waterfall queries (use parallel fetching)
- * - Hardcoded Subsquid URL (use environment variable)
- * - Exposing raw GraphQL errors to users
+ * - User query: <20ms (indexed by wallet address)
+ * - Events query: <30ms (filtered by date range)
+ * - Analytics query: <50ms (aggregated events)
  * 
  * Created: December 18, 2025
- * Reference: SUBSQUID-SUPABASE-MIGRATION-PLAN.md Phase 3
- * Reference: gmeow-indexer/schema.graphql
- * Quality Gates: GI-14 (Performance <10ms), GI-15 (Data Accuracy)
+ * Updated: December 22, 2025 (Layer 1 compliance)
+ * Reference: COMPLETE-CALCULATION-SYSTEM.md (3-layer architecture)
+ * Reference: gmeow-indexer/schema.graphql (actual Subsquid schema)
  */
 
 import { logError } from './middleware/error-handler'
@@ -75,9 +88,33 @@ const DEFAULT_TIMEOUT = 10000 // 10 seconds
 const MAX_RETRIES = 2
 
 // ============================================================================
-// TYPES
+// TYPES - LAYER 1 (On-Chain Blockchain Data Only)
 // ============================================================================
 
+/**
+ * User on-chain stats from Subsquid
+ * LAYER 1 ONLY - No calculated or off-chain fields!
+ * 
+ * For complete user stats with calculations, use:
+ * - Layer 2: Supabase (viral XP, quest progress, referrals)
+ * - Layer 3: unified-calculator.ts (level, rank, totalScore)
+ */
+export interface UserOnChainStats {
+  id: string                    // Wallet address (primary key)
+  pointsBalance: number          // Current spendable balance (on-chain)
+  totalEarnedFromGMs: number     // Cumulative GM rewards (on-chain)
+  currentStreak: number          // Current GM streak (on-chain)
+  lifetimeGMs: number            // Total GM count (on-chain)
+  lastGMTimestamp: string | null // Last GM timestamp (on-chain)
+  totalTipsGiven: number         // Tips sent count (on-chain)
+  totalTipsReceived: number      // Tips received count (on-chain)
+  milestoneCount: number         // Milestone achievements (on-chain)
+}
+
+/**
+ * @deprecated Use UserOnChainStats instead
+ * This type mixed Layer 1, 2, 3 data (violation of architecture)
+ */
 export interface LeaderboardEntry {
   id: string
   wallet: string
@@ -97,6 +134,10 @@ export interface LeaderboardEntry {
   updatedAt: string
 }
 
+/**
+ * @deprecated Use UserOnChainStats instead
+ * This type mixed Layer 1, 2, 3 data (violation of architecture)
+ */
 export interface UserStats {
   wallet: string
   fid?: number
@@ -121,11 +162,11 @@ export interface GMRankEvent {
   wallet: string
   eventType: string
   delta: number
-  totalPoints: number
-  previousPoints: number
-  level: number
-  tierName: string
-  tierPercent: number
+  totalPoints: number    // DEPRECATED: Use pointsAwarded from event instead
+  previousPoints: number // DEPRECATED: Not reliably tracked on-chain
+  level: number          // DEPRECATED: Level is Layer 3 (calculated)
+  tierName: string       // DEPRECATED: Tier is Layer 3 (calculated)
+  tierPercent: number    // DEPRECATED: Percentage is Layer 3 (calculated)
   questId?: number
   metadata?: Record<string, any>
   createdAt: string
@@ -321,25 +362,44 @@ export class SubsquidClient {
   }
 
   /**
-   * Get users ordered by totalPoints (raw on-chain data)
-   * Returns: Array of User entities with on-chain fields only
-   * Calculation layer must compute: rank, viralXP, guildBonus, etc.
+   * Get users ordered by pointsBalance (raw on-chain data)
+   * 
+   * LAYER 1 ONLY: Returns on-chain blockchain data from Subsquid User entities.
+   * For complete user stats, combine with:
+   * - Layer 2 (Supabase): viral XP, quest progress, referrals
+   * - Layer 3 (unified-calculator): level, rank, totalScore
+   * 
+   * @returns Array of User entities with on-chain fields only
    */
-  async getLeaderboard(limit: number = 100, offset: number = 0) {
+  async getLeaderboard(limit: number = 100, offset: number = 0): Promise<UserOnChainStats[]> {
     const data = await this.query<{ users: any[] }>(
       USERS_QUERY,
       { limit, offset }
     )
 
-    return data?.users || []
+    return (data?.users || []).map(user => ({
+      id: user.id,
+      pointsBalance: Number(user.pointsBalance || 0),
+      totalEarnedFromGMs: Number(user.totalEarnedFromGMs || 0),
+      currentStreak: Number(user.currentStreak || 0),
+      lifetimeGMs: Number(user.lifetimeGMs || 0),
+      lastGMTimestamp: user.lastGMTimestamp,
+      totalTipsGiven: Number(user.totalTipsGiven || 0),
+      totalTipsReceived: Number(user.totalTipsReceived || 0),
+      milestoneCount: Number(user.milestoneCount || 0),
+    }))
   }
 
   /**
    * Get user by wallet address (raw on-chain data)
-   * Returns: User entity with on-chain fields only (totalPoints, currentStreak, etc.)
-   * Calculation layer must compute: totalScore, viralXP, rank, etc.
+   * 
+   * LAYER 1 ONLY: Returns on-chain User entity.
+   * For complete stats, use unified-calculator.ts to calculate level/rank.
+   * 
+   * @param wallet - Wallet address (0x...)
+   * @returns User entity with on-chain fields only, or null if not found
    */
-  async getUserStatsByWallet(wallet: string) {
+  async getUserStatsByWallet(wallet: string): Promise<UserOnChainStats | null> {
     // Normalize wallet address
     const normalizedWallet = wallet.toLowerCase()
 
@@ -348,7 +408,20 @@ export class SubsquidClient {
       { wallet: normalizedWallet }
     )
 
-    return data?.users?.[0] || null
+    const user = data?.users?.[0]
+    if (!user) return null
+
+    return {
+      id: user.id,
+      pointsBalance: Number(user.pointsBalance || 0),
+      totalEarnedFromGMs: Number(user.totalEarnedFromGMs || 0),
+      currentStreak: Number(user.currentStreak || 0),
+      lifetimeGMs: Number(user.lifetimeGMs || 0),
+      lastGMTimestamp: user.lastGMTimestamp,
+      totalTipsGiven: Number(user.totalTipsGiven || 0),
+      totalTipsReceived: Number(user.totalTipsReceived || 0),
+      milestoneCount: Number(user.milestoneCount || 0),
+    }
   }
 
   /**
@@ -422,13 +495,20 @@ export function getSubsquidClient(): SubsquidClient {
 // ============================================================================
 
 /**
- * Get user leaderboard entry (with fallback for missing data)
+ * Get user on-chain stats by FID or wallet address
+ * 
+ * LAYER 1 ONLY: Returns blockchain data from Subsquid.
+ * For FID lookups, first resolve FID → wallet via Supabase user_profiles.
+ * 
+ * @param fidOrWallet - FID number or wallet address string
+ * @returns User on-chain stats or null
  */
-export async function getLeaderboardEntry(fidOrWallet: number | string): Promise<UserStats | null> {
+export async function getLeaderboardEntry(fidOrWallet: number | string): Promise<UserOnChainStats | null> {
   const client = getSubsquidClient()
 
   if (typeof fidOrWallet === 'number') {
-    return client.getUserStatsByFID(fidOrWallet)
+    console.warn('[getLeaderboardEntry] FID lookup not supported in Subsquid. Use Supabase to resolve FID → wallet first.')
+    return null
   } else {
     return client.getUserStatsByWallet(fidOrWallet)
   }
