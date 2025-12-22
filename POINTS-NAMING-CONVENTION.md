@@ -1,28 +1,46 @@
-# Points & Scoring Naming Convention
+# Points & Scoring Naming Convention - 3-Layer Consistency Plan
 
 **Created:** December 22, 2025  
-**Purpose:** Standardize all points-related naming across contracts, indexer, API, and database
+**Updated:** December 22, 2025 (3-Layer Audit Complete)  
+**Purpose:** Standardize ALL naming across contract (Layer 1), Subsquid (Layer 2), Supabase (Layer 2), and API (Layer 3)
 
-## 🚨 CRITICAL ISSUES FOUND
+## 🚨 CRITICAL PRINCIPLE
 
-### Issue 1: Data Inconsistency
-- **Guild route**: FID 602828, wallet 0x8870C155..., points: 5000
-- **Test route**: FID 18139, wallet 0x7539472..., points: 20
-- **Problem**: Using different test users, mixing mock and real data
+**Contract names are IMMUTABLE** (on-chain, cannot change)  
+**Subsquid + Supabase + API names MUST BE CONSISTENT** (all use same terms)
 
-### Issue 2: Naming Confusion
-Multiple overlapping terms for points:
-- `pointsBalance` (contract + Subsquid)
-- `totalPoints` (guild aggregation, leaderboard)
-- `totalScore` (calculated value)
-- `base_points` (API response)
-- `pointsEarned` (event field)
-- `rewardPoints` (event field)
-- `totalEarnedFromGMs` (Subsquid cumulative)
+## 🔍 AUDIT RESULTS
+
+### Data Sources Audited:
+1. ✅ **Contract ABIs** - GmeowCore.abi.json events and storage
+2. ✅ **Subsquid Models** - gmeow-indexer/src/model/generated/*.model.ts
+3. ✅ **Supabase Schema** - 41 tables via Supabase MCP
+4. ✅ **unified-calculator.ts** - TotalScore, CompleteStats types
+5. ✅ **subsquid-client.ts** - UserOnChainStats, LeaderboardEntry types
+
+### Critical Issues Found:
+
+**Issue 1: Inconsistent Field Names Across Layers**
+- Contract: `pointsBalance` (uint256)
+- Subsquid: `pointsBalance` (bigint) ✅ Matches contract
+- Supabase: `points` (bigint) ❌ Different name!
+- API: `blockchainPoints` (number) ❌ Different name!
+
+**Issue 2: Multiple Names for Same Concept**
+- **Current Spendable Balance:** `pointsBalance` (contract/Subsquid) vs `points` (Supabase) vs `blockchainPoints` (API)
+- **Cumulative Earned:** `totalEarnedFromGMs` (Subsquid) vs `total_points_earned` (Supabase)
+- **Points Spent:** Not tracked (contract) vs `total_points_spent` (Supabase)
+- **Total Score:** `totalPoints` (Subsquid deprecated) vs `totalScore` (API)
+
+**Issue 3: Snake_case vs camelCase**
+- Supabase: `total_points_earned`, `total_points_spent`, `viral_bonus_xp`
+- API (Guild): `base_points`, `viral_xp`, `total_score` (snake_case) ❌
+- API (Viral): `blockchainPoints`, `viralXP`, `totalScore` (camelCase) ✅
+- unified-calculator: `blockchainPoints`, `viralXP`, `totalScore` (camelCase) ✅
 
 ---
 
-## 📋 OFFICIAL NAMING STANDARD
+## 📋 3-LAYER NAMING STANDARD
 
 ### Layer 1: Smart Contract (On-Chain)
 
