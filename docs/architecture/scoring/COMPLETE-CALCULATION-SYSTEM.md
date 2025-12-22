@@ -667,3 +667,26 @@ stats: {
 2. Update profile-service.ts calculation logic
 3. Test with real user data
 4. Verify multipliers apply correctly to new XP
+
+---
+
+# 📋 Route Migration Checklist (Updated Dec 22, 2025)
+
+## Before Migrating Any Route, You MUST:
+
+### 1. Read Documentation
+
+**Primary References:**
+
+- ✅ **SUBSQUID-LAYER-1-COMPLIANCE-V2.md** - Complete 3-layer architecture (actual contract events, corrected schemas) ← NEW
+- ✅ **LAYER-1-AUDIT-SUMMARY.md** - Executive summary (9 violations found, migration scripts) ← NEW
+- ✅ **SUBSQUID-LAYER-1-AUDIT-FINDINGS.md** - Detailed audit findings (contract ABIs, Supabase violations, function naming) ← NEW
+- ✅ **MULTI-WALLET-CACHE-ARCHITECTURE.md** - Multi-wallet cache system (3-layer sync, 99% hit rate) ← NEW
+- ✅ **UNIFIED-CALCULATION-BUG-FIXES-DEC-20-2025.md** - Bug fixes + 6 new functions ← NEW
+- ✅ **HYBRID-IMPLEMENTATION-COMPLETE-PLAN.md** - Data source mapping
+- ✅ **INFRASTRUCTURE-USAGE-QUICK-REF.md** - lib/ infrastructure patterns
+- ✅ **COMPLETE-CALCULATION-SYSTEM.md** - 3-layer calculation architecture
+- ✅ **UNIFIED-CALCULATOR-MIGRATION.md** - Unified calculator API
+
+---
+
