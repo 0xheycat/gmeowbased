@@ -495,7 +495,40 @@ export function getSubsquidClient(): SubsquidClient {
 // ============================================================================
 
 /**
+ * Get on-chain user stats by wallet address (RECOMMENDED)
+ * 
+ * LAYER 1 ONLY: Returns blockchain data from Subsquid indexer.
+ * This function provides clear, descriptive naming for on-chain data retrieval.
+ * 
+ * For complete user stats, combine with:
+ * - Layer 2 (Supabase): viral XP, quest progress, profile data
+ * - Layer 3 (unified-calculator): level, rank, totalScore calculations
+ * 
+ * @param wallet - Wallet address (0x...) - FID NOT supported (use Supabase to resolve FID → wallet)
+ * @returns User on-chain stats or null if not found
+ * 
+ * @example
+ * // Multi-wallet aggregation pattern
+ * const profile = await supabase.from('user_profiles').select('wallet_address, verified_addresses, custody_address').eq('fid', fid).single()
+ * const allWallets = [profile.wallet_address, profile.custody_address, ...(profile.verified_addresses || [])].filter(Boolean)
+ * const onChainData = await Promise.all(allWallets.map(w => getOnChainUserStats(w)))
+ * const totalPoints = onChainData.reduce((sum, d) => sum + (d?.pointsBalance || 0), 0)
+ */
+export async function getOnChainUserStats(wallet: string): Promise<UserOnChainStats | null> {
+  const client = getSubsquidClient()
+  return client.getUserStatsByWallet(wallet)
+}
+
+/**
  * Get user on-chain stats by FID or wallet address
+ * 
+ * @deprecated Use getOnChainUserStats(wallet) instead for clearer naming.
+ * This function name suggests ranking/leaderboard position (Layer 3 calculation),
+ * but it actually returns raw on-chain data (Layer 1).
+ * 
+ * Migration:
+ * - Old: const stats = await getLeaderboardEntry(wallet)
+ * - New: const stats = await getOnChainUserStats(wallet)
  * 
  * LAYER 1 ONLY: Returns blockchain data from Subsquid.
  * For FID lookups, first resolve FID → wallet via Supabase user_profiles.
@@ -504,6 +537,8 @@ export function getSubsquidClient(): SubsquidClient {
  * @returns User on-chain stats or null
  */
 export async function getLeaderboardEntry(fidOrWallet: number | string): Promise<UserOnChainStats | null> {
+  console.warn('[DEPRECATED] getLeaderboardEntry() is deprecated. Use getOnChainUserStats(wallet) instead.')
+  
   const client = getSubsquidClient()
 
   if (typeof fidOrWallet === 'number') {
