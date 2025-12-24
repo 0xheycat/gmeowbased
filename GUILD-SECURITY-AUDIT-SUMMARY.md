@@ -821,8 +821,170 @@ All fixes must follow this flow. See `MULTI-WALLET-CACHE-ARCHITECTURE.md` for pa
 
 ---
 
-### Phase 4: LOW (3 hours) - OPTIONAL
-15. Optimize array operations in leaderboard (3h)
+## 🎯 FUTURE PHASES ROADMAP (POST-PHASE 4)
+
+### Phase 5: Guild Analytics & Leaderboards (OPTIONAL - 1 week)
+**Priority:** LOW (Core functionality complete)  
+**Status:** ⏸️ NOT STARTED - Waiting for decision
+
+**Features:**
+- Guild level progression charts (timeline visualization)
+- Treasury growth analysis (daily/weekly/monthly)
+- Member activity heatmap (top contributors)
+- Leaderboard enhancements (sort by level, growth rate)
+
+**Implementation:**
+- No new Subsquid indexing needed (uses existing Phase 3+4 data)
+- 4 new API endpoints for analytics
+- Frontend charts using recharts library
+- Cache TTL: 5-10 minutes for analytics data
+
+**Timeline:** 5 days development + 3 days testing
+
+---
+
+### Phase 6: Guild Quests & Rewards (FUTURE - 2 weeks)
+**Priority:** LOW (Requires contract updates)  
+**Status:** ⏸️ BLOCKED - Waiting for contract to add quest events
+
+**Contract Events Needed (Not Yet Deployed):**
+```solidity
+event GuildQuestCreated(uint256 questId, uint256 guildId, string questType, uint256 rewardPoints)
+event GuildQuestCompleted(uint256 questId, uint256 guildId, address completedBy, uint256 timestamp)
+event GuildRewardClaimed(uint256 guildId, address claimedBy, uint256 amount, string rewardType)
+```
+
+**Implementation Plan (If Contract Adds Events):**
+- Week 1: Subsquid schema + event processors + re-index
+- Week 2: Sync jobs + UI (quest board, completion tracking)
+- Pattern: Follow exact same approach as Phase 3 (GuildPointsDeposited)
+
+---
+
+### Phase 7: Guild Treasury Tokens (FUTURE - 1 week)
+**Priority:** LOW (Requires contract updates)  
+**Status:** ⏸️ BLOCKED - Waiting for ERC20 treasury support
+
+**Contract Event Needed:**
+```solidity
+event GuildTreasuryTokenDeposited(uint256 guildId, address token, address from, uint256 amount)
+```
+
+**Implementation Plan (If Contract Adds Event):**
+- Follow Phase 3 pattern (GuildPointsDeposited)
+- Add token symbol + decimals to metadata
+- Display in activity feed: "Deposited 100 USDC to guild treasury"
+- Treasury balance shows points + token balances
+
+---
+
+## 📊 PRODUCTION DEPLOYMENT READINESS (PHASE 3 + 4)
+
+### Current Status: ✅ READY TO DEPLOY
+
+**Phase 3 (GuildPointsDeposited) - COMPLETE:**
+- [x] Subsquid event handler ✅
+- [x] Database table: guild_points_deposited_event ✅
+- [x] Re-index: 6 events captured (8 minutes) ✅
+- [x] GraphQL endpoint: Working on port 4350 ✅
+- [x] Sync job: sync-guild-deposits.ts (348 lines) ✅
+- [x] API route: /api/cron/sync-guild-deposits ✅
+- [x] GitHub workflow: Every 15 minutes ✅
+- [x] Testing: Manual trigger successful ✅
+
+**Phase 4 (GuildLevelUp) - COMPLETE:**
+- [x] Subsquid event handler ✅
+- [x] Database table: guild_level_up_event ✅
+- [x] GraphQL endpoint: Working on port 4350 ✅
+- [x] Sync job: sync-guild-level-ups.ts (348 lines) ✅
+- [x] API route: /api/cron/sync-guild-level-ups ✅
+- [x] GitHub workflow: Every 15 minutes ✅
+- [x] Testing: Manual trigger successful (31ms) ✅
+
+### Deployment Checklist
+
+**Step 1: Subsquid Indexer**
+```bash
+cd gmeow-indexer
+git pull origin main
+npm run build
+docker compose down && docker compose up -d
+npx squid-typeorm-migration apply
+npm run serve  # GraphQL server on port 4350
+```
+
+**Step 2: Next.js (Vercel Auto-Deploy)**
+```bash
+git push origin main  # Triggers Vercel deployment
+# Verify endpoints:
+# - https://gmeowhq.art/api/cron/sync-guild-deposits
+# - https://gmeowhq.art/api/cron/sync-guild-level-ups
+```
+
+**Step 3: Verify GitHub Actions**
+- Monitor: .github/workflows/sync-guild-deposits.yml (first 3 runs)
+- Monitor: .github/workflows/sync-guild-level-ups.yml (first 3 runs)
+- Expected: 100% success rate, 0 errors
+
+**Step 4: 48-Hour Monitoring**
+- Sync job success rate: Should be 100%
+- Activity feed: Should show blockchain deposits
+- Guild stats: Should include points from events
+- Performance: < 200ms GraphQL queries
+
+### Git Commit History (Dec 24, 2025)
+
+```
+07f33e5 Phase 4: Update Documentation - Sync Job Implementation Complete
+55f75c5 Phase 4: Add Guild Level-Up Sync Job (Subsquid → Supabase)
+1288628 Phase 4: Add Localhost Testing Results
+3444e79 Phase 4: Add GuildLevelUp Event Handler
+5157be3 Phase 3 Week 1 Complete + Points Migration Updates
+```
+
+**Today's Summary:**
+- Files Created: 6 (sync jobs + event handlers + docs)
+- Lines Added: 1,121 insertions
+- Commits: 4 (all pushed to main)
+- Testing: All localhost tests passed ✅
+
+---
+
+## 📋 NEXT SESSION PRIORITIES (TOMORROW)
+
+### Recommended Actions:
+
+**1. Production Deployment (2-3 hours)**
+- Deploy Subsquid indexer to production server
+- Verify GitHub Actions cron jobs running every 15 min
+- Monitor first 3 sync job runs (expected: 0 errors)
+- Check activity feed displays blockchain deposits correctly
+
+**2. Phase 5 Planning (Optional - 1 hour)**
+- Define analytics requirements (charts, metrics)
+- Design API endpoints for analytics data
+- Plan frontend chart components
+- Estimate development timeline
+
+**3. Code Cleanup (Optional - 1 hour)**
+- Review console.log statements (remove debug logs)
+- Update TypeScript types if needed
+- Run full test suite
+- Update .env.example if new vars added
+
+### Decision Points:
+
+**Question 1: Deploy Phase 3+4 to Production?**
+- ✅ YES: All testing passed, sync jobs working, ready to deploy
+- ⏸️ WAIT: Need additional testing or review
+
+**Question 2: Start Phase 5 (Analytics)?**
+- ✅ YES: Enhance guild features with charts/metrics
+- ⏸️ NO: Focus on other project areas first
+
+**Question 3: Wait for Contract Updates (Phase 6+7)?**
+- ⏸️ YES: Phase 6 requires quest events, Phase 7 requires token support
+- Contract team needs to add these events first
 
 ---
 
