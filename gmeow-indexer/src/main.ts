@@ -47,12 +47,14 @@ import {TypeormDatabase} from '@subsquid/typeorm-store'
 import {In} from 'typeorm'
 import * as ethers from 'ethers'
 import {processor, CORE_ADDRESS, GUILD_ADDRESS, BADGE_ADDRESS, NFT_ADDRESS, REFERRAL_ADDRESS} from './processor'
+import { recordFailure, recordSuccess, isRateLimitError } from './rpc-manager'
 import {
     User,
     GMEvent,
     Guild,
     GuildMember,
     GuildEvent,
+    GuildPointsDepositedEvent,
     BadgeMint,
     NFTMint,
     NFTTransfer,
@@ -98,6 +100,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const guilds = new Map<string, Guild>()
     const guildMembers = new Map<string, GuildMember>()
     const guildEvents: GuildEvent[] = []
+    const guildPointsDepositedEvents: GuildPointsDepositedEvent[] = []
     const badgeMints: BadgeMint[] = []
     const nftMints: NFTMint[] = []
     const nftTransfers: NFTTransfer[] = []
@@ -159,7 +162,8 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                     const topic = log.topics[0]
                     if (topic === guildInterface.getEvent('GuildCreated')?.topicHash ||
                         topic === guildInterface.getEvent('GuildJoined')?.topicHash ||
-                        topic === guildInterface.getEvent('GuildLeft')?.topicHash) {
+                        topic === guildInterface.getEvent('GuildLeft')?.topicHash ||
+                        topic === guildInterface.getEvent('GuildPointsDeposited')?.topicHash) {
                         const decoded = guildInterface.parseLog({
                             topics: log.topics as string[],
                             data: log.data
@@ -654,7 +658,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 closedBlock: null,
                                 isActive: true,
                                 totalCompletions: 0,
-                                totalPointsAwarded: 0n,
+                                pointsAwarded: 0n,
                                 totalTokensAwarded: 0n,
                                 txHash: log.transaction?.id || '',
                             })
@@ -696,7 +700,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 closedBlock: null,
                                 isActive: true,
                                 totalCompletions: 0,
-                                totalPointsAwarded: 0n,
+                                pointsAwarded: 0n,
                                 totalTokensAwarded: 0n,
                                 txHash: log.transaction?.id || '',
                             })
@@ -758,7 +762,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             let quest = quests.get(questId)
                             if (quest) {
                                 quest.totalCompletions += 1
-                                quest.totalPointsAwarded += pointsAwarded
+                                quest.pointsAwarded += pointsAwarded
                                 if (tokenAmount > 0n) {
                                     quest.totalTokensAwarded += tokenAmount
                                 }
@@ -832,12 +836,16 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             const guildId = decoded.args.guildId.toString()
                             const leader = decoded.args.leader.toLowerCase()
                             
+                            // Phase 1.2: Create guild with default values (will be synced from contract every 100 blocks)
                             let guild = new Guild({
                                 id: guildId,
+                                name: '', // Will be synced from getGuildInfo()
                                 owner: leader,
                                 createdAt: blockTime,
                                 totalMembers: 1,
-                                totalPoints: 0n,
+                                level: 0, // Will be synced from getGuildInfo()
+                                isActive: true, // Default to true, will be synced from getGuildInfo()
+                                treasuryPoints: 0n,
                             })
                             guilds.set(guildId, guild)
                             
@@ -861,7 +869,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 guild,
                                 user,
                                 joinedAt: blockTime,
-                                role: 'owner',
+                                role: 'leader', // Phase 2.1: Leader role
                                 pointsContributed: 0n,
                                 isActive: true,
                             }))
@@ -948,6 +956,35 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                         }
                     }
                     
+                    // Handle GuildPointsDeposited
+                    // Contract: event GuildPointsDeposited(uint256 guildId, address from, uint256 amount)
+                    // 4-Layer: Contract (camelCase) → Subsquid (camelCase) → DB (snake_case) → API (camelCase)
+                    else if (topic === guildInterface.getEvent('GuildPointsDeposited')?.topicHash) {
+                        const decoded = guildInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const guildId = decoded.args.guildId.toString()
+                            const from = decoded.args.from.toLowerCase() // Contract field name (camelCase)
+                            const amount = decoded.args.amount // Contract field name (camelCase)
+                            
+                            // Create GuildPointsDepositedEvent entity (Layer 2 - exact contract names)
+                            guildPointsDepositedEvents.push(new GuildPointsDepositedEvent({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                guildId, // Contract: uint256 guildId (camelCase - source of truth)
+                                from,    // Contract: address from (camelCase - source of truth)
+                                amount,  // Contract: uint256 amount (camelCase - source of truth)
+                                timestamp: blockTime,
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            ctx.log.info(`💰 GuildPointsDeposited: guildId=${guildId}, from=${from}, amount=${amount.toString()}`)  
+                        }
+                    }
+                    
                     // Phase 8: Handle GuildQuestCreated event
                     else if (topic === guildInterface.getEvent('GuildQuestCreated')?.topicHash) {
                         const decoded = guildInterface.parseLog({
@@ -979,7 +1016,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 closedBlock: null,
                                 isActive: true,
                                 totalCompletions: 0,
-                                totalPointsAwarded: 0n,
+                                pointsAwarded: 0n,
                                 totalTokensAwarded: 0n,
                                 txHash: log.transaction?.id || '',
                             })
@@ -1009,7 +1046,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             let quest = quests.get(questId)
                             if (quest) {
                                 quest.totalCompletions += 1
-                                quest.totalPointsAwarded += reward
+                                quest.pointsAwarded += reward
                             }
                             
                             // Create quest completion
@@ -1245,7 +1282,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                 closedBlock: null,
                                 isActive: true,
                                 totalCompletions: 0,
-                                totalPointsAwarded: 0n,
+                                pointsAwarded: 0n,
                                 totalTokensAwarded: 0n,
                                 txHash: log.transaction?.id || '',
                             })
@@ -1271,7 +1308,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             
                             if (quest) {
                                 quest.totalCompletions += 1
-                                quest.totalPointsAwarded += pointsAwarded
+                                quest.pointsAwarded += pointsAwarded
                             }
                             
                             questCompletions.push(new QuestCompletion({
@@ -1295,6 +1332,39 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
             } catch (e) {
                 ctx.log.warn(`⚠️  Failed to process log at block ${block.header.height}: ${e}`)
             }
+        }
+    }
+    
+    // BUG #16 FIX: Read actual treasury points from contract storage
+    // CRITICAL: Events can be incomplete (external calls, reorgs). Must read contract state.
+    if (guilds.size > 0) {
+        try {
+            const { getCurrentEndpoint } = await import('./rpc-manager')
+            const rpcEndpoint = getCurrentEndpoint()
+            const provider = new ethers.JsonRpcProvider(rpcEndpoint.url)
+            const guildContract = new ethers.Contract(
+                GUILD_ADDRESS,
+                guildAbiJson,
+                provider
+            )
+            
+            ctx.log.info(`📊 Reading treasury points for ${guilds.size} guilds from contract...`)
+            
+            // Batch read treasury points for all guilds
+            for (const [guildId, guild] of guilds) {
+                try {
+                    const treasuryPoints = await guildContract.guildTreasuryPoints(BigInt(guildId))
+                    guild.treasuryPoints = treasuryPoints
+                    ctx.log.info(`   Guild #${guildId}: ${treasuryPoints} treasury points`)
+                } catch (err: any) {
+                    ctx.log.warn(`⚠️  Failed to read treasury for guild #${guildId}: ${err.message}`)
+                }
+            }
+            
+            recordSuccess()
+        } catch (err: any) {
+            ctx.log.warn(`⚠️  Failed to read contract state: ${err.message}`)
+            recordFailure(err)
         }
     }
     
@@ -1333,6 +1403,12 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     if (guildEvents.length > 0) {
         await ctx.store.insert(guildEvents)
         ctx.log.info(`💾 Saved ${guildEvents.length} guild events`)
+    }
+    
+    // Phase 3: Save GuildPointsDeposited events (Layer 2 - Subsquid database)
+    if (guildPointsDepositedEvents.length > 0) {
+        await ctx.store.insert(guildPointsDepositedEvents)
+        ctx.log.info(`💾 Saved ${guildPointsDepositedEvents.length} guild points deposited events`)
     }
     
     if (badgeMints.length > 0) {
@@ -1394,6 +1470,141 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     if (powerBadges.length > 0) {
         await ctx.store.upsert(powerBadges.map(p => new PowerBadge(p)))
         ctx.log.info(`💾 Saved ${powerBadges.length} power badges`)
+    }
+    
+    // BUG #16 FIX: Periodic sync of ALL guilds with contract state
+    // Run every 100 blocks to ensure treasury balances stay up-to-date
+    // PHASE 1.2: Enhanced with getGuildInfo() to sync name, level, isActive, member count
+    const currentBlock = endBlock || 0
+    if (currentBlock % 100 === 0) {
+        try {
+            const { getCurrentEndpoint } = await import('./rpc-manager')
+            const rpcEndpoint = getCurrentEndpoint()
+            const provider = new ethers.JsonRpcProvider(rpcEndpoint.url)
+            const guildContract = new ethers.Contract(
+                GUILD_ADDRESS,
+                guildAbiJson,
+                provider
+            )
+            
+            // Load ALL guilds from database
+            const allGuilds = await ctx.store.findBy(Guild, {})
+            if (allGuilds.length > 0) {
+                ctx.log.info(`🔄 Syncing ${allGuilds.length} guilds from contract (Phase 1.2)...`)
+                
+                for (const guild of allGuilds) {
+                    try {
+                        // Phase 1.2: Read full guild info from contract
+                        const guildInfo = await guildContract.getGuildInfo(BigInt(guild.id))
+                        
+                        // Update all fields from contract (source of truth)
+                        let updated = false
+                        
+                        if (guild.name !== guildInfo.name) {
+                            ctx.log.info(`   Guild #${guild.id}: name updated "${guild.name}" → "${guildInfo.name}"`)
+                            guild.name = guildInfo.name
+                            updated = true
+                        }
+                        
+                        if (guild.owner !== guildInfo.leader.toLowerCase()) {
+                            ctx.log.info(`   Guild #${guild.id}: leader changed ${guild.owner} → ${guildInfo.leader.toLowerCase()}`)
+                            guild.owner = guildInfo.leader.toLowerCase()
+                            updated = true
+                        }
+                        
+                        const contractLevel = Number(guildInfo.level)
+                        if (guild.level !== contractLevel) {
+                            ctx.log.info(`   Guild #${guild.id}: level ${guild.level} → ${contractLevel}`)
+                            guild.level = contractLevel
+                            updated = true
+                        }
+                        
+                        if (guild.isActive !== guildInfo.active) {
+                            ctx.log.info(`   Guild #${guild.id}: active ${guild.isActive} → ${guildInfo.active}`)
+                            guild.isActive = guildInfo.active
+                            updated = true
+                        }
+                        
+                        const contractMembers = Number(guildInfo.memberCount)
+                        if (guild.totalMembers !== contractMembers) {
+                            ctx.log.info(`   Guild #${guild.id}: members ${guild.totalMembers} → ${contractMembers}`)
+                            guild.totalMembers = contractMembers
+                            updated = true
+                        }
+                        
+                        if (guild.treasuryPoints !== guildInfo.treasuryPoints) {
+                            ctx.log.info(`   Guild #${guild.id}: treasury ${guild.treasuryPoints} → ${guildInfo.treasuryPoints}`)
+                            guild.treasuryPoints = guildInfo.treasuryPoints
+                            updated = true
+                        }
+                        
+                        if (updated) {
+                            ctx.log.info(`   ✅ Guild #${guild.id} synced from contract`)
+                        }
+                    } catch (err: any) {
+                        ctx.log.warn(`⚠️  Failed to read guild info for #${guild.id}: ${err.message}`)
+                    }
+                }
+                
+                // Save updated guilds
+                await ctx.store.upsert(allGuilds)
+                ctx.log.info(`✅ Guild sync complete at block ${currentBlock} (Phase 1.2)`)
+                
+                // Phase 2.1: Sync member roles from contract storage
+                ctx.log.info(`🔄 Syncing member roles from contract (Phase 2.1)...`)
+                for (const guild of allGuilds) {
+                    try {
+                        // Get all members for this guild
+                        const members = await ctx.store.findBy(GuildMember, { guild: { id: guild.id } })
+                        if (members.length === 0) continue
+                        
+                        let rolesUpdated = 0
+                        for (const member of members) {
+                            const memberAddress = member.user.id // User ID is the wallet address
+                            
+                            // Determine role from contract
+                            let newRole = 'member' // Default
+                            
+                            // Check if leader (guild owner)
+                            if (memberAddress.toLowerCase() === guild.owner.toLowerCase()) {
+                                newRole = 'leader'
+                            } else {
+                                // Check if officer via contract storage
+                                try {
+                                    const isOfficer = await guildContract.guildOfficers(BigInt(guild.id), memberAddress)
+                                    if (isOfficer) {
+                                        newRole = 'officer'
+                                    }
+                                } catch (err: any) {
+                                    // If contract call fails, keep as member
+                                    ctx.log.warn(`   Failed to check officer status for ${memberAddress}: ${err.message}`)
+                                }
+                            }
+                            
+                            // Update if role changed
+                            if (member.role !== newRole) {
+                                ctx.log.info(`   Guild #${guild.id}: ${memberAddress} role ${member.role} → ${newRole}`)
+                                member.role = newRole
+                                rolesUpdated++
+                            }
+                        }
+                        
+                        // Save updated members
+                        if (rolesUpdated > 0) {
+                            await ctx.store.upsert(members)
+                            ctx.log.info(`   ✅ Guild #${guild.id}: ${rolesUpdated} role(s) updated`)
+                        }
+                    } catch (err: any) {
+                        ctx.log.warn(`⚠️  Failed to sync roles for guild #${guild.id}: ${err.message}`)
+                    }
+                }
+                ctx.log.info(`✅ Member role sync complete at block ${currentBlock} (Phase 2.1)`)
+                recordSuccess()
+            }
+        } catch (err: any) {
+            ctx.log.warn(`⚠️  Guild sync failed: ${err.message}`)
+            recordFailure(err)
+        }
     }
     
     ctx.log.info(`✅ Batch complete: ${startBlock} to ${endBlock}`)

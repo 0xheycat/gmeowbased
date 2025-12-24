@@ -236,7 +236,7 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
     // LAYER 2: Get cached guild stats (from cron sync - updated every 6 hours)
     const { data: cachedStats, error: statsError } = await supabase
       .from('guild_stats_cache')
-      .select('guild_id, member_count, total_points, level, treasury_balance, is_active, leader_address')
+      .select('guild_id, member_count, treasury_points, level, treasury_balance, is_active, leader_address')
 
     if (statsError) {
       console.error('[guild/list] Failed to fetch guild stats cache:', statsError)
@@ -259,7 +259,7 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
         chain: 'base' as const,
         name: guild.name || 'Unknown Guild',
         leader: stats?.leader_address || '',
-        totalPoints: stats?.total_points || 0,
+        totalPoints: stats?.treasury_points || 0,
         memberCount: stats?.member_count || 0,
         level: stats?.level || 1,
         active: stats?.is_active !== false,

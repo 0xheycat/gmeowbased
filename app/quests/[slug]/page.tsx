@@ -325,7 +325,7 @@ export default async function QuestDetailPage({ params }: QuestDetailPageProps) 
                       <>
                         <LockIcon className="w-4 h-4 text-red-500" />
                         <span className="text-gray-600 dark:text-gray-400">
-                          Minimum {quest.min_viral_xp_required} Viral XP required
+                          Minimum {quest.min_viral_xp_required} Viral Points required
                         </span>
                       </>
                     ) : (

@@ -6,9 +6,9 @@ import { WebhookPayloadSchema } from '@/lib/validation/api-schemas'
 import {
   calculateViralBonus,
   calculateIncrementalBonus,
+  hasMetricsIncreased,
   type EngagementMetrics,
 } from '@/lib/scoring/unified-calculator'
-import { hasMetricsIncreased } from '@/lib/viral/viral-bonus'
 import { trackEvent } from '@/lib/utils/analytics'
 import { checkIdempotency, storeIdempotency, returnCachedResponse } from '@/lib/middleware/idempotency'
 import { generateRequestId } from '@/lib/middleware/request-id'

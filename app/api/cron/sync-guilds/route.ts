@@ -397,11 +397,12 @@ export async function POST(request: NextRequest) {
         }
 
         // Use Subsquid stats as primary source, fall back to events if needed
-        const finalMemberCount = guildStats.memberCount || eventMemberCount
-        const finalTotalPoints = guildStats.totalPoints || eventTotalPoints
-        const level = calculateGuildLevel(finalTotalPoints)
-        const treasuryBalance = 0 // TODO: Query from blockchain if needed
+        const finalMemberCount = guildStats.totalMembers || eventMemberCount
+        const finalTreasuryPoints = Number(guildStats.treasuryPoints) || eventTotalPoints
+        const level = calculateGuildLevel(finalTreasuryPoints)
+        const treasuryBalance = Number(guildStats.treasuryPoints) || 0
         const isActive = finalMemberCount > 0
+        const finalLeaderAddress = guildStats.owner || leaderAddress
 
         // Upsert into guild_stats_cache
         const { error: cacheError } = await supabase
@@ -409,11 +410,11 @@ export async function POST(request: NextRequest) {
           .upsert({
             guild_id: metadata.guild_id,
             member_count: finalMemberCount,
-            total_points: finalTotalPoints,
+            treasury_points: finalTreasuryPoints,
             level,
             treasury_balance: treasuryBalance,
             is_active: isActive,
-            leader_address: leaderAddress,
+            leader_address: finalLeaderAddress,
             last_synced_at: new Date().toISOString(),
           }, {
             onConflict: 'guild_id'
@@ -424,17 +425,17 @@ export async function POST(request: NextRequest) {
           console.error(`[Guild Sync] Cache error for guild ${metadata.guild_id}:`, cacheError)
         }
 
-        console.log(`[Guild Sync] Guild ${metadata.guild_id}: ${finalMemberCount} members, ${finalTotalPoints} points, level ${level}`)
+        console.log(`[Guild Sync] Guild ${metadata.guild_id}: ${finalMemberCount} members, ${finalTreasuryPoints} treasury points, level ${level}`)
 
         results.push({
           guildId: metadata.guild_id,
           hasMetadata: true,
           memberCount: finalMemberCount,
-          totalPoints: finalTotalPoints,
+          totalPoints: finalTreasuryPoints,
           level,
           treasuryBalance,
           isActive,
-          leaderAddress,
+          leaderAddress: finalLeaderAddress,
           synced: !cacheError,
         })
 

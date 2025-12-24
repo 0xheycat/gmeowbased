@@ -15,12 +15,12 @@
  * - Icons for each stat type
  * 
  * Stats Displayed:
- * 1. Viral XP (leaderboard_calculations.viral_xp)
- * 2. BASE Points (leaderboard_calculations.base_points)
+ * 1. Viral Points (user_points_balances.viral_points) - renamed from viral_xp
+ * 2. Points Balance (user_points_balances.points_balance) - renamed from base_points
  * 3. Quest Completions (count from quest_completions)
  * 4. Badge Count (count from user_badges)
- * 5. Global Rank (leaderboard_calculations.global_rank)
- * 6. Streak (calculated from streak_bonus)
+ * 5. Global Rank (points_leaderboard.rank)
+ * 6. Streak (Subsquid UserOnChainStats.currentStreak)
  * 
  * @module components/profile/ProfileStats
  */
@@ -94,30 +94,30 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {/* Viral XP */}
+        {/* Viral Points */}
         <StatCard
-          label="Viral XP"
-          value={calculatedStats.formattedStats.viral_xp}
+          label="Viral Points"
+          value={calculatedStats.formattedStats.viral_points}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
             </svg>
           }
-          tooltip="Social engagement XP from viral badge shares"
+          tooltip="Social engagement points from viral cast shares"
           colorClass="text-purple-600"
         />
 
-        {/* BASE Points */}
+        {/* Points Balance */}
         <StatCard
-          label="BASE Points"
-          value={calculatedStats.formattedStats.base_points}
+          label="Points Balance"
+          value={calculatedStats.formattedStats.points_balance}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
           }
-          tooltip="Spendable currency from quest completions"
+          tooltip="Spendable points from quest completions and activities"
           colorClass="text-blue-600"
         />
 
@@ -151,13 +151,13 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
         {/* Global Rank */}
         <StatCard
           label="Global Rank"
-          value={stats.global_rank > 0 ? `#${stats.global_rank.toLocaleString()}` : 'Unranked'}
+          value={(stats.global_rank && stats.global_rank > 0) ? `#${stats.global_rank.toLocaleString()}` : 'Unranked'}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M16 11V3H8V9H2V21H22V11H16ZM10 5H14V19H10V5ZM4 11H8V19H4V11ZM20 19H16V13H20V19Z" />
             </svg>
           }
-          tooltip="Position on global leaderboard"
+          tooltip="Position on global leaderboard by total score"
           colorClass="text-orange-600"
         />
 

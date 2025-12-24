@@ -46,6 +46,7 @@ import { rateLimit, strictLimiter, getClientIp } from '@/lib/middleware/rate-lim
 import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
+import { getAllWalletsForFID } from '@/lib/integrations/neynar-wallet-sync'
 
 // ==========================================
 // Helper Functions
@@ -65,6 +66,57 @@ function getTierFromRank(rank: number | null | undefined): string {
 }
 
 /**
+ * BUG #8 FIX: Get points for a user (already aggregated by Subsquid)
+ * 
+ * ARCHITECTURE NOTE: Subsquid indexes blockchain data by FID, not by wallet.
+ * This means user_points_balances ALREADY aggregates ALL wallet activity for a FID.
+ * - When a user has 3 verified wallets, Subsquid combines activity from all 3
+ * - The points_balance field includes blockchain points from ALL verified addresses
+ * - No manual aggregation needed - Subsquid does this at index-time
+ * 
+ * Follows 4-layer architecture: Contract → Subsquid (aggregates by FID) → Supabase → API
+ */
+async function getMultiWalletStats(fid: number): Promise<{
+  pointsBalance: number
+  viralPoints: number
+  guildBonusPoints: number
+  totalScore: number
+}> {
+  const supabase = createClient()
+  if (!supabase) {
+    return { pointsBalance: 0, viralPoints: 0, guildBonusPoints: 0, totalScore: 0 }
+  }
+
+  // Query user_points_balances by FID (Subsquid already aggregated all wallets)
+  const { data: pointsData } = await supabase
+    .from('user_points_balances')
+    .select('points_balance, viral_points, guild_points_awarded, total_score')
+    .eq('fid', fid)
+    .maybeSingle()
+
+  if (!pointsData) {
+    return { pointsBalance: 0, viralPoints: 0, guildBonusPoints: 0, totalScore: 0 }
+  }
+
+  // Get verified wallets count for logging (multi-wallet support verification)
+  const allWallets = await getAllWalletsForFID(fid)
+
+  console.log(`[guild-detail] Multi-wallet stats for FID ${fid}:`, {
+    walletCount: allWallets.length,
+    walletsTracked: allWallets.map(w => w.slice(0, 6) + '...' + w.slice(-4)),
+    pointsBalance: pointsData.points_balance,
+    note: 'Subsquid aggregates all wallet activity by FID automatically',
+  })
+
+  return {
+    pointsBalance: pointsData.points_balance || 0,
+    viralPoints: pointsData.viral_points || 0,
+    guildBonusPoints: pointsData.guild_points_awarded || 0,
+    totalScore: pointsData.total_score || 0,
+  }
+}
+
+/**
  * Validate guild ID parameter
  */
 function validateGuildId(guildId: string): bigint | null {
@@ -78,9 +130,121 @@ function validateGuildId(guildId: string): bigint | null {
 }
 
 /**
+ * Generate member badges based on role, activity, and contributions
+ */
+function getMemberBadges(
+  isOfficer: boolean,
+  isLeader: boolean,
+  points: number,
+  createdAt?: string
+): Array<{
+  id: string
+  name: string
+  description: string
+  icon: string
+  rarity: 'common' | 'rare' | 'epic' | 'legendary'
+  category: 'role' | 'achievement' | 'activity'
+}> {
+  const badges: Array<{
+    id: string
+    name: string
+    description: string
+    icon: string
+    rarity: 'common' | 'rare' | 'epic' | 'legendary'
+    category: 'role' | 'achievement' | 'activity'
+  }> = []
+  
+  // Calculate days since joining
+  const daysSinceJoin = createdAt 
+    ? Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24))
+    : 0
+  
+  // Role badges
+  if (isLeader) {
+    badges.push({
+      id: 'guild-leader',
+      name: 'Guild Leader',
+      description: 'Guild founder and leader',
+      icon: '/badges/role/crown.png',
+      rarity: 'legendary',
+      category: 'role',
+    })
+  } else if (isOfficer) {
+    badges.push({
+      id: 'officer',
+      name: 'Officer',
+      description: 'Guild officer',
+      icon: '/badges/role/shield.png',
+      rarity: 'epic',
+      category: 'role',
+    })
+  }
+  
+  // Achievement badges (points-based)
+  if (points >= 10000) {
+    badges.push({
+      id: 'top-contributor',
+      name: 'Top Contributor',
+      description: 'Contributed 10,000+ points',
+      icon: '/badges/achievement/top-contributor.png',
+      rarity: 'legendary',
+      category: 'achievement',
+    })
+  } else if (points >= 5000) {
+    badges.push({
+      id: 'high-contributor',
+      name: 'High Contributor',
+      description: 'Contributed 5,000+ points',
+      icon: '/badges/achievement/top-contributor.png',
+      rarity: 'epic',
+      category: 'achievement',
+    })
+  } else if (points >= 1000) {
+    badges.push({
+      id: 'contributor',
+      name: 'Contributor',
+      description: 'Contributed 1,000+ points',
+      icon: '/badges/achievement/contributor.png',
+      rarity: 'rare',
+      category: 'achievement',
+    })
+  }
+  
+  // Activity badges (time-based)
+  if (daysSinceJoin >= 90) {
+    badges.push({
+      id: 'dedicated',
+      name: 'Dedicated',
+      description: 'Member for over 90 days',
+      icon: '/badges/achievement/veteran.png',
+      rarity: 'epic',
+      category: 'activity',
+    })
+  } else if (daysSinceJoin >= 30) {
+    badges.push({
+      id: 'committed',
+      name: 'Committed',
+      description: 'Member for over 30 days',
+      icon: '/badges/achievement/veteran.png',
+      rarity: 'rare',
+      category: 'activity',
+    })
+  }
+  
+  // Filter out badges with empty icons and limit to 6
+  return badges.filter(b => b.icon && b.icon !== '').slice(0, 6)
+}
+
+/**
  * Fetch guild data from Supabase (TRUE HYBRID LAYER 1+2)
  */
-async function fetchGuildFromSupabase(guildId: string): Promise<{
+async function fetchGuildFromSupabase(
+  guildId: string,
+  options: {
+    limit?: number
+    cursor?: string | null
+  } = {}
+): Promise<{
   guild: {
     id: string
     name: string
@@ -100,7 +264,14 @@ async function fetchGuildFromSupabase(guildId: string): Promise<{
     farcaster?: any
     badges?: any
     leaderboardStats?: any
+    joinedAt?: string | null
   }>
+  pagination: {
+    nextCursor: string | null
+    hasMore: boolean
+    totalCount: number
+    fetched: number
+  }
 } | null> {
   try {
     const supabase = createClient()
@@ -117,117 +288,240 @@ async function fetchGuildFromSupabase(guildId: string): Promise<{
       return null
     }
     
-    // LAYER 2: Get guild events for stats calculation
-    const { data: events, error: eventsError } = await supabase
-      .from('guild_events')
-      .select('event_type, actor_address, target_address, amount, created_at')
-      .eq('guild_id', guildId)
-      .order('created_at', { ascending: false })
-      .limit(1000)
+    // LAYER 2: Use atomic RPC function to calculate stats (BUG #2 FIX)
+    // This prevents race conditions by using SERIALIZABLE transaction isolation
+    const { data: statsData, error: statsError } = await supabase
+      .rpc('get_guild_stats_atomic', { p_guild_id: guildId })
+      .single()
     
-    if (eventsError) {
-      console.error('[guild-detail] Error fetching events:', eventsError)
+    if (statsError || !statsData) {
+      console.error('[guild-detail] Error fetching atomic stats:', statsError)
+      return null
     }
     
-    // LAYER 3 (CALCULATED): Aggregate guild stats from events
-    let leaderAddress = ''
-    let totalPoints = 0
-    let memberCount = 0
-    const memberSet = new Set<string>()
-    const memberPoints = new Map<string, number>()
-    const officers = new Set<string>()
-    
-    for (const event of events || []) {
-      const { event_type, actor_address, target_address, amount } = event
-      
-      if (event_type === 'GUILD_CREATED') {
-        leaderAddress = actor_address
-        officers.add(actor_address)
-      } else if (event_type === 'MEMBER_JOINED') {
-        memberSet.add(actor_address)
-      } else if (event_type === 'MEMBER_LEFT') {
-        memberSet.delete(actor_address)
-      } else if (event_type === 'MEMBER_PROMOTED') {
-        officers.add(target_address!)
-      } else if (event_type === 'MEMBER_DEMOTED') {
-        officers.delete(target_address!)
-      } else if (event_type === 'POINTS_DEPOSITED') {
-        totalPoints += amount || 0
-        const currentPoints = memberPoints.get(actor_address) || 0
-        memberPoints.set(actor_address, currentPoints + (amount || 0))
-      } else if (event_type === 'POINTS_CLAIMED') {
-        totalPoints -= amount || 0
-      }
+    // Extract stats from RPC response (with type assertion)
+    const stats = statsData as {
+      leader_address: string
+      total_points: number
+      member_count: number
+      level: number
+      officers: any
+      member_points: any
+      member_addresses: string[]
     }
     
-    memberCount = memberSet.size
+    const {
+      leader_address: leaderAddress,
+      total_points: totalPoints,
+      member_count: memberCount,
+      level,
+      officers: officersJson,
+      member_points: memberPointsJson,
+      member_addresses: memberAddresses
+    } = stats
     
-    // Calculate guild level based on total points
-    const level = calculateGuildLevel(totalPoints)
+    // Parse JSON fields
+    const officers = new Set<string>(
+      (officersJson as any[]).map((o: any) => o.address)
+    )
+    const memberPointsMap = new Map<string, number>(
+      Object.entries(memberPointsJson as Record<string, number>)
+    )
     
-    // Get member profiles from user_profiles
-    const memberAddresses = Array.from(memberSet)
-    const { data: profiles, error: profilesError } = await supabase
+    // ============================================================================
+    // FID AUTO-DETECTION: Use existing Neynar infrastructure
+    // ============================================================================
+    // CRITICAL: user_profiles may have stale/mock FID data
+    // Solution: Always lookup FIDs fresh from wallet addresses via Neynar
+    // Uses: lib/integrations/neynar.ts (fetchFidByAddress with 5min cache)
+    
+    const { fetchFidByAddress } = await import('@/lib/integrations/neynar')
+    const addressToFidMap = new Map<string, number>()
+    
+    // Fetch FIDs in parallel for all member addresses
+    await Promise.all(
+      memberAddresses.map(async (address) => {
+        try {
+          const fid = await fetchFidByAddress(address)
+          if (fid) {
+            addressToFidMap.set(address, fid)
+          }
+        } catch (error) {
+          console.error(`[guild-detail] Error fetching FID for ${address}:`, error)
+        }
+      })
+    )
+    
+    // Get member profiles from user_profiles (for display_name/avatar fallback only)
+    // BUG #10 FIX: Cursor-based pagination for large guilds
+    const { limit = 50, cursor } = options
+    
+    // Build paginated query
+    let profileQuery = supabase
       .from('user_profiles')
-      .select('fid, wallet_address, verified_addresses, display_name, avatar_url')
+      .select('fid, wallet_address, verified_addresses, display_name, avatar_url, created_at')
       .in('wallet_address', memberAddresses)
-      .limit(50)
+      .order('created_at', { ascending: false })
+      .limit(limit + 1) // Fetch one extra to check if there's more
+    
+    // Apply cursor if provided (pagination)
+    if (cursor) {
+      profileQuery = profileQuery.lt('created_at', cursor)
+    }
+    
+    const { data: profiles, error: profilesError } = await profileQuery
     
     if (profilesError) {
       console.error('[guild-detail] Error fetching profiles:', profilesError)
     }
     
-    // Get member badges
-    const fids = (profiles || []).map(p => p.fid).filter(Boolean)
-    const { data: badges, error: badgesError } = await supabase
-      .from('user_badges')
-      .select('fid, badge_id, tier, badge_type')
-      .in('fid', fids)
-    
-    if (badgesError) {
-      console.error('[guild-detail] Error fetching badges:', badgesError)
+    // Use correct FIDs from Neynar (auto-detected from addresses)
+    const fids: number[] = []
+    for (const address of memberAddresses) {
+      const fidFromNeynar = addressToFidMap.get(address)
+      if (fidFromNeynar) {
+        fids.push(fidFromNeynar)
+      } else {
+        // Fallback to user_profiles FID only if Neynar lookup failed
+        const profile = (profiles || []).find(p => p.wallet_address === address)
+        if (profile?.fid) {
+          fids.push(profile.fid)
+        }
+      }
     }
     
-    const badgesByFid = new Map<number, any[]>()
-    for (const badge of badges || []) {
-      if (!badgesByFid.has(badge.fid)) {
-        badgesByFid.set(badge.fid, [])
+    // Fetch Farcaster data using existing profile-service infrastructure (with caching)
+    // This uses lib/profile/profile-service.ts which:
+    // - Fetches from Neynar with 5min cache
+    // - Syncs to user_profiles in background
+    // - Provides rich Farcaster stats (username, pfp, bio, verified addresses)
+    const { fetchProfileData } = await import('@/lib/profile/profile-service')
+    
+    const farcasterDataByFid = new Map<number, { username: string; displayName: string; pfpUrl: string }>()
+    
+    // Fetch in parallel for all FIDs
+    await Promise.all(
+      fids.map(async (fid) => {
+        try {
+          const profileData = await fetchProfileData(fid)
+          if (profileData) {
+            farcasterDataByFid.set(fid, {
+              username: profileData.username || `fid:${fid}`,
+              displayName: profileData.display_name || '', // ProfileData uses snake_case
+              pfpUrl: profileData.avatar_url || '',  // ProfileData uses avatar_url
+            })
+          }
+        } catch (error) {
+          console.error(`[guild-detail] Error fetching profile for FID ${fid}:`, error)
+        }
+      })
+    )
+    
+    // BUG #10 FIX: Calculate pagination metadata based on member addresses (not profiles)
+    // CRITICAL FIX: Iterate over memberAddresses (from contract), not profiles (from DB)
+    // This ensures ALL members are returned, even if they don't have a user_profiles entry
+    const hasMore = memberAddresses.length > limit
+    const paginatedAddresses = hasMore ? memberAddresses.slice(0, limit) : memberAddresses
+    const nextCursor = hasMore && paginatedAddresses.length > 0
+      ? paginatedAddresses[paginatedAddresses.length - 1]
+      : null
+    
+    // Build profile map for lookups
+    const profileMap = new Map<string, any>()
+    for (const profile of profiles || []) {
+      if (profile.wallet_address) {
+        profileMap.set(profile.wallet_address.toLowerCase(), profile)
       }
-      badgesByFid.get(badge.fid)!.push(badge)
     }
     
     // Enrich members with profile data
-    const members = (profiles || []).map(profile => {
-      const userBadges = badgesByFid.get(profile.fid) || []
-      const transformedBadges = userBadges.map(b => ({
-        id: b.badge_id,
-        name: b.badge_id.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-        rarity: b.tier,
-        category: b.badge_type,
-      }))
+    // LAYER 4: Enrich members with points data
+    // Map member addresses to their data using correct FIDs from Neynar
+    const enrichedMembers = await Promise.all(paginatedAddresses.map(async (address) => {
+      // Get profile from map (may not exist)
+      const currentProfile = profileMap.get(address.toLowerCase())
       
-      return {
-        address: profile.wallet_address || '',
-        isOfficer: officers.has(profile.wallet_address || ''),
-        points: (memberPoints.get(profile.wallet_address || '') || 0).toString(),
-        farcaster: {
-          fid: profile.fid,
-          username: profile.display_name || profile.wallet_address,
-          displayName: profile.display_name || '',
-          pfpUrl: profile.avatar_url || '',
-        },
-        badges: transformedBadges,
-        leaderboardStats: {
-          base_points: memberPoints.get(profile.wallet_address || '') || 0,
-          viral_xp: 0,
-          guild_bonus_points: 0,
-          total_score: memberPoints.get(profile.wallet_address || '') || 0,
-          global_rank: null,
-          rank_tier: getTierFromRank(null),
-          is_guild_officer: officers.has(profile.wallet_address || ''),
+      // Get correct FID for this address (from Neynar lookup)
+      const correctFid = addressToFidMap.get(address)
+      
+      // Fallback to user_profiles if Neynar lookup failed
+      const fid = correctFid || currentProfile?.fid
+      
+      if (!fid) {
+        // No FID found - user doesn't have Farcaster account
+        return {
+          address,
+          isOfficer: officers.has(address),
+          points: memberPointsMap.get(address)?.toString() || '0',
+          farcaster: {
+            fid: 0,
+            username: address, // Show address as fallback
+            displayName: '',
+            pfpUrl: '',
+          },
+          badges: [],
+          leaderboardStats: {
+            pointsBalance: memberPointsMap.get(address) || 0,
+            viralPoints: 0,
+            guildBonusPoints: 0,
+            totalScore: memberPointsMap.get(address) || 0,
+            rank: null,
+            streakDays: 0,
+          },
         }
       }
-    })
+      
+      // Get points breakdown from user_points_balances (migrations applied Dec 22)
+      // BUG #8 FIX: Subsquid aggregates all wallet activity by FID (multi-wallet support)
+      const aggregatedStats = await getMultiWalletStats(fid)
+      
+      // Generate badges based on role, points, and activity (not from database)
+      const memberBadges = getMemberBadges(
+        officers.has(address),
+        address.toLowerCase() === leaderAddress.toLowerCase(),
+        aggregatedStats.pointsBalance,
+        currentProfile?.created_at
+      )
+      
+      // Get global rank from points_leaderboard view
+      const { data: rankData } = await supabase
+        .from('points_leaderboard')
+        .select('points_rank')
+        .eq('fid', fid)
+        .maybeSingle()
+      
+      // Get Farcaster data from cached profile service
+      const farcasterData = farcasterDataByFid.get(fid)
+      
+      // Get profile data for fallback display_name/avatar
+      return {
+        address: address,
+        isOfficer: officers.has(address),
+        points: aggregatedStats.pointsBalance.toString(),
+        joinedAt: currentProfile?.created_at || undefined, // BUG #10: Include for pagination cursor (may be undefined)
+        farcaster: fid ? {
+          fid: fid,
+          username: farcasterData?.username || currentProfile?.display_name || `fid:${fid}`,
+          displayName: farcasterData?.displayName || currentProfile?.display_name || '',
+          pfpUrl: farcasterData?.pfpUrl || currentProfile?.avatar_url || '',
+        } : {
+          fid: 0,
+          username: address, // Fallback to address if no FID
+          displayName: '',
+          pfpUrl: '',
+        },
+        badges: memberBadges,
+        leaderboardStats: {
+          pointsBalance: aggregatedStats.pointsBalance,
+          viralPoints: aggregatedStats.viralPoints,
+          guildBonusPoints: aggregatedStats.guildBonusPoints,
+          totalScore: aggregatedStats.totalScore,
+          globalRank: rankData?.points_rank || null,
+          rankTier: getTierFromRank(rankData?.points_rank),
+          isGuildOfficer: officers.has(address),
+        }
+      }
+    }))
     
     return {
       guild: {
@@ -242,7 +536,13 @@ async function fetchGuildFromSupabase(guildId: string): Promise<{
         active: true,
         treasury: totalPoints,
       },
-      members
+      members: enrichedMembers,
+      pagination: {
+        nextCursor,
+        hasMore,
+        totalCount: memberCount,
+        fetched: enrichedMembers.length,
+      },
     }
   } catch (error) {
     console.error('[guild-detail] fetchGuildFromSupabase error:', error)
@@ -298,26 +598,64 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
       return []
     }
     
-    console.log('[guild-api] Fetching leaderboard stats from Subsquid...')
-    // Query Subsquid for leaderboard stats for each member
-    const { getLeaderboardEntry } = await import('@/lib/subsquid-client')
+    console.log('[guild-api] Fetching member stats from Supabase...')
+    // Query Supabase for points balances for each member
+    
+    // First, get guild metadata and officers
+    const { data: guildMeta } = await supabase
+      .from('guild_metadata')
+      .select('name')
+      .eq('guild_id', guildId.toString())
+      .single()
+    
+    const { data: events } = await supabase
+      .from('guild_events')
+      .select('event_type, actor_address, target_address')
+      .eq('guild_id', guildId.toString())
+      .in('event_type', ['GUILD_CREATED', 'MEMBER_PROMOTED', 'MEMBER_DEMOTED'])
+      .order('created_at', { ascending: false })
+    
+    // Build officers set
+    const officers = new Set<string>()
+    for (const event of events || []) {
+      if (event.event_type === 'GUILD_CREATED') {
+        officers.add(event.actor_address)
+      } else if (event.event_type === 'MEMBER_PROMOTED' && event.target_address) {
+        officers.add(event.target_address)
+      } else if (event.event_type === 'MEMBER_DEMOTED' && event.target_address) {
+        officers.delete(event.target_address)
+      }
+    }
     
     const membersWithStats = await Promise.all(
       guildProfiles.map(async (profile) => {
         try {
-          const stats = await getLeaderboardEntry(profile.wallet_address || profile.fid)
+          // Get points balance (migrations applied Dec 22)
+          const { data: stats } = await supabase
+            .from('user_points_balances')
+            .select('points_balance, viral_points, guild_points_awarded, total_score')
+            .eq('fid', profile.fid)
+            .single()
+          
+          // Get global rank from leaderboard view
+          const { data: rankData } = await supabase
+            .from('points_leaderboard')
+            .select('points_rank')
+            .eq('fid', profile.fid)
+            .single()
+          
           return stats ? {
             address: profile.wallet_address,
             farcaster_fid: profile.fid,
-            is_guild_officer: stats.isGuildOfficer || false,
-            base_points: stats.basePoints || 0,
-            viral_xp: stats.viralXP || 0,
-            guild_bonus_points: stats.guildBonusPoints || 0,
-            total_score: stats.totalScore || 0,
-            global_rank: stats.rank,
-            rank_tier: getTierFromRank(stats.rank),
-            guild_id: stats.guildId,
-            guild_name: stats.guildName
+            isGuildOfficer: officers.has(profile.wallet_address || ''),
+            pointsBalance: stats.points_balance || 0,
+            viralPoints: stats.viral_points || 0,
+            guildBonusPoints: stats.guild_points_awarded || 0,
+            totalScore: stats.total_score || 0,
+            globalRank: rankData?.points_rank || null,
+            rankTier: getTierFromRank(rankData?.points_rank),
+            guildId: guildId.toString(),
+            guildName: guildMeta?.name || 'Unknown Guild'
           } : null
         } catch (err) {
           console.error(`[guild-api] Error fetching stats for profile ${profile.fid}:`, err)
@@ -422,18 +760,18 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
         
         return {
           address: m.address,
-          isOfficer: m.is_guild_officer || false,
-          points: (m.base_points || 0).toString(),
+          isOfficer: m.isGuildOfficer || false,
+          points: (m.pointsBalance || 0).toString(),
           farcaster: farcasterProfile,
           badges: userBadges,
           leaderboardStats: {
-            base_points: m.base_points || 0,
-            viral_xp: m.viral_xp || 0,
-            guild_bonus_points: m.guild_bonus_points || 0,
-            total_score: m.total_score || 0,
-            global_rank: m.global_rank,
-            rank_tier: m.rank_tier,
-            is_guild_officer: m.is_guild_officer || false,
+            pointsBalance: m.pointsBalance || 0,
+            viralPoints: m.viralPoints || 0,
+            guildBonusPoints: m.guildBonusPoints || 0,
+            totalScore: m.totalScore || 0,
+            globalRank: m.globalRank,
+            rankTier: m.rankTier,
+            isGuildOfficer: m.isGuildOfficer || false,
           }
         }
       }))
@@ -538,11 +876,11 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
           )
         }
         
-        // Fetch leaderboard stats
+        // Fetch leaderboard stats (migrations applied Dec 22)
         const { data: leaderboardData } = await supabase
-          .from('leaderboard_calculations')
-          .select('base_points, viral_xp, guild_bonus_points, total_score, global_rank, rank_tier, is_guild_officer')
-          .eq('farcaster_fid', profile.fid)
+          .from('user_points_balances')
+          .select('points_balance, viral_points, guild_points_awarded, total_score')
+          .eq('fid', profile.fid)
           .single()
         
         // Fetch real Farcaster profile from Neynar
@@ -583,20 +921,28 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
         return [{
           address: leaderAddress,
           isOfficer: true,
-          points: leaderboardData?.base_points?.toString() || '0',
+          points: leaderboardData?.points_balance?.toString() || '0',
           farcaster: farcasterProfile || (profile.fid ? {
             fid: profile.fid,
             username: profile.wallet_address || leaderAddress,
           } : null),
           badges: badges || [],
-          leaderboardStats: leaderboardData || {
-            base_points: 0,
-            viral_xp: 0,
-            guild_bonus_points: 0,
-            total_score: 0,
-            global_rank: null,
-            rank_tier: null,
-            is_guild_officer: true,
+          leaderboardStats: leaderboardData ? {
+            pointsBalance: leaderboardData.points_balance || 0,
+            viralPoints: leaderboardData.viral_points || 0,
+            guildBonusPoints: leaderboardData.guild_points_awarded || 0,
+            totalScore: leaderboardData.total_score || 0,
+            globalRank: null,
+            rankTier: null,
+            isGuildOfficer: true,
+          } : {
+            pointsBalance: 0,
+            viralPoints: 0,
+            guildBonusPoints: 0,
+            totalScore: 0,
+            globalRank: null,
+            rankTier: null,
+            isGuildOfficer: true,
           }
         }]
       }
@@ -612,13 +958,13 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
       farcaster: null,
       badges: [],
       leaderboardStats: {
-        base_points: 0,
-        viral_xp: 0,
-        guild_bonus_points: 0,
-        total_score: 0,
-        global_rank: null,
-        rank_tier: null,
-        is_guild_officer: true,
+        pointsBalance: 0,
+        viralPoints: 0,
+        guildBonusPoints: 0,
+        totalScore: 0,
+        globalRank: null,
+        rankTier: null,
+        isGuildOfficer: true,
       }
     }]
   } catch (error) {
@@ -632,13 +978,13 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
       farcaster: null,
       badges: [],
       leaderboardStats: {
-        base_points: 0,
-        viral_xp: 0,
-        guild_bonus_points: 0,
-        total_score: 0,
-        global_rank: null,
-        rank_tier: null,
-        is_guild_officer: true,
+        pointsBalance: 0,
+        viralPoints: 0,
+        guildBonusPoints: 0,
+        totalScore: 0,
+        globalRank: null,
+        rankTier: null,
+        isGuildOfficer: true,
       }
     }]
   }
@@ -652,13 +998,13 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
   const startTime = Date.now()
   const requestId = generateRequestId()
   
   try {
-    const { guildId: guildIdParam } = params
+    const { guildId: guildIdParam } = await params
     
     // 1. RATE LIMITING (use lib/ infrastructure)
     const clientIp = getClientIp(req)
@@ -684,11 +1030,21 @@ export async function GET(
       })
     }
 
+    // BUG #10 FIX: Parse pagination query parameters
+    const { searchParams } = new URL(req.url)
+    const limitParam = searchParams.get('limit')
+    const cursorParam = searchParams.get('cursor')
+    
+    const limit = limitParam ? Math.min(parseInt(limitParam, 10), 100) : 50 // Max 100 per page
+    const cursor = cursorParam || null
+
     // 3. FETCH GUILD DATA (with caching - TRUE HYBRID)
+    // Note: Cache key includes pagination params for correct cache segmentation
+    const cacheKey = cursor ? `${guildIdParam}-${limit}-${cursor}` : guildIdParam
     const result = await getCached(
       'guild-detail',
-      guildIdParam,
-      async () => await fetchGuildFromSupabase(guildIdParam),
+      cacheKey,
+      async () => await fetchGuildFromSupabase(guildIdParam, { limit, cursor }),
       { ttl: 60 }
     )
     
@@ -716,10 +1072,20 @@ export async function GET(
         treasury: result.guild.treasury.toString(),
       },
       members: result.members,
+      // BUG #10 FIX: Cursor-based pagination metadata
+      pagination: {
+        limit,
+        cursor,
+        nextCursor: result.pagination.nextCursor,
+        hasMore: result.pagination.hasMore,
+        totalCount: result.pagination.totalCount,
+        fetched: result.pagination.fetched,
+      },
+      // Deprecated: kept for backward compatibility
       meta: {
         membersFetched: result.members.length,
         totalMembers: result.guild.memberCount,
-        hasMore: result.members.length < result.guild.memberCount,
+        hasMore: result.pagination.hasMore,
       },
     }
 

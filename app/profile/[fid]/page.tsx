@@ -86,7 +86,7 @@ export default function ProfilePage() {
     totalScore: number
     pointsBalance: number
     pendingRewards: number
-    viralXp: number
+    viralPoints: number
     guildBonus: number
     referralBonus: number
     streakBonus: number
@@ -239,7 +239,7 @@ export default function ProfilePage() {
               totalScore: userEntry.total_score || 0,
               pointsBalance: userEntry.points_balance || 0,
               pendingRewards: userEntry.pending_rewards || 0,
-              viralXp: userEntry.viral_xp || 0,
+              viralPoints: userEntry.viral_points || 0,
               guildBonus: userEntry.guild_bonus || 0,
               referralBonus: userEntry.referral_bonus || 0,
               streakBonus: userEntry.streak_bonus || 0,
@@ -308,7 +308,7 @@ export default function ProfilePage() {
                 totalScore={rewardsData.totalScore}
                 pointsBalance={rewardsData.pointsBalance}
                 pendingRewards={rewardsData.pendingRewards}
-                viralXp={rewardsData.viralXp}
+                viralPoints={rewardsData.viralPoints}
                 guildBonus={rewardsData.guildBonus}
                 referralBonus={rewardsData.referralBonus}
                 streakBonus={rewardsData.streakBonus}
@@ -533,7 +533,7 @@ export default function ProfilePage() {
           isOpen={isClaimModalOpen}
           onClose={() => setIsClaimModalOpen(false)}
           pendingRewards={rewardsData.pendingRewards}
-          viralXp={rewardsData.viralXp}
+          viralPoints={rewardsData.viralPoints}
           guildBonus={rewardsData.guildBonus}
           referralBonus={rewardsData.referralBonus}
           streakBonus={rewardsData.streakBonus}

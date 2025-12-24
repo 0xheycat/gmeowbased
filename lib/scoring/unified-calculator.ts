@@ -40,16 +40,16 @@
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * 1. FETCH LAYER 1 (Blockchain):
- *    blockchainPoints = Subsquid User.totalPoints (GM rewards)
+ *    pointsBalance = Subsquid User.pointsBalance (GM rewards)
  * 
  * 2. FETCH LAYER 2 (Off-Chain):
- *    viralXP = SUM(badge_casts.viral_bonus_xp)
+ *    viralPoints = SUM(badge_casts.viral_points)
  *    questPoints = SUM(user_quest_progress.points)
  *    guildPoints = SUM(guild_activity.points)
  *    referralPoints = SUM(referrals.points)
  * 
  * 3. CALCULATE TOTAL SCORE:
- *    totalScore = blockchainPoints + viralXP + questPoints + guildPoints + referralPoints
+ *    totalScore = pointsBalance + viralPoints + questPoints + guildPoints + referralPoints
  * 
  * 4. DERIVE LEVEL:
  *    level = calculateLevelProgress(totalScore)
@@ -146,8 +146,8 @@ export type ViralTierConfig = {
 }
 
 export type TotalScore = {
-  blockchainPoints: number   // Layer 1: Subsquid User.totalPoints
-  viralXP: number            // Layer 2: SUM(badge_casts.viral_bonus_xp)
+  pointsBalance: number      // Layer 1: Subsquid User.pointsBalance (blockchain state)
+  viralPoints: number        // Layer 2: SUM(badge_casts.viral_points)
   questPoints: number        // Layer 2: SUM(user_quest_progress.points)
   guildPoints: number        // Layer 2: SUM(guild_activity.points)
   referralPoints: number     // Layer 2: SUM(referrals.points)
@@ -167,8 +167,8 @@ export type CompleteStats = {
   // Display formatting
   formatted: {
     totalScore: string
-    blockchainPoints: string
-    viralXP: string
+    pointsBalance: string
+    viralPoints: string
     level: string
     rankTier: string
   }
@@ -644,6 +644,25 @@ export function calculateViralBonus(metrics: EngagementMetrics): {
 }
 
 /**
+ * Check if engagement metrics have increased
+ * Used to prevent duplicate XP awards for same metrics
+ * 
+ * @param current - Current engagement metrics
+ * @param previous - Previous engagement metrics
+ * @returns True if any metric increased
+ */
+export function hasMetricsIncreased(
+  current: EngagementMetrics,
+  previous: EngagementMetrics
+): boolean {
+  return (
+    current.likes > previous.likes ||
+    current.recasts > previous.recasts ||
+    current.replies > previous.replies
+  )
+}
+
+/**
  * Calculate incremental XP bonus (only award for new engagement)
  * Prevents double-rewarding users for same engagement metrics
  * 
@@ -849,27 +868,27 @@ export function formatLastActive(lastActive: string): string {
  */
 export function calculateCompleteStats(input: {
   // Layer 1: Blockchain (Subsquid)
-  blockchainPoints: number      // User.totalPoints (GM rewards with streak multiplier)
+  pointsBalance: number          // User.pointsBalance (GM rewards with streak multiplier)
   currentStreak: number          // User.currentStreak
   lastGMTimestamp: number | null // User.lastGMTimestamp
   lifetimeGMs: number            // User.lifetimeGMs
   
   // Layer 2: Off-Chain (Supabase)
-  viralXP: number                // SUM(badge_casts.viral_bonus_xp)
+  viralPoints: number            // SUM(badge_casts.viral_points)
   questPoints?: number           // SUM(user_quest_progress.points)
   guildPoints?: number           // SUM(guild_activity.points)
   referralPoints?: number        // SUM(referrals.points)
 }): CompleteStats {
   // STEP 1: Calculate total score (Layer 1 + Layer 2)
   const scores: TotalScore = {
-    blockchainPoints: input.blockchainPoints,
-    viralXP: input.viralXP,
+    pointsBalance: input.pointsBalance,
+    viralPoints: input.viralPoints,
     questPoints: input.questPoints || 0,
     guildPoints: input.guildPoints || 0,
     referralPoints: input.referralPoints || 0,
     totalScore:
-      input.blockchainPoints +
-      input.viralXP +
+      input.pointsBalance +
+      input.viralPoints +
       (input.questPoints || 0) +
       (input.guildPoints || 0) +
       (input.referralPoints || 0),
@@ -884,8 +903,8 @@ export function calculateCompleteStats(input: {
   // STEP 4: Format for display
   const formatted = {
     totalScore: formatPoints(scores.totalScore),
-    blockchainPoints: formatPoints(scores.blockchainPoints),
-    viralXP: formatPoints(scores.viralXP),
+    pointsBalance: formatPoints(scores.pointsBalance),
+    viralPoints: formatPoints(scores.viralPoints),
     level: level.level.toString(),
     rankTier: rank.currentTier.name,
   }
@@ -918,8 +937,8 @@ export interface StatsCalculationResult {
   streak: number
   totalScore: number
   formattedStats: {
-    base_points: string
-    viral_xp: string
+    points_balance: string      // Renamed from base_points
+    viral_points: string        // Renamed from viral_xp
     total_score: string
     quest_completions: string
     badge_count: string
@@ -932,27 +951,29 @@ export interface StatsCalculationResult {
  * Used by legacy calculateStats wrapper
  */
 export interface ProfileStats {
-  // Points & XP (from leaderboard_calculations)
-  viral_xp: number
-  base_points: number
-  guild_bonus: number
-  referral_bonus: number
-  streak_bonus: number
-  badge_prestige: number
+  // Primary fields (from user_points_balances)
+  points_balance: number        // Renamed from base_points
+  viral_points: number          // Renamed from viral_xp
+  guild_points_awarded: number  // Renamed from guild_bonus
   total_score: number
   
-  // Progression
+  // Calculated fields
   level: number
-  global_rank: number
   rank_tier: string
-  streak: number
+  current_streak: number        // Renamed from streak (from Subsquid)
   
-  // Activity Metrics
+  // Legacy/calculated fields (optional for backward compatibility)
+  global_rank?: number
+  referral_bonus?: number
+  streak_bonus?: number
+  badge_prestige?: number
+  
+  // Activity metrics
   quest_completions: number
   badge_count: number
   viral_casts: number
   
-  // Time-based
+  // Timestamps
   member_since: string
   last_active: string
 }
@@ -973,12 +994,11 @@ export function calculateStats(stats: ProfileStats): StatsCalculationResult {
   // Calculate level from total_score (UNIFIED SYSTEM)
   const levelData = calculateLevelProgress(stats.total_score)
   
-  // Calculate rank tier from total_score (UNIFIED SYSTEM - uses total_score NOT base_points)
+  // Calculate rank tier from total_score (UNIFIED SYSTEM - uses total_score NOT points_balance)
   const tier = getRankTierByPoints(stats.total_score)
   
-  // Calculate streak from streak_bonus (10 points per day - matching old system)
-  const POINTS_PER_DAY = 10
-  const streak = Math.floor(stats.streak_bonus / POINTS_PER_DAY)
+  // Get streak directly (no calculation needed - comes from Subsquid currentStreak)
+  const streak = stats.current_streak
   
   // Create rank progress object (UNIFIED FORMAT)
   const rankProgress: RankProgress = {
@@ -991,10 +1011,10 @@ export function calculateStats(stats: ProfileStats): StatsCalculationResult {
     pointsToNext: levelData.xpToNextLevel,
   }
   
-  // Format numbers for display (UNIFIED FORMATTERS)
+  // Format numbers for display (UNIFIED FORMATTERS) - using new field names
   const formattedStats = {
-    base_points: formatNumber(stats.base_points),
-    viral_xp: formatNumber(stats.viral_xp),
+    points_balance: formatNumber(stats.points_balance),
+    viral_points: formatNumber(stats.viral_points),
     total_score: formatNumber(stats.total_score),
     quest_completions: formatNumber(stats.quest_completions),
     badge_count: formatNumber(stats.badge_count),

@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     // 5. VERIFY CREATOR HAS SUFFICIENT POINTS
     const { data: leaderboardData, error: leaderboardError } = await supabase
       .from('user_points_balances')
-      .select('total_points')
+      .select('total_score')
       .eq('fid', body.creator_fid)
       .single() as { data: Database['public']['Tables']['user_points_balances']['Row'], error: any };
     
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    const creatorPoints = leaderboardData.total_points || 0;
+    const creatorPoints = leaderboardData.total_score || 0;
     
     if (creatorPoints < cost.total) {
       return createErrorResponse({
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
         completion_count: 0,
         expiry_date: body.ends_at,
         cover_image_url: body.cover_image_url,
-        min_viral_xp_required: 0,
+        min_viral_points_required: 0,
         is_featured: false,
         tags: [body.category, body.difficulty],
         participant_count: 0,
@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('user_points_balances')
         .update({ 
-          base_points: creatorPoints, // Restore original points
+          points_balance: creatorPoints, // Restore original points
           updated_at: new Date().toISOString()
         })
         .eq('fid', body.creator_fid);

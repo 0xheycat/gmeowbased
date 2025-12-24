@@ -227,34 +227,14 @@ CREATE TRIGGER trigger_update_referral_registrations_timestamp
   EXECUTE FUNCTION update_referral_registrations_timestamp();
 
 -- =====================================================
--- Sample Data (for testing)
+-- Sample Data Removed (Dec 24, 2025)
 -- =====================================================
--- Insert sample data only if tables are empty
-
-DO $$
-BEGIN
-  -- Check if referral_stats is empty
-  IF NOT EXISTS (SELECT 1 FROM referral_stats LIMIT 1) THEN
-    INSERT INTO referral_stats (fid, address, username, avatar, total_referrals, points_earned, tier, rank)
-    VALUES
-      (18139, '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb', 'testuser1', 'https://i.imgur.com/example1.jpg', 10, 500, 'gold', 1),
-      (12345, '0x0000000000000000000000000000000000000001', 'testuser2', 'https://i.imgur.com/example2.jpg', 5, 250, 'silver', 2),
-      (67890, '0x0000000000000000000000000000000000000002', 'testuser3', 'https://i.imgur.com/example3.jpg', 2, 100, 'bronze', 3);
-    
-    RAISE NOTICE 'Sample referral_stats inserted';
-  END IF;
-  
-  -- Check if referral_activity is empty
-  IF NOT EXISTS (SELECT 1 FROM referral_activity LIMIT 1) THEN
-    INSERT INTO referral_activity (fid, event_type, referral_code, points_awarded)
-    VALUES
-      (18139, 'code_registered', 'TESTCODE', 0),
-      (18139, 'code_used', 'TESTCODE', 50),
-      (18139, 'referral_completed', 'TESTCODE', 100);
-    
-    RAISE NOTICE 'Sample referral_activity inserted';
-  END IF;
-END $$;
+-- Migration cleaned: No mock/test data in production migrations
+-- Test data should be added via scripts/sql/seed_test_data.sql for local dev only
+-- Production data will come from:
+-- - Blockchain events (via Subsquid indexer)
+-- - Neynar API (via lib/integrations/neynar.ts)
+-- - User activity (via API endpoints)
 
 -- =====================================================
 -- Verification

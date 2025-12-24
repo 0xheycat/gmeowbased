@@ -8,6 +8,7 @@
  * 
  * Request Body:
  * {
+ *   "address": string (0x... wallet address - REQUIRED),
  *   "name"?: string (2-50 chars),
  *   "description"?: string (max 500 chars),
  *   "banner"?: string (URL)
@@ -31,9 +32,16 @@ import { z } from 'zod'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { getGuild } from '@/lib/contracts/guild-contract'
 import { getSupabaseAdminClient } from '@/lib/supabase/edge'
+import { type Address } from 'viem'
+import { logGuildEvent } from '@/lib/guild/event-logger'
+import { invalidateCachePattern } from '@/lib/cache/server'
 
 // Validation schema
 const GuildUpdateSchema = z.object({
+  address: z.union([
+    z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid wallet address'),
+    z.array(z.string().regex(/^0x[a-fA-F0-9]{40}$/)).min(1).max(10) // Support multi-wallet (cachedWallets)
+  ]).transform(val => Array.isArray(val) ? val : [val]), // Normalize to array
   name: z.string().min(2).max(50).optional(),
   description: z.string().max(500).optional(),
   banner: z.string().url().max(500).optional().or(z.literal('')),
@@ -41,12 +49,12 @@ const GuildUpdateSchema = z.object({
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
   const requestId = generateRequestId()
   
   try {
-    const { guildId } = params
+    const { guildId } = await params
 
     // 1. Rate limiting
     const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
@@ -83,6 +91,9 @@ export async function PUT(
     }
 
     const { name, description, banner } = validation.data
+    
+    // Normalize addresses to lowercase (validation.data.address is now always an array)
+    const addresses = validation.data.address.map(addr => addr.toLowerCase() as Address)
 
     // 4. Verify guild exists on contract
     const guild = await getGuild(guildIdBigInt)
@@ -93,15 +104,24 @@ export async function PUT(
       )
     }
 
-    // 5. Check if user is guild leader (TODO: Add auth when available)
-    // For now, we'll allow updates but in production you should verify:
-    // const userAddress = await getUserAddress(req)
-    // if (userAddress !== guild.leader) {
-    //   return NextResponse.json(
-    //     { success: false, message: 'Only guild leader can update settings' },
-    //     { status: 403 }
-    //   )
-    // }
+    // 5. AUTHENTICATION - Check if ANY wallet is guild leader (multi-wallet support)
+    const leaderLowercase = guild.leader.toLowerCase()
+    const isLeader = addresses.some(addr => leaderLowercase === addr)
+    const matchingAddress = addresses.find(addr => leaderLowercase === addr) || addresses[0]
+    
+    if (!isLeader) {
+      console.warn('[guild-update] Authorization failed:', {
+        requestedBy: addresses,
+        guildLeader: leaderLowercase,
+        guildId,
+        timestamp: new Date().toISOString(),
+      })
+      
+      return NextResponse.json(
+        { success: false, message: 'Only guild leader can update settings' },
+        { status: 403, headers: { 'X-Request-ID': requestId } }
+      )
+    }
 
     // 6. Update guild metadata in database
     const supabase = getSupabaseAdminClient()
@@ -144,7 +164,37 @@ export async function PUT(
       if (error) throw error
     }
 
-    // 7. Fetch updated data
+    // 7. AUDIT LOGGING - Log the update event
+    const metadata: Record<string, any> = { 
+      guild_name: name || guild.name,
+      all_verified_addresses: addresses // Multi-wallet audit trail
+    }
+    if (name) metadata.new_name = name
+    if (description) metadata.new_description = description
+    if (banner) metadata.new_banner = banner
+    
+    logGuildEvent({
+      guild_id: guildId,
+      event_type: 'GUILD_UPDATED',
+      actor_address: matchingAddress,
+      metadata,
+    }).catch((error) => {
+      console.error('[guild-update] Failed to log event:', error)
+    })
+
+    // CACHE INVALIDATION - Clear stale guild data after mutation
+    invalidateCachePattern('guild', `${guildId}:*`).catch((error) => {
+      console.error('[guild-update] Failed to invalidate cache:', error)
+    })
+    // Also invalidate guild list caches
+    invalidateCachePattern('guild', 'leaderboard:*').catch((error) => {
+      console.error('[guild-update] Failed to invalidate leaderboard cache:', error)
+    })
+    invalidateCachePattern('guild', 'list:*').catch((error) => {
+      console.error('[guild-update] Failed to invalidate list cache:', error)
+    })
+
+    // 8. Fetch updated data
     const { data: updatedGuild, error: fetchError } = await supabase
       .from('guild_metadata')
       .select('guild_id, name, description, banner')

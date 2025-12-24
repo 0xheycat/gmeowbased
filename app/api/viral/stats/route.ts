@@ -56,13 +56,13 @@ type TierBreakdown = {
 type ViralStats = {
   fid: number
   // Layer 2: Supabase (off-chain viral engagement)
-  totalViralXp: number
+  viralPoints: number
   totalCasts: number
   topCasts: ViralCastStat[]
   tierBreakdown: TierBreakdown
-  averageXpPerCast: number
+  averagePointsPerCast: number
   // Layer 1: Subsquid (blockchain stats)
-  blockchainPoints: number
+  pointsBalance: number
   globalRank: number | null
   currentStreak: number
   // Layer 3: Calculated (unified-calculator)
@@ -156,7 +156,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     
     if (!casts || casts.length === 0) {
       // LAYER 3: Calculate stats even with no viral XP
-      const blockchainPoints = blockchainStats?.totalScore || 0
+      const blockchainPoints = blockchainStats?.pointsBalance || 0
       const totalScore = blockchainPoints + 0 // No viral XP yet
       const levelData = calculateLevelProgress(totalScore)
       const rankTier = getRankTierByPoints(totalScore)
@@ -177,22 +177,22 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
         averageXpPerCast: 0,
         // Layer 1: Blockchain
         blockchainPoints,
-        globalRank: blockchainStats?.rank || null,
-        currentStreak: Math.floor((blockchainStats?.streakBonus || 0) / 10), // 10 points per streak day
+        globalRank: null,
+        currentStreak: blockchainStats?.currentStreak || 0,
         // Layer 3: Calculated
         totalScore,
         level: levelData.level,
         rankTier: rankTier.name,
-        message: 'No badge casts found. Share your first badge to start earning viral XP!',
+        message: 'No badge casts found. Share your first badge to start earning viral points!',
       }
     }
     
-    // Calculate total viral XP
-    const totalViralXp = casts.reduce((sum, cast) => sum + (cast.viral_bonus_xp || 0), 0)
+    // Calculate total viral points
+    const viralPoints = casts.reduce((sum, cast) => sum + (cast.viral_bonus_points || 0), 0)
     
     // Build top casts list with tier information
     const topCasts: ViralCastStat[] = casts
-      .filter(cast => cast.viral_bonus_xp && cast.viral_bonus_xp > 0)
+      .filter(cast => cast.viral_bonus_points && cast.viral_bonus_points > 0)
       .map(cast => {
         const metrics: EngagementMetrics = {
           likes: cast.likes_count || 0,
@@ -213,7 +213,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
           score,
           tier: tier.name,
           tierEmoji: tier.emoji,
-          bonusXp: cast.viral_bonus_xp || 0,
+          bonusXp: cast.viral_bonus_points || 0,
           createdAt: cast.created_at,
         }
       })
@@ -246,23 +246,23 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     })
     
     // LAYER 3: Calculated - Use unified-calculator for total score, level, rank
-        const blockchainPoints = blockchainStats?.totalScore || 0
-        const totalScore = blockchainPoints + totalViralXp
+        const pointsBalance = blockchainStats?.pointsBalance || 0
+        const totalScore = pointsBalance + viralPoints
         const levelData = calculateLevelProgress(totalScore)
         const rankTier = getRankTierByPoints(totalScore)
 
         return {
           fid,
           // Layer 2: Viral engagement (off-chain)
-          totalViralXp,
+          viralPoints,
           totalCasts: casts.length,
           topCasts,
           tierBreakdown,
-          averageXpPerCast: casts.length > 0 ? Math.round(totalViralXp / casts.length) : 0,
+          averagePointsPerCast: casts.length > 0 ? Math.round(viralPoints / casts.length) : 0,
           // Layer 1: Blockchain (on-chain)
-          blockchainPoints,
-          globalRank: blockchainStats?.rank || null,
-          currentStreak: Math.floor((blockchainStats?.streakBonus || 0) / 10), // 10 points per streak day
+          pointsBalance,
+          globalRank: null,
+          currentStreak: blockchainStats?.currentStreak || 0,
           // Layer 3: Calculated (unified-calculator)
           totalScore,
           level: levelData.level,

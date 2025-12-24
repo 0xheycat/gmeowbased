@@ -1,7 +1,7 @@
 /**
  * GET /api/guild/[guildId]/events
  * 
- * Purpose: Fetch recent guild events for activity feed
+ * Purpose: Fetch recent guild events for activity feed with cursor-based pagination
  * Method: GET
  * Auth: Optional (public events)
  * Rate Limit: 60 requests/hour
@@ -9,14 +9,22 @@
  * Query Parameters:
  * - limit?: number (default: 50, max: 100)
  * - type?: GuildEventType (filter by event type)
+ * - cursor?: string (ISO timestamp for pagination, fetch events older than this)
  * 
  * Response:
  * {
  *   "success": boolean,
  *   "events": GuildEventRecord[],
  *   "total": number,
+ *   "nextCursor": string | null,
+ *   "hasMore": boolean,
  *   "timestamp": number
  * }
+ * 
+ * Security Fix (BUG #5 - Dec 24, 2025):
+ * - Cursor-based pagination prevents unbounded query DoS attacks
+ * - Hard limit of 100 events per request enforced
+ * - Follows notifications API pagination pattern
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -49,9 +57,10 @@ export async function GET(
       100
     )
     const eventType = searchParams.get('type')
+    const cursor = searchParams.get('cursor') ?? undefined // ISO timestamp for pagination
 
-    // Fetch events
-    let events = await getGuildEvents(guildId, limit)
+    // Fetch events with cursor-based pagination
+    let events = await getGuildEvents(guildId, limit, cursor)
 
     // Filter by type if specified
     if (eventType) {
@@ -64,11 +73,18 @@ export async function GET(
       formatted_message: formatEventMessage(event),
     }))
 
+    // Calculate next cursor for pagination
+    const nextCursor = formattedEvents.length > 0
+      ? formattedEvents[formattedEvents.length - 1].created_at
+      : null
+
     return NextResponse.json(
       {
         success: true,
         events: formattedEvents,
         total: events.length,
+        nextCursor, // ISO timestamp for fetching next page
+        hasMore: events.length === limit, // true if there might be more data
         timestamp: Date.now(),
       },
       {

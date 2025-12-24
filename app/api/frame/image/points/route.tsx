@@ -31,12 +31,12 @@ export async function GET(req: NextRequest) {
       const username = getStringParam(searchParams, 'username', 'Pilot')
       const gmXP = getNumericParam(searchParams, 'gmXP', 0)
       const questXP = getNumericParam(searchParams, 'questXP', 0)
-      const viralXP = getNumericParam(searchParams, 'viralXP', 0)
+      const viralPoints = getNumericParam(searchParams, 'viralPoints', 0)
 
-    const total = gmXP + questXP + viralXP || 1
+    const total = gmXP + questXP + viralPoints || 1
     const gmPercent = Math.round((gmXP / total) * 100)
     const questPercent = Math.round((questXP / total) * 100)
-    const viralPercent = Math.round((viralXP / total) * 100)
+    const viralPercent = Math.round((viralPoints / total) * 100)
 
     const [fonts, bgImage] = await Promise.all([
       loadFrameFonts(),
@@ -311,7 +311,7 @@ export async function GET(req: NextRequest) {
                       fontWeight: 700,
                     }}
                   >
-                    {viralXP}
+                    {viralPoints}
                   </div>
                   <div
                     style={{ display: 'flex', fontSize: FRAME_FONTS_V2.caption,

@@ -13,19 +13,15 @@
 import { getSupabaseServerClient } from '@/lib/supabase';
 import type { Database } from '@/types/supabase'
 
-// Toggle for development/testing
-const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_GM === 'true' || false;
-
 /**
  * Get user wallet address from FID
  * This is the PRIMARY Supabase query for GM frame.
  * Subsquid handles all blockchain data.
+ * 
+ * NOTE: For multi-wallet support, use getAllWalletsForFID() from:
+ * @see lib/integrations/neynar-wallet-sync.ts
  */
 export async function getWalletFromFid(fid: number): Promise<string | null> {
-  if (USE_MOCK_DATA) {
-    console.log('[getWalletFromFid] Using mock data');
-    return '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
-  }
 
   const supabase = getSupabaseServerClient();
   

@@ -329,10 +329,20 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
         username: e.actor_address ? `${e.actor_address.slice(0, 6)}...${e.actor_address.slice(-4)}` : 'Unknown',
         timestamp: e.created_at || new Date().toISOString(),
         details: e.event_type === 'POINTS_DEPOSITED' 
-          ? `Deposited ${Number(e.amount || 0)} points`
+          ? `Deposited ${Number(e.amount || 0).toLocaleString()} points`
+          : e.event_type === 'POINTS_CLAIMED'
+          ? `Claimed ${Number(e.amount || 0).toLocaleString()} points`
           : e.event_type === 'MEMBER_JOINED'
           ? 'Joined guild'
-          : 'Completed quest'
+          : e.event_type === 'GUILD_UPDATED'
+          ? 'Updated guild settings'
+          : e.event_type === 'MEMBER_PROMOTED'
+          ? 'Promoted member'
+          : e.event_type === 'MEMBER_DEMOTED'
+          ? 'Demoted member'
+          : e.event_type === 'GUILD_CREATED'
+          ? 'Created guild'
+          : 'Guild activity'
       }))
 
       // Calculate level from total members
@@ -442,10 +452,20 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
         username: e.actor_address ? `${e.actor_address.slice(0, 6)}...${e.actor_address.slice(-4)}` : 'Unknown',
         timestamp: e.created_at || new Date().toISOString(),
         details: e.event_type === 'POINTS_DEPOSITED' 
-          ? `Deposited ${Number(e.amount || 0)} points`
+          ? `Deposited ${Number(e.amount || 0).toLocaleString()} points`
+          : e.event_type === 'POINTS_CLAIMED'
+          ? `Claimed ${Number(e.amount || 0).toLocaleString()} points`
           : e.event_type === 'MEMBER_JOINED'
           ? 'Joined guild'
-          : 'Completed quest'
+          : e.event_type === 'GUILD_UPDATED'
+          ? 'Updated guild settings'
+          : e.event_type === 'MEMBER_PROMOTED'
+          ? 'Promoted member'
+          : e.event_type === 'MEMBER_DEMOTED'
+          ? 'Demoted member'
+          : e.event_type === 'GUILD_CREATED'
+          ? 'Created guild'
+          : 'Guild activity'
       }))
 
     return {

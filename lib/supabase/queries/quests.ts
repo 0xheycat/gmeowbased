@@ -178,17 +178,17 @@ export async function getQuestBySlug(
   // Check if completed
   const isCompleted = userProgress?.status === 'completed';
   
-  // Check if locked (viral XP requirement)
+  // Check if locked (viral points requirement)
   let isLocked = false;
   if (userFid && quest.min_viral_xp_required && quest.min_viral_xp_required > 0) {
-    const { data: leaderboard } = await (supabase as any)
-      .from('leaderboard_weekly')
-      .select('viral_xp')
+    const { data: pointsData } = await (supabase as any)
+      .from('user_points_balances')
+      .select('viral_points')
       .eq('fid', userFid)
       .single();
     
-    const userViralXp = leaderboard?.viral_xp || 0;
-    isLocked = userViralXp < quest.min_viral_xp_required;
+    const userViralPoints = pointsData?.viral_points || 0;
+    isLocked = userViralPoints < quest.min_viral_xp_required;
   }
   
   return {

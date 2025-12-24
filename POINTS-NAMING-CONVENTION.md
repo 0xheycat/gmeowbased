@@ -159,7 +159,440 @@ export type TotalScore = {
 3. ✅ `totalScore` is OK (calculated field, not in contract)
 
 ---
+## 🎯 COMPLETE CALCULATION SYSTEM ARCHITECTURE
 
+### Overview: 3-Layer Points System
+
+**The system separates concerns across 3 distinct layers:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ LAYER 1: BLOCKCHAIN (Immutable Source of Truth)                │
+├─────────────────────────────────────────────────────────────────┤
+│ Contract: GmeowCore.sol                                         │
+│ Storage:  pointsBalance (uint256) - Current spendable          │
+│ Events:   GMSent, PointsDeposited, PointsWithdrawn, etc.       │
+│ Indexer:  Subsquid → User.pointsBalance (mirrors contract)     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ LAYER 2: OFF-CHAIN DATABASE (Supabase)                         │
+├─────────────────────────────────────────────────────────────────┤
+│ viral_points      - Badge cast engagement (calculated)         │
+│ quest_points      - Quest completions (website)                │
+│ guild_points      - Guild activity bonuses (website)           │
+│ referral_points   - Referral rewards (bot API)                 │
+│                                                                 │
+│ NOTE: These are SEPARATE from blockchain points                │
+│       They track off-chain activities                          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ LAYER 3: CALCULATION LOGIC (unified-calculator.ts)             │
+├─────────────────────────────────────────────────────────────────┤
+│ totalScore = pointsBalance + viralPoints + questPoints +       │
+│              guildPoints + referralPoints                      │
+│                                                                 │
+│ level = calculateLevelProgress(totalScore)                     │
+│   Formula: Quadratic progression (300 + n×200 XP/level)        │
+│   Example: Lvl 1→2 = 300 XP, Lvl 2→3 = 500 XP, Lvl 3→4 = 700  │
+│                                                                 │
+│ rankTier = getRankTierByPoints(totalScore)                     │
+│   12 tiers: Signal Kitten → Omniversal Being                   │
+│   Thresholds: 0, 500, 1500, 4000, 8000, 15000, 30000, ...     │
+│                                                                 │
+│ multiplier = getRankMultiplier(rankTier)                       │
+│   Range: 1.0x to 2.0x based on rank tier                       │
+│   Applied to: Quest rewards, viral XP                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Critical Distinction: pointsBalance vs totalScore
+
+**❌ COMMON MISTAKE:** Treating these as the same thing
+
+```typescript
+// WRONG - These are DIFFERENT concepts
+pointsBalance === totalScore  // FALSE!
+
+// CORRECT - Understand the difference
+pointsBalance = contract storage (on-chain only)
+totalScore = pointsBalance + viralPoints + questPoints + guildPoints + referralPoints
+```
+
+**Example:**
+```typescript
+User has:
+  - pointsBalance: 5000 (from blockchain GM rewards)
+  - viralPoints: 1500 (from badge cast engagement)
+  - questPoints: 500 (from quest completions)
+  - guildPoints: 200 (from guild bonuses)
+  - referralPoints: 300 (from referrals)
+
+Result:
+  - pointsBalance: 5000 ← contract storage
+  - totalScore: 7500 ← calculated sum (used for level/rank)
+```
+
+### Multi-Wallet Aggregation (Layer 2.5)
+
+**Users can have multiple wallets. API aggregates all wallets:**
+
+```typescript
+// User Profile in Supabase
+{
+  fid: 18139,
+  wallet_address: "0x1234...",      // Connected wallet
+  custody_address: "0x5678...",     // Farcaster custody
+  verified_addresses: ["0x9abc..."] // Additional wallets
+}
+
+// Subsquid Data (3 separate User records)
+User { id: "0x1234...", pointsBalance: 5000n }
+User { id: "0x5678...", pointsBalance: 3000n }
+User { id: "0x9abc...", pointsBalance: 2000n }
+
+// API Response (aggregated)
+{
+  pointsBalance: 10000,  // 5000 + 3000 + 2000
+  viralPoints: 1500,
+  totalScore: 11500,
+  metadata: {
+    multiWallet: {
+      walletCount: 3,
+      wallets: ["0x1234...", "0x5678...", "0x9abc..."],
+      walletsSuccessful: 3
+    }
+  }
+}
+```
+
+---
+
+## 📊 LEVEL PROGRESSION SYSTEM
+
+### Quadratic Formula (300 + n×200)
+
+**XP required for each level increases quadratically:**
+
+```typescript
+Level 1 → 2: 300 XP
+Level 2 → 3: 500 XP   (+200)
+Level 3 → 4: 700 XP   (+200)
+Level 4 → 5: 900 XP   (+200)
+Level 5 → 6: 1100 XP  (+200)
+...
+```
+
+**Formula:**
+```typescript
+LEVEL_XP_BASE = 300
+LEVEL_XP_INCREMENT = 200
+
+XP for level n = LEVEL_XP_BASE + (n - 1) × LEVEL_XP_INCREMENT
+Total XP to reach level n = Σ(300 + k×200) for k=0 to n-1
+                          = (n-1) × 300 + 200 × [n(n-1)/2]
+```
+
+**Example Calculations:**
+
+| Level | XP Needed | Cumulative XP | Progress |
+|-------|-----------|---------------|----------|
+| 1     | 0         | 0             | Start    |
+| 2     | 300       | 300           | +300     |
+| 3     | 500       | 800           | +500     |
+| 4     | 700       | 1500          | +700     |
+| 5     | 900       | 2400          | +900     |
+| 10    | 2100      | 13500         | +2100    |
+| 20    | 4100      | 58000         | +4100    |
+| 50    | 10100     | 502500        | +10100   |
+| 99    | 19900     | 1950300       | +19900   |
+
+**API Response Structure:**
+
+```typescript
+{
+  level: 5,                  // Current level
+  levelFloor: 2400,          // Total XP to reach level 5
+  nextLevelTarget: 3500,     // Total XP to reach level 6
+  xpIntoLevel: 100,          // Progress into current level
+  xpForLevel: 1100,          // XP needed for level 5→6
+  xpToNextLevel: 1000,       // XP remaining to level up
+  levelPercent: 0.09         // 9% progress (100/1100)
+}
+```
+
+---
+
+## 🏆 RANK TIER SYSTEM (12 Tiers)
+
+### Complete Tier Breakdown
+
+**Rank is determined by `totalScore` (NOT `pointsBalance`):**
+
+```typescript
+rankTier = getRankTierByPoints(totalScore)
+```
+
+**12-Tier Progression:**
+
+| Tier | Name | Min Points | Max Points | Category | Multiplier | Reward |
+|------|------|------------|------------|----------|------------|--------|
+| 1 | Signal Kitten | 0 | 500 | Beginner | 1.0x | First Steps Badge |
+| 2 | Warp Scout | 500 | 1,500 | Beginner | 1.0x | Explorer Badge |
+| 3 | Beacon Runner | 1,500 | 4,000 | Beginner | 1.1x | +10% Quest XP |
+| 4 | Night Operator | 4,000 | 8,000 | Intermediate | 1.2x | Streak Master Badge |
+| 5 | Star Captain | 8,000 | 15,000 | Intermediate | 1.3x | +30% Quest XP |
+| 6 | Void Navigator | 15,000 | 30,000 | Intermediate | 1.4x | Guild Leader Badge |
+| 7 | Quantum Architect | 30,000 | 60,000 | Advanced | 1.5x | +50% Quest XP |
+| 8 | Alpha Cat | 60,000 | 100,000 | Advanced | 1.6x | Alpha Badge |
+| 9 | Nexus Keeper | 100,000 | 200,000 | Advanced | 1.7x | Nexus Badge |
+| 10 | Reality Shaper | 200,000 | 350,000 | Legendary | 1.8x | Reality Badge |
+| 11 | Cosmic Entity | 350,000 | 500,000 | Legendary | 1.9x | Cosmic Badge |
+| 12 | Omniversal Being | 500,000+ | ∞ | Mythic | 2.0x | Omniversal Badge |
+
+### Rank Multipliers
+
+**Multipliers apply to quest rewards and viral XP:**
+
+```typescript
+// Example: User completes quest worth 100 base XP
+// User is "Alpha Cat" (Tier 8, 1.6x multiplier)
+
+baseQuestXP = 100
+rankMultiplier = 1.6
+finalXP = baseQuestXP × rankMultiplier = 160 XP
+
+// User receives 60% bonus XP for being high rank
+```
+
+**Multiplier Progression:**
+
+```typescript
+Beginner (Tiers 1-3):     1.0x - 1.1x  (0-10% bonus)
+Intermediate (Tiers 4-6): 1.2x - 1.4x  (20-40% bonus)
+Advanced (Tiers 7-9):     1.5x - 1.7x  (50-70% bonus)
+Legendary (Tiers 10-11):  1.8x - 1.9x  (80-90% bonus)
+Mythic (Tier 12):         2.0x         (100% bonus)
+```
+
+**API Response Structure:**
+
+```typescript
+{
+  currentTier: {
+    name: "Alpha Cat",
+    minPoints: 60000,
+    maxPoints: 100000,
+    tier: "advanced",
+    reward: { type: "multiplier", value: 1.6, label: "+60% Quest XP" }
+  },
+  nextTier: {
+    name: "Nexus Keeper",
+    minPoints: 100000,
+    maxPoints: 200000
+  },
+  percent: 0.5,              // 50% progress through tier
+  currentFloor: 60000,       // Tier start
+  nextTarget: 100000,        // Tier end
+  pointsIntoTier: 20000,     // Progress (80000 - 60000)
+  pointsToNext: 20000        // Remaining (100000 - 80000)
+}
+```
+
+---
+
+## 🔥 VIRAL ENGAGEMENT SYSTEM
+
+### Engagement Score Calculation
+
+**Formula:**
+```typescript
+score = (recasts × 10) + (replies × 5) + (likes × 2)
+
+ENGAGEMENT_WEIGHTS = {
+  RECAST: 10,  // Highest - amplifies reach
+  REPLY: 5,    // High - drives conversation
+  LIKE: 2      // Medium - shows approval
+}
+```
+
+**Example:**
+```typescript
+Cast has:
+  - 8 recasts
+  - 12 replies
+  - 25 likes
+
+score = (8 × 10) + (12 × 5) + (25 × 2)
+      = 80 + 60 + 50
+      = 190
+```
+
+### 6 Viral Tiers
+
+| Tier | Name | Emoji | XP Reward | Min Score | Example Engagement |
+|------|------|-------|-----------|-----------|-------------------|
+| 1 | Mega Viral | 🔥 | 500 | 100+ | 10 recasts OR 50 likes |
+| 2 | Viral | ⚡ | 250 | 50+ | 5 recasts OR 25 likes |
+| 3 | Popular | ✨ | 100 | 20+ | 2 recasts OR 10 likes |
+| 4 | Engaging | 💫 | 50 | 10+ | 1 recast OR 5 likes |
+| 5 | Active | 🌟 | 25 | 5+ | 3 likes |
+| 6 | None | - | 0 | <5 | No engagement |
+
+### Viral XP Calculation
+
+**Tier upgrades award incremental XP (no double-rewarding):**
+
+```typescript
+// Initial cast (no engagement)
+tier: "none", xp: 0
+
+// After 6 likes (score = 12)
+tier: "engaging", xp: 50  // Award +50 XP
+
+// After 12 likes + 2 recasts (score = 44)
+tier: "popular", xp: 100  // Award +50 XP (100 - 50 previous)
+
+// After 12 likes + 6 recasts (score = 84)
+tier: "viral", xp: 250    // Award +150 XP (250 - 100 previous)
+```
+
+**Prevents Double-Rewarding:**
+```typescript
+// WRONG - User gets 500 + 250 + 100 = 850 XP total
+calculateViralBonus() // Returns full XP every time
+
+// CORRECT - User gets only incremental XP
+calculateIncrementalBonus(current, previous) 
+// Returns difference: max(0, currentXP - previousXP)
+```
+
+### Viral Data Flow
+
+```
+1. User shares badge → POST /api/cast/badge-share
+2. Cast logged to badge_casts:
+   {
+     cast_hash: "0xabc...",
+     fid: 18139,
+     viral_score: 0,
+     viral_tier: "none",
+     viral_bonus_xp: 0,
+     likes: 0, recasts: 0, replies: 0
+   }
+
+3. Cron job runs (every 5 min) → viral-engagement-sync.ts
+4. Fetch engagement from Neynar API
+5. Calculate score = (recasts×10) + (replies×5) + (likes×2)
+6. Determine tier (mega_viral, viral, popular, etc.)
+7. Calculate incremental XP (only new XP)
+8. Update badge_casts:
+   {
+     viral_score: 84,
+     viral_tier: "viral",
+     viral_bonus_xp: 250,  // Cumulative
+     likes: 12, recasts: 6, replies: 0
+   }
+
+9. If tier upgraded → Send notification
+10. User's viralPoints updated in API responses
+```
+
+---
+
+## 🔧 COMPLETE API RESPONSE STRUCTURE
+
+### CompleteStats Type (from unified-calculator.ts)
+
+```typescript
+{
+  // Score breakdown (Layer 1 + Layer 2)
+  scores: {
+    pointsBalance: 5000,     // Layer 1: Blockchain
+    viralPoints: 1500,       // Layer 2: Off-chain
+    questPoints: 500,        // Layer 2: Off-chain
+    guildPoints: 200,        // Layer 2: Off-chain
+    referralPoints: 300,     // Layer 2: Off-chain
+    totalScore: 7500         // Layer 3: Calculated sum
+  },
+  
+  // Level progression (Layer 3)
+  level: {
+    level: 5,
+    levelFloor: 2400,
+    nextLevelTarget: 3500,
+    xpIntoLevel: 100,
+    xpForLevel: 1100,
+    xpToNextLevel: 1000,
+    levelPercent: 0.09
+  },
+  
+  // Rank progression (Layer 3)
+  rank: {
+    currentTier: {
+      name: "Beacon Runner",
+      minPoints: 1500,
+      maxPoints: 4000,
+      tier: "beginner",
+      reward: { type: "multiplier", value: 1.1, label: "+10% Quest XP" }
+    },
+    nextTier: {
+      name: "Night Operator",
+      minPoints: 4000,
+      maxPoints: 8000
+    },
+    percent: 0.6,
+    currentFloor: 1500,
+    nextTarget: 4000,
+    pointsIntoTier: 1500,
+    pointsToNext: 1000
+  },
+  
+  // Display formatting
+  formatted: {
+    totalScore: "7,500",
+    pointsBalance: "5,000",
+    viralPoints: "1,500",
+    level: "Level 5",
+    rankTier: "Beacon Runner"
+  },
+  
+  // Blockchain metadata (Layer 1)
+  streak: 7,
+  lastGMTimestamp: 1703232000000,
+  lifetimeGMs: 42
+}
+```
+
+### Multi-Wallet Metadata
+
+**Added in API responses for transparency:**
+
+```typescript
+{
+  // ... scores, level, rank, formatted ...
+  
+  metadata: {
+    sources: {
+      subsquid: true,    // Data from Subsquid indexer
+      supabase: true,    // Data from Supabase
+      calculated: true   // Data from unified-calculator
+    },
+    multiWallet: {
+      walletCount: 3,
+      wallets: [
+        "0x1234...",  // Connected wallet
+        "0x5678...",  // Custody wallet
+        "0x9abc..."   // Verified wallet
+      ],
+      walletsSuccessful: 3  // All wallets returned data
+    }
+  }
+}
+```
+
+---
 ## 🔧 COMPLETE RENAMING PLAN
 
 ### RULE 1: Contract Names are Immutable
@@ -722,542 +1155,3 @@ curl http://localhost:3000/api/viral/stats | jq '.scores'
 **END OF DOCUMENT**  
 **Last Updated:** December 22, 2025  
 **Next Review:** After migration completion
-
-### Layer 1: Smart Contract (On-Chain)
-
-**Contract Storage Variables:**
-```solidity
-mapping(address => uint256) public pointsBalance;  // Current spendable balance
-mapping(uint256 => uint256) public fidPoints;      // FID-based lookup
-uint256 public contractPointsReserve;              // Contract's point reserve
-mapping(address => uint256) public pointsLocked;   // Points locked in activities
-```
-
-**Contract Events:**
-```solidity
-event GMSent(address user, uint256 streak, uint256 pointsEarned);
-event GMEvent(address user, uint256 rewardPoints, uint256 newStreak);
-event PointsDeposited(address who, uint256 amount);
-event PointsWithdrawn(address who, uint256 amount);
-event PointsTipped(address from, address to, uint256 points, uint256 fid);
-```
-
-**Event Field Naming:**
-- `pointsEarned` - Points earned from GM event
-- `rewardPoints` - Reward points from action
-- `amount` - Generic amount for deposits/withdrawals
-- `points` - Generic points for tips/transfers
-
-**✅ OFFICIAL CONTRACT NAME:** `pointsBalance`
-- **Type:** `uint256` (BigInt in TypeScript)
-- **Meaning:** Current spendable points balance for a wallet
-- **Source of Truth:** On-chain storage variable
-
----
-
-### Layer 2: Subsquid Indexer (Off-Chain Database)
-
-**User Model Schema:**
-```typescript
-@Entity_()
-export class User {
-  @BigIntColumn_({nullable: false})
-  pointsBalance!: bigint              // ← CURRENT spendable balance (matches contract)
-  
-  @BigIntColumn_({nullable: false})
-  totalEarnedFromGMs!: bigint         // ← CUMULATIVE earned from GM events only
-  
-  @IntColumn_({nullable: false})
-  currentStreak!: number              // Current GM streak
-  
-  @BigIntColumn_({nullable: false})
-  lastGMTimestamp!: bigint            // Last GM timestamp
-  
-  @IntColumn_({nullable: false})
-  lifetimeGMs!: number                // Total GM count
-  
-  @BigIntColumn_({nullable: false})
-  totalTipsGiven!: bigint             // Total points tipped to others
-  
-  @BigIntColumn_({nullable: false})
-  totalTipsReceived!: bigint          // Total points received from tips
-}
-```
-
-**Other Model Fields:**
-```typescript
-// Guild Model
-@BigIntColumn_({nullable: false})
-totalPoints!: bigint                  // Guild's total accumulated points
-
-// LeaderboardEntry Model
-@BigIntColumn_({nullable: false})
-totalPoints!: bigint                  // User's total points for leaderboard
-
-// DailyStats Model
-@BigIntColumn_({nullable: false})
-totalPointsAwarded!: bigint           // Points awarded today
-
-// Quest Model
-@BigIntColumn_({nullable: false})
-totalPointsAwarded!: bigint           // Points awarded by this quest
-```
-
-**Indexer Processing Logic:**
-```typescript
-// GMEvent processing
-user.pointsBalance += points          // Update current balance
-user.totalEarnedFromGMs += points     // Track cumulative earnings from GMs
-
-// Deposit processing
-user.pointsBalance += amount          // Add to current balance
-
-// Withdrawal processing
-user.pointsBalance -= amount          // Deduct from current balance
-
-// Tip processing
-fromUser.pointsBalance -= points      // Sender loses points
-toUser.pointsBalance += points        // Receiver gains points
-```
-
-**✅ SUBSQUID NAMING:**
-- `pointsBalance` - Current spendable balance (mirrors contract)
-- `totalEarnedFromGMs` - Lifetime GM earnings (cumulative, never decreases)
-- `totalPoints` - Aggregated points (used in guild/leaderboard contexts)
-
----
-
-### Layer 3: API Response (Unified Calculator)
-
-**Current API Response Fields (INCONSISTENT - NEEDS FIXING):**
-```typescript
-// From guild/[guildId]/route.ts
-{
-  leaderboardStats: {
-    base_points: 5000,           // ⚠️ Should be "blockchainPoints"
-    viral_xp: 0,                 // ✅ OK
-    guild_bonus_points: 0,       // ✅ OK
-    total_score: 5000,           // ⚠️ Should be "totalScore"
-    global_rank: null,           // ✅ OK
-    rank_tier: "unranked",       // ⚠️ Should be "rankTier"
-    is_guild_officer: true       // ⚠️ Should be "isGuildOfficer"
-  }
-}
-
-// From viral/stats/route.ts
-{
-  blockchainPoints: 0,           // ✅ CORRECT
-  totalViralXp: 0,              // ✅ CORRECT
-  totalScore: 0,                // ✅ CORRECT
-  level: 1,                     // ✅ CORRECT
-  rankTier: "Signal Kitten"     // ✅ CORRECT
-}
-```
-
-**✅ STANDARDIZED API NAMING (Must Use):**
-```typescript
-interface UserStats {
-  // PRIMARY POINT VALUES
-  blockchainPoints: number        // From contract pointsBalance (multi-wallet sum)
-  viralXP: number                 // Viral experience points
-  questPoints: number             // Quest completion points
-  guildPoints: number             // Guild bonus points
-  referralPoints: number          // Referral bonus points
-  
-  // CALCULATED VALUES
-  totalScore: number              // Sum of all point types
-  level: number                   // Calculated level (0-99)
-  rankTier: string                // Tier name (Signal Kitten, Alpha Cat, etc.)
-  
-  // BLOCKCHAIN STATS
-  currentStreak: number           // Current GM streak
-  lifetimeGMs: number             // Total GMs sent
-  lastGMTimestamp: number | null  // Last GM timestamp
-  
-  // FORMATTED DISPLAY
-  formatted: {
-    blockchainPoints: string      // "1,234"
-    totalScore: string            // "5,678"
-    level: string                 // "Level 5"
-    rankTier: string              // "Alpha Cat"
-  }
-  
-  // METADATA (UPDATE #1 & #2)
-  metadata: {
-    sources: {
-      subsquid: boolean           // Data from Subsquid
-      supabase: boolean           // Data from Supabase
-      calculated: boolean         // Data from calculator
-    },
-    multiWallet: {
-      walletCount: number         // Number of wallets checked
-      wallets: string[]           // List of wallets
-      walletsSuccessful: number   // Wallets with data
-    }
-  }
-}
-```
-
----
-
-## 🔄 FIELD MAPPING TABLE
-
-| **Contract (On-Chain)** | **Subsquid (Indexer)** | **API Response** | **Meaning** |
-|------------------------|----------------------|------------------|-------------|
-| `pointsBalance` | `pointsBalance` | `blockchainPoints` | Current spendable balance (multi-wallet sum in API) |
-| `pointsEarned` (event) | `totalEarnedFromGMs` | N/A | Cumulative GM earnings (internal tracking) |
-| N/A | `totalPoints` (guild) | `guildPoints` | Guild-specific point aggregation |
-| N/A | `totalPoints` (leaderboard) | `totalScore` | Total score for ranking |
-| `rewardPoints` (event) | Added to `pointsBalance` | Counted in `blockchainPoints` | Points from actions |
-| N/A | N/A | `viralXP` | Off-chain viral engagement score |
-| N/A | N/A | `questPoints` | Off-chain quest completion score |
-| N/A | N/A | `referralPoints` | Off-chain referral bonus |
-| N/A | N/A | `totalScore` | Sum of all point types |
-
----
-
-## 📊 DATA FLOW
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ LAYER 1: SMART CONTRACT (Source of Truth)                      │
-├─────────────────────────────────────────────────────────────────┤
-│ Storage: pointsBalance (uint256)                               │
-│ Events:  GMSent.pointsEarned, PointsDeposited.amount           │
-│                                                                 │
-│ Example: wallet 0x1234... has pointsBalance = 5000             │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│ LAYER 2: SUBSQUID INDEXER (Event Aggregation)                  │
-├─────────────────────────────────────────────────────────────────┤
-│ User.pointsBalance = 5000n (bigint, mirrors contract)          │
-│ User.totalEarnedFromGMs = 8000n (cumulative, includes spent)   │
-│ User.currentStreak = 7                                         │
-│ User.lifetimeGMs = 42                                          │
-│                                                                 │
-│ Note: pointsBalance can go down (withdrawals, tips)            │
-│       totalEarnedFromGMs only goes up                          │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│ LAYER 2.5: MULTI-WALLET AGGREGATION (UPDATE #1)                │
-├─────────────────────────────────────────────────────────────────┤
-│ User has 3 wallets:                                            │
-│ - wallet_address:       0x1234... → pointsBalance: 5000       │
-│ - custody_address:      0x5678... → pointsBalance: 3000       │
-│ - verified_addresses[0]: 0x9abc... → pointsBalance: 2000      │
-│                                                                │
-│ Aggregated:             blockchainPoints = 10,000             │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│ LAYER 3: UNIFIED CALCULATOR (Scoring)                          │
-├─────────────────────────────────────────────────────────────────┤
-│ Input:                                                          │
-│   blockchainPoints: 10000 (from multi-wallet sum)              │
-│   viralXP: 1500 (from badge casts)                            │
-│   questPoints: 500 (from completed quests)                     │
-│   guildPoints: 200 (from guild bonuses)                        │
-│   referralPoints: 300 (from referrals)                         │
-│                                                                 │
-│ Calculated:                                                     │
-│   totalScore = 10000 + 1500 + 500 + 200 + 300 = 12,500       │
-│   level = 8 (based on totalScore)                             │
-│   rankTier = "Alpha Cat" (tier for level 8)                   │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│ LAYER 4: API RESPONSE (Client-Facing)                          │
-├─────────────────────────────────────────────────────────────────┤
-│ {                                                               │
-│   blockchainPoints: 10000,    // Multi-wallet sum              │
-│   viralXP: 1500,              // Off-chain                     │
-│   questPoints: 500,           // Off-chain                     │
-│   guildPoints: 200,           // Off-chain                     │
-│   referralPoints: 300,        // Off-chain                     │
-│   totalScore: 12500,          // Calculated                    │
-│   level: 8,                   // Calculated                    │
-│   rankTier: "Alpha Cat",      // Calculated                    │
-│   currentStreak: 7,           // From Subsquid                 │
-│   lifetimeGMs: 42,            // From Subsquid                 │
-│   metadata: {                 // UPDATE #1 & #2                │
-│     sources: { subsquid: true, supabase: true, calculated: true },│
-│     multiWallet: { walletCount: 3, wallets: [...], walletsSuccessful: 3 }│
-│   }                                                             │
-│ }                                                               │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🚨 CRITICAL NAMING RULES
-
-### ✅ DO USE:
-- **Contract:** `pointsBalance` (storage), `pointsEarned` (event), `rewardPoints` (event)
-- **Subsquid:** `pointsBalance`, `totalEarnedFromGMs`, `totalPoints` (context-specific)
-- **API:** `blockchainPoints`, `viralXP`, `totalScore`, `level`, `rankTier`
-- **Formatted:** camelCase for all API fields
-
-### ❌ DON'T USE:
-- `base_points` → Use `blockchainPoints`
-- `total_score` → Use `totalScore`
-- `rank_tier` → Use `rankTier`
-- `is_guild_officer` → Use `isGuildOfficer`
-- `points` (ambiguous) → Be specific: `blockchainPoints`, `questPoints`, etc.
-- `totalPoints` in API → Use `totalScore` or `blockchainPoints`
-
-### 🔄 SNAKE_CASE TO CAMELCASE:
-All API responses must use camelCase:
-```typescript
-// ❌ WRONG (snake_case)
-{
-  base_points: 5000,
-  viral_xp: 1000,
-  total_score: 6000,
-  rank_tier: "Alpha Cat",
-  is_guild_officer: true
-}
-
-// ✅ CORRECT (camelCase)
-{
-  blockchainPoints: 5000,
-  viralXP: 1000,
-  totalScore: 6000,
-  rankTier: "Alpha Cat",
-  isGuildOfficer: true
-}
-```
-
----
-
-## 🔧 MIGRATION CHECKLIST
-
-### Step 1: Fix API Response Naming
-- [ ] Update `app/api/guild/[guildId]/route.ts`
-  - [ ] Change `base_points` → `blockchainPoints`
-  - [ ] Change `viral_xp` → `viralXP`
-  - [ ] Change `total_score` → `totalScore`
-  - [ ] Change `rank_tier` → `rankTier`
-  - [ ] Change `is_guild_officer` → `isGuildOfficer`
-- [ ] Update `app/api/guild/[guildId]/members/route.ts`
-- [ ] Update `app/api/guild/[guildId]/member-stats/route.ts`
-- [ ] Update `app/api/viral/leaderboard/route.ts`
-
-### Step 2: Add Metadata to All Routes
-- [ ] Add `metadata.sources` (subsquid, supabase, calculated)
-- [ ] Add `metadata.multiWallet` (walletCount, wallets, walletsSuccessful)
-
-### Step 3: Use Consistent Test Data
-- [ ] Use FID 18139 consistently across all tests
-- [ ] Use wallet 0x7539472dad6a371e6e152c5a203469aa32314130
-- [ ] Remove FID 602828 from test data
-- [ ] Ensure test-infrastructure and route tests use same user
-
-### Step 4: Update Documentation
-- [ ] Update API docs with new field names
-- [ ] Add examples showing `blockchainPoints` vs `totalScore`
-- [ ] Document multi-wallet aggregation
-- [ ] Add migration guide for frontend clients
-
----
-
-## 📖 GLOSSARY
-
-**blockchainPoints**
-- **Source:** Contract `pointsBalance` (multi-wallet sum)
-- **Type:** `number`
-- **Range:** 0 to 2^53-1 (JavaScript safe integer)
-- **Meaning:** Current spendable points from on-chain activities (GMs, deposits, tips)
-- **Can decrease:** Yes (withdrawals, tips sent)
-
-**totalEarnedFromGMs**
-- **Source:** Subsquid cumulative tracking
-- **Type:** `bigint`
-- **Meaning:** Lifetime total earned from GM events only (never decreases)
-- **Can decrease:** No (monotonically increasing)
-- **Use case:** Track total GM earnings even after spending
-
-**viralXP**
-- **Source:** Off-chain badge cast engagement
-- **Type:** `number`
-- **Meaning:** Experience points from viral badge sharing
-- **Can decrease:** No
-
-**questPoints**
-- **Source:** Off-chain quest completions
-- **Type:** `number`
-- **Meaning:** Points from completing quests
-- **Can decrease:** No
-
-**guildPoints**
-- **Source:** Guild membership bonuses
-- **Type:** `number`
-- **Meaning:** Bonus points from guild activities
-- **Can decrease:** No
-
-**referralPoints**
-- **Source:** Referral system
-- **Type:** `number`
-- **Meaning:** Points from referring new users
-- **Can decrease:** No
-
-**totalScore**
-- **Source:** Calculated (sum of all point types)
-- **Type:** `number`
-- **Formula:** `blockchainPoints + viralXP + questPoints + guildPoints + referralPoints`
-- **Meaning:** Overall user score for leaderboards and ranking
-- **Use case:** Global rankings, tier assignments
-
-**pointsBalance** (Contract/Subsquid)
-- **Source:** On-chain storage variable
-- **Type:** `uint256` (contract), `bigint` (Subsquid)
-- **Meaning:** Current spendable balance for a single wallet
-- **Can decrease:** Yes (withdrawals, tips, spending)
-- **Note:** NOT the same as `blockchainPoints` (which is multi-wallet sum)
-
----
-
-## 🎯 EXAMPLES
-
-### Example 1: Single Wallet User
-```typescript
-// Contract State
-wallet 0x1234...
-  pointsBalance: 5000
-
-// Subsquid
-User {
-  id: "0x1234...",
-  pointsBalance: 5000n,
-  totalEarnedFromGMs: 8000n,  // Earned 8k, spent 3k
-  currentStreak: 7,
-  lifetimeGMs: 42
-}
-
-// API Response (after multi-wallet aggregation)
-{
-  blockchainPoints: 5000,     // Only 1 wallet
-  viralXP: 1500,
-  totalScore: 6500,
-  level: 4,
-  rankTier: "Alpha Cat",
-  currentStreak: 7,
-  lifetimeGMs: 42,
-  metadata: {
-    sources: { subsquid: true, supabase: true, calculated: true },
-    multiWallet: {
-      walletCount: 1,
-      wallets: ["0x1234..."],
-      walletsSuccessful: 1
-    }
-  }
-}
-```
-
-### Example 2: Multi-Wallet User
-```typescript
-// Contract State
-wallet 0x1234... pointsBalance: 5000
-wallet 0x5678... pointsBalance: 3000
-wallet 0x9abc... pointsBalance: 2000
-
-// Subsquid (3 separate User records)
-User { id: "0x1234...", pointsBalance: 5000n, ... }
-User { id: "0x5678...", pointsBalance: 3000n, ... }
-User { id: "0x9abc...", pointsBalance: 2000n, ... }
-
-// Supabase (1 user profile)
-user_profiles {
-  fid: 18139,
-  wallet_address: "0x1234...",
-  custody_address: "0x5678...",
-  verified_addresses: ["0x9abc..."]
-}
-
-// API Response (after multi-wallet aggregation)
-{
-  blockchainPoints: 10000,    // 5000 + 3000 + 2000
-  viralXP: 1500,
-  totalScore: 11500,
-  level: 7,
-  rankTier: "Alpha Cat",
-  currentStreak: 7,           // From first wallet with data
-  lifetimeGMs: 42,            // From first wallet with data
-  metadata: {
-    sources: { subsquid: true, supabase: true, calculated: true },
-    multiWallet: {
-      walletCount: 3,
-      wallets: ["0x1234...", "0x5678...", "0x9abc..."],
-      walletsSuccessful: 3
-    }
-  }
-}
-```
-
-### Example 3: Guild Context
-```typescript
-// Guild.totalPoints (sum of all member contributions)
-Guild {
-  id: "1",
-  name: "gmeowbased",
-  totalPoints: 15000n,        // Sum of all member pointsBalance
-  memberCount: 3
-}
-
-// Member stats
-{
-  address: "0x1234...",
-  points: "5000",             // Member's contribution (their pointsBalance)
-  blockchainPoints: 5000,     // Same as points (for consistency)
-  viralXP: 1500,
-  totalScore: 6500,           // Used for guild leaderboard
-  guildRank: 1                // Rank within guild
-}
-```
-
----
-
-## 🐛 BUG FIXES NEEDED
-
-### Bug 1: Inconsistent Test Data
-**Current:** Test infrastructure uses FID 18139, guild route shows FID 602828  
-**Fix:** Use FID 18139 consistently across all tests  
-**Impact:** Confusing test results, can't validate data consistency
-
-### Bug 2: Snake Case in API Responses
-**Current:** Guild routes return `base_points`, `total_score`, `rank_tier`  
-**Fix:** Convert to camelCase: `blockchainPoints`, `totalScore`, `rankTier`  
-**Impact:** Inconsistent API, harder for frontend to consume
-
-### Bug 3: Missing Metadata
-**Current:** Routes don't include `metadata.sources` or `metadata.multiWallet`  
-**Fix:** Add metadata to all route responses  
-**Impact:** Can't verify data sources or multi-wallet aggregation
-
-### Bug 4: Guild totalPoints = -5000
-**Current:** Guild shows negative points  
-**Fix:** Investigate why guild points calculation is negative  
-**Hypothesis:** Might be withdrawals or incorrect aggregation logic
-
----
-
-## ✅ APPROVAL REQUIRED
-
-**Does this naming convention make sense?**
-- Contract: `pointsBalance` (current spendable)
-- Subsquid: `pointsBalance`, `totalEarnedFromGMs`
-- API: `blockchainPoints` (multi-wallet sum), `totalScore` (all points)
-
-**Ready to proceed with:**
-1. Fixing snake_case → camelCase in API responses
-2. Using consistent test data (FID 18139 only)
-3. Adding metadata to all routes
-4. Migrating deprecated functions
-
-**Next Steps:**
-- Review this document
-- Approve naming convention
-- Begin API response standardization
-- Fix test data consistency
-- Add metadata fields

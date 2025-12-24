@@ -15,13 +15,13 @@
  * ═══════════════════════════════════════════════════════════════════════════
  * ✅ Hybrid scoring (Subsquid blockchain + Supabase off-chain)
  * ✅ 7 scoring components (aligned with COMPLETE-CALCULATION-SYSTEM.md):
- *    • blockchainPoints - On-chain points from Subsquid User.totalPoints (GM + Quests + Tips)
- *    • viralXP - Off-chain engagement from Supabase badge_casts.viral_bonus_xp
+ *    • pointsBalance - On-chain points from Subsquid User.pointsBalance (GM + Quests + Tips)
+ *    • viralPoints - Off-chain engagement from Supabase badge_casts.viral_bonus_points
  *    • streakDays - Current GM streak (metadata, NOT scored as points - see contract)
  *    • guildBonus - Guild membership value (calculated from guild level)
  *    • referralBonus - Referral rewards (calculated from referral count)
  *    • badgePrestige - NFT badge collection prestige
- *    • totalScore - blockchainPoints + viralXP (primary scoring metric)
+ *    • totalScore - pointsBalance + viralPoints (primary scoring metric)
  * ✅ Category-specific leaderboards (8 categories: base, viral, guild, referral, streak, badge, tip, nft)
  * ✅ Batch calculation support for efficient leaderboard generation
  * ✅ Parallel data fetching (Subsquid + Supabase queries run concurrently)
@@ -144,13 +144,13 @@ export type GuildRole = 'owner' | 'officer' | 'member'
  * Aligned with COMPLETE-CALCULATION-SYSTEM.md
  */
 export interface ScoreBreakdown {
-  blockchainPoints: number    // Subsquid User.totalPoints (GM + Quests + Tips on-chain)
-  viralXP: number             // Supabase badge_casts.viral_bonus_xp (engagement scoring)
+  pointsBalance: number       // Subsquid User.pointsBalance (GM + Quests + Tips on-chain)
+  viralPoints: number         // Supabase badge_casts.viral_bonus_points (engagement scoring)
   streakDays: number          // Current streak in days (metadata only, NOT scored directly)
   guildBonus: number          // Guild membership value (if applicable)
   referralBonus: number       // Referral rewards (if applicable)
   badgePrestige: number       // Badge collection value (if applicable)
-  totalScore: number          // blockchainPoints + viralXP (final score)
+  totalScore: number          // pointsBalance + viralPoints (final score)
 }
 
 export interface LeaderboardScore {
@@ -223,9 +223,9 @@ export interface BadgeCollectionStats {
  * Calculate complete leaderboard score for a user
  * 
  * CALCULATION FLOW (per COMPLETE-CALCULATION-SYSTEM.md):
- * 1. Fetch blockchain points: Subsquid User.totalPoints (on-chain GM + Quests + Tips)
- * 2. Fetch viral bonus: Supabase badge_casts.viral_bonus_xp (off-chain engagement)
- * 3. Calculate total: blockchainPoints + viralXP = totalScore
+ * 1. Fetch blockchain points: Subsquid User.pointsBalance (on-chain GM + Quests + Tips)
+ * 2. Fetch viral bonus: Supabase badge_casts.viral_points (off-chain engagement)
+ * 3. Calculate total: pointsBalance + viralPoints = totalScore
  * 4. Derive level: from totalScore using quadratic formula (rank.ts)
  * 5. Derive rank tier: from totalScore using 12-tier system (rank.ts)
  * 
@@ -245,22 +245,22 @@ export async function calculateHybridScore(
   
   // Use unified calculator for complete stats calculation
   const stats = calculateCompleteStats({
-    blockchainPoints: subsquidData.totalPoints || 0,
+    pointsBalance: subsquidData.totalPoints || 0,
     currentStreak: subsquidData.currentStreak || 0,
     lastGMTimestamp: null, // Not available in current data
     lifetimeGMs: 0, // Not available in current data
-    viralXP: supabaseData.castEngagement || 0,
-    questPoints: 0, // Included in blockchainPoints
-    guildPoints: 0, // Included in blockchainPoints
-    referralPoints: 0, // Included in blockchainPoints
+    viralPoints: supabaseData.castEngagement || 0,
+    questPoints: 0, // Included in pointsBalance
+    guildPoints: 0, // Included in pointsBalance
+    referralPoints: 0, // Included in pointsBalance
   })
   
   // Map to LeaderboardScore format
   return {
     totalScore: stats.scores.totalScore,
     breakdown: {
-      blockchainPoints: stats.scores.blockchainPoints,
-      viralXP: stats.scores.viralXP,
+      pointsBalance: stats.scores.pointsBalance,
+      viralPoints: stats.scores.viralPoints,
       streakDays: stats.streak,
       guildBonus: subsquidData.guildLevel * 100,
       referralBonus: subsquidData.referralCount * 50,
@@ -276,7 +276,7 @@ export async function calculateHybridScore(
  * Get Subsquid blockchain stats for a user
  * Queries User entity: totalPoints, currentStreak, badgeCount, etc.
  * 
- * IMPORTANT: User.totalPoints already includes:
+ * IMPORTANT: User.pointsBalance already includes:
  * - Base GM rewards (gmPointReward from contract)
  * - Streak bonus multiplier (7d=+15%, 30d=+30%, 100d=+60%)
  * - Quest completion rewards
@@ -311,17 +311,17 @@ async function getSupabaseStats(fid: number) {
   // Fetch viral engagement data (primary off-chain metric)
   const { data: viralData } = await supabase
     .from('badge_casts')
-    .select('viral_bonus_xp')
+    .select('viral_bonus_points')
     .eq('fid', fid)
   
-  // Calculate total viral XP from all badge casts
+  // Calculate total viral points from all badge casts
   const castEngagement = viralData?.reduce(
-    (sum, cast) => sum + (cast.viral_bonus_xp || 0), 
+    (sum, cast) => sum + (cast.viral_bonus_points || 0), 
     0
   ) || 0
   
   return {
-    castEngagement,  // Viral bonus XP (off-chain social engagement)
+    castEngagement,  // Viral bonus points (off-chain social engagement)
   }
 }
 
@@ -344,7 +344,7 @@ export async function calculateCategoryScore(
   
   switch (category) {
     case 'viral_legends':
-      return fullScore.breakdown.viralXP
+      return fullScore.breakdown.viralPoints
     case 'streak_kings':
       return fullScore.breakdown.streakDays  // Days, not points
     case 'badge_collectors':
@@ -355,7 +355,7 @@ export async function calculateCategoryScore(
       return fullScore.breakdown.referralBonus
     case 'all_pilots':
     default:
-      return fullScore.totalScore  // blockchainPoints + viralXP
+      return fullScore.totalScore  // pointsBalance + viralPoints
   }
 }
 

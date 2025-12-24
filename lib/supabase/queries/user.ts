@@ -16,7 +16,7 @@ export interface UserProfile {
   username?: string | null
   // Additional enrichment fields (if available)
   questsCompleted?: number
-  viralXP?: number
+  viralPoints?: number
   tipsSent?: number
   tipsReceived?: number
 }

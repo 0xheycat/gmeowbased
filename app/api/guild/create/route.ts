@@ -271,22 +271,29 @@ export async function POST(req: NextRequest) {
     // IDEMPOTENCY CHECK - Prevent duplicate operations
     const idempotencyKey = getIdempotencyKey(req)
     
-    if (idempotencyKey) {
-      // Validate key format
-      if (!isValidIdempotencyKey(idempotencyKey)) {
-        return createErrorResponse(
-          'Invalid idempotency key format. Must be 36-72 characters.',
-          requestId,
-          400
-        )
-      }
-      
-      // Check if operation already completed
-      const cachedResult = await checkIdempotency(idempotencyKey)
-      if (cachedResult.exists) {
-        console.log('[guild-create] Returning cached response for idempotency key:', idempotencyKey)
-        return returnCachedResponse(cachedResult)
-      }
+    // BUG #6 FIX: Make idempotency key REQUIRED (not optional)
+    if (!idempotencyKey) {
+      return createErrorResponse(
+        'Idempotency-Key header is required for guild creation',
+        requestId,
+        400
+      )
+    }
+    
+    // Validate key format
+    if (!isValidIdempotencyKey(idempotencyKey)) {
+      return createErrorResponse(
+        'Invalid idempotency key format. Must be 36-72 characters.',
+        requestId,
+        400
+      )
+    }
+    
+    // Check if operation already completed
+    const cachedResult = await checkIdempotency(idempotencyKey)
+    if (cachedResult.exists) {
+      console.log('[guild-create] Returning cached response for idempotency key:', idempotencyKey)
+      return returnCachedResponse(cachedResult)
     }
     
     // Parse request body

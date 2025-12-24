@@ -48,12 +48,16 @@ type LeaderboardEntry @entity {
 }
 
 # Guild System (from Guild contract)
+# Phase 1.2: Enhanced with getGuildInfo() contract reads (name, level, isActive)
 type Guild @entity {
   id: ID! # guild ID from contract
-  owner: String! @index
+  name: String! # Guild name from contract
+  owner: String! @index # Guild leader address
   createdAt: BigInt!
   totalMembers: Int!
-  totalPoints: BigInt!
+  level: Int! # Guild level (0-255 from contract uint8)
+  isActive: Boolean! # Guild active status from contract
+  treasuryPoints: BigInt! # Guild treasury balance from contract
   members: [GuildMember!] @derivedFrom(field: "guild")
   events: [GuildEvent!] @derivedFrom(field: "guild")
 }
@@ -74,6 +78,21 @@ type GuildEvent @entity {
   eventType: String! # CREATED, JOINED, LEFT, DEPOSIT, POINTS_AWARDED
   user: String! @index
   amount: BigInt # for deposits/points
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# Guild Points Deposited Event (Layer 2: Contract Event Structure)
+# Source: event GuildPointsDeposited(uint256 guildId, address from, uint256 amount)
+# Naming: Exact contract field names (camelCase - contract is source of truth)
+type GuildPointsDepositedEvent @entity {
+  id: ID! # txHash-logIndex
+  guildId: String! @index # Contract field name (uint256 → String for DB)
+  from: String! @index # Contract field name (address)
+  amount: BigInt! # Contract field name (uint256 → BigInt)
+  
+  # Standard event metadata
   timestamp: BigInt!
   blockNumber: Int! @index
   txHash: String! @index
@@ -150,7 +169,7 @@ type DailyStats @entity {
   date: String! @index
   totalGMs: Int!
   uniqueUsers: Int!
-  totalPointsAwarded: BigInt!
+  dailyPointsAwarded: BigInt! # Daily aggregate of pointsAwarded from events
   newGuilds: Int!
   badgesMinted: Int!
 }
@@ -246,7 +265,7 @@ type Quest @entity {
   
   # Stats
   totalCompletions: Int!
-  totalPointsAwarded: BigInt!
+  pointsAwarded: BigInt! # Total points awarded from QuestCompleted events
   totalTokensAwarded: BigInt!
   
   # Relations

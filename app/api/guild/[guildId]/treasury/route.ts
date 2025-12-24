@@ -52,7 +52,7 @@ import { rateLimit, apiLimiter, getClientIp } from '@/lib/middleware/rate-limit'
 import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { createClient } from '@/lib/supabase/edge'
-import { getGuildDepositAnalytics } from '@/lib/subsquid-client'
+import { getGuildTreasury } from '@/lib/contracts/guild-contract'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -112,62 +112,26 @@ interface UserProfile {
 // ==========================================
 
 /**
- * Get guild treasury balance (HYBRID: Subsquid + Supabase)
- * LAYER 1: Subsquid - On-chain deposit verification
- * LAYER 2: Supabase - Off-chain event tracking
- * LAYER 3: Calculated - Balance = deposits - claims, verified against on-chain
+ * Get guild treasury balance from smart contract (SOURCE OF TRUTH)
+ * BUG #7 FIX: Query contract directly, don't calculate from events
+ * 
+ * 4-Layer Architecture:
+ * LAYER 1: Smart Contract (0x6754...c8A3) - guildTreasuryPoints[guildId]
+ * LAYER 2: This function queries Layer 1 directly
+ * LAYER 3: Supabase events used for transaction history only (not balance)
+ * LAYER 4: API returns contract balance (source of truth)
  */
 async function getTreasuryBalance(guildId: string): Promise<string> {
-  const supabase = createClient()
-  
   try {
-    // LAYER 1: Get on-chain deposit analytics (all time)
-    const onChainAnalytics = await getGuildDepositAnalytics(
-      new Date(0), // From genesis
-      new Date()   // To now
-    )
-
-    // LAYER 2: Query all POINTS_DEPOSITED and POINTS_CLAIMED events
-    const { data: events, error } = await supabase
-      .from('guild_events')
-      .select('event_type, amount')
-      .eq('guild_id', guildId)
-      .in('event_type', ['POINTS_DEPOSITED', 'POINTS_CLAIMED'])
-
-    if (error) {
-      console.error('[guild-treasury] Error fetching events:', error)
-      return '0'
-    }
-
-    if (!events || events.length === 0) {
-      return '0'
-    }
-
-    // LAYER 3: Calculate off-chain balance
-    let offChainBalance = 0
-    for (const event of events) {
-      const amount = event.amount || 0
-      if (event.event_type === 'POINTS_DEPOSITED') {
-        offChainBalance += amount
-      } else if (event.event_type === 'POINTS_CLAIMED') {
-        offChainBalance -= amount
-      }
-    }
-
-    // Use on-chain data as source of truth, fall back to off-chain
-    const onChainBalance = onChainAnalytics.total7d || 0
-    const finalBalance = onChainBalance > 0 ? onChainBalance : offChainBalance
-
-    // Log discrepancies for debugging
-    if (Math.abs(offChainBalance - onChainBalance) > 100) {
-      console.warn('[guild-treasury] Balance mismatch:', {
-        guildId,
-        offChain: offChainBalance,
-        onChain: onChainBalance,
-      })
-    }
-
-    return finalBalance.toString()
+    // BUG #7 FIX: Query contract directly (source of truth)
+    const treasuryPoints = await getGuildTreasury(BigInt(guildId))
+    
+    console.log('[guild-treasury] Contract balance:', {
+      guildId,
+      treasuryPoints: treasuryPoints.toString(),
+    })
+    
+    return treasuryPoints.toString()
   } catch (error) {
     console.error('[guild-treasury] getTreasuryBalance error:', error)
     return '0'

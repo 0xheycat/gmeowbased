@@ -57,7 +57,7 @@ const GMEOW_CORE_ABI = [
  * Same logic as leaderboard-service.ts but isolated for claim
  */
 async function calculatePendingRewards(address: string): Promise<{
-  viral_xp: number
+  viralPoints: number
   guild_bonus: number
   referral_bonus: number
   streak_bonus: number
@@ -81,7 +81,7 @@ async function calculatePendingRewards(address: string): Promise<{
   const user = userData?.data?.users?.[0]
   
   if (!user) {
-    return { viral_xp: 0, guild_bonus: 0, referral_bonus: 0, streak_bonus: 0, badge_prestige: 0, total: 0 }
+    return { viralPoints: 0, guild_bonus: 0, referral_bonus: 0, streak_bonus: 0, badge_prestige: 0, total: 0 }
   }
   
   // Layer 2: Supabase off-chain metadata
@@ -139,7 +139,7 @@ async function calculatePendingRewards(address: string): Promise<{
   const total = viralBonus + guildBonus + referralBonus + streakBonus + badgePrestige
   
   return {
-    viral_xp: viralBonus,
+    viralPoints: viralBonus,
     guild_bonus: guildBonus,
     referral_bonus: referralBonus,
     streak_bonus: streakBonus,
@@ -326,7 +326,7 @@ export async function POST(request: NextRequest) {
       .from('reward_claims')
       .insert({
         wallet_address: walletAddress.toLowerCase(),
-        viral_xp_claimed: pending.viral_xp,
+        viral_bonus_points_claimed: pending.viralPoints,
         guild_bonus_claimed: pending.guild_bonus,
         referral_bonus_claimed: pending.referral_bonus,
         streak_bonus_claimed: pending.streak_bonus,
@@ -348,7 +348,7 @@ export async function POST(request: NextRequest) {
       success: true,
       claimed: pending.total,
       breakdown: {
-        viral_xp: pending.viral_xp,
+        viralPoints: pending.viralPoints,
         guild_bonus: pending.guild_bonus,
         referral_bonus: pending.referral_bonus,
         streak_bonus: pending.streak_bonus,
@@ -404,7 +404,7 @@ export async function GET(request: NextRequest) {
       address,
       pending_rewards: pending.total,
       breakdown: {
-        viral_xp: pending.viral_xp,
+        viralPoints: pending.viralPoints,
         guild_bonus: pending.guild_bonus,
         referral_bonus: pending.referral_bonus,
         streak_bonus: pending.streak_bonus,

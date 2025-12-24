@@ -2,23 +2,25 @@
  * Profile Service - Data fetching layer for user profiles
  * 
  * Architecture:
- * - Uses actual Supabase schema (user_profiles + leaderboard_calculations)
+ * - Uses current Supabase schema (user_profiles + user_points_balances)
  * - Base-only chain (no multichain references)
  * - Integrates Neynar API for fresh Farcaster data
  * - Implements caching (180s TTL for profile data)
  * - Type-safe queries with PostgreSQL array handling
  * 
  * Data Sources:
- * - user_profiles table (21 columns): fid, wallet_address, display_name, bio, etc.
- * - leaderboard_calculations table (18 columns): address, base_points, viral_xp, etc.
- * - Neynar API: Fresh Farcaster profile data (username, pfp, bio)
+ * - user_profiles table: fid, wallet_address, verified_addresses, display_name, bio, etc.
+ * - user_points_balances table: points_balance, viral_points, guild_points_awarded, total_score
+ * - points_leaderboard view: rank calculation from total_score
+ * - Subsquid GraphQL: UserOnChainStats.currentStreak (on-chain source of truth)
+ * - Neynar API: Fresh Farcaster profile data (username, pfp, verified addresses)
  * 
  * Key Schema Patterns:
  * - user_profiles.fid: BIGINT (primary key)
- * - leaderboard_calculations.farcaster_fid: INTEGER (type mismatch!)
- * - user_profiles.verified_addresses: TEXT[] array
+ * - user_points_balances.fid: BIGINT (primary key, synced from Subsquid)
+ * - user_profiles.verified_addresses: TEXT[] array (multi-wallet support)
  * - user_profiles.social_links: JSONB object
- * - leaderboard_calculations.address: TEXT (single Base address)
+ * - total_score: GENERATED ALWAYS AS (points_balance + viral_points + guild_points_awarded)
  * 
  * @module lib/profile/profile-service
  */
@@ -123,47 +125,76 @@ async function fetchUserProfileFromDB(fid: number) {
 }
 
 /**
- * Fetch leaderboard data for user
+ * Fetch user points balances from Supabase + guild_events (PHASE 3 ENHANCEMENT)
  * 
- * Schema: leaderboard_calculations (18 columns)
- * - id, address (text), farcaster_fid (integer)
- * - base_points, viral_xp, guild_bonus, referral_bonus, streak_bonus, badge_prestige
- * - total_score (generated), global_rank, rank_change, rank_tier
- * - period, calculated_at, updated_at, tip_points, nft_points
+ * Schema: user_points_balances (points_balance, viral_points, guild_points_awarded, total_score)
  * 
- * Note: farcaster_fid is INTEGER (different from user_profiles.fid BIGINT)
+ * ⚠️ CRITICAL CHANGE (Phase 3 Week 1 Day 1):
+ * Previously only fetched guild_points_awarded from user_points_balances.
+ * Now COMBINES two sources for complete guild points calculation:
+ * 
+ * Source 1: guild_members.contribution_points (website deposits)
+ * Source 2: guild_events.amount WHERE event_type='POINTS_DEPOSITED' (blockchain deposits)
+ * 
+ * This fixes the offline metrics gap in unified-calculator.ts
  */
-async function fetchLeaderboardDataFromDB(fid: number) {
-  // ⚠️ PHASE 5: Replaced with Subsquid getLeaderboardEntry()
-  try {
-    const { getLeaderboardEntry } = await import('@/lib/subsquid-client')
-    const stats = await getLeaderboardEntry(fid)
+async function fetchUserPointsBalance(fid: number) {
+  const supabase = getSupabaseServerClient()
+  if (!supabase) return null
+  
+  // Get user's verified addresses for multi-wallet guild events lookup
+  const { data: profileData } = await supabase
+    .from('user_profiles')
+    .select('verified_addresses, wallet_address')
+    .eq('fid', fid)
+    .single()
+  
+  const walletAddresses = [
+    ...(profileData?.verified_addresses || []),
+    ...(profileData?.wallet_address ? [profileData.wallet_address] : [])
+  ].filter(Boolean) as string[]
+  
+  // Fetch points balance + guild events in parallel
+  const [pointsData, guildEventsData] = await Promise.all([
+    supabase
+      .from('user_points_balances')
+      .select('points_balance, viral_points, guild_points_awarded, total_score, last_synced_at')
+      .eq('fid', fid)
+      .single(),
     
-    if (!stats) return null
-    
-    // Map Subsquid response to expected leaderboard format
-    return {
-      address: stats.wallet,
-      farcaster_fid: fid,
-      total_score: stats.totalScore,
-      base_points: stats.basePoints,
-      viral_xp: stats.viralXP,
-      guild_bonus: stats.guildBonus,
-      referral_bonus: stats.referralBonus,
-      streak_bonus: stats.streakBonus,
-      badge_prestige: stats.badgePrestige,
-      global_rank: stats.rank || 0,
-      rank_tier: getRankTier(stats.totalScore),
-      updated_at: stats.lastUpdated,
-    }
-  } catch (error) {
-    console.error('[fetchLeaderboardDataFromDB] Subsquid error:', error)
-    return null
+    // LAYER 3: Fetch blockchain guild deposits (Phase 3 P1)
+    // Sum all guild_events.amount WHERE event_type='POINTS_DEPOSITED' for user's wallets
+    walletAddresses.length > 0
+      ? supabase
+          .from('guild_events')
+          .select('amount')
+          .eq('event_type', 'POINTS_DEPOSITED')
+          .in('actor_address', walletAddresses)
+      : Promise.resolve({ data: null, error: null })
+  ])
+  
+  if (pointsData.error || !pointsData.data) return null
+  
+  // Calculate guild points from guild_events (blockchain deposits)
+  const guildEventPoints = (guildEventsData.data || []).reduce((sum, event) => {
+    return sum + (Number(event.amount) || 0)
+  }, 0)
+  
+  // Combine: guild_points_awarded (website) + guild_events (blockchain)
+  const combinedGuildPoints = (pointsData.data.guild_points_awarded || 0) + guildEventPoints
+  
+  return {
+    points_balance: pointsData.data.points_balance || 0,
+    viral_points: pointsData.data.viral_points || 0,
+    guild_points_awarded: combinedGuildPoints, // ✅ COMBINED SOURCE
+    total_score: (pointsData.data.total_score || 0) + guildEventPoints, // ✅ UPDATED TOTAL
+    last_synced_at: pointsData.data.last_synced_at,
   }
 }
 
 // Helper function to determine rank tier from score (using unified calculator)
 function getRankTier(score: number): string {
+  const { getRankTierByPoints } = require('@/lib/scoring/unified-calculator')
   const tier = getRankTierByPoints(score)
   return tier.name
 }
@@ -200,6 +231,44 @@ async function countUserBadges(fid: number): Promise<number> {
 
   if (error) return 0
   return count || 0
+}
+
+/**
+ * Get user's global leaderboard rank
+ * 
+ * LAYER 2 (Supabase): Query points_leaderboard view
+ */
+async function getGlobalRank(fid: number): Promise<number> {
+  const supabase = getSupabaseServerClient()
+  if (!supabase) return 0
+
+  const { data, error } = await (supabase as any)
+    .from('points_leaderboard')
+    .select('rank')
+    .eq('fid', fid)
+    .single()
+
+  if (error || !data) return 0
+  return data.rank || 0
+}
+
+/**
+ * Get user's current streak from Subsquid (on-chain)
+ * 
+ * LAYER 1 (Subsquid): Fetch UserOnChainStats.currentStreak
+ * Uses primary wallet address from verified addresses
+ */
+async function getCurrentStreak(walletAddress: string): Promise<number> {
+  if (!walletAddress) return 0
+
+  try {
+    const { getOnChainUserStats } = await import('@/lib/subsquid-client')
+    const stats = await getOnChainUserStats(walletAddress)
+    return stats?.currentStreak || 0
+  } catch (error) {
+    console.error('[getCurrentStreak] Error fetching from Subsquid:', error)
+    return 0
+  }
 }
 
 /**
@@ -262,14 +331,15 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
     'profile',
     `fid:${fid}`,
     async () => {
-      // LAYER 1: Subsquid (On-Chain Data)
-      const [userProfile, leaderboard, neynarUser, questCount, badgeCount, viralBonusXP] = await Promise.all([
+      // LAYER 1: Subsquid (On-Chain Data) + LAYER 2: Supabase
+      const [userProfile, pointsBalance, neynarUser, questCount, badgeCount, viralBonusXP, globalRank] = await Promise.all([
         fetchUserProfileFromDB(fid),
-        fetchLeaderboardDataFromDB(fid), // Already uses Subsquid getLeaderboardEntry
+        fetchUserPointsBalance(fid), // LAYER 2: Supabase off-chain points
         fetchNeynarUser(fid),
         countQuestCompletions(fid),
         countUserBadges(fid),
         aggregateViralBonusXP(fid), // LAYER 2: Supabase viral bonus aggregation
+        getGlobalRank(fid), // LAYER 2: Query points_leaderboard view
       ])
 
       if (!userProfile) return null
@@ -310,11 +380,14 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
         website: links.website || null,
       }
 
-      // LAYER 3: Calculate derived metrics using lib/rank.ts
-      const totalScore = (leaderboard?.total_score || 0) + viralBonusXP
+      // LAYER 3: Calculate derived metrics using unified-calculator
+      const { calculateLevelProgress, getRankTierByPoints } = await import('@/lib/scoring/unified-calculator')
+      const totalScore = (pointsBalance?.total_score || 0)
       const levelProgress = calculateLevelProgress(totalScore)
       const rankTier = getRankTierByPoints(totalScore)
-      const streak = Math.floor((leaderboard?.streak_bonus || 0) / 10) // 10 points per streak day
+      
+      // LAYER 1: Fetch current streak from Subsquid (on-chain data)
+      const currentStreak = await getCurrentStreak(primaryAddress)
 
       // Build complete profile data (merged from all 3 layers)
       const profileData: ProfileData = {
@@ -336,15 +409,10 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
         
         // Stats (HYBRID: All 3 layers)
         stats: {
-          // LAYER 1 (Subsquid): On-chain points
-          base_points: leaderboard?.base_points || 0,
-          guild_bonus: leaderboard?.guild_bonus || 0,
-          referral_bonus: leaderboard?.referral_bonus || 0,
-          streak_bonus: leaderboard?.streak_bonus || 0,
-          badge_prestige: leaderboard?.badge_prestige || 0,
-          
-          // LAYER 2 (Supabase): Off-chain viral XP
-          viral_xp: viralBonusXP,
+          // LAYER 2 (Supabase): Off-chain points
+          points_balance: pointsBalance?.points_balance || 0,
+          viral_points: pointsBalance?.viral_points || 0,
+          guild_points_awarded: pointsBalance?.guild_points_awarded || 0,
           
           // LAYER 3 (Calculated): Total score from all sources
           total_score: totalScore,
@@ -352,14 +420,19 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
           // LAYER 3 (Calculated): Level progression
           level: levelProgress.level,
           
-          // LAYER 1 (Subsquid): Rank
-          global_rank: leaderboard?.global_rank || 0,
+          // LAYER 1 (Subsquid): Streak (TODO)
+          current_streak: currentStreak,
           
           // LAYER 3 (Calculated): Rank tier
           rank_tier: rankTier.name,
           
-          // LAYER 1 (Subsquid): Streak
-          streak,
+          // LAYER 2 (Supabase): Leaderboard position from points_leaderboard view
+          global_rank: globalRank,
+          
+          // Legacy fields (for backward compatibility)
+          referral_bonus: 0,      // TODO: Calculate from referrals table
+          streak_bonus: currentStreak * 10,  // Derived from current_streak
+          badge_prestige: badgeCount * 25,   // Derived from badge_count
           
           // LAYER 2 (Supabase): Activity counts
           quest_completions: questCount,
@@ -368,7 +441,7 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
           
           // Time
           member_since: userProfile.onboarded_at || userProfile.created_at || new Date().toISOString(),
-          last_active: leaderboard?.updated_at || new Date().toISOString(),
+          last_active: pointsBalance?.last_synced_at || new Date().toISOString(),
         },
         
         // Neynar Score (LAYER 2: Supabase)

@@ -47,12 +47,12 @@ export interface GuildMember {
   points: string
   pointsContributed?: number
   avatarUrl?: string
-  // Leaderboard stats from leaderboard_calculations table
+  // Leaderboard stats from user_points_balances table
   leaderboardStats?: {
     total_score: number
-    base_points: number
-    viral_xp: number
-    guild_bonus_points: number
+    points_balance: number           // Renamed from base_points
+    viral_points: number             // Renamed from viral_xp
+    guild_points_awarded: number     // Renamed from guild_bonus_points
     is_guild_officer: boolean
     global_rank: number | null
     rank_tier: string | null
@@ -179,7 +179,7 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
       try {
         setIsLoading(true)
         setError(null)
-        // Use existing guild API route that returns members
+        // Use main guild API route that returns enriched member data
         const response = await fetch(`/api/guild/${guildId}`)
         if (!response.ok) {
           const errorText = await response.text()
@@ -191,13 +191,13 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
         const membersArray = data.members || []
         const transformedMembers = membersArray.map((m: any) => ({
           address: m.address,
-          role: m.isOfficer ? 'officer' : 'member',
-          joinedAt: new Date().toISOString(),
+          role: m.role || 'member', // Use role directly from API
+          joinedAt: m.joinedAt || new Date().toISOString(),
           points: m.points || '0',
-          username: m.farcaster?.username || `${m.address.slice(0, 6)}...${m.address.slice(-4)}`,
+          username: m.farcaster?.username || m.username || `${m.address.slice(0, 6)}...${m.address.slice(-4)}`,
           pointsContributed: parseInt(m.points || '0'),
           farcaster: m.farcaster,
-          badges: m.badges || [],
+          badges: (m.badges || []).filter((b: any) => b && b.icon && b.icon !== ''), // Filter out badges with empty icons
           leaderboardStats: m.leaderboardStats || null
         }))
         
@@ -525,17 +525,17 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
                   )}
                 </td>
                 <td className="py-4 px-6 text-right">
-                  {member.leaderboardStats ? (
+                  {member.leaderboardStats && member.leaderboardStats.total_score !== undefined ? (
                     <div className="space-y-1">
                       {/* Total Score */}
                       <div className="font-semibold text-gray-900 dark:text-white">
                         {member.leaderboardStats.total_score.toLocaleString()}
                       </div>
                       
-                      {/* Guild Bonus (purple) */}
-                      {member.leaderboardStats.guild_bonus_points > 0 && (
+                      {/* Guild Points Awarded (purple) */}
+                      {member.leaderboardStats.guild_points_awarded > 0 && (
                         <div className="text-xs text-purple-600 dark:text-purple-400">
-                          +{member.leaderboardStats.guild_bonus_points.toLocaleString()} guild bonus
+                          +{member.leaderboardStats.guild_points_awarded.toLocaleString()} guild bonus
                           {member.leaderboardStats.is_guild_officer && ' (Officer)'}
                         </div>
                       )}
@@ -679,7 +679,7 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
             )}
 
             {/* Leaderboard Stats Section */}
-            {member.leaderboardStats && (
+            {member.leaderboardStats && member.leaderboardStats.total_score !== undefined && (
               <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-semibold">
                   Leaderboard Stats
@@ -693,12 +693,12 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
                     </div>
                   </div>
                   
-                  {/* Guild Bonus */}
-                  {member.leaderboardStats.guild_bonus_points > 0 && (
+                  {/* Guild Points Awarded */}
+                  {member.leaderboardStats.guild_points_awarded > 0 && (
                     <div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">Guild Bonus</div>
                       <div className="font-semibold text-purple-600 dark:text-purple-400">
-                        +{member.leaderboardStats.guild_bonus_points.toLocaleString()}
+                        +{member.leaderboardStats.guild_points_awarded.toLocaleString()}
                         {member.leaderboardStats.is_guild_officer && ' ⚡'}
                       </div>
                     </div>

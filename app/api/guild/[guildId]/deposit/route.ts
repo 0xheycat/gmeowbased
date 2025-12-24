@@ -29,13 +29,18 @@
  * 1. Rate Limiting - Upstash Redis (30 req/hour per user)
  * 2. Request Validation - Zod schema validation
  * 3. Authentication - Wallet address verification
- * 4. RBAC - User must be guild member with sufficient points
+ * 4. RBAC - User must be guild member (balance check delegated to contract)
  * 5. Input Sanitization - XSS prevention
  * 6. SQL Injection Prevention - Parameterized queries
  * 7. CSRF Protection - Origin validation
  * 8. Privacy Controls - User ownership verification
  * 9. Audit Logging - All deposit attempts tracked
  * 10. Error Masking - No sensitive data in errors
+ * 
+ * Security Fix (BUG #4 - Dec 24, 2025):
+ * - Removed API-side balance check to prevent TOCTOU race condition
+ * - Contract enforces balance requirement atomically during transaction
+ * - Follows 4-layer architecture: Contract validates, API coordinates
  * 
  * Enterprise Enhancement: Idempotency Keys
  * - Header: Idempotency-Key (36-72 chars, UUID v4 recommended)
@@ -60,7 +65,8 @@ import {
   isValidIdempotencyKey,
   returnCachedResponse 
 } from '@/lib/middleware/idempotency'
-import { logGuildEvent } from '@/lib/guild/event-logger'
+import { createClient } from '@/lib/supabase/edge'
+import { invalidateCachePattern } from '@/lib/cache/server'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -86,27 +92,6 @@ type RequestBody = z.infer<typeof BodySchema>
 // ==========================================
 // 3. Helper Functions
 // ==========================================
-
-/**
- * Get user's points balance
- */
-async function getUserPoints(address: Address): Promise<bigint> {
-  const client = getPublicClient()
-  
-  try {
-    const points = await client.readContract({
-      address: getContractAddress('base'),
-      abi: GM_CONTRACT_ABI,
-      functionName: 'pointsBalance',
-      args: [address],
-    }) as bigint
-    
-    return points || 0n
-  } catch (error) {
-    console.error('[guild-deposit] getUserPoints error:', error)
-    return 0n
-  }
-}
 
 /**
  * Check user's current guild
@@ -326,46 +311,60 @@ export async function POST(
       return createErrorResponse(errorResponse.message, 403, requestId)
     }
 
-    // 4. RBAC - Check user has sufficient points
-    const userPoints = await getUserPoints(address as Address)
-    const amountBigInt = BigInt(amount)
-    
-    if (userPoints < amountBigInt) {
-      const errorResponse = {
-        success: false,
-        message: `Insufficient points. You have ${userPoints.toString()} points, need ${amount}`,
-        timestamp: Date.now(),
-      }
-      
-      // Cache error response with idempotency key
-      if (idempotencyKey) {
-        await storeIdempotency(idempotencyKey, errorResponse, 400)
-      }
-      
-      return createErrorResponse(errorResponse.message, 400)
-    }
+    // 4. RBAC - Guild membership verified above
+    // Note: Balance check removed to prevent TOCTOU race condition (BUG #4)
+    // Smart contract will revert if user has insufficient balance during transaction execution
 
     // 5. AUDIT LOGGING
     console.log('[guild-deposit] Deposit request:', {
       address,
       guildId,
       amount,
-      userPoints: userPoints.toString(),
       timestamp: new Date().toISOString(),
     })
 
-    // Log event to database (non-blocking)
-    logGuildEvent({
-      guild_id: guildId.toString(),
-      event_type: 'POINTS_DEPOSITED',
-      actor_address: address,
-      amount: amount,
-      metadata: {
-        user_points_before: userPoints.toString(),
-        request_id: requestId,
-      },
-    }).catch((error) => {
-      console.error('[guild-deposit] Failed to log event:', error)
+    // BUG #9 FIX: Use atomic RPC transaction instead of separate log
+    const supabase = createClient()
+    if (!supabase) {
+      return createErrorResponse('Database not available', 503, requestId)
+    }
+
+    // Guild name for event metadata (simplified - defaults to Guild #ID)
+    const guildName = `Guild #${guildId}`
+
+    // Execute atomic transaction (event + stats update)
+    try {
+      const { data: txResult, error: txError } = await supabase.rpc(
+        'guild_deposit_points_tx',
+        {
+          p_guild_id: guildId.toString(),
+          p_depositor_address: address,
+          p_amount: BigInt(amount),
+          p_guild_name: guildName,
+          p_request_id: requestId,
+        }
+      )
+
+      if (txError) {
+        console.error('[guild-deposit] Transaction failed:', txError)
+      } else {
+        console.log('[guild-deposit] Transaction success:', txResult)
+      }
+    } catch (err: unknown) {
+      console.error('[guild-deposit] Transaction error:', err)
+      // Non-blocking error - continue to response
+    }
+
+    // CACHE INVALIDATION - Clear stale guild data after mutation
+    invalidateCachePattern('guild', `${guildId}:*`).catch((error: unknown) => {
+      console.error('[guild-deposit] Failed to invalidate cache:', error)
+    })
+    // Also invalidate guild list caches
+    invalidateCachePattern('guild', 'leaderboard:*').catch((error: unknown) => {
+      console.error('[guild-deposit] Failed to invalidate leaderboard cache:', error)
+    })
+    invalidateCachePattern('guild', 'list:*').catch((error: unknown) => {
+      console.error('[guild-deposit] Failed to invalidate list cache:', error)
     })
 
     // 6. RETURN INSTRUCTION FOR WALLET

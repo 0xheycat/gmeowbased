@@ -55,7 +55,8 @@ import {
   returnCachedResponse 
 } from '@/lib/middleware/idempotency'
 import { generateRequestId } from '@/lib/middleware/request-id'
-import { logGuildEvent } from '@/lib/guild/event-logger'
+import { createClient } from '@/lib/supabase/edge'
+import { invalidateCachePattern } from '@/lib/cache/server'
 
 // ==========================================
 // Validation Schema
@@ -274,17 +275,62 @@ export async function POST(
       timestamp: new Date().toISOString(),
     })
 
-    // Log event to database (non-blocking)
-    logGuildEvent({
-      guild_id: guildId.toString(),
-      event_type: 'MEMBER_JOINED',
-      actor_address: address,
-      metadata: {
-        guild_name: guild.name,
-        request_id: requestId,
-      },
-    }).catch((error) => {
-      console.error('[guild-join] Failed to log event:', error)
+    // BUG #9 FIX: Use atomic RPC transaction instead of separate log
+    // Get FID for member (needed for transaction)
+    const supabase = createClient()
+    if (!supabase) {
+      return createErrorResponse('Database not available', requestId, 503)
+    }
+
+    // Get user FID from database (optional, defaults to 0)
+    let memberFID = 0
+    try {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('fid')
+        .eq('wallet_address', address.toLowerCase())
+        .maybeSingle()
+      
+      memberFID = profile?.fid || 0
+    } catch (err: unknown) {
+      console.warn('[guild-join] Failed to fetch FID:', err)
+      // Continue without FID (transaction will use 0)
+    }
+
+    // Execute atomic transaction (event + stats update)
+    try {
+      const { data: txResult, error: txError } = await supabase.rpc(
+        'guild_member_join_tx',
+        {
+          p_guild_id: guildId.toString(),
+          p_member_address: address,
+          p_fid: memberFID,
+          p_guild_name: guild.name,
+          p_request_id: requestId,
+        }
+      )
+
+      if (txError) {
+        console.error('[guild-join] Transaction failed:', txError)
+        // Continue to response (event logging is non-blocking)
+      } else {
+        console.log('[guild-join] Transaction success:', txResult)
+      }
+    } catch (err: unknown) {
+      console.error('[guild-join] Transaction error:', err)
+      // Non-blocking error - continue to response
+    }
+
+    // CACHE INVALIDATION - Clear stale guild data after mutation
+    invalidateCachePattern('guild', `${guildId}:*`).catch((error: unknown) => {
+      console.error('[guild-join] Failed to invalidate cache:', error)
+    })
+    // Also invalidate guild list caches
+    invalidateCachePattern('guild', 'leaderboard:*').catch((error: unknown) => {
+      console.error('[guild-join] Failed to invalidate leaderboard cache:', error)
+    })
+    invalidateCachePattern('guild', 'list:*').catch((error: unknown) => {
+      console.error('[guild-join] Failed to invalidate list cache:', error)
     })
 
     // 9. SUCCESS RESPONSE

@@ -103,7 +103,7 @@ export type LeaderboardEntry = {
   pfpUrl: string
   // Quest data from Supabase
   questsCompleted: number
-  viralXP: number
+  viralPoints: number
 }
 
 export async function fetchLeaderboard(params: {
@@ -163,7 +163,7 @@ export async function fetchLeaderboard(params: {
         displayName: profile?.displayName || '',
         pfpUrl: profile?.pfpUrl || '',
         questsCompleted: (profile as any)?.questsCompleted || 0,
-        viralXP: (profile as any)?.viralXP || 0,
+        viralPoints: (profile as any)?.viralPoints || 0,
       }
     })
     
@@ -199,7 +199,7 @@ export type UserStatsData = {
   username: string
   pfpUrl: string
   questsCompleted: number
-  viralXP: number
+  viralPoints: number
   tipsSent: number
   tipsReceived: number
 }
@@ -253,7 +253,7 @@ export async function fetchUserStats(params: {
       username: (supabaseData as any)?.username || '',
       pfpUrl: (supabaseData as any)?.pfpUrl || '',
       questsCompleted: (supabaseData as any)?.questsCompleted || 0,
-      viralXP: (supabaseData as any)?.viralXP || 0,
+      viralPoints: (supabaseData as any)?.viralPoints || 0,
       tipsSent: (supabaseData as any)?.tipsSent || 0,
       tipsReceived: (supabaseData as any)?.tipsReceived || 0,
     }

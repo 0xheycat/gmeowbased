@@ -207,9 +207,15 @@ export function GuildCreationForm({
       }
 
       // Step 2: Get contract args from API
+      // BUG #6 FIX: Add Idempotency-Key header to prevent duplicate guilds
+      const idempotencyKey = `guild-create-${address}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      
       const response = await fetch('/api/guild/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
+        },
         body: JSON.stringify({
           guildName: guildName.trim(),
           address

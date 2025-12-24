@@ -34,7 +34,7 @@ export async function handlePointsFrame(ctx: FrameHandlerContext): Promise<Respo
     const breakdown = {
       gmXP: stats.lifetimeGMs * 10, // Example: 10 XP per GM
       questXP: stats.questsCompleted * 50, // Example: 50 XP per quest
-      viralXP: stats.viralXP,
+      viralXP: stats.viralPoints,
       badgeXP: stats.badgeCount * 25,
       guildBonus: stats.guildRole ? 100 : 0,
       referralBonus: stats.referralCodes * 50,
