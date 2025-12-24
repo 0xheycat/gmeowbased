@@ -247,8 +247,29 @@ Contract (Layer 1) → Subsquid (Layer 2) → Supabase (Layer 3) → API (Layer 
 - Database: ✅ Guild #1 exists (level=1, treasury=3205 points)
 - Conclusion: ✅ **PRODUCTION READY** - System will capture events when guild levels up
 
+**Phase 4 Sync Job Implementation (Dec 24, 2025 16:00 UTC):**
+- [x] **Sync Job Created:** lib/jobs/sync-guild-level-ups.ts (348 lines)
+  - GraphQL query: Fetches guildLevelUpEvents from Subsquid
+  - Transform: Layer 2 (camelCase) → Layer 3 (snake_case)
+  - Target: guild_events table with event_type='LEVEL_UP'
+  - Features: Pagination (1000 events/batch), idempotency, error handling
+- [x] **API Route Created:** app/api/cron/sync-guild-level-ups/route.ts (71 lines)
+  - Authentication: CRON_SECRET Bearer token
+  - Response: SyncResult { success, inserted, updated, skipped, errors, durationMs }
+- [x] **GitHub Workflow Created:** .github/workflows/sync-guild-level-ups.yml
+  - Schedule: Every 15 minutes (*/15 * * * *)
+  - Trigger: POST /api/cron/sync-guild-level-ups
+- [x] **Manual Testing:** ✅ Sync job working correctly
+  - Response: {success: true, inserted: 0, errors: 0, durationMs: 31ms}
+  - Subsquid integration: ✅ GraphQL queries working
+  - Supabase integration: ✅ Ready for event inserts
+- [x] **Rationale:** Implemented now while Phase 3 pattern fresh in memory
+  - Prevents future context loss and rework
+  - User's wise decision: "Better adding now, why? I wonder we forgetting"
+- [x] **Git Commit:** 55f75c5 (546 insertions, 3 files created)
+
 **Phase 4 Scope Adjustment:**  
-Original plan included Member Role Events (Promoted/Demoted) and Guild Lifecycle Events (LevelUp/Deactivated). After contract ABI analysis, discovered that only `GuildLevelUp` event exists in deployed smart contract. Phase 4 implementation focused on this single event handler. Future phases may add quest/reward events if needed.
+Original plan included Member Role Events (Promoted/Demoted) and Guild Lifecycle Events (LevelUp/Deactivated). After contract ABI analysis, discovered that only `GuildLevelUp` event exists in deployed smart contract. Phase 4 implementation focused on this single event handler. Sync job added (Dec 24) to ensure UI can display level-up milestones when needed.
 
 **Event Implementation Sequence (2 weeks total):**
 
