@@ -55,6 +55,7 @@ import {
     GuildMember,
     GuildEvent,
     GuildPointsDepositedEvent,
+    GuildLevelUpEvent,
     BadgeMint,
     NFTMint,
     NFTTransfer,
@@ -101,6 +102,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const guildMembers = new Map<string, GuildMember>()
     const guildEvents: GuildEvent[] = []
     const guildPointsDepositedEvents: GuildPointsDepositedEvent[] = []
+    const guildLevelUpEvents: GuildLevelUpEvent[] = []
     const badgeMints: BadgeMint[] = []
     const nftMints: NFTMint[] = []
     const nftTransfers: NFTTransfer[] = []
@@ -163,7 +165,8 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                     if (topic === guildInterface.getEvent('GuildCreated')?.topicHash ||
                         topic === guildInterface.getEvent('GuildJoined')?.topicHash ||
                         topic === guildInterface.getEvent('GuildLeft')?.topicHash ||
-                        topic === guildInterface.getEvent('GuildPointsDeposited')?.topicHash) {
+                        topic === guildInterface.getEvent('GuildPointsDeposited')?.topicHash ||
+                        topic === guildInterface.getEvent('GuildLevelUp')?.topicHash) {
                         const decoded = guildInterface.parseLog({
                             topics: log.topics as string[],
                             data: log.data
@@ -985,6 +988,34 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                         }
                     }
                     
+                    // Handle GuildLevelUp
+                    // Contract: event GuildLevelUp(uint256 guildId, uint8 newLevel)
+                    // 4-Layer: Contract (camelCase) → Subsquid (camelCase) → DB (snake_case) → API (camelCase)
+                    // Note: Event emitted automatically when guildTreasuryPoints() crosses level thresholds
+                    else if (topic === guildInterface.getEvent('GuildLevelUp')?.topicHash) {
+                        const decoded = guildInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const guildId = decoded.args.guildId.toString()
+                            const newLevel = Number(decoded.args.newLevel) // Contract field name (uint8 → number)
+                            
+                            // Create GuildLevelUpEvent entity (Layer 2 - exact contract names)
+                            guildLevelUpEvents.push(new GuildLevelUpEvent({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                guildId,   // Contract: uint256 guildId (camelCase - source of truth)
+                                newLevel,  // Contract: uint8 newLevel (camelCase - source of truth)
+                                timestamp: blockTime,
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            ctx.log.info(`📈 GuildLevelUp: guildId=${guildId}, newLevel=${newLevel}`)
+                        }
+                    }
+                    
                     // Phase 8: Handle GuildQuestCreated event
                     else if (topic === guildInterface.getEvent('GuildQuestCreated')?.topicHash) {
                         const decoded = guildInterface.parseLog({
@@ -1409,6 +1440,12 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     if (guildPointsDepositedEvents.length > 0) {
         await ctx.store.insert(guildPointsDepositedEvents)
         ctx.log.info(`💾 Saved ${guildPointsDepositedEvents.length} guild points deposited events`)
+    }
+    
+    // Phase 4: Save GuildLevelUp events (Layer 2 - Subsquid database)
+    if (guildLevelUpEvents.length > 0) {
+        await ctx.store.insert(guildLevelUpEvents)
+        ctx.log.info(`💾 Saved ${guildLevelUpEvents.length} guild level up events`)
     }
     
     if (badgeMints.length > 0) {
