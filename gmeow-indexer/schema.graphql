@@ -98,6 +98,21 @@ type GuildPointsDepositedEvent @entity {
   txHash: String! @index
 }
 
+# Guild Level Up Event (Layer 2: Contract Event Structure)
+# Source: event GuildLevelUp(uint256 guildId, uint8 newLevel)
+# Naming: Exact contract field names (camelCase - contract is source of truth)
+# Note: Event emitted automatically when guildTreasuryPoints() crosses level thresholds
+type GuildLevelUpEvent @entity {
+  id: ID! # txHash-logIndex
+  guildId: String! @index # Contract field name (uint256 → String for DB)
+  newLevel: Int! # Contract field name (uint8 → Int)
+  
+  # Standard event metadata
+  timestamp: BigInt!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
 # Badge/NFT System (from Badge contract)
 type BadgeMint @entity {
   id: ID! # txHash-logIndex
