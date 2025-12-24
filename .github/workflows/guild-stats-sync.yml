@@ -1,9 +1,9 @@
-name: Guild Stats Sync (Every 6 Hours)
+name: Guild Stats Sync (Hourly)
 
 on:
   schedule:
-    # Run every 6 hours (0:00, 6:00, 12:00, 18:00 UTC)
-    - cron: '0 */6 * * *'
+    # Run every hour (0:00, 1:00, 2:00, ... UTC)
+    - cron: '0 * * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -15,12 +15,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Sync guild statistics
+      - name: Sync guild statistics from Subsquid
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           DEPLOYMENT_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art' }}
         run: |
-          echo "🏰 Starting guild stats sync..."
+          echo "🏰 Starting guild stats sync from Subsquid indexer..."
+          echo "📊 Architecture: Subsquid (Layer 2) → Supabase guild_stats_cache (Layer 3)"
           
           # Call cron API endpoint
           response=$(curl -s -w "\n%{http_code}" -X POST \
@@ -42,10 +43,11 @@ jobs:
             # Parse and display results (if jq is available)
             if command -v jq &> /dev/null; then
               echo "📈 Sync summary:"
-              echo "  Total guilds: $(echo "$body" | jq -r '.stats.total_guilds')"
-              echo "  Updated: $(echo "$body" | jq -r '.stats.updated')"
+              echo "  Total guilds: $(echo "$body" | jq -r '.stats.total // .stats.total_guilds')"
+              echo "  Synced: $(echo "$body" | jq -r '.stats.synced // .stats.updated')"
               echo "  Failed: $(echo "$body" | jq -r '.stats.failed')"
               echo "⏱️  Duration: $(echo "$body" | jq -r '.duration')"
+              echo "🎯 Cache hit rate target: 95%+ (once populated)"
             fi
           else
             echo "❌ Guild stats sync failed with status $http_code"

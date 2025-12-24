@@ -1,4 +1,4 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, StringColumn as StringColumn_, Index as Index_, BigIntColumn as BigIntColumn_, IntColumn as IntColumn_, OneToMany as OneToMany_} from "@subsquid/typeorm-store"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, StringColumn as StringColumn_, Index as Index_, BigIntColumn as BigIntColumn_, IntColumn as IntColumn_, BooleanColumn as BooleanColumn_, OneToMany as OneToMany_} from "@subsquid/typeorm-store"
 import {GuildMember} from "./guildMember.model"
 import {GuildEvent} from "./guildEvent.model"
 
@@ -11,6 +11,9 @@ export class Guild {
     @PrimaryColumn_()
     id!: string
 
+    @StringColumn_({nullable: false})
+    name!: string
+
     @Index_()
     @StringColumn_({nullable: false})
     owner!: string
@@ -21,8 +24,14 @@ export class Guild {
     @IntColumn_({nullable: false})
     totalMembers!: number
 
+    @IntColumn_({nullable: false})
+    level!: number
+
+    @BooleanColumn_({nullable: false})
+    isActive!: boolean
+
     @BigIntColumn_({nullable: false})
-    totalPoints!: bigint
+    treasuryPoints!: bigint
 
     @OneToMany_(() => GuildMember, e => e.guild)
     members!: GuildMember[]

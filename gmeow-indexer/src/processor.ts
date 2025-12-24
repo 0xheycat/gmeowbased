@@ -7,6 +7,10 @@ import {
     Log as _Log,
     Transaction as _Transaction,
 } from '@subsquid/evm-processor'
+import { getCurrentEndpoint, initializeRpcManager } from './rpc-manager'
+
+// Initialize automatic RPC failover manager
+initializeRpcManager()
 
 // Gmeow contract addresses on Base (verified Dec 11, 2025)
 export const CORE_ADDRESS = '0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73'.toLowerCase()
@@ -15,13 +19,16 @@ export const NFT_ADDRESS = '0xCE9596a992e38c5fa2d997ea916a277E0F652D5C'.toLowerC
 export const BADGE_ADDRESS = '0x5Af50Ee323C45564d94B0869d95698D837c59aD2'.toLowerCase()
 export const REFERRAL_ADDRESS = '0x9E7c32C1fB3a2c08e973185181512a442b90Ba44'.toLowerCase()
 
+// Get current RPC endpoint (automatically rotates on failure)
+const currentRpc = getCurrentEndpoint()
+
 export const processor = new EvmBatchProcessor()
     // Base mainnet archive
     .setGateway('https://v2.archive.subsquid.io/network/base-mainnet')
-    // Base RPC endpoint
+    // Base RPC endpoint (automatic failover via rpc-manager)
     .setRpcEndpoint({
-        url: assertNotNull(process.env.RPC_BASE_HTTP || 'https://mainnet.base.org', 'No RPC endpoint supplied'),
-        rateLimit: 10
+        url: assertNotNull(currentRpc.url, 'No RPC endpoint supplied'),
+        rateLimit: currentRpc.rateLimit
     })
     .setFinalityConfirmation(10) // Base has faster finality
     .setFields({

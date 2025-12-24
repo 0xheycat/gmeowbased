@@ -18,7 +18,7 @@ export const revalidate = 300 // 5 minutes
  * - page: number (default: 1)
  * - pageSize: number (default: 15, max: 100)
  * - search: string (optional - search by username or FID)
- * - orderBy: 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points' (default: 'total_score')
+ * - orderBy: 'total_score' | 'points_balance' | 'viral_points' | 'guild_points_awarded' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points' (default: 'total_score')
  * 
  * Response:
  * {
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '15'), 100)
     const search = searchParams.get('search') || undefined
-    const orderBy = (searchParams.get('orderBy') || 'total_score') as 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
+    const orderBy = (searchParams.get('orderBy') || 'total_score') as 'total_score' | 'points_balance' | 'viral_points' | 'guild_points_awarded' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
     
     // Validate period
     if (!['daily', 'weekly', 'all_time'].includes(period)) {
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Validate orderBy
-    const validOrderBy = ['total_score', 'base_points', 'viral_xp', 'guild_bonus', 'referral_bonus', 'streak_bonus', 'badge_prestige', 'tip_points', 'nft_points']
+    const validOrderBy = ['total_score', 'points_balance', 'viral_points', 'guild_points_awarded', 'referral_bonus', 'streak_bonus', 'badge_prestige', 'tip_points', 'nft_points']
     if (!validOrderBy.includes(orderBy)) {
       return NextResponse.json(
         { error: 'Invalid orderBy parameter' },

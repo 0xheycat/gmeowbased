@@ -23,7 +23,7 @@ interface BalanceCardProps {
   totalScore: number
   pointsBalance: number
   pendingRewards: number
-  viralXp: number
+  viralPoints: number
   guildBonus: number
   referralBonus: number
   streakBonus: number
@@ -37,7 +37,7 @@ export function ProfileBalanceCard({
   totalScore,
   pointsBalance,
   pendingRewards,
-  viralXp,
+  viralPoints,
   guildBonus,
   referralBonus,
   streakBonus,
@@ -127,10 +127,10 @@ export function ProfileBalanceCard({
           
           {showDetails && (
             <div className="mt-3 space-y-2 text-sm">
-              {viralXp > 0 && (
+              {viralPoints > 0 && (
                 <div className="flex justify-between items-center px-3 py-2 bg-purple-500/10 rounded">
                   <span className="text-purple-400">🚀 Viral XP</span>
-                  <span className="font-bold text-purple-400">+{formatNumber(viralXp)}</span>
+                  <span className="font-bold text-purple-400">+{formatNumber(viralPoints)}</span>
                 </div>
               )}
               {guildBonus > 0 && (

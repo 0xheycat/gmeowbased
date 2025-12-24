@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { LeaderboardEntry } from '@/components/leaderboard/LeaderboardTable'
 
 type TimePeriod = 'daily' | 'weekly' | 'all_time'
-type OrderBy = 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
+type OrderBy = 'total_score' | 'points_balance' | 'viral_points' | 'guild_points_awarded' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
 
 interface LeaderboardResult {
   data: LeaderboardEntry[]

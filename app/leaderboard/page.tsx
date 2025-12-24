@@ -124,9 +124,9 @@ export default function LeaderboardPage() {
         
         <TabPanels className="mt-6">
           <TabPanel><CategoryLeaderboard orderBy="total_score" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
-          <TabPanel><CategoryLeaderboard orderBy="base_points" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
-          <TabPanel><CategoryLeaderboard orderBy="viral_xp" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
-          <TabPanel><CategoryLeaderboard orderBy="guild_bonus" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
+          <TabPanel><CategoryLeaderboard orderBy="points_balance" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
+          <TabPanel><CategoryLeaderboard orderBy="viral_points" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
+          <TabPanel><CategoryLeaderboard orderBy="guild_points_awarded" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
           <TabPanel><CategoryLeaderboard orderBy="referral_bonus" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
           <TabPanel><CategoryLeaderboard orderBy="streak_bonus" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
           <TabPanel><CategoryLeaderboard orderBy="badge_prestige" selectedTier={selectedTier} setSelectedTier={setSelectedTier} /></TabPanel>
@@ -231,7 +231,7 @@ function CategoryLeaderboard({
   selectedTier,
   setSelectedTier 
 }: { 
-  orderBy: 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
+  orderBy: 'total_score' | 'points_balance' | 'viral_points' | 'guild_points_awarded' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
   selectedTier: string
   setSelectedTier: (tier: string) => void
 }) {

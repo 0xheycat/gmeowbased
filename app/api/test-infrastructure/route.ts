@@ -81,11 +81,11 @@ export async function GET(request: NextRequest) {
     }
     
     const stats = calculateCompleteStats({
-      blockchainPoints: totalPoints,
+      pointsBalance: totalPoints,
       currentStreak: firstResult.currentStreak,
       lastGMTimestamp: firstResult.lastGMTimestamp ? new Date(firstResult.lastGMTimestamp).getTime() : null,
       lifetimeGMs: firstResult.lifetimeGMs,
-      viralXP: 0, // Not testing viral XP in this endpoint
+      viralPoints: 0, // Not testing viral points in this endpoint
       questPoints: 0,
       guildPoints: 0,
       referralPoints: 0
@@ -96,14 +96,14 @@ export async function GET(request: NextRequest) {
     // ═══════════════════════════════════════════════════════════════════════
     const routeTests = {
       guild: {
-        detail: { url: `${baseUrl}/api/guild/${testGuildId}`, status: 'untested', data: null, error: null },
-        members: { url: `${baseUrl}/api/guild/${testGuildId}/members`, status: 'untested', data: null, error: null },
-        memberStats: { url: `${baseUrl}/api/guild/${testGuildId}/member-stats?address=${allWallets[0]}`, status: 'untested', data: null, error: null }
+        detail: { url: `${baseUrl}/api/guild/${testGuildId}`, status: 'untested', data: null as any, error: null },
+        members: { url: `${baseUrl}/api/guild/${testGuildId}/members`, status: 'untested', data: null as any, error: null },
+        memberStats: { url: `${baseUrl}/api/guild/${testGuildId}/member-stats?address=${allWallets[0]}`, status: 'untested', data: null as any, error: null }
       },
       viral: {
-        stats: { url: `${baseUrl}/api/viral/stats?fid=${testFID}`, status: 'untested', data: null, error: null },
-        leaderboard: { url: `${baseUrl}/api/viral/leaderboard`, status: 'untested', data: null, error: null },
-        badgeMetrics: { url: `${baseUrl}/api/viral/badge-metrics?fid=${testFID}`, status: 'untested', data: null, error: null }
+        stats: { url: `${baseUrl}/api/viral/stats?fid=${testFID}`, status: 'untested', data: null as any, error: null },
+        leaderboard: { url: `${baseUrl}/api/viral/leaderboard`, status: 'untested', data: null as any, error: null },
+        badgeMetrics: { url: `${baseUrl}/api/viral/badge-metrics?fid=${testFID}`, status: 'untested', data: null as any, error: null }
       }
     }
 

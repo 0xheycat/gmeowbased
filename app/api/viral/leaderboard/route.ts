@@ -17,12 +17,12 @@ type LeaderboardEntry = {
   username: string | null
   displayName: string | null
   pfpUrl: string | null
-  totalViralXp: number
+  viralPoints: number
   viralCasts: number
   topTier: string
   topTierEmoji: string
   // On-chain data (Subsquid)
-  blockchainPoints: number
+  pointsBalance: number
   totalScore: number
   level: number
   rankTier: string
@@ -66,7 +66,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     if (!supabase) throw new Error('Database connection failed')
     
     // LAYER 2: Supabase - Get viral engagement data (off-chain)
-    const query = supabase.from('badge_casts').select('fid, viral_bonus_xp, tier')
+    const query = supabase.from('badge_casts').select('fid, viral_bonus_points, tier')
     const { data: casts, error } = await query
     
     if (error) {
@@ -83,8 +83,8 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     
     casts.forEach(cast => {
       const fid = cast.fid
-      const xp = cast.viral_bonus_xp || 0
-      const tier = cast.tier || 'common'
+      const xp = (cast as any).viral_bonus_points || 0
+      const tier = (cast as any).tier || 'common'
       
       if (!fidStats.has(fid)) {
         fidStats.set(fid, { totalXp: 0, castCount: 0, topTier: tier })
@@ -100,10 +100,10 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       }
     })
     
-    // Sort by viral XP and paginate
+    // Sort by viral points and paginate
     const sortedEntries = Array.from(fidStats.entries())
-      .map(([fid, stats]) => ({ fid, totalViralXp: stats.totalXp, viralCasts: stats.castCount, topTier: stats.topTier }))
-      .sort((a, b) => b.totalViralXp - a.totalViralXp)
+      .map(([fid, stats]) => ({ fid, viralPoints: stats.totalXp, viralCasts: stats.castCount, topTier: stats.topTier }))
+      .sort((a, b) => b.viralPoints - a.viralPoints)
       .slice(offset, offset + limit)
     
     // Get FIDs for profile lookup
@@ -145,9 +145,9 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       const profile = profileMap.get(entry.fid)
       const onChainStats = onChainMap.get(entry.fid)
       
-      // Calculate total score (blockchain + viral XP)
-      const blockchainPoints = onChainStats?.totalXp || 0
-      const totalScore = blockchainPoints + entry.totalViralXp
+      // Calculate total score (blockchain + viral points)
+      const pointsBalance = onChainStats?.totalXp || 0
+      const totalScore = pointsBalance + entry.viralPoints
       
       // Calculate level and rank tier using unified calculator
       const levelData = calculateLevelProgress(totalScore)
@@ -159,12 +159,12 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
         username: null, // Not in user_profiles schema
         displayName: profile?.display_name || null,
         pfpUrl: profile?.avatar_url || null,
-        totalViralXp: entry.totalViralXp,
+        viralPoints: entry.viralPoints,
         viralCasts: entry.viralCasts,
         topTier: entry.topTier,
         topTierEmoji: tierEmojis[entry.topTier] || '🎖️',
         // On-chain stats
-        blockchainPoints,
+        pointsBalance,
         totalScore,
         level: levelData.level,
         rankTier: rankTier.name,

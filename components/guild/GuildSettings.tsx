@@ -33,6 +33,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { z } from 'zod'
 import Image from 'next/image'
+import { useAccount } from 'wagmi'
+import { useAuthContext } from '@/lib/contexts/AuthContext'
 import { EditIcon, ExportIcon, UploadIcon } from '@/components/icons'
 import { useDialog } from '@/components/dialogs'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
@@ -56,6 +58,10 @@ export interface GuildSettingsProps {
 }
 
 export function GuildSettings({ guildId, isLeader, isOwner = false }: GuildSettingsProps) {
+  // Get wallet addresses (multi-wallet support)
+  const { address } = useAccount() // Currently connected wallet
+  const { cachedWallets } = useAuthContext() // All verified wallets from multi-wallet cache
+  
   // Hydration fix
   const [mounted, setMounted] = useState(false)
   
@@ -131,10 +137,28 @@ export function GuildSettings({ guildId, isLeader, isOwner = false }: GuildSetti
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guildId])
 
-  // Auto-save draft to localStorage
+  // Auto-save draft to localStorage with error handling
   const saveDraft = useCallback(() => {
     if (!mounted || typeof window === 'undefined') return
-    localStorage.setItem(`guild-settings-draft-${guildId}`, JSON.stringify(formData))
+    
+    try {
+      const draftKey = `guild-settings-draft-${guildId}`
+      const draftData = JSON.stringify(formData)
+      localStorage.setItem(draftKey, draftData)
+    } catch (error) {
+      // Handle localStorage errors gracefully (non-blocking)
+      if (error instanceof Error) {
+        if (error.name === 'QuotaExceededError') {
+          console.warn('[GuildSettings] LocalStorage quota exceeded, draft auto-save disabled')
+          // Don't show error to user - draft save is non-critical
+          // User can still save via form submission
+        } else if (error.name === 'SecurityError') {
+          console.warn('[GuildSettings] LocalStorage blocked (private browsing mode), draft auto-save disabled')
+        } else {
+          console.warn('[GuildSettings] LocalStorage error:', error.message)
+        }
+      }
+    }
   }, [mounted, formData, guildId])
 
   useEffect(() => {
@@ -286,12 +310,22 @@ export function GuildSettings({ guildId, isLeader, isOwner = false }: GuildSetti
       }
       
       // Step 2: Save all settings to database
+      // Multi-wallet support: Send all verified wallets to check if ANY is the guild leader
+      const addressesToCheck = cachedWallets.length > 0 ? cachedWallets : (address ? [address] : [])
+      
+      if (addressesToCheck.length === 0) {
+        throw new Error('Wallet not connected. Please connect your wallet to update guild settings.')
+      }
+      
       const response = await fetch(`/api/guild/${guildId}/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(finalFormData),
+        body: JSON.stringify({
+          ...finalFormData,
+          address: addressesToCheck, // Multi-wallet: Check if ANY wallet is the guild leader
+        }),
       })
 
       if (!response.ok) {
@@ -302,7 +336,12 @@ export function GuildSettings({ guildId, isLeader, isOwner = false }: GuildSetti
       const result = await response.json()
       if (result.success) {
         // Clear draft on successful save
-        localStorage.removeItem(`guild-settings-draft-${guildId}`)
+        try {
+          localStorage.removeItem(`guild-settings-draft-${guildId}`)
+        } catch (error) {
+          // Non-critical - draft cleanup failed but save succeeded
+          console.warn('[GuildSettings] Failed to clear draft from localStorage:', error)
+        }
         
         setSuccessMessage('Guild settings updated successfully!')
         

@@ -93,6 +93,10 @@ export function GuildAnalytics({ guildId }: GuildAnalyticsProps) {
     return `${prefix}${value}%`
   }
 
+  // CRITICAL: All useState hooks MUST be before conditional returns
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
   if (isLoading) {
     return (
       <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading analytics">
@@ -108,9 +112,6 @@ export function GuildAnalytics({ guildId }: GuildAnalyticsProps) {
       </div>
     )
   }
-
-  const [errorDialogOpen, setErrorDialogOpen] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
 
   if (error || !stats) {
     return (

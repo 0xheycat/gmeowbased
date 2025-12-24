@@ -64,7 +64,7 @@ export class Quest {
     totalCompletions!: number
 
     @BigIntColumn_({nullable: false})
-    totalPointsAwarded!: bigint
+    pointsAwarded!: bigint
 
     @BigIntColumn_({nullable: false})
     totalTokensAwarded!: bigint

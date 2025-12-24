@@ -10,7 +10,7 @@ export type TeamSummary = {
   name: string
   founder: string // mapped from guild leader
   totalPoints: number
-  founderBonus: number // not in ABI; kept for compatibility -> 0
+  ownerBonus: number // Guild owner role bonus (2.0x multiplier) - calculated in leaderboard-service.ts
   memberCount: number
   pfp?: string | null // not in ABI
   bio?: string | null // not in ABI
@@ -81,7 +81,7 @@ export async function getTeamSummary(chain: ChainKey, teamId: number): Promise<T
     name,
     founder: leader,
     totalPoints: totalPointsNum,
-    founderBonus: 0, // not present in ABI
+    ownerBonus: 0, // Calculated in leaderboard-service.ts based on guild member role
     memberCount: memberCountNum,
     pfp: null,
     bio: null,

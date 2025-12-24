@@ -193,16 +193,9 @@ export const RewardsSchema = z.object({
     .min(10, 'Minimum 10 XP')
     .max(1000, 'Maximum 1000 XP per quest'),
   
-  reward_category: z.enum(['viral_xp', 'base_points', 'both'], {
+  reward_category: z.enum(['viral_points', 'points_balance', 'both'], {
     message: 'Invalid reward category'
   }),
-  
-  reward_points: z
-    .number()
-    .int()
-    .min(0)
-    .max(500, 'Maximum 500 points per user')
-    .optional(),
   
   reward_badge_id: z
     .string()

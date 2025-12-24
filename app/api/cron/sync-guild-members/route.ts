@@ -21,6 +21,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/edge'
+import { getSubsquidClient } from '@/lib/subsquid-client'
 import type { Database } from '@/types/supabase.generated'
 
 type Json = Database['public']['Tables']['guild_events']['Row']['metadata']
@@ -39,6 +40,7 @@ interface GuildEvent {
 interface MemberStats {
   guild_id: string
   member_address: string
+  member_role: string          // PHASE 2.1: Added role field (leader/officer/member)
   joined_at: string
   last_active: string | null
   points_contributed: number
@@ -64,7 +66,8 @@ function computeMemberStats(events: GuildEvent[]): Map<string, Map<string, Membe
 
   // Process events to build member stats
   for (const event of validEvents) {
-    const { guild_id, actor_address, event_type, amount, created_at } = event
+    const { guild_id, event_type, amount, created_at } = event
+    const actor_address = event.actor_address.toLowerCase() // Normalize to lowercase
 
     if (!guildMembersMap.has(guild_id)) {
       guildMembersMap.set(guild_id, new Map())
@@ -76,6 +79,7 @@ function computeMemberStats(events: GuildEvent[]): Map<string, Map<string, Membe
       membersMap.set(actor_address, {
         guild_id,
         member_address: actor_address,
+        member_role: 'member',  // PHASE 2.1: Default to member, updated from Subsquid later
         joined_at: created_at, // First event is join
         last_active: created_at,
         points_contributed: 0,
@@ -176,8 +180,168 @@ export async function POST(req: NextRequest) {
 
     console.log(`[sync-guild-members] Processing ${events.length} events`)
 
-    // Compute member statistics
-    const guildMembersMap = computeMemberStats(events as GuildEvent[])
+    // PHASE 2.1: Fetch member roles from Subsquid FIRST (source of truth)
+    const subsquid = getSubsquidClient()
+    let rolesUpdated = 0
+    const guildMembersMap = new Map<string, Map<string, MemberStats>>()
+    
+    console.log('[sync-guild-members] Phase 2.1: Fetching active members from Subsquid...')
+    
+    const guildEvents = events as GuildEvent[]
+    for (const guild_id of new Set(guildEvents.map(e => e.guild_id))) {
+      try {
+        const guildMembersQuery = `
+          query GetGuildMembers($guildId: String!) {
+            guildMembers(where: { guild: { id_eq: $guildId }, isActive_eq: true }) {
+              id
+              role
+              user {
+                id
+              }
+            }
+          }
+        `
+        
+        const response = await fetch(process.env.NEXT_PUBLIC_SUBSQUID_URL || 'http://localhost:4350/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: guildMembersQuery,
+            variables: { guildId: guild_id }
+          })
+        })
+        
+        const result = await response.json()
+        const subsquidMembers = result.data?.guildMembers || []
+        
+        if (!guildMembersMap.has(guild_id)) {
+          guildMembersMap.set(guild_id, new Map())
+        }
+        
+        const membersMap = guildMembersMap.get(guild_id)!
+        
+        // Create member entries from Subsquid (contract truth)
+        for (const subsquidMember of subsquidMembers) {
+          const memberAddress = subsquidMember.user.id.toLowerCase()
+          
+          // Map Subsquid's "owner" to DB's "leader" for CHECK constraint compatibility
+          const mappedRole = subsquidMember.role === 'owner' ? 'leader' : subsquidMember.role
+          
+          membersMap.set(memberAddress, {
+            guild_id,
+            member_address: memberAddress,
+            member_role: mappedRole,
+            joined_at: new Date().toISOString(), // Will be updated from events if available
+            last_active: new Date().toISOString(),
+            points_contributed: 0,
+            deposit_count: 0,
+            quest_completions: 0,
+            total_score: 0,
+            global_rank: null,
+            guild_rank: 0,
+          })
+          
+          rolesUpdated++
+        }
+        
+        console.log(`[sync-guild-members] Guild ${guild_id}: ${subsquidMembers.length} active members from contract`)
+      } catch (error) {
+        console.error(`[sync-guild-members] Failed to fetch members for guild ${guild_id}:`, error)
+      }
+    }
+    
+    console.log(`[sync-guild-members] Phase 2.1: Loaded ${rolesUpdated} active members from Subsquid`)
+    
+    // Now add event stats ONLY for active members
+    const validEvents = guildEvents.filter(e => e.created_at !== null) as Array<GuildEvent & { created_at: string }>
+    validEvents.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    
+    for (const event of validEvents) {
+      const { guild_id, event_type, amount, created_at } = event
+      const actor_address = event.actor_address.toLowerCase()
+      
+      const membersMap = guildMembersMap.get(guild_id)
+      if (!membersMap) continue
+      
+      const member = membersMap.get(actor_address)
+      if (!member) {
+        // Skip events for members not in contract (stale/left members)
+        continue
+      }
+      
+      // Update joined_at to earliest event
+      if (new Date(created_at) < new Date(member.joined_at)) {
+        member.joined_at = created_at
+      }
+      
+      // Update last activity
+      if (new Date(created_at) > new Date(member.last_active || 0)) {
+        member.last_active = created_at
+      }
+      
+      // Track deposits
+      if (event_type === 'POINTS_DEPOSITED') {
+        member.points_contributed += Number(amount || 0)
+        member.deposit_count += 1
+      }
+    }
+    
+    console.log(`[sync-guild-members] Processed ${validEvents.length} events for active members`)
+
+    // Calculate guild ranks
+    for (const [guild_id, membersMap] of guildMembersMap.entries()) {
+      const members = Array.from(membersMap.values())
+      members.sort((a, b) => b.points_contributed - a.points_contributed)
+      members.forEach((member, index) => {
+        member.guild_rank = index + 1
+      })
+      members.forEach(member => {
+        membersMap.set(member.member_address, member)
+      })
+    }
+
+    // PHASE 2.2: Clean up stale cache entries (members who left guild)
+    let staleRemoved = 0
+    for (const [guild_id, membersMap] of guildMembersMap.entries()) {
+      const activeMemberAddresses = Array.from(membersMap.keys())
+      
+      // Get all cached members for this guild
+      const { data: cachedMembers, error: fetchError } = await supabase
+        .from('guild_member_stats_cache')
+        .select('member_address')
+        .eq('guild_id', guild_id)
+      
+      if (fetchError) {
+        console.error(`[sync-guild-members] Failed to fetch cached members for guild ${guild_id}:`, fetchError)
+        continue
+      }
+      
+      // Find stale members (in cache but not in Subsquid active list)
+      const staleAddresses = (cachedMembers || [])
+        .map(m => m.member_address.toLowerCase())
+        .filter(addr => !activeMemberAddresses.includes(addr))
+      
+      if (staleAddresses.length > 0) {
+        console.log(`[sync-guild-members] Removing ${staleAddresses.length} stale members from guild ${guild_id}`)
+        
+        // Delete stale entries
+        const { error: deleteError } = await supabase
+          .from('guild_member_stats_cache')
+          .delete()
+          .eq('guild_id', guild_id)
+          .in('member_address', staleAddresses)
+        
+        if (deleteError) {
+          console.error(`[sync-guild-members] Failed to remove stale members:`, deleteError)
+        } else {
+          staleRemoved += staleAddresses.length
+        }
+      }
+    }
+    
+    if (staleRemoved > 0) {
+      console.log(`[sync-guild-members] Phase 2.2: Removed ${staleRemoved} stale cache entries`)
+    }
 
     // Upsert member stats to cache
     let totalMembers = 0
@@ -195,6 +359,7 @@ export async function POST(req: NextRequest) {
             .upsert({
               guild_id: member.guild_id,
               member_address: member.member_address,
+              member_role: member.member_role,      // PHASE 2.1: Role field
               joined_at: member.joined_at,
               last_active: member.last_active,
               points_contributed: member.points_contributed,
@@ -224,7 +389,7 @@ export async function POST(req: NextRequest) {
 
     const duration = Date.now() - startTime
 
-    console.log(`[sync-guild-members] Complete - ${successCount}/${totalMembers} members updated in ${duration}ms`)
+    console.log(`[sync-guild-members] Complete - ${successCount}/${totalMembers} members updated, ${staleRemoved} stale removed in ${duration}ms`)
 
     return NextResponse.json({
       success: true,
@@ -232,6 +397,7 @@ export async function POST(req: NextRequest) {
         total_members: totalMembers,
         updated: successCount,
         failed: failCount,
+        stale_removed: staleRemoved,
         guilds_processed: guildMembersMap.size,
       },
       duration: `${duration}ms`,

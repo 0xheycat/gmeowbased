@@ -110,15 +110,17 @@ export async function logGuildEvent(event: GuildEvent): Promise<boolean> {
 }
 
 /**
- * Fetch recent guild events
+ * Fetch recent guild events with cursor-based pagination
  * 
  * @param guildId - Guild ID to fetch events for
- * @param limit - Max events to return (default: 50)
+ * @param limit - Max events to return (default: 50, max: 100)
+ * @param cursor - ISO timestamp for pagination (fetch events older than this)
  * @returns Promise<GuildEventRecord[]>
  */
 export async function getGuildEvents(
   guildId: string,
-  limit: number = 50
+  limit: number = 50,
+  cursor?: string
 ): Promise<GuildEventRecord[]> {
   try {
     const supabase = getSupabaseAdminClient()
@@ -128,14 +130,24 @@ export async function getGuildEvents(
       return []
     }
 
+    // Enforce max limit to prevent DoS (BUG #5 fix - Dec 24, 2025)
+    const safeLimit = Math.min(limit, 100)
+
     // Note: guild_events table not yet in Database types (pending schema migration)
     // Using type assertion until migration is run
-    const { data, error} = await supabase
+    let query = supabase
       .from('guild_events')
       .select('*')
       .eq('guild_id', guildId)
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .limit(safeLimit)
+
+    // Cursor-based pagination: fetch events older than cursor
+    if (cursor) {
+      query = query.lt('created_at', cursor)
+    }
+
+    const { data, error} = await query
 
     if (error) {
       console.error('[guild-event-logger] Failed to fetch events:', error)

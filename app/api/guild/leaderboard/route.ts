@@ -121,92 +121,139 @@ async function fetchGuildsFromSupabase(): Promise<LeaderboardGuild[]> {
           chain: 'base' as const,
           name: meta?.name || 'Unknown Guild',
           leader: cache.leader_address || '',
-          totalPoints: Number(cache.total_points || 0),
+          totalPoints: cache.treasury_points ?? 0, // Null-safe: use 0 if null/undefined
           memberCount: cache.member_count || 0,
           level: cache.level || 1,
-          score: Number(cache.total_points || 0), // Default score is points
+          score: cache.treasury_points ?? 0, // Null-safe: use 0 if null/undefined
           description: meta?.description || undefined,
           banner: meta?.banner || undefined,
         }
       })
 
-      return leaderboardGuilds.filter(g => g.name && g.totalPoints > 0)
+      return leaderboardGuilds.filter(g => g.name && g.memberCount > 0)
     }
 
-    // FALLBACK: Cache miss - calculate from events (slow path)
-    console.log('[guild/leaderboard] Cache miss, calculating from events')
+    // FALLBACK: Cache miss - query Subsquid (Layer 2) for on-chain data
+    console.log('[guild/leaderboard] Cache miss, querying Subsquid for on-chain guild data')
 
-    // Get guild metadata
+    // Layer 2 (Subsquid): Query indexed blockchain data
+    // Follows 4-layer architecture: Contract → Subsquid → Supabase → API
+    
+    // Get guild metadata from Supabase (Layer 3)
     const { data: guilds, error: guildsError } = await supabase
       .from('guild_metadata')
       .select('guild_id, name, description, banner, created_at')
+
+    console.log(`[guild/leaderboard] Found ${guilds?.length || 0} guilds in metadata`)
 
     if (guildsError || !guilds) {
       console.error('[guild/leaderboard] Failed to fetch guild metadata:', guildsError)
       return []
     }
 
-    // Get guild events for member tracking
-    const { data: events, error: eventsError } = await supabase
-      .from('guild_events')
-      .select('guild_id, event_type, actor_address, amount')
-
-    if (eventsError) {
-      console.error('[guild/leaderboard] Failed to fetch guild events:', eventsError)
-    }
-
-    const allEvents = events || []
-
-    // Calculate stats from events
-    const guildStatsMap = new Map<string, { memberCount: number; totalPoints: number; leader: string }>()
-
-    // Process events to calculate member counts and total points
-    for (const event of allEvents) {
-      const guildId = event.guild_id
-      if (!guildStatsMap.has(guildId)) {
-        guildStatsMap.set(guildId, { memberCount: 0, totalPoints: 0, leader: '' })
-      }
-      const stats = guildStatsMap.get(guildId)!
-
-      if (event.event_type === 'MEMBER_JOINED') {
-        stats.memberCount++
-        if (!stats.leader && event.actor_address) {
-          stats.leader = event.actor_address
+    // Query Subsquid GraphQL directly for all guilds
+    const subsquidUrl = process.env.SUBSQUID_URL || 'http://localhost:4350/graphql'
+    const guildIds = guilds.map(g => g.guild_id)
+    
+    console.log(`[guild/leaderboard] Querying Subsquid for ${guildIds.length} guilds`)
+    
+    let subsquidGuilds: any[] = []
+    try {
+      const query = `
+        query GetGuilds($ids: [String!]!) {
+          guilds(where: { id_in: $ids }) {
+            id
+            treasuryPoints
+            totalMembers
+            owner
+          }
         }
-      } else if (event.event_type === 'MEMBER_LEFT') {
-        stats.memberCount = Math.max(0, stats.memberCount - 1)
-      } else if (event.event_type === 'POINTS_DEPOSITED') {
-        stats.totalPoints += Number(event.amount || 0)
-      } else if (event.event_type === 'POINTS_CLAIMED') {
-        stats.totalPoints = Math.max(0, stats.totalPoints - Number(event.amount || 0))
-      } else if (event.event_type === 'GUILD_CREATED' && event.actor_address) {
-        stats.leader = event.actor_address
-      }
-    }
-
-    // Build leaderboard entries
-    const leaderboardGuilds: LeaderboardGuild[] = guilds
-      .map((guild) => {
-        const stats = guildStatsMap.get(guild.guild_id) || { memberCount: 0, totalPoints: 0, leader: '' }
-        const level = calculateGuildLevel(stats.totalPoints)
-
-        return {
-          rank: 0, // Will be calculated after sorting
-          id: guild.guild_id,
-          chain: 'base' as const,
-          name: guild.name || 'Unknown Guild',
-          leader: stats.leader || '',
-          totalPoints: stats.totalPoints,
-          memberCount: stats.memberCount,
-          level,
-          score: stats.totalPoints, // Default score is points
-          description: guild.description || undefined,
-          banner: guild.banner || undefined,
-        }
+      `
+      
+      const response = await fetch(subsquidUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: { ids: guildIds } })
       })
-      .filter((g) => g.name && g.totalPoints > 0) // Only active guilds
+      
+      if (!response.ok) {
+        throw new Error(`Subsquid API returned ${response.status}`)
+      }
+      
+      const result = await response.json()
+      
+      if (result.errors) {
+        console.error('[guild/leaderboard] Subsquid GraphQL errors:', result.errors)
+        throw new Error('Subsquid GraphQL query failed')
+      }
+      
+      subsquidGuilds = result.data?.guilds || []
+      console.log(`[guild/leaderboard] Received ${subsquidGuilds.length} guilds from Subsquid`)
+    } catch (error) {
+      console.error('[guild/leaderboard] Subsquid query failed, falling back to Supabase cache:', error)
+      
+      // FALLBACK: If Subsquid is down, use Supabase cache (Layer 3)
+      // This prevents complete failure when indexer is unavailable
+      const { data: cachedStats, error: cacheError } = await supabase
+        .from('guild_stats_cache')
+        .select('guild_id, member_count, treasury_points, leader_address, last_synced_at')
+      
+      if (cacheError || !cachedStats || cachedStats.length === 0) {
+        console.error('[guild/leaderboard] Cache fallback also failed or empty:', cacheError)
+        return [] // Only return empty if ALL layers fail
+      }
+      
+      console.log(`[guild/leaderboard] Using cached data for ${cachedStats.length} guilds (last sync: ${cachedStats[0]?.last_synced_at})`)
+      
+      // Map cached data to Subsquid format
+      subsquidGuilds = cachedStats.map(cache => ({
+        id: cache.guild_id,
+        treasuryPoints: cache.treasury_points?.toString() || '0',
+        totalMembers: cache.member_count || 0,
+        owner: cache.leader_address || ''
+      }))
+    }
 
-    return leaderboardGuilds
+    // Build leaderboard from Subsquid data
+    const subsquidMap = new Map(subsquidGuilds.map(g => [g.id, g]))
+    const leaderboardGuilds: LeaderboardGuild[] = []
+    
+    for (const guild of guilds) {
+      const subsquidData = subsquidMap.get(guild.guild_id)
+      
+      if (!subsquidData) {
+        console.warn(`[guild/leaderboard] No Subsquid data for guild ${guild.guild_id}`)
+        continue
+      }
+
+      console.log(`[guild/leaderboard] Guild ${guild.guild_id}: treasuryPoints=${subsquidData.treasuryPoints}, members=${subsquidData.totalMembers}`)
+
+      const totalPoints = Number(subsquidData.treasuryPoints ?? 0)
+      const memberCount = subsquidData.totalMembers ?? 0
+      const level = calculateGuildLevel(totalPoints)
+
+      leaderboardGuilds.push({
+        rank: 0, // Will be calculated after sorting
+        id: guild.guild_id,
+        chain: 'base' as const,
+        name: guild.name || 'Unknown Guild',
+        leader: subsquidData.owner || '',
+        totalPoints, // From contract via Subsquid (source of truth)
+        memberCount,
+        level,
+        score: totalPoints,
+        description: guild.description || undefined,
+        banner: guild.banner || undefined,
+      })
+    }
+
+    console.log(`[guild/leaderboard] Built ${leaderboardGuilds.length} guild entries before filtering`)
+
+    const filteredGuilds = leaderboardGuilds.filter((g) => g.name && g.memberCount > 0) // Only guilds with members (active)
+
+    console.log(`[guild/leaderboard] Returning ${filteredGuilds.length} guilds after filtering`)
+
+    return filteredGuilds
   } catch (error) {
     console.error('[guild/leaderboard] Error fetching guilds:', error)
     return []
@@ -232,22 +279,28 @@ function calculateScore(guild: LeaderboardGuild, metric: QueryParams['metric']):
 
 /**
  * Rank guilds by metric
+ * OPTIMIZED: Single-pass algorithm (BUG #15 fix)
+ * Before: 3 operations (.map → .sort → .map) - 2 full array copies
+ * After: 1 operation (.map with in-place sort) - 1 array copy
+ * Performance: O(n) → O(n) for copies, but reduces memory allocation by 50%
  */
 function rankGuilds(guilds: LeaderboardGuild[], metric: QueryParams['metric']): LeaderboardGuild[] {
-  // Calculate scores
-  const scored = guilds.map((guild) => ({
+  // Single pass: calculate scores, sort, and assign ranks in one operation
+  const rankedGuilds = guilds.map((guild) => ({
     ...guild,
     score: calculateScore(guild, metric),
+    rank: 0, // Placeholder, will be updated after sort
   }))
 
-  // Sort by score (descending)
-  scored.sort((a, b) => b.score - a.score)
+  // Sort by score (descending) - in-place to avoid extra copy
+  rankedGuilds.sort((a, b) => b.score - a.score)
 
-  // Assign ranks
-  return scored.map((guild, index) => ({
-    ...guild,
-    rank: index + 1,
-  }))
+  // Assign ranks in-place (no new array allocation)
+  for (let i = 0; i < rankedGuilds.length; i++) {
+    rankedGuilds[i].rank = i + 1
+  }
+
+  return rankedGuilds
 }
 
 /**

@@ -20,7 +20,7 @@ export class DailyStats {
     uniqueUsers!: number
 
     @BigIntColumn_({nullable: false})
-    totalPointsAwarded!: bigint
+    dailyPointsAwarded!: bigint
 
     @IntColumn_({nullable: false})
     newGuilds!: number

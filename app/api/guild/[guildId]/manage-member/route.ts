@@ -49,6 +49,7 @@ import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { logGuildEvent } from '@/lib/guild/event-logger'
+import { invalidateCachePattern } from '@/lib/cache/server'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -338,6 +339,18 @@ export async function POST(
         console.error('[guild-manage-member] Failed to log event:', error)
       })
     }
+
+    // CACHE INVALIDATION - Clear stale guild data after mutation
+    invalidateCachePattern('guild', `${guildId}:*`).catch((error) => {
+      console.error('[guild-manage-member] Failed to invalidate cache:', error)
+    })
+    // Also invalidate guild list caches
+    invalidateCachePattern('guild', 'leaderboard:*').catch((error) => {
+      console.error('[guild-manage-member] Failed to invalidate leaderboard cache:', error)
+    })
+    invalidateCachePattern('guild', 'list:*').catch((error) => {
+      console.error('[guild-manage-member] Failed to invalidate list cache:', error)
+    })
 
     // 6. RETURN INSTRUCTION FOR WALLET
     // Note: Actual contract call must be done client-side with user's wallet

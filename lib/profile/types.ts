@@ -74,47 +74,51 @@ export interface SocialLinks {
 // ============================================================================
 
 /**
- * User profile statistics from leaderboard_calculations + user_profiles
+ * User profile statistics from user_points_balances + Subsquid
  * 
  * Data Sources:
- * - viral_xp: leaderboard_calculations.viral_xp (from badge_casts)
- * - base_points: leaderboard_calculations.base_points (from quests)
- * - guild_bonus: leaderboard_calculations.guild_bonus
- * - referral_bonus: leaderboard_calculations.referral_bonus
- * - streak_bonus: leaderboard_calculations.streak_bonus
- * - badge_prestige: leaderboard_calculations.badge_prestige
- * - total_score: leaderboard_calculations.total_score (auto-calculated)
- * - global_rank: leaderboard_calculations.global_rank
- * - rank_tier: leaderboard_calculations.rank_tier
- * - level: Calculated from total_score using lib/rank.ts
- * - streak: Calculated from streak_bonus
+ * - points_balance: user_points_balances.points_balance (spendable points from activities)
+ * - viral_points: user_points_balances.viral_points (engagement points from viral casts)
+ * - guild_points_awarded: user_points_balances.guild_points_awarded (guild membership bonus)
+ * - total_score: GENERATED column (points_balance + viral_points + guild_points_awarded)
+ * - current_streak: Subsquid UserOnChainStats.currentStreak (on-chain)
+ * - global_rank: points_leaderboard view (calculated from total_score)
+ * - level: unified-calculator.calculateLevelProgress(total_score)
+ * - rank_tier: unified-calculator.getRankTierByPoints(total_score)
+ * - referral_bonus: Future feature (from referrals table)
+ * - streak_bonus: Derived (current_streak * 10)
+ * - badge_prestige: Derived (badge_count * 25)
  * - quest_completions: Count from quest_completions table
  * - badge_count: Count from user_badges table
  */
 export interface ProfileStats {
-  // Points & XP (from leaderboard_calculations)
-  viral_xp: number           // Social engagement XP (display only)
-  base_points: number        // BASE POINTS (spendable currency)
-  guild_bonus: number        // Guild level multiplier
-  referral_bonus: number     // Referral rewards
-  streak_bonus: number       // GM streak rewards
-  badge_prestige: number     // Badge collection prestige
-  total_score: number        // Auto-calculated total
+  // Points (from user_points_balances - migrated Dec 22, 2025)
+  points_balance: number        // Blockchain points (spendable currency)
+  viral_points: number          // Social engagement points
+  guild_points_awarded: number  // Guild contribution points  
+  total_score: number           // Auto-calculated total (generated column)
   
-  // Progression
-  level: number              // Current user level (1-100+) from lib/rank.ts
-  global_rank: number        // Global leaderboard rank
-  rank_tier: string          // Rank tier name (Rookie, Elite GM, etc.)
-  streak: number             // Current daily streak (derived from streak_bonus)
+  // Progression (calculated by unified-calculator)
+  level: number                 // Current user level (1-100+)
+  rank_tier: string             // Rank tier name (Signal Kitten, Star Captain, etc.)
+  current_streak: number        // Current GM streak from Subsquid
   
-  // Activity Metrics
-  quest_completions: number  // Total quests completed
-  badge_count: number        // Total badges earned
-  viral_casts: number        // Total viral badge shares
+  // Leaderboard position
+  global_rank?: number          // Global leaderboard position (calculated on demand)
+  
+  // Legacy fields (for backward compatibility - TODO: migrate to new schema)
+  referral_bonus?: number       // Referral rewards (deprecated - moving to separate table)
+  streak_bonus?: number         // Streak rewards (deprecated - use current_streak * 10)
+  badge_prestige?: number       // Badge collection prestige (deprecated - use badge_count * 25)
+  
+  // Activity Metrics (from Supabase)
+  quest_completions: number     // Total quests completed
+  badge_count: number           // Total badges earned
+  viral_casts: number           // Total viral badge shares (deprecated)
   
   // Time-based
-  member_since: string       // ISO date (user_profiles.onboarded_at)
-  last_active: string        // ISO date (leaderboard_calculations.updated_at)
+  member_since: string          // ISO date (user_profiles.onboarded_at)
+  last_active: string           // ISO date (user_points_balances.last_synced_at)
 }
 
 // ============================================================================

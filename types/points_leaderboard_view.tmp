@@ -1,0 +1,10 @@
+      points_leaderboard: {
+        Row: {
+          current_points: number | null
+          fid: number | null
+          points_rank: number | null
+          total_points_earned: number | null
+          total_points_spent: number | null
+        }
+        Relationships: []
+      }

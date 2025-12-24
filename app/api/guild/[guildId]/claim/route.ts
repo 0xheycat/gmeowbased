@@ -70,6 +70,7 @@ import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { logGuildEvent } from '@/lib/guild/event-logger'
+import { invalidateCachePattern } from '@/lib/cache/server'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -426,6 +427,15 @@ export async function POST(
         },
       }).catch((error) => {
         console.error('[guild-claim] Failed to log event:', error)
+      })
+
+      // CACHE INVALIDATION - Clear stale guild data after mutation
+      invalidateCachePattern('guild', `${guildId}:*`).catch((error) => {
+        console.error('[guild-claim] Failed to invalidate cache:', error)
+      })
+      // Also invalidate guild list caches
+      invalidateCachePattern('guild', 'leaderboard:*').catch((error) => {
+        console.error('[guild-claim] Failed to invalidate leaderboard cache:', error)
       })
 
       const duration = Date.now() - startTime

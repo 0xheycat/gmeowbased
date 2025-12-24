@@ -80,12 +80,12 @@ interface GuildMember {
   role: 'owner' | 'officer' | 'member'
   points: string
   joinedAt: string
-  // Leaderboard stats from leaderboard_calculations table
+  // Leaderboard stats from user_points_balances table
   leaderboardStats?: {
     total_score: number
-    base_points: number
-    viral_xp: number
-    guild_bonus_points: number
+    points_balance: number           // ✅ NEW naming convention (Dec 22 migrations)
+    viral_points: number             // ✅ NEW naming convention
+    guild_points_awarded: number     // ✅ NEW naming convention
     is_guild_officer: boolean
     global_rank: number | null
     rank_tier: string | null
@@ -110,6 +110,72 @@ interface GuildMember {
 // 4. Helper Functions
 // ==========================================
 
+/**
+ * Get member badges (simplified for API enrichment)
+ */
+function getMemberBadges(
+  role: 'owner' | 'officer' | 'member',
+  daysSinceJoin: number,
+  points: number
+): Badge[] {
+  const badges: Badge[] = []
+  
+  // Role badges
+  if (role === 'owner') {
+    badges.push({
+      id: 'guild-leader',
+      name: 'Guild Leader',
+      description: 'Guild founder and leader',
+      icon: '/badges/role/crown.png',
+      rarity: 'legendary',
+      category: 'role',
+    })
+  } else if (role === 'officer') {
+    badges.push({
+      id: 'officer',
+      name: 'Officer',
+      description: 'Guild officer',
+      icon: '/badges/role/shield.png',
+      rarity: 'epic',
+      category: 'role',
+    })
+  }
+  
+  // Achievement badges
+  if (points >= 10000) {
+    badges.push({
+      id: 'top-contributor',
+      name: 'Top Contributor',
+      description: 'Contributed 10,000+ points',
+      icon: '/badges/achievement/top-contributor.png',
+      rarity: 'legendary',
+      category: 'achievement',
+    })
+  } else if (points >= 5000) {
+    badges.push({
+      id: 'high-contributor',
+      name: 'High Contributor',
+      description: 'Contributed 5,000+ points',
+      icon: '/badges/achievement/top-contributor.png',
+      rarity: 'epic',
+      category: 'achievement',
+    })
+  }
+  
+  // Activity badges
+  if (daysSinceJoin >= 90) {
+    badges.push({
+      id: 'dedicated',
+      name: 'Dedicated',
+      description: 'Member for over 90 days',
+      icon: '/badges/achievement/veteran.png',
+      rarity: 'epic',
+      category: 'activity',
+    })
+  }
+  
+  return badges.filter(b => b.icon && b.icon !== '').slice(0, 6)
+}
 
 
 /**
@@ -246,39 +312,70 @@ function assignMemberBadges(member: GuildMember, guildCreatedAt: Date): Badge[] 
 }
 
 /**
- * Fetch leaderboard stats for member addresses
+ * Fetch leaderboard stats for members
+ * Uses hybrid pattern: blockchain data from Subsquid + off-chain data from Supabase
  */
-async function fetchLeaderboardStats(addresses: string[]): Promise<Record<string, any>> {
-  if (addresses.length === 0) return {}
+async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<string, any>> {
+  if (members.length === 0) return {}
   
   try {
-    // Fetch stats from Subsquid (replaces leaderboard_calculations)
-    const { getLeaderboardEntry } = await import('@/lib/subsquid-client')
-    
-    // Build lookup map (address → stats) from Subsquid
+    const supabase = createClient()
     const statsMap: Record<string, any> = {}
     
-    // Query Subsquid for each address in parallel
-    const statsPromises = addresses.map(async (address) => {
-      try {
-        const stats = await getLeaderboardEntry(address)
-        if (stats) {
-          statsMap[address.toLowerCase()] = {
-            total_score: stats.totalScore || 0,
-            base_points: stats.basePoints || 0,
-            viral_xp: stats.viralXP || 0,
-            guild_bonus_points: stats.guildBonusPoints || 0,
-            is_guild_officer: stats.isGuildOfficer || false,
-            global_rank: stats.rank,
-            rank_tier: getTierFromRank(stats.rank),
-          }
-        }
-      } catch (err) {
-        console.error(`[guild-members] Error fetching stats for ${address}:`, err)
-      }
+    // Collect FIDs from members who have Farcaster profiles
+    const fids = members
+      .filter(m => m.farcaster?.fid)
+      .map(m => m.farcaster!.fid)
+    
+    if (fids.length === 0) return {}
+    
+    // Query Supabase user_points_balances for off-chain data
+    const { data: pointsData, error } = await supabase
+      .from('user_points_balances')
+      .select('fid, points_balance, viral_points, guild_points_awarded, total_score')
+      .in('fid', fids)
+    
+    if (error) {
+      console.error('[guild-members] Error fetching points balances:', error)
+      return {}
+    }
+    
+    // Build FID → points data lookup
+    const pointsMap = new Map<number, any>()
+    pointsData?.forEach(p => {
+      pointsMap.set(p.fid, p)
     })
     
-    await Promise.all(statsPromises)
+    // Query points_leaderboard for global rank
+    const { data: rankData } = await supabase
+      .from('points_leaderboard')
+      .select('fid, points_rank')
+      .in('fid', fids)
+    
+    const rankMap = new Map<number, number | null>()
+    rankData?.forEach(r => {
+      // @ts-ignore - TypeScript incorrectly narrows Map value type
+      rankMap.set(r.fid, r.points_rank)
+    })
+    
+    // Build address → stats map
+    for (const member of members) {
+      if (!member.farcaster?.fid) continue
+      
+      const fid = member.farcaster.fid
+      const points = pointsMap.get(fid)
+      const rank = rankMap.get(fid) || null
+      
+      statsMap[member.address.toLowerCase()] = {
+        total_score: points?.total_score || 0,
+        points_balance: points?.points_balance || 0,        // ✅ NEW naming (matches UI)
+        viral_points: points?.viral_points || 0,            // ✅ NEW naming (matches UI)
+        guild_points_awarded: points?.guild_points_awarded || 0,  // ✅ NEW naming (matches UI)
+        is_guild_officer: member.role === 'officer' || member.role === 'owner',
+        global_rank: rank,
+        rank_tier: getTierFromRank(rank),
+      }
+    }
     
     return statsMap
   } catch (error) {
@@ -365,9 +462,46 @@ async function getGuildData(guildId: string) {
 }
 
 /**
- * Get all members with roles and points from Supabase (TRUE HYBRID)
+ * Get all members with roles and points from Supabase (PHASE 2.1 - Cache-based)
+ * Primary: guild_member_stats_cache (includes role from Subsquid)
+ * Fallback: guild_events (event-based reconstruction)
  */
 async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
+  const supabase = createClient()
+
+  // PHASE 2.1: Query guild_member_stats_cache for member data including role
+  // @ts-ignore - member_role column exists but types not regenerated yet
+  const { data: memberStats, error: statsError } = await supabase
+    .from('guild_member_stats_cache')
+    .select('member_address, member_role, joined_at, points_contributed')
+    .eq('guild_id', guildId)
+    .order('points_contributed', { ascending: false })
+
+  // If cache exists and has data, use it
+  if (!statsError && memberStats && memberStats.length > 0) {
+    console.log(`[guild-members] Phase 2.1: Using cached member data with roles from Subsquid`)
+    
+    // Convert cache data to GuildMember format
+    const members: GuildMember[] = memberStats.map((stat: any) => ({
+      address: stat.member_address,
+      role: (stat.member_role === 'leader' ? 'owner' : stat.member_role) as 'owner' | 'officer' | 'member',  // Map leader→owner for API
+      points: stat.points_contributed?.toString() || '0',
+      joinedAt: stat.joined_at || new Date().toISOString(),
+    }))
+
+    return members
+  }
+  
+  // Fallback to event-based logic if cache not populated
+  console.log('[guild-members] Cache not available, using event-based fallback')
+  return getGuildMembersFromEvents(guildId)
+}
+
+/**
+ * Fallback: Get guild members from guild_events
+ * Used when guild_member_stats_cache is not populated yet
+ */
+async function getGuildMembersFromEvents(guildId: string): Promise<GuildMember[]> {
   const guildData = await getGuildData(guildId)
   
   if (!guildData || !guildData.active) {
@@ -498,7 +632,7 @@ async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
   // Fetch leaderboard stats for all members
   if (memberAddresses.length > 0) {
     try {
-      const leaderboardStats = await fetchLeaderboardStats(memberAddresses)
+      const leaderboardStats = await fetchLeaderboardStats(members)
       
       for (const member of members) {
         const stats = leaderboardStats[member.address.toLowerCase()]
@@ -584,19 +718,72 @@ export async function GET(
       })
     }
 
-    // 4. PAGINATION
+    // 4. ENRICH WITH FARCASTER DATA AND BADGES
+    const addresses = allMembers.map(m => m.address)
+    const farcasterUsersRaw = await fetchUsersByAddresses(addresses)
+    const farcasterUsers = Array.isArray(farcasterUsersRaw) ? farcasterUsersRaw : []
+    
+    // Build address → Farcaster data map (case-insensitive)
+    const farcasterMap = new Map<string, FarcasterUser>()
+    farcasterUsers.forEach((user: FarcasterUser) => {
+      // Map all verified addresses
+      user.verifications?.forEach((addr: string) => {
+        farcasterMap.set(addr.toLowerCase(), user)
+      })
+      // Map custody address
+      if (user.custodyAddress) {
+        farcasterMap.set(user.custodyAddress.toLowerCase(), user)
+      }
+      // Map wallet address if present
+      if (user.walletAddress) {
+        farcasterMap.set(user.walletAddress.toLowerCase(), user)
+      }
+    })
+    
+    // Enrich members with Farcaster data and badges
+    const enrichedMembers = allMembers.map(member => {
+      const farcaster = farcasterMap.get(member.address.toLowerCase())
+      const daysSinceJoin = Math.floor((Date.now() - new Date(member.joinedAt).getTime()) / (1000 * 60 * 60 * 24))
+      const points = parseInt(member.points || '0')
+      
+      return {
+        ...member,
+        farcaster: farcaster ? {
+          fid: farcaster.fid,
+          username: farcaster.username,
+          displayName: farcaster.displayName,
+          pfpUrl: farcaster.pfpUrl,
+          bio: farcaster.bio,
+          followerCount: farcaster.followerCount,
+          followingCount: farcaster.followingCount,
+          powerBadge: farcaster.powerBadge,
+        } : undefined,
+        badges: getMemberBadges(member.role, daysSinceJoin, points),
+      }
+    })
+
+    // 5. PAGINATION
     const { items, total } = paginateMembers(
-      allMembers,
+      enrichedMembers,
       queryParams.limit,
       queryParams.offset
     )
 
-    // 5. SUCCESS RESPONSE
+    // 6. FETCH LEADERBOARD STATS FOR PAGINATED MEMBERS
+    const leaderboardStats = await fetchLeaderboardStats(items)
+    
+    // Attach leaderboard stats to members
+    const finalMembers = items.map(member => ({
+      ...member,
+      leaderboardStats: leaderboardStats[member.address.toLowerCase()] || null,
+    }))
+
+    // 7. SUCCESS RESPONSE
     const duration = Date.now() - startTime
     return NextResponse.json(
       {
         success: true,
-        members: items,
+        members: finalMembers,
         pagination: {
           limit: queryParams.limit,
           offset: queryParams.offset,

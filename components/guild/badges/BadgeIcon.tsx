@@ -139,16 +139,28 @@ export function BadgeIcon({
         )}
       >
         {/* Badge icon */}
-        <Image
-          src={badge.icon}
-          alt={badge.name}
-          width={sizeConfig.icon}
-          height={sizeConfig.icon}
-          className={cn(
-            'relative z-10',
-            badge.animated && 'animate-pulse'
-          )}
-        />
+        {badge.icon && badge.icon !== '' ? (
+          <Image
+            src={badge.icon}
+            alt={badge.name}
+            width={sizeConfig.icon}
+            height={sizeConfig.icon}
+            className={cn(
+              'relative z-10',
+              badge.animated && 'animate-pulse'
+            )}
+          />
+        ) : (
+          <div className={cn(
+            'relative z-10 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs font-bold',
+            sizeConfig.icon === 16 && 'text-[8px]',
+            sizeConfig.icon === 24 && 'text-[10px]',
+            sizeConfig.icon === 32 && 'text-xs',
+            sizeConfig.icon === 48 && 'text-sm'
+          )}>
+            {badge.name.slice(0, 1).toUpperCase()}
+          </div>
+        )}
 
         {/* Legendary sparkle effect */}
         {badge.rarity === 'legendary' && (

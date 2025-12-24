@@ -1,6 +1,14 @@
 /**
  * Mock Quest Data for Testing
  * Used when Supabase is unavailable or for development
+ * 
+ * ⚠️ WARNING: Mock data for local development only!
+ * DO NOT use in production. Always fetch real data from Supabase.
+ * 
+ * For production, use:
+ * - Supabase queries via lib/supabase/edge.ts
+ * - Subsquid for blockchain data
+ * - Neynar for Farcaster data via lib/integrations/neynar.ts
  */
 
 import type { Quest } from './types/quest';

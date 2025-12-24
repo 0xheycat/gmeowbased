@@ -79,6 +79,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
   const [errorMessage, setErrorMessage] = useState('')
   const [xpOverlayOpen, setXpOverlayOpen] = useState(false)
   const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
+  const [userRole, setUserRole] = useState<'owner' | 'officer' | 'member' | null>(null)
   
   // Prevent hydration mismatch
   useEffect(() => {
@@ -129,6 +130,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
     const checkMembership = async () => {
       if (!address) {
         setIsMember(false)
+        setUserRole(null)
         return
       }
 
@@ -136,11 +138,25 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
         const memberResponse = await fetch(`/api/guild/${guildId}/is-member?address=${address}`)
         const memberData = await memberResponse.json()
         setIsMember(memberData.isMember)
-        // Membership checked successfully
+        
+        // Fetch user's role if they are a member
+        if (memberData.isMember) {
+          const membersResponse = await fetch(`/api/guild/${guildId}/members?page=1&limit=50`)
+          if (membersResponse.ok) {
+            const membersData = await membersResponse.json()
+            const userMember = membersData.members?.find(
+              (m: any) => m.address.toLowerCase() === address.toLowerCase()
+            )
+            if (userMember) {
+              setUserRole(userMember.role)
+            }
+          }
+        }
       } catch (err) {
         setErrorMessage('Failed to check guild membership')
         setErrorDialogOpen(true)
         setIsMember(false)
+        setUserRole(null)
       }
     }
 
@@ -287,8 +303,8 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
   }
 
   const isLeader = address && guild && guild.leader.toLowerCase() === address.toLowerCase()
-  // TODO: Add officer check when guild officers API is available
-  const canManage = Boolean(isLeader)
+  // Phase 2.3: Check user role from fetched data (owner or officer can manage)
+  const canManage = Boolean(userRole === 'owner' || userRole === 'officer')
 
   if (isLoading) {
     return (
@@ -476,6 +492,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
                     <button
                       key={tab.id}
                       {...keyboardProps}
+                      onClick={() => setActiveTab(tab.id)}
                       role="tab"
                       aria-selected={isActive}
                       aria-controls={`${tab.id}-panel`}
@@ -514,7 +531,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
               )}
               {activeTab === 'settings' && (
                 <div role="tabpanel" id="settings-panel" aria-labelledby="settings-tab">
-                  <GuildSettings guildId={guildId} isLeader={isLeader || false} />
+                  <GuildSettings guildId={guildId} isLeader={canManage} />
                 </div>
               )}
             </div>

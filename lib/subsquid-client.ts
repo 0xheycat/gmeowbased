@@ -18,7 +18,7 @@
  *    - All on-chain timestamps, block numbers, transaction hashes
  * 
  * ❌ FORBIDDEN (Layer 2 - Off-chain / Layer 3 - Calculated):
- *    - viralXP → Layer 2 (Supabase badge_casts.viral_bonus_xp)
+ *    - viralPoints → Layer 2 (Supabase badge_casts.viral_bonus_points)
  *    - rank → Layer 3 (Calculated by unified-calculator.ts)
  *    - level → Layer 3 (Calculated by unified-calculator.ts)
  *    - totalScore → Layer 3 (Calculated: blockchain + viral + quests)
@@ -34,13 +34,13 @@
  * const onChain = await getLeaderboardEntry(address)
  * 
  * // Step 2: Get off-chain data (Layer 2 - in route, not here!)
- * const { data: viralXP } = await supabase.from('badge_casts')...
+ * const { data: viralPoints } = await supabase.from('badge_casts')...
  * 
  * // Step 3: Calculate derived metrics (Layer 3 - in route, not here!)
  * import { calculateCompleteStats } from '@/lib/scoring/unified-calculator'
  * const stats = calculateCompleteStats({
- *   blockchainPoints: Number(onChain.totalPoints),
- *   viralXP: viralXP || 0,
+ *   pointsBalance: Number(onChain.pointsBalance),
+ *   viralPoints: viralPoints || 0,
  *   ...
  * })
  * 
@@ -122,7 +122,7 @@ export interface LeaderboardEntry {
   rank: number
   totalScore: number
   basePoints: number
-  viralXP: number
+  viralPoints: number
   guildBonus: number
   guildBonusPoints: number
   referralBonus: number
@@ -143,7 +143,7 @@ export interface UserStats {
   fid?: number
   totalScore: number
   basePoints: number
-  viralXP: number
+  viralPoints: number
   guildBonus: number
   guildBonusPoints: number
   referralBonus: number
@@ -181,11 +181,10 @@ export interface XPTransaction {
 }
 
 export interface GuildStats {
-  guildId: string
-  memberCount: number
-  totalPoints: number
-  averagePoints: number
-  rank?: number
+  id: string              // Guild ID
+  treasuryPoints: string  // Guild treasury balance (from contract, returned as string from BigInt)
+  totalMembers: number    // Total member count
+  owner: string           // Guild owner/leader address
 }
 
 export interface SubsquidError {
@@ -287,12 +286,11 @@ const XP_TRANSACTIONS_QUERY = `
 
 const GUILD_STATS_QUERY = `
   query GetGuildStats($guildId: String!) {
-    guildStats(where: { guildId_eq: $guildId }) {
-      guildId
-      memberCount
-      totalPoints
-      averagePoints
-      rank
+    guilds(where: { id_eq: $guildId }) {
+      id
+      treasuryPoints
+      totalMembers
+      owner
     }
   }
 `
@@ -471,9 +469,9 @@ export class SubsquidClient {
    * Get guild stats
    */
   async getGuildStats(guildId: string): Promise<GuildStats | null> {
-    const data = await this.query<{ guildStats: GuildStats[] }>(GUILD_STATS_QUERY, { guildId })
+    const data = await this.query<{ guilds: GuildStats[] }>(GUILD_STATS_QUERY, { guildId })
 
-    return data?.guildStats?.[0] || null
+    return data?.guilds?.[0] || null
   }
 }
 

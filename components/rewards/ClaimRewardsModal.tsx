@@ -26,7 +26,7 @@ interface ClaimRewardsModalProps {
   isOpen: boolean
   onClose: () => void
   pendingRewards: number
-  viralXp: number
+  viralPoints: number
   guildBonus: number
   referralBonus: number
   streakBonus: number
@@ -38,7 +38,7 @@ export function ClaimRewardsModal({
   isOpen,
   onClose,
   pendingRewards,
-  viralXp,
+  viralPoints,
   guildBonus,
   referralBonus,
   streakBonus,
@@ -140,10 +140,10 @@ export function ClaimRewardsModal({
         <div className="space-y-2 mb-6">
           <div className="text-sm font-medium text-gray-400 mb-2">Breakdown:</div>
           
-          {viralXp > 0 && (
+          {viralPoints > 0 && (
             <div className="flex justify-between items-center px-3 py-2 bg-purple-500/10 rounded-lg">
               <span className="text-purple-400 text-sm">🚀 Viral XP</span>
-              <span className="font-bold text-purple-400">+{formatNumber(viralXp)}</span>
+              <span className="font-bold text-purple-400">+{formatNumber(viralPoints)}</span>
             </div>
           )}
           {guildBonus > 0 && (

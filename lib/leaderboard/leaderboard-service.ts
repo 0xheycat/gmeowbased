@@ -11,7 +11,7 @@
  * ✅ Period-based queries (daily, weekly, all_time)
  * ✅ Pagination support
  * ✅ Search by username, address, or FID
- * ✅ Multiple sort options (total_score, base_points, etc.)
+ * ✅ Multiple sort options (total_score, points_balance, etc.)
  * ✅ Neynar enrichment for user data
  * 
  * DATA FLOW:
@@ -59,7 +59,7 @@ export type LeaderboardEntry = {
   
   /** 
    * PENDING REWARDS: Claimable off-chain bonuses (not yet on-chain)
-   * Formula: viral_xp + guild_bonus + referral_bonus + streak_bonus + badge_prestige
+   * Formula: viral_points + guild_bonus + referral_bonus + streak_bonus + badge_prestige
    * Claimed via: Oracle wallet deposits to contract
    */
   pending_rewards: number
@@ -70,10 +70,10 @@ export type LeaderboardEntry = {
   base_points: number
   
   /** 
-   * Viral XP from cast engagement (badge shares on Warpcast)
-   * Formula: Sum of viral_bonus_xp from badge_casts table
+   * Viral Points from cast engagement (badge shares on Warpcast)
+   * Formula: Sum of viral_bonus_points from badge_casts table
    */
-  viral_xp: number
+  viral_points: number
   
   /** 
    * Guild bonus from guild membership and contribution
@@ -129,7 +129,7 @@ export type LeaderboardEntry = {
   avatar_url: string | null
   social_links: any
   
-  // @deprecated Use viral_xp instead
+  // @deprecated Use viral_points instead
   viral_bonus_xp: number
   
   // Calculated progression fields
@@ -164,7 +164,7 @@ export async function getLeaderboard(options: {
   page?: number
   perPage?: number
   search?: string
-  orderBy?: 'total_score' | 'base_points' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
+  orderBy?: 'total_score' | 'points_balance' | 'viral_points' | 'guild_points_awarded' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
 }): Promise<LeaderboardResponse> {
   const {
     period = 'all_time',
@@ -218,13 +218,13 @@ export async function getLeaderboard(options: {
   if (fids.length > 0) {
     const { data: viralCasts } = await supabase
       .from('badge_casts')
-      .select('fid, viral_bonus_xp')
+      .select('fid, viral_bonus_points')
       .in('fid', fids)
     
     viralCasts?.forEach(cast => {
-      if (cast.fid && cast.viral_bonus_xp) {
+      if (cast.fid && cast.viral_bonus_points) {
         const current = viralBonusData.get(cast.fid) || 0
-        viralBonusData.set(cast.fid, current + cast.viral_bonus_xp)
+        viralBonusData.set(cast.fid, current + cast.viral_bonus_points)
       }
     })
   }
@@ -419,7 +419,8 @@ export async function getLeaderboard(options: {
       points_balance: basePoints, // Spendable balance (on-chain only)
       pending_rewards: pendingRewards, // Claimable off-chain bonuses
       base_points: basePoints, // Deprecated: use points_balance
-      viral_xp: viralBonus,
+      viral_points: viralBonus,
+      viral_xp: viralBonus, // Deprecated: use viral_points
       guild_bonus: guildBonus,
       guild_bonus_points: guildBonus, // Alias for backward compatibility
       referral_bonus: referralBonus,

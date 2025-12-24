@@ -40,7 +40,8 @@ import { base } from 'viem/chains'
 import { getContractAddress, GM_CONTRACT_ABI, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
-import { logGuildEvent } from '@/lib/guild/event-logger'
+import { createClient } from '@/lib/supabase/edge'
+import { invalidateCachePattern } from '@/lib/cache/server'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -274,16 +275,48 @@ export async function POST(
       timestamp: new Date().toISOString(),
     })
 
-    // Log event to database (non-blocking)
-    logGuildEvent({
-      guild_id: guildId.toString(),
-      event_type: 'MEMBER_LEFT',
-      actor_address: address,
-      metadata: {
-        timestamp: new Date().toISOString(),
-      },
-    }).catch((error) => {
-      console.error('[guild-leave] Failed to log event:', error)
+    // BUG #9 FIX: Use atomic RPC transaction instead of separate log
+    const supabase = createClient()
+    if (!supabase) {
+      return createErrorResponse('Database not available', 503)
+    }
+
+    // Get guild name for event metadata
+    const guildData = await getGuildData(guildIdNum)
+    const guildName = guildData?.name || `Guild #${guildId}`
+
+    // Execute atomic transaction (event + stats update)
+    try {
+      const { data: txResult, error: txError } = await supabase.rpc(
+        'guild_member_leave_tx',
+        {
+          p_guild_id: guildId.toString(),
+          p_member_address: address,
+          p_guild_name: guildName,
+          p_request_id: requestId,
+        }
+      )
+
+      if (txError) {
+        console.error('[guild-leave] Transaction failed:', txError)
+      } else {
+        console.log('[guild-leave] Transaction success:', txResult)
+      }
+    } catch (err: unknown) {
+      console.error('[guild-leave] Transaction error:', err)
+      // Non-blocking error - continue to response
+    }
+
+    // CACHE INVALIDATION - Clear stale guild data after mutation
+    invalidateCachePattern('guild', `${guildId}:*`).catch((error: unknown) => {
+      console.error('[guild-leave] Failed to invalidate cache:', error)
+    })
+    // Also invalidate guild list caches
+    invalidateCachePattern('guild', 'leaderboard:*').catch((error: unknown) => {
+      console.error('[guild-leave] Failed to invalidate leaderboard cache:', error)
+    })
+    invalidateCachePattern('guild', 'list:*').catch((error: unknown) => {
+      console.error('[guild-leave] Failed to invalidate list cache:', error)
     })
 
     // 5. RETURN INSTRUCTION FOR WALLET
