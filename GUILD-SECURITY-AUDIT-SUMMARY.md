@@ -24,10 +24,38 @@ Contract (Layer 1) → Subsquid (Layer 2) → Supabase (Layer 3) → API (Layer 
   - 🎯 **NEXT:** Quest assignments, rewards, advanced analytics (Phase 3+)
   - ⚠️ **Events alone are insufficient** - storage is source of truth
 
-**🗺️ Complete Contract Integration Roadmap:**
+**🗺️ Guild Contract Integration - ✅ COMPLETE (Dec 24, 2025):**
 - ✅ **Phase 1.1:** Treasury balance (DONE - 1/15 functions) ✅ PRODUCTION VERIFIED
 - ✅ **Phase 1.2:** Full guild info sync (DONE - name, level, isActive) ✅ PRODUCTION VERIFIED DEC 24
 - ✅ **Phase 2.1:** Member roles & permissions (DONE - contract storage reads) ✅ **LOCALHOST TESTED DEC 24**
+- ✅ **Phase 3:** GuildPointsDeposited event (DONE - sync job) ✅ **COMPLETE DEC 24**
+- ✅ **Phase 4:** GuildLevelUp event (DONE - sync job) ✅ **COMPLETE DEC 24**
+
+**🎉 Guild Indexing Status: 100% COMPLETE - NO NEW APIs NEEDED**
+
+**Indexed Contract Events (All 5):**
+- ✅ GuildCreated, GuildJoined, GuildLeft (Phase 2)
+- ✅ GuildPointsDeposited (Phase 3 - sync job to Supabase)
+- ✅ GuildLevelUp (Phase 4 - sync job to Supabase)
+
+**Contract Storage Reads (Complete):**
+- ✅ treasuryPoints, name, level, isActive (Phase 1.2)
+- ✅ guildOfficers(), owner (Phase 2.1)
+
+**Data Access (4 Existing Endpoints):**
+- ✅ `/api/guild/list` → All guilds with indexed data
+- ✅ `/api/guild/[guildId]` → Full details (Subsquid + storage)
+- ✅ `/api/guild/[guildId]/members` → Roles from contract
+- ✅ `/api/guild/[guildId]/activity` → Events from guild_events
+
+**Infrastructure (NOT User APIs):**
+- ✅ `/api/cron/sync-guild-deposits` → Background sync (15 min)
+- ✅ `/api/cron/sync-guild-level-ups` → Background sync (15 min)
+
+**❌ NO NEW USER-FACING API ENDPOINTS NEEDED**
+- Guild infrastructure complete
+- All data flows through existing 4 endpoints
+- Future work: OTHER contracts (Referral, NFT, Badge)
   - ✅ Subsquid reads `guildOfficers()` + `guild.owner` every 100 blocks
   - ✅ Supabase migration adds `member_role` column (CHECK: leader/officer/member)
   - ✅ API maps: Contract "owner" → Supabase "leader" → API "owner"

@@ -1218,13 +1218,48 @@ Response:
 | **GitHub Actions** | ✅ Cron every 15 min | ⏸️ N/A (no sync job) |
 | **Production Ready** | ✅ YES | ✅ YES (indexer ready) |
 
-**Key Difference:** Phase 3 needed Supabase sync for UI. Phase 4 only needs Subsquid indexing (GraphQL queries sufficient).
+**Key Difference:** Phase 3 needed Supabase sync for UI. Phase 4 sync job added (Dec 24) to keep pattern consistent.
+
+### Guild Subsquid Indexing - ✅ 100% COMPLETE (Dec 24, 2025)
+
+**Status:** 🎉 **ALL GUILD CONTRACT EVENTS INDEXED - NO NEW APIs NEEDED**
+
+**What's Indexed (Complete Coverage):**
+- ✅ GuildCreated, GuildJoined, GuildLeft (Phase 2 - member events)
+- ✅ GuildPointsDeposited (Phase 3 - treasury deposits + sync job)
+- ✅ GuildLevelUp (Phase 4 - milestone events + sync job)
+- ✅ Contract Storage: treasuryPoints, name, level, isActive (Phase 2.1)
+- ✅ Contract Storage: guildOfficers(), owner (Phase 2.1 - roles)
+
+**Data Access (EXISTING Endpoints Only):**
+- `/api/guild/list` → Includes all indexed guild data
+- `/api/guild/[guildId]` → Full guild details from Subsquid + contract storage
+- `/api/guild/[guildId]/members` → Member list with roles from contract
+- `/api/guild/[guildId]/activity` → Shows all events from guild_events table
+
+**Infrastructure (Background Sync - NOT User APIs):**
+- `POST /api/cron/sync-guild-deposits` → Subsquid → Supabase (every 15 min)
+- `POST /api/cron/sync-guild-level-ups` → Subsquid → Supabase (every 15 min)
+
+**❌ NO NEW USER-FACING API ENDPOINTS NEEDED**
+- All guild data accessible via existing 4 endpoints above
+- Sync jobs are internal infrastructure (GitHub Actions cron)
+- UI components query existing endpoints only
+- Future work should focus on OTHER contracts (Referral, NFT, Badge)
+
+**Contract Events NOT in Deployed Contract:**
+- ❌ GuildQuestCreated (doesn't exist in current contract)
+- ❌ GuildRewardClaimed (doesn't exist in current contract)
+- ❌ MemberPromoted/Demoted (doesn't exist in current contract)
+- ❌ GuildDeactivated (doesn't exist in current contract)
+
+**Conclusion:** Guild contract indexing is COMPLETE. All events captured, all storage reads implemented. Data flows through 4-layer architecture to existing API endpoints.
 
 ### Future Phases Roadmap (Post-Phase 4)
 
 **Status:** ✅ Phase 3 + Phase 4 COMPLETE - All core guild events indexed  
 **Production Ready:** ✅ YES - 4-layer architecture verified  
-**Next Priority:** Phase 5 (Optional enhancements - UI/UX features)
+**Next Priority:** Focus on OTHER contracts or UI enhancements (NO new guild APIs)
 
 ---
 
