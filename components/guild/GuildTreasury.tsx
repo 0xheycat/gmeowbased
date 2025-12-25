@@ -19,7 +19,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { MonetizationOnIcon, KeyboardArrowUpIcon, KeyboardArrowDownIcon, AccessTimeIcon } from '@/components/icons'
+import { MonetizationOnIcon, KeyboardArrowUpIcon, KeyboardArrowDownIcon, AccessTimeIcon, ErrorIcon } from '@/components/icons'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import Loader from '@/components/ui/gmeow-loader'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
@@ -47,6 +47,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   const [claimingId, setClaimingId] = useState<string | null>(null) // Track which claim is being processed
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMessage, setDialogMessage] = useState('')
+  const [persistentError, setPersistentError] = useState<string | null>(null) // Persistent error banner
   const [isMember, setIsMember] = useState(false)
   
   // XP celebration state
@@ -143,8 +144,10 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
       const data = await response.json()
       
       if (!response.ok) {
-        setDialogMessage(data.message || 'Unable to process deposit. Please check your wallet and try again.')
+        const errorMsg = data.message || 'Unable to process deposit. Please check your wallet and try again.'
+        setDialogMessage(errorMsg)
         setDialogOpen(true)
+        setPersistentError(errorMsg) // Persist error after dialog closes
         setIsDepositing(false)
         return
       }
@@ -160,8 +163,10 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
       
       // Note: Transaction confirmation is handled by useWaitForTransactionReceipt hook
     } catch (err) {
-      setDialogMessage('Deposit failed. Please check your connection and try again.')
+      const errorMsg = 'Deposit failed. Please check your connection and try again.'
+      setDialogMessage(errorMsg)
       setDialogOpen(true)
+      setPersistentError(errorMsg) // Persist error after dialog closes
       setIsDepositing(false)
     }
   }
@@ -173,6 +178,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
       setDialogOpen(true)
       setDepositAmount('')
       setIsDepositing(false)
+      setPersistentError(null) // Clear error on success
       
       // Trigger XP celebration for treasury contribution
       const payload: XpEventPayload = {
@@ -206,8 +212,10 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   // Handle write errors
   useEffect(() => {
     if (writeError) {
-      setDialogMessage('Transaction failed. Please try again.')
+      const errorMsg = 'Transaction failed. Please try again.'
+      setDialogMessage(errorMsg)
       setDialogOpen(true)
+      setPersistentError(errorMsg) // Persist error after dialog closes
       setIsDepositing(false)
     }
   }, [writeError])
@@ -318,6 +326,26 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
           BASE POINTS
         </div>
       </div>
+
+      {/* Persistent Error Banner */}
+      {persistentError && (
+        <div className="bg-wcag-error-light/10 dark:bg-wcag-error-dark/10 border border-wcag-error-light dark:border-wcag-error-dark rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <ErrorIcon className="w-5 h-5 text-wcag-error-light dark:text-wcag-error-dark flex-shrink-0 mt-0.5" />
+            <p {...ERROR_ARIA} className={`flex-1 text-sm ${WCAG_CLASSES.text.semantic.error}`}>
+              {persistentError}
+            </p>
+            <button
+              onClick={() => setPersistentError(null)}
+              aria-label="Dismiss error message"
+              className={`text-wcag-error-light dark:text-wcag-error-dark hover:opacity-80 transition-fast ${FOCUS_STYLES.ring}`}
+              {...createKeyboardHandler(() => setPersistentError(null))}
+            >
+              <span className="text-xl font-bold">×</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Deposit Form */}
       {address && isMember && (

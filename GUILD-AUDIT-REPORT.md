@@ -95,21 +95,22 @@
 
 **Audit Date:** December 25, 2025 17:30 UTC  
 **Scope:** Active guild UI components, API endpoints, cron jobs, frame routes  
-**Status:** ✅ SCAN COMPLETE - 3 BUGS FIXED, 4 REMAINING  
-**Testing:** ✅ BUG #22, #23, #24 VERIFIED ON LOCALHOST (Dec 25, 2025 17:25 UTC)
+**Status:** ✅ SCAN COMPLETE - 4 BUGS FIXED, 3 REMAINING  
+**Testing:** ✅ BUG #22, #23, #24, #25 VERIFIED ON LOCALHOST (Dec 25, 2025 17:40 UTC)
 
 ---
 
-### 🔍 BUG SUMMARY (7 TOTAL → 4 REMAINING)
+### 🔍 BUG SUMMARY (7 TOTAL → 3 REMAINING)
 
 **Severity Breakdown:**
 - 🟡 **MEDIUM (0/2):** ~~Treasury API naming~~ ✅, ~~Zod validation~~ ✅ **BOTH FIXED**
-- 🟢 **LOW (4):** UI polish issues, accessibility improvements
+- 🟢 **LOW (3):** UI polish issues, SEO improvements
 
 **Fixed Bugs:**
 - ✅ **BUG #22** (MEDIUM): Treasury API camelCase transformation - FIXED Dec 25, 2025 16:54 UTC
 - ✅ **BUG #23** (MEDIUM): Zod validation for API responses - FIXED Dec 25, 2025 17:05 UTC
 - ✅ **BUG #24** (LOW): Button loading visual feedback - FIXED Dec 25, 2025 17:25 UTC
+- ✅ **BUG #25** (LOW): Persistent error banner - FIXED Dec 25, 2025 17:40 UTC
 
 **All Remaining Issues Non-Blocking:**
 - ✅ No critical bugs found
@@ -412,16 +413,18 @@ const handleClaim = async (transactionId: string) => {
 
 ---
 
-### BUG #25: Missing Error Toast for Failed Deposits
+### BUG #25: Missing Error Toast for Failed Deposits ✅ **FIXED**
 **Severity:** 🟢 LOW  
-**File:** `components/guild/GuildTreasury.tsx` (Line 145-154)  
-**Category:** UX - Error Handling
+**File:** `components/guild/GuildTreasury.tsx` (Line 48, 146, 167, 216, 178, 330-345)  
+**Category:** UX - Error Handling  
+**Fixed:** Dec 25, 2025 17:40 UTC (Commit: [pending])
 
 **Issue:**
-Failed deposits show dialog but don't persist error state after closing.
+Failed deposits showed dialog but didn't persist error state after closing, leaving no visible indication of what went wrong.
 
-**Current Code:**
+**Root Cause:**
 ```typescript
+// ❌ BEFORE: Error cleared when dialog dismissed
 useEffect(() => {
   if (writeError) {
     setDialogMessage('Transaction failed. Please try again.')
@@ -429,36 +432,104 @@ useEffect(() => {
     setIsDepositing(false)
   }
 }, [writeError])
+// User closes dialog → error forgotten
 ```
 
-**Expected Enhancement:**
-```typescript
-// Add error state
-const [persistentError, setPersistentError] = useState<string | null>(null)
+**Fix Implemented:**
 
+1. **Added Persistent Error State:**
+```typescript
+// Line 48: Track persistent error
+const [persistentError, setPersistentError] = useState<string | null>(null)
+```
+
+2. **Updated Error Handling:**
+```typescript
+// Line 146: API error
+if (!response.ok) {
+  const errorMsg = data.message || 'Unable to process deposit...'
+  setDialogMessage(errorMsg)
+  setDialogOpen(true)
+  setPersistentError(errorMsg) // ✅ Persist after dialog closes
+  setIsDepositing(false)
+}
+
+// Line 167: Network error
+catch (err) {
+  const errorMsg = 'Deposit failed. Please check your connection...'
+  setDialogMessage(errorMsg)
+  setDialogOpen(true)
+  setPersistentError(errorMsg) // ✅ Persist after dialog closes
+  setIsDepositing(false)
+}
+
+// Line 216: Transaction error
 useEffect(() => {
   if (writeError) {
     const errorMsg = 'Transaction failed. Please try again.'
     setDialogMessage(errorMsg)
     setDialogOpen(true)
-    setPersistentError(errorMsg) // ✅ Persist error
+    setPersistentError(errorMsg) // ✅ Persist after dialog closes
     setIsDepositing(false)
   }
 }, [writeError])
 
-// Show error banner above form
+// Line 178: Clear on success
+if (isConfirmed) {
+  // ...
+  setPersistentError(null) // ✅ Clear error on successful deposit
+}
+```
+
+3. **Added Error Banner UI:**
+```typescript
+// Line 330-345: Persistent error banner above deposit form
 {persistentError && (
-  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg p-4">
-    <div className="flex items-center gap-3">
-      <ErrorIcon className="w-5 h-5 text-red-600" />
-      <p className="text-red-800 dark:text-red-200">{persistentError}</p>
-      <button onClick={() => setPersistentError(null)} className="ml-auto">
-        Dismiss
+  <div className="bg-wcag-error-light/10 dark:bg-wcag-error-dark/10 border border-wcag-error-light dark:border-wcag-error-dark rounded-lg p-4">
+    <div className="flex items-start gap-3">
+      <ErrorIcon className="w-5 h-5 text-wcag-error-light dark:text-wcag-error-dark flex-shrink-0 mt-0.5" />
+      <p {...ERROR_ARIA} className={`flex-1 text-sm ${WCAG_CLASSES.text.semantic.error}`}>
+        {persistentError}
+      </p>
+      <button
+        onClick={() => setPersistentError(null)}
+        aria-label="Dismiss error message"
+        className={`text-wcag-error-light dark:text-wcag-error-dark hover:opacity-80 transition-fast ${FOCUS_STYLES.ring}`}
+        {...createKeyboardHandler(() => setPersistentError(null))}
+      >
+        <span className="text-xl font-bold">×</span>
       </button>
     </div>
   </div>
 )}
 ```
+
+**Verification:**
+```bash
+# TypeScript compilation
+✅ No errors found
+
+# Infrastructure used
+✅ WCAG_CLASSES.text.semantic.error
+✅ ERROR_ARIA (role="alert", aria-live="assertive")
+✅ FOCUS_STYLES.ring (keyboard navigation)
+✅ createKeyboardHandler (Enter/Space support)
+✅ ErrorIcon (MUI icon)
+```
+
+**User Experience Flow:**
+1. Deposit fails → Dialog shows error ✅
+2. User dismisses dialog → Error banner appears ✅
+3. User sees persistent error below balance card ✅
+4. User can dismiss banner when ready ✅
+5. Successful deposit clears error ✅
+
+**Accessibility:**
+- ✅ `role="alert"` for screen readers
+- ✅ `aria-live="assertive"` (immediate announcement)
+- ✅ Keyboard dismissible (Enter/Space)
+- ✅ WCAG AA color contrast (error colors)
+- ✅ Focus ring on dismiss button
 
 **Priority:** P3 (Low) - UX enhancement  
 **Timeline:** 45 minutes
