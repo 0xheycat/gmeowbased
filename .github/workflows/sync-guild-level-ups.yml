@@ -36,19 +36,33 @@ jobs:
           echo "📊 Response status: $http_code"
           echo "📄 Response body: $body"
           
-          # Check if request was successful
+          # Check if request was successful (HTTP 200 + success: true)
           if [ "$http_code" -eq 200 ]; then
-            echo "✅ Guild level-ups synced successfully!"
-            
-            # Parse and display results (if jq is available)
+            # Validate JSON success field
             if command -v jq &> /dev/null; then
-              echo "📈 Sync summary:"
-              echo "  Inserted: $(echo "$body" | jq -r '.inserted')"
-              echo "  Skipped (duplicates): $(echo "$body" | jq -r '.skipped')"
-              echo "  Errors: $(echo "$body" | jq -r '.errors')"
-              echo "  Total processed: $(echo "$body" | jq -r '.totalProcessed')"
-              echo "  Last block: $(echo "$body" | jq -r '.lastSyncedBlock')"
-              echo "⏱️  Duration: $(echo "$body" | jq -r '.durationMs')ms"
+              success_field=$(echo "$body" | jq -r '.success // false')
+              
+              if [ "$success_field" = "true" ]; then
+                echo "✅ Guild level-ups synced successfully!"
+                
+                # Parse and display results
+                echo "📈 Sync summary:"
+                echo "  Inserted: $(echo "$body" | jq -r '.inserted')"
+                echo "  Skipped (duplicates): $(echo "$body" | jq -r '.skipped')"
+                echo "  Errors: $(echo "$body" | jq -r '.errors')"
+                echo "  Total processed: $(echo "$body" | jq -r '.totalProcessed')"
+                echo "  Last block: $(echo "$body" | jq -r '.lastSyncedBlock')"
+                echo "⏱️  Duration: $(echo "$body" | jq -r '.durationMs')ms"
+              else
+                echo "❌ Sync returned HTTP 200 but success=false"
+                echo "Error: $(echo "$body" | jq -r '.error // "Unknown error"')"
+                echo "Response: $body"
+                exit 1
+              fi
+            else
+              # Fallback if jq not available (shouldn't happen)
+              echo "⚠️  jq not available, only checking HTTP status"
+              echo "✅ Sync completed (HTTP $http_code)"
             fi
           else
             echo "❌ Sync failed with status $http_code"
