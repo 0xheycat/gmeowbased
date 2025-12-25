@@ -238,15 +238,9 @@ Contract (Layer 1) → Subsquid (Layer 2) → Supabase (Layer 3) → API (Layer 
   - **Monitoring:** Auto-notify on failure
   - **Next:** Merge to main + verify first 3 runs
 
-⏸️ **P4 - Member Role Change Events**
-- [ ] Add MemberPromoted event handler (emitted by promoteToOfficer())
-- [ ] Add MemberDemoted event handler (emitted by demoteFromOfficer())
-- [ ] Update GuildMember.role on role change events
-- [ ] Sync to guild_member_stats_cache via cron job
-- [ ] Test: Verify role changes sync to cache
-- [ ] **Naming Convention:** Use `member`, `newRole` (contract params)
-
 ✅ **P4 - Guild Lifecycle Events (COMPLETE - Dec 24, 2025 23:45 UTC)**
+
+**NOTE:** Member Role Events (MemberPromoted/Demoted) were originally planned for P4 but **DO NOT EXIST** in deployed contract. Contract analysis confirmed only GuildLevelUp event exists.
 - [x] **Add GuildLevelUp event handler** (Commit: 3444e79) ✅ COMPLETE
   - Schema: GuildLevelUpEvent entity added to schema.graphql
   - Migration: 1766608424693-Data.js (guild_level_up_event table + 3 indexes)
