@@ -25,16 +25,7 @@ import Loader from '@/components/ui/gmeow-loader'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA, ERROR_ARIA } from '@/lib/utils/accessibility'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
-
-export interface TreasuryTransaction {
-  id: string
-  type: 'deposit' | 'claim'
-  amount: number
-  from: string
-  username: string
-  timestamp: string
-  status: 'completed' | 'pending'
-}
+import { TreasuryResponseSchema, TreasuryErrorSchema, type TreasuryTransaction } from '@/types/api/guild-treasury'
 
 export interface GuildTreasuryProps {
   guildId: string
@@ -88,12 +79,33 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
         setIsLoading(true)
         setError(null)
         const response = await fetch(`/api/guild/${guildId}/treasury?page=1&limit=50`)
-        if (!response.ok) throw new Error('Failed to load treasury')
-        const data = await response.json()
-        setBalance(data.balance || 0)
-        setTransactions(data.transactions || [])
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          const validatedError = TreasuryErrorSchema.safeParse(errorData)
+          throw new Error(
+            validatedError.success 
+              ? validatedError.data.message 
+              : 'Failed to load treasury'
+          )
+        }
+        
+        const rawData = await response.json()
+        
+        // Runtime validation with Zod
+        const validationResult = TreasuryResponseSchema.safeParse(rawData)
+        
+        if (!validationResult.success) {
+          console.error('[GuildTreasury] Schema validation failed:', validationResult.error)
+          throw new Error('Invalid response format from server')
+        }
+        
+        const data = validationResult.data
+        setBalance(Number(data.balance))
+        setTransactions(data.transactions)
       } catch (err) {
-        setError('Failed to load treasury. Please refresh the page.')
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load treasury'
+        setError(`${errorMessage}. Please refresh the page.`)
       } finally {
         setIsLoading(false)
       }
