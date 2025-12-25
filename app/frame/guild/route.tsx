@@ -30,8 +30,27 @@ export async function GET(req: Request) {
     } catch {}
   }
   
-  const title = guildId ? `Guild #${guildId}` : 'Guild'
-  const description = guildId ? `Open guild ${guildId} on @gmeowbased` : '@gmeowbased guild preview'
+  // Fetch guild name for better SEO
+  let guildName = guildId ? `Guild #${guildId}` : 'Guild'
+  if (guildId) {
+    try {
+      const guildResponse = await fetch(`${origin}/api/guild/${guildId}`, {
+        next: { revalidate: 300 } // Cache for 5 minutes
+      })
+      if (guildResponse.ok) {
+        const guildData = await guildResponse.json()
+        if (guildData.guild?.name) {
+          guildName = guildData.guild.name
+        }
+      }
+    } catch (err) {
+      // Fallback to Guild #X on error
+      console.error('[Frame] Failed to fetch guild name:', err)
+    }
+  }
+  
+  const title = guildName
+  const description = guildId ? `Join ${guildName} on @gmeowbased` : '@gmeowbased guild preview'
   const guildUrl = `${origin}/guild/${guildId}`
   
   const imageUrl = buildDynamicFrameImageUrl({
