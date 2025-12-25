@@ -44,6 +44,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   const [errorMessage, setErrorMessage] = useState('')
   const [depositAmount, setDepositAmount] = useState('')
   const [isDepositing, setIsDepositing] = useState(false)
+  const [claimingId, setClaimingId] = useState<string | null>(null) // Track which claim is being processed
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMessage, setDialogMessage] = useState('')
   const [isMember, setIsMember] = useState(false)
@@ -214,6 +215,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   const handleClaim = async (transactionId: string) => {
     if (!canManage) return
 
+    setClaimingId(transactionId)
     try {
       const response = await fetch(`/api/guild/${guildId}/claim`, {
         method: 'POST',
@@ -244,6 +246,8 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
     } catch (err) {
       setDialogMessage('Claim approval failed. Please check your connection and try again.')
       setDialogOpen(true)
+    } finally {
+      setClaimingId(null)
     }
   }
 
@@ -339,7 +343,9 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
               disabled={isDepositing || isWriting || isConfirming || !depositAmount}
               aria-busy={isDepositing || isWriting || isConfirming}
               aria-label={`Deposit ${depositAmount || '0'} points to guild treasury`}
-              className={`px-6 py-3 bg-wcag-info-light hover:bg-wcag-info-dark disabled:bg-gray-400 text-white font-semibold rounded-lg transition-smooth ${BUTTON_SIZES.md} ${FOCUS_STYLES.ring} flex items-center gap-2`}
+              className={`px-6 py-3 bg-wcag-info-light hover:bg-wcag-info-dark disabled:bg-gray-400 text-white font-semibold rounded-lg transition-smooth ${BUTTON_SIZES.md} ${FOCUS_STYLES.ring} flex items-center gap-2 ${
+                (isDepositing || isWriting || isConfirming) ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
+              }`}
             >
               {(isDepositing || isWriting || isConfirming) ? (
                 <>
@@ -403,10 +409,21 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
                   </div>
                   <button
                     {...keyboardProps}
+                    disabled={claimingId === claim.id}
+                    aria-busy={claimingId === claim.id}
                     aria-label={`Approve ${claim.username}'s claim for ${claim.amount.toLocaleString()} points`}
-                    className={`px-4 py-2 bg-wcag-success-light hover:bg-wcag-success-dark text-white font-semibold rounded-lg transition-smooth ${BUTTON_SIZES.md} ${FOCUS_STYLES.ring}`}
+                    className={`px-4 py-2 bg-wcag-success-light hover:bg-wcag-success-dark text-white font-semibold rounded-lg transition-smooth ${BUTTON_SIZES.md} ${FOCUS_STYLES.ring} ${
+                      claimingId === claim.id ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
+                    }`}
                   >
-                    Approve
+                    {claimingId === claim.id ? (
+                      <>
+                        <Loader size="small" variant="minimal" />
+                        Approving...
+                      </>
+                    ) : (
+                      'Approve'
+                    )}
                   </button>
                 </div>
               )
