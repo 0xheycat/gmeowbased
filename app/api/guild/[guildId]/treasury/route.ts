@@ -16,13 +16,14 @@
  *   "balance": string (total points in treasury),
  *   "transactions": Array<{
  *     "id": string,
- *     "type": "deposit" | "claim" | "reward",
- *     "amount": string,
+ *     "type": "deposit" | "claim",
+ *     "amount": number,
  *     "from": string,
- *     "to": string | null,
+ *     "username": string,
  *     "timestamp": string (ISO),
  *     "status": "completed" | "pending",
- *     "transactionHash": string
+ *     "transactionHash": string | null (Layer 4 camelCase),
+ *     "createdAt": string (ISO) (Layer 4 camelCase)
  *   }>,
  *   "pagination": {
  *     "limit": number,
@@ -87,6 +88,9 @@ interface TreasuryTransaction {
   username: string
   timestamp: string
   status: 'completed' | 'pending'
+  // Layer 4 (API) camelCase fields (transformed from Layer 3 snake_case)
+  transactionHash: string | null
+  createdAt: string
 }
 
 interface GuildEvent {
@@ -187,6 +191,7 @@ async function getTreasuryTransactions(guildId: string): Promise<TreasuryTransac
     })
 
     // Convert events to TreasuryTransaction format with profile lookup
+    // IMPORTANT: Transform snake_case DB fields → camelCase API fields (Layer 3 → Layer 4)
     const transactions: TreasuryTransaction[] = typedEvents.map(event => {
       const profile = addressToProfile.get(event.actor_address?.toLowerCase())
       return {
@@ -197,6 +202,9 @@ async function getTreasuryTransactions(guildId: string): Promise<TreasuryTransac
         username: profile?.display_name || `Address ${event.actor_address?.slice(0, 8)}...`,
         timestamp: event.created_at,
         status: 'completed' as const,
+        // Layer 4 (API) must return camelCase per 4-layer architecture
+        transactionHash: event.transaction_hash || null,
+        createdAt: event.created_at,
       }
     })
 
