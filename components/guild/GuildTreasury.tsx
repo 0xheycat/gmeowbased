@@ -36,7 +36,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   const { address } = useAccount()
   const { writeContract, data: hash, error: writeError, isPending: isWriting } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
-  const [balance, setBalance] = useState(0)
+  const [balance, setBalance] = useState<string>('0') // Store as string for BigInt precision safety
   const [transactions, setTransactions] = useState<TreasuryTransaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -103,7 +103,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
         }
         
         const data = validationResult.data
-        setBalance(Number(data.balance))
+        setBalance(data.balance || '0') // Keep as string for precision
         setTransactions(data.transactions)
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load treasury'
@@ -320,7 +320,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
           <span className="text-sm opacity-90">Treasury Balance</span>
         </div>
         <div className="text-4xl font-bold mb-1">
-          {balance.toLocaleString()}
+          {parseInt(balance || '0').toLocaleString()}
         </div>
         <div className="text-sm opacity-75">
           BASE POINTS
