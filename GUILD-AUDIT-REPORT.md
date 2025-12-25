@@ -95,18 +95,21 @@
 
 **Audit Date:** December 25, 2025 17:30 UTC  
 **Scope:** Active guild UI components, API endpoints, cron jobs, frame routes  
-**Status:** ✅ SCAN COMPLETE - 7 BUGS FOUND (MEDIUM/LOW SEVERITY)  
-**Testing:** ⏸️ PENDING LOCALHOST VERIFICATION
+**Status:** ✅ SCAN COMPLETE - 1 BUG FIXED, 6 REMAINING  
+**Testing:** ✅ BUG #22 VERIFIED ON LOCALHOST (Dec 25, 2025 16:54 UTC)
 
 ---
 
-### 🔍 BUG SUMMARY (7 TOTAL)
+### 🔍 BUG SUMMARY (7 TOTAL → 6 REMAINING)
 
 **Severity Breakdown:**
-- 🟡 **MEDIUM (3):** API naming inconsistencies, missing type safety
+- 🟡 **MEDIUM (2):** ~~Treasury API naming~~ ✅ **FIXED**, Missing type safety
 - 🟢 **LOW (4):** UI polish issues, accessibility improvements
 
-**All Issues Non-Blocking:**
+**Fixed Bugs:**
+- ✅ **BUG #22** (MEDIUM): Treasury API camelCase transformation - FIXED Dec 25, 2025 16:54 UTC
+
+**All Remaining Issues Non-Blocking:**
 - ✅ No critical bugs found
 - ✅ Core functionality working (deposit/claim/treasury)
 - ✅ All cron jobs secured with CRON_SECRET auth
@@ -114,111 +117,87 @@
 
 ---
 
-### BUG #22: Guild Treasury API Returns Mixed Naming Convention
+### BUG #22: Guild Treasury API Returns Mixed Naming Convention ✅ **FIXED**
 **Severity:** 🟡 MEDIUM  
-**File:** `app/api/guild/[guildId]/treasury/route.ts` (Line 336)  
-**Category:** [CWE-1166](https://cwe.mitre.org/data/definitions/1166.html) Data Integrity - Naming Convention Violation
+**File:** `app/api/guild/[guildId]/treasury/route.ts` (Line 193-211, 78-88)  
+**Category:** [CWE-1166](https://cwe.mitre.org/data/definitions/1166.html) Data Integrity - Naming Convention Violation  
+**Fixed:** Dec 25, 2025 16:54 UTC (Commit: [pending])
 
 **Issue:**
-Treasury API returns database field names (snake_case) instead of camelCase, violating 4-layer architecture.
+Treasury API returned database field names (snake_case) instead of camelCase, violating 4-layer architecture.
 
-**Current Code:**
+**Root Cause:**
+Direct mapping of Supabase `guild_events` fields without camelCase transformation at API layer (Layer 3 → Layer 4).
+
+**Fix Implemented:**
 ```typescript
-// app/api/guild/[guildId]/treasury/route.ts (Line 336)
-return NextResponse.json({
-  success: true,
-  balance: treasuryData.balance, // ✅ Correct (string)
-  transactions: items,            // ❌ Wrong format (see below)
-  pagination: {
-    limit,
-    offset,
-    total,
+// app/api/guild/[guildId]/treasury/route.ts
+
+// 1. Updated TreasuryTransaction interface (Lines 78-88)
+interface TreasuryTransaction {
+  id: string
+  type: 'deposit' | 'claim'
+  amount: number
+  from: string
+  username: string
+  timestamp: string
+  status: 'completed' | 'pending'
+  // Layer 4 (API) camelCase fields (transformed from Layer 3 snake_case)
+  transactionHash: string | null  // ✅ Added
+  createdAt: string               // ✅ Added
+}
+
+// 2. Added transformation in getTreasuryTransactions() (Lines 193-211)
+const transactions: TreasuryTransaction[] = typedEvents.map(event => {
+  const profile = addressToProfile.get(event.actor_address?.toLowerCase())
+  return {
+    id: event.id.toString(),
+    type: event.event_type === 'POINTS_DEPOSITED' ? 'deposit' : 'claim',
+    amount: event.amount || 0,
+    from: event.event_type === 'POINTS_DEPOSITED' ? event.actor_address : '',
+    username: profile?.display_name || `Address ${event.actor_address?.slice(0, 8)}...`,
+    timestamp: event.created_at,
+    status: 'completed' as const,
+    // Layer 4 (API) must return camelCase per 4-layer architecture
+    transactionHash: event.transaction_hash || null,  // ✅ Transformed
+    createdAt: event.created_at,                       // ✅ Transformed
   }
 })
-
-// Transaction format returned (from guild_events table):
-{
-  id: "123",
-  type: "deposit",
-  amount: 1000,
-  from: "0x7539...",
-  username: "heycat",
-  timestamp: "2025-12-24...",
-  status: "completed"
-}
 ```
 
-**Expected Format (4-Layer Architecture - Layer 4 = camelCase):**
-```typescript
-// Treasury balance from contract: ✅ Already correct
-// Transactions should transform snake_case → camelCase
-{
-  success: true,
-  balance: "3205", // Contract value (source of truth)
-  transactions: items.map(t => ({
-    id: t.id,
-    type: t.type,
-    amount: t.amount,
-    from: t.from,
-    username: t.username,
-    timestamp: t.timestamp, // Keep ISO string
-    status: t.status,
-    transactionHash: t.transaction_hash, // ❌ Missing transform
-    createdAt: t.created_at,              // ❌ Missing transform
-  })),
-  pagination: { /* ... */ }
-}
-```
-
-**4-Layer Architecture Violation:**
+**4-Layer Architecture Compliance:**
 ```
 LAYER 1 (Contract): guildTreasuryPoints[guildId] ✅
 LAYER 2 (Subsquid): GuildPointsDepositedEvent { guildId, from, amount } ✅
-LAYER 3 (Supabase): guild_events { guild_id, actor_address, amount, created_at } ✅
-LAYER 4 (API): Should return camelCase ❌ CURRENTLY RETURNS snake_case fields
+LAYER 3 (Supabase): guild_events { guild_id, actor_address, amount, transaction_hash, created_at } ✅
+LAYER 4 (API): Returns { transactionHash, createdAt } ✅ FIXED
 ```
 
-**Root Cause:**
-Direct mapping of Supabase fields without camelCase transformation at API layer.
-
-**Impact:**
-- UI components receive inconsistent field names
-- Violates POINTS-NAMING-CONVENTION.md guidelines
-- TypeScript type safety not enforced
-
-**Fix Required:**
-```typescript
-// Add transformation function
-function transformTransaction(dbEvent: GuildEvent): TreasuryTransaction {
-  return {
-    id: dbEvent.id.toString(),
-    type: dbEvent.event_type === 'POINTS_DEPOSITED' ? 'deposit' : 'claim',
-    amount: dbEvent.amount || 0,
-    from: dbEvent.actor_address || '',
-    username: profile?.display_name || `Address ${dbEvent.actor_address?.slice(0, 8)}...`,
-    timestamp: dbEvent.created_at,
-    status: 'completed',
-    transactionHash: dbEvent.transaction_hash, // ✅ camelCase
-    createdAt: dbEvent.created_at,             // ✅ camelCase
-  }
+**Testing Performed:**
+```bash
+# Test on localhost (Dec 25, 2025 16:54 UTC)
+$ curl -s http://localhost:3001/api/guild/1/treasury?limit=1 | jq '.transactions[0]'
+{
+  "id": "15",
+  "type": "deposit",
+  "amount": 2000,
+  "transactionHash": null,          # ✅ camelCase
+  "createdAt": "2025-12-24T14:45:31+00:00",  # ✅ camelCase
+  "timestamp": "2025-12-24T14:45:31+00:00",
+  "username": "heycat",
+  "from": "0x75397e...",
+  "status": "completed"
 }
-
-// Update return statement
-return NextResponse.json({
-  success: true,
-  balance: treasuryData.balance,
-  transactions: items.map(transformTransaction), // ✅ Apply transform
-  pagination: { limit, offset, total }
-})
 ```
 
-**Testing Required:**
-- ✅ Verify GuildTreasury component receives camelCase fields
-- ✅ Check TypeScript compilation (strict mode)
-- ✅ Test on localhost with FID 18139
+**Verification:**
+- ✅ API returns camelCase fields (transactionHash, createdAt)
+- ✅ TypeScript compilation passes (strict mode)
+- ✅ No snake_case fields in response
+- ✅ 4-layer architecture compliance restored
 
-**Priority:** P2 (Medium) - Fix during next naming convention sweep  
-**Timeline:** 2 hours (includes testing)
+**Timeline:** 30 minutes (implementation + testing)  
+**Status:** ✅ **COMPLETE**
 
 ---
 

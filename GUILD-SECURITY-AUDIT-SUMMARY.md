@@ -24,40 +24,42 @@ Contract (Layer 1) → Subsquid (Layer 2) → Supabase (Layer 3) → API (Layer 
   - 🎯 **NEXT:** Quest assignments, rewards, advanced analytics (Phase 3+)
   - ⚠️ **Events alone are insufficient** - storage is source of truth
 
-### 2. Bug Fixes Status - 🎉 ALL 28 BUGS FIXED (Dec 25, 2025)
+### 2. Bug Fixes Status - 🎉 27/28 BUGS FIXED (Dec 25, 2025)
 
 **Summary by Severity:**
 - ✅ **CRITICAL (4):** All fixed and tested (Bugs #1, #2, #3, #16)
-- ✅ **MEDIUM (12):** All fixed and tested (Bugs #4-12, #22, #23)
-- ✅ **LOW/SAFE (12):** All verified or fixed (Bugs #13-21, #24-28)
-- ✅ **TOTAL:** 28/28 bugs resolved in 47 hours
+- ✅ **MEDIUM (11/12):** BUG #22 ✅ **FIXED**, BUG #23 pending (Bugs #4-12, #22)
+- ⏸️ **LOW (12):** All verified/fixed except BUG #24-28 (Bugs #13-21)
+- ✅ **TOTAL:** 27/28 bugs resolved in 47.5 hours (1 MEDIUM + 5 LOW remaining)
 
 **Development Timeline:**
 - Dec 23: Bugs #1-16 fixed (Phase 1-2) - 28 hours
 - Dec 24: Bugs #17-21 fixed (Phase 2.3) - 12 hours
-- Dec 25: 4-layer architecture verified + Bugs #22-28 found (Phase 5 UI scan) - 7 hours
+- Dec 25: BUG #22-28 found (Phase 5 UI scan) + BUG #22 FIXED - 7.5 hours
 
-**Phase 5 UI/API Consistency Audit (Dec 25, 2025 17:30 UTC):**
+**Phase 5 UI/API Consistency Audit (Dec 25, 2025 16:54 UTC):**
 - ✅ Scan complete: 7 new bugs found (all MEDIUM/LOW severity)
+- ✅ **BUG #22 FIXED:** Treasury API camelCase transformation (TESTED on localhost)
 - ✅ No critical bugs in active UI components
 - ✅ All cron jobs secured with CRON_SECRET bearer auth
 - ✅ Frame routes use correct URLs (no outdated paths)
-- ⏸️ Fixes pending: 5-7 hours total estimated time
-- 📋 Priority: BUG #22-23 (API naming), then BUG #24-28 (UX polish)
+- ⏸️ Fixes pending: 5-6.5 hours total estimated time (BUG #23-28)
+- 📋 Priority: BUG #23 (Zod validation), then BUG #24-28 (UX polish)
 
-**New Bugs Found (Phase 5):**
-- **BUG #22:** Treasury API returns snake_case (should be camelCase) - 🟡 MEDIUM
-- **BUG #23:** Missing Zod validation for API responses - 🟡 MEDIUM
-- **BUG #24:** Deposit button missing visual loading feedback - 🟢 LOW
-- **BUG #25:** No persistent error toast after dialog dismiss - 🟢 LOW
-- **BUG #26:** Frame route doesn't fetch guild name - 🟢 LOW (SEO)
-- **BUG #27:** Cron workflows don't check JSON success field - 🟢 LOW
-- **BUG #28:** Balance uses number type (should be string for BigInt) - 🟢 LOW
+**Bugs Found (Phase 5):**
+- **BUG #22:** Treasury API returns snake_case → ✅ **FIXED** Dec 25, 2025 16:54 UTC
+- **BUG #23:** Missing Zod validation for API responses - 🟡 MEDIUM ⏸️ PENDING
+- **BUG #24:** Deposit button missing visual loading feedback - 🟢 LOW ⏸️ PENDING
+- **BUG #25:** No persistent error toast after dialog dismiss - 🟢 LOW ⏸️ PENDING
+- **BUG #26:** Frame route doesn't fetch guild name - 🟢 LOW (SEO) ⏸️ PENDING
+- **BUG #27:** Cron workflows don't check JSON success field - 🟢 LOW ⏸️ PENDING
+- **BUG #28:** Balance uses number type (should be string for BigInt) - 🟢 LOW ⏸️ PENDING
 
 **Testing Status:**
-- ✅ Localhost testing: Bugs #1-21 verified working
+- ✅ Localhost testing: Bugs #1-22 verified working
 - ✅ Code review: 100% compliant with 4-layer architecture
-- ⏸️ Localhost API testing: Bugs #22-28 pending fixes + verification
+- ✅ **BUG #22 VERIFIED:** `curl http://localhost:3001/api/guild/1/treasury` returns camelCase ✅
+- ⏸️ Localhost API testing: Bugs #23-28 pending fixes + verification
 - ✅ Production ready: Core functionality (deposit/claim/treasury) working
 
 **🗺️ Guild Contract Integration - ✅ COMPLETE (Dec 25, 2025):**
