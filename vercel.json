@@ -1,6 +1,23 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "pnpm install --prod --frozen-lockfile && pnpm build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "installCommand": "pnpm install --frozen-lockfile",
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 10
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
+      ]
+    }
+  ]
 }
