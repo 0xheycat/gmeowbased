@@ -27,7 +27,9 @@ import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay
 import { getGMStats, type GMStats } from '@/lib/integrations/subsquid-client'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI, type ChainKey } from '@/lib/contracts/gmeow-utils'
 import { Tooltip } from '@/components/ui/tooltip'
-import { calculateRankProgress, invalidateUserScoringCache, type RankProgress } from '@/lib/scoring/unified-calculator'
+import { invalidateUserScoringCache } from '@/lib/scoring/unified-calculator'
+import { getUserStatsOnChain } from '@/lib/contracts/scoring-module'
+import type { RankProgress } from '@/lib/scoring/unified-calculator'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import WbSunnyIcon from '@mui/icons-material/WbSunny'
@@ -136,11 +138,22 @@ export function GMButton({
         })
         setGmStats(stats)
         
-        // Calculate rank progress from total XP (10 XP per GM)
-        if (stats) {
-          const totalXP = stats.totalGMs * 10
-          const progress = calculateRankProgress(totalXP)
-          setRankProgress(progress)
+        // Get rank progress from on-chain ScoringModule contract
+        if (address) {
+          try {
+            const onChainStats = await getUserStatsOnChain(address)
+            if (onChainStats) {
+              setRankProgress({
+                currentTier: onChainStats.rankTier,
+                currentPoints: Number(onChainStats.totalScore),
+                nextTierPoints: onChainStats.nextRankThreshold ? Number(onChainStats.nextRankThreshold) : 0,
+                progress: onChainStats.rankProgress || 0,
+                nextTierName: `Tier ${onChainStats.rankTier + 1}`
+              })
+            }
+          } catch (error) {
+            console.error('[GMButton] Error fetching on-chain stats:', error)
+          }
         }
       } catch (error) {
         console.error('[GMButton] Error fetching GM stats:', error)
@@ -256,10 +269,26 @@ export function GMButton({
       console.log('[GMButton] Updated stats:', updatedStats)
       setGmStats(updatedStats)
 
-      // Recalculate rank progress
-      const newTotalXP = updatedStats.totalGMs * 10
-      const newProgress = calculateRankProgress(newTotalXP)
-      setRankProgress(newProgress)
+      // Get updated rank progress from on-chain
+      if (address) {
+        try {
+          const onChainStats = await getUserStatsOnChain(address)
+          if (onChainStats) {
+            setRankProgress({
+              currentTier: onChainStats.rankTier,
+              currentPoints: Number(onChainStats.totalScore),
+              nextTierPoints: onChainStats.nextRankThreshold ? Number(onChainStats.nextRankThreshold) : 0,
+              progress: onChainStats.rankProgress || 0,
+              nextTierName: `Tier ${onChainStats.rankTier + 1}`
+            })
+          }
+        } catch (error) {
+          console.error('[GMButton] Error fetching updated on-chain stats:', error)
+        }
+      }
+
+      // Get totalXP from on-chain total score
+      const newTotalXP = address ? Number((await getUserStatsOnChain(address))?.totalScore || 0) : updatedStats.totalGMs * 10
 
       // Refetch on-chain lastGMTime
       refetchLastGMTime()

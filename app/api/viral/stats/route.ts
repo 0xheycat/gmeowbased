@@ -3,13 +3,18 @@ import { createClient } from '@/lib/supabase/edge'
 import type { Database } from '@/types/supabase'
 import { 
   getViralTier, 
-  calculateEngagementScore, 
-  calculateLevelProgress,
-  getRankTierByPoints,
+  calculateEngagementScore,
   formatPoints,
   type EngagementMetrics 
 } from '@/lib/scoring/unified-calculator'
+import { getUserStatsOnChain } from '@/lib/contracts/scoring-module'
 import { getLeaderboardEntry } from '@/lib/subsquid-client'
+
+// Helper: Map rank tier index to name
+function getRankTierName(tierIndex: number): string {
+  const names = ['Cadet', 'Pilot', 'Captain', 'Commander', 'Star Admiral', 'Galaxy Marshal', 'Cosmic Ace', 'Nebula Lord', 'Stellar Emperor', 'Void Sovereign', 'Astral Titan', 'Cosmic Legend']
+  return names[tierIndex] || 'Unknown'
+}
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { rateLimit, getClientIp, apiLimiter } from '@/lib/middleware/rate-limit'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
@@ -155,13 +160,27 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     }
     
     if (!casts || casts.length === 0) {
-      // LAYER 3: Calculate stats even with no viral XP
+      // LAYER 1: On-chain contract (primary source of truth)
+      let onChainStats = null
+      let level = 0
+      let rankTier = 'Cadet'
       const blockchainPoints = blockchainStats?.pointsBalance || 0
       const totalScore = blockchainPoints + 0 // No viral XP yet
-      const levelData = calculateLevelProgress(totalScore)
-      const rankTier = getRankTierByPoints(totalScore)
       
-      // GI-13: Return empty state with helpful message + blockchain data
+      if (profile?.verified_addresses?.[0]) {
+        try {
+          onChainStats = await getUserStatsOnChain(profile.verified_addresses[0])
+          level = Number(onChainStats.level)
+          rankTier = getRankTierName(Number(onChainStats.rankTier))
+        } catch (error) {
+          console.error('[viral/stats] Failed to fetch on-chain stats:', error)
+          // Fallback: Use basic tier for 0 points
+          level = 0
+          rankTier = 'Cadet'
+        }
+      }
+      
+      // GI-13: Return empty state with helpful message + on-chain data
       return {
         fid,
         totalViralXp: 0,
@@ -179,10 +198,10 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
         blockchainPoints,
         globalRank: null,
         currentStreak: blockchainStats?.currentStreak || 0,
-        // Layer 3: Calculated
+        // Layer 1: On-chain contract
         totalScore,
-        level: levelData.level,
-        rankTier: rankTier.name,
+        level,
+        rankTier,
         message: 'No badge casts found. Share your first badge to start earning viral points!',
       }
     }
@@ -245,11 +264,29 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       else if (tier.name === 'Active') tierBreakdown.active++
     })
     
-    // LAYER 3: Calculated - Use unified-calculator for total score, level, rank
+    // LAYER 1: On-chain contract (primary source of truth)
         const pointsBalance = blockchainStats?.pointsBalance || 0
         const totalScore = pointsBalance + viralPoints
-        const levelData = calculateLevelProgress(totalScore)
-        const rankTier = getRankTierByPoints(totalScore)
+        
+        let level = 0
+        let rankTier = 'Cadet'
+        
+        if (profile?.verified_addresses?.[0]) {
+          try {
+            const onChainStats = await getUserStatsOnChain(profile.verified_addresses[0])
+            level = Number(onChainStats.level)
+            rankTier = getRankTierName(Number(onChainStats.rankTier))
+          } catch (error) {
+            console.error('[viral/stats] Failed to fetch on-chain stats:', error)
+            // Fallback: Use basic calculation from totalScore
+            level = Math.floor(totalScore / 1000) // Simple fallback: 1 level per 1000 points
+            rankTier = totalScore < 1000 ? 'Cadet' : totalScore < 5000 ? 'Pilot' : 'Captain'
+          }
+        } else {
+          // No verified address: Use fallback calculation
+          level = Math.floor(totalScore / 1000)
+          rankTier = totalScore < 1000 ? 'Cadet' : totalScore < 5000 ? 'Pilot' : 'Captain'
+        }
 
         return {
           fid,
@@ -263,10 +300,10 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
           pointsBalance,
           globalRank: null,
           currentStreak: blockchainStats?.currentStreak || 0,
-          // Layer 3: Calculated (unified-calculator)
+          // Layer 1: On-chain contract (ScoringModule)
           totalScore,
-          level: levelData.level,
-          rankTier: rankTier.name,
+          level,
+          rankTier,
         }
       },
       { ttl: 120 }
