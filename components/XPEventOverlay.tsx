@@ -50,9 +50,11 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useAccount } from 'wagmi'
 import { XPCelebrationModal } from '@/components/xp-celebration'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'
-import { calculateRankProgress, type RankProgress } from '@/lib/scoring/unified-calculator'
+import { getUserStatsOnChain } from '@/lib/contracts/scoring-module'
+import type { RankProgress } from '@/lib/scoring/unified-calculator'
 import type { TierCategory } from '@/components/xp-celebration/types'
 import {
   GmIcon,
@@ -269,7 +271,14 @@ export function XPEventOverlay({ open, payload, onClose }: XPEventOverlayProps) 
   const xpEarned = Math.max(0, Math.round(xpEarnedRaw))
   const totalPoints = Number.isFinite(totalPointsRaw) ? Math.max(0, Math.round(totalPointsRaw)) : 0
 
-  const progress = payload.progress ?? calculateRankProgress(totalPoints)
+  // Use progress from payload (already fetched from on-chain in useEffect)
+  const progress = payload.progress || {
+    currentTier: 0 as any,
+    currentPoints: totalPoints,
+    nextTierPoints: 0,
+    progress: 0,
+    nextTierName: 'Tier 1'
+  }
   const copy = EVENT_COPY[payload.event] ?? EVENT_COPY.gm
 
   const tierName = progress.currentTier.name

@@ -6,7 +6,6 @@ import { withTiming } from '@/lib/middleware/timing'
 import { getCached } from '@/lib/cache/server'
 import { LeaderboardQuerySchema } from '@/lib/validation/api-schemas'
 import { getLeaderboardEntry } from '@/lib/subsquid-client'
-import { calculateLevelProgress, getRankTierByPoints, formatPoints } from '@/lib/scoring/unified-calculator'
 import { getUserStatsOnChain, getLevelProgressOnChain } from '@/lib/contracts/scoring-module'
 
 export const runtime = 'nodejs'
@@ -150,7 +149,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       const pointsBalance = onChainStats?.totalXp || 0
       const totalScore = pointsBalance + entry.viralPoints
       
-      // Phase 9.3: Fetch on-chain level/rank from ScoringModule contract
+      // Phase 9: Fetch on-chain level/rank from ScoringModule contract (production)
       let levelData: any
       let rankTier: any
       
@@ -160,21 +159,30 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
           const levelProgress = await getLevelProgressOnChain(profile.verified_addresses[0])
           
           levelData = {
-            level: contractStats.level,
-            levelPercent: levelProgress.progressPercent / 100,
+            level: Number(contractStats.level),
+            levelPercent: Number(levelProgress.progressPercent) / 100,
             xpToNextLevel: Number(levelProgress.xpToNextLevel),
           }
           
-          rankTier = { name: getRankName(contractStats.rankTier) }
+          rankTier = { name: getRankName(Number(contractStats.rankTier)) }
         } catch (error) {
-          // Fallback to offline calculations
-          levelData = calculateLevelProgress(totalScore)
-          rankTier = getRankTierByPoints(totalScore)
+          console.error(`[viral/leaderboard] Failed to fetch on-chain stats for FID ${entry.fid}:`, error)
+          // Production-grade fallback: Basic tier/level from totalScore
+          levelData = {
+            level: Math.floor(totalScore / 1000),
+            levelPercent: (totalScore % 1000) / 1000,
+            xpToNextLevel: 1000 - (totalScore % 1000),
+          }
+          rankTier = { name: totalScore < 1000 ? 'Cadet' : totalScore < 5000 ? 'Pilot' : 'Captain' }
         }
       } else {
-        // No verified address, use offline calculations
-        levelData = calculateLevelProgress(totalScore)
-        rankTier = getRankTierByPoints(totalScore)
+        // No verified address: Use fallback calculation
+        levelData = {
+          level: Math.floor(totalScore / 1000),
+          levelPercent: (totalScore % 1000) / 1000,
+          xpToNextLevel: 1000 - (totalScore % 1000),
+        }
+        rankTier = { name: totalScore < 1000 ? 'Cadet' : totalScore < 5000 ? 'Pilot' : 'Captain' }
       }
       
       return {

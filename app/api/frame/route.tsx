@@ -3,11 +3,7 @@
 
 
 import { NextResponse } from 'next/server'
-import {
-  createPublicClient,
-  http,
-  type Address,
-} from 'viem'
+import { type Address } from 'viem'
 
 // Import your gmeow-utils. Adjust path if your gmeow-utils export is different.
 import gm, {
@@ -25,7 +21,6 @@ import gm, {
   type GMChainKey,
 } from '@/lib/contracts/gmeow-utils'
 import { getReferralCode } from '@/lib/contracts/referral-contract'
-import { calculateRankProgress } from '@/lib/scoring/unified-calculator'
 import { getChainIconUrl } from '@/lib/utils/icons'
 import { buildDynamicFrameImageUrl } from '@/lib/api/share'
 import {
