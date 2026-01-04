@@ -67,6 +67,7 @@
     "oracle:monitor": "tsx ./scripts/oracle-balance-monitor.ts"
   },
   "dependencies": {
+    "@apollo/client": "^3.14.0",
     "@coinbase/onchainkit": "^0.36.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",

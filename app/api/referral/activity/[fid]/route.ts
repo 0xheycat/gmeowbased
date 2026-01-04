@@ -31,9 +31,15 @@ import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-lim
 import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { getReferrerHistory } from '@/lib/subsquid-client'
+import { auditLog, auditWarn } from '@/lib/middleware/audit-logger'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+// ===== BUG #R5 FIX: PREVENT DOS VIA UNBOUNDED OFFSET =====
+// Maximum offset to prevent resource exhaustion attacks
+// 10,000 rows = reasonable pagination limit for activity feed
+const MAX_OFFSET = 10000
 
 // Path parameter validation schema
 const FidParamSchema = z.coerce.number().int().positive()
@@ -75,19 +81,38 @@ interface ReferralActivityRow {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  { params }: { params: Promise<{ fid: string }> }
 ) {
+  const resolvedParams = await params
   const requestId = generateRequestId()
   const startTime = Date.now()
   const clientIp = getClientIp(request)
 
   try {
+    // ===== SECURITY LAYER 0: AUTHENTICATION =====
+    const authenticatedFid = request.headers.get('x-farcaster-fid')
+    if (!authenticatedFid || authenticatedFid !== resolvedParams.fid) {
+      logError('Authentication failed', {
+        endpoint: `/api/referral/activity/${resolvedParams.fid}`,
+        ip: clientIp,
+        method: 'GET',
+        requestId,
+        reason: 'Missing or mismatched x-farcaster-fid header',
+      })
+      
+      return createErrorResponse({
+        type: ErrorType.AUTHENTICATION,
+        message: 'Unauthorized: x-farcaster-fid header required and must match FID',
+        statusCode: 401,
+      })
+    }
+
     // ===== SECURITY LAYER 1: RATE LIMITING (60 req/hour) =====
     const rateLimitResult = await rateLimit(clientIp, strictLimiter)
     
     if (!rateLimitResult.success) {
       logError('Rate limit exceeded', {
-        endpoint: `/api/referral/activity/${params.fid}`,
+        endpoint: `/api/referral/activity/${resolvedParams.fid}`,
         ip: clientIp,
         method: 'GET',
         requestId,
@@ -109,11 +134,11 @@ export async function GET(
 
     // ===== SECURITY LAYER 2: REQUEST VALIDATION =====
     // Validate FID parameter
-    const fidValidation = FidParamSchema.safeParse(params.fid)
+    const fidValidation = FidParamSchema.safeParse(resolvedParams.fid)
     
     if (!fidValidation.success) {
       logError('Invalid FID parameter', {
-        endpoint: `/api/referral/activity/${params.fid}`,
+        endpoint: `/api/referral/activity/${resolvedParams.fid}`,
         ip: clientIp,
         method: 'GET',
         requestId,
@@ -152,6 +177,25 @@ export async function GET(
     }
 
     const { limit, offset } = queryValidation.data
+
+    // ===== BUG #R5 FIX: VALIDATE OFFSET BOUNDS =====
+    // Validate offset to prevent DoS via unbounded pagination
+    if (offset > MAX_OFFSET) {
+      logError('Offset exceeds maximum', {
+        endpoint: `/api/referral/activity/${fid}`,
+        ip: clientIp,
+        requestId,
+        offset,
+        maxOffset: MAX_OFFSET,
+      })
+
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: `Pagination offset too large (max ${MAX_OFFSET})`,
+        statusCode: 400,
+        details: { offset, maxOffset: MAX_OFFSET },
+      })
+    }
 
     // ===== SECURITY LAYER 3-4: AUTHENTICATION & RBAC =====
     // Public endpoint - no authentication required for read-only activity data
@@ -204,7 +248,7 @@ export async function GET(
         }))
       } catch (subsquidError) {
         // Non-blocking: Continue with Supabase data only if Subsquid fails
-        console.warn(`[Referral Activity] Subsquid error for FID ${fid}:`, subsquidError)
+        auditWarn(`[Referral Activity] Subsquid error for FID ${fid}:`, { error: subsquidError })
       }
     }
 
@@ -260,7 +304,7 @@ export async function GET(
     // Public activity data - no sensitive information exposed
 
     // ===== SECURITY LAYER 9: AUDIT LOGGING =====
-    console.log('[Referral Activity API] Success', {
+    auditLog('[Referral Activity API] Success', {
       requestId,
       ip: clientIp,
       fid,
@@ -306,7 +350,7 @@ export async function GET(
   } catch (error) {
     // ===== SECURITY LAYER 10: ERROR MASKING (CRITICAL) =====
     logError('Unexpected error in referral activity API', {
-      endpoint: `/api/referral/activity/${params.fid}`,
+      endpoint: `/api/referral/activity/${resolvedParams.fid}`,
       ip: clientIp,
       requestId,
       error: error instanceof Error ? error.message : 'Unknown error',

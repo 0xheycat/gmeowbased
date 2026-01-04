@@ -185,7 +185,7 @@ async function updateCastMetrics(
         likes_count: metrics.likes,
         recasts_count: metrics.recasts,
         replies_count: metrics.replies,
-        viral_bonus_xp: bonusXp,
+        viral_bonus_points: bonusXp,
         last_metrics_update: new Date().toISOString(),
       })
       .eq('cast_hash', castHash)

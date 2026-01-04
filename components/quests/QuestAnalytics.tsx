@@ -68,29 +68,46 @@ export function QuestAnalytics({
   
   // Load completions from API
   useEffect(() => {
-    if (recentCompleters.length === 0 && !isLoading) {
-      setIsLoading(true)
+    let mounted = true;
+    
+    const loadCompletions = async () => {
+      setIsLoading(true);
       
-      fetch(`/api/quests/${questId}/completions?limit=10&period=7d`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.completions) {
-            setLocalCompleters(data.completions.map((c: any) => ({
-              id: c.id,
-              user: c.user.address,
-              completedAt: c.completedAt,
-              rewardAmount: parseInt(c.pointsAwarded),
-            })))
-          }
-        })
-        .catch(err => {
-          console.error('Failed to load quest completions:', err)
-        })
-        .finally(() => {
-          setIsLoading(false)
-        })
-    }
-  }, [questId, recentCompleters, isLoading])
+      try {
+        // Bug #18 fix: Correct API path is /api/quests/completions/[questId]
+        const res = await fetch(`/api/quests/completions/${questId}?limit=10&period=7d`);
+        
+        if (!res.ok) {
+          console.error(`API returned ${res.status}`);
+          return;
+        }
+        
+        const data = await res.json();
+        
+        if (mounted && data.completions) {
+          setLocalCompleters(data.completions.map((c: any) => ({
+            id: c.id,
+            user: c.user.address,
+            completedAt: c.completedAt,
+            rewardAmount: parseInt(c.pointsAwarded),
+          })));
+        }
+      } catch (err) {
+        console.error('Failed to load quest completions:', err);
+        // Silently fail - analytics is non-critical
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadCompletions();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [questId])
   
   if (completionCount === 0) {
     return null // Don't show if no completions yet
@@ -175,7 +192,7 @@ export function QuestAnalytics({
           {/* View All Link */}
           {localCompleters.length > 5 && (
             <Link 
-              href={`/quests/${questId}/completions`}
+              href={`/quests/${slug}/completions`}
               className="block mt-4 text-center text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline"
             >
               View all {completionCount} completions →

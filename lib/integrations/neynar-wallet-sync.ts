@@ -65,11 +65,13 @@ async function fetchNeynarWallets(fid: number): Promise<NeynarWalletData | null>
  * 
  * @param fid - Farcaster ID
  * @param forceUpdate - Force update even if profile exists
+ * @param connectedAddress - The currently connected wallet address (optional, uses this as primary if provided)
  * @returns Updated wallet data or null on error
  */
 export async function syncWalletsFromNeynar(
   fid: number,
-  forceUpdate: boolean = false
+  forceUpdate: boolean = false,
+  connectedAddress?: string
 ): Promise<NeynarWalletData | null> {
   const supabase = createClient()
   if (!supabase) {
@@ -81,8 +83,30 @@ export async function syncWalletsFromNeynar(
   const walletData = await fetchNeynarWallets(fid)
   if (!walletData) return null
 
-  // Get primary wallet (first verified or custody)
-  const primaryWallet = walletData.verified_addresses[0] || walletData.custody_address
+  // Get primary wallet with priority:
+  // 1. Connected wallet (if provided and verified)
+  // 2. First verified address
+  // 3. Custody address
+  let primaryWallet: string | null
+  
+  if (connectedAddress) {
+    const normalizedConnected = connectedAddress.toLowerCase()
+    const normalizedVerified = walletData.verified_addresses.map(addr => addr.toLowerCase())
+    const normalizedCustody = walletData.custody_address?.toLowerCase()
+    
+    // Use connected wallet if it's verified or is the custody address
+    if (normalizedVerified.includes(normalizedConnected) || normalizedConnected === normalizedCustody) {
+      primaryWallet = connectedAddress
+      console.log('[syncWalletsFromNeynar] Using connected wallet as primary:', connectedAddress)
+    } else {
+      // Fallback to first verified or custody
+      primaryWallet = walletData.verified_addresses[0] || walletData.custody_address
+      console.warn('[syncWalletsFromNeynar] Connected wallet not verified, using fallback:', primaryWallet)
+    }
+  } else {
+    // No connected wallet provided, use first verified or custody
+    primaryWallet = walletData.verified_addresses[0] || walletData.custody_address
+  }
 
   // Update database
   const { error } = await supabase

@@ -53,7 +53,7 @@ export function QuestPreview({
     },
     {
       label: 'Rewards configured',
-      passed: draft.reward_points && draft.reward_points >= 10,
+      passed: draft.reward_points_awarded && draft.reward_points_awarded >= 10,
     },
   ]
 
@@ -192,7 +192,7 @@ function QuestCardPreview({ draft }: { draft: QuestDraft }) {
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <MonetizationOnIcon className="h-4 w-4" />
-              <span>{draft.reward_points || 0} points</span>
+              <span>{draft.reward_points_awarded || 0} points</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <AccessTimeIcon className="h-4 w-4" />
@@ -228,9 +228,9 @@ function QuestDetailsPreview({
       />
       <DetailRow
         label="Rewards"
-        value={`${draft.reward_points || 0} BASE POINTS + ${draft.reward_xp || 0} XP`}
+        value={`${draft.reward_points_awarded || 0} POINTS`}
       />
-      <DetailRow label="Creation Cost" value={`${estimatedCost} BASE POINTS`} />
+      <DetailRow label="Creation Cost" value={`${estimatedCost} POINTS`} />
       
       {draft.starts_at && (
         <DetailRow

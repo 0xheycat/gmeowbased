@@ -38,7 +38,9 @@
 // - user_points_balances: base_points→points_balance, total_points→total_score
 // - See supabase.generated.ts header for complete rename list
 //
-// ❌ FORBIDDEN: "blockchainPoints", "viralXP", "base_points"
+// ❌ FORBIDDEN: "blockchainPoints" (→ pointsBalance), "base_points" (→ points_balance)
+// ✅ CORRECT: "viralXP" / "viral_xp" (progression system, separate from Points currency)
+// ℹ️ NOTE: XP (progression/leveling) ≠ Points (spendable currency) - two separate reward systems
 // ✅ REQUIRED: Update all 4 layers when changing any points field
 
 export type { Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes } from './supabase.generated';

@@ -22,6 +22,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { invalidateUserScoringCache } from '@/lib/scoring/unified-calculator'
 import { type Address } from 'viem'
 import GuildMemberList from './GuildMemberList'
 import GuildAnalytics from './GuildAnalytics'
@@ -213,6 +214,13 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
   useEffect(() => {
     if (isSuccess) {
       setIsMember(true)
+      
+      // Invalidate scoring cache to show updated multiplier immediately
+      if (address) {
+        invalidateUserScoringCache(address).catch((err) => {
+          console.error('[GuildProfilePage] Failed to invalidate cache:', err);
+        });
+      }
       
       // Show XP celebration
       const payload: XpEventPayload = {

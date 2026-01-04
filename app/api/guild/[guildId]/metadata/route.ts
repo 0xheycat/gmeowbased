@@ -13,13 +13,13 @@ import { getSupabaseAdminClient } from '@/lib/supabase/edge'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { guildId: string } }
+  { params }: { params: Promise<{ guildId: string }> }
 ) {
   const requestId = generateRequestId()
+  // Next.js 15: params must be awaited
+  const { guildId } = await params
   
   try {
-    const { guildId } = params
-
     // Validate guild ID
     const guildIdBigInt = BigInt(guildId)
     if (guildIdBigInt <= 0n) {

@@ -16,7 +16,7 @@
  * ✅ Hybrid scoring (Subsquid blockchain + Supabase off-chain)
  * ✅ 7 scoring components (aligned with COMPLETE-CALCULATION-SYSTEM.md):
  *    • pointsBalance - On-chain points from Subsquid User.pointsBalance (GM + Quests + Tips)
- *    • viralPoints - Off-chain engagement from Supabase badge_casts.viral_bonus_points
+ *    • viralPoints - Off-chain engagement from Supabase badge_casts.viral_bonus_xp
  *    • streakDays - Current GM streak (metadata, NOT scored as points - see contract)
  *    • guildBonus - Guild membership value (calculated from guild level)
  *    • referralBonus - Referral rewards (calculated from referral count)
@@ -145,7 +145,7 @@ export type GuildRole = 'owner' | 'officer' | 'member'
  */
 export interface ScoreBreakdown {
   pointsBalance: number       // Subsquid User.pointsBalance (GM + Quests + Tips on-chain)
-  viralPoints: number         // Supabase badge_casts.viral_bonus_points (engagement scoring)
+  viralPoints: number         // Supabase badge_casts.viral_bonus_xp (engagement scoring)
   streakDays: number          // Current streak in days (metadata only, NOT scored directly)
   guildBonus: number          // Guild membership value (if applicable)
   referralBonus: number       // Referral rewards (if applicable)
@@ -224,7 +224,7 @@ export interface BadgeCollectionStats {
  * 
  * CALCULATION FLOW (per COMPLETE-CALCULATION-SYSTEM.md):
  * 1. Fetch blockchain points: Subsquid User.pointsBalance (on-chain GM + Quests + Tips)
- * 2. Fetch viral bonus: Supabase badge_casts.viral_points (off-chain engagement)
+ * 2. Fetch viral bonus: Supabase badge_casts.viral_bonus_xp (off-chain engagement)
  * 3. Calculate total: pointsBalance + viralPoints = totalScore
  * 4. Derive level: from totalScore using quadratic formula (rank.ts)
  * 5. Derive rank tier: from totalScore using 12-tier system (rank.ts)
@@ -311,12 +311,12 @@ async function getSupabaseStats(fid: number) {
   // Fetch viral engagement data (primary off-chain metric)
   const { data: viralData } = await supabase
     .from('badge_casts')
-    .select('viral_bonus_points')
+    .select('viral_bonus_xp')
     .eq('fid', fid)
   
   // Calculate total viral points from all badge casts
   const castEngagement = viralData?.reduce(
-    (sum, cast) => sum + (cast.viral_bonus_points || 0), 
+    (sum, cast) => sum + (cast.viral_bonus_xp || 0), 
     0
   ) || 0
   

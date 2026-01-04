@@ -35,7 +35,7 @@ export const QuestCard = ({
 }: { 
   quest: { 
     title: string
-    reward_points: number
+    reward_points_awarded: number
     difficulty: string
     category?: string
   } 
@@ -64,7 +64,7 @@ export const QuestCard = ({
         </span>
       )}
       <span style={{ marginLeft: 'auto', fontSize: '20px', fontWeight: 600, color: '#10B981' }}>
-        +{quest.reward_points} XP
+        +{quest.reward_points_awarded} POINTS
       </span>
     </div>
   </div>

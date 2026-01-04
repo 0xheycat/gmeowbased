@@ -6,6 +6,7 @@ import { fetchUserByAddress, fetchFidByAddress, fetchUserByFid } from '@/lib/int
 import { getReferrer } from '@/lib/contracts/referral-contract'
 import { getCached } from '@/lib/cache/server'
 import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
+import { getUserStatsOnChain, type UserStats } from '@/lib/contracts/scoring-module'
 
 // Type definitions
 export type ProfileChainSnapshot = {
@@ -48,6 +49,8 @@ export type ProfileOverviewData = {
   frameUrl?: string
   shareUrl?: string
   neynarScore: number | null
+  // Phase 9.3: On-chain scoring data from ScoringModule contract
+  onChainStats?: UserStats | null
 }
 
 // Phase 8.9: Re-export ALL_CHAIN_KEYS as PROFILE_SUPPORTED_CHAINS for backward compatibility
@@ -386,6 +389,15 @@ export async function buildProfileOverview(
     globalRank = await fetchGlobalRank(addr)
   }
 
+  // Phase 9.3: Fetch on-chain scoring stats from ScoringModule contract (Base mainnet)
+  let onChainStats: UserStats | null = null
+  try {
+    onChainStats = await getUserStatsOnChain(addr)
+  } catch (error) {
+    console.warn('[Profile] Failed to fetch on-chain stats from ScoringModule:', error)
+    // Graceful degradation: continue without on-chain stats
+  }
+
   return {
     address: addr,
     fid,
@@ -406,5 +418,6 @@ export async function buildProfileOverview(
     frameUrl: frameUrl || undefined,
     shareUrl: frameUrl || undefined,
     neynarScore: farcasterUser?.neynarScore ?? null,
+    onChainStats, // Phase 9.3: On-chain contract data
   }
 }

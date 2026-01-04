@@ -117,7 +117,7 @@ export interface SyncResult {
 // CONSTANTS
 // ============================================================================
 
-const SUBSQUID_GRAPHQL_URL = process.env.NEXT_PUBLIC_SUBSQUID_URL || 'http://localhost:4350/graphql'
+const SUBSQUID_GRAPHQL_URL = process.env.NEXT_PUBLIC_SUBSQUID_URL || 'https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql'
 const BATCH_SIZE = 1000 // Max events per GraphQL query
 const DEFAULT_TIMEOUT = 10000 // 10 seconds
 

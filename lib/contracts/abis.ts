@@ -43,15 +43,16 @@
  * ```
  * 
  * Contract Architecture (Base Chain Only - All Verified ✓):
- * - Core: 0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73 (verified Dec 12, 2025)
- * - Guild: 0x6754e71fFd49Fb9C33C19dA1Aa6596155e53C8A3 (verified Dec 12, 2025)
- * - NFT: 0xCE9596a992e38c5fa2d997ea916a277E0F652D5C (verified Dec 12, 2025)
- * - Badge: 0x5Af50Ee323C45564d94B0869d95698D837c59aD2 (verified Dec 12, 2025)
- * - Referral: 0x9E7c32C1fB3a2c08e973185181512a442b90Ba44 (verified Dec 12, 2025)
+ * - ScoringModule: 0xdeCFDc900DD1DBD6f947d3558143aA8374413Bd6 (verified Dec 31, 2025)
+ * - Core: 0x343829A6A613d51B4A81c2dE508e49CA66D4548d (verified Dec 31, 2025)
+ * - Guild: 0xC3AA96aDA307BaD7e6c2d7575051fA19C358C097 (verified Dec 31, 2025)
+ * - NFT: 0x34d0CD77Ba8d643C1d5f568331d61eFa35132eA8 (verified Dec 31, 2025)
+ * - Badge: 0x45a2aaa181dd5f9b1fd173b135b44f5207ee3dbb (verified Dec 31, 2025)
+ * - Referral: 0x50941e1033fF8E163fB60A0433b1CB2bc71Ce8Df (verified Dec 31, 2025)
  * 
  * Verification:
  * - All contracts verified on BaseScan: https://basescan.org
- * - Deployment Block: 39,270,005 - 39,281,269
+ * - Deployment Blocks: 40,193,345 - 40,219,320 (Dec 31, 2025 - Jan 1, 2026)
  * - Deployer: 0x8870C155666809609176260F2B65a626C000D773
  * - Network: Base (8453)
  * 
@@ -110,7 +111,7 @@ import GUILD_ABI_JSON from '@/abi/GmeowGuildStandalone.abi.json'
 import NFT_ABI_JSON from '@/abi/GmeowNFT.abi.json'
 import BADGE_ABI_JSON from '@/abi/GmeowBadge.abi.json'
 import REFERRAL_ABI_JSON from '@/abi/GmeowReferralStandalone.abi.json'
-
+import scoringABI from '@/abi/ScoringModule.json'
 // Export as typed ABIs
 export const GM_CONTRACT_ABI = GM_ABI_JSON as unknown as Abi
 export const CORE_ABI = CORE_ABI_JSON as unknown as Abi
@@ -118,6 +119,7 @@ export const GUILD_ABI = GUILD_ABI_JSON as unknown as Abi
 export const NFT_ABI = NFT_ABI_JSON as unknown as Abi
 export const BADGE_ABI = BADGE_ABI_JSON as unknown as Abi
 export const REFERRAL_ABI = REFERRAL_ABI_JSON as unknown as Abi
+export const SCORING_ABI = scoringABI as unknown as Abi
 export const ERC721_ABI = erc721Abi as unknown as Abi
 
 // Also export raw JSON for cases where untyped ABI is needed
@@ -172,4 +174,14 @@ export function getReferralABI(): Abi {
  */
 export function getBadgeABI(): Abi {
   return BADGE_ABI
+}
+
+/**
+ * Helper function to get the correct ABI for ScoringModule contract
+ * 
+ * @returns ScoringModule contract ABI (Base chain)
+ * @note Only valid for Base chain (8453) deployments
+ */
+export function getScoringABI(): Abi {
+  return SCORING_ABI
 }

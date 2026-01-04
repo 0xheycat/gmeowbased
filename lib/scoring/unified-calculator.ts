@@ -43,7 +43,7 @@
  *    pointsBalance = Subsquid User.pointsBalance (GM rewards)
  * 
  * 2. FETCH LAYER 2 (Off-Chain):
- *    viralPoints = SUM(badge_casts.viral_points)
+ *    viralPoints = SUM(badge_casts.viral_bonus_xp)
  *    questPoints = SUM(user_quest_progress.points)
  *    guildPoints = SUM(guild_activity.points)
  *    referralPoints = SUM(referrals.points)
@@ -87,6 +87,69 @@
  */
 
 import { clamp } from '@/lib/utils/utils'
+import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
+import { SCORING_ABI } from '@/lib/contracts/abis'
+import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
+import { getCached, invalidateCache } from '@/lib/cache/server'
+
+// ============================================================================
+// VIEM CLIENT (Phase 8.2 - Connection Pooling)
+// ============================================================================
+// Uses pooled RPC client instead of creating new instances
+// This prevents RPC rate limiting and connection pool exhaustion
+
+// ============================================================================
+// PERFORMANCE MONITORING (Phase 8.3 - Production-Grade Enhancements)
+// ============================================================================
+// Track RPC call latency and cache performance
+const performanceMetrics = {
+  rpcCalls: 0,
+  cacheHits: 0,
+  cacheMisses: 0,
+  avgLatency: 0,
+  lastReset: Date.now(),
+}
+
+function trackRPCCall(startTime: number) {
+  const latency = Date.now() - startTime
+  performanceMetrics.rpcCalls++
+  performanceMetrics.avgLatency = 
+    (performanceMetrics.avgLatency * (performanceMetrics.rpcCalls - 1) + latency) / performanceMetrics.rpcCalls
+}
+
+function trackCacheHit() {
+  performanceMetrics.cacheHits++
+}
+
+function trackCacheMiss() {
+  performanceMetrics.cacheMisses++
+}
+
+/**
+ * Get performance metrics for scoring operations
+ * Useful for monitoring RPC call frequency and cache efficiency
+ */
+export function getScoringPerformanceMetrics() {
+  const totalCacheAttempts = performanceMetrics.cacheHits + performanceMetrics.cacheMisses
+  return {
+    ...performanceMetrics,
+    cacheHitRate: totalCacheAttempts > 0 
+      ? (performanceMetrics.cacheHits / totalCacheAttempts * 100).toFixed(2) + '%'
+      : 'N/A',
+    uptime: ((Date.now() - performanceMetrics.lastReset) / 1000 / 60).toFixed(2) + ' minutes',
+  }
+}
+
+/**
+ * Reset performance metrics
+ */
+export function resetScoringMetrics() {
+  performanceMetrics.rpcCalls = 0
+  performanceMetrics.cacheHits = 0
+  performanceMetrics.cacheMisses = 0
+  performanceMetrics.avgLatency = 0
+  performanceMetrics.lastReset = Date.now()
+}
 
 // ============================================================================
 // TYPES
@@ -147,7 +210,7 @@ export type ViralTierConfig = {
 
 export type TotalScore = {
   pointsBalance: number      // Layer 1: Subsquid User.pointsBalance (blockchain state)
-  viralPoints: number        // Layer 2: SUM(badge_casts.viral_points)
+  viralPoints: number        // Layer 2: SUM(badge_casts.viral_bonus_xp) - XP progression
   questPoints: number        // Layer 2: SUM(user_quest_progress.points)
   guildPoints: number        // Layer 2: SUM(guild_activity.points)
   referralPoints: number     // Layer 2: SUM(referrals.points)
@@ -177,6 +240,433 @@ export type CompleteStats = {
   streak: number             // Current GM streak days
   lastGMTimestamp: number | null
   lifetimeGMs: number
+}
+
+// ============================================================================
+// ON-CHAIN DATA FETCHING (Phase 3.2A)
+// ============================================================================
+
+/**
+ * UserStats struct from ScoringModule.sol
+ * @see contract/modules/ScoringModule.sol
+ */
+export type OnChainUserStats = {
+  tier: bigint
+  gmPoints: bigint
+  questPoints: bigint
+  viralPoints: bigint
+  guildPoints: bigint
+  referralPoints: bigint
+}
+
+/**
+ * Fetch user stats directly from ScoringModule contract
+ * 
+ * ENHANCEMENTS (Phase 8.3):
+ * - L1/L2/L3 caching (30s TTL, stale-while-revalidate)
+ * - Performance monitoring (RPC latency tracking)
+ * - Graceful error handling with zero fallback
+ * - Request deduplication (cache stampede prevention)
+ * 
+ * @param address User wallet address
+ * @param forceRefresh Skip cache and fetch fresh data
+ * @returns On-chain user stats with all point breakdowns
+ * 
+ * @example
+ * const stats = await fetchUserStatsOnChain('0x123...')
+ * console.log(stats.gmPoints) // 1500n
+ */
+export async function fetchUserStatsOnChain(
+  address: `0x${string}`,
+  forceRefresh = false
+): Promise<OnChainUserStats> {
+  const cacheKey = `user-stats-${address.toLowerCase()}`
+  
+  return getCached(
+    'scoring',
+    cacheKey,
+    async () => {
+      const startTime = Date.now()
+      try {
+        trackCacheMiss()
+        const publicClient = getPublicClient()
+        const result = await publicClient.readContract({
+          address: STANDALONE_ADDRESSES.base.scoringModule,
+          abi: SCORING_ABI,
+          functionName: 'getUserStats',
+          args: [address],
+        }) as [bigint, bigint, bigint, bigint, bigint, bigint]
+        
+        trackRPCCall(startTime)
+        
+        return {
+          tier: result[0],
+          gmPoints: result[1],
+          questPoints: result[2],
+          viralPoints: result[3],
+          guildPoints: result[4],
+          referralPoints: result[5],
+        }
+      } catch (error) {
+        trackRPCCall(startTime)
+        console.error('[fetchUserStatsOnChain] Error:', error)
+        // Return zeros on error (wallet may not exist in contract yet)
+        return {
+          tier: 0n,
+          gmPoints: 0n,
+          questPoints: 0n,
+          viralPoints: 0n,
+          guildPoints: 0n,
+          referralPoints: 0n,
+        }
+      }
+    },
+    {
+      ttl: 300, // 5 minutes (scores only change on events: quest claim, GM reward, guild join)
+      staleWhileRevalidate: true, // Serve stale data while refreshing background
+      force: forceRefresh,
+    }
+  ).then(data => {
+    if (!forceRefresh) trackCacheHit()
+    return data
+  })
+}
+
+/**
+ * Fetch total score from ScoringModule contract
+ * 
+ * ENHANCEMENTS (Phase 8.3):
+ * - L1/L2/L3 caching (30s TTL, stale-while-revalidate)
+ * - Performance monitoring (RPC latency tracking)
+ * - Graceful error handling with zero fallback
+ * 
+ * @param address User wallet address
+ * @param forceRefresh Skip cache and fetch fresh data
+ * @returns Total score (sum of all point types)
+ * 
+ * @example
+ * const total = await fetchTotalScoreOnChain('0x123...')
+ * console.log(total) // 15000n
+ */
+export async function fetchTotalScoreOnChain(
+  address: `0x${string}`,
+  forceRefresh = false
+): Promise<bigint> {
+  const cacheKey = `total-score-${address.toLowerCase()}`
+  
+  return getCached(
+    'scoring',
+    cacheKey,
+    async () => {
+      const startTime = Date.now()
+      try {
+        trackCacheMiss()
+        const publicClient = getPublicClient()
+        const result = await publicClient.readContract({
+          address: STANDALONE_ADDRESSES.base.scoringModule,
+          abi: SCORING_ABI,
+          functionName: 'totalScore',
+          args: [address],
+        }) as bigint
+        
+        trackRPCCall(startTime)
+        return result
+      } catch (error) {
+        trackRPCCall(startTime)
+        console.error('[fetchTotalScoreOnChain] Error:', error)
+        return 0n
+      }
+    },
+    {
+      ttl: 300, // 5 minutes (total score changes only on score update events)
+      staleWhileRevalidate: true,
+      force: forceRefresh,
+    }
+  ).then(data => {
+    if (!forceRefresh) trackCacheHit()
+    return data
+  })
+}
+
+/**
+ * Fetch user tier from ScoringModule contract
+ * 
+ * ENHANCEMENTS (Phase 8.3):
+ * - L1/L2/L3 caching (30s TTL, stale-while-revalidate)
+ * - Performance monitoring (RPC latency tracking)
+ * - Graceful error handling with zero fallback
+ * 
+ * @param address User wallet address
+ * @param forceRefresh Skip cache and fetch fresh data
+ * @returns User tier (0-11 for 12-tier system)
+ * 
+ * @example
+ * const tier = await fetchUserTierOnChain('0x123...')
+ * console.log(tier) // 3n (Galactic Kitty)
+ */
+export async function fetchUserTierOnChain(
+  address: `0x${string}`,
+  forceRefresh = false
+): Promise<bigint> {
+  const cacheKey = `user-tier-${address.toLowerCase()}`
+  
+  return getCached(
+    'scoring',
+    cacheKey,
+    async () => {
+      const startTime = Date.now()
+      try {
+        trackCacheMiss()
+        const publicClient = getPublicClient()
+        const result = await publicClient.readContract({
+          address: STANDALONE_ADDRESSES.base.scoringModule,
+          abi: SCORING_ABI,
+          functionName: 'getUserTier',
+          args: [address],
+        }) as bigint
+        
+        trackRPCCall(startTime)
+        return result
+      } catch (error) {
+        trackRPCCall(startTime)
+        console.error('[fetchUserTierOnChain] Error:', error)
+        return 0n
+      }
+    },
+    {
+      ttl: 300, // 5 minutes (tier upgrades happen infrequently)
+      staleWhileRevalidate: true,
+      force: forceRefresh,
+    }
+  ).then(data => {
+    if (!forceRefresh) trackCacheHit()
+    return data
+  })
+}
+
+/**
+ * Fetch score breakdown from ScoringModule contract
+ * 
+ * ENHANCEMENTS (Phase 8.3):
+ * - L1/L2/L3 caching (30s TTL, stale-while-revalidate)
+ * - Performance monitoring (RPC latency tracking)
+ * - Graceful error handling with zero fallback
+ * 
+ * @param address User wallet address
+ * @param forceRefresh Skip cache and fetch fresh data
+ * @returns Full breakdown of points by category
+ * 
+ * @example
+ * const breakdown = await fetchScoreBreakdownOnChain('0x123...')
+ * console.log(breakdown) // { gmPoints: 1000n, questPoints: 500n, ... }
+ */
+export async function fetchScoreBreakdownOnChain(
+  address: `0x${string}`,
+  forceRefresh = false
+): Promise<Omit<OnChainUserStats, 'tier'>> {
+  const cacheKey = `score-breakdown-${address.toLowerCase()}`
+  
+  return getCached(
+    'scoring',
+    cacheKey,
+    async () => {
+      const startTime = Date.now()
+      try {
+        trackCacheMiss()
+        const publicClient = getPublicClient()
+        const result = await publicClient.readContract({
+          address: STANDALONE_ADDRESSES.base.scoringModule,
+          abi: SCORING_ABI,
+          functionName: 'getScoreBreakdown',
+          args: [address],
+        }) as [bigint, bigint, bigint, bigint, bigint]
+        
+        trackRPCCall(startTime)
+        
+        return {
+          gmPoints: result[0],
+          questPoints: result[1],
+          viralPoints: result[2],
+          guildPoints: result[3],
+          referralPoints: result[4],
+        }
+      } catch (error) {
+        trackRPCCall(startTime)
+        console.error('[fetchScoreBreakdownOnChain] Error:', error)
+        return {
+          gmPoints: 0n,
+          questPoints: 0n,
+          viralPoints: 0n,
+          guildPoints: 0n,
+          referralPoints: 0n,
+        }
+      }
+    },
+    {
+      ttl: 300, // 5 minutes (breakdown changes only on score update events)
+      staleWhileRevalidate: true,
+      force: forceRefresh,
+    }
+  ).then(data => {
+    if (!forceRefresh) trackCacheHit()
+    return data
+  })
+}
+
+/**
+ * Batch fetch user stats for multiple addresses (Phase 8.3 - Request Batching)
+ * 
+ * PERFORMANCE:
+ * - Parallel requests (not sequential)
+ * - Individual caching per address
+ * - Shared cache stampede prevention
+ * - Graceful degradation (continues on individual failures)
+ * 
+ * @param addresses Array of wallet addresses
+ * @param forceRefresh Skip cache for all addresses
+ * @returns Array of OnChainUserStats in same order as input
+ * 
+ * @example
+ * const addresses = ['0x123...', '0x456...', '0x789...']
+ * const stats = await batchFetchUserStats(addresses)
+ * console.log(stats[0].gmPoints) // First user's GM points
+ */
+export async function batchFetchUserStats(
+  addresses: `0x${string}`[],
+  forceRefresh = false
+): Promise<OnChainUserStats[]> {
+  // Parallel fetch with individual error handling
+  const promises = addresses.map(address => 
+    fetchUserStatsOnChain(address, forceRefresh)
+      .catch(error => {
+        console.error(`[batchFetchUserStats] Failed for ${address}:`, error)
+        // Return zeros on error (don't fail entire batch)
+        return {
+          tier: 0n,
+          gmPoints: 0n,
+          questPoints: 0n,
+          viralPoints: 0n,
+          guildPoints: 0n,
+          referralPoints: 0n,
+        }
+      })
+  )
+  
+  return Promise.all(promises)
+}
+
+/**
+ * Invalidate cached scoring data for a user (call after score updates)
+ * 
+ * @param address User wallet address
+ * 
+ * @example
+ * // After quest completion or GM reward
+ * await invalidateUserScoringCache('0x123...')
+ */
+export async function invalidateUserScoringCache(address: `0x${string}`): Promise<void> {
+  const lowerAddress = address.toLowerCase()
+  await Promise.all([
+    invalidateCache('scoring', `user-stats-${lowerAddress}`),
+    invalidateCache('scoring', `total-score-${lowerAddress}`),
+    invalidateCache('scoring', `user-tier-${lowerAddress}`),
+    invalidateCache('scoring', `score-breakdown-${lowerAddress}`),
+  ])
+}
+
+/**
+ * Convert on-chain stats to TotalScore format
+ * 
+ * @param stats On-chain user stats (bigint values)
+ * @returns TotalScore with number values for calculations
+ * 
+ * @example
+ * const stats = await fetchUserStatsOnChain('0x123...')
+ * const total = convertOnChainStats(stats)
+ * console.log(total.totalScore) // 15000 (number)
+ */
+export function convertOnChainStats(stats: OnChainUserStats): TotalScore {
+  const gmPoints = Number(stats.gmPoints)
+  const questPoints = Number(stats.questPoints)
+  const viralPoints = Number(stats.viralPoints)
+  const guildPoints = Number(stats.guildPoints)
+  const referralPoints = Number(stats.referralPoints)
+  
+  return {
+    pointsBalance: gmPoints, // GM points = Layer 1 points balance
+    viralPoints,
+    questPoints,
+    guildPoints,
+    referralPoints,
+    totalScore: gmPoints + questPoints + viralPoints + guildPoints + referralPoints,
+  }
+}
+
+/**
+ * Fetch complete user stats from on-chain + calculate derived values
+ * 
+ * @param address User wallet address
+ * @param currentStreak Current GM streak (from Subsquid or 0)
+ * @returns Complete stats with level, rank, and formatting
+ * 
+ * @example
+ * const stats = await fetchCompleteStatsOnChain('0x123...', 5)
+ * console.log(stats.level.level) // 12
+ * console.log(stats.rank.currentTier.name) // "Galactic Kitty"
+ */
+export async function fetchCompleteStatsOnChain(
+  address: `0x${string}`,
+  currentStreak: number = 0
+): Promise<CompleteStats> {
+  // Fetch on-chain stats
+  const onChainStats = await fetchUserStatsOnChain(address)
+  
+  // Convert to TotalScore format
+  const scores = convertOnChainStats(onChainStats)
+  
+  // Calculate level progression
+  const level = calculateLevelProgress(scores.totalScore)
+  
+  // Calculate rank tier and progression
+  const currentTier = getRankTierByPoints(scores.totalScore)
+  const currentIndex = IMPROVED_RANK_TIERS.findIndex((tier) => tier.name === currentTier.name)
+  const nextTier = currentIndex >= 0 && currentIndex < IMPROVED_RANK_TIERS.length - 1
+    ? IMPROVED_RANK_TIERS[currentIndex + 1]
+    : undefined
+  
+  const currentFloor = currentTier.minPoints
+  const nextTarget = nextTier ? nextTier.minPoints : currentFloor + 2000
+  const span = nextTarget - currentFloor
+  const pointsIntoTier = scores.totalScore - currentFloor
+  const pointsToNext = nextTier ? Math.max(0, nextTarget - scores.totalScore) : 0
+  const percent = span > 0 ? clamp(pointsIntoTier / span, 0, 1) : 1
+  
+  const rank: RankProgress = {
+    ...level,
+    currentTier,
+    nextTier,
+    percent,
+    currentFloor,
+    nextTarget,
+    pointsIntoTier,
+    pointsToNext,
+  }
+  
+  return {
+    scores,
+    level,
+    rank,
+    formatted: {
+      totalScore: formatNumber(scores.totalScore),
+      pointsBalance: formatNumber(scores.pointsBalance),
+      viralPoints: formatNumber(scores.viralPoints),
+      level: `Level ${level.level}`,
+      rankTier: currentTier.name,
+    },
+    streak: currentStreak,
+    lastGMTimestamp: null, // TODO: Fetch from Subsquid
+    lifetimeGMs: 0, // TODO: Fetch from Subsquid
+  }
 }
 
 // ============================================================================
@@ -874,7 +1364,7 @@ export function calculateCompleteStats(input: {
   lifetimeGMs: number            // User.lifetimeGMs
   
   // Layer 2: Off-Chain (Supabase)
-  viralPoints: number            // SUM(badge_casts.viral_points)
+  viralPoints: number            // SUM(badge_casts.viral_bonus_xp) - XP progression
   questPoints?: number           // SUM(user_quest_progress.points)
   guildPoints?: number           // SUM(guild_activity.points)
   referralPoints?: number        // SUM(referrals.points)
@@ -937,8 +1427,8 @@ export interface StatsCalculationResult {
   streak: number
   totalScore: number
   formattedStats: {
-    points_balance: string      // Renamed from base_points
-    viral_points: string        // Renamed from viral_xp
+    points_balance: string      // Spendable points currency
+    viral_xp: string            // Viral engagement XP (progression metric)
     total_score: string
     quest_completions: string
     badge_count: string
@@ -952,9 +1442,9 @@ export interface StatsCalculationResult {
  */
 export interface ProfileStats {
   // Primary fields (from user_points_balances)
-  points_balance: number        // Renamed from base_points
-  viral_points: number          // Renamed from viral_xp
-  guild_points_awarded: number  // Renamed from guild_bonus
+  points_balance: number        // Spendable points currency
+  viral_xp: number              // Viral engagement XP (progression metric)
+  guild_points_awarded: number  // Guild bonus points
   total_score: number
   
   // Calculated fields
@@ -1014,7 +1504,7 @@ export function calculateStats(stats: ProfileStats): StatsCalculationResult {
   // Format numbers for display (UNIFIED FORMATTERS) - using new field names
   const formattedStats = {
     points_balance: formatNumber(stats.points_balance),
-    viral_points: formatNumber(stats.viral_points),
+    viral_xp: formatNumber(stats.viral_xp),
     total_score: formatNumber(stats.total_score),
     quest_completions: formatNumber(stats.quest_completions),
     badge_count: formatNumber(stats.badge_count),

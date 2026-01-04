@@ -2,15 +2,19 @@
  * GuildDiscoveryPage Component
  * 
  * Purpose: Browse, search, and filter guilds with detailed cards
- * Template: trezoadmin-41/discovery (40%) + gmeowbased0.6 layout (15%)
+ * Architecture: Hybrid - GraphQL (Subsquid) + Supabase
  * 
  * Features:
  * - Grid layout with guild cards (3 columns desktop, 1 mobile)
  * - Search by name/description
- * - Filter by chain (Base, Ethereum, All)
- * - Sort by members/treasury/activity
+ * - Filter by chain (Base only)
+ * - Sort by members/treasury/level/activity
  * - Loading states and empty states
  * - Responsive design (375px → desktop)
+ * 
+ * Data Sources:
+ * - Subsquid GraphQL: guild treasury, level, member count (on-chain)
+ * - Supabase: guild description, banner, metadata (off-chain)
  * 
  * Usage:
  * <GuildDiscoveryPage />
@@ -18,7 +22,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchIcon, FilterListIcon, UsersIcon, MonetizationOnIcon, TrendingUpIcon } from '@/components/icons'
 import {
@@ -34,27 +38,31 @@ import { Button } from '@/components/ui/button'
 import GuildLeaderboard from '@/components/guild/GuildLeaderboard'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
+import { useGuilds, type Guild } from '@/hooks/useGuild'
+import { createClient } from '@/lib/supabase/edge'
 
-export interface Guild {
-  id: string
-  name: string
-  description: string
-  chain: 'base'
-  memberCount: number
-  treasury: number
-  owner: string
-  createdAt: string
-  avatarUrl?: string
+// Guild metadata from Supabase
+interface GuildMetadata {
+  guild_id: string
+  description?: string
+  banner?: string
 }
 
-type SortOption = 'members' | 'treasury' | 'activity'
+// Combined guild data (Subsquid + Supabase)
+export interface EnrichedGuild extends Guild {
+  description: string
+  avatarUrl?: string
+  bannerUrl?: string
+  memberCount: number // denormalized from totalMembers
+  treasury: number // denormalized from treasuryPoints (as number for sorting)
+  chain: 'base' // Base chain only
+}
+
+type SortOption = 'members' | 'treasury' | 'activity' | 'level'
 type ChainFilter = 'base'
 
 export default function GuildDiscoveryPage() {
   const router = useRouter()
-  const [guilds, setGuilds] = useState<Guild[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMessage, setDialogMessage] = useState('')
   
@@ -62,60 +70,101 @@ export default function GuildDiscoveryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [chainFilter] = useState<ChainFilter>('base')
   const [sortBy, setSortBy] = useState<SortOption>('members')
+  
+  // Metadata from Supabase
+  const [guildMetadata, setGuildMetadata] = useState<Record<string, GuildMetadata>>({})
+  const [metadataLoading, setMetadataLoading] = useState(true)
 
-  const loadGuilds = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      const response = await fetch('/api/guild/list')
-      if (!response.ok) {
-        setDialogMessage('Failed to load guilds. Please try again.')
-        setDialogOpen(true)
-        setError('Failed to load guilds')
-        return
-      }
-      const data = await response.json()
-      setGuilds(data.guilds || [])
-    } catch (err) {
-      setDialogMessage('Failed to load guilds. Please try again.')
-      setDialogOpen(true)
-      setError('Failed to load guilds')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // GraphQL data from Subsquid
+  const { guilds, loading: graphqlLoading, error: graphqlError, refetch } = useGuilds({
+    limit: 100,
+    orderBy: sortBy === 'activity' ? 'recent' : sortBy, // Map 'activity' to 'recent'
+  })
 
+  // Fetch guild metadata from Supabase
   useEffect(() => {
-    loadGuilds()
+    async function fetchMetadata() {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('guild_metadata')
+          .select('guild_id, description, banner')
+        
+        if (error) {
+          console.error('[GuildDiscovery] Failed to load metadata:', error)
+          return
+        }
+
+        // Convert to lookup object
+        const metadataMap = (data || []).reduce((acc, item) => {
+          acc[item.guild_id] = {
+            guild_id: item.guild_id,
+            description: item.description || undefined,
+            banner: item.banner || undefined,
+          }
+          return acc
+        }, {} as Record<string, GuildMetadata>)
+
+        setGuildMetadata(metadataMap)
+      } catch (err) {
+        console.error('[GuildDiscovery] Metadata fetch error:', err)
+      } finally {
+        setMetadataLoading(false)
+      }
+    }
+
+    fetchMetadata()
   }, [])
 
+  // Combine GraphQL + Supabase data
+  const enrichedGuilds = useMemo<EnrichedGuild[]>(() => {
+    return guilds.map(guild => {
+      const metadata = guildMetadata[guild.id] || {}
+      return {
+        ...guild,
+        description: metadata.description || 'No description available',
+        bannerUrl: metadata?.banner,
+        memberCount: guild.totalMembers,
+        treasury: Number(guild.treasuryPoints) || 0,
+        chain: 'base' as const, // Base chain only
+      }
+    })
+  }, [guilds, guildMetadata])
+
+  const isLoading = graphqlLoading || metadataLoading
+  const error = graphqlError
+
   // Filter and sort guilds
-  const filteredGuilds = guilds
-    .filter(guild => {
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase()
-        const matchName = guild.name.toLowerCase().includes(query)
-        const matchDesc = guild.description.toLowerCase().includes(query)
-        if (!matchName && !matchDesc) return false
-      }
-      
-      // Base chain only - no filter needed
-      
-      return true
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'members':
-          return b.memberCount - a.memberCount
-        case 'treasury':
-          return b.treasury - a.treasury
-        case 'activity':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        default:
-          return 0
-      }
-    })
+  const filteredGuilds = useMemo(() => {
+    return enrichedGuilds
+      .filter(guild => {
+        // Search filter
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase()
+          const matchName = guild.name.toLowerCase().includes(query)
+          const matchDesc = guild.description.toLowerCase().includes(query)
+          if (!matchName && !matchDesc) return false
+        }
+        
+        // Base chain only - no filter needed
+        
+        return true
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'members':
+            return b.memberCount - a.memberCount
+          case 'treasury':
+            return b.treasury - a.treasury
+          case 'activity':
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          case 'level':
+            return b.level - a.level
+          default:
+            return 0
+        }
+      })
+  }, [enrichedGuilds, searchQuery, sortBy])
 
   const handleGuildClick = (guildId: string) => {
     router.push(`/guild/${guildId}`)
@@ -158,8 +207,7 @@ export default function GuildDiscoveryPage() {
             <p className="text-red-700 dark:text-red-300 mb-4">Unable to load guilds. Please try again.</p>
             <Button
               onClick={() => {
-                setError(null)
-                loadGuilds()
+                refetch() // Refetch GraphQL data
               }}
               variant="default"
             >
@@ -189,13 +237,11 @@ export default function GuildDiscoveryPage() {
                 </button>
                 <button
                   onClick={() => {
-                    setError(null)
-                    loadGuilds()
+                    refetch() // Refetch GraphQL data
                   }}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
                   {...createKeyboardHandler(() => {
-                    setError(null)
-                    loadGuilds()
+                    refetch()
                   })}
                 >
                   Retry

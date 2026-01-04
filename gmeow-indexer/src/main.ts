@@ -45,8 +45,8 @@
 
 import {TypeormDatabase} from '@subsquid/typeorm-store'
 import {In} from 'typeorm'
-import * as ethers from 'ethers'
-import {processor, CORE_ADDRESS, GUILD_ADDRESS, BADGE_ADDRESS, NFT_ADDRESS, REFERRAL_ADDRESS} from './processor'
+import *  as ethers from 'ethers'
+import {processor, CORE_ADDRESS, GUILD_ADDRESS, BADGE_ADDRESS, NFT_ADDRESS, REFERRAL_ADDRESS, SCORING_ADDRESS} from './processor'
 import { recordFailure, recordSuccess, isRateLimitError } from './rpc-manager'
 import {
     User,
@@ -70,6 +70,9 @@ import {
     TreasuryOperation,
     BadgeStake,
     PowerBadge,
+    StatsUpdatedEvent,
+    LevelUpEvent,
+    RankUpEvent,
 } from './model'
 
 // Import ABIs for event decoding
@@ -77,6 +80,7 @@ import coreAbiJson from '../abi/GmeowCore.abi.json'
 import guildAbiJson from '../abi/GmeowGuildStandalone.abi.json'
 import referralAbiJson from '../abi/GmeowReferralStandalone.abi.json'
 import nftAbiJson from '../abi/GmeowNFT.abi.json'
+import scoringAbiJson from '../abi/ScoringModule.abi.json'
 
 // Import webhook utility
 import { sendWebhook, createWebhookEvent } from './webhook'
@@ -86,6 +90,7 @@ const coreInterface = new ethers.Interface(coreAbiJson)
 const guildInterface = new ethers.Interface(guildAbiJson)
 const referralInterface = new ethers.Interface(referralAbiJson)
 const nftInterface = new ethers.Interface(nftAbiJson)
+const scoringInterface = new ethers.Interface(scoringAbiJson)
 
 // ERC721 Transfer event signature
 const TRANSFER_SIGNATURE = 'Transfer(address,address,uint256)'
@@ -122,6 +127,11 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const treasuryOperations: any[] = [] // TreasuryOperation type
     const badgeStakes: any[] = [] // BadgeStake type (Phase 8.3)
     const powerBadges: any[] = [] // PowerBadge type (Phase 8.3)
+    
+    // Phase 3.2G: ScoringModule events (Jan 1, 2026)
+    const statsUpdatedEvents: StatsUpdatedEvent[] = []
+    const levelUpEvents: LevelUpEvent[] = []
+    const rankUpEvents: RankUpEvent[] = []
     
     // Collect addresses to load
     const userAddresses = new Set<string>()
@@ -202,6 +212,20 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             if (decoded.args.code) {
                                 referralCodeStrings.add(decoded.args.code)
                             }
+                        }
+                    }
+                } else if (log.address === SCORING_ADDRESS) {
+                    // Phase 3.2G: Collect user addresses from ScoringModule events
+                    const topic = log.topics[0]
+                    if (topic === scoringInterface.getEvent('StatsUpdated')?.topicHash ||
+                        topic === scoringInterface.getEvent('LevelUp')?.topicHash ||
+                        topic === scoringInterface.getEvent('RankUp')?.topicHash) {
+                        const decoded = scoringInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        if (decoded && decoded.args.user) {
+                            userAddresses.add(decoded.args.user.toLowerCase())
                         }
                     }
                 }
@@ -1097,6 +1121,52 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             ctx.log.info(`🛡️ Guild Reward Claimed: Quest #${questId} by ${claimer.slice(0,6)} in Guild #${guildId}`)
                         }
                     }
+                    
+                    // Phase 9: Handle QuestAdded event (User quest creation with escrow)
+                    else if (topic === coreInterface.getEvent('QuestAdded')?.topicHash) {
+                        const decoded = coreInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const questId = decoded.args.questId.toString()
+                            const creator = decoded.args.creator.toLowerCase()
+                            const questType = Number(decoded.args.questType)
+                            const rewardPerUserPoints = decoded.args.rewardPerUserPoints || 0n
+                            const maxCompletions = decoded.args.maxCompletions || 0n
+                            
+                            // Calculate escrow amount
+                            const escrowAmount = rewardPerUserPoints * maxCompletions
+                            
+                            // Create quest entity
+                            let quest = new Quest({
+                                id: questId,
+                                questType: 'user', // User-generated quest (vs 'guild')
+                                creator,
+                                contractAddress: CORE_ADDRESS,
+                                rewardPoints: rewardPerUserPoints,
+                                rewardToken: null,
+                                rewardTokenAmount: null,
+                                onchainType: questType,
+                                targetAsset: null,
+                                targetAmount: null,
+                                targetData: null,
+                                createdAt: new Date(Number(blockTime) * 1000),
+                                createdBlock: block.header.height,
+                                closedAt: null,
+                                closedBlock: null,
+                                isActive: true,
+                                totalCompletions: 0,
+                                pointsAwarded: 0n,
+                                totalTokensAwarded: 0n,
+                                txHash: log.transaction?.id || '',
+                            })
+                            quests.set(questId, quest)
+                            
+                            ctx.log.info(`🎯 Quest Added: #${questId} by ${creator.slice(0,6)} | ${rewardPerUserPoints} pts/completion | ${maxCompletions} max | ${escrowAmount} total escrow`)
+                        }
+                    }
                 }
                 
                 // Badge/NFT events
@@ -1360,6 +1430,149 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                     }
                 }
                 
+                // Phase 3.2G: ScoringModule contract events (Jan 1, 2026)
+                else if (log.address === SCORING_ADDRESS) {
+                    const topic = log.topics[0]
+                    
+                    // Handle StatsUpdated event
+                    if (topic === scoringInterface.getEvent('StatsUpdated')?.topicHash) {
+                        const decoded = scoringInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const userAddr = decoded.args.user.toLowerCase()
+                            const totalScore = decoded.args.totalScore
+                            const level = Number(decoded.args.level)
+                            const rankTier = Number(decoded.args.rankTier)
+                            const multiplier = Number(decoded.args.multiplier)
+                            
+                            // Get or create user
+                            let user = getOrCreateUser(users, userAddr, blockTime)
+                            
+                            // Update user scoring fields
+                            user.level = level
+                            user.rankTier = rankTier
+                            user.totalScore = totalScore
+                            user.multiplier = multiplier
+                            user.updatedAt = new Date(Number(blockTime) * 1000)
+                            
+                            // Determine trigger type from transaction context
+                            // Note: This is a simplification - in production you'd analyze the tx to determine trigger
+                            let triggerType = 'UNKNOWN'
+                            let triggerAmount = 0n
+                            
+                            // Try to infer from recent events in same block/tx
+                            // For now, we'll set generic values
+                            triggerType = 'MANUAL' // Default, could be enhanced with tx analysis
+                            triggerAmount = totalScore // Use total score as placeholder
+                            
+                            // Create StatsUpdatedEvent
+                            statsUpdatedEvents.push(new StatsUpdatedEvent({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                user,
+                                totalScore,
+                                level,
+                                rankTier,
+                                multiplier,
+                                triggerType,
+                                triggerAmount,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            ctx.log.info(`📊 Stats Updated: ${userAddr.slice(0,6)}... Level ${level}, Tier ${rankTier}, Score ${totalScore}`)
+                        }
+                    }
+                    
+                    // Handle LevelUp event
+                    else if (topic === scoringInterface.getEvent('LevelUp')?.topicHash) {
+                        const decoded = scoringInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const userAddr = decoded.args.user.toLowerCase()
+                            const oldLevel = Number(decoded.args.oldLevel)
+                            const newLevel = Number(decoded.args.newLevel)
+                            const totalScore = decoded.args.totalScore
+                            const levelGap = newLevel - oldLevel
+                            
+                            // Get or create user
+                            let user = getOrCreateUser(users, userAddr, blockTime)
+                            
+                            // Update user level tracking
+                            user.level = newLevel
+                            user.lastLevelUpAt = new Date(Number(blockTime) * 1000)
+                            user.totalLevelUps += 1
+                            user.updatedAt = new Date(Number(blockTime) * 1000)
+                            
+                            // Create LevelUpEvent
+                            levelUpEvents.push(new LevelUpEvent({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                user,
+                                oldLevel,
+                                newLevel,
+                                totalScore,
+                                levelGap,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            ctx.log.info(`🆙 Level Up: ${userAddr.slice(0,6)}... ${oldLevel} → ${newLevel} (Score: ${totalScore})`)
+                        }
+                    }
+                    
+                    // Handle RankUp event
+                    else if (topic === scoringInterface.getEvent('RankUp')?.topicHash) {
+                        const decoded = scoringInterface.parseLog({
+                            topics: log.topics as string[],
+                            data: log.data
+                        })
+                        
+                        if (decoded) {
+                            const userAddr = decoded.args.user.toLowerCase()
+                            const oldTier = Number(decoded.args.oldTier)
+                            const newTier = Number(decoded.args.newTier)
+                            const totalScore = decoded.args.totalScore
+                            const tierGap = newTier - oldTier
+                            
+                            // Get or create user
+                            let user = getOrCreateUser(users, userAddr, blockTime)
+                            
+                            // Calculate new multiplier (contract logic: 100 + tier * 40)
+                            const newMultiplier = 100 + newTier * 40
+                            
+                            // Update user rank tracking
+                            user.rankTier = newTier
+                            user.multiplier = newMultiplier
+                            user.lastRankUpAt = new Date(Number(blockTime) * 1000)
+                            user.totalRankUps += 1
+                            user.updatedAt = new Date(Number(blockTime) * 1000)
+                            
+                            // Create RankUpEvent
+                            rankUpEvents.push(new RankUpEvent({
+                                id: `${log.transaction?.id}-${log.logIndex}`,
+                                user,
+                                oldTier,
+                                newTier,
+                                totalScore,
+                                tierGap,
+                                newMultiplier,
+                                timestamp: new Date(Number(blockTime) * 1000),
+                                blockNumber: block.header.height,
+                                txHash: log.transaction?.id || '',
+                            }))
+                            
+                            ctx.log.info(`⭐ Rank Up: ${userAddr.slice(0,6)}... Tier ${oldTier} → ${newTier} (Multiplier: ${newMultiplier}, Score: ${totalScore})`)
+                        }
+                    }
+                }
+                
             } catch (e) {
                 ctx.log.warn(`⚠️  Failed to process log at block ${block.header.height}: ${e}`)
             }
@@ -1507,6 +1720,22 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     if (powerBadges.length > 0) {
         await ctx.store.upsert(powerBadges.map(p => new PowerBadge(p)))
         ctx.log.info(`💾 Saved ${powerBadges.length} power badges`)
+    }
+    
+    // Phase 3.2G: Save ScoringModule events (Jan 1, 2026)
+    if (statsUpdatedEvents.length > 0) {
+        await ctx.store.insert(statsUpdatedEvents)
+        ctx.log.info(`💾 Saved ${statsUpdatedEvents.length} stats updated events`)
+    }
+    
+    if (levelUpEvents.length > 0) {
+        await ctx.store.insert(levelUpEvents)
+        ctx.log.info(`💾 Saved ${levelUpEvents.length} level up events`)
+    }
+    
+    if (rankUpEvents.length > 0) {
+        await ctx.store.insert(rankUpEvents)
+        ctx.log.info(`💾 Saved ${rankUpEvents.length} rank up events`)
     }
     
     // BUG #16 FIX: Periodic sync of ALL guilds with contract state
@@ -1668,6 +1897,22 @@ function getOrCreateUser(
             totalTipsReceived: 0n,
             // Phase 7: Milestones
             milestoneCount: 0,
+            // Phase 3.2G: ScoringModule fields (initialized to defaults)
+            level: 0,
+            rankTier: 0,
+            totalScore: 0n,
+            multiplier: 100, // Base multiplier (1.0x)
+            gmPoints: 0n,
+            viralPoints: 0n,
+            questPoints: 0n,
+            guildPoints: 0n,
+            referralPoints: 0n,
+            xpIntoLevel: 0n,
+            xpToNextLevel: 100n, // Default XP for first level
+            pointsIntoTier: 0n,
+            pointsToNextTier: 1000n, // Default points for first tier
+            totalLevelUps: 0,
+            totalRankUps: 0,
             createdAt: new Date(Number(timestamp) * 1000),
             updatedAt: new Date(Number(timestamp) * 1000),
         })

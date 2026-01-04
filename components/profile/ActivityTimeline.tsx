@@ -29,7 +29,7 @@ export interface ActivityItem {
     streak_days?: number
     guild_name?: string
     tip_amount?: number
-    reward_points?: number
+    reward_points_awarded?: number
     xp_earned?: number
     xp_amount?: number
     action_type?: string
@@ -116,7 +116,7 @@ function getActivityDetail(activity: ActivityItem): string | null {
   switch (type) {
     case 'quest':
       if (metadata.xp_earned) return `+${metadata.xp_earned} XP`
-      if (metadata.reward_points) return `+${metadata.reward_points} points`
+      if (metadata.reward_points_awarded) return `+${metadata.reward_points_awarded} points`
       return null
 
     case 'badge':
@@ -135,7 +135,7 @@ function getActivityDetail(activity: ActivityItem): string | null {
       return metadata.tip_amount ? `+${metadata.tip_amount} points` : null
 
     case 'reward':
-      return metadata.reward_points ? `+${metadata.reward_points} points` : null
+      return metadata.reward_points_awarded ? `+${metadata.reward_points_awarded} points` : null
 
     default:
       return null

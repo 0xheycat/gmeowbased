@@ -1,5 +1,6 @@
 # User Points & Streaks (from Core contract)
 # Phase 7: Enhanced with tip tracking and milestones
+# Phase 3.2G (Jan 1, 2026): Enhanced with ScoringModule on-chain data
 type User @entity {
   id: ID! # wallet address (lowercase)
   pointsBalance: BigInt! # Current spendable balance (matches contract pointsBalance)
@@ -21,6 +22,36 @@ type User @entity {
   milestones: [ViralMilestone!] @derivedFrom(field: "user")
   milestoneCount: Int!
   
+  # Phase 3.2G: ScoringModule on-chain scoring data (from StatsUpdated events)
+  level: Int! @index # User level (0-100+, from getUserStats)
+  rankTier: Int! @index # Rank tier (0-11: Cadet to Cosmic Legend, from getUserStats)
+  totalScore: BigInt! @index # Total score across all categories (from getUserStats)
+  multiplier: Int! # Bonus multiplier from rank tier (100-500 = 1.0x-5.0x)
+  
+  # Phase 3.2G: Point breakdown (from getScoreBreakdown)
+  gmPoints: BigInt! # Points from GM events
+  viralPoints: BigInt! # Points from viral activities (tips, engagements)
+  questPoints: BigInt! # Points from quest completions
+  guildPoints: BigInt! # Points from guild activities
+  referralPoints: BigInt! # Points from referrals
+  
+  # Phase 3.2G: Progression tracking (from getLevelProgress & getRankProgress)
+  xpIntoLevel: BigInt! # XP earned in current level
+  xpToNextLevel: BigInt! # XP required for next level
+  pointsIntoTier: BigInt! # Points earned in current tier
+  pointsToNextTier: BigInt! # Points required for next tier
+  
+  # Phase 3.2G: Historical tracking
+  lastLevelUpAt: DateTime # Last time user leveled up
+  lastRankUpAt: DateTime # Last time user ranked up
+  totalLevelUps: Int! # Total number of level ups
+  totalRankUps: Int! # Total number of rank ups
+  
+  # Phase 3.2G: Event relations
+  statsUpdates: [StatsUpdatedEvent!] @derivedFrom(field: "user")
+  levelUps: [LevelUpEvent!] @derivedFrom(field: "user")
+  rankUps: [RankUpEvent!] @derivedFrom(field: "user")
+  
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -37,13 +68,28 @@ type GMEvent @entity {
 }
 
 # Leaderboard (pre-computed rankings)
+# Phase 3.2G: Enhanced with on-chain scoring data
 type LeaderboardEntry @entity {
   id: ID! # wallet address (lowercase)
   user: User!
-  rank: Int! @index
-  totalPoints: BigInt!
-  weeklyPoints: BigInt!
-  monthlyPoints: BigInt!
+  
+  # Rankings
+  rank: Int! @index # Global rank position
+  
+  # Scores (from User entity)
+  totalPoints: BigInt! # Total score (denormalized from User.totalScore)
+  weeklyPoints: BigInt! # Points earned this week
+  monthlyPoints: BigInt! # Points earned this month
+  
+  # Phase 3.2G: On-chain data (denormalized from User for faster queries)
+  level: Int! # User level
+  rankTier: Int! # Rank tier (0-11)
+  multiplier: Int! # Bonus multiplier
+  
+  # Phase 3.2G: Rank change tracking
+  previousRank: Int # Rank from last update (for delta calculation)
+  rankChange: Int # Change in rank (negative = improved)
+  
   updatedAt: DateTime!
 }
 
@@ -374,6 +420,80 @@ type PowerBadge @entity {
   fid: BigInt! @index
   isPowerBadge: Boolean! # power status
   setBy: String! # admin who set this
+  
+  # Metadata
+  timestamp: DateTime!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# ============================================================================
+# Phase 3.2G: ScoringModule Events (Jan 1, 2026)
+# Contract: 0xdeCFDc900DD1DBD6f947d3558143aA8374413Bd6 (deployed block 40193345)
+# ============================================================================
+
+# StatsUpdated Event (emitted whenever user stats change)
+# Source: event StatsUpdated(address indexed user, uint256 totalScore, uint256 level, uint8 rankTier, uint16 multiplier)
+# Trigger: GM completion, quest completion, guild deposit, referral reward, manual point adjustment
+type StatsUpdatedEvent @entity {
+  id: ID! # txHash-logIndex
+  user: User!
+  
+  # Snapshot data (from event params)
+  totalScore: BigInt! # Total score at time of update
+  level: Int! # Level at time of update (uint256 from contract)
+  rankTier: Int! # Rank tier at time of update (uint8: 0-11)
+  multiplier: Int! # Bonus multiplier at time of update (uint16: 100-500)
+  
+  # Context (for analytics)
+  triggerType: String! @index # "GM", "QUEST", "GUILD", "REFERRAL", "MANUAL"
+  triggerAmount: BigInt! # Points added in this transaction
+  
+  # Metadata
+  timestamp: DateTime!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# LevelUp Event (emitted when user levels up)
+# Source: event LevelUp(address indexed user, uint256 oldLevel, uint256 newLevel, uint256 totalScore)
+# Trigger: Automatic when totalScore crosses level thresholds
+type LevelUpEvent @entity {
+  id: ID! # txHash-logIndex
+  user: User!
+  
+  # Level progression
+  oldLevel: Int! # Previous level
+  newLevel: Int! # New level after level up
+  totalScore: BigInt! # Total score at time of level up
+  
+  # Computed analytics
+  levelGap: Int! # newLevel - oldLevel (usually 1, but could be >1 for large score increases)
+  
+  # Metadata
+  timestamp: DateTime!
+  blockNumber: Int! @index
+  txHash: String! @index
+}
+
+# RankUp Event (emitted when user ranks up to new tier)
+# Source: event RankUp(address indexed user, uint8 oldTier, uint8 newTier, uint256 totalScore)
+# Trigger: Automatic when totalScore crosses tier thresholds
+# Tiers: 0=Cadet, 1=Pilot, 2=Captain, 3=Commander, 4=Star Admiral, 
+#        5=Galaxy Marshal, 6=Cosmic Ace, 7=Nebula Lord, 8=Stellar Emperor,
+#        9=Void Sovereign, 10=Astral Titan, 11=Cosmic Legend
+type RankUpEvent @entity {
+  id: ID! # txHash-logIndex
+  user: User!
+  
+  # Rank progression
+  oldTier: Int! # Previous tier (uint8: 0-11)
+  newTier: Int! # New tier after rank up (uint8: 0-11)
+  totalScore: BigInt! # Total score at time of rank up
+  
+  # Computed analytics
+  tierGap: Int! # newTier - oldTier (usually 1, but could be >1 for large score increases)
+  newMultiplier: Int! # New bonus multiplier unlocked (100-500)
   
   # Metadata
   timestamp: DateTime!

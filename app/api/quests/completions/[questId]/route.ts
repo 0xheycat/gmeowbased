@@ -54,9 +54,10 @@ interface EnrichedCompletion {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { questId: string } }
+  { params }: { params: Promise<{ questId: string }> }
 ) {
-  const questId = params.questId
+  // Next.js 15: params must be awaited
+  const { questId } = await params
   const { searchParams } = new URL(request.url)
   
   // Parse query parameters

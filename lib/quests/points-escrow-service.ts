@@ -18,7 +18,7 @@
  * DATA SOURCES:
  * ✅ CURRENT: user_points_balances table (Supabase)
  *   - points_balance: Spendable points from activities
- *   - viral_points: Engagement points from casts
+ *   - viral_xp: Engagement XP from casts (progression metric)
  *   - guild_points_awarded: Bonus points from guild membership
  *   - total_score: Auto-computed sum (GENERATED column)
  * 
@@ -34,8 +34,8 @@
  * - Transaction safety: Postgres BEGIN/COMMIT blocks
  * 
  * MIGRATION COMPLETE (December 22-23, 2025):
- * ✅ Created user_points_balances table (points_balance, viral_points, guild_points_awarded)
- * ✅ Migrated column names (base_points→points_balance, viral_xp→viral_points, total_points→total_score)
+ * ✅ Created user_points_balances table (points_balance, viral_xp, guild_points_awarded)
+ * ✅ Migrated column names (base_points→points_balance, viral_points→viral_xp Dec 27 fix, total_points→total_score)
  * ✅ Updated all queries to use new schema
  * ✅ Implemented hourly sync from Subsquid (cron job)
  * ✅ Tested escrow/refund operations with new table
@@ -53,7 +53,7 @@
  * - [ ] Add multi-currency escrow (points + tokens)
  * 
  * BACKWARD COMPATIBILITY (Deprecation Timeline):
- * - V1 API: Supports both old (base_points, viral_xp) and new (points_balance, viral_points) names
+ * - V1 API: Migrated to new naming (points_balance, viral_xp - Dec 27 fix)
  * - V2 API (Future): Will use only new names, remove aliases
  * - Migration Window: 6 months (through June 2026)
  * 
@@ -129,7 +129,7 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
     // 1. GET CURRENT POINTS BALANCE (using user_points_balances table)
     const { data: balanceData, error: balanceError } = await supabase
       .from('user_points_balances')
-      .select('total_score')
+      .select('points_balance')
       .eq('fid', input.fid)
       .single();
     
@@ -140,7 +140,7 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
       };
     }
     
-    const currentPoints = balanceData.total_score || 0;
+    const currentPoints = balanceData.points_balance || 0;
     
     if (currentPoints < input.amount) {
       return {
@@ -175,7 +175,7 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
     }
     
     // 3. INSERT ESCROW RECORD (quest_creation_costs)
-    // NOTE: quest_id will be updated after quest creation
+    // NOTE: quest_id will be NULL initially, updated after quest creation
     const { data: escrowData, error: escrowError } = await supabase
       .from('quest_creation_costs')
       .insert({
@@ -187,7 +187,7 @@ export async function escrowPoints(input: EscrowPointsInput): Promise<EscrowResu
           category: input.questData.category,
           slug: input.questData.slug || null,
         },
-        quest_id: 0, // Placeholder, will be updated
+        quest_id: null, // Will be updated after quest creation
         is_refunded: false,
       })
       .select('id')
@@ -260,7 +260,7 @@ export async function refundPoints(questId: number): Promise<RefundResult> {
     // 1. GET QUEST DATA
     const { data: questData, error: questError } = await supabase
       .from('unified_quests')
-      .select('creator_fid, reward_points, total_completions')
+      .select('creator_fid, reward_points_awarded, total_completions')
       .eq('id', questId)
       .single();
     
@@ -294,7 +294,7 @@ export async function refundPoints(questId: number): Promise<RefundResult> {
     
     // 3. CALCULATE REFUND AMOUNT
     const totalEscrowed = escrowData.points_escrowed;
-    const totalSpent = questData.reward_points * (questData.total_completions || 0);
+    const totalSpent = questData.reward_points_awarded * (questData.total_completions || 0);
     const refundAmount = Math.max(0, totalEscrowed - totalSpent);
     
     if (refundAmount === 0) {
@@ -376,7 +376,7 @@ export async function calculateRefund(questId: number): Promise<number | null> {
   try {
     const { data: questData, error: questError } = await supabase
       .from('unified_quests')
-      .select('reward_points, total_completions')
+      .select('reward_points_awarded, total_completions')
       .eq('id', questId)
       .single();
     
@@ -395,7 +395,7 @@ export async function calculateRefund(questId: number): Promise<number | null> {
     }
     
     const totalEscrowed = escrowData.points_escrowed;
-    const totalSpent = questData.reward_points * (questData.total_completions || 0);
+    const totalSpent = questData.reward_points_awarded * (questData.total_completions || 0);
     const refundAmount = Math.max(0, totalEscrowed - totalSpent);
     
     return refundAmount;

@@ -47,11 +47,20 @@ abstract contract ReferralModule is BaseModule {
     require(referrer != address(0) && referrer != msg.sender, "E016");
     referrerOf[msg.sender] = referrer;
 
-    // Add points using unified helper (works in both architectures)
+    // Calculate rewards
     uint256 referrerReward = referralPointReward;
     uint256 refereeReward = referralPointReward / 2;
-    _addPoints(referrer, referrerReward);
-    _addPoints(msg.sender, refereeReward);
+    
+    // Add to ScoringModule with multipliers
+    if (address(scoringModule) != address(0)) {
+      // Referrer gets multiplier based on their rank
+      uint8 referrerTier = scoringModule.userRankTier(referrer);
+      uint256 referrerBonus = scoringModule.applyMultiplier(referrerReward, referrerTier);
+      scoringModule.addReferralPoints(referrer, referrerBonus);
+      
+      // Referee gets base reward (no multiplier yet)
+      scoringModule.addReferralPoints(msg.sender, refereeReward);
+    }
     
     referralStats[referrer].totalReferred += 1;
     referralStats[referrer].totalPointsEarned += referrerReward;

@@ -32,9 +32,15 @@ import { rateLimit, getClientIp, strictLimiter } from '@/lib/middleware/rate-lim
 import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { getReferrerHistory, getReferralNetworkStats } from '@/lib/subsquid-client'
+import { auditLog, auditWarn } from '@/lib/middleware/audit-logger'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+// ===== BUG #R5 FIX: PREVENT DOS VIA UNBOUNDED OFFSET =====
+// Maximum offset to prevent resource exhaustion attacks
+// 10,000 rows = reasonable pagination limit for leaderboard
+const MAX_OFFSET = 10000
 
 // Query parameter validation schema
 const LeaderboardQuerySchema = z.object({
@@ -64,8 +70,8 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now()
   const clientIp = getClientIp(request)
 
-  // ===== SECURITY LAYER 9: AUDIT LOGGING =====
-  console.log('[API /api/referral/leaderboard] Request received', {
+  // ===== BUG #R8 FIX: ENVIRONMENT-GATED AUDIT LOGGING =====
+  auditLog('[API /api/referral/leaderboard] Request received', {
     requestId,
     ip: clientIp,
     timestamp: new Date().toISOString(),
@@ -123,6 +129,27 @@ export async function GET(request: NextRequest) {
     // ===== SECURITY LAYER 3-4: AUTHENTICATION & RBAC =====
     // Public endpoint - no authentication required for read-only leaderboard data
 
+    // ===== BUG #R7 FIX: VALIDATE SEARCH INPUT FORMAT =====
+    // Additional regex validation to prevent DoS via complex patterns
+    if (search) {
+      const searchRegex = /^[a-zA-Z0-9._-]+$/
+      if (!searchRegex.test(search)) {
+        logError('Invalid search format', {
+          endpoint: '/api/referral/leaderboard',
+          ip: clientIp,
+          requestId,
+          search,
+        })
+
+        return createErrorResponse({
+          type: ErrorType.VALIDATION,
+          message: 'Invalid search format (allowed: letters, numbers, dots, underscores, hyphens)',
+          statusCode: 400,
+          details: { field: 'search', pattern: searchRegex.source },
+        })
+      }
+    }
+
     // ===== SECURITY LAYER 5: INPUT SANITIZATION =====
     // Search query sanitization (prevent SQL injection via regex)
     const sanitizedSearch = search?.replace(/[^\w\s.-]/g, '')
@@ -167,7 +194,7 @@ export async function GET(request: NextRequest) {
     // Note: This is a mock implementation - adapt to your actual database schema
     let query = supabase
       .from('referral_stats')
-      .select('fid, address, username, avatar, total_referrals, points_earned, tier, rank, rank_change', { count: 'exact' })
+      .select('fid, address, username, avatar, total_referrals, points_awarded, tier, rank, rank_change', { count: 'exact' })
       .order('total_referrals', { ascending: false })
 
     // Apply time filter if not all-time
@@ -177,11 +204,36 @@ export async function GET(request: NextRequest) {
 
     // Apply search filter
     if (sanitizedSearch) {
-      query = query.or(`fid.eq.${sanitizedSearch},address.ilike.%${sanitizedSearch}%`)
+      // Try to parse as FID (integer) first, otherwise search by username
+      const fidSearch = parseInt(sanitizedSearch, 10)
+      if (!isNaN(fidSearch)) {
+        query = query.eq('fid', fidSearch)
+      } else {
+        query = query.ilike('username', `%${sanitizedSearch}%`)
+      }
     }
 
-    // Apply pagination
+    // ===== BUG #R5 FIX: VALIDATE OFFSET BOUNDS =====
+    // Apply pagination with MAX_OFFSET validation to prevent DoS
     const offset = (page - 1) * pageSize
+    
+    if (offset > MAX_OFFSET) {
+      logError('Offset exceeds maximum', {
+        endpoint: '/api/referral/leaderboard',
+        ip: clientIp,
+        requestId,
+        offset,
+        maxOffset: MAX_OFFSET,
+      })
+
+      return createErrorResponse({
+        type: ErrorType.VALIDATION,
+        message: `Pagination offset too large (max ${MAX_OFFSET})`,
+        statusCode: 400,
+        details: { offset, maxOffset: MAX_OFFSET },
+      })
+    }
+
     query = query.range(offset, offset + pageSize - 1)
 
     const { data, error, count } = await query
@@ -201,34 +253,51 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // ===== NAMING FIX: TRANSFORM SNAKE_CASE TO CAMELCASE =====
+    // Supabase returns snake_case fields, API Layer 4 must return camelCase
+    const transformToCamelCase = (entry: any) => ({
+      fid: entry.fid,
+      address: entry.address,
+      username: entry.username,
+      avatar: entry.avatar,
+      totalReferrals: entry.total_referrals,        // snake_case → camelCase
+      pointsAwarded: entry.points_awarded,          // snake_case → camelCase
+      tier: entry.tier,
+      rank: entry.rank,
+      rankChange: entry.rank_change,                // snake_case → camelCase
+      onChainReferrals: 0,
+      firstReferral: null,
+      lastReferral: null,
+    })
+
     // ===== LAYER 1: SUBSQUID ON-CHAIN DATA =====
     // Fetch on-chain referral events for each leaderboard entry
     const enrichedData = await Promise.all(
       (data || []).map(async (entry) => {
         try {
           if (!entry.address) {
-            return {
+            return transformToCamelCase({
               ...entry,
-              onChainReferrals: 0,
-              firstReferral: null,
-              lastReferral: null,
-            }
+              total_referrals: 0,
+              points_awarded: 0,
+              rank_change: 0,
+            })
           }
 
           // Get on-chain referral network stats
           const networkStats = await getReferralNetworkStats(entry.address)
           
           return {
-            ...entry,
+            ...transformToCamelCase(entry),
             onChainReferrals: networkStats?.totalReferrals || 0,
             firstReferral: networkStats?.firstReferral || null,
             lastReferral: networkStats?.lastReferral || null,
           }
         } catch (subsquidError) {
           // Non-blocking: Continue with Supabase data only if Subsquid fails
-          console.warn(`[Referral Leaderboard] Subsquid error for ${entry.address}:`, subsquidError)
+          auditWarn(`[Referral Leaderboard] Subsquid error for ${entry.address}:`, { error: subsquidError })
           return {
-            ...entry,
+            ...transformToCamelCase(entry),
             onChainReferrals: 0,
             firstReferral: null,
             lastReferral: null,
@@ -244,7 +313,7 @@ export async function GET(request: NextRequest) {
     // Public leaderboard data - no sensitive information exposed
 
     // ===== SECURITY LAYER 9: AUDIT LOGGING =====
-    console.log('[Referral Leaderboard API] Success', {
+    auditLog('[Referral Leaderboard API] Success', {
       requestId,
       ip: clientIp,
       period,

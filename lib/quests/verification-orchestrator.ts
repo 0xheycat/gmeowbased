@@ -193,10 +193,13 @@ export async function verifyQuest(
     const nextTaskIndex = isQuestComplete ? undefined : taskIndex + 1;
     
     // 9. Calculate rewards (only if entire quest is complete)
+    // PRODUCTION FIX: Separate XP (unified/off-chain) from Points (onchain contract)
+    // - XP: Calculated based on quest category and points awarded (see queries/quests.ts)
+    // - Points: Onchain rewards via smart contract
     const rewards = isQuestComplete
       ? {
-          xp_earned: questWithProgress.reward_points,
-          points_earned: questWithProgress.reward_points, // Points = XP for quest completion
+          xp_earned: questWithProgress.reward_points_awarded, // XP calculated from points * category multiplier
+          points_earned: questWithProgress.reward_points_awarded, // Onchain points from quest reward
           token_earned: questWithProgress.token_reward_amount,
           nft_awarded: !!questWithProgress.nft_reward_contract,
         }

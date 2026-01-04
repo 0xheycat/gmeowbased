@@ -226,77 +226,119 @@ export async function fetchUsersByAddresses(
 
   console.log('[fetchUsersByAddresses] Looking up addresses:', uniques)
 
-  const CHUNK = 90
-  const chunks: string[][] = []
-  for (let i = 0; i < uniques.length; i += CHUNK) chunks.push(uniques.slice(i, i + CHUNK))
-
+  // STEP 1: Check cache for all addresses
+  const cachedUsers = await getBatchCachedNeynarUsersByAddress(uniques)
   const addressToUser = new Map<string, FarcasterUser | null>()
-  const fidsToEnrich = new Set<number>()
+  const uncachedAddresses: string[] = []
 
-  for (const chunk of chunks) {
-    console.log('[fetchUsersByAddresses] Fetching chunk:', chunk)
-    
-    const data = await neynarFetch<Record<string, NeynarUser[]>>(
-      '/v2/farcaster/user/bulk-by-address',
-      {
-        addresses: chunk.join(','),
-        address_types: ['custody_address', 'verified_address'],
-      },
-    )
+  for (const addr of uniques) {
+    const cached = cachedUsers.get(addr)
+    if (cached) {
+      // Convert cached user to FarcasterUser format
+      const user: FarcasterUser = {
+        fid: cached.fid,
+        username: cached.username,
+        displayName: cached.displayName,
+        pfpUrl: cached.pfpUrl,
+        walletAddress: addr as `0x${string}`,
+      }
+      addressToUser.set(addr, user)
+    } else {
+      uncachedAddresses.push(addr)
+    }
+  }
 
-    console.log('[fetchUsersByAddresses] API response:', {
-      hasData: !!data,
-      keys: data ? Object.keys(data) : [],
-      firstResult: data ? Object.values(data)[0] : null,
-    })
+  console.log('[fetchUsersByAddresses] Cache stats:', {
+    total: uniques.length,
+    cached: cachedUsers.size,
+    uncached: uncachedAddresses.length,
+    hitRate: `${((cachedUsers.size / uniques.length) * 100).toFixed(1)}%`
+  })
 
-    if (data) {
-      for (const addr of chunk) {
-        const u0 = data[addr]?.[0]
-        const mapped = mapUser(u0)
-        console.log('[fetchUsersByAddresses] Address mapping:', {
-          address: addr,
-          found: !!u0,
-          fid: mapped?.fid,
-          username: mapped?.username,
+  // STEP 2: Fetch uncached addresses from API
+  if (uncachedAddresses.length > 0) {
+    const CHUNK = 90
+    const chunks: string[][] = []
+    for (let i = 0; i < uncachedAddresses.length; i += CHUNK) {
+      chunks.push(uncachedAddresses.slice(i, i + CHUNK))
+    }
+
+    const fidsToEnrich = new Set<number>()
+    const usersToCache = new Map<string, Omit<CachedNeynarUser, 'cachedAt'>>()
+
+    for (const chunk of chunks) {
+      console.log('[fetchUsersByAddresses] Fetching chunk:', chunk.length, 'addresses')
+      
+      const data = await neynarFetch<Record<string, NeynarUser[]>>(
+        '/v2/farcaster/user/bulk-by-address',
+        {
+          addresses: chunk.join(','),
+          address_types: ['custody_address', 'verified_address'],
+        },
+      )
+
+      if (data) {
+        for (const addr of chunk) {
+          const u0 = data[addr]?.[0]
+          const mapped = mapUser(u0)
+          
+          if (mapped) {
+            mapped.walletAddress = addr as `0x${string}`
+            addressToUser.set(addr, mapped)
+            
+            // Cache the user data
+            usersToCache.set(addr, {
+              fid: mapped.fid,
+              username: mapped.username || '',
+              displayName: mapped.displayName || '',
+              pfpUrl: mapped.pfpUrl || '',
+            })
+            
+            if (mapped.neynarScore == null && mapped.fid) {
+              fidsToEnrich.add(mapped.fid)
+            }
+          } else {
+            addressToUser.set(addr, null)
+          }
+        }
+      } else {
+        console.warn('[fetchUsersByAddresses] No data returned from API for chunk')
+        for (const addr of chunk) addressToUser.set(addr, null)
+      }
+    }
+
+    // STEP 3: Store freshly fetched users in cache
+    if (usersToCache.size > 0) {
+      await setBatchCachedNeynarUsersByAddress(usersToCache)
+    }
+
+    // Enrich scores in bulk if needed
+    if (fidsToEnrich.size > 0) {
+      const fids = Array.from(fidsToEnrich)
+      const fidChunks: number[][] = []
+      for (let i = 0; i < fids.length; i += 150) fidChunks.push(fids.slice(i, i + 150))
+      const fidScoreMap = new Map<number, number | null>()
+      
+      for (const fc of fidChunks) {
+        const users = await neynarFetch<{ users?: NeynarUser[] }>(
+          '/v2/farcaster/user/bulk',
+          { fids: fc.join(',') }
+        )
+        users?.users?.forEach(u => {
+          const score = toNumberOrNull(u?.score)
+          fidScoreMap.set(u.fid, score)
         })
-        if (mapped) {
-          mapped.walletAddress = addr as `0x${string}`
-          addressToUser.set(addr, mapped)
-          if (mapped.neynarScore == null && mapped.fid) fidsToEnrich.add(mapped.fid)
-        } else {
-          addressToUser.set(addr, null)
+      }
+      
+      for (const [, user] of addressToUser) {
+        if (user && user.neynarScore == null && user.fid) {
+          user.neynarScore = fidScoreMap.get(user.fid) ?? null
         }
       }
-    } else {
-      console.warn('[fetchUsersByAddresses] No data returned from API')
-      for (const addr of chunk) addressToUser.set(addr, null)
     }
   }
 
-  // Enrich scores in bulk if needed
-  if (fidsToEnrich.size) {
-    const fids = Array.from(fidsToEnrich)
-    const fidChunks: number[][] = []
-    for (let i = 0; i < fids.length; i += 150) fidChunks.push(fids.slice(i, i + 150))
-    const fidScoreMap = new Map<number, number | null>()
-    for (const fc of fidChunks) {
-      const users = await neynarFetch<{ users?: NeynarUser[] }>(
-        '/v2/farcaster/user/bulk',
-        { fids: fc.join(',') }
-      )
-      users?.users?.forEach(u => {
-        const score = toNumberOrNull(u?.score)
-        fidScoreMap.set(u.fid, score)
-      })
-    }
-    for (const [, user] of addressToUser) {
-      if (user && user.neynarScore == null && user.fid) {
-        user.neynarScore = fidScoreMap.get(user.fid) ?? null
-      }
-    }
-  }
-
+  // STEP 4: Return merged results (cached + fresh)
   for (const a of addresses) {
     const lower = a?.toLowerCase()
     out[a] = lower ? addressToUser.get(lower) ?? null : null
@@ -364,6 +406,9 @@ export async function fetchFidByAddress(address: string): Promise<number | null>
 import {
   getCachedNeynarUser,
   setCachedNeynarUser,
+  getBatchCachedNeynarUsersByAddress,
+  setBatchCachedNeynarUsersByAddress,
+  type CachedNeynarUser
 } from '@/lib/cache/neynar-cache'
 
 export async function fetchUserByFid(fid: number | string): Promise<FarcasterUser | null> {

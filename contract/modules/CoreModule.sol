@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 import "./BaseModule.sol";
+import "./ScoringModule.sol";
 import "../libraries/CoreLogicLib.sol";
 
 /**
@@ -109,6 +110,7 @@ abstract contract CoreModule is BaseModule {
     q.maxCompletions = maxCompletions;
     q.expiresAt = expiresAt;
     q.isActive = true;
+    q.escrowedPoints = totalEscrow; // FIX: Set escrow for claim validation
     
     activeQuestIds.push(qid);
     emit QuestAdded(qid, msg.sender, questType, rewardPoints, maxCompletions);
@@ -142,12 +144,25 @@ abstract contract CoreModule is BaseModule {
 
     q.claimedCount++;
 
-    uint256 reward = q.rewardPoints;
-    contractPointsReserve -= reward;
-    pointsBalance[msg.sender] += reward;
-    userTotalEarned[msg.sender] += reward;
+    uint256 baseReward = q.rewardPoints;
+    uint256 finalReward = baseReward;
+    
+    // Apply rank multiplier if scoring module is set
+    if (address(scoringModule) != address(0)) {
+      uint8 userTier = scoringModule.userRankTier(msg.sender);
+      finalReward = scoringModule.applyMultiplier(baseReward, userTier);
+    }
+    
+    contractPointsReserve -= baseReward;  // Deduct base escrow
+    pointsBalance[msg.sender] += finalReward;
+    userTotalEarned[msg.sender] += finalReward;
+    
+    // Update scoring module with new points
+    if (address(scoringModule) != address(0)) {
+      scoringModule.addPoints(msg.sender, finalReward);
+    }
 
-    emit QuestCompleted(questId, msg.sender, reward, farcasterFidOf[msg.sender], address(0), 0);
+    emit QuestCompleted(questId, msg.sender, finalReward, farcasterFidOf[msg.sender], address(0), 0);
   }
 
   // ============ QUEST VIEWS ============
@@ -250,11 +265,25 @@ abstract contract CoreModule is BaseModule {
     
     gmStreak[msg.sender] = newStreak;
 
-    uint256 reward = _computeGMReward(gmPointReward, newStreak);
-    pointsBalance[msg.sender] += reward;
-    userTotalEarned[msg.sender] += reward;
+    // First apply streak multiplier
+    uint256 streakReward = _computeGMReward(gmPointReward, newStreak);
+    uint256 finalReward = streakReward;
+    
+    // Then apply rank multiplier if scoring module is set
+    if (address(scoringModule) != address(0)) {
+      uint8 userTier = scoringModule.userRankTier(msg.sender);
+      finalReward = scoringModule.applyMultiplier(streakReward, userTier);
+    }
+    
+    pointsBalance[msg.sender] += finalReward;
+    userTotalEarned[msg.sender] += finalReward;
+    
+    // Update scoring module with new points
+    if (address(scoringModule) != address(0)) {
+      scoringModule.addPoints(msg.sender, finalReward);
+    }
 
-    emit GMSent(msg.sender, reward, newStreak);
+    emit GMSent(msg.sender, finalReward, newStreak);
     // emit PointsEarned(msg.sender, reward);
   }
 
@@ -271,6 +300,22 @@ abstract contract CoreModule is BaseModule {
 
   function gmhistory(address user) external view returns (uint256 last, uint256 streak) {
     return (lastGMTime[user], gmStreak[user]);
+  }
+
+  /**
+   * @notice Fix escrow for existing quests that were created without it
+   * @param questId The quest ID to fix
+   * @dev Only callable by owner for quests created before escrow fix
+   */
+  function fixQuestEscrow(uint256 questId) external onlyOwner {
+    Quest storage q = quests[questId];
+    require(q.creator != address(0), "Quest does not exist");
+    require(q.escrowedPoints == 0, "Escrow already set");
+    
+    uint256 totalEscrow = q.rewardPoints * q.maxCompletions;
+    q.escrowedPoints = totalEscrow;
+    
+    emit QuestAdded(questId, q.creator, q.questType, q.rewardPoints, q.maxCompletions);
   }
 
   // ============ VIEWS ============

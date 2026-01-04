@@ -1,14 +1,18 @@
 /**
- * ReferralStatsCards Component
+ * ReferralStatsCards Component - Phase 5: Hybrid Architecture Migration
  * 
  * Purpose: Display referral statistics in a responsive grid layout
- * Template: ProfileStats.tsx pattern (stat cards reference)
+ * Template: music/* loading states + ProfileStats.tsx pattern
+ * 
+ * @architecture Hybrid Data Layer
+ * - Referral stats: Subsquid GraphQL (useReferralStatsByOwner + useReferralCodesByOwner)
+ * - Aggregations: Client-side calculations from Subsquid data
+ * - Tier badges: Contract call (getReferralTier)
  * 
  * Features:
- * - 4 stat cards: Total referrals, Active this week, This month, All-time points
- * - Tier badge display (Bronze/Silver/Gold)
- * - Real-time data from contract
- * - Loading states
+ * - 4 stat cards: Code count, Total uses, Total rewards, Tier badge
+ * - Real-time data from Subsquid (60s polling)
+ * - Skeleton wave loading states
  * - Responsive 2x2 grid
  * 
  * Usage:
@@ -20,7 +24,9 @@
 import { useState, useEffect } from 'react'
 import type { Address } from 'viem'
 import { PeopleIcon, TrendingUpIcon, Calendar, EmojiEventsIcon } from '@/components/icons'
-import { getReferralStats, getReferralCode, getReferralTier } from '@/lib/contracts/referral-contract'
+import { useReferralStatsByOwner, useReferralCodesByOwner } from '@/hooks/useReferralSubsquid'
+import { getReferralTier } from '@/lib/contracts/referral-contract'
+import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 
 export interface ReferralStatsCardsProps {
   /** User's wallet address */
@@ -45,84 +51,67 @@ const TIER_COLORS = {
 }
 
 export function ReferralStatsCards({ address, className = '' }: ReferralStatsCardsProps) {
-  const [stats, setStats] = useState<ReferralStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // Fetch stats from Subsquid (real-time GraphQL with 60s polling)
+  const { totalUses, totalRewards, codeCount, loading: statsLoading } = useReferralStatsByOwner(
+    address?.toLowerCase()
+  )
+  const { codes, loading: codesLoading } = useReferralCodesByOwner(
+    address?.toLowerCase(),
+    1
+  )
+  
+  // Fetch tier from contract (tier logic not in Subsquid)
+  const [tier, setTier] = useState<number>(0)
+  const [tierLoading, setTierLoading] = useState(true)
 
-  // Fetch stats on mount
   useEffect(() => {
-    if (!address) return
-
-    const fetchStats = async () => {
+    const fetchTier = async () => {
+      if (!address) return
       try {
-        setIsLoading(true)
-        setError(null)
-
-        // Fetch from contract
-        const [referralStats, code, tier] = await Promise.all([
-          getReferralStats(address),
-          getReferralCode(address),
-          getReferralTier(address),
-        ])
-
-        setStats({
-          totalReferred: Number(referralStats.totalReferred),
-          pointsEarned: referralStats.totalPointsEarned,
-          tier,
-          code,
-        })
+        const userTier = await getReferralTier(address)
+        setTier(userTier)
       } catch (err) {
-        console.error('Failed to fetch referral stats:', err)
-        setError('Failed to load stats')
+        console.error('Failed to fetch tier:', err)
       } finally {
-        setIsLoading(false)
+        setTierLoading(false)
       }
     }
-
-    fetchStats()
+    fetchTier()
   }, [address])
+
+  const isLoading = statsLoading || codesLoading || tierLoading
+  const referralCode = codes?.[0]?.id || null
 
   if (isLoading) {
     return (
-      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className}`}>
-        {[...Array(4)].map((_, i) => (
+      <div 
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}
+        role="status"
+        aria-live="polite"
+        aria-label="Loading referral statistics"
+      >
+        {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="
-              rounded-xl border border-white/10
-              bg-white/5 p-6
-              animate-pulse
-            "
+            className="rounded-xl border border-white/10 bg-white/5 p-6"
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="h-10 w-10 rounded-lg bg-white/10" />
-              <div className="h-4 w-16 rounded bg-white/10" />
+              <Skeleton variant="rect" className="h-10 w-10 rounded-lg" animation="wave" />
+              <Skeleton variant="text" className="h-4 w-16" animation="wave" />
             </div>
-            <div className="h-8 w-20 rounded bg-white/10 mb-2" />
-            <div className="h-4 w-24 rounded bg-white/10" />
+            <Skeleton variant="text" className="h-8 w-20 mb-2" animation="wave" />
+            <Skeleton variant="text" className="h-4 w-24" animation="wave" />
           </div>
         ))}
       </div>
     )
   }
 
-  if (error) {
-    return (
-      <div className={`rounded-xl border border-red-500/20 bg-red-500/5 p-6 ${className}`}>
-        <p className="text-sm text-red-400">{error}</p>
-      </div>
-    )
-  }
-
-  if (!stats) {
-    return null
-  }
-
   const statCards = [
     {
       icon: PeopleIcon,
-      label: 'Total referrals',
-      value: stats.totalReferred.toString(),
+      label: 'Total uses',
+      value: totalUses.toString(),
       description: 'All-time referrals',
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/10',
@@ -130,7 +119,7 @@ export function ReferralStatsCards({ address, className = '' }: ReferralStatsCar
     {
       icon: TrendingUpIcon,
       label: 'Points earned',
-      value: Number(stats.pointsEarned).toLocaleString(),
+      value: Number(totalRewards).toLocaleString(),
       description: 'From referrals',
       color: 'text-green-400',
       bgColor: 'bg-green-500/10',
@@ -138,23 +127,23 @@ export function ReferralStatsCards({ address, className = '' }: ReferralStatsCar
     {
       icon: EmojiEventsIcon,
       label: 'Referral tier',
-      value: TIER_NAMES[stats.tier],
-      description: stats.tier === 3 ? 'Max tier!' : `${stats.totalReferred}/10 to Gold`,
-      color: TIER_COLORS[stats.tier as keyof typeof TIER_COLORS] || 'text-gray-400',
+      value: TIER_NAMES[tier],
+      description: tier === 3 ? 'Max tier!' : `${totalUses}/10 to Gold`,
+      color: TIER_COLORS[tier as keyof typeof TIER_COLORS] || 'text-gray-400',
       bgColor: 'bg-yellow-500/10',
     },
     {
       icon: Calendar,
       label: 'Your code',
-      value: stats.code || 'Not set',
-      description: stats.code ? 'Share to earn' : 'Register a code',
+      value: referralCode || 'Not set',
+      description: referralCode ? 'Share to earn' : 'Register a code',
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/10',
     },
   ]
 
   return (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className}`}>
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}>
       {statCards.map((card, index) => {
         const Icon = card.icon
         return (

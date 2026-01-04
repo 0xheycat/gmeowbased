@@ -3,7 +3,9 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAccount } from 'wagmi'
 import { useAuth } from '@/lib/hooks/use-auth'
+import { useWallets } from '@/lib/contexts/AuthContext'
 import { useDialog } from '@/components/dialogs'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
@@ -17,6 +19,7 @@ import { ProfileEditModal } from '@/components/profile/ProfileEditModal'
 import { ClaimRewardsModal } from '@/components/rewards/ClaimRewardsModal'
 import { ClaimHistory } from '@/components/rewards/ClaimHistory'
 import { ErrorDialog } from '@/components/dialogs'
+import ProgressionCharts from '@/components/charts/ProgressionCharts'
 import { profileSectionVariants, profileSectionTransition } from '@/components/profile/animations'
 import type { ProfileData } from '@/lib/profile/types'
 import type { Badge } from '@/components/profile/BadgeCollection'
@@ -58,11 +61,49 @@ export default function ProfilePage() {
   const params = useParams()
   const fid = params.fid as string
   const { fid: currentUserFid } = useAuth()
-
+  const { address: connectedAddress } = useAccount()
+  const userWallets = useWallets() // All verified addresses for current user
+  
+  // State declarations (profile must be declared before being used in useMemo)
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Helper: Check if this is the user's own profile
+  // Matches if: same FID OR connected wallet is the profile's wallet
+  const isOwnProfile = useMemo(() => {
+    // FID match (primary check)
+    if (fid === currentUserFid?.toString()) return true
+    
+    // Connected wallet match (for multi-wallet scenarios)
+    if (connectedAddress && profile?.wallet?.address) {
+      // Check if connected address matches profile's primary wallet
+      if (connectedAddress.toLowerCase() === profile.wallet.address.toLowerCase()) {
+        return true
+      }
+      
+      // Check if connected address is in user's verified wallets cache
+      if (userWallets.some(w => w.toLowerCase() === connectedAddress.toLowerCase())) {
+        return true
+      }
+    }
+    
+    return false
+  }, [fid, currentUserFid, connectedAddress, profile?.wallet?.address, userWallets])
+  
+  // Debug: Log wallet state on mount and changes
+  useEffect(() => {
+    console.log('[ProfilePage] Wallet State:', {
+      urlFid: fid,
+      currentUserFid,
+      connectedAddress,
+      userWallets,
+      profilePrimaryAddress: profile?.wallet?.address,
+      isOwnProfile
+    })
+  }, [fid, currentUserFid, connectedAddress, userWallets, profile?.wallet?.address, isOwnProfile])
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   
   // Error dialog state
@@ -153,6 +194,14 @@ export default function ProfilePage() {
 
         const data = await response.json()
         if (data.success && data.data) {
+          console.log('[ProfilePage] Profile fetched:', {
+            fid,
+            primaryAddress: data.data.wallet?.address,
+            connectedAddress,
+            currentUserFid,
+            isOwnProfile,
+            willUseConnected: !!(connectedAddress && isOwnProfile)
+          })
           setProfile(data.data)
         } else {
           setError('Invalid profile data')
@@ -175,7 +224,13 @@ export default function ProfilePage() {
 
       try {
         setQuestsLoading(true)
-        const response = await fetch(`/api/user/quests/${fid}?status=all&sort=recent&limit=20`)
+        
+        // Use connected wallet if viewing own profile and wallet is connected
+        const addressParam = (connectedAddress && isOwnProfile)
+          ? `&address=${connectedAddress}`
+          : ''
+        
+        const response = await fetch(`/api/user/quests/${fid}?status=all&sort=recent&limit=20${addressParam}`)
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.quests) {
@@ -190,7 +245,7 @@ export default function ProfilePage() {
     }
 
     void fetchQuests()
-  }, [fid, activeTab])
+  }, [fid, activeTab, connectedAddress, currentUserFid])
 
   // Fetch badges when badges tab is active
   useEffect(() => {
@@ -224,22 +279,35 @@ export default function ProfilePage() {
       try {
         setRewardsLoading(true)
         
+        // Use connected wallet if viewing own profile and wallet is connected
+        // Otherwise use profile's stored wallet address
+        const walletToUse = (connectedAddress && isOwnProfile) 
+          ? connectedAddress 
+          : profile.wallet.address
+        
+        console.log('[Profile] Fetching rewards with wallet:', {
+          walletToUse,
+          connectedAddress,
+          profileAddress: profile.wallet.address,
+          isOwnProfile
+        })
+        
         // Get leaderboard data (has pending rewards)
-        const leaderboardRes = await fetch(`/api/leaderboard-v2?search=${profile.wallet.address}&period=all_time`)
+        const leaderboardRes = await fetch(`/api/leaderboard-v2?search=${walletToUse}&period=all_time`)
         if (leaderboardRes.ok) {
           const leaderboardData = await leaderboardRes.json()
           const userEntry = leaderboardData.data?.[0]
           
           if (userEntry) {
             // Get claim eligibility
-            const claimRes = await fetch(`/api/rewards/claim?address=${profile.wallet.address}`)
+            const claimRes = await fetch(`/api/rewards/claim?address=${walletToUse}`)
             const claimData = claimRes.ok ? await claimRes.json() : { can_claim: false }
             
             setRewardsData({
               totalScore: userEntry.total_score || 0,
               pointsBalance: userEntry.points_balance || 0,
               pendingRewards: userEntry.pending_rewards || 0,
-              viralPoints: userEntry.viral_points || 0,
+              viralPoints: userEntry.viral_xp || 0,
               guildBonus: userEntry.guild_bonus || 0,
               referralBonus: userEntry.referral_bonus || 0,
               streakBonus: userEntry.streak_bonus || 0,
@@ -257,7 +325,7 @@ export default function ProfilePage() {
     }
 
     void fetchRewards()
-  }, [profile])
+  }, [profile, connectedAddress, fid, currentUserFid])
   
   // Fetch activity when activity tab is active
   useEffect(() => {
@@ -319,15 +387,46 @@ export default function ProfilePage() {
               />
             )}
             
-            <ProfileStats stats={profile.stats} />
+            {/* Phase 2 Migration: ProfileStats now uses GraphQL for scoring data */}
+            {/* Use connected wallet if viewing own profile, otherwise use profile's wallet */}
+            {profile.wallet?.address && (
+              <ProfileStats
+                address={(
+                  (connectedAddress && isOwnProfile)
+                    ? connectedAddress
+                    : profile.wallet.address
+                ) as `0x${string}`}
+                questCompletions={profile.stats.quest_completions}
+                badgeCount={profile.stats.badge_count}
+                lastActive={profile.stats.last_active}
+              />
+            )}
+            
+            {/* Phase 2.5: Progression Charts - Historical level/rank progression */}
+            {profile.wallet?.address && (
+              <ProgressionCharts
+                userAddress={(
+                  (connectedAddress && isOwnProfile)
+                    ? connectedAddress
+                    : profile.wallet.address
+                ) as `0x${string}`}
+              />
+            )}
+            
             <SocialLinks
               socialLinks={profile.social_links}
               wallet={profile.wallet}
             />
             
-            {/* Claim History */}
+            {/* Claim History - Use connected wallet if viewing own profile */}
             {profile.wallet?.address && (
-              <ClaimHistory walletAddress={profile.wallet.address} />
+              <ClaimHistory 
+                walletAddress={
+                  (connectedAddress && isOwnProfile)
+                    ? connectedAddress
+                    : profile.wallet.address
+                } 
+              />
             )}
           </motion.div>
         )

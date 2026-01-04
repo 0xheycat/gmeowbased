@@ -2,5 +2,5 @@
  * Viral engagement tracking
  */
 
-export * from './viral-bonus'
+// Note: viral-bonus is a stub - actual implementations are in @/lib/scoring/unified-calculator
 export * from './viral-engagement-sync'

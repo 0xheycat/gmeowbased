@@ -25,19 +25,22 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 import StarIcon from '@mui/icons-material/Star'
 import { cn } from '@/lib/utils/utils'
 import { Button } from '@/components/ui/button'
-import { getRankTierByPoints } from '@/lib/scoring/unified-calculator'
 import { motion } from 'framer-motion'
 import { BadgeDisplay, BadgeDisplaySkeleton } from './BadgeDisplay'
 import { useLeaderboardBadges } from '@/lib/hooks/useLeaderboardBadges'
 import { ComparisonModal } from './ComparisonModal'
 import BarChartIcon from '@mui/icons-material/BarChart'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import { TierBadge } from '@/components/score/TierBadge'
+import { TotalScoreDisplay } from '@/components/score/TotalScoreDisplay'
+import { ScoreDetailsModal } from '@/components/modals/ScoreDetailsModal'
 
 // LeaderboardCalculation from database
 export interface LeaderboardEntry {
   id: string
   address: string
   farcaster_fid: number | null
-  base_points: number
+  points_balance: number
   viral_xp: number
   guild_bonus: number
   referral_bonus: number
@@ -96,6 +99,8 @@ export function LeaderboardTable({
   const [localSearch, setLocalSearch] = useState(searchQuery)
   const [comparisonFids, setComparisonFids] = useState<number[]>([])
   const [showComparisonModal, setShowComparisonModal] = useState(false)
+  const [detailsAddress, setDetailsAddress] = useState<`0x${string}` | null>(null)
+  const [detailsDisplayName, setDetailsDisplayName] = useState<string | null>(null)
   
   // Find current user's entry for "Your Rank" feature
   const currentUserEntry = useMemo(
@@ -190,7 +195,6 @@ export function LeaderboardTable({
       sortable: false,
       headerClassName: 'min-w-[200px]',
       render: (row) => {
-        const tier = getRankTierByPoints(row.total_score)
         const userBadges = row.farcaster_fid ? badgesByFid[row.farcaster_fid] || [] : []
         return (
           <div className="flex items-center gap-3">
@@ -210,6 +214,14 @@ export function LeaderboardTable({
                 <span className="font-semibold text-base">
                   {row.display_name || row.username || `Pilot #${row.farcaster_fid}`}
                 </span>
+                {/* On-chain Tier Badge */}
+                {row.address && (
+                  <TierBadge 
+                    address={row.address as `0x${string}`}
+                    variant="compact"
+                    size="sm"
+                  />
+                )}
                 {/* Guild Badge (Task 4.1) */}
                 {row.guild_name && (
                   <div className="flex items-center gap-1">
@@ -224,11 +236,7 @@ export function LeaderboardTable({
                   </div>
                 )}
               </div>
-              {tier && (
-                <div className={cn('rank-badge text-xs mt-1', tier.tier)}>
-                  {tier.name}
-                </div>
-              )}
+              {/* Removed old tier badge - now using TierBadge component */}
               {/* Badges */}
               {row.farcaster_fid && (
                 <div className="mt-1.5">
@@ -270,73 +278,51 @@ export function LeaderboardTable({
     },
     {
       key: 'total_score',
-      label: 'Total Points',
+      label: 'Total Score',
       sortable: true,
-      headerClassName: 'text-right',
-      className: 'text-right font-bold text-brand',
-      render: (row) => row.total_score.toLocaleString(),
-    },
-    {
-      key: 'base_points',
-      label: 'Quest Points',
-      sortable: true,
-      headerClassName: 'text-right',
-      className: 'text-right text-gray-900 dark:text-gray-300',
-      render: (row) => row.base_points.toLocaleString(),
-    },
-    {
-      key: 'guild_bonus',
-      label: 'Guild Bonus',
-      sortable: true,
-      headerClassName: 'text-right',
+      headerClassName: 'text-right min-w-[140px]',
       className: 'text-right',
-      render: (row) => {
-        if (!row.guild_bonus_points || row.guild_bonus_points === 0) {
-          return <span className="text-gray-500">0</span>
-        }
-        return (
-          <div className="flex flex-col items-end">
-            <span className="text-purple-600 dark:text-purple-400 font-semibold">
-              +{row.guild_bonus_points.toLocaleString()}
-            </span>
-            {row.is_guild_officer && (
-              <span className="text-xs text-amber-600 dark:text-amber-400">
-                (Officer +5%)
-              </span>
-            )}
-          </div>
+      render: (row) => (
+        row.address ? (
+          <TotalScoreDisplay 
+            address={row.address as `0x${string}`}
+            size="sm"
+            showLabel={false}
+          />
+        ) : (
+          <span className="font-bold text-brand">
+            {row.total_score.toLocaleString()}
+          </span>
         )
-      },
+      ),
     },
     {
-      key: 'referral_bonus',
-      label: 'Referrals',
-      sortable: true,
-      headerClassName: 'text-right',
-      className: 'text-right text-green-400',
-      render: (row) => (row.referral_bonus > 0 ? `+${row.referral_bonus}` : '0'),
-    },
-    {
-      key: 'badge_prestige',
-      label: 'Badge Prestige',
-      sortable: true,
-      headerClassName: 'text-right',
-      className: 'text-right text-purple-400',
-      render: (row) => (row.badge_prestige > 0 ? `+${row.badge_prestige}` : '0'),
-    },
-    {
-      key: 'viral_xp',
-      label: 'Viral XP',
-      sortable: true,
-      headerClassName: 'text-right',
-      className: 'text-right text-blue-400',
-      render: (row) => (row.viral_xp > 0 ? `+${row.viral_xp}` : '0'),
+      key: 'actions',
+      label: 'Details',
+      sortable: false,
+      headerClassName: 'text-center w-32',
+      className: 'text-center',
+      render: (row) => (
+        row.address ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setDetailsAddress(row.address as `0x${string}`)
+              setDetailsDisplayName(row.display_name || row.username || null)
+            }}
+            className="gap-2"
+          >
+            <VisibilityIcon className="w-4 h-4" />
+            View
+          </Button>
+        ) : null
+      ),
     },
   ]
 
   // Mobile card render
   const mobileCardRender = (row: LeaderboardEntry) => {
-    const tier = getRankTierByPoints(row.total_score)
     return (
       <div className="space-y-3">
         {/* Header */}
@@ -379,14 +365,18 @@ export function LeaderboardTable({
             </div>
           )}
           <div className="flex-1">
-            <div className="font-semibold text-lg">
-              {row.display_name || row.username || `Pilot #${row.farcaster_fid}`}
-            </div>
-            {tier && (
-              <div className={cn('rank-badge text-xs mt-1', tier.tier)}>
-                {tier.name}
+            <div className="flex items-center gap-2 mb-1">
+              <div className="font-semibold text-lg">
+                {row.display_name || row.username || `Pilot #${row.farcaster_fid}`}
               </div>
-            )}
+              {row.address && (
+                <TierBadge 
+                  address={row.address as `0x${string}`}
+                  variant="compact"
+                  size="sm"
+                />
+              )}
+            </div>
             {/* Badges in mobile view */}
             {row.farcaster_fid && (
               <div className="mt-2">
@@ -401,39 +391,25 @@ export function LeaderboardTable({
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <div>
-            <div className="text-xs text-gray-900 dark:text-gray-300 uppercase font-medium">Total Points</div>
-            <div className="text-lg font-bold text-brand">{row.total_score.toLocaleString()}</div>
+            <div className="text-xs text-gray-900 dark:text-gray-300 uppercase font-medium">Total Score</div>
+            <div className="text-2xl font-bold text-brand">{row.total_score.toLocaleString()}</div>
           </div>
-          <div>
-            <div className="text-xs text-gray-900 dark:text-gray-300 uppercase font-medium">Quest Points</div>
-            <div className="text-lg font-semibold">{row.base_points.toLocaleString()}</div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-900 dark:text-gray-300 uppercase font-medium">Guild Bonus</div>
-            <div className="text-base font-medium text-yellow-500">
-              {row.guild_bonus > 0 ? `+${row.guild_bonus}` : '0'}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-900 dark:text-gray-300 uppercase font-medium">Referrals</div>
-            <div className="text-base font-medium text-green-400">
-              {row.referral_bonus > 0 ? `+${row.referral_bonus}` : '0'}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-900 dark:text-gray-300 uppercase font-medium">Badges</div>
-            <div className="text-base font-medium text-purple-400">
-              {row.badge_prestige > 0 ? `+${row.badge_prestige}` : '0'}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-900 dark:text-gray-300 uppercase font-medium">Viral XP</div>
-            <div className="text-base font-medium text-blue-400">
-              {row.viral_xp > 0 ? `+${row.viral_xp}` : '0'}
-            </div>
-          </div>
+          {row.address && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDetailsAddress(row.address as `0x${string}`)
+                setDetailsDisplayName(row.display_name || row.username || null)
+              }}
+              className="gap-2 w-full"
+            >
+              <VisibilityIcon className="w-4 h-4" />
+              View Score Breakdown
+            </Button>
+          )}
         </div>
 
         {/* Comparison Checkbox (Mobile) */}
@@ -663,6 +639,17 @@ export function LeaderboardTable({
         isOpen={showComparisonModal}
         onClose={() => setShowComparisonModal(false)}
         onRemovePilot={removeFromComparison}
+      />
+
+      {/* Score Details Modal */}
+      <ScoreDetailsModal
+        address={detailsAddress || undefined}
+        displayName={detailsDisplayName || undefined}
+        isOpen={!!detailsAddress}
+        onClose={() => {
+          setDetailsAddress(null)
+          setDetailsDisplayName(null)
+        }}
       />
     </div>
   )

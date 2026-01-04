@@ -187,15 +187,15 @@ export const TasksArraySchema = z
 // Rewards Schema
 // ============================================
 export const RewardsSchema = z.object({
-  reward_xp: z
+  reward_points_awarded: z
     .number()
     .int()
-    .min(10, 'Minimum 10 XP')
-    .max(1000, 'Maximum 1000 XP per quest'),
+    .min(10, 'Minimum 10 POINTS')
+    .max(1000, 'Maximum 1000 POINTS per quest'),
   
-  reward_category: z.enum(['viral_points', 'points_balance', 'both'], {
+  reward_category: z.enum(['viral_xp', 'points_balance', 'both'], {
     message: 'Invalid reward category'
-  }),
+  }).optional(),
   
   reward_badge_id: z
     .string()
@@ -296,7 +296,7 @@ export const CompleteQuestCreationSchema = QuestCreationSchema
 // ============================================
 export const QuestDraftSchema = QuestBasicsSchema.partial().extend({
   tasks: TasksArraySchema.optional(),
-  reward_xp: z.number().optional(),
+  reward_points_awarded: z.number().optional(),
   reward_category: z.string().optional()
 })
 

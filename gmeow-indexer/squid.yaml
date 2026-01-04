@@ -3,6 +3,8 @@ name: gmeow-indexer
 version: 1
 description: 'The very first evm squid from manifest  '
 build: 
+scale:
+  dedicated: false
 deploy:
   addons:
     postgres: 

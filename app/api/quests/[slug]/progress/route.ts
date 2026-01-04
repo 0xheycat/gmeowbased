@@ -17,12 +17,13 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   const startTime = Date.now();
   const requestId = generateRequestId();
   const clientIp = getClientIp(request);
-  const slug = params.slug;
+  // Next.js 15: params must be awaited
+  const { slug } = await params;
   
   try {
     // 1. RATE LIMITING (60 requests per minute)
@@ -118,7 +119,7 @@ export async function POST(
     
     // 6. RESPONSE WITH RATE LIMIT HEADERS
     const statusMessage = progress?.status === 'completed' 
-      ? `Quest completed! You earned ${result.reward_points} points!`
+      ? `Quest completed! You earned ${result.reward_points_awarded} points!`
       : progress?.status === 'in_progress'
       ? `Quest in progress: ${progress.progress_percentage}% complete`
       : 'Quest not started yet';

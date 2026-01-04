@@ -2,11 +2,11 @@
  * GuildLeaderboard Component (WCAG AA Compliant)
  * 
  * Purpose: Ranking of guilds with time filters
- * Template: trezoadmin-41/leaderboard (40%) + gmeowbased0.6 layout (10%)
+ * Architecture: Subsquid GraphQL-first (no API routes)
  * 
  * Features:
- * - Top guilds ranked by points/treasury
- * - Time filters (keyboard accessible)
+ * - Top guilds ranked by treasury points (from Subsquid)
+ * - Time filters (keyboard accessible) - UI only, shows all-time data
  * - Medal icons for top 3
  * - Responsive table (desktop) and cards (mobile)
  * - Click to view guild profile (Enter/Space support)
@@ -19,13 +19,14 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { EmojiEventsIcon, MilitaryTechIcon, LeaderboardIcon } from '@/components/icons'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import { Button } from '@/components/ui/button'
 import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
+import { useGuildLeaderboard } from '@/hooks/useGuild'
 
 export interface GuildRank {
   rank: number
@@ -33,7 +34,7 @@ export interface GuildRank {
   name: string
   chain: 'base'
   points: number
-  level?: number
+  level: number
   memberCount: number
   owner: string
   avatarUrl?: string
@@ -43,61 +44,27 @@ type TimeFilter = '24h' | '7d' | '30d' | 'all'
 
 export default function GuildLeaderboard() {
   const router = useRouter()
-  const [guilds, setGuilds] = useState<GuildRank[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all')
-  const [dialogMessage, setDialogMessage] = useState('')
   const [errorDialogOpen, setErrorDialogOpen] = useState(false)
 
-  const loadLeaderboard = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      // Map frontend filter to API period format
-      const periodMap: Record<TimeFilter, string> = {
-        '24h': 'week',
-        '7d': 'week',
-        '30d': 'month',
-        'all': 'all-time'
-      }
-      const period = periodMap[timeFilter]
-      const response = await fetch(`/api/guild/leaderboard?period=${period}`)
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        setDialogMessage(errorData.message || 'Failed to load leaderboard. Please try again.')
-        setErrorDialogOpen(true)
-        setError('Failed to load leaderboard')
-        return
-      }
-      const data = await response.json()
-      
-      // Map API response to component format
-      const mappedGuilds = (data.leaderboard || data.guilds || []).map((g: any) => ({
-        rank: g.rank,
-        id: g.id,
-        name: g.name,
-        chain: g.chain || 'base',
-        points: parseInt(g.totalPoints || g.points || '0'),
-        level: g.level || 1,
-        memberCount: parseInt(g.memberCount || '0'),
-        owner: g.leader || g.owner || ''
-      }))
-      
-      setGuilds(mappedGuilds)
-    } catch (err) {
-      // Error handled by dialog display
-      setDialogMessage('Failed to load leaderboard. Please try again.')
-      setErrorDialogOpen(true)
-      setError('Failed to load leaderboard')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // Fetch guilds from Subsquid (sorted by treasury points)
+  const { guilds: graphqlGuilds, loading, error, refetch } = useGuildLeaderboard({ limit: 100 })
 
-  useEffect(() => {
-    loadLeaderboard()
-  }, [timeFilter])
+  // Transform GraphQL data to component format with rankings
+  const guilds = useMemo<GuildRank[]>(() => {
+    return graphqlGuilds.map((guild, index) => ({
+      rank: index + 1,
+      id: guild.id,
+      name: guild.name,
+      chain: 'base' as const,
+      points: Number(guild.treasuryPoints),
+      level: guild.level,
+      memberCount: guild.totalMembers,
+      owner: guild.owner,
+    }))
+  }, [graphqlGuilds])
+
+  const dialogMessage = error?.message || 'Failed to load leaderboard. Please try again.'
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <MilitaryTechIcon className="w-6 h-6 text-yellow-500" />
@@ -110,7 +77,7 @@ export default function GuildLeaderboard() {
     router.push(`/guild/${guildId}`)
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-7xl" role="status" aria-live="polite" aria-label="Loading leaderboard">
         {/* Header Skeleton */}
@@ -147,8 +114,7 @@ export default function GuildLeaderboard() {
             <p className="text-red-700 dark:text-red-300 mb-4">Unable to load leaderboard. Please try again.</p>
             <Button
               onClick={() => {
-                setError(null)
-                loadLeaderboard()
+                refetch()
               }}
               variant="default"
             >
@@ -178,15 +144,13 @@ export default function GuildLeaderboard() {
                 </button>
                 <button
                   onClick={() => {
-                    setError(null)
                     setErrorDialogOpen(false)
-                    loadLeaderboard()
+                    refetch()
                   }}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
                   {...createKeyboardHandler(() => {
-                    setError(null)
                     setErrorDialogOpen(false)
-                    loadLeaderboard()
+                    refetch()
                   })}
                 >
                   Retry
@@ -288,7 +252,7 @@ export default function GuildLeaderboard() {
               <tbody>
                 {guilds.map(guild => {
                   const keyboardProps = createKeyboardHandler(() => handleGuildClick(guild.id))
-                  const ariaLabel = `Rank ${guild.rank}: ${guild.name} guild. ${guild.points.toLocaleString()} points, Level ${guild.level || 1}, ${guild.memberCount} members. Press Enter to view guild.`
+                  const ariaLabel = `Rank ${guild.rank}: ${guild.name} guild. ${guild.points.toLocaleString()} points, Level ${guild.level}, ${guild.memberCount} members. Press Enter to view guild.`
                   
                   return (
                     <tr
@@ -324,7 +288,7 @@ export default function GuildLeaderboard() {
                       </td>
                       <td className="py-4 px-4 text-right">
                         <span className="inline-flex items-center px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium rounded">
-                          Level {guild.level || 1}
+                          Level {guild.level}
                         </span>
                       </td>
                       <td className={`py-4 px-4 text-right font-semibold ${WCAG_CLASSES.text.onLight.primary}`}>
@@ -341,7 +305,7 @@ export default function GuildLeaderboard() {
           <div className="md:hidden space-y-4">
             {guilds.map(guild => {
               const keyboardProps = createKeyboardHandler(() => handleGuildClick(guild.id))
-              const ariaLabel = `Rank ${guild.rank}: ${guild.name} guild. ${guild.points.toLocaleString()} points, Level ${guild.level || 1}, ${guild.memberCount} members.`
+              const ariaLabel = `Rank ${guild.rank}: ${guild.name} guild. ${guild.points.toLocaleString()} points, Level ${guild.level}, ${guild.memberCount} members.`
               
               return (
                 <button
@@ -383,7 +347,7 @@ export default function GuildLeaderboard() {
                         Level
                       </div>
                       <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {guild.level || 1}
+                        {guild.level}
                       </div>
                     </div>
                     <div>

@@ -43,7 +43,9 @@ export function TaskBuilder({
       type: 'social',
       title: '',
       description: '',
-      verification_data: {},
+      verification_data: {
+        type: 'follow_user', // DEFAULT: Set verification type for social quests
+      },
       required: true,
       order: tasks.length,
     }
@@ -231,7 +233,17 @@ function TaskForm({ task, onUpdate, onClose }: TaskFormProps) {
   })
 
   const handleChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    // When task type changes, set default verification type
+    if (field === 'type') {
+      const defaultVerificationType = value === 'social' ? 'follow_user' : value === 'onchain' ? 'mint_nft' : undefined;
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+        verification_data: defaultVerificationType ? { type: defaultVerificationType } : {},
+      }))
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }))
+    }
   }
 
   const handleVerificationChange = (field: string, value: any) => {
@@ -282,37 +294,164 @@ function TaskForm({ task, onUpdate, onClose }: TaskFormProps) {
       {formData.type === 'social' && (
         <div className="space-y-4">
           <p className="text-sm font-medium">Social Verification</p>
-          <Input
-            label="Target FID (Optional)"
-            type="number"
-            value={formData.verification_data.target_fid || ''}
-            onChange={(e) => handleVerificationChange('target_fid', parseInt(e.target.value))}
-            placeholder="User FID to follow"
-          />
-          <Input
-            label="Channel ID (Optional)"
-            value={formData.verification_data.channel_id || ''}
-            onChange={(e) => handleVerificationChange('channel_id', e.target.value)}
-            placeholder="e.g., gmeowbased"
-          />
+          <Select
+            label="Verification Type"
+            value={formData.verification_data.type || 'follow_user'}
+            onChange={(e) => handleVerificationChange('type', e.target.value)}
+          >
+            <option value="follow_user">Follow User</option>
+            <option value="like_cast">Like Cast</option>
+            <option value="recast">Recast</option>
+            <option value="reply_to_cast">Reply to Cast</option>
+            <option value="create_cast_with_tag">Create Cast with Tag</option>
+            <option value="join_channel">Join Channel</option>
+          </Select>
+          
+          {(formData.verification_data.type === 'follow_user') && (
+            <Input
+              label="Target FID"
+              type="number"
+              value={formData.verification_data.target_fid || ''}
+              onChange={(e) => handleVerificationChange('target_fid', parseInt(e.target.value) || undefined)}
+              placeholder="User FID to follow (e.g., 18139)"
+              required
+            />
+          )}
+          
+          {(formData.verification_data.type === 'like_cast' || 
+            formData.verification_data.type === 'recast' || 
+            formData.verification_data.type === 'reply_to_cast') && (
+            <Input
+              label="Cast Hash"
+              value={formData.verification_data.target_cast_hash || ''}
+              onChange={(e) => handleVerificationChange('target_cast_hash', e.target.value)}
+              placeholder="0x... (cast hash from Warpcast)"
+              required
+            />
+          )}
+          
+          {formData.verification_data.type === 'create_cast_with_tag' && (
+            <Input
+              label="Required Tag"
+              value={formData.verification_data.required_tag || ''}
+              onChange={(e) => handleVerificationChange('required_tag', e.target.value)}
+              placeholder="e.g., @gmeowbased or #gm"
+              required
+            />
+          )}
+          
+          {formData.verification_data.type === 'join_channel' && (
+            <Input
+              label="Channel ID"
+              value={formData.verification_data.target_channel_id || ''}
+              onChange={(e) => handleVerificationChange('target_channel_id', e.target.value)}
+              placeholder="e.g., gmeowbased"
+              required
+            />
+          )}
         </div>
       )}
 
       {formData.type === 'onchain' && (
         <div className="space-y-4">
           <p className="text-sm font-medium">Onchain Verification</p>
-          <Input
-            label="Token Address (Optional)"
-            value={formData.verification_data.token_address || ''}
-            onChange={(e) => handleVerificationChange('token_address', e.target.value)}
-            placeholder="0x..."
-          />
-          <Input
-            label="Minimum Amount (Optional)"
-            value={formData.verification_data.min_amount || ''}
-            onChange={(e) => handleVerificationChange('min_amount', e.target.value)}
-            placeholder="1000000000000000000"
-          />
+          <Select
+            label="Verification Type"
+            value={formData.verification_data.type || 'mint_nft'}
+            onChange={(e) => handleVerificationChange('type', e.target.value)}
+          >
+            <option value="mint_nft">Mint NFT</option>
+            <option value="swap_token">Swap Token</option>
+            <option value="provide_liquidity">Provide Liquidity</option>
+            <option value="bridge">Bridge</option>
+            <option value="custom">Custom</option>
+          </Select>
+          
+          {(formData.verification_data.type === 'mint_nft') && (
+            <>
+              <Input
+                label="NFT Contract Address"
+                value={formData.verification_data.nft_contract || ''}
+                onChange={(e) => handleVerificationChange('nft_contract', e.target.value)}
+                placeholder="0x... (Base NFT contract)"
+                required
+              />
+              <Input
+                label="Minimum Balance"
+                type="number"
+                value={formData.verification_data.min_balance || '1'}
+                onChange={(e) => handleVerificationChange('min_balance', parseInt(e.target.value) || 1)}
+                placeholder="1"
+              />
+            </>
+          )}
+          
+          {(formData.verification_data.type === 'swap_token') && (
+            <>
+              <Input
+                label="Token Address"
+                value={formData.verification_data.token_address || ''}
+                onChange={(e) => handleVerificationChange('token_address', e.target.value)}
+                placeholder="0x... (ERC-20 token)"
+                required
+              />
+              <Input
+                label="Minimum Amount"
+                value={formData.verification_data.min_amount || ''}
+                onChange={(e) => handleVerificationChange('min_amount', e.target.value)}
+                placeholder="1000000000000000000 (in wei)"
+                required
+              />
+            </>
+          )}
+          
+          {(formData.verification_data.type === 'provide_liquidity') && (
+            <>
+              <Input
+                label="Pool Address"
+                value={formData.verification_data.pool_address || ''}
+                onChange={(e) => handleVerificationChange('pool_address', e.target.value)}
+                placeholder="0x... (LP pool contract)"
+                required
+              />
+              <Input
+                label="Minimum LP Tokens"
+                value={formData.verification_data.min_lp_tokens || ''}
+                onChange={(e) => handleVerificationChange('min_lp_tokens', e.target.value)}
+                placeholder="1000000000000000000 (in wei)"
+                required
+              />
+            </>
+          )}
+          
+          {(formData.verification_data.type === 'bridge') && (
+            <Input
+              label="Transaction Hash"
+              value={formData.verification_data.transaction_hash || ''}
+              onChange={(e) => handleVerificationChange('transaction_hash', e.target.value)}
+              placeholder="0x... (bridge tx hash)"
+              required
+            />
+          )}
+          
+          {(formData.verification_data.type === 'custom') && (
+            <>
+              <Input
+                label="Contract Address"
+                value={formData.verification_data.contract_address || ''}
+                onChange={(e) => handleVerificationChange('contract_address', e.target.value)}
+                placeholder="0x..."
+                required
+              />
+              <Input
+                label="Function Signature"
+                value={formData.verification_data.function_signature || ''}
+                onChange={(e) => handleVerificationChange('function_signature', e.target.value)}
+                placeholder="balanceOf(address)"
+                required
+              />
+            </>
+          )}
         </div>
       )}
 

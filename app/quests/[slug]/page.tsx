@@ -1,15 +1,27 @@
 /**
- * Professional Quest Detail Page
- * Phase 2.7: Quest Page Rebuild
- * 
+ * Professional Quest Detail Page - Phase 4: Hybrid Architecture Migration
  * Path: /quests/[slug]
- * Template: gmeowbased0.6 (0-10% adaptation)
- * Features: Multi-step tasks, progress tracking, verification, rewards
+ * 
+ * @architecture Hybrid Data Layer
+ * - Quest definition: Supabase (quest_definitions table via /api/quests/[slug])
+ * - Completion stats: Subsquid GraphQL (Quest entity with totalCompletions)
+ * - Recent completions: Subsquid GraphQL (QuestCompletion entities)
+ * - User progress: Supabase (user_quest_progress table)
+ * 
+ * @template music/* - Loading states, error boundaries, animations
+ * 
+ * Features:
+ * - Multi-step tasks, progress tracking, verification, rewards
+ * - Real-time completion stats from Subsquid
+ * - Music template loading (Skeleton wave animation)
+ * - Professional error states with retry
+ * - Framer Motion animations
  */
 
-import { Suspense } from 'react';
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+'use client'
+
+import { use, useEffect, useState } from 'react';
+import { notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -19,11 +31,14 @@ import LockIcon from '@mui/icons-material/Lock';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import { getQuestBySlug } from '@/lib/supabase/queries/quests';
 import { QuestProgress } from '@/components/quests';
 import { QuestVerification } from '@/components/quests/QuestVerification';
 import { QuestAnalytics } from '@/components/quests/QuestAnalytics';
-import type { Quest, QuestTask } from '@/lib/supabase/types/quest';
+import { useAuthContext } from '@/lib/contexts/AuthContext';
+import { useQuestStats, useQuestCompletions } from '@/hooks/useQuestSubsquid';
+import { Skeleton } from '@/components/ui/skeleton/Skeleton';
+import { motion } from 'framer-motion';
+import type { Quest, QuestTask, QuestWithProgress } from '@/lib/supabase/types/quest';
 
 interface QuestDetailPageProps {
   params: Promise<{
@@ -31,32 +46,94 @@ interface QuestDetailPageProps {
   }>;
 }
 
-export async function generateMetadata({ params }: QuestDetailPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const quest = await getQuestBySlug(slug);
+export default function QuestDetailPage({ params }: QuestDetailPageProps) {
+  const router = useRouter();
+  const { slug } = use(params);
+  const { fid: userFid } = useAuthContext();
+  const [quest, setQuest] = useState<QuestWithProgress | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  if (!quest) {
-    return {
-      title: 'Quest Not Found',
-    };
-  }
+  // Hybrid data: Fetch on-chain completion stats if quest is deployed
+  const { quest: onchainQuest, loading: onchainLoading } = useQuestStats(
+    quest?.onchain_quest_id ? String(quest.onchain_quest_id) : null
+  );
+  const { completions: recentCompletions, loading: completionsLoading } = useQuestCompletions(
+    quest?.onchain_quest_id ? String(quest.onchain_quest_id) : null,
+    10 // Recent 10 completions
+  );
   
-  return {
-    title: `${quest.title} - Quests - Gmeowbased`,
-    description: quest.description,
-    openGraph: {
-      images: quest.cover_image_url ? [quest.cover_image_url] : [],
-    },
-  };
-}
+  useEffect(() => {
+    async function fetchQuest() {
+      try {
+        // Include userFid parameter to get progress and completion status
+        const url = userFid 
+          ? `/api/quests/${slug}?userFid=${userFid}`
+          : `/api/quests/${slug}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          if (response.status === 404) {
+            notFound();
+          }
+          throw new Error('Failed to fetch quest');
+        }
+        const data = await response.json();
+        // API returns { success: true, data: questData }
+        setQuest(data.data);
+      } catch (error) {
+        console.error('Error fetching quest:', error);
+        notFound();
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchQuest();
+  }, [slug, userFid]);
 
-export default async function QuestDetailPage({ params }: QuestDetailPageProps) {
-  const { slug } = await params;
+  // Note: Removed automatic redirect to complete page
+  // Users now stay on quest detail page to see and use claim button after verification
+  // The QuestVerification component will show the claim button when quest is completed
   
-  // TODO: Get user FID from auth session
-  const userFid = undefined; // Replace with actual auth
-  
-  const quest = await getQuestBySlug(slug, userFid);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        {/* Hero Skeleton */}
+        <div 
+          role="status"
+          aria-live="polite"
+          aria-label="Loading quest details"
+          className="relative h-[400px] bg-gray-200 dark:bg-gray-800"
+        >
+          <Skeleton variant="rect" className="absolute inset-0" animation="wave" />
+          
+          <div className="absolute inset-0 flex items-end">
+            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-12">
+              <Skeleton variant="text" className="h-4 w-32 mb-4 bg-white/20" animation="wave" />
+              <Skeleton variant="text" className="h-12 w-3/4 mb-4 bg-white/20" animation="wave" />
+              <Skeleton variant="text" className="h-6 w-2/3 bg-white/20" animation="wave" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Content Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <Skeleton variant="text" className="h-6 w-40 mb-4" animation="wave" />
+                <Skeleton variant="rect" className="h-32" animation="wave" />
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <Skeleton variant="text" className="h-6 w-32 mb-4" animation="wave" />
+                <Skeleton variant="rect" className="h-24" animation="wave" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   if (!quest) {
     notFound();
@@ -144,11 +221,14 @@ export default async function QuestDetailPage({ params }: QuestDetailPageProps) 
               <div className="flex sm:flex-col gap-4 sm:gap-2 text-white">
                 <div className="flex items-center gap-2 text-sm">
                   <EmojiEventsIcon className="w-5 h-5 text-yellow-400" />
-                  <span className="font-semibold">{quest.reward_points} XP</span>
+                  <span className="font-semibold">{quest.reward_points_awarded} POINTS</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <PeopleIcon className="w-5 h-5" />
-                  <span>{quest.participant_count} joined</span>
+                  <span>
+                    {/* Hybrid data: Use Subsquid totalCompletions if available, fallback to Supabase */}
+                    {onchainQuest?.totalCompletions ?? quest.participant_count} joined
+                  </span>
                 </div>
                 {quest.estimated_time_minutes && (
                   <div className="flex items-center gap-2 text-sm">
@@ -263,14 +343,37 @@ export default async function QuestDetailPage({ params }: QuestDetailPageProps) 
             {!quest.is_locked && (
               <QuestVerification 
                 quest={quest}
-                userFid={userFid}
-                onVerificationComplete={(taskIndex) => {
+                userFid={userFid ?? undefined}
+                onVerificationComplete={async (taskIndex) => {
                   console.log(`Task ${taskIndex} completed`)
-                  // TODO: Refresh quest data
+                  // Bug #34 Fix: Re-fetch quest data to update Quest Steps sidebar
+                  // Bug #42 Fix: Add cache-busting parameter to force fresh data
+                  const url = userFid 
+                    ? `/api/quests/${slug}?userFid=${userFid}&_t=${Date.now()}`
+                    : `/api/quests/${slug}?_t=${Date.now()}`;
+                  const response = await fetch(url)
+                  if (response.ok) {
+                    const data = await response.json()
+                    setQuest(data.data)
+                  }
+                  router.refresh()
                 }}
-                onQuestComplete={() => {
+                onQuestComplete={async () => {
                   console.log('Quest completed!')
-                  // TODO: Redirect to completion page or refresh
+                  // Bug #34 Fix: Re-fetch quest data to update Quest Steps sidebar
+                  // Bug #42 Fix: Add cache-busting parameter to force fresh data
+                  const url = userFid 
+                    ? `/api/quests/${slug}?userFid=${userFid}&_t=${Date.now()}`
+                    : `/api/quests/${slug}?_t=${Date.now()}`;
+                  const response = await fetch(url)
+                  if (response.ok) {
+                    const data = await response.json()
+                    setQuest(data.data)
+                    // Note: Removed redirect - users stay on page to see claim button
+                    // The QuestVerification component now shows claim button immediately
+                  } else {
+                    router.refresh();
+                  }
                 }}
               />
             )}
@@ -287,9 +390,9 @@ export default async function QuestDetailPage({ params }: QuestDetailPageProps) 
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">XP Points</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Points Reward</span>
                   <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                    +{quest.reward_points}
+                    +{quest.reward_points_awarded}
                   </span>
                 </div>
                 
@@ -344,8 +447,8 @@ export default async function QuestDetailPage({ params }: QuestDetailPageProps) 
             {/* Quest Analytics */}
             <QuestAnalytics
               questId={quest.id.toString()}
-              completionCount={quest.completion_count || 0}
-              participantCount={quest.participant_count}
+              completionCount={onchainQuest?.totalCompletions ?? quest.completion_count ?? 0}
+              participantCount={onchainQuest?.totalCompletions ?? quest.participant_count}
               recentCompleters={[]}
             />
             

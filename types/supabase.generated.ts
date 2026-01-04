@@ -59,6 +59,9 @@
 // - 2025-12-21: guild_stats_cache - Guild stats cache for leaderboard
 // - 2025-12-21: reward_claims - Reward claim tracking table
 // - 2025-12-25: guild_member_stats_cache.member_role - Phase 2.1 member role field (leader/officer/member)
+// - 2025-12-28: unified_quests.verification_data - Populated 'type' field within JSONB (Bug #21 fix)
+//               Migration: 20251228000000_populate_verification_data_type.sql
+//               Note: No schema changes - only data population within existing JSONB column
 //
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎯 POINTS NAMING CONVENTION (Contract = Source of Truth)
@@ -75,15 +78,19 @@
 //
 // Renamed columns:
 // - user_profiles: points→points_balance, total_points_earned→total_earned_from_gms, xp dropped
-// - badge_casts: viral_bonus_xp→viral_bonus_points
+// - badge_casts: viral_bonus_points→viral_bonus_xp (Dec 27 fix)
 // - quest_definitions: reward_xp→reward_points_awarded
 // - unified_quests: reward_points→reward_points_awarded, total_earned_points→total_points_awarded
-// - user_points_balances: base_points→points_balance, viral_xp→viral_points, guild_bonus→guild_points_awarded, total_points→total_score
+// - user_points_balances: base_points→points_balance, viral_points→viral_xp (Dec 27 fix), guild_bonus→guild_points_awarded, total_points→total_score
 // - reward_claims: viral_xp_claimed→viral_points_claimed, guild_bonus_claimed→guild_points_claimed, total_claimed→total_points_claimed
 // - referral_stats: points_earned→points_awarded
 // - points_transactions: balance_after→points_balance_after
 //
-// ❌ FORBIDDEN: "blockchainPoints", "viralXP", "base_points", "total_points"
+// ❌ FORBIDDEN: "blockchainPoints" (→ pointsBalance), "base_points" (→ points_balance), "total_points" (→ total_score)
+// ✅ CORRECT: "viralXP" / "viral_xp" (progression system, separate from Points currency)
+// ℹ️ NOTE: XP (progression/leveling) ≠ Points (spendable currency) - two separate reward systems
+//   - Viral XP: Quest unlock requirement (min_viral_xp_required), progression metric
+//   - Contract Points: Quest rewards (reward_points_awarded), spendable currency
 // ✅ REQUIRED: Update all 4 layers (Contract → Subsquid → Supabase → API)
 //
 // ═══════════════════════════════════════════════════════════════════════════
@@ -122,7 +129,7 @@ export type Database = {
           recasts_count: number | null
           replies_count: number | null
           tier: string
-          viral_bonus_points: number | null
+          viral_bonus_xp: number | null
           viral_score: number | null
           viral_tier: string | null
         }
@@ -138,7 +145,7 @@ export type Database = {
           recasts_count?: number | null
           replies_count?: number | null
           tier: string
-          viral_bonus_points?: number | null
+          viral_bonus_xp?: number | null
           viral_score?: number | null
           viral_tier?: string | null
         }
@@ -154,7 +161,7 @@ export type Database = {
           recasts_count?: number | null
           replies_count?: number | null
           tier?: string
-          viral_bonus_points?: number | null
+          viral_bonus_xp?: number | null
           viral_score?: number | null
           viral_tier?: string | null
         }
@@ -1009,7 +1016,7 @@ export type Database = {
           is_refunded: boolean | null
           points_escrowed: number
           points_refunded: number | null
-          quest_id: number
+          quest_id: number | null  // Nullable - populated after quest creation
           refund_reason: string | null
           refunded_at: string | null
           total_cost: number
@@ -1022,7 +1029,7 @@ export type Database = {
           is_refunded?: boolean | null
           points_escrowed: number
           points_refunded?: number | null
-          quest_id: number
+          quest_id?: number | null  // Nullable - populated after quest creation
           refund_reason?: string | null
           refunded_at?: string | null
           total_cost: number
@@ -1035,7 +1042,7 @@ export type Database = {
           is_refunded?: boolean | null
           points_escrowed?: number
           points_refunded?: number | null
-          quest_id?: number
+          quest_id?: number | null  // Nullable - populated after quest creation
           refund_reason?: string | null
           refunded_at?: string | null
           total_cost?: number
@@ -1140,7 +1147,7 @@ export type Database = {
           quest_type: string
           requirements?: Json
           reward_badges?: string[] | null
-          reward_points?: number
+          reward_points_awarded?: number
           reward_xp?: number
           start_date?: string | null
           updated_at?: string
@@ -1164,7 +1171,7 @@ export type Database = {
           quest_type?: string
           requirements?: Json
           reward_badges?: string[] | null
-          reward_points?: number
+          reward_points_awarded?: number
           reward_xp?: number
           start_date?: string | null
           updated_at?: string
@@ -1579,6 +1586,7 @@ export type Database = {
         Row: {
           badge_image_url: string | null
           category: string
+          completion_count: number
           cover_image_url: string | null
           created_at: string
           creation_cost: number
@@ -1587,16 +1595,21 @@ export type Database = {
           creator_fid: number
           description: string
           difficulty: string | null
+          escrow_tx_hash: string | null
           estimated_time_minutes: number | null
           expiry_date: string | null
           featured_order: number | null
           id: number
           is_featured: boolean | null
+          last_synced_at: string | null
           max_completions: number | null
           min_viral_xp_required: number | null
+          onchain_quest_id: number | null
+          onchain_status: string | null
           participant_count: number | null
           quest_image_storage_path: string | null
           quest_image_url: string | null
+          refunded_at: string | null
           reward_mode: string
           reward_nft_address: string | null
           reward_nft_token_id: number | null
@@ -1618,6 +1631,7 @@ export type Database = {
         Insert: {
           badge_image_url?: string | null
           category: string
+          completion_count?: number
           cover_image_url?: string | null
           created_at?: string
           creation_cost?: number
@@ -1626,13 +1640,17 @@ export type Database = {
           creator_fid: number
           description: string
           difficulty?: string | null
+          escrow_tx_hash?: string | null
           estimated_time_minutes?: number | null
           expiry_date?: string | null
           featured_order?: number | null
           id?: number
           is_featured?: boolean | null
+          last_synced_at?: string | null
           max_completions?: number | null
           min_viral_xp_required?: number | null
+          onchain_quest_id?: number | null
+          onchain_status?: string | null
           participant_count?: number | null
           quest_image_storage_path?: string | null
           quest_image_url?: string | null
@@ -1657,6 +1675,7 @@ export type Database = {
         Update: {
           badge_image_url?: string | null
           category?: string
+          completion_count?: number
           cover_image_url?: string | null
           created_at?: string
           creation_cost?: number
@@ -1665,20 +1684,24 @@ export type Database = {
           creator_fid?: number
           description?: string
           difficulty?: string | null
+          escrow_tx_hash?: string | null
           estimated_time_minutes?: number | null
           expiry_date?: string | null
           featured_order?: number | null
           id?: number
           is_featured?: boolean | null
+          last_synced_at?: string | null
           max_completions?: number | null
           min_viral_xp_required?: number | null
+          onchain_quest_id?: number | null
+          onchain_status?: string | null
           participant_count?: number | null
           quest_image_storage_path?: string | null
           quest_image_url?: string | null
           reward_mode?: string
           reward_nft_address?: string | null
           reward_nft_token_id?: number | null
-          reward_points?: number
+          reward_points_awarded?: number
           reward_token_address?: string | null
           reward_token_amount?: number | null
           slug?: string
@@ -1844,7 +1867,7 @@ export type Database = {
           last_synced_at: string
           total_score: number
           updated_at: string
-          viral_points: number
+          viral_xp: number
         }
         Insert: {
           points_balance?: number
@@ -1853,7 +1876,7 @@ export type Database = {
           last_synced_at?: string
           total_score?: number
           updated_at?: string
-          viral_points?: number
+          viral_xp?: number
         }
         Update: {
           points_balance?: number
@@ -1862,7 +1885,7 @@ export type Database = {
           last_synced_at?: string
           total_score?: number
           updated_at?: string
-          viral_points?: number
+          viral_xp?: number
         }
         Relationships: []
       }

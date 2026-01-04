@@ -25,7 +25,7 @@ interface ComparisonPilot {
   display_name?: string
   pfp_url?: string
   total_score: number
-  base_points: number
+  points_balance: number
   viral_xp: number
   guild_bonus: number
   referral_bonus: number
@@ -43,7 +43,7 @@ interface ComparisonModalProps {
 }
 
 const categories = [
-  { label: 'Quest Points', key: 'base_points' as const },
+  { label: 'Quest Points', key: 'points_balance' as const },
   { label: 'Viral XP', key: 'viral_xp' as const },
   { label: 'Guild Bonus', key: 'guild_bonus' as const },
   { label: 'Referrals', key: 'referral_bonus' as const },

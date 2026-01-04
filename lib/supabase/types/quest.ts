@@ -44,13 +44,17 @@ export interface Quest {
   creator_fid: number;
   creator_address?: string;
   
-  // Rewards (XP + Points)
-  reward_points: number; // Points awarded (currency)
-  reward_xp?: number; // XP awarded (progression) - optional separate field
+  // Rewards
+  reward_points_awarded: number; // Points awarded (onchain currency, matches contract pointsAwarded event)
   reward_mode: RewardMode;
   token_reward_amount?: number;
   nft_reward_contract?: string;
   nft_reward_token_id?: number;
+  
+  // On-chain integration
+  onchain_quest_id?: number | null; // Quest ID from contract (null for database-only quests)
+  escrow_tx_hash?: string | null; // Transaction hash of addQuest() call
+  onchain_status?: string | null; // Contract status: pending, active, completed, closed
   
   // Verification
   verification_data: Record<string, any>;
@@ -119,10 +123,10 @@ export interface QuestCompletion {
   completer_fid: number;
   completer_address?: string;
   verification_proof: Record<string, any>;
-  points_awarded: number; // Points earned (currency)
-  xp_awarded?: number; // XP earned (progression) - optional separate tracking
+  points_awarded: number; // Points earned (onchain, from reward_points_awarded)
   token_awarded?: number;
   nft_awarded_token_id?: number;
+  // Note: XP is NOT stored here - it's awarded separately via increment_user_xp() RPC
 }
 
 /**
@@ -144,7 +148,7 @@ export interface QuestCardData {
   imageUrl: string;
   coverImage: string;
   category: QuestCategory;
-  xpReward: number;
+  pointsReward: number;
   participantCount: number;
   estimatedTime: string;
   difficulty?: QuestDifficulty;
@@ -167,7 +171,7 @@ export function questToCardData(quest: Quest, userFid?: number): QuestCardData {
     imageUrl: quest.cover_image_url || '/images/quest-placeholder.jpg',
     coverImage: quest.cover_image_url || '/images/quest-placeholder.jpg',
     category: quest.category,
-    xpReward: quest.reward_points, // reward_points represents Points (currency), but display as XP for now
+    pointsReward: quest.reward_points_awarded, // Spendable POINTS currency (XP calculated separately at completion)
     participantCount: quest.participant_count,
     estimatedTime: quest.estimated_time_minutes 
       ? `~${quest.estimated_time_minutes} min` 

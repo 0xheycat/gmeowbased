@@ -28,7 +28,7 @@ import {
   hasMetricsIncreased,
   calculateIncrementalBonus,
   type EngagementMetrics,
-} from './viral-bonus'
+} from '@/lib/scoring/unified-calculator'
 
 // ============================================================================
 // Type Definitions

@@ -27,6 +27,7 @@ import { base } from 'wagmi/chains'
 import { CloseIcon, AddIcon } from '@/components/icons'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
+import { ScoreBreakdownCard } from '@/components/score/ScoreBreakdownCard'
 import { GUILD_ABI } from '@/lib/contracts/gmeow-utils'
 import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, ERROR_ARIA, LOADING_ARIA } from '@/lib/utils/accessibility'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
@@ -326,6 +327,21 @@ export function GuildCreationForm({
               {GUILD_CREATION_COST} BASE POINTS
             </span>
           </div>
+        </div>
+
+        {/* Creator Score Requirements - On-chain */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+            Your Score Breakdown
+          </h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            Guild creation requires {GUILD_CREATION_COST} total points. Check your on-chain score below:
+          </p>
+          <ScoreBreakdownCard 
+            address={address}
+            showTierBadge={true}
+            showLeaderboardRank={false}
+          />
         </div>
 
         {/* Transaction Hash Display (during confirmation) */}

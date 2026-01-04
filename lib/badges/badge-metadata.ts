@@ -306,7 +306,7 @@ export function generateQuestBadgeMetadata(params: {
       type: 'quest_completion',
       questName,
     }),
-    external_url: `https://gmeowhq.art/quests/${questId}`,
+    external_url: `https://gmeowhq.art/quests/${slug}`,
     attributes: [
       {
         trait_type: 'Badge Type',
@@ -348,7 +348,7 @@ export function generateQuestBadgeMetadata(params: {
       quest_category: questCategory,
       completed_by: completedBy,
       earned_at: completedAt,
-      reward_points: reward,
+      reward_points_awarded: reward,
       soulbound: true,
     },
   }

@@ -50,6 +50,7 @@ export interface QuestCostBreakdown {
   base: number
   tasks: number
   rewards: number
+  pointsEscrow: number
   badge: number
   total: number
 }
@@ -60,6 +61,7 @@ export interface QuestCostInput {
   rewardXp: number
   hasNewBadge?: boolean
   rewardPoints?: number
+  maxParticipants?: number // For calculating total escrow (reward × participants)
 }
 
 /**
@@ -81,20 +83,24 @@ export function calculateQuestCost(input: QuestCostInput): QuestCostBreakdown {
   const tasks = input.taskCount * 20
   
   // Reward cost (10:1 ratio - 100 XP = 10 points cost)
-  const rewards = Math.floor(input.rewardXp / 10)
+  const xpRewardCost = Math.floor(input.rewardXp / 10)
   
   // Badge creation cost (50 points)
   const badge = input.hasNewBadge ? 50 : 0
   
-  // Additional cost for point rewards (1:1 ratio)
-  const pointRewardCost = input.rewardPoints || 0
+  // Total escrow for point rewards = (points per user) × (max participants)
+  // Example: 100 points/user × 20 participants = 2000 points total escrow
+  const pointRewardCost = input.rewardPoints && input.maxParticipants
+    ? input.rewardPoints * input.maxParticipants
+    : (input.rewardPoints || 0)
   
-  const total = base + tasks + rewards + badge + pointRewardCost
+  const total = base + tasks + xpRewardCost + badge + pointRewardCost
   
   return {
     base,
     tasks,
-    rewards: rewards + pointRewardCost,
+    rewards: xpRewardCost,
+    pointsEscrow: pointRewardCost,
     badge,
     total
   }

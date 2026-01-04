@@ -240,7 +240,7 @@ export function generateQuestNFTMetadata(params: {
       type: questName,
       tokenId,
     }),
-    external_url: `https://gmeowhq.art/quests/${questId}`,
+    external_url: `https://gmeowhq.art/quests/${slug}`,
     background_color: getRarityColor(rarity),
     attributes: [
       {

@@ -63,6 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Wagmi wallet state
   const { address, isConnected } = useAccount()
   
+  // Debug: Log wallet state changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('[AuthContext] Wallet state:', { 
+        connected: isConnected, 
+        address,
+        fid
+      })
+    }
+  }, [isConnected, address, fid])
+  
   /**
    * Detect if we're in a miniapp context
    * Based on MCP best practice: Check referrer + iframe
@@ -182,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(profileData)
         
         // Sync multi-wallet cache (3-layer hybrid system)
+        // No connected address in miniapp context
         try {
           await syncWalletsFromNeynar(contextFid, false)
           const wallets = await getAllWalletsForFID(contextFid)
@@ -220,8 +232,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })
           
           // Sync multi-wallet cache (3-layer hybrid system)
+          // Pass connected wallet address to use as primary
           try {
-            await syncWalletsFromNeynar(profileData.fid, false)
+            await syncWalletsFromNeynar(profileData.fid, false, address)
             const wallets = await getAllWalletsForFID(profileData.fid)
             setCachedWallets(wallets)
             console.log('[AuthProvider] Cached', wallets.length, 'wallets for FID', profileData.fid)
@@ -268,13 +281,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Note: Don't clear miniappContext (it's read-only from SDK)
     // Wallet disconnect handled by Wagmi
   }, [])
-  
+    // Auto-trigger authenticate when wallet connects or miniapp context changes
+  useEffect(() => {
+    if ((isConnected && address) || (isMiniappSession && miniappContext)) {
+      authenticate()
+    }
+  }, [address, isConnected, miniappContext, isMiniappSession, authenticate])
   const value: AuthContextType = {
     fid,
     address,
     profile,
     cachedWallets,
-    isAuthenticated: !!fid || !!address,
+    isAuthenticated: !!fid, // Only authenticated if we have a FID
     authMethod: fid && isMiniappSession ? 'miniapp' : isConnected ? 'wallet' : null,
     miniappContext,
     isMiniappSession,

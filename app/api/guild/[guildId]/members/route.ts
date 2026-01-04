@@ -84,7 +84,7 @@ interface GuildMember {
   leaderboardStats?: {
     total_score: number
     points_balance: number           // ✅ NEW naming convention (Dec 22 migrations)
-    viral_points: number             // ✅ NEW naming convention
+    viral_xp: number             // ✅ Viral engagement XP (progression metric)
     guild_points_awarded: number     // ✅ NEW naming convention
     is_guild_officer: boolean
     global_rank: number | null
@@ -332,7 +332,7 @@ async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<str
     // Query Supabase user_points_balances for off-chain data
     const { data: pointsData, error } = await supabase
       .from('user_points_balances')
-      .select('fid, points_balance, viral_points, guild_points_awarded, total_score')
+      .select('fid, points_balance, viral_xp, guild_points_awarded, total_score')
       .in('fid', fids)
     
     if (error) {
@@ -369,7 +369,7 @@ async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<str
       statsMap[member.address.toLowerCase()] = {
         total_score: points?.total_score || 0,
         points_balance: points?.points_balance || 0,        // ✅ NEW naming (matches UI)
-        viral_points: points?.viral_points || 0,            // ✅ NEW naming (matches UI)
+        viral_points: points?.viral_xp || 0,            // ✅ API uses viral_points for backward compatibility
         guild_points_awarded: points?.guild_points_awarded || 0,  // ✅ NEW naming (matches UI)
         is_guild_officer: member.role === 'officer' || member.role === 'owner',
         global_rank: rank,

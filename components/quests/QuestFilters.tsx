@@ -32,8 +32,8 @@ import SearchIcon from '@mui/icons-material/Search';
 
 export type QuestSortOption = 
   | 'trending'
-  | 'xp-high'
-  | 'xp-low'
+  | 'points-high'
+  | 'points-low'
   | 'newest'
   | 'ending-soon'
   | 'most-participants';
@@ -42,7 +42,7 @@ export interface QuestFilterState {
   categories: string[];
   difficulties: string[];
   statuses: string[];
-  xpRange: { min: number; max: number };
+  pointsRange: { min: number; max: number };
   participantRange: { min: number; max: number };
   dateRange: { start: string; end: string } | null;
   isFeatured: boolean | null;
@@ -66,8 +66,8 @@ const STATUSES = ['draft', 'active', 'completed', 'archived'];
 
 const SORT_OPTIONS: { value: QuestSortOption; label: string }[] = [
   { value: 'trending', label: 'Trending' },
-  { value: 'xp-high', label: 'Highest XP' },
-  { value: 'xp-low', label: 'Lowest XP' },
+  { value: 'points-high', label: 'Highest Points' },
+  { value: 'points-low', label: 'Lowest Points' },
   { value: 'newest', label: 'Newest' },
   { value: 'ending-soon', label: 'Ending Soon' },
   { value: 'most-participants', label: 'Most Popular' },
@@ -136,11 +136,11 @@ export default function QuestFilters({
     onFiltersChange({ ...filters, statuses: newStatuses });
   };
 
-  // XP Range
-  const updateXpRange = (key: 'min' | 'max', value: number) => {
+  // Points Range
+  const updatePointsRange = (key: 'min' | 'max', value: number) => {
     onFiltersChange({
       ...filters,
-      xpRange: { ...filters.xpRange, [key]: value }
+      pointsRange: { ...filters.pointsRange, [key]: value }
     });
   };
 
@@ -167,7 +167,7 @@ export default function QuestFilters({
       categories: [],
       difficulties: [],
       statuses: [],
-      xpRange: { min: 0, max: 10000 },
+      pointsRange: { min: 0, max: 10000 },
       participantRange: { min: 0, max: 1000 },
       dateRange: null,
       isFeatured: null,
@@ -418,16 +418,16 @@ export default function QuestFilters({
               <div className="flex items-center gap-4">
                 <input
                   type="number"
-                  value={filters.xpRange.min}
-                  onChange={(e) => updateXpRange('min', parseInt(e.target.value) || 0)}
+                  value={filters.pointsRange.min}
+                  onChange={(e) => updatePointsRange('min', parseInt(e.target.value) || 0)}
                   className="w-24 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Min"
                 />
                 <span className="text-gray-500">to</span>
                 <input
                   type="number"
-                  value={filters.xpRange.max}
-                  onChange={(e) => updateXpRange('max', parseInt(e.target.value) || 10000)}
+                  value={filters.pointsRange.max}
+                  onChange={(e) => updatePointsRange('max', parseInt(e.target.value) || 10000)}
                   className="w-24 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Max"
                 />
@@ -438,8 +438,8 @@ export default function QuestFilters({
                 min="0"
                 max="10000"
                 step="100"
-                value={filters.xpRange.max}
-                onChange={(e) => updateXpRange('max', parseInt(e.target.value))}
+                value={filters.pointsRange.max}
+                onChange={(e) => updatePointsRange('max', parseInt(e.target.value))}
                 className="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-primary-500"
               />
             </div>

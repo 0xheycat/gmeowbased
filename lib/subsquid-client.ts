@@ -18,7 +18,7 @@
  *    - All on-chain timestamps, block numbers, transaction hashes
  * 
  * ❌ FORBIDDEN (Layer 2 - Off-chain / Layer 3 - Calculated):
- *    - viralPoints → Layer 2 (Supabase badge_casts.viral_bonus_points)
+ *    - viralPoints → Layer 2 (Supabase badge_casts.viral_bonus_xp)
  *    - rank → Layer 3 (Calculated by unified-calculator.ts)
  *    - level → Layer 3 (Calculated by unified-calculator.ts)
  *    - totalScore → Layer 3 (Calculated: blockchain + viral + quests)
@@ -2168,18 +2168,23 @@ export async function getGuildMembershipByAddress(address: string): Promise<any[
     })
     
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      // Log warning but don't throw - guild membership is optional
+      console.warn(`[Subsquid] Guild membership query failed: HTTP ${response.status}`, { address: normalizedAddress })
+      return []
     }
     
     const result = await response.json()
     
     if (result.errors) {
-      throw new Error(result.errors[0]?.message || 'GraphQL query failed')
+      // Log warning but don't throw - guild membership is optional
+      console.warn('[Subsquid] Guild membership GraphQL error:', result.errors[0]?.message, { address: normalizedAddress })
+      return []
     }
     
     return result.data?.guildMembers || []
   } catch (error) {
-    logError('Failed to fetch guild membership', { error, address })
+    // Silent fallback - guild membership is optional data
+    console.warn('[Subsquid] Guild membership fetch error:', error instanceof Error ? error.message : 'Unknown error', { address: normalizedAddress })
     return []
   }
 }

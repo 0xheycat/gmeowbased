@@ -214,7 +214,7 @@ export default function BadgeCollection({
       {filteredBadges.length > 0 ? (
         <div className="grid gap-4 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5">
           {filteredBadges.map(badge => {
-            const config = TIER_CONFIG[badge.tier]
+            const config = TIER_CONFIG[badge.tier] || TIER_CONFIG.common // Fallback to common tier
             const isHovered = hoveredBadge === badge.id
 
             return (
@@ -225,6 +225,8 @@ export default function BadgeCollection({
                   setHoveredBadge(badge.id)
                   // Delay hover card appearance (Twitter pattern: 500ms)
                   hoverTimeoutRef.current = setTimeout(() => {
+                    // Null check to prevent runtime error
+                    if (!e.currentTarget) return
                     const rect = e.currentTarget.getBoundingClientRect()
                     // Position card to the right and slightly below (Twitter pattern)
                     // Auto-adjust if too close to viewport edges
@@ -264,16 +266,22 @@ export default function BadgeCollection({
                 >
                   {/* Badge Image with lazy loading (Performance optimization) */}
                   <div className="relative h-full w-full">
-                    <Image
-                      src={badge.image_url}
-                      alt={badge.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                      loading="lazy" // Lazy loading for performance (LinkedIn pattern)
-                      placeholder="blur" // Blur placeholder while loading
-                      blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjwvc3ZnPg=="
-                    />
+                    {badge.image_url && badge.image_url.trim() !== '' ? (
+                      <Image
+                        src={badge.image_url}
+                        alt={badge.earned ? `${badge.name} badge (earned)` : `${badge.name} badge (locked)`}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                        loading="lazy" // Lazy loading for performance (LinkedIn pattern)
+                        placeholder="blur" // Blur placeholder while loading
+                        blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjwvc3ZnPg=="
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                        <span className="text-2xl font-bold text-gray-600">?</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Locked overlay */}

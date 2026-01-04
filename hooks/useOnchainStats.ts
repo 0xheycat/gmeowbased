@@ -8,11 +8,16 @@
  * - ✅ Automatic caching (client-side)
  * - ✅ Background revalidation (update stale data)
  * - ✅ Optimistic updates (instant UI feedback)
+ * - ✅ On-chain contract reads (ScoringModule) - Phase 3.2B (Dec 31, 2025)
  * 
  * Uses the secured /api/onchain-stats/[chain] API endpoint
+ * AND direct ScoringModule contract reads for points/scores
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { useReadContract } from 'wagmi'
+import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
+import { SCORING_ABI } from '@/lib/contracts/abis'
 
 type ChainKey = 'base' | 'ethereum' | 'optimism' | 'op' | 'arbitrum' | 'polygon' | 'gnosis' | 'celo' | 'scroll' | 'unichain' | 'soneium' | 'zksync' | 'zora'
 
@@ -94,6 +99,20 @@ export type OnchainStatsData = {
   
   // Metadata
   duration?: number
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 3.2B: ScoringModule On-Chain Stats (Dec 31, 2025)
+  // ═══════════════════════════════════════════════════════════════
+  // Points breakdown from ScoringModule contract
+  scoringStats?: {
+    tier: number              // User tier (0-11)
+    gmPoints: number          // GM rewards points
+    questPoints: number       // Quest completion points
+    viralPoints: number       // Viral engagement points
+    guildPoints: number       // Guild activity points
+    referralPoints: number    // Referral bonus points
+    totalScore: number        // Total score sum
+  } | null
 }
 
 type UseOnchainStatsOptions = {
@@ -139,6 +158,38 @@ export function useOnchainStats(
   const refreshTimer = useRef<NodeJS.Timeout | null>(null)
 
   const cacheKey = address && enabled ? `${address}:${chainKey}` : null
+
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 3.2B: ScoringModule Contract Read (Dec 31, 2025)
+  // ═══════════════════════════════════════════════════════════════
+  // Read user stats directly from ScoringModule contract (Base chain only)
+  const { data: scoringStatsRaw, isLoading: scoringLoading } = useReadContract({
+    address: STANDALONE_ADDRESSES.base.scoringModule,
+    abi: SCORING_ABI,
+    functionName: 'getUserStats',
+    args: address && chainKey === 'base' ? [address as `0x${string}`] : undefined,
+    chainId: 8453, // Base chain
+    query: {
+      enabled: !!address && enabled && chainKey === 'base',
+      refetchInterval: 60000, // Refetch every 60 seconds
+      staleTime: 30000, // Consider data stale after 30 seconds
+    },
+  })
+
+  // Convert ScoringModule stats from BigInt to numbers
+  const scoringStats = scoringStatsRaw ? {
+    tier: Number((scoringStatsRaw as any)[0]),
+    gmPoints: Number((scoringStatsRaw as any)[1]),
+    questPoints: Number((scoringStatsRaw as any)[2]),
+    viralPoints: Number((scoringStatsRaw as any)[3]),
+    guildPoints: Number((scoringStatsRaw as any)[4]),
+    referralPoints: Number((scoringStatsRaw as any)[5]),
+    totalScore: Number((scoringStatsRaw as any)[1]) + 
+                Number((scoringStatsRaw as any)[2]) + 
+                Number((scoringStatsRaw as any)[3]) + 
+                Number((scoringStatsRaw as any)[4]) + 
+                Number((scoringStatsRaw as any)[5]),
+  } : null
 
   const fetchStats = useCallback(async (addr: string, chain: ChainKey, isBackground = false): Promise<OnchainStatsData> => {
     const key = `${addr}:${chain}`
@@ -198,8 +249,14 @@ export function useOnchainStats(
 
       if (!isMounted.current) return
 
-      memoryCache.set(cacheKey, { data: stats, fetchedAt: Date.now() })
-      setData(stats)
+      // Merge API stats with on-chain ScoringModule stats (Phase 3.2B)
+      const mergedStats = {
+        ...stats,
+        scoringStats: chainKey === 'base' ? scoringStats : null,
+      }
+
+      memoryCache.set(cacheKey, { data: mergedStats, fetchedAt: Date.now() })
+      setData(mergedStats)
       setError(null)
     } catch (err) {
       if (!isMounted.current) return

@@ -90,7 +90,7 @@ async function getMultiWalletStats(fid: number): Promise<{
   // Query user_points_balances by FID (Subsquid already aggregated all wallets)
   const { data: pointsData } = await supabase
     .from('user_points_balances')
-    .select('points_balance, viral_points, guild_points_awarded, total_score')
+    .select('points_balance, viral_xp, guild_points_awarded, total_score')
     .eq('fid', fid)
     .maybeSingle()
 
@@ -110,7 +110,7 @@ async function getMultiWalletStats(fid: number): Promise<{
 
   return {
     pointsBalance: pointsData.points_balance || 0,
-    viralPoints: pointsData.viral_points || 0,
+    viralPoints: pointsData.viral_xp || 0,
     guildBonusPoints: pointsData.guild_points_awarded || 0,
     totalScore: pointsData.total_score || 0,
   }
@@ -633,7 +633,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
           // Get points balance (migrations applied Dec 22)
           const { data: stats } = await supabase
             .from('user_points_balances')
-            .select('points_balance, viral_points, guild_points_awarded, total_score')
+            .select('points_balance, viral_xp, guild_points_awarded, total_score')
             .eq('fid', profile.fid)
             .single()
           
@@ -649,7 +649,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
             farcaster_fid: profile.fid,
             isGuildOfficer: officers.has(profile.wallet_address || ''),
             pointsBalance: stats.points_balance || 0,
-            viralPoints: stats.viral_points || 0,
+            viralPoints: stats.viral_xp || 0,
             guildBonusPoints: stats.guild_points_awarded || 0,
             totalScore: stats.total_score || 0,
             globalRank: rankData?.points_rank || null,
@@ -879,7 +879,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
         // Fetch leaderboard stats (migrations applied Dec 22)
         const { data: leaderboardData } = await supabase
           .from('user_points_balances')
-          .select('points_balance, viral_points, guild_points_awarded, total_score')
+          .select('points_balance, viral_xp, guild_points_awarded, total_score')
           .eq('fid', profile.fid)
           .single()
         
@@ -929,7 +929,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
           badges: badges || [],
           leaderboardStats: leaderboardData ? {
             pointsBalance: leaderboardData.points_balance || 0,
-            viralPoints: leaderboardData.viral_points || 0,
+            viralPoints: leaderboardData.viral_xp || 0,
             guildBonusPoints: leaderboardData.guild_points_awarded || 0,
             totalScore: leaderboardData.total_score || 0,
             globalRank: null,

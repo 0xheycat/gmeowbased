@@ -40,6 +40,7 @@ import { ManagementTableEmptyState, NoSearchResultsEmptyState, ErrorState } from
 
 interface QuestData {
   id: string | number;
+  slug: string; // Bug #49 Fix: Add slug property for proper routing
   title: string;
   category: 'onchain' | 'social';
   difficulty: 'beginner' | 'intermediate' | 'advanced';
@@ -303,7 +304,7 @@ export default function QuestManagementTable({
                       <StarIcon className="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" />
                     )}
                     <Link
-                      href={`/quests/${quest.id}`}
+                      href={`/quests/${quest.slug}`}
                       className="font-medium text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 truncate max-w-xs"
                     >
                       {quest.title}
@@ -367,7 +368,7 @@ export default function QuestManagementTable({
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Link
-                      href={`/quests/${quest.id}`}
+                      href={`/quests/${quest.slug}`}
                       className="p-1.5 rounded-lg text-gray-600 hover:text-primary-600 hover:bg-primary-50 dark:text-gray-400 dark:hover:text-primary-400 dark:hover:bg-primary-900/30 transition-colors"
                       title="View"
                     >

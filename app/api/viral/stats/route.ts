@@ -138,7 +138,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
           .from('badge_casts')
           .select('*')
           .eq('fid', fid)
-          .order('viral_bonus_xp', { ascending: false })
+          .order('viral_bonus_points', { ascending: false })
           .limit(50) as { data: Database['public']['Tables']['badge_casts']['Row'][] | null, error: any } // GI-11: Limit result size
     
     if (error) {
@@ -188,11 +188,11 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     }
     
     // Calculate total viral points
-    const viralPoints = casts.reduce((sum, cast) => sum + (cast.viral_bonus_points || 0), 0)
+    const viralPoints = casts.reduce((sum, cast) => sum + (cast.viral_bonus_xp || 0), 0)
     
     // Build top casts list with tier information
     const topCasts: ViralCastStat[] = casts
-      .filter(cast => cast.viral_bonus_points && cast.viral_bonus_points > 0)
+      .filter(cast => cast.viral_bonus_xp && cast.viral_bonus_xp > 0)
       .map(cast => {
         const metrics: EngagementMetrics = {
           likes: cast.likes_count || 0,
@@ -213,7 +213,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
           score,
           tier: tier.name,
           tierEmoji: tier.emoji,
-          bonusXp: cast.viral_bonus_points || 0,
+          bonusXp: cast.viral_bonus_xp || 0,
           createdAt: cast.created_at,
         }
       })
