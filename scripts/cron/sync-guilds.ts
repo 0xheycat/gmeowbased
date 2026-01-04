@@ -6,7 +6,7 @@
  * Runs independently via GitHub Actions (no Vercel API overhead)
  */
 
-import { getSupabaseAdminClient } from '@/lib/supabase/edge'
+import { getSupabaseAdminClient } from '../../lib/supabase/edge'
 
 type GuildEvent = {
   id: string

@@ -6,7 +6,7 @@
  * Processes badge mint queue independently via GitHub Actions
  */
 
-import { processBatch } from '@/scripts/automation/mint-badge-queue'
+import { processBatch } from '../automation/mint-badge-queue'
 
 async function mintBadges() {
   console.log('🎖️ Starting badge minting worker...')
@@ -18,7 +18,7 @@ async function mintBadges() {
     const duration = Date.now() - startTime
     console.log(`\n📈 Badge minting complete:`)
     console.log(`  Processed: ${result.processed}`)
-    console.log(`  Successful: ${result.successful}`)
+    console.log(`  Successful: ${result.success}`)
     console.log(`  Failed: ${result.failed}`)
     console.log(`  Duration: ${duration}ms`)
     

@@ -6,6 +6,7 @@
       "DOM",
       "DOM.Iterable"
     ],
+    "types": [],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "preserve",
@@ -43,7 +44,6 @@
     "node_modules",
     "Planing/**/*",
     "planning/**/*",
-    "scripts/**/*",
     "backups/**/*",
     "backstop_data/**/*",
     "playwright-report/**/*",
