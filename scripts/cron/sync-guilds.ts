@@ -6,15 +6,8 @@
  * Runs independently via GitHub Actions (no Vercel API overhead)
  */
 
+// @ts-nocheck - Script uses dynamic Supabase types
 import { getSupabaseAdminClient } from '../../lib/supabase/edge'
-
-type GuildEvent = {
-  id: string
-  guild_id: string
-  event_type: string
-  points?: number
-  [key: string]: any
-}
 
 async function syncGuildStats() {
   console.log('🏰 Starting guild stats sync from Subsquid indexer...')
@@ -22,6 +15,7 @@ async function syncGuildStats() {
   
   try {
     const supabase = getSupabaseAdminClient()
+    if (!supabase) throw new Error('Failed to initialize Supabase client')
     
     // Fetch all guilds
     const { data: guilds, error: guildError } = await supabase
@@ -30,6 +24,7 @@ async function syncGuildStats() {
       .order('created_at', { ascending: false })
     
     if (guildError) throw guildError
+    if (!guilds) throw new Error('No guilds found')
     
     console.log(`📊 Found ${guilds.length} guilds to sync`)
     
@@ -48,12 +43,12 @@ async function syncGuildStats() {
         if (!events) continue
         
         // Calculate stats from events
-        const memberCount = events.filter((e: GuildEvent) => e.event_type === 'MEMBER_JOINED').length -
-                           events.filter((e: GuildEvent) => e.event_type === 'MEMBER_LEFT').length
+        const memberCount = events.filter(e => e.event_type === 'MEMBER_JOINED').length -
+                           events.filter(e => e.event_type === 'MEMBER_LEFT').length
         
         const totalPoints = events
-          .filter((e: GuildEvent) => e.event_type === 'POINTS_DEPOSITED')
-          .reduce((sum: number, e: GuildEvent) => sum + (e.points || 0), 0)
+          .filter(e => e.event_type === 'POINTS_DEPOSITED')
+          .reduce((sum, e) => sum + (e.points || 0), 0)
         
         // Calculate guild level
         let level = 1
