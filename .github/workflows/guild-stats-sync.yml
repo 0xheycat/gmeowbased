@@ -15,29 +15,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
       - name: Sync guild statistics from Subsquid
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          DEPLOYMENT_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art' }}
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL || 'https://gmeowhq.art' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          echo "🏰 Starting guild stats sync from Subsquid indexer..."
-          echo "📊 Architecture: Subsquid (Layer 2) → Supabase guild_stats_cache (Layer 3)"
+          echo "🏰 Starting guild stats sync (standalone - no Vercel API)"
+          echo "📊 Architecture: Direct execution → Subsquid → Supabase"
           
-          # Call cron API endpoint
-          response=$(curl -s -w "\n%{http_code}" -X POST \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            -H "Content-Type: application/json" \
-            "$DEPLOYMENT_URL/api/cron/sync-guilds")
+          # Run standalone script (no Vercel CPU usage)
+          pnpm tsx scripts/cron-runner.ts sync-guilds
+          response="$?"
           
-          # Extract HTTP status code (last line)
-          http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | head -n-1)
-          
-          echo "📊 Response status: $http_code"
-          echo "📄 Response body: $body"
-          
-          # Check if request was successful
-          if [ "$http_code" -eq 200 ]; then
+          # Check exit code
+          if [ "$response" -eq 0 ]; then
             echo "✅ Guild stats synced successfully!"
             
             # Parse and display results (if jq is available)

@@ -1,5 +1,77 @@
+# Build outputs
 .next/
 node_modules/
+out/
+dist/
+build/
+
+# Environment files
+.env
 .env.local
+.env.*.local
+.env.sepolia
+.env.contracts.*
+.env.example*
+
+# Logs
 *.log
+logs/
+*.tsbuildinfo
+
+# Cache and temp files
+.cache/
+.backup/
+.lighthouseci/
+cache/
 .DS_Store
+*.swp
+*.swo
+
+# Large directories
+gmeow-indexer/
+archive/
+backups/
+docs-archive/
+.archive-plan.txt
+
+# Git
+.git/
+.github/
+
+# Testing
+__tests__/
+tests/
+e2e/
+test/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+test-*.sh
+
+# Deployment logs
+deployments/
+*.deployment.log
+deployment-*.log
+
+# Foundry/contract files
+broadcast/
+out/
+cache/
+lib/
+contract/
+foundry.lock
+
+# Documentation (if not needed for runtime)
+*.md
+planning/
+Docs/
+docs/
+
+# Python
+.venv/
+__pycache__/
+
+# CRITICAL: Cron API routes (moved to GitHub Actions)
+# Prevents CPU usage on Vercel free tier
+app/api/cron/
