@@ -57,7 +57,7 @@ export interface TemplateData {
   difficulty: 'beginner' | 'intermediate' | 'advanced'
   estimated_time_minutes: number
   reward_xp: number
-  reward_category: 'viral_points' | 'points_balance' | 'both'
+  reward_category: 'viral_xp' | 'points_balance' | 'both'
   tasks: Array<{
     type: 'social' | 'onchain' | 'manual'
     title: string
@@ -326,7 +326,7 @@ export async function createCustomTemplate(
     difficulty: quest.difficulty,
     estimated_time_minutes: quest.estimated_time_minutes,
     reward_xp: quest.reward_xp,
-    reward_category: quest.reward_category || 'viral_points',
+    reward_category: quest.reward_category || 'viral_xp',
     tasks: quest.quest_tasks.map((task: any) => ({
       type: task.type,
       title: task.title,

@@ -110,10 +110,10 @@ async function fetchAvailableQuests(): Promise<Array<{
     
     const { data, error } = await supabase
       .from('unified_quests')
-      .select('id, title, category, type, reward_points, max_completions, expiry_date, status')
+      .select('id, title, category, type, reward_points_awarded, max_completions, expiry_date, status')
       .eq('status', 'active')
       .or(`expiry_date.is.null,expiry_date.gt.${now}`)
-      .order('reward_points', { ascending: false })
+      .order('reward_points_awarded', { ascending: false })
       .limit(50)
     
     if (error || !data) return []

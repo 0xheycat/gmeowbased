@@ -27,6 +27,21 @@ export class LeaderboardEntry {
     @BigIntColumn_({nullable: false})
     monthlyPoints!: bigint
 
+    @IntColumn_({nullable: false})
+    level!: number
+
+    @IntColumn_({nullable: false})
+    rankTier!: number
+
+    @IntColumn_({nullable: false})
+    multiplier!: number
+
+    @IntColumn_({nullable: true})
+    previousRank!: number | undefined | null
+
+    @IntColumn_({nullable: true})
+    rankChange!: number | undefined | null
+
     @DateTimeColumn_({nullable: false})
     updatedAt!: Date
 }

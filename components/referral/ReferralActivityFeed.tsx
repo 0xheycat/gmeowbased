@@ -1,140 +1,78 @@
 /**
- * ReferralActivityFeed Component
+ * ReferralActivityFeed Component - Phase 5: Hybrid Architecture Migration
  * 
- * Purpose: Timeline of referral events for a user
- * Template: trezoadmin-41/activity-feed (35%) + ActivityTimeline pattern (25%)
+ * Purpose: Timeline of referral events from Subsquid GraphQL
+ * Template: music/* loading states + ActivityTimeline pattern
+ * 
+ * @architecture Hybrid Data Layer
+ * - Referral activity: Subsquid GraphQL (useRecentReferralActivity hook)
+ * - Real-time data with 30s polling
+ * - Client-side timestamp formatting
  * 
  * Features:
- * - Chronological activity timeline
- * - Event types: registered, referred, reward, badge
+ * - Chronological activity timeline from ReferralUse events
+ * - Event types: Code creation, Referral uses
  * - Relative timestamps (e.g., "2 hours ago")
- * - Loading states
+ * - Skeleton wave loading
  * - Empty state
  * 
  * Usage:
- * <ReferralActivityFeed fid={12345} />
+ * <ReferralActivityFeed address="0x..." />
  */
 
 'use client'
 
-import { useState, useEffect } from 'react'
-import { CheckCircleIcon, PeopleIcon, EmojiEventsIcon, StarIcon, Calendar } from '@/components/icons'
+import type { Address } from 'viem'
+import { CheckCircleIcon, PeopleIcon, StarIcon, Calendar } from '@/components/icons'
+import { useRecentReferralActivity } from '@/hooks/useReferralSubsquid'
+import { Skeleton } from '@/components/ui/skeleton/Skeleton'
+import { formatReferralTimestamp } from '@/hooks/useReferralSubsquid'
+import { motion } from 'framer-motion'
 
 export interface ReferralActivityFeedProps {
-  /** User's Farcaster ID */
-  fid: number
+  /** User's wallet address */
+  address?: Address
   /** Maximum number of activities to show */
   limit?: number
   /** Custom CSS class */
   className?: string
 }
 
-interface Activity {
-  id: string
-  type: 'registered' | 'referred' | 'reward' | 'badge'
-  timestamp: string
-  data: {
-    code?: string
-    referredFid?: number
-    referredUsername?: string
-    points?: number
-    badgeName?: string
-  }
+const getActivityIcon = (isReferralUse: boolean) => {
+  return isReferralUse ? (
+    <PeopleIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+  ) : (
+    <CheckCircleIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+  )
 }
 
-const getRelativeTime = (timestamp: string): string => {
-  const now = new Date()
-  const then = new Date(timestamp)
-  const diffMs = now.getTime() - then.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMins / 60)
-  const diffDays = Math.floor(diffHours / 24)
-
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`
-  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`
-  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`
-  return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) !== 1 ? 's' : ''} ago`
-}
-
-const getActivityIcon = (type: Activity['type']) => {
-  switch (type) {
-    case 'registered':
-      return <CheckCircleIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-    case 'referred':
-      return <PeopleIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-    case 'reward':
-      return <StarIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-    case 'badge':
-      return <EmojiEventsIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-  }
-}
-
-const getActivityText = (activity: Activity): { title: string; description: string } => {
-  switch (activity.type) {
-    case 'registered':
-      return {
-        title: 'Referral Code Registered',
-        description: `You registered the code "${activity.data.code}"`,
-      }
-    case 'referred':
-      return {
-        title: 'New Referral',
-        description: `${activity.data.referredUsername || `User ${activity.data.referredFid}`} joined using your code`,
-      }
-    case 'reward':
-      return {
-        title: 'Reward Earned',
-        description: `You earned ${activity.data.points} points from a referral`,
-      }
-    case 'badge':
-      return {
-        title: 'Badge Unlocked',
-        description: `Earned the ${activity.data.badgeName} badge`,
-      }
-  }
-}
-
-export function ReferralActivityFeed({ fid, limit = 20, className = '' }: ReferralActivityFeedProps) {
-  const [activities, setActivities] = useState<Activity[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const loadActivities = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        const params = new URLSearchParams({
-          limit: limit.toString(),
-        })
-
-        const response = await fetch(`/api/referral/activity/${fid}?${params}`)
-        
-        if (!response.ok) {
-          throw new Error('Failed to load activity feed')
-        }
-
-        const data = await response.json()
-        setActivities(data.activities || [])
-      } catch (err) {
-        console.error('Failed to load activity feed:', err)
-        setError('Failed to load activity feed. Please try again.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadActivities()
-  }, [fid, limit])
+export function ReferralActivityFeed({ address, limit = 20, className = '' }: ReferralActivityFeedProps) {
+  // Fetch activity from Subsquid (ReferralUse events with 30s polling)
+  const { activity, loading: isLoading, error, refetch } = useRecentReferralActivity(limit)
 
   if (error) {
     return (
-      <div className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 ${className}`}>
-        <p className="text-red-700 dark:text-red-300">{error}</p>
-      </div>
+      <motion.div 
+        className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 ${className}`}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+        role="alert"
+        aria-live="assertive"
+      >
+        <p className="text-red-700 dark:text-red-300 mb-4">
+          Failed to load activity feed. Please try again.
+        </p>
+        <motion.button
+          onClick={() => refetch()}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.15 }}
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors focus:ring-2 focus:ring-red-500 focus:outline-none shadow-lg shadow-red-500/30"
+        >
+          Retry
+        </motion.button>
+      </motion.div>
     )
   }
 
@@ -148,18 +86,23 @@ export function ReferralActivityFeed({ fid, limit = 20, className = '' }: Referr
       </div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex gap-4 animate-pulse">
-              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-full" />
+        <div 
+          className="space-y-4"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading activity feed"
+        >
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex gap-4">
+              <Skeleton variant="avatar" className="w-10 h-10" animation="wave" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-2/3" />
+                <Skeleton variant="text" className="h-4 w-1/3" animation="wave" />
+                <Skeleton variant="text" className="h-3 w-2/3" animation="wave" />
               </div>
             </div>
           ))}
         </div>
-      ) : activities.length === 0 ? (
+      ) : activity.length === 0 ? (
         <div className="text-center py-12">
           <Calendar className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">
@@ -173,15 +116,21 @@ export function ReferralActivityFeed({ fid, limit = 20, className = '' }: Referr
 
           {/* Activities */}
           <div className="space-y-6">
-            {activities.map((activity) => {
-              const activityText = getActivityText(activity)
-              if (!activityText) return null
-              const { title, description } = activityText
+            {activity.map((use) => {
+              const title = 'New Referral'
+              const description = `${use.referee.slice(0, 6)}...${use.referee.slice(-4)} used code "${use.code.id}" and earned ${Number(use.reward)} points`
+              
               return (
-                <div key={activity.id} className="relative flex gap-4">
+                <motion.div 
+                  key={use.id} 
+                  className="relative flex gap-4"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
                   {/* Icon */}
                   <div className="relative z-10 flex items-center justify-center w-10 h-10 bg-white dark:bg-gray-900 rounded-full border-2 border-gray-200 dark:border-gray-700">
-                    {getActivityIcon(activity.type)}
+                    {getActivityIcon(true)}
                   </div>
 
                   {/* Content */}
@@ -191,14 +140,14 @@ export function ReferralActivityFeed({ fid, limit = 20, className = '' }: Referr
                         {title}
                       </h3>
                       <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {getRelativeTime(activity.timestamp)}
+                        {formatReferralTimestamp(use.timestamp)}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {description}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               )
             })}
           </div>

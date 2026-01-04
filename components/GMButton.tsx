@@ -27,7 +27,7 @@ import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay
 import { getGMStats, type GMStats } from '@/lib/integrations/subsquid-client'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI, type ChainKey } from '@/lib/contracts/gmeow-utils'
 import { Tooltip } from '@/components/ui/tooltip'
-import { calculateRankProgress, type RankProgress } from '@/lib/scoring/unified-calculator'
+import { calculateRankProgress, invalidateUserScoringCache, type RankProgress } from '@/lib/scoring/unified-calculator'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import WbSunnyIcon from '@mui/icons-material/WbSunny'
@@ -233,6 +233,11 @@ export function GMButton({
 
     const handleSuccess = async () => {
       console.log('[GMButton] Transaction confirmed! Hash:', txHash)
+      
+      // Invalidate scoring cache to show updated points immediately
+      await invalidateUserScoringCache(address).catch((err) => {
+        console.error('[GMButton] Failed to invalidate cache:', err);
+      });
       
       // Small delay to ensure indexer has updated
       await new Promise(resolve => setTimeout(resolve, 2000))

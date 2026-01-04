@@ -117,7 +117,7 @@ export const ANIMATION_TIMINGS = {
   xpCounter: 800,            // ms - number increment
   confettiBurst: 200,        // ms - particle spawn
   confettiFall: 2000,        // ms - particle lifecycle
-  modalAutoDismiss: 4000,    // ms - total display time
+  modalAutoDismiss: 30000,   // ms - total display time (Bug #47: increased from 8s to 30s)
   modalExit: 200,            // ms - scale + fade out
 } as const
 

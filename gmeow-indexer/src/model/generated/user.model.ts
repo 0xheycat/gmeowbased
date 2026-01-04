@@ -1,9 +1,12 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, BigIntColumn as BigIntColumn_, IntColumn as IntColumn_, OneToMany as OneToMany_, DateTimeColumn as DateTimeColumn_} from "@subsquid/typeorm-store"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, BigIntColumn as BigIntColumn_, IntColumn as IntColumn_, OneToMany as OneToMany_, Index as Index_, DateTimeColumn as DateTimeColumn_} from "@subsquid/typeorm-store"
 import {BadgeMint} from "./badgeMint.model"
 import {GuildMember} from "./guildMember.model"
 import {GMEvent} from "./gmEvent.model"
 import {TipEvent} from "./tipEvent.model"
 import {ViralMilestone} from "./viralMilestone.model"
+import {StatsUpdatedEvent} from "./statsUpdatedEvent.model"
+import {LevelUpEvent} from "./levelUpEvent.model"
+import {RankUpEvent} from "./rankUpEvent.model"
 
 @Entity_()
 export class User {
@@ -55,6 +58,69 @@ export class User {
 
     @IntColumn_({nullable: false})
     milestoneCount!: number
+
+    @Index_()
+    @IntColumn_({nullable: false})
+    level!: number
+
+    @Index_()
+    @IntColumn_({nullable: false})
+    rankTier!: number
+
+    @Index_()
+    @BigIntColumn_({nullable: false})
+    totalScore!: bigint
+
+    @IntColumn_({nullable: false})
+    multiplier!: number
+
+    @BigIntColumn_({nullable: false})
+    gmPoints!: bigint
+
+    @BigIntColumn_({nullable: false})
+    viralPoints!: bigint
+
+    @BigIntColumn_({nullable: false})
+    questPoints!: bigint
+
+    @BigIntColumn_({nullable: false})
+    guildPoints!: bigint
+
+    @BigIntColumn_({nullable: false})
+    referralPoints!: bigint
+
+    @BigIntColumn_({nullable: false})
+    xpIntoLevel!: bigint
+
+    @BigIntColumn_({nullable: false})
+    xpToNextLevel!: bigint
+
+    @BigIntColumn_({nullable: false})
+    pointsIntoTier!: bigint
+
+    @BigIntColumn_({nullable: false})
+    pointsToNextTier!: bigint
+
+    @DateTimeColumn_({nullable: true})
+    lastLevelUpAt!: Date | undefined | null
+
+    @DateTimeColumn_({nullable: true})
+    lastRankUpAt!: Date | undefined | null
+
+    @IntColumn_({nullable: false})
+    totalLevelUps!: number
+
+    @IntColumn_({nullable: false})
+    totalRankUps!: number
+
+    @OneToMany_(() => StatsUpdatedEvent, e => e.user)
+    statsUpdates!: StatsUpdatedEvent[]
+
+    @OneToMany_(() => LevelUpEvent, e => e.user)
+    levelUps!: LevelUpEvent[]
+
+    @OneToMany_(() => RankUpEvent, e => e.user)
+    rankUps!: RankUpEvent[]
 
     @DateTimeColumn_({nullable: false})
     createdAt!: Date

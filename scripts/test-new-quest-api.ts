@@ -205,7 +205,7 @@ async function runTests() {
       console.log(`\n  Quest: ${quest.title || quest.id}`);
       console.log(`  Type: ${quest.type}`);
       console.log(`  Category: ${quest.category}`);
-      console.log(`  XP Reward: ${quest.reward_points || 0}`);
+      console.log(`  Points Reward: ${quest.reward_points_awarded || 0}`);
       console.log(`  User Progress: ${quest.user_progress?.status || 'not_started'}`);
     }
   }

@@ -3,35 +3,84 @@
   "chainId": 8453,
   "deployer": "0x8870C155666809609176260F2B65a626C000D773",
   "oracle": "0x8870C155666809609176260F2B65a626C000D773",
+  "deploymentDate": "2025-12-31",
+  "version": "production-v2",
   "contracts": {
-    "GmeowCore": "0x9BDD11aA50456572E3Ea5329fcDEb81974137f92",
-    "GmeowGuild": "0x967457be45facE07c22c0374dAfBeF7b2f7cd059",
-    "GmeowNFT": "0xD99aeE13eA68C1e4e43cfA60E792520Dd06C2c20"
+    "ScoringModule": "0xdeCFDc900DD1DBD6f947d3558143aA8374413Bd6",
+    "GmeowCore": "0x343829A6A613d51B4A81c2dE508e49CA66D4548d",
+    "GmeowGuild": "0xC3AA96aDA307BaD7e6c2d7575051fA19C358C097",
+    "GmeowReferral": "0x50941e1033fF8E163fB60A0433b1CB2bc71Ce8Df",
+    "SoulboundBadge": "0x45a2aaa181dd5f9b1fd173b135b44f5207ee3dbb",
+    "GmeowNFT": "0x34d0CD77Ba8d643C1d5f568331d61eFa35132eA8"
+  },
+  "deploymentBlocks": {
+    "scoringModule": 40193345,
+    "core": 40194624,
+    "guild": 40218430,
+    "referral": 40194753,
+    "badge": 40218664,
+    "nft": 40219320
+  },
+  "deploymentTimestamps": {
+    "scoringModule": "2025-12-31T10:13:57Z",
+    "core": "2025-12-31T10:56:35Z",
+    "referral": "2025-12-31T11:00:53Z",
+    "guild": "2026-01-01T00:10:07Z",
+    "badge": "2026-01-01T00:10:07Z",
+    "nft": "2026-01-01T00:39:47Z"
   },
   "transactions": {
-    "coreDeploy": "0x8dc6d56da058e5add79fe10ad6669ac8bbee4442cebbd99479f5f4f9a1f728d4",
-    "guildDeploy": "0x976fb38ecbe1ad77b6802c777da7f8c244017edd464addad802c9e538463158a",
-    "nftDeploy": "0xb6f9705cb34433fd49b7de002691bc39858059e6a8d0047ff4f11bb11ec632e3",
-    "guildLink": "0xb3c58690c382b2a73fb2a0acdfa5c7d2c99b1eab1d49e637c5866ec9c9ae81df",
-    "nftLink": "0x4747db26f754d17717fbb6a804186812794ec4c550d4140ac4ae42f3ca65b807"
+    "scoringModuleDeploy": "0x25eccd43b8de80aa99e3e106c11670e3aad7bfb107925c48ee8db22e5dd7b1cb",
+    "coreDeploy": "0xc116cffc4186f92517e5696b444d13f50499aef314a32fff19e678cb746ff8fe",
+    "referralDeploy": "0xc309fcc576338a19e71d81b26e0d59fead9aa8902c7a9a25e35c6d9b7d0f76e7",
+    "guildDeploy": "0xb9de23577da33a3ffb0bbad0e98d7c8e9941bdfaed4afed3fe4f79792ef14954",
+    "nftDeploy": "0xacc3df5a09ecd759c994a9741611f9f6699974862573a7cec0fb365cbcf8eb6f",
+    "guildSetScoring": "0x54d2b42af7b04e86d3b0401ea262772b61c0180de86db4df1a187301bc0c954f",
+    "guildAuthorize": "0xe68a42cdb3c20b52f9b0466a450f7d595a6cf703c919bbd430a7c189a2265a45",
+    "guildSetBadge": "0xb66449a497d25b22d60053c3f7255278ed9c99077f99b068f10ddd694b9d6f9c",
+    "guildAuthorizeBadge": "0xbdab7ff23f249b028921d71842fb103c6ea6c4c5ca375de52e6a9bf003e5a8c7",
+    "coreAuthorizeNFT": "0xacb2c16c8494c46dcfa036c71398a4961bff390ef9dd0ae7b84c6dca650947d7"
   },
-  "deployedAt": "2025-11-26T17:45:00Z",
-  "architecture": "hybrid-standalone",
-  "bonusValues": {
-    "ogThreshold": 50000,
-    "streak7Bonus": 15,
-    "streak30Bonus": 30,
-    "streak100Bonus": 60
+  "testing": {
+    "status": "complete",
+    "testsPassed": "15/17",
+    "successRate": "88%",
+    "testTransactions": {
+      "addQuestPoints": "0xa78813904a02792cf1a485b1ccca4902dcee7fd0c5d087bcce20db05e754f7fb",
+      "createGuild": "0x714490ea76a7f77a0455554ae5ae642f124049d471f0591f1983f784abbbe679",
+      "sendGM": "0x69f14286ec71429412c7d4b1fab753347756f0b10b6454755c158bd375368a06"
+    },
+    "gasUsed": {
+      "guildDeploy": 2420160,
+      "nftDeploy": 2603753,
+      "createGuild": 330126,
+      "addPoints": 146404,
+      "sendGM": 191188
+    }
+  },
+  "architecture": "modular-standalone",
+  "features": {
+    "scoringModule": "centralized point tracking",
+    "multiContract": "Core, Guild, Referral, Badge, NFT",
+    "authorizations": "5/5 complete",
+    "tested": "on-chain integration verified"
   },
   "costs": {
-    "initialBalance": "0.000189590826301270 ETH",
-    "finalBalance": "0.000140878784961244 ETH",
-    "totalSpent": "0.000048712041340026 ETH",
-    "estimatedUSD": "$0.13 USD"
+    "testingSpent": "0.000617 ETH",
+    "estimatedUSD": "~$2.41 USD"
   },
   "basescanLinks": {
-    "core": "https://basescan.org/address/0x9BDD11aA50456572E3Ea5329fcDEb81974137f92",
-    "guild": "https://basescan.org/address/0x967457be45facE07c22c0374dAfBeF7b2f7cd059",
-    "nft": "https://basescan.org/address/0xD99aeE13eA68C1e4e43cfA60E792520Dd06C2c20"
+    "scoringModule": "https://basescan.org/address/0xdeCFDc900DD1DBD6f947d3558143aA8374413Bd6",
+    "core": "https://basescan.org/address/0x343829A6A613d51B4A81c2dE508e49CA66D4548d",
+    "guild": "https://basescan.org/address/0xC3AA96aDA307BaD7e6c2d7575051fA19C358C097",
+    "referral": "https://basescan.org/address/0x50941e1033fF8E163fB60A0433b1CB2bc71Ce8Df",
+    "badge": "https://basescan.org/address/0x45a2aaa181dd5f9b1fd173b135b44f5207ee3dbb",
+    "nft": "https://basescan.org/address/0x34d0CD77Ba8d643C1d5f568331d61eFa35132eA8"
+  },
+  "deprecated": {
+    "oldCore": "0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73",
+    "oldGuild": "0x6754e71fFd49Fb9C33C19dA1Aa6596155e53C8A3",
+    "oldNFT": "0xCE9596a992e38c5fa2d997ea916a277E0F652D5C",
+    "reason": "Replaced with modular architecture Dec 31, 2025"
   }
 }

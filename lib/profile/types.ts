@@ -78,9 +78,9 @@ export interface SocialLinks {
  * 
  * Data Sources:
  * - points_balance: user_points_balances.points_balance (spendable points from activities)
- * - viral_points: user_points_balances.viral_points (engagement points from viral casts)
+ * - viral_xp: user_points_balances.viral_xp (engagement XP from viral casts - progression metric)
  * - guild_points_awarded: user_points_balances.guild_points_awarded (guild membership bonus)
- * - total_score: GENERATED column (points_balance + viral_points + guild_points_awarded)
+ * - total_score: GENERATED column (points_balance + viral_xp + guild_points_awarded)
  * - current_streak: Subsquid UserOnChainStats.currentStreak (on-chain)
  * - global_rank: points_leaderboard view (calculated from total_score)
  * - level: unified-calculator.calculateLevelProgress(total_score)
@@ -92,9 +92,9 @@ export interface SocialLinks {
  * - badge_count: Count from user_badges table
  */
 export interface ProfileStats {
-  // Points (from user_points_balances - migrated Dec 22, 2025)
+  // Points (from user_points_balances - migrated Dec 22, 2025, viral_xp fixed Dec 27, 2025)
   points_balance: number        // Blockchain points (spendable currency)
-  viral_points: number          // Social engagement points
+  viral_xp: number              // Social engagement XP (progression metric, separate from Points currency)
   guild_points_awarded: number  // Guild contribution points  
   total_score: number           // Auto-calculated total (generated column)
   

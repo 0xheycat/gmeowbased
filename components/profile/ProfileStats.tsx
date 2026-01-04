@@ -1,39 +1,47 @@
 'use client'
 
 /**
- * ProfileStats Component
+ * ProfileStats Component - Phase 2: GraphQL Migration
  * 
- * Template Strategy: trezoadmin-41/MyProfile/ProfileIntro.tsx (stats section)
- * Adaptation: 25%
- * Platform Reference: LinkedIn profile stats
+ * MIGRATED: Uses GraphQL useUserStats hook for scoring data (viral points, points balance, tier/rank)
+ * KEPT: Uses Supabase for quest completions, badge count, last active
+ * 
+ * Data Flow:
+ * - Scoring data: useUserStats hook → Apollo Client → Subsquid (50-100ms) → Contract fallback (300-500ms)
+ * - Quest/Badge data: Passed via props from parent (Supabase)
  * 
  * Features:
  * - 6 stat cards in responsive grid (2 cols mobile, 3 cols desktop)
  * - Number formatting with commas (1,234)
- * - Animated counters (optional)
  * - Tooltips for stat explanations
  * - Icons for each stat type
+ * - Loading skeleton
+ * - Error handling
  * 
  * Stats Displayed:
- * 1. Viral Points (user_points_balances.viral_points) - renamed from viral_xp
- * 2. Points Balance (user_points_balances.points_balance) - renamed from base_points
- * 3. Quest Completions (count from quest_completions)
- * 4. Badge Count (count from user_badges)
- * 5. Global Rank (points_leaderboard.rank)
- * 6. Streak (Subsquid UserOnChainStats.currentStreak)
+ * 1. Viral Points (GraphQL: stats.viralPoints)
+ * 2. Quest Points (GraphQL: stats.questPoints)
+ * 3. Quest Completions (Supabase: passed via props)
+ * 4. Badge Count (Supabase: passed via props)
+ * 5. Global Rank (GraphQL: stats.rankTier)
+ * 6. Streak (GraphQL: stats.currentStreak)
  * 
  * @module components/profile/ProfileStats
  */
 
-import type { ProfileStats as ProfileStatsType } from '@/lib/profile/types'
-import { calculateStats, formatLastActive } from '@/lib/scoring/unified-calculator'
+import { useUserStats } from '@/hooks/useUserStats'
+import type { Address } from 'viem'
+import { formatLastActive } from '@/lib/scoring/unified-calculator'
 
-// Icons from components/icons
+// Icons
 import { TrendArrowUpIcon } from '@/components/icons/trend-arrow-up-icon'
 import { TrendArrowDownIcon } from '@/components/icons/trend-arrow-down-icon'
 
 interface ProfileStatsProps {
-  stats: ProfileStatsType
+  address: Address
+  questCompletions: number // From Supabase
+  badgeCount: number // From Supabase
+  lastActive?: string // From Supabase
 }
 
 interface StatCardProps {
@@ -77,19 +85,79 @@ function StatCard({ label, value, icon, change, tooltip, colorClass = 'text-prim
   )
 }
 
-export function ProfileStats({ stats }: ProfileStatsProps) {
-  // Calculate formatted stats and level info
-  const calculatedStats = calculateStats(stats)
+// Tier names mapping
+const TIER_NAMES = [
+  'Iron', 'Bronze', 'Silver', 'Gold', 
+  'Platinum', 'Diamond', 'Master', 'Grandmaster',
+  'Challenger', 'Elite', 'Legend', 'Mythic'
+]
+
+export function ProfileStats({ address, questCompletions, badgeCount, lastActive }: ProfileStatsProps) {
+  // Fetch scoring data from GraphQL
+  const { stats, loading, error, source } = useUserStats(address, {
+    variant: 'complete',
+    enableFallback: true,
+    pollInterval: 60000, // 60s polling
+  })
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm">
+        <div className="mb-6">
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 animate-pulse">
+              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg mb-2"></div>
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-1"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error || !stats) {
+    return (
+      <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm">
+        <div className="text-center py-8">
+          <p className="text-red-600 dark:text-red-400 mb-2">Failed to load stats</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{error?.message || 'Unable to fetch scoring data'}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Calculate level progress
+  const currentXP = Number(stats.xpIntoLevel)
+  const nextLevelXP = Number(stats.xpToNextLevel)
+  const levelPercent = nextLevelXP > 0 
+    ? Math.min((currentXP / nextLevelXP) * 100, 100)
+    : 100
+
+  const tierName = TIER_NAMES[stats.rankTier] || 'Unknown'
 
   return (
     <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-          Profile Statistics
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Last active {formatLastActive(stats.last_active)}
-        </p>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+            Profile Statistics
+          </h2>
+          <span className="text-xs text-gray-500 dark:text-gray-400" title={source === 'subsquid' ? 'Data from Subsquid GraphQL' : 'Data from contract (fallback)'}>
+            {source === 'subsquid' ? '⚡ Live' : '🔗 On-chain'}
+          </span>
+        </div>
+        {lastActive && (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Last active {formatLastActive(lastActive)}
+          </p>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -97,7 +165,7 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
         {/* Viral Points */}
         <StatCard
           label="Viral Points"
-          value={calculatedStats.formattedStats.viral_points}
+          value={Number(stats.viralPoints).toLocaleString()}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
@@ -107,24 +175,24 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
           colorClass="text-purple-600"
         />
 
-        {/* Points Balance */}
+        {/* Quest Points */}
         <StatCard
-          label="Points Balance"
-          value={calculatedStats.formattedStats.points_balance}
+          label="Quest Points"
+          value={Number(stats.questPoints).toLocaleString()}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
           }
-          tooltip="Spendable points from quest completions and activities"
+          tooltip="Points earned from quest completions and activities"
           colorClass="text-blue-600"
         />
 
-        {/* Quest Completions */}
+        {/* Quest Completions (Supabase) */}
         <StatCard
           label="Quests"
-          value={calculatedStats.formattedStats.quest_completions}
+          value={questCompletions.toLocaleString()}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" />
@@ -134,10 +202,10 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
           colorClass="text-green-600"
         />
 
-        {/* Badge Count */}
+        {/* Badge Count (Supabase) */}
         <StatCard
           label="Badges"
-          value={calculatedStats.formattedStats.badge_count}
+          value={badgeCount.toLocaleString()}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
@@ -148,23 +216,23 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
           colorClass="text-yellow-600"
         />
 
-        {/* Global Rank */}
+        {/* Rank Tier */}
         <StatCard
-          label="Global Rank"
-          value={(stats.global_rank && stats.global_rank > 0) ? `#${stats.global_rank.toLocaleString()}` : 'Unranked'}
+          label="Rank Tier"
+          value={tierName}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M16 11V3H8V9H2V21H22V11H16ZM10 5H14V19H10V5ZM4 11H8V19H4V11ZM20 19H16V13H20V19Z" />
             </svg>
           }
-          tooltip="Position on global leaderboard by total score"
+          tooltip={`Tier ${stats.rankTier}/11 based on total score`}
           colorClass="text-orange-600"
         />
 
         {/* Streak */}
         <StatCard
           label="Day Streak"
-          value={calculatedStats.streak}
+          value={Number(stats.currentStreak || 0).toLocaleString()}
           icon={
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.66 8L12 2.35L6.34 8C4.78 9.56 4 11.64 4 13.64S4.78 17.73 6.34 19.29C7.9 20.85 9.95 21.58 12 21.58C14.05 21.58 16.1 20.85 17.66 19.29C19.22 17.73 20 15.64 20 13.64S19.22 9.56 17.66 8ZM12 19.59C10.6 19.59 9.25 19.04 8.23 18.02C7.21 17 6.66 15.65 6.66 14.25C6.66 12.85 7.21 11.5 8.23 10.48L12 6.7L15.77 10.48C16.79 11.5 17.34 12.85 17.34 14.25C17.34 15.65 16.79 17 15.77 18.02C14.75 19.04 13.4 19.59 12 19.59Z" />
@@ -180,24 +248,24 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Level {calculatedStats.level}
+              Level {stats.level}
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {calculatedStats.rankTier}
+              {tierName}
             </span>
           </div>
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {calculatedStats.xpToNextLevel.toLocaleString()} XP to next level
+            {(nextLevelXP - currentXP).toLocaleString()} XP to next level
           </span>
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
           <div 
             className="bg-gradient-to-r from-blue-600 to-purple-600 h-2.5 rounded-full transition-all duration-500"
-            style={{ width: `${calculatedStats.levelPercent}%` }}
+            style={{ width: `${levelPercent}%` }}
           />
         </div>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-right">
-          {calculatedStats.levelPercent.toFixed(1)}% to Level {calculatedStats.level + 1}
+          {levelPercent.toFixed(1)}% to Level {stats.level + 1}
         </p>
       </div>
 
@@ -208,11 +276,11 @@ export function ProfileStats({ stats }: ProfileStatsProps) {
             Total Score
           </span>
           <span className="text-2xl font-bold text-gray-900 dark:text-white">
-            {calculatedStats.formattedStats.total_score}
+            {Number(stats.totalScore).toLocaleString()}
           </span>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Auto-calculated from all activities
+          Auto-calculated from all on-chain activities
         </p>
       </div>
     </div>

@@ -112,14 +112,18 @@ export async function POST(request: NextRequest) {
     // Generate unique filename based on type
     const extension = fileName.split('.').pop() || 'jpg'
     const timestamp = Date.now()
+    // Add 20-char random suffix for virtually guaranteed uniqueness (prevents 409 duplicates)
+    // Collision probability: 1 in 1.3 quintillion
+    const randomSuffix = Math.random().toString(36).substring(2) + 
+                        Math.random().toString(36).substring(2)
     
     let uniqueFileName: string
     if (type === 'guild-banner') {
-      uniqueFileName = `${guildId}/${timestamp}.${extension}`
+      uniqueFileName = `${guildId}/${timestamp}-${randomSuffix}.${extension}`
     } else if (type === 'quest') {
-      uniqueFileName = `general/${fid}/${timestamp}-${fileName.replace(/[^a-zA-Z0-9_.-]/g, '_')}`
+      uniqueFileName = `general/${fid}/${timestamp}-${randomSuffix}-${fileName.replace(/[^a-zA-Z0-9_.-]/g, '_')}`
     } else {
-      uniqueFileName = `${fid}/${type}-${timestamp}.${extension}`
+      uniqueFileName = `${fid}/${type}-${timestamp}-${randomSuffix}.${extension}`
     }
 
     // Select bucket

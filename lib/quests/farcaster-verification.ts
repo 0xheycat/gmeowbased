@@ -106,8 +106,15 @@ export async function verifyFollowUser(
     }
     
     // Check if user follows target
+    const followingUrl = `${NEYNAR_BASE_URL}/farcaster/following?fid=${userFid}&limit=100`;
+    console.log('[Follow Verification] Fetching following list:', {
+      url: followingUrl,
+      hasApiKey: !!NEYNAR_API_KEY,
+      apiKeyLength: NEYNAR_API_KEY?.length
+    });
+    
     const followingResponse = await fetch(
-      `${NEYNAR_BASE_URL}/farcaster/following?fid=${userFid}&limit=1000`,
+      followingUrl,
       {
         headers: {
           'api_key': NEYNAR_API_KEY || '',
@@ -115,12 +122,33 @@ export async function verifyFollowUser(
       }
     );
     
+    console.log('[Follow Verification] Response status:', followingResponse.status);
+    
     if (!followingResponse.ok) {
-      throw new Error('Failed to fetch following list');
+      const errorText = await followingResponse.text();
+      console.error('[Follow Verification] API Error:', {
+        status: followingResponse.status,
+        statusText: followingResponse.statusText,
+        body: errorText
+      });
+      throw new Error(`Failed to fetch following list: ${followingResponse.status} - ${errorText}`);
     }
     
     const followingData = await followingResponse.json();
-    const isFollowing = followingData.users?.some((u: any) => u.fid === targetFid);
+    console.log('[Follow Verification] Following data:', {
+      totalUsers: followingData.users?.length,
+      targetFid,
+      sampleUser: followingData.users?.[0]
+    });
+    
+    // Neynar API returns: users[].user.fid (not users[].fid)
+    const isFollowing = followingData.users?.some((follow: any) => follow.user?.fid === targetFid);
+    
+    console.log('[Follow Verification] Result:', {
+      isFollowing,
+      targetFid,
+      userFid
+    });
     
     if (isFollowing) {
       return {
@@ -184,7 +212,7 @@ export async function verifyLikeCast(
     
     // Check if user liked the cast
     const reactionsResponse = await fetch(
-      `${NEYNAR_BASE_URL}/farcaster/reactions/cast?hash=${castHash}&types=likes&limit=1000`,
+      `${NEYNAR_BASE_URL}/farcaster/reactions/cast?hash=${castHash}&types=likes&limit=100`,
       {
         headers: {
           'api_key': NEYNAR_API_KEY || '',
@@ -237,7 +265,7 @@ export async function verifyRecast(
   try {
     // Fetch cast recasts
     const response = await fetch(
-      `${NEYNAR_BASE_URL}/farcaster/reactions/cast?hash=${castHash}&types=recasts&limit=1000`,
+      `${NEYNAR_BASE_URL}/farcaster/reactions/cast?hash=${castHash}&types=likes&limit=100`,
       {
         headers: {
           'api_key': NEYNAR_API_KEY || '',
@@ -288,9 +316,9 @@ export async function verifyCastWithTag(
   requiredTag: string
 ): Promise<SocialVerificationResult> {
   try {
-    // Fetch user's recent casts
+    // Fetch user's recent casts using official Neynar API
     const response = await fetch(
-      `${NEYNAR_BASE_URL}/farcaster/feed/user/${userFid}/casts?limit=50`,
+      `${NEYNAR_BASE_URL}/farcaster/feed?feed_type=filter&filter_type=fids&fids=${userFid}&limit=50`,
       {
         headers: {
           'api_key': NEYNAR_API_KEY || '',
@@ -348,9 +376,93 @@ export async function verifyJoinChannel(
   channelId: string
 ): Promise<SocialVerificationResult> {
   try {
-    // Fetch user's channel memberships
+    // METHOD 1: Check channel memberships list (may have caching delays)
+    const channelListResponse = await fetch(
+      `${NEYNAR_BASE_URL}/farcaster/channel/user?fid=${userFid}&limit=100`,
+      {
+        headers: {
+          'api_key': NEYNAR_API_KEY || '',
+        },
+      }
+    );
+    
+    if (channelListResponse.ok) {
+      const data = await channelListResponse.json();
+      const channels = data.channels || [];
+      const isMember = channels.some((ch: any) => ch.id === channelId);
+      
+      if (isMember) {
+        return {
+          success: true,
+          message: `Successfully verified channel membership`,
+          proof: {
+            verified_at: Date.now(),
+            verified_data: {
+              user_fid: userFid,
+              channel_id: channelId,
+              verified_via: 'channel_list',
+            },
+          },
+        };
+      }
+    }
+    
+    // METHOD 2: Fallback - Check if user has any casts in the channel
+    // This is more real-time and catches recently joined members
+    const feedResponse = await fetch(
+      `${NEYNAR_BASE_URL}/farcaster/feed?fid=${userFid}&filter_type=channel_id&channel_id=${channelId}&limit=1`,
+      {
+        headers: {
+          'api_key': NEYNAR_API_KEY || '',
+        },
+      }
+    );
+    
+    if (feedResponse.ok) {
+      const feedData = await feedResponse.json();
+      const hasCasts = feedData.casts && feedData.casts.length > 0;
+      
+      if (hasCasts) {
+        return {
+          success: true,
+          message: `Successfully verified channel membership (via cast activity)`,
+          proof: {
+            verified_at: Date.now(),
+            verified_data: {
+              user_fid: userFid,
+              channel_id: channelId,
+              verified_via: 'channel_feed',
+              cast_count: feedData.casts.length,
+            },
+          },
+        };
+      }
+    }
+    
+    return {
+      success: false,
+      message: `User ${userFid} is not a member of channel "${channelId}". Try posting a cast in the channel first.`,
+    };
+  } catch (error) {
+    console.error('Channel membership verification failed:', error);
+    return {
+      success: false,
+      message: 'Failed to verify channel membership',
+    };
+  }
+}
+
+/**
+ * Verify user replied to a cast
+ */
+export async function verifyReplyToCast(
+  userFid: number,
+  targetCastHash: string
+): Promise<SocialVerificationResult> {
+  try {
+    // Fetch cast with replies
     const response = await fetch(
-      `${NEYNAR_BASE_URL}/farcaster/user/channels?fid=${userFid}&limit=100`,
+      `${NEYNAR_BASE_URL}/farcaster/cast/conversation?identifier=${targetCastHash}&type=hash&reply_depth=1&include_chronological_parent_casts=false`,
       {
         headers: {
           'api_key': NEYNAR_API_KEY || '',
@@ -359,23 +471,26 @@ export async function verifyJoinChannel(
     );
     
     if (!response.ok) {
-      throw new Error('Failed to fetch user channels');
+      throw new Error('Failed to fetch cast conversation');
     }
     
     const data = await response.json();
-    const channels = data.channels || [];
+    const replies = data.conversation?.cast?.direct_replies || [];
     
-    const isMember = channels.some((ch: any) => ch.id === channelId);
+    // Check if userFid has replied
+    const hasReplied = replies.some((reply: any) => reply.author.fid === userFid);
     
-    if (isMember) {
+    if (hasReplied) {
+      const userReply = replies.find((r: any) => r.author.fid === userFid);
       return {
         success: true,
-        message: `Successfully verified channel membership`,
+        message: 'Successfully verified cast reply',
         proof: {
           verified_at: Date.now(),
           verified_data: {
             user_fid: userFid,
-            channel_id: channelId,
+            target_cast_hash: targetCastHash,
+            reply_hash: userReply.hash,
             verified_via: 'neynar_api',
           },
         },
@@ -384,13 +499,13 @@ export async function verifyJoinChannel(
     
     return {
       success: false,
-      message: `User ${userFid} is not a member of channel "${channelId}"`,
+      message: `User ${userFid} has not replied to this cast`,
     };
   } catch (error) {
-    console.error('Channel membership verification failed:', error);
+    console.error('Reply verification failed:', error);
     return {
       success: false,
-      message: 'Failed to verify channel membership',
+      message: 'Failed to verify cast reply',
     };
   }
 }
@@ -420,6 +535,12 @@ export async function verifySocialQuest(
         return { success: false, message: 'Cast hash required' };
       }
       return verifyRecast(userFid, verificationData.target_cast_hash);
+    
+    case 'reply_to_cast':
+      if (!verificationData.target_cast_hash) {
+        return { success: false, message: 'Cast hash required' };
+      }
+      return verifyReplyToCast(userFid, verificationData.target_cast_hash);
     
     case 'create_cast_with_tag':
       if (!verificationData.required_tag) {

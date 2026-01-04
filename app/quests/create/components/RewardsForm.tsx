@@ -42,8 +42,7 @@ export function RewardsForm({
   className = '',
 }: RewardsFormProps) {
   const [formData, setFormData] = useState({
-    reward_points: draft.reward_points || 10,
-    reward_xp: draft.reward_xp || 0,
+    reward_points_awarded: draft.reward_points_awarded || 10,
     reward_badge_ids: draft.reward_badge_ids || [],
     create_new_badge: draft.create_new_badge || false,
     announce_via_bot: draft.announce_via_bot || false,
@@ -66,18 +65,11 @@ export function RewardsForm({
   const validate = () => {
     const newErrors: Record<string, string> = {}
 
-    if (formData.reward_points < 10) {
-      newErrors.reward_points = 'Minimum reward is 10 BASE POINTS'
+    if (formData.reward_points_awarded < 10) {
+      newErrors.reward_points_awarded = 'Minimum reward is 10 POINTS'
     }
-    if (formData.reward_points > 1000) {
-      newErrors.reward_points = 'Maximum reward is 1000 BASE POINTS'
-    }
-
-    if (formData.reward_xp < 0) {
-      newErrors.reward_xp = 'XP cannot be negative'
-    }
-    if (formData.reward_xp > 500) {
-      newErrors.reward_xp = 'Maximum XP is 500'
+    if (formData.reward_points_awarded > 1000) {
+      newErrors.reward_points_awarded = 'Maximum reward is 1000 POINTS'
     }
 
     setErrors(newErrors)
@@ -94,7 +86,7 @@ export function RewardsForm({
   }
 
   // Calculate total cost including rewards
-  const totalCost = estimatedCost + (formData.reward_points || 0)
+  const totalCost = estimatedCost + (formData.reward_points_awarded || 0)
   const badgeCreationCost = formData.create_new_badge ? 50 : 0
   const grandTotal = totalCost + badgeCreationCost
 
@@ -121,7 +113,7 @@ export function RewardsForm({
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Reward Pool (Escrowed):</span>
-            <span className="font-medium">{formData.reward_points} BASE POINTS</span>
+            <span className="font-medium">{formData.reward_points_awarded} POINTS</span>
           </div>
           {badgeCreationCost > 0 && (
             <div className="flex justify-between">
@@ -142,39 +134,22 @@ export function RewardsForm({
 
       {/* Rewards Form */}
       <div className="grid gap-6 rounded-lg border border-border bg-card p-6">
-        {/* BASE POINTS Reward */}
+        {/* POINTS Reward */}
         <div>
           <Input
-            label="BASE POINTS Reward"
+            label="POINTS Reward"
             type="number"
-            value={formData.reward_points}
-            onChange={(e) => handleChange('reward_points', parseInt(e.target.value) || 0)}
+            value={formData.reward_points_awarded}
+            onChange={(e) => handleChange('reward_points_awarded', parseInt(e.target.value) || 0)}
             min="10"
             max="1000"
             required
-            error={errors.reward_points}
+            error={errors.reward_points_awarded}
             helperText="Points users earn on completion (10-1000)"
             prefix={<CoinsIcon className="h-4 w-4 text-muted-foreground" />}
           />
           <p className="mt-2 text-xs text-muted-foreground">
-            <strong>BASE POINTS:</strong> From contract, used for leaderboard rankings
-          </p>
-        </div>
-
-        {/* XP Reward */}
-        <div>
-          <Input
-            label="XP Reward (Optional)"
-            type="number"
-            value={formData.reward_xp}
-            onChange={(e) => handleChange('reward_xp', parseInt(e.target.value) || 0)}
-            min="0"
-            max="500"
-            error={errors.reward_xp}
-            helperText="Experience points for level progression (0-500)"
-          />
-          <p className="mt-2 text-xs text-muted-foreground">
-            <strong>XP:</strong> Backend metric, NOT escrowed, used for rank/level progression only
+            <strong>POINTS:</strong> Spendable currency from contract. XP is calculated automatically based on quest type.
           </p>
         </div>
 

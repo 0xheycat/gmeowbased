@@ -28,6 +28,10 @@ import { TrendingChannelsSkeleton } from './components/skeletons/TrendingChannel
 import { ActivityFeedSkeleton } from './components/skeletons/ActivityFeedSkeleton'
 import { DashboardGMSection } from '@/app/dashboard/components/DashboardGMSection'
 import { StakingDashboard } from './components/StakingDashboard'
+import { DashboardStatsWidget } from './components/DashboardStatsWidget'
+import { LevelProgress } from './components/LevelProgress'
+import { TierProgress } from './components/TierProgress'
+import { RecentActivity } from './components/RecentActivity'
 
 export default async function DashboardPage() {
   return (
@@ -46,6 +50,44 @@ export default async function DashboardPage() {
 
         {/* GM & Stats Tab */}
         <TabsContent value="gm">
+          {/* User Scoring Stats Widget */}
+          <DashboardErrorBoundary componentName="User Stats">
+            <Suspense fallback={
+              <div className="h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl animate-pulse mb-6" />
+            }>
+              <DashboardStatsWidget />
+            </Suspense>
+          </DashboardErrorBoundary>
+
+          {/* Level & Tier Progress */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <DashboardErrorBoundary componentName="Level Progress">
+              <Suspense fallback={
+                <div className="h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+              }>
+                <LevelProgress />
+              </Suspense>
+            </DashboardErrorBoundary>
+
+            <DashboardErrorBoundary componentName="Tier Progress">
+              <Suspense fallback={
+                <div className="h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+              }>
+                <TierProgress />
+              </Suspense>
+            </DashboardErrorBoundary>
+          </div>
+
+          {/* Recent Activity */}
+          <DashboardErrorBoundary componentName="Recent Activity">
+            <Suspense fallback={
+              <div className="h-96 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse mb-6" />
+            }>
+              <RecentActivity />
+            </Suspense>
+          </DashboardErrorBoundary>
+
+          {/* Daily GM Section */}
           <DashboardErrorBoundary componentName="Daily GM">
             <Suspense fallback={
               <div className="h-96 bg-slate-100 dark:bg-slate-800 rounded-3xl animate-pulse" />

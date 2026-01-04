@@ -20,19 +20,20 @@ export const dynamic = 'force-dynamic';
 
 // Request validation schema
 const VerifyQuestSchema = z.object({
-  userFid: z.number().int().positive().min(1).max(1000000),
+  userFid: z.number().int().positive().min(1).max(10000000), // Raised from 1M to 10M to support growing Farcaster network
   userAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
   taskIndex: z.number().int().min(0).optional(),
 });
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   const startTime = Date.now();
   const requestId = generateRequestId();
   const clientIp = getClientIp(request);
-  const questSlug = params.slug;
+  // Next.js 15: params must be awaited
+  const { slug: questSlug } = await params;
   
   try {
     // 1. RATE LIMITING (60 requests per minute)
@@ -82,19 +83,20 @@ export async function POST(
       });
     }
     
-    // 3. EXTRACT QUEST ID
-    // Quest slug format: "quest-1" or just "1"
-    const questIdMatch = questSlug.match(/^quest-(\d+)$/) || questSlug.match(/^(\d+)$/);
-    if (!questIdMatch) {
+    // 3. FETCH QUEST BY SLUG (supports both numeric ID and text slug)
+    const { getQuestBySlug } = await import('@/lib/supabase/queries/quests');
+    const questData = await getQuestBySlug(questSlug, validationResult.data.userFid);
+    
+    if (!questData) {
       return createErrorResponse({
-        type: ErrorType.VALIDATION,
-        message: 'Invalid quest ID format',
-        statusCode: 400,
-        details: { expected: 'quest-{id} or {id}' },
+        type: ErrorType.NOT_FOUND,
+        message: 'Quest not found',
+        statusCode: 404,
+        details: { slug: questSlug },
       });
     }
     
-    const questId = parseInt(questIdMatch[1]);
+    const questId = questData.id;
     
     // 4. VERIFY QUEST TASK
     const verificationResult = await verifyQuest({
@@ -103,6 +105,59 @@ export async function POST(
       questId: questId,
       taskIndex: validationResult.data.taskIndex,
     });
+    
+    // 4.5. GENERATE ORACLE SIGNATURE (if quest completed and user has wallet)
+    let claimSignature = null;
+    if (verificationResult.quest_completed && validationResult.data.userAddress) {
+      try {
+        const { generateQuestClaimSignature } = await import('@/lib/quests/oracle-signature');
+        
+        // CRITICAL: Use onchain_quest_id, not database id
+        if (!questData.onchain_quest_id) {
+          throw new Error('Quest not deployed on-chain - cannot generate claim signature');
+        }
+        
+        claimSignature = await generateQuestClaimSignature({
+          questId: questData.onchain_quest_id,
+          userAddress: validationResult.data.userAddress as `0x${string}`,
+          fid: validationResult.data.userFid,
+        });
+        
+        console.log('[API] Generated claim signature:', {
+          questId,
+          userFid: validationResult.data.userFid,
+          deadline: claimSignature.deadline,
+          nonce: claimSignature.nonce.toString(),
+        });
+        
+        // Store signature in quest_completions for later claiming
+        try {
+          const { createClient } = await import('@/lib/supabase/edge');
+          const supabase = createClient();
+          
+          // Convert BigInt to string for JSON storage
+          const serializableSignature = {
+            ...claimSignature,
+            nonce: claimSignature.nonce.toString(),
+          };
+          
+          await supabase
+            .from('quest_completions')
+            .update({
+              claim_signature: serializableSignature
+            })
+            .eq('quest_id', questId)
+            .eq('completer_fid', validationResult.data.userFid);
+          
+          console.log('[API] Stored claim signature in database');
+        } catch (dbError) {
+          console.error('[API] Failed to store claim signature in database:', dbError);
+        }
+      } catch (signatureError) {
+        // Log error but don't fail verification - user can still complete quest later
+        console.error('[API] Failed to generate claim signature:', signatureError);
+      }
+    }
     
     // 5. REQUEST LOGGING
     const duration = Date.now() - startTime;
@@ -122,7 +177,10 @@ export async function POST(
     });
     
     // 6. RESPONSE
-    const response = NextResponse.json(verificationResult);
+    const response = NextResponse.json({
+      ...verificationResult,
+      claim_signature: claimSignature, // Add signature if quest completed
+    });
     
     // Add rate limit and request ID headers
     response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit || 60));

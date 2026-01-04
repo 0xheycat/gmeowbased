@@ -80,13 +80,14 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const requestId = generateRequestId()
+  // Next.js 15: params must be awaited
+  const { id: notificationId } = await params
   
   try {
     // Validate notification ID (UUID format)
-    const notificationId = params.id
     if (!UUID_REGEX.test(notificationId)) {
       return NextResponse.json(
         { error: 'Invalid notification ID format' },
@@ -209,7 +210,7 @@ export async function PATCH(
   } catch (error) {
     trackError('notification_read_api_error', error as Error, {
       function: 'PATCH /api/notifications/[id]/read',
-      notificationId: params.id,
+      notificationId,
     })
     
     return NextResponse.json(

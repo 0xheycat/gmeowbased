@@ -243,37 +243,40 @@ export const ALL_CHAIN_IDS: Record<ChainKey, number> = {
  * Main entry point for contract interactions.
  * 
  * @constant
- * @verified BaseScan December 12, 2025
+ * @verified BaseScan December 31, 2025
+ * @updated December 31, 2025 - New production deployment
  */
 export const CONTRACT_ADDRESSES: Record<GMChainKey, `0x${string}`> = {
-  base: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73',
+  base: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x343829A6A613d51B4A81c2dE508e49CA66D4548d',
 }
 
 /**
  * Standalone Architecture Addresses - Base Chain Only
  * 
  * Complete contract suite for Gmeowbased platform.
- * Deployed: December 12, 2025
+ * Deployed: December 31, 2025 (Updated)
  * 
  * Architecture:
  * - Core: Main GM contract (user stats, history)
  * - Guild: Guild management and membership
  * - NFT: NFT minting and ownership
- * - Badge: Badge system and achievements
+ * - Badge: Badge system and achievements (auto-deployed by Core)
  * - Referral: Referral tracking and rewards
  * 
  * ⚠️ IMPORTANT: Only Base chain is supported for writes!
  * 
  * @constant
  * @verified BaseScan https://basescan.org/
+ * @updated December 31, 2025 - Production deployment with testing complete
  */
 export const STANDALONE_ADDRESSES = {
   base: {
-    core: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x9EB9bEC3fDcdE8741c65436df1b60d50Facd9D73',
-    guild: (process.env.NEXT_PUBLIC_GM_BASE_GUILD as `0x${string}`) || '0x6754e71fFd49Fb9C33C19dA1Aa6596155e53C8A3',
-    nft: (process.env.NEXT_PUBLIC_GM_BASE_NFT as `0x${string}`) || '0xCE9596a992e38c5fa2d997ea916a277E0F652D5C',
-    badge: (process.env.NEXT_PUBLIC_GM_BASE_BADGE as `0x${string}`) || '0x5Af50Ee323C45564d94B0869d95698D837c59aD2',
-    referral: (process.env.NEXT_PUBLIC_GM_BASE_REFERRAL as `0x${string}`) || '0x9E7c32C1fB3a2c08e973185181512a442b90Ba44',
+    core: (process.env.NEXT_PUBLIC_GM_BASE_CORE as `0x${string}`) || '0x343829A6A613d51B4A81c2dE508e49CA66D4548d',
+    guild: (process.env.NEXT_PUBLIC_GM_BASE_GUILD as `0x${string}`) || '0xC3AA96aDA307BaD7e6c2d7575051fA19C358C097',
+    nft: (process.env.NEXT_PUBLIC_GM_BASE_NFT as `0x${string}`) || '0x34d0CD77Ba8d643C1d5f568331d61eFa35132eA8',
+    badge: (process.env.NEXT_PUBLIC_GM_BASE_BADGE as `0x${string}`) || '0x45a2aaa181dd5f9b1fd173b135b44f5207ee3dbb',
+    referral: (process.env.NEXT_PUBLIC_GM_BASE_REFERRAL as `0x${string}`) || '0x50941e1033fF8E163fB60A0433b1CB2bc71Ce8Df',
+    scoringModule: (process.env.NEXT_PUBLIC_GM_BASE_SCORING as `0x${string}`) || '0xdeCFDc900DD1DBD6f947d3558143aA8374413Bd6',
    // proxy: (process.env.NEXT_PUBLIC_GM_BASE_PROXY as `0x${string}`) || '0x', // GM Proxy Contract deprecated latest update dec 9 standalone fix
   },
 }

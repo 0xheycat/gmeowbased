@@ -207,7 +207,7 @@ export default function QuestGrid({
     category: quest.category,
     coverImage: quest.cover_image_url || '/images/quest-default.jpg',
     badgeImage: quest.badge_image_url || '/images/badge-default.png',
-    xpReward: quest.reward_points,
+    pointsReward: quest.reward_points_awarded,
     creator: {
       name: `Creator ${quest.creator_fid}`, // TODO: Fetch actual creator data
       fid: quest.creator_fid,

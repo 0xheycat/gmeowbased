@@ -30,6 +30,8 @@ import { type Address } from 'viem'
 import { WorkspacePremiumIcon, MilitaryTechIcon, MoreIcon } from '@/components/icons'
 import { Dialog, DialogBackdrop, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/dialogs'
 import { ConfirmDialog } from '@/components/dialogs'
+import { TierBadge } from '@/components/score/TierBadge'
+import { TotalScoreDisplay } from '@/components/score/TotalScoreDisplay'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { GUILD_ABI_JSON } from '@/lib/contracts/abis'
 import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
@@ -47,15 +49,12 @@ export interface GuildMember {
   points: string
   pointsContributed?: number
   avatarUrl?: string
-  // Leaderboard stats from user_points_balances table
+  // Leaderboard stats (MIGRATION: Keep only off-chain features)
+  // ❌ REMOVED: total_score, viral_xp, guild_points_awarded, rank_tier → Now fetched on-chain via TierBadge + TotalScoreDisplay
+  // ✅ KEPT: global_rank (off-chain feature, stored in Supabase leaderboard_snapshots)
   leaderboardStats?: {
-    total_score: number
-    points_balance: number           // Renamed from base_points
-    viral_points: number             // Renamed from viral_xp
-    guild_points_awarded: number     // Renamed from guild_bonus_points
-    is_guild_officer: boolean
-    global_rank: number | null
-    rank_tier: string | null
+    global_rank: number | null       // Off-chain: Leaderboard position (Supabase)
+    is_guild_officer: boolean        // Off-chain: Guild role status
   }
   // Farcaster profile data
   farcaster?: {
@@ -492,6 +491,14 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {member.farcaster?.displayName || member.farcaster?.username || member.username || `${member.address.slice(0, 6)}...${member.address.slice(-4)}`}
                         </span>
+                        {/* On-chain Tier Badge */}
+                        {member.address && (
+                          <TierBadge 
+                            address={member.address as `0x${string}`}
+                            variant="compact"
+                            size="sm"
+                          />
+                        )}
                         {/* Power Badge */}
                         {member.farcaster?.powerBadge && (
                           <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-1.5 py-0.5 rounded font-semibold" title="Power Badge">
@@ -525,30 +532,24 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
                   )}
                 </td>
                 <td className="py-4 px-6 text-right">
-                  {member.leaderboardStats && member.leaderboardStats.total_score !== undefined ? (
+                  {member.address ? (
                     <div className="space-y-1">
-                      {/* Total Score */}
-                      <div className="font-semibold text-gray-900 dark:text-white">
-                        {member.leaderboardStats.total_score.toLocaleString()}
-                      </div>
+                      {/* On-chain Total Score */}
+                      <TotalScoreDisplay 
+                        address={member.address as `0x${string}`}
+                        size="sm"
+                        showLabel={false}
+                      />
                       
-                      {/* Guild Points Awarded (purple) */}
-                      {member.leaderboardStats.guild_points_awarded > 0 && (
-                        <div className="text-xs text-purple-600 dark:text-purple-400">
-                          +{member.leaderboardStats.guild_points_awarded.toLocaleString()} guild bonus
-                          {member.leaderboardStats.is_guild_officer && ' (Officer)'}
-                        </div>
-                      )}
-                      
-                      {/* Global Rank */}
-                      {member.leaderboardStats.global_rank && (
+                      {/* Global Rank (Supabase - off-chain feature) */}
+                      {member.leaderboardStats?.global_rank && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           Rank #{member.leaderboardStats.global_rank.toLocaleString()}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-400 dark:text-gray-600">No stats</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-600">No address</span>
                   )}
                 </td>
                 <td className="py-4 px-6 text-right font-semibold text-gray-900 dark:text-white">
@@ -644,6 +645,14 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {member.farcaster?.displayName || member.farcaster?.username || member.username || `${member.address.slice(0, 6)}...${member.address.slice(-4)}`}
                     </span>
+                    {/* On-chain Tier Badge */}
+                    {member.address && (
+                      <TierBadge 
+                        address={member.address as `0x${string}`}
+                        variant="compact"
+                        size="sm"
+                      />
+                    )}
                     {/* Power Badge */}
                     {member.farcaster?.powerBadge && (
                       <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-1.5 py-0.5 rounded font-semibold" title="Power Badge">
@@ -678,48 +687,29 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
               </div>
             )}
 
-            {/* Leaderboard Stats Section */}
-            {member.leaderboardStats && member.leaderboardStats.total_score !== undefined && (
+            {/* Leaderboard Stats Section - On-chain Data */}
+            {member.address && (
               <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-semibold">
                   Leaderboard Stats
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Total Score */}
+                  {/* On-chain Total Score */}
                   <div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">Total Score</div>
-                    <div className="font-semibold text-gray-900 dark:text-white">
-                      {member.leaderboardStats.total_score.toLocaleString()}
-                    </div>
+                    <TotalScoreDisplay 
+                      address={member.address as `0x${string}`}
+                      size="sm"
+                      showLabel={false}
+                    />
                   </div>
                   
-                  {/* Guild Points Awarded */}
-                  {member.leaderboardStats.guild_points_awarded > 0 && (
-                    <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Guild Bonus</div>
-                      <div className="font-semibold text-purple-600 dark:text-purple-400">
-                        +{member.leaderboardStats.guild_points_awarded.toLocaleString()}
-                        {member.leaderboardStats.is_guild_officer && ' ⚡'}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Global Rank */}
-                  {member.leaderboardStats.global_rank && (
+                  {/* Global Rank (Supabase - off-chain feature) */}
+                  {member.leaderboardStats?.global_rank && (
                     <div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">Global Rank</div>
                       <div className="font-semibold text-gray-900 dark:text-white">
                         #{member.leaderboardStats.global_rank.toLocaleString()}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Rank Tier */}
-                  {member.leaderboardStats.rank_tier && (
-                    <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Tier</div>
-                      <div className="font-semibold text-gray-900 dark:text-white capitalize">
-                        {member.leaderboardStats.rank_tier}
                       </div>
                     </div>
                   )}

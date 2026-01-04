@@ -17,12 +17,16 @@
  * - Real-time status updates
  * - Professional error handling
  * 
+ * Bug #30 Fix (December 29, 2025):
+ * - Added useEffect to sync taskIndex when quest progress changes
+ * - Prevents reset to task 0 on page reload for multi-task quests
+ * 
  * Template: gmeowbased0.6 (0-10% adaptation)
  */
 
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
@@ -35,7 +39,9 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
 import { WalletButton } from '@/components/WalletButton'
 import { useDialog, ErrorDialog } from '@/components/dialogs'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
+import { QuestClaimButton } from '@/components/quests/QuestClaimButton'
 import type { QuestWithProgress, QuestTask } from '@/lib/supabase/types/quest'
+import type { QuestClaimSignature } from '@/lib/quests/oracle-signature'
 
 interface QuestVerificationProps {
   quest: QuestWithProgress
@@ -53,6 +59,8 @@ interface VerificationState {
     points_earned: number
   }
   proof?: any
+  claimSignature?: QuestClaimSignature | null
+  questCompleted?: boolean
 }
 
 export function QuestVerification({ 
@@ -67,12 +75,138 @@ export function QuestVerification({
   const [xpOverlayOpen, setXpOverlayOpen] = useState(false)
   const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
   
+  // Bug #40 Fix: Initialize with correct task index from database
+  // Use quest.user_progress?.current_task_index as the source of truth
+  const initialTaskIndex = quest.user_progress?.current_task_index ?? 0
+  
   const [verificationState, setVerificationState] = useState<VerificationState>({
-    taskIndex: quest.user_progress?.current_task_index || 0,
+    taskIndex: initialTaskIndex,
     status: 'idle'
   })
   
   const [fidInput, setFidInput] = useState(userFid?.toString() || '')
+
+  // Fetch claim signature from database if quest is already completed
+  useEffect(() => {
+    if (quest.is_completed && userFid && !verificationState.claimSignature) {
+      console.log('[QuestVerification] Quest already completed, checking claim status');
+      
+      async function fetchClaimSignature() {
+        try {
+          // Check if quest has onchain_quest_id (requires blockchain claim)
+          if (!quest.onchain_quest_id) {
+            console.log('[QuestVerification] Database-only quest (no onchain_quest_id), no claim button needed');
+            setVerificationState(prev => ({
+              ...prev,
+              questCompleted: true,
+              status: 'success'
+            }));
+            return;
+          }
+
+          const response = await fetch(`/api/quests/unclaimed?fid=${userFid}`);
+          if (!response.ok) {
+            console.error('[QuestVerification] Failed to fetch unclaimed quests');
+            return;
+          }
+          
+          const data = await response.json();
+          const unclaimedQuest = data.unclaimed_quests?.find(
+            (q: any) => q.quest_id === quest.id
+          );
+          
+          if (unclaimedQuest && unclaimedQuest.claim_signature) {
+            const signature = unclaimedQuest.claim_signature;
+            
+            // Check if signature userAddress matches connected wallet
+            if (signature.userAddress?.toLowerCase() !== address?.toLowerCase()) {
+              console.log('[QuestVerification] Wallet mismatch detected, regenerating signature', {
+                signatureAddress: signature.userAddress,
+                connectedAddress: address
+              });
+              
+              // Regenerate signature for current wallet
+              try {
+                const regenResponse = await fetch('/api/quests/regenerate-signature', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    quest_id: quest.id,
+                    fid: userFid,
+                    userAddress: address
+                  })
+                });
+                
+                if (regenResponse.ok) {
+                  const regenData = await regenResponse.json();
+                  console.log('[QuestVerification] Signature regenerated for current wallet');
+                  setVerificationState(prev => ({
+                    ...prev,
+                    claimSignature: regenData.signature,
+                    questCompleted: true,
+                    status: 'success'
+                  }));
+                  return;
+                } else {
+                  console.error('[QuestVerification] Failed to regenerate signature');
+                }
+              } catch (regenError) {
+                console.error('[QuestVerification] Error regenerating signature:', regenError);
+              }
+            }
+            
+            console.log('[QuestVerification] Found claim signature in database');
+            setVerificationState(prev => ({
+              ...prev,
+              claimSignature: signature,
+              questCompleted: true,
+              status: 'success'
+            }));
+          } else {
+            console.log('[QuestVerification] No claim signature found or quest already claimed');
+          }
+        } catch (error) {
+          console.error('[QuestVerification] Error fetching claim signature:', error);
+        }
+      }
+      
+      fetchClaimSignature();
+    }
+  }, [quest.is_completed, quest.id, userFid, verificationState.claimSignature, address]);
+
+  // Bug #30 & #40 Fix: Sync taskIndex when quest progress updates (e.g., after verification or page reload)
+  useEffect(() => {
+    const dbTaskIndex = quest.user_progress?.current_task_index
+    if (dbTaskIndex !== undefined && dbTaskIndex !== verificationState.taskIndex) {
+      console.log('[QuestVerification] Syncing taskIndex from database:', {
+        current: verificationState.taskIndex,
+        database: dbTaskIndex,
+        questId: quest.id,
+        reason: 'Quest progress updated'
+      })
+      setVerificationState(prev => ({
+        ...prev,
+        taskIndex: dbTaskIndex,
+        status: 'idle' // Reset status when syncing from DB
+      }))
+    }
+  }, [quest.user_progress?.current_task_index, quest.id, verificationState.taskIndex])
+
+  // Bug #41 Fix: Detect if database shows quest completed but quest.is_completed is false
+  // This happens when page hasn't refreshed after completion
+  useEffect(() => {
+    if (quest.user_progress?.status === 'completed' && !quest.is_completed) {
+      console.warn('[Bug #41] Quest completed in database but not reflected in UI:', {
+        questId: quest.id,
+        questSlug: quest.slug,
+        dbStatus: quest.user_progress.status,
+        isCompleted: quest.is_completed,
+        action: 'Triggering onQuestComplete to refresh quest data'
+      })
+      // Trigger parent to refetch quest data
+      onQuestComplete?.()
+    }
+  }, [quest.user_progress?.status, quest.is_completed, quest.id, quest.slug, onQuestComplete])
 
   const tasks = (quest.tasks || []) as QuestTask[]
   const currentTask = tasks[verificationState.taskIndex]
@@ -85,6 +219,16 @@ export function QuestVerification({
 
   // Verify quest completion (NEW API - uses verification orchestrator)
   const handleVerify = useCallback(async () => {
+    // Debug logging
+    console.log('[QuestVerification] Starting verification:', {
+      userFid,
+      fidInput,
+      isOnchain,
+      isSocial,
+      isConnected,
+      address
+    });
+
     // Validation
     if (isOnchain && (!isConnected || !address)) {
       setErrorMessage('Connect your wallet to verify onchain quests')
@@ -92,9 +236,19 @@ export function QuestVerification({
       return
     }
 
-    const currentFid = parseInt(fidInput)
-    if (isSocial && (!currentFid || currentFid <= 0)) {
+    // Bug #17 fix: Use userFid prop if available, otherwise parse from input
+    const currentFid = userFid || parseInt(fidInput)
+    console.log('[QuestVerification] Calculated currentFid:', currentFid, 'from userFid:', userFid, 'or fidInput:', fidInput);
+    
+    if (isSocial && (!currentFid || currentFid <= 0 || isNaN(currentFid))) {
       setErrorMessage('Enter your Farcaster ID to verify social quests')
+      openError()
+      return
+    }
+
+    // Onchain quests also need userFid for reward distribution
+    if (isOnchain && (!currentFid || isNaN(currentFid))) {
+      setErrorMessage('User ID required for quest verification')
       openError()
       return
     }
@@ -109,20 +263,66 @@ export function QuestVerification({
 
     try {
       // Call NEW verification API (uses verification-orchestrator.ts)
-      const response = await fetch(`/api/quests/${quest.id}/verify`, {
+      // API expects quest slug, not numeric ID
+      const questSlug = quest.slug || quest.id.toString();
+      
+      // Log request for debugging
+      const requestBody = {
+        userFid: currentFid,
+        userAddress: address,
+        taskIndex: verificationState.taskIndex
+      };
+      console.log('[QuestVerification] Request:', {
+        url: `/api/quests/${questSlug}/verify`,
+        body: requestBody
+      });
+      
+      const response = await fetch(`/api/quests/${questSlug}/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userFid: currentFid,
-          userAddress: address,
-          taskIndex: verificationState.taskIndex
-        })
+        body: JSON.stringify(requestBody)
       })
+
+      // Handle HTTP errors
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.log('[QuestVerification] API error response:', errorData);
+        } catch (parseError) {
+          console.error('[QuestVerification] Failed to parse error response:', parseError);
+          errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        
+        // Extract detailed error message
+        const errorMsg = errorData.message 
+          || errorData.details?.message 
+          || errorData.error
+          || `Server error: ${response.status}`;
+        
+        console.error('[QuestVerification] HTTP Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          extractedMessage: errorMsg
+        });
+        
+        throw new Error(errorMsg);
+      }
 
       const result = await response.json()
 
+      // Log full response for debugging
+      console.log('[QuestVerification] API response:', {
+        success: result.success,
+        message: result.message,
+        details: result.details
+      })
+
       if (!result.success) {
-        throw new Error(result.message || 'Verification failed')
+        // Show detailed error message from API
+        const errorMsg = result.message || result.details?.message || 'Verification failed'
+        throw new Error(errorMsg)
       }
 
       // Verification successful - rewards automatically distributed
@@ -131,15 +331,19 @@ export function QuestVerification({
         status: 'success',
         message: result.message || 'Verification successful!',
         rewards: result.rewards,
-        proof: result.proof
+        proof: result.proof,
+        claimSignature: result.claim_signature || null,
+        questCompleted: result.quest_completed || false
       }))
 
-      const xp = result.rewards?.xp_earned || quest.reward_points || 0
-      const points = result.rewards?.points_earned || 0
+      // XP and Points are separate reward systems (see QUEST-NAMING-AUDIT-REPORT.md)
+      const xp = result.rewards?.xp_earned || quest.reward_points_awarded || 0
+      const points = result.rewards?.points_earned || quest.reward_points_awarded || 0
 
       // Show XPEventOverlay celebration for task or quest completion
       if (result.quest_completed) {
         // Quest fully completed - big celebration
+        const questSlug = quest.slug || quest.id.toString()
         setXpPayload({
           event: 'quest-verify',
           chainKey: 'base',
@@ -147,35 +351,39 @@ export function QuestVerification({
           totalPoints: points,
           headline: `${quest.title} completed!`,
           shareLabel: 'Share quest completion',
-          visitUrl: `/quests/${quest.id}`,
+          visitUrl: `/quests/${questSlug}`,
           visitLabel: 'View quest details',
+          tierTagline: `+${xp} XP earned • +${points} Points awarded`,
         })
         setXpOverlayOpen(true)
         onQuestComplete?.()
       } else if (result.task_completed) {
         // Individual task completed - smaller celebration
+        const questSlug = quest.slug || quest.id.toString()
         setXpPayload({
           event: 'task-complete',
           chainKey: 'base',
           xpEarned: xp,
           totalPoints: points,
           headline: `Task ${verificationState.taskIndex + 1} complete!`,
-          tierTagline: `+${xp} XP, +${points} Points`,
+          shareLabel: 'Share task progress',
+          visitUrl: `/quests/${questSlug}`,
           visitLabel: 'Continue quest',
+          tierTagline: `+${xp} XP earned • Task ${verificationState.taskIndex + 1}/${quest.tasks?.length || 0}`,
         })
         setXpOverlayOpen(true)
       }
 
       onVerificationComplete?.(verificationState.taskIndex)
 
-      // Move to next task after celebration
+      // Move to next task after celebration (Bug #47 Fix: Wait full 30 seconds for overlay)
       if (result.task_completed && result.next_task_index !== undefined && !result.quest_completed) {
         setTimeout(() => {
           setVerificationState(prev => ({
             taskIndex: result.next_task_index,
             status: 'idle'
           }))
-        }, 3000) // Wait for overlay
+        }, 30000) // Match ANIMATION_TIMINGS.modalAutoDismiss (30 seconds)
       }
 
     } catch (error) {
@@ -197,9 +405,12 @@ export function QuestVerification({
     isConnected, 
     address, 
     fidInput, 
+    userFid,  // Bug #37 Fix: Added missing dependency
     quest.id,
+    quest.slug,  // Bug #37 Fix: Added for API calls
     quest.title,
-    quest.reward_points,
+    quest.reward_points_awarded,
+    quest.tasks,  // Bug #37 Fix: Added to track task array changes
     currentTask, 
     verificationState.taskIndex, 
     tasks.length,
@@ -434,11 +645,17 @@ export function QuestVerification({
             disabled={
               verificationState.status === 'verifying' ||
               (isOnchain && !isConnected) ||
-              (isSocial && !fidInput)
+              (isSocial && !fidInput) ||
+              isTaskCompleted
             }
             className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl font-semibold transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {verificationState.status === 'verifying' ? (
+            {isTaskCompleted ? (
+              <>
+                <CheckCircleIcon className="w-5 h-5" />
+                Task {verificationState.taskIndex + 1} Completed
+              </>
+            ) : verificationState.status === 'verifying' ? (
               <>
                 <LoopIcon className="w-5 h-5 animate-spin" />
                 Verifying...
@@ -473,20 +690,67 @@ export function QuestVerification({
       )}
 
       {/* Completed State */}
-      {isQuestCompleted && verificationState.rewards && (
-        <div className="bg-gradient-to-r from-green-500 to-primary-500 rounded-xl p-6 text-white text-center">
-          <EmojiEventsIcon className="w-12 h-12 mx-auto mb-3" />
-          <h3 className="text-xl font-bold mb-1">Quest Complete!</h3>
-          <div className="flex items-center justify-center gap-4 text-white/90">
-            <div className="flex items-center gap-1">
-              <EmojiEventsIcon className="w-4 h-4" />
-              <span>+{verificationState.rewards.xp_earned} XP</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <MonetizationOnIcon className="w-4 h-4" />
-              <span>+{verificationState.rewards.points_earned} Points</span>
+      {isQuestCompleted && (
+        <div className="space-y-4">
+          <div className="bg-gradient-to-r from-green-500 to-primary-500 rounded-xl p-6 text-white text-center">
+            <EmojiEventsIcon className="w-12 h-12 mx-auto mb-3" />
+            <h3 className="text-xl font-bold mb-1">Quest Complete!</h3>
+            <div className="flex items-center justify-center gap-4 text-white/90">
+              <div className="flex items-center gap-1">
+                <EmojiEventsIcon className="w-4 h-4" />
+                <span>+{(() => {
+                  // Calculate XP based on quest category (offline metric)
+                  const pointsReward = quest.reward_points_awarded || 0;
+                  const category = quest.category || 'custom';
+                  const XP_MULTIPLIERS: Record<string, number> = {
+                    social: 1.0,
+                    onchain: 1.5,
+                    creative: 1.2,
+                    learn: 1.0,
+                    hybrid: 2.0,
+                    custom: 1.0,
+                  };
+                  const multiplier = XP_MULTIPLIERS[category] || 1.0;
+                  return Math.floor(pointsReward * multiplier);
+                })()} XP</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MonetizationOnIcon className="w-4 h-4" />
+                <span>+{quest.reward_points_awarded} Points</span>
+              </div>
             </div>
           </div>
+
+          {/* Claim Button - Show immediately after quest completion */}
+          {verificationState.claimSignature && userFid && address && (
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border-2 border-blue-300 dark:border-blue-800">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 text-center">
+                🎉 Ready to claim your rewards on-chain!
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center">
+                Claim your {quest.reward_points_awarded} points on the blockchain to use them in the GMeowbased ecosystem.
+              </p>
+              <QuestClaimButton
+                questId={quest.id}
+                questTitle={quest.title}
+                signature={verificationState.claimSignature}
+                userFid={userFid}
+                onClaimSuccess={() => {
+                  // Refresh quest data to show claimed status
+                  window.location.reload();
+                }}
+              />
+            </div>
+          )}
+
+          {/* No claim signature - show message */}
+          {verificationState.questCompleted && !verificationState.claimSignature && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
+                ⏳ Claim signature is being generated. Please refresh the page in a moment to claim your rewards.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -502,10 +766,8 @@ export function QuestVerification({
         payload={xpPayload}
         onClose={() => {
           setXpOverlayOpen(false)
-          // Reload quest data after overlay closes
-          if (xpPayload?.event === 'quest-verify') {
-            window.location.reload()
-          }
+          // Note: Removed page reload - users stay on page to see claim button
+          // The quest data is already updated and claim button is now visible
         }}
       />
     </div>

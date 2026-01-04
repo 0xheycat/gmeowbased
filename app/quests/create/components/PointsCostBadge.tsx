@@ -14,6 +14,7 @@ interface QuestCostBreakdown {
   base: number
   tasks: number
   rewards: number
+  pointsEscrow: number
   badge: number
   total: number
 }
@@ -33,8 +34,8 @@ export function PointsCostBadge({ cost, className = '' }: PointsCostBadgeProps) 
         onMouseLeave={() => setShowBreakdown(false)}
         className={`flex items-center gap-2 text-lg px-4 py-2 bg-secondary rounded-full hover:bg-secondary/80 transition-colors ${className}`}
       >
-        <span className="text-muted-foreground">Cost:</span>
-        <span className="font-bold">{cost.total} BASE POINTS</span>
+        <span className="text-muted-foreground">Total Cost:</span>
+        <span className="font-bold">{cost.total} POINTS</span>
       </button>
 
       {/* Breakdown Tooltip */}
@@ -56,8 +57,13 @@ export function PointsCostBadge({ cost, className = '' }: PointsCostBadgeProps) 
             </div>
             
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Rewards:</span>
+              <span className="text-muted-foreground">XP Rewards:</span>
               <span className="font-medium">{cost.rewards} pts</span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Points Escrow:</span>
+              <span className="font-medium">{cost.pointsEscrow} pts</span>
             </div>
             
             {cost.badge > 0 && (

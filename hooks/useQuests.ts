@@ -52,7 +52,7 @@ export function useQuests(filters?: QuestFilters) {
 
 export function useQuestDetails(questId: string | null, userFid: number | null) {
   const shouldFetch = questId && userFid;
-  const url = shouldFetch ? `/api/quests/${questId}?userFid=${userFid}` : null;
+  const url = shouldFetch ? `/api/quests/${slug}?userFid=${userFid}` : null;
   
   const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
     revalidateOnFocus: true,
@@ -74,7 +74,7 @@ export function useQuestDetails(questId: string | null, userFid: number | null) 
 
 export function useCheckProgress() {
   const checkProgress = async (questId: string, userFid: number) => {
-    const response = await fetch(`/api/quests/${questId}/progress`, {
+    const response = await fetch(`/api/quests/${slug}/progress`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -10,7 +10,7 @@
  * 
  * Data Sources:
  * - user_profiles table: fid, wallet_address, verified_addresses, display_name, bio, etc.
- * - user_points_balances table: points_balance, viral_points, guild_points_awarded, total_score
+ * - user_points_balances table: points_balance, viral_xp, guild_points_awarded, total_score
  * - points_leaderboard view: rank calculation from total_score
  * - Subsquid GraphQL: UserOnChainStats.currentStreak (on-chain source of truth)
  * - Neynar API: Fresh Farcaster profile data (username, pfp, verified addresses)
@@ -20,7 +20,7 @@
  * - user_points_balances.fid: BIGINT (primary key, synced from Subsquid)
  * - user_profiles.verified_addresses: TEXT[] array (multi-wallet support)
  * - user_profiles.social_links: JSONB object
- * - total_score: GENERATED ALWAYS AS (points_balance + viral_points + guild_points_awarded)
+ * - total_score: GENERATED ALWAYS AS (points_balance + viral_xp + guild_points_awarded)
  * 
  * @module lib/profile/profile-service
  */
@@ -127,7 +127,7 @@ async function fetchUserProfileFromDB(fid: number) {
 /**
  * Fetch user points balances from Supabase + guild_events (PHASE 3 ENHANCEMENT)
  * 
- * Schema: user_points_balances (points_balance, viral_points, guild_points_awarded, total_score)
+ * Schema: user_points_balances (points_balance, viral_xp, guild_points_awarded, total_score)
  * 
  * ⚠️ CRITICAL CHANGE (Phase 3 Week 1 Day 1):
  * Previously only fetched guild_points_awarded from user_points_balances.
@@ -158,7 +158,7 @@ async function fetchUserPointsBalance(fid: number) {
   const [pointsData, guildEventsData] = await Promise.all([
     supabase
       .from('user_points_balances')
-      .select('points_balance, viral_points, guild_points_awarded, total_score, last_synced_at')
+      .select('points_balance, viral_xp, guild_points_awarded, total_score, last_synced_at')
       .eq('fid', fid)
       .single(),
     
@@ -185,7 +185,7 @@ async function fetchUserPointsBalance(fid: number) {
   
   return {
     points_balance: pointsData.data.points_balance || 0,
-    viral_points: pointsData.data.viral_points || 0,
+    viral_xp: pointsData.data.viral_xp || 0,
     guild_points_awarded: combinedGuildPoints, // ✅ COMBINED SOURCE
     total_score: (pointsData.data.total_score || 0) + guildEventPoints, // ✅ UPDATED TOTAL
     last_synced_at: pointsData.data.last_synced_at,
@@ -411,7 +411,7 @@ export async function fetchProfileData(fid: number): Promise<ProfileData | null>
         stats: {
           // LAYER 2 (Supabase): Off-chain points
           points_balance: pointsBalance?.points_balance || 0,
-          viral_points: pointsBalance?.viral_points || 0,
+          viral_xp: pointsBalance?.viral_xp || 0,
           guild_points_awarded: pointsBalance?.guild_points_awarded || 0,
           
           // LAYER 3 (Calculated): Total score from all sources

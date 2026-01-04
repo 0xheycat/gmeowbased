@@ -1,0 +1,331 @@
+/**
+ * ProgressionCharts Component
+ * @template music/charts (adapted 40%)
+ * @description Historical level/rank progression with professional loading states
+ * 
+ * Data Flow:
+ * 1. Fetch historical events from Subsquid GraphQL (useUserHistory hook)
+ * 2. Client-side filtering by time period (7d/30d/all)
+ * 3. Recharts renders interactive charts
+ * 
+ * Professional Patterns:
+ * - Music template loading states (Skeleton component)
+ * - GPU-optimized animations (will-change-transform)
+ * - Accessible (aria-live regions for dynamic updates)
+ * - Responsive design (mobile + desktop)
+ * 
+ * Usage:
+ * <ProgressionCharts userAddress="0x..." />
+ */
+
+'use client'
+
+import { useState, useMemo } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { useUserHistory } from '@/hooks/useUserHistory'
+import { Skeleton } from '@/components/ui/skeleton/Skeleton'
+import { format } from 'date-fns'
+
+interface ProgressionChartsProps {
+  userAddress: `0x${string}`
+}
+
+type TimeFilter = '7d' | '30d' | 'all'
+
+const TIER_NAMES = [
+  'Unranked', 'Bronze', 'Silver', 'Gold', 'Platinum', 
+  'Diamond', 'Master', 'Grandmaster', 'Champion', 
+  'Legend', 'Mythic', 'Immortal'
+]
+
+export default function ProgressionCharts({ userAddress }: ProgressionChartsProps) {
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('30d')
+  
+  // Fetch historical data from Subsquid
+  const { levelUps, rankUps, loading, error } = useUserHistory(userAddress)
+
+  // Filter data by time period
+  const filteredLevelUps = useMemo(() => {
+    if (!levelUps || levelUps.length === 0) return []
+    
+    const now = Date.now()
+    const cutoffMs = timeFilter === '7d' ? 7 * 24 * 60 * 60 * 1000 
+                    : timeFilter === '30d' ? 30 * 24 * 60 * 60 * 1000
+                    : 0
+
+    return levelUps
+      .filter(event => {
+        const eventTime = new Date(event.timestamp).getTime()
+        return timeFilter === 'all' || (now - eventTime) <= cutoffMs
+      })
+      .map(event => ({
+        timestamp: new Date(event.timestamp).getTime(),
+        level: event.newLevel,
+        date: format(new Date(event.timestamp), 'MMM d, yyyy'),
+        time: format(new Date(event.timestamp), 'HH:mm')
+      }))
+      .sort((a, b) => a.timestamp - b.timestamp)
+  }, [levelUps, timeFilter])
+
+  const filteredRankUps = useMemo(() => {
+    if (!rankUps || rankUps.length === 0) return []
+    
+    const now = Date.now()
+    const cutoffMs = timeFilter === '7d' ? 7 * 24 * 60 * 60 * 1000 
+                    : timeFilter === '30d' ? 30 * 24 * 60 * 60 * 1000
+                    : 0
+
+    return rankUps
+      .filter(event => {
+        const eventTime = new Date(event.timestamp).getTime()
+        return timeFilter === 'all' || (now - eventTime) <= cutoffMs
+      })
+      .map(event => ({
+        timestamp: new Date(event.timestamp).getTime(),
+        tier: event.newTier,
+        tierName: TIER_NAMES[event.newTier] || `Tier ${event.newTier}`,
+        date: format(new Date(event.timestamp), 'MMM d, yyyy'),
+        time: format(new Date(event.timestamp), 'HH:mm')
+      }))
+      .sort((a, b) => a.timestamp - b.timestamp)
+  }, [rankUps, timeFilter])
+
+  // Professional loading state (music template pattern)
+  if (loading) {
+    return (
+      <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading progression charts">
+        <div className="flex items-center justify-between">
+          <Skeleton variant="rect" className="h-8 w-48" animation="wave" />
+          <div className="flex gap-2">
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} variant="rect" className="h-10 w-16 rounded-lg" animation="wave" />
+            ))}
+          </div>
+        </div>
+        <Skeleton variant="rect" className="h-64 rounded-lg" animation="wave" />
+        <Skeleton variant="rect" className="h-64 rounded-lg" animation="wave" />
+      </div>
+    )
+  }
+
+  // Professional error state (music template pattern)
+  if (error) {
+    return (
+      <div 
+        className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6"
+        role="alert"
+        aria-live="assertive"
+      >
+        <div className="flex items-start gap-3">
+          <svg 
+            className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+            />
+          </svg>
+          <div>
+            <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-1">
+              Unable to Load Progression Charts
+            </h3>
+            <p className="text-red-700 dark:text-red-300 text-sm">
+              Failed to fetch historical data. Please try again later.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const hasLevelData = filteredLevelUps.length > 0
+  const hasRankData = filteredRankUps.length > 0
+
+  // Professional empty state (music template pattern)
+  if (!hasLevelData && !hasRankData) {
+    return (
+      <div 
+        className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center"
+        role="status"
+        aria-label="No progression data available"
+      >
+        <svg 
+          className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-600" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={1.5} 
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" 
+          />
+        </svg>
+        <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-1">
+          No Progression Data Yet
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-500">
+          Level up or rank up to see your progression charts here!
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6" role="region" aria-label="Progression charts">
+      {/* Header with time filters */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white">Progression History</h2>
+        
+        {/* Time Filters (music template button group pattern) */}
+        <div className="flex gap-2" role="group" aria-label="Time period filter">
+          {(['7d', '30d', 'all'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setTimeFilter(filter)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                timeFilter === filter
+                  ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/50'
+                  : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80'
+              }`}
+              aria-pressed={timeFilter === filter}
+            >
+              {filter === '7d' ? '7 Days' : filter === '30d' ? '30 Days' : 'All Time'}
+            </button>
+          ))}
+        </div>
+      </div>>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          📈 Progression History
+        </h3>
+        <div className="flex gap-2" role="group" aria-label="Time period filters">
+          {(['7d', '30d', 'all'] as TimeFilter[]).map(filter => {
+            const isActive = timeFilter === filter
+            const label = filter === 'all' ? 'All Time' : filter.toUpperCase()
+            
+            return (
+              <button
+                key={filter}
+                onClick={() => setTimeFilter(filter)}
+                aria-pressed={isActive}
+                aria-label={`Filter by ${label}`}
+                className={`min-w-[44px] min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isActive
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Level Progression Chart */}
+      {hasLevelData && (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">
+            Level Progression
+          </h4>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={filteredLevelUps}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis 
+                dataKey="date" 
+                stroke="#9CA3AF"
+                style={{ fontSize: '12px' }}
+              />
+              <YAxis 
+                stroke="#9CA3AF"
+                style={{ fontSize: '12px' }}
+                label={{ value: 'Level', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1F2937', 
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                  color: '#F9FAFB'
+                }}
+                labelStyle={{ color: '#F9FAFB' }}
+                formatter={(value: any) => [`Level ${value}`, 'Level']}
+              />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="level" 
+                stroke="#3B82F6" 
+                strokeWidth={2}
+                dot={{ fill: '#3B82F6', r: 4 }}
+                activeDot={{ r: 6 }}
+                name="Level"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+            {filteredLevelUps.length} level {filteredLevelUps.length === 1 ? 'up' : 'ups'} in selected period
+          </div>
+        </div>
+      )}
+
+      {/* Rank Tier Progression Chart */}
+      {hasRankData && (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">
+            Rank Tier Progression
+          </h4>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={filteredRankUps}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis 
+                dataKey="date" 
+                stroke="#9CA3AF"
+                style={{ fontSize: '12px' }}
+              />
+              <YAxis 
+                stroke="#9CA3AF"
+                style={{ fontSize: '12px' }}
+                domain={[0, 11]}
+                ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
+                tickFormatter={(value) => TIER_NAMES[value] || `T${value}`}
+                label={{ value: 'Rank Tier', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1F2937', 
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                  color: '#F9FAFB'
+                }}
+                labelStyle={{ color: '#F9FAFB' }}
+                formatter={(value: any) => [TIER_NAMES[value as number] || `Tier ${value}`, 'Rank']}
+              />
+              <Legend />
+              <Line 
+                type="stepAfter" 
+                dataKey="tier" 
+                stroke="#8B5CF6" 
+                strokeWidth={2}
+                dot={{ fill: '#8B5CF6', r: 4 }}
+                activeDot={{ r: 6 }}
+                name="Tier"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+            {filteredRankUps.length} rank {filteredRankUps.length === 1 ? 'change' : 'changes'} in selected period
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

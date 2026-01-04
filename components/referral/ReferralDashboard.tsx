@@ -1,14 +1,21 @@
 /**
- * ReferralDashboard Component
+ * ReferralDashboard Component - Phase 5: Hybrid Architecture Migration
  * 
  * Purpose: Main referral system dashboard integrating all referral components
- * Template: trezoadmin-41/dashboard-analytics (35%) + gmeowbased0.6 layout patterns (15%)
+ * Template: music/* loading/error states + referral components
+ * 
+ * @architecture Hybrid Data Layer
+ * - Referral codes: Subsquid GraphQL (ReferralCode entity via useReferralCodesByOwner)
+ * - Referral stats: Subsquid GraphQL (aggregated from ReferralUse events)
+ * - Contract writes: Direct contract calls (registration/updates)
  * 
  * Features:
- * - Integrated referral management (code, link, stats)
+ * - Subsquid-powered referral code management
+ * - Real-time stats from GraphQL
+ * - Professional loading states (Skeleton wave)
+ * - Music template error boundaries
  * - Responsive 2-column desktop, 1-column mobile layout
  * - Section organization with proper spacing
- * - Loading states for async components
  * - Empty state for users without referral code
  * 
  * Usage:
@@ -23,7 +30,9 @@ import { ReferralCodeForm } from './ReferralCodeForm'
 import { ReferralLinkGenerator } from './ReferralLinkGenerator'
 import { ReferralStatsCards } from './ReferralStatsCards'
 import { ErrorIcon, InfoIcon } from '@/components/icons'
-import { getReferralCode } from '@/lib/contracts/referral-contract'
+import { useReferralCodesByOwner } from '@/hooks/useReferralSubsquid'
+import { Skeleton } from '@/components/ui/skeleton/Skeleton'
+import { motion } from 'framer-motion'
 
 export interface ReferralDashboardProps {
   /** User's wallet address */
@@ -35,49 +44,60 @@ export interface ReferralDashboardProps {
 }
 
 export function ReferralDashboard({ address, fid, className = '' }: ReferralDashboardProps) {
-  const [referralCode, setReferralCode] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // Fetch referral codes from Subsquid (real-time GraphQL)
+  const { codes, loading: isLoading, error: queryError, refetch } = useReferralCodesByOwner(
+    address?.toLowerCase(),
+    1 // Only need the first code (users typically have 1 code)
+  )
 
-  useEffect(() => {
-    const loadReferralCode = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const code = await getReferralCode(address)
-        setReferralCode(code)
-      } catch (err) {
-        console.error('Failed to load referral code:', err)
-        setError('Failed to load referral code. Please refresh the page.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  const referralCode = codes?.[0]?.id || null
+  const error = queryError ? 'Failed to load referral code. Please refresh the page.' : null
 
-    loadReferralCode()
-  }, [fid])
-
-  const handleCodeRegistered = (newCode: string) => {
-    setReferralCode(newCode)
+  const handleCodeRegistered = async (newCode: string) => {
+    // Refetch codes from Subsquid after registration
+    await refetch()
   }
 
   if (isLoading) {
     return (
-      <div className={`space-y-6 ${className}`}>
-        {/* Loading Skeleton */}
-        <div className="animate-pulse space-y-6">
-          {/* Stats Cards Skeleton */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-32" />
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-32" />
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-32" />
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-32" />
+      <div 
+        className={`space-y-6 ${className}`}
+        role="status"
+        aria-live="polite"
+        aria-label="Loading referral dashboard"
+      >
+        {/* Header Skeleton */}
+        <div className="space-y-2">
+          <Skeleton variant="text" className="h-9 w-64" animation="wave" />
+          <Skeleton variant="text" className="h-5 w-96" animation="wave" />
+        </div>
+        
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+              <Skeleton variant="text" className="h-4 w-24 mb-4" animation="wave" />
+              <Skeleton variant="text" className="h-8 w-16 mb-2" animation="wave" />
+              <Skeleton variant="text" className="h-4 w-32" animation="wave" />
+            </div>
+          ))}
+        </div>
+        
+        {/* Forms Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <Skeleton variant="text" className="h-7 w-48" animation="wave" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+              <Skeleton variant="text" className="h-4 w-32 mb-4" animation="wave" />
+              <Skeleton variant="rect" className="h-11 w-full mb-4" animation="wave" />
+              <Skeleton variant="rect" className="h-11 w-32" animation="wave" />
+            </div>
           </div>
-          
-          {/* Forms Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-64" />
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-64" />
+          <div className="space-y-4">
+            <Skeleton variant="text" className="h-7 w-48" animation="wave" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+              <Skeleton variant="rect" className="h-32 w-full" animation="wave" />
+            </div>
           </div>
         </div>
       </div>
@@ -86,10 +106,25 @@ export function ReferralDashboard({ address, fid, className = '' }: ReferralDash
 
   if (error) {
     return (
-      <div className={`space-y-6 ${className}`}>
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+      <motion.div 
+        className={`space-y-6 ${className}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div 
+          role="alert"
+          aria-live="assertive"
+          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6"
+        >
           <div className="flex items-start gap-3">
-            <ErrorIcon className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <motion.div
+              initial={{ rotate: 0 }}
+              animate={{ rotate: [0, -10, 10, -10, 0] }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <ErrorIcon className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            </motion.div>
             <div>
               <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-1">
                 Error Loading Dashboard
@@ -97,16 +132,30 @@ export function ReferralDashboard({ address, fid, className = '' }: ReferralDash
               <p className="text-red-700 dark:text-red-300 mb-4">
                 {error}
               </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors focus:ring-2 focus:ring-red-500 focus:outline-none"
-              >
-                Refresh Page
-              </button>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => refetch()}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors focus:ring-2 focus:ring-red-500 focus:outline-none shadow-lg shadow-red-500/30"
+                >
+                  Retry
+                </motion.button>
+                <motion.button
+                  onClick={() => window.location.reload()}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="px-4 py-2 min-h-[44px] bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-lg transition-colors focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                >
+                  Refresh Page
+                </motion.button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     )
   }
 

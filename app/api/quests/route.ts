@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
             return {
               ...quest,
               completionCount,
-              popularity: completionCount * (quest.reward_points || 0), // engagement score
+              popularity: completionCount * (quest.reward_points_awarded || 0), // engagement score
             };
           })
         );
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         if (filters.sortBy === 'popular') {
           enrichedQuests.sort((a, b) => b.completionCount - a.completionCount);
         } else if (filters.sortBy === 'rewards') {
-          enrichedQuests.sort((a, b) => (b.reward_points || 0) - (a.reward_points || 0));
+          enrichedQuests.sort((a, b) => (b.reward_points_awarded || 0) - (a.reward_points_awarded || 0));
         }
         
         return enrichedQuests;

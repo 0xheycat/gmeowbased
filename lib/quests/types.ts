@@ -69,17 +69,28 @@ export interface TaskConfig {
   title: string
   description: string
   verification_data: {
+    // Verification type (REQUIRED for quest verification to work)
+    type?: string // e.g., 'follow_user', 'like_cast', 'mint_nft', etc.
+    
     // Social (Farcaster via Neynar API)
     target_fid?: number
-    channel_id?: string
-    cast_hash?: string
-    required_text?: string
+    target_cast_hash?: string // For like_cast, recast, reply_to_cast
+    required_tag?: string // For create_cast_with_tag
+    target_channel_id?: string // For join_channel
+    channel_id?: string // Legacy
+    cast_hash?: string // Legacy
+    required_text?: string // Legacy
     
     // Onchain (Base RPC + proxy contract)
-    token_address?: string
-    nft_contract?: string
-    min_amount?: string
-    min_balance?: number
+    token_address?: string // For swap_token
+    nft_contract?: string // For mint_nft
+    min_amount?: string // For swap_token
+    min_balance?: number // For mint_nft
+    pool_address?: string // For provide_liquidity
+    min_lp_tokens?: string // For provide_liquidity
+    transaction_hash?: string // For bridge
+    contract_address?: string // For custom
+    function_signature?: string // For custom
     
     // Manual (admin/creator approval)
     proof_required?: boolean
@@ -109,7 +120,7 @@ export interface QuestDraft {
   tasks: TaskConfig[]
   
   // Rewards
-  reward_points: number // BASE POINTS (escrowed from creator)
+  reward_points_awarded: number // BASE POINTS (escrowed from creator)
   reward_xp?: number // XP (backend logic, NOT escrowed)
   reward_badge_ids?: string[] // Non-transferable badges
   create_new_badge?: boolean // Costs 50 BASE POINTS

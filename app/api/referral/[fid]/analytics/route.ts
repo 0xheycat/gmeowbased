@@ -31,6 +31,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/edge'
 import { strictLimiter, getClientIp } from '@/lib/middleware/rate-limit'
 import { createErrorResponse, ErrorType, logError } from '@/lib/middleware/error-handler'
 import { generateRequestId } from '@/lib/middleware/request-id'
+import { auditLog } from '@/lib/middleware/audit-logger'
 
 // ===== SECURITY LAYER 2: INPUT VALIDATION =====
 const FidParamSchema = z.object({
@@ -39,17 +40,35 @@ const FidParamSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  { params }: { params: Promise<{ fid: string }> }
 ) {
+  const resolvedParams = await params
   const requestId = generateRequestId()
   const startTime = Date.now()
   const clientIp = getClientIp(request)
 
-  // ===== SECURITY LAYER 9: AUDIT LOGGING =====
-  console.log('[API /api/referral/[fid]/analytics] Request received', {
+  // ===== SECURITY LAYER 0: AUTHENTICATION =====
+  const authenticatedFid = request.headers.get('x-farcaster-fid')
+  if (!authenticatedFid || authenticatedFid !== resolvedParams.fid) {
+    logError('Authentication failed', {
+      endpoint: `/api/referral/${resolvedParams.fid}/analytics`,
+      ip: clientIp,
+      method: 'GET',
+      reason: 'Missing or mismatched x-farcaster-fid header',
+    })
+    
+    return createErrorResponse({
+      type: ErrorType.AUTHENTICATION,
+      message: 'Unauthorized: x-farcaster-fid header required and must match FID',
+      statusCode: 401,
+    })
+  }
+
+  // ===== BUG #R8 FIX: ENVIRONMENT-GATED AUDIT LOGGING =====
+  auditLog('[API /api/referral/[fid]/analytics] Request received', {
     requestId,
     ip: clientIp,
-    fid: params.fid,
+    fid: resolvedParams.fid,
     timestamp: new Date().toISOString(),
   })
 
@@ -229,7 +248,7 @@ export async function GET(
     ) || { date: new Date().toISOString().split('T')[0], count: 0 }
 
     // ===== SECURITY LAYER 9: AUDIT LOGGING =====
-    console.log('[Referral Analytics API] Success', {
+    auditLog('[Referral Analytics API] Success', {
       requestId,
       ip: clientIp,
       fid,
@@ -284,7 +303,7 @@ export async function GET(
       endpoint: '/api/referral/[fid]/analytics',
       ip: clientIp,
       requestId,
-      fid: params.fid,
+      fid: resolvedParams.fid,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
     })

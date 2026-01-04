@@ -12,6 +12,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuthContext } from '@/lib/contexts/AuthContext'
 import { WizardStepper, type WizardStep } from './components/WizardStepper'
 import { TemplateSelector } from './components/TemplateSelector'
 import { QuestBasicsForm } from './components/QuestBasicsForm'
@@ -29,6 +30,7 @@ import { QuestDraftSaveIndicator } from '@/components/quests/QuestDraftSaveIndic
 import { QuestDraftRecoveryPrompt } from '@/components/quests/QuestDraftRecoveryPrompt'
 import { useDialog } from '@/components/dialogs'
 import { ErrorDialog } from '@/components/dialogs'
+import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import type { QuestDraft, QuestTemplate, TaskConfig } from '@/lib/quests/types'
 
 // Mock templates for development (fallback if database fetch fails)
@@ -49,7 +51,7 @@ const MOCK_TEMPLATES: QuestTemplate[] = [
       estimated_time: '15min',
       ends_at: '',
       tasks: [],
-      reward_points: 50,
+      reward_points_awarded: 50,
     },
     created_by: 'system',
     is_active: true,
@@ -71,7 +73,7 @@ const MOCK_TEMPLATES: QuestTemplate[] = [
       estimated_time: '30min',
       ends_at: '',
       tasks: [],
-      reward_points: 100,
+      reward_points_awarded: 100,
     },
     created_by: 'system',
     is_active: true,
@@ -93,7 +95,7 @@ const MOCK_TEMPLATES: QuestTemplate[] = [
       estimated_time: '1hr',
       ends_at: '',
       tasks: [],
-      reward_points: 150,
+      reward_points_awarded: 150,
     },
     created_by: 'system',
     is_active: true,
@@ -103,13 +105,16 @@ const MOCK_TEMPLATES: QuestTemplate[] = [
 
 export default function QuestCreatePage() {
   const router = useRouter()
+  const { fid, address } = useAuthContext()
   
   const [currentStep, setCurrentStep] = useState<WizardStep>('template')
   const [questDraft, setQuestDraft] = useState<Partial<QuestDraft>>({
     tasks: [],
-    reward_points: 10,
+    reward_points_awarded: 10,
   })
   const [isPublishing, setIsPublishing] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [celebrationPayload, setCelebrationPayload] = useState<XpEventPayload | null>(null)
   const [showRecoveryPrompt, setShowRecoveryPrompt] = useState(false)
   const [recoveryMetadata, setRecoveryMetadata] = useState<QuestDraftMetadata | null>(null)
   
@@ -181,9 +186,10 @@ export default function QuestCreatePage() {
   const estimatedCost = calculateQuestCost({
     category: (questDraft.category || 'social') as any,
     taskCount: questDraft.tasks?.length || 0,
-    rewardXp: questDraft.reward_xp || 0,
+    rewardXp: 0, // XP removed - calculated at completion based on quest type
     hasNewBadge: questDraft.create_new_badge,
-    rewardPoints: questDraft.reward_points || 0,
+    rewardPoints: questDraft.reward_points_awarded || 0,
+    maxParticipants: questDraft.max_participants, // Include max participants for accurate escrow calculation
   })
 
   const handleTemplateSelect = (template: QuestTemplate) => {
@@ -210,11 +216,22 @@ export default function QuestCreatePage() {
     setIsPublishing(true)
 
     try {
+      // Ensure creator info is included
+      if (!fid) {
+        throw new Error('Please connect your wallet to create a quest')
+      }
+
       // Phase 3: API call to /api/quests/create
       const response = await fetch('/api/quests/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(questDraft),
+        body: JSON.stringify({
+          ...questDraft,
+          creator_fid: fid,
+          creator_address: address,
+          // Remove undefined cover_image_url if not set
+          cover_image_url: questDraft.cover_image_url || undefined,
+        }),
       })
 
       const result = await response.json()
@@ -226,8 +243,27 @@ export default function QuestCreatePage() {
       // Clear auto-save after successful publish
       clearDraft()
 
-      // Redirect to quest detail page
-      router.push(`/quests/${result.data.quest.slug}`)
+      // Show celebration overlay
+      // Award XP for quest creation (separate from points escrow)
+      const questXP = result.data.rewards?.xp_earned || questDraft.reward_points_awarded || 100
+      const questCost = result.data.cost?.total || questDraft.reward_points_awarded || 0
+      setCelebrationPayload({
+        event: 'quest-create',
+        chainKey: 'base',
+        xpEarned: questXP, // Award XP for creating a quest
+        totalPoints: result.data.escrow?.points_remaining || 0,
+        headline: 'Quest ready to launch',
+        shareLabel: 'Announce quest frame',
+        visitUrl: `/quests/${result.data.quest.slug}`,
+        visitLabel: 'View quest',
+        tierTagline: `+${questXP} XP earned • ${questCost} points escrowed`,
+      })
+      setShowCelebration(true)
+
+      // Redirect after celebration (30s to match ANIMATION_TIMINGS.modalAutoDismiss)
+      setTimeout(() => {
+        router.push(`/quests/${result.data.quest.slug}`)
+      }, 30000)
     } catch (error) {
       console.error('Failed to publish quest:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -366,6 +402,13 @@ export default function QuestCreatePage() {
         title={errorDialogConfig.title}
         error={errorDialogConfig.message}
         onRetry={errorDialogConfig.onRetry}
+      />
+
+      {/* Success Celebration Overlay */}
+      <XPEventOverlay
+        open={showCelebration}
+        payload={celebrationPayload}
+        onClose={() => setShowCelebration(false)}
       />
     </div>
   )

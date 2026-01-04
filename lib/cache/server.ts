@@ -72,8 +72,8 @@
  *   - [x] Add graceful degradation (error handling) - December 18, 2025
  *   - [x] Add staleness detection (getEntry method) - December 18, 2025
  *   - [ ] Add distributed cache invalidation (Redis pub/sub)
- *   - [ ] Implement cache compression (reduce memory usage)
- *   - [ ] Add cache metrics dashboard (hit rate, eviction rate)
+ *   - [x] Implement cache compression (reduce memory usage) - January 3, 2026 (Phase 8.4.3)
+ *   - [x] Add cache metrics dashboard (hit rate, eviction rate) - January 3, 2026 (Phase 8.4.2)
  *   - [ ] Support cache tags (group invalidation)
  *   - [ ] Add cache preloading strategies (predictive)
  *   - [ ] Implement cache versioning (schema migrations)
@@ -118,6 +118,12 @@
 import { kv } from '@vercel/kv'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { 
+  compressData, 
+  decompressData,
+  getCompressionStats,
+  type CompressionOptions 
+} from './compression'
 
 // ========================================
 // TYPES
@@ -142,6 +148,10 @@ export type CacheOptions = {
   force?: boolean
   /** Preferred backend (default: 'auto' - tries redis → filesystem → memory) */
   backend?: CacheBackend
+  /** Enable compression for cached values (default: true, Phase 8.4.3) */
+  compress?: boolean
+  /** Compression options (algorithm, level, minSize) */
+  compressionOptions?: CompressionOptions
 }
 
 export type CacheEntry<T> = {
@@ -157,6 +167,16 @@ export type CacheStats = {
   memoryHitRate: number
   externalHitRate: number
   filesystemHitRate: number
+  compression?: {
+    totalOriginalBytes: number
+    totalCompressedBytes: number
+    avgCompressionRatio: number
+    compressionCount: number
+    decompressionCount: number
+    avgCompressionTime: number
+    avgDecompressionTime: number
+    totalBytesSaved: number
+  }
 }
 
 // ========================================
@@ -278,12 +298,12 @@ const USE_EXTERNAL_CACHE =
 let externalHits = 0
 let externalMisses = 0
 
-async function getFromExternal<T>(namespace: string, key: string): Promise<T | null> {
+async function getFromExternal<T>(namespace: string, key: string, useCompression = true): Promise<T | null> {
   if (!USE_EXTERNAL_CACHE) return null
 
   try {
     const fullKey = `${namespace}:${key}`
-    const data = await kv.get<T>(fullKey)
+    const data = await kv.get(fullKey)
     
     if (data === null) {
       externalMisses++
@@ -291,7 +311,18 @@ async function getFromExternal<T>(namespace: string, key: string): Promise<T | n
     }
     
     externalHits++
-    return data
+    
+    // Check if data is compressed (has the compressed wrapper structure)
+    if (useCompression && data && typeof data === 'object' && 'compressed' in data) {
+      try {
+        return await decompressData(data as any)
+      } catch (error) {
+        console.error('[Cache] Decompression failed, returning uncompressed:', error)
+        return data as T
+      }
+    }
+    
+    return data as T
   } catch (error) {
     console.error('[Cache] External cache GET error:', error)
     return null
@@ -302,13 +333,27 @@ async function setToExternal<T>(
   namespace: string,
   key: string,
   data: T,
-  ttlSeconds: number
+  ttlSeconds: number,
+  useCompression = true,
+  compressionOpts?: CompressionOptions
 ): Promise<void> {
   if (!USE_EXTERNAL_CACHE) return
 
   try {
     const fullKey = `${namespace}:${key}`
-    await kv.set(fullKey, data, { ex: ttlSeconds })
+    
+    // Compress data if enabled
+    let dataToStore: any = data
+    if (useCompression) {
+      try {
+        dataToStore = await compressData(data, compressionOpts)
+      } catch (error) {
+        console.error('[Cache] Compression failed, storing uncompressed:', error)
+        dataToStore = data
+      }
+    }
+    
+    await kv.set(fullKey, dataToStore, { ex: ttlSeconds })
   } catch (error) {
     console.error('[Cache] External cache SET error:', error)
   }
@@ -382,14 +427,14 @@ function getFilesystemPath(namespace: string, key: string): string {
   return path.join(CACHE_DIR, `${namespace}_${sanitized}.json`)
 }
 
-async function getFromFilesystem<T>(namespace: string, key: string): Promise<T | null> {
+async function getFromFilesystem<T>(namespace: string, key: string, useCompression = true): Promise<T | null> {
   try {
     const initialized = await initFilesystem()
     if (!initialized) return null
 
     const filePath = getFilesystemPath(namespace, key)
     const content = await fs.readFile(filePath, 'utf-8')
-    const entry: CacheEntry<T> = JSON.parse(content)
+    const entry: CacheEntry<any> = JSON.parse(content)
 
     const age = Date.now() - entry.timestamp
 
@@ -408,7 +453,18 @@ async function getFromFilesystem<T>(namespace: string, key: string): Promise<T |
     }
 
     filesystemHits++
-    return entry.data
+    
+    // Check if data is compressed
+    if (useCompression && entry.data && typeof entry.data === 'object' && 'compressed' in entry.data) {
+      try {
+        return await decompressData(entry.data)
+      } catch (error) {
+        console.error('[Cache] Decompression failed, returning uncompressed:', error)
+        return entry.data as T
+      }
+    }
+    
+    return entry.data as T
   } catch (error) {
     filesystemMisses++
     return null
@@ -419,7 +475,9 @@ async function setToFilesystem<T>(
   namespace: string,
   key: string,
   data: T,
-  ttlSeconds: number
+  ttlSeconds: number,
+  useCompression = true,
+  compressionOpts?: CompressionOptions
 ): Promise<void> {
   try {
     const initialized = await initFilesystem()
@@ -445,8 +503,19 @@ async function setToFilesystem<T>(
       }
     }
 
-    const entry: CacheEntry<T> = {
-      data,
+    // Compress data if enabled
+    let dataToStore: any = data
+    if (useCompression) {
+      try {
+        dataToStore = await compressData(data, compressionOpts)
+      } catch (error) {
+        console.error('[Cache] Compression failed, storing uncompressed:', error)
+        dataToStore = data
+      }
+    }
+
+    const entry: CacheEntry<any> = {
+      data: dataToStore,
       timestamp: Date.now(),
       expiresAt: Date.now() + ttlSeconds * 1000,
     }
@@ -532,6 +601,8 @@ async function getCached<T>(
     skipExternal = false,
     force = false,
     backend = 'auto',
+    compress = true, // Default: enable compression
+    compressionOptions,
   } = options
 
   // Validate TTL
@@ -559,10 +630,10 @@ async function getCached<T>(
         try { memoryCache.set(cacheKey, fresh, ttl) } catch (e) { /* ignore */ }
       }
       if (useRedis) {
-        setToExternal(namespace, key, fresh, ttl).catch(() => { /* ignore */ })
+        setToExternal(namespace, key, fresh, ttl, compress, compressionOptions).catch(() => { /* ignore */ })
       }
       if (useFilesystem) {
-        setToFilesystem(namespace, key, fresh, ttl).catch(() => { /* ignore */ })
+        setToFilesystem(namespace, key, fresh, ttl, compress, compressionOptions).catch(() => { /* ignore */ })
       }
       return fresh
     } catch (error) {
@@ -602,7 +673,7 @@ async function getCached<T>(
   // L2: Check external cache (Redis/Vercel KV)
   if (useRedis && !hasStaleData) {
     try {
-      const extCached = await getFromExternal<T>(namespace, key)
+      const extCached = await getFromExternal<T>(namespace, key, compress)
       if (extCached !== null) {
         // Populate L1 cache
         if (useMemory) {
@@ -619,7 +690,7 @@ async function getCached<T>(
   // L3: Check filesystem cache (free-tier fallback)
   if (useFilesystem && !hasStaleData) {
     try {
-      const fsCached = await getFromFilesystem<T>(namespace, key)
+      const fsCached = await getFromFilesystem<T>(namespace, key, compress)
       if (fsCached !== null) {
         // Populate L1 cache
         if (useMemory) {
@@ -644,10 +715,10 @@ async function getCached<T>(
           try { memoryCache.set(cacheKey, fresh, ttl) } catch (e) { /* ignore */ }
         }
         if (useRedis) {
-          setToExternal(namespace, key, fresh, ttl).catch(() => { /* ignore */ })
+          setToExternal(namespace, key, fresh, ttl, compress, compressionOptions).catch(() => { /* ignore */ })
         }
         if (useFilesystem) {
-          setToFilesystem(namespace, key, fresh, ttl).catch(() => { /* ignore */ })
+          setToFilesystem(namespace, key, fresh, ttl, compress, compressionOptions).catch(() => { /* ignore */ })
         }
       } catch (error) {
         console.error(`[Cache] Background refresh failed for ${cacheKey}:`, error)
@@ -672,10 +743,10 @@ async function getCached<T>(
         try { memoryCache.set(cacheKey, fresh, ttl) } catch (e) { /* ignore */ }
       }
       if (useRedis) {
-        setToExternal(namespace, key, fresh, ttl).catch(() => { /* ignore */ })
+        setToExternal(namespace, key, fresh, ttl, compress, compressionOptions).catch(() => { /* ignore */ })
       }
       if (useFilesystem) {
-        setToFilesystem(namespace, key, fresh, ttl).catch(() => { /* ignore */ })
+        setToFilesystem(namespace, key, fresh, ttl, compress, compressionOptions).catch(() => { /* ignore */ })
       }
 
       return fresh
@@ -737,12 +808,13 @@ function clearAllCache(): void {
 }
 
 /**
- * Get cache statistics
+ * Get cache statistics (including compression metrics)
  */
 function getCacheStats(): CacheStats {
   const memStats = memoryCache.stats()
   const extTotal = externalHits + externalMisses
   const fsTotal = filesystemHits + filesystemMisses
+  const compressionStats = getCompressionStats()
   
   return {
     hits: memStats.hits + externalHits + filesystemHits,
@@ -751,6 +823,7 @@ function getCacheStats(): CacheStats {
     memoryHitRate: memStats.hitRate,
     externalHitRate: extTotal > 0 ? externalHits / extTotal : 0,
     filesystemHitRate: fsTotal > 0 ? filesystemHits / fsTotal : 0,
+    compression: compressionStats,
   }
 }
 
@@ -1092,11 +1165,56 @@ export const serverCache = new ServerCache('server')
 export const localCache = new ServerCache('bot')
 
 // ========================================
+// REDIS PUB/SUB (DISTRIBUTED INVALIDATION)
+// ========================================
+
+/**
+ * Distributed cache invalidation via Redis pub/sub
+ * 
+ * When one serverless instance invalidates a cache key, it publishes
+ * a message to Redis. All other instances subscribe to this channel
+ * and invalidate their L1 memory cache accordingly.
+ * 
+ * This ensures cache consistency across multiple serverless instances.
+ */
+
+const CACHE_INVALIDATION_CHANNEL = 'cache:invalidation'
+
+/** Subscribe to cache invalidation events */
+export async function subscribeToCacheInvalidation(): Promise<void> {
+  try {
+    if (!kv) return // Redis not available
+    
+    // Note: Vercel KV doesn't support pub/sub in REST API
+    // This requires Redis client with subscribe capability
+    // For now, we document the pattern for future Redis implementation
+    
+    console.log('[Cache] Distributed invalidation requires Redis pub/sub (not available in Vercel KV REST API)')
+    console.log('[Cache] Alternative: Use webhook-based invalidation or TTL-based expiration')
+  } catch (error) {
+    console.error('[Cache] Failed to subscribe to invalidation channel:', error)
+  }
+}
+
+/** Publish cache invalidation event */
+async function publishInvalidation(namespace: string, key: string): Promise<void> {
+  try {
+    if (!kv) return // Redis not available
+    
+    // With full Redis client, would publish:
+    // await redis.publish(CACHE_INVALIDATION_CHANNEL, JSON.stringify({ namespace, key }))
+    
+    // For Vercel KV, we rely on L2 invalidation and TTL expiration
+  } catch (error) {
+    console.error('[Cache] Failed to publish invalidation:', error)
+  }
+}
+
+// ========================================
 // EXPORTS
 // ========================================
 
 export {
-  // Core functions
   getCached,
   invalidateCache,
   invalidateCachePattern,
@@ -1118,6 +1236,11 @@ export {
   buildLeaderboardKey,
   buildQuestStatusKey,
   buildBadgeTemplatesKey,
+  
+  // Compression utilities (Phase 8.4.3)
+  compressData,
+  decompressData,
+  getCompressionStats,
   
   // Warming & initialization
   warmCache,

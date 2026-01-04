@@ -53,11 +53,11 @@ abstract contract GuildModule is BaseModule {
     require(bytes(name).length <= 64, "Name too long");
     require(guildOf[msg.sender] == 0, "E002");
     
-    // Check points using unified helper (works in both architectures)
+    // Check points using unified helper (reads from ScoringModule)
     uint256 userPoints = _getUserPoints(msg.sender);
     require(userPoints >= guildCreationCost, "E003");
     
-    // Deduct points using unified helper (works in both architectures)
+    // Deduct points (helper automatically updates ScoringModule)
     _deductPoints(msg.sender, guildCreationCost);
 
     nextGuildId += 1;
@@ -137,7 +137,14 @@ abstract contract GuildModule is BaseModule {
     );
     require(guildTreasuryPoints[guildId] >= points, "E009");
     guildTreasuryPoints[guildId] -= points;
-    _addPoints(msg.sender, points);
+    
+    // Add to ScoringModule with multiplier
+    if (address(scoringModule) != address(0)) {
+      uint8 userTier = scoringModule.userRankTier(msg.sender);
+      uint256 bonusPoints = scoringModule.applyMultiplier(points, userTier);
+      scoringModule.addGuildPoints(msg.sender, bonusPoints);
+    }
+    
     emit GuildRewardClaimed(guildId, msg.sender, points);
   }
 
@@ -194,8 +201,17 @@ abstract contract GuildModule is BaseModule {
     require(gq.active, "E005");
     uint256 gid = gq.guildId;
     require(guildOf[msg.sender] == gid, "E006");
-    _addPoints(msg.sender, gq.rewardPoints);
-    addGuildPoints(gid, gq.rewardPoints);
-    emit GuildRewardClaimed(gid, msg.sender, gq.rewardPoints);
+    
+    uint256 baseReward = gq.rewardPoints;
+    
+    // Add to ScoringModule with multiplier
+    if (address(scoringModule) != address(0)) {
+      uint8 userTier = scoringModule.userRankTier(msg.sender);
+      uint256 bonusReward = scoringModule.applyMultiplier(baseReward, userTier);
+      scoringModule.addGuildPoints(msg.sender, bonusReward);
+    }
+    
+    addGuildPoints(gid, baseReward);
+    emit GuildRewardClaimed(gid, msg.sender, baseReward);
   }
 }

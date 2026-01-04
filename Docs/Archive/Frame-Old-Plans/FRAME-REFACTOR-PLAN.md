@@ -137,7 +137,7 @@ export async function handleQuestFrame(request: FrameRequest, req: Request) {
   const title = quest.title
   const description = quest.description
   const buttons = [
-    { label: 'View Quest', target: `${origin}/quests/${questId}`, action: 'link' }
+    { label: 'View Quest', target: `${origin}/quests/${slug}`, action: 'link' }
   ]
   
   const html = buildFrameHtml({

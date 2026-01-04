@@ -38,6 +38,7 @@ import { getSubsquidClient, getGuildMembershipByAddress, getReferralCodeByOwner,
 import { fetchUserByFid, fetchUserByUsername } from '@/lib/integrations/neynar'
 import { createClient } from '@/lib/supabase/edge'
 import { calculateLevelProgress, getRankTierByPoints } from '@/lib/scoring/unified-calculator'
+import { getUserStatsOnChain, getLevelProgressOnChain, type UserStats } from '@/lib/contracts/scoring-module'
 
 export type LeaderboardEntry = {
   address: string
@@ -59,7 +60,7 @@ export type LeaderboardEntry = {
   
   /** 
    * PENDING REWARDS: Claimable off-chain bonuses (not yet on-chain)
-   * Formula: viral_points + guild_bonus + referral_bonus + streak_bonus + badge_prestige
+   * Formula: viral_xp + guild_bonus + referral_bonus + streak_bonus + badge_prestige
    * Claimed via: Oracle wallet deposits to contract
    */
   pending_rewards: number
@@ -70,10 +71,10 @@ export type LeaderboardEntry = {
   base_points: number
   
   /** 
-   * Viral Points from cast engagement (badge shares on Warpcast)
-   * Formula: Sum of viral_bonus_points from badge_casts table
+   * Viral XP from cast engagement (badge shares on Warpcast)
+   * Formula: Sum of viral_bonus_xp from badge_casts table
    */
-  viral_points: number
+  viral_xp: number
   
   /** 
    * Guild bonus from guild membership and contribution
@@ -129,7 +130,7 @@ export type LeaderboardEntry = {
   avatar_url: string | null
   social_links: any
   
-  // @deprecated Use viral_points instead
+  // @deprecated Use viral_xp instead
   viral_bonus_xp: number
   
   // Calculated progression fields
@@ -164,7 +165,7 @@ export async function getLeaderboard(options: {
   page?: number
   perPage?: number
   search?: string
-  orderBy?: 'total_score' | 'points_balance' | 'viral_points' | 'guild_points_awarded' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
+  orderBy?: 'total_score' | 'points_balance' | 'viral_xp' | 'guild_points_awarded' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
 }): Promise<LeaderboardResponse> {
   const {
     period = 'all_time',
@@ -218,19 +219,20 @@ export async function getLeaderboard(options: {
   if (fids.length > 0) {
     const { data: viralCasts } = await supabase
       .from('badge_casts')
-      .select('fid, viral_bonus_points')
+      .select('fid, viral_bonus_xp')
       .in('fid', fids)
     
     viralCasts?.forEach(cast => {
-      if (cast.fid && cast.viral_bonus_points) {
+      if (cast.fid && cast.viral_bonus_xp) {
         const current = viralBonusData.get(cast.fid) || 0
-        viralBonusData.set(cast.fid, current + cast.viral_bonus_points)
+        viralBonusData.set(cast.fid, current + cast.viral_bonus_xp)
       }
     })
   }
   
   // Query guild membership for guild bonus calculation
   // Uses GuildMember from Subsquid for on-chain guild data
+  // Non-blocking: Errors are caught and logged, returning empty data
   const guildMembershipData = new Map<string, { guildId: string, role: string, pointsContributed: number, guildName: string | null }>()
   for (const wallet of walletAddresses) {
     try {
@@ -312,7 +314,7 @@ export async function getLeaderboard(options: {
   // LAYER 3: CALCULATION - DERIVE ALL METRICS
   // ========================================
   // Transform raw on-chain data into leaderboard entries with calculated fields
-  const data = rawUsers.map((user: any, index: number) => {
+  const data = await Promise.all(rawUsers.map(async (user: any, index: number) => {
     const wallet = user.id.toLowerCase()
     const profile = walletToProfile.get(wallet)
     const fid = profile?.fid || null
@@ -408,9 +410,32 @@ export async function getLeaderboard(options: {
     // SPENDABLE BALANCE: Real on-chain points (stays as basePoints)
     // Only this can be used for spending on badges, quests, tips
     
-    // Calculate level and tier from total score
-    const levelInfo = calculateLevelProgress(totalScore)
-    const tierInfo = getRankTierByPoints(totalScore)
+    // Phase 9.3: Fetch on-chain stats from ScoringModule contract
+    let onChainStats: UserStats | null = null
+    let levelInfo: any
+    let tierInfo: any
+    
+    try {
+      onChainStats = await getUserStatsOnChain(user.id)
+      const levelProgress = await getLevelProgressOnChain(user.id)
+      
+      // Use on-chain data (single source of truth)
+      levelInfo = {
+        level: onChainStats.level,
+        levelPercent: levelProgress.progressPercent / 100,
+        xpToNextLevel: Number(levelProgress.xpToNextLevel),
+      }
+      
+      tierInfo = {
+        name: getRankName(onChainStats.rankTier),
+        icon: getRankIcon(onChainStats.rankTier),
+      }
+    } catch (error) {
+      console.warn(`[Leaderboard] Failed to fetch on-chain stats for ${user.id}:`, error)
+      // Fallback to offline calculations
+      levelInfo = calculateLevelProgress(totalScore)
+      tierInfo = getRankTierByPoints(totalScore)
+    }
     
     return {
       address: user.id,
@@ -419,8 +444,7 @@ export async function getLeaderboard(options: {
       points_balance: basePoints, // Spendable balance (on-chain only)
       pending_rewards: pendingRewards, // Claimable off-chain bonuses
       base_points: basePoints, // Deprecated: use points_balance
-      viral_points: viralBonus,
-      viral_xp: viralBonus, // Deprecated: use viral_points
+      viral_xp: viralBonus,
       guild_bonus: guildBonus,
       guild_bonus_points: guildBonus, // Alias for backward compatibility
       referral_bonus: referralBonus,
@@ -448,18 +472,31 @@ export async function getLeaderboard(options: {
       rankTier: tierInfo.name,
       rankTierIcon: tierInfo.icon || '',
     }
-  })
+  }))
   
   // Apply search filter if needed
   let filteredData = data
   if (search) {
     const searchTerm = search.trim().toLowerCase()
     
-    // Address search (0x...)
+    // Address search (0x...) - check all verified addresses in multi-wallet system
     if (searchTerm.startsWith('0x')) {
-      filteredData = data.filter(entry => 
-        entry.address.toLowerCase().includes(searchTerm)
-      )
+      filteredData = data.filter(entry => {
+        // Check if the search address matches this entry's primary address
+        if (entry.address.toLowerCase() === searchTerm) {
+          return true
+        }
+        
+        // Also check verified_addresses from profile (multi-wallet support)
+        const profile = walletToProfile.get(entry.address.toLowerCase())
+        if (profile?.verified_addresses) {
+          return profile.verified_addresses.some((addr: string) => 
+            addr.toLowerCase() === searchTerm
+          )
+        }
+        
+        return false
+      })
     }
     // FID search (numeric)
     else if (!isNaN(parseInt(searchTerm))) {
@@ -485,4 +522,15 @@ export async function getLeaderboard(options: {
     perPage,
     totalPages: Math.ceil(filteredData.length / perPage),
   }
+}
+
+// Phase 9.3: Helper functions for on-chain rank tier mapping
+function getRankName(tierIndex: number): string {
+  const names = ['Cadet', 'Pilot', 'Captain', 'Commander', 'Star Admiral', 'Galaxy Marshal', 'Cosmic Ace', 'Nebula Lord', 'Stellar Emperor', 'Void Sovereign', 'Astral Titan', 'Cosmic Legend']
+  return names[tierIndex] || 'Unknown'
+}
+
+function getRankIcon(tierIndex: number): string {
+  const icons = ['🎖️', '✈️', '⚓', '🎖️', '⭐', '🌌', '🚀', '🌠', '👑', '🌑', '⚡', '🌟']
+  return icons[tierIndex] || '🎖️'
 }

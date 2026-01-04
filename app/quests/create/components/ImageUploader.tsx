@@ -108,7 +108,8 @@ export function ImageUploader({
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image')
+        const errorText = await uploadResponse.text()
+        throw new Error(`Failed to upload image: ${uploadResponse.status} ${errorText}`)
       }
 
       // Success - use publicUrl

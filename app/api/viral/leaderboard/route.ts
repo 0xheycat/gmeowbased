@@ -7,6 +7,7 @@ import { getCached } from '@/lib/cache/server'
 import { LeaderboardQuerySchema } from '@/lib/validation/api-schemas'
 import { getLeaderboardEntry } from '@/lib/subsquid-client'
 import { calculateLevelProgress, getRankTierByPoints, formatPoints } from '@/lib/scoring/unified-calculator'
+import { getUserStatsOnChain, getLevelProgressOnChain } from '@/lib/contracts/scoring-module'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -66,7 +67,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     if (!supabase) throw new Error('Database connection failed')
     
     // LAYER 2: Supabase - Get viral engagement data (off-chain)
-    const query = supabase.from('badge_casts').select('fid, viral_bonus_points, tier')
+    const query = supabase.from('badge_casts').select('fid, viral_bonus_xp, tier')
     const { data: casts, error } = await query
     
     if (error) {
@@ -83,7 +84,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     
     casts.forEach(cast => {
       const fid = cast.fid
-      const xp = (cast as any).viral_bonus_points || 0
+      const xp = (cast as any).viral_bonus_xp || 0
       const tier = (cast as any).tier || 'common'
       
       if (!fidStats.has(fid)) {
@@ -141,7 +142,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
     const tierEmojis: Record<string, string> = { mythic: '👑', legendary: '🌟', epic: '⚡', rare: '💎', common: '🎖️' }
     
     // LAYER 3: Calculated - Merge all layers and calculate derived stats
-    const leaderboard: LeaderboardEntry[] = sortedEntries.map((entry, index) => {
+    const leaderboard: LeaderboardEntry[] = await Promise.all(sortedEntries.map(async (entry, index) => {
       const profile = profileMap.get(entry.fid)
       const onChainStats = onChainMap.get(entry.fid)
       
@@ -149,9 +150,32 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
       const pointsBalance = onChainStats?.totalXp || 0
       const totalScore = pointsBalance + entry.viralPoints
       
-      // Calculate level and rank tier using unified calculator
-      const levelData = calculateLevelProgress(totalScore)
-      const rankTier = getRankTierByPoints(totalScore)
+      // Phase 9.3: Fetch on-chain level/rank from ScoringModule contract
+      let levelData: any
+      let rankTier: any
+      
+      if (profile?.verified_addresses?.[0]) {
+        try {
+          const contractStats = await getUserStatsOnChain(profile.verified_addresses[0])
+          const levelProgress = await getLevelProgressOnChain(profile.verified_addresses[0])
+          
+          levelData = {
+            level: contractStats.level,
+            levelPercent: levelProgress.progressPercent / 100,
+            xpToNextLevel: Number(levelProgress.xpToNextLevel),
+          }
+          
+          rankTier = { name: getRankName(contractStats.rankTier) }
+        } catch (error) {
+          // Fallback to offline calculations
+          levelData = calculateLevelProgress(totalScore)
+          rankTier = getRankTierByPoints(totalScore)
+        }
+      } else {
+        // No verified address, use offline calculations
+        levelData = calculateLevelProgress(totalScore)
+        rankTier = getRankTierByPoints(totalScore)
+      }
       
       return {
         rank: offset + index + 1,
@@ -170,7 +194,7 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
         rankTier: rankTier.name,
         globalRank: onChainStats?.rank || null,
       }
-    })
+    }))
     
     return { leaderboard, totalUsers: fidStats.size, hasMore: offset + limit < fidStats.size, chain, season }
   }, { ttl: 180 })
@@ -179,3 +203,9 @@ export const GET = withTiming(withErrorHandler(async (request: Request) => {
   response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')
   return response
 }))
+
+// Phase 9.3: Helper function for rank tier name mapping
+function getRankName(tierIndex: number): string {
+  const names = ['Cadet', 'Pilot', 'Captain', 'Commander', 'Star Admiral', 'Galaxy Marshal', 'Cosmic Ace', 'Nebula Lord', 'Stellar Emperor', 'Void Sovereign', 'Astral Titan', 'Cosmic Legend']
+  return names[tierIndex] || 'Unknown'
+}

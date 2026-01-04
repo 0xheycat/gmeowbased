@@ -50,6 +50,7 @@ const QuerySchema = z.object({
   sort: z.enum(['recent', 'oldest', 'xp_earned']).optional().default('recent'),
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),
   offset: z.coerce.number().int().min(0).optional().default(0),
+  address: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(), // Optional wallet address override
 })
 
 // ============================================================================
@@ -104,28 +105,36 @@ export async function GET(
       })
     }
 
-    const { status, sort, limit, offset } = queryResult.data
+    const { status, sort, limit, offset, address: addressOverride } = queryResult.data
 
     // 3. Cached Database Query with TRUE HYBRID pattern
     const result = await getCached(
       'user-quests',
-      `${fid}:${status}:${sort}:${limit}:${offset}`,
+      `${fid}:${status}:${sort}:${limit}:${offset}:${addressOverride || 'default'}`,
       async () => {
         const supabase = createClient()
 
-        // LAYER 1: Off-chain (Supabase) - Get user's wallet address
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('wallet_address')
-          .eq('fid', fid)
-          .single()
+        // Determine which wallet address to use
+        let userAddress: string | null = null
 
-        // Handle case where profile doesn't exist or has no wallet
-        if (profileError || !profile || !profile.wallet_address) {
-          return { quests: [], total: 0 }
+        if (addressOverride) {
+          // Use provided address override (from connected wallet)
+          userAddress = addressOverride.toLowerCase()
+        } else {
+          // LAYER 1: Off-chain (Supabase) - Get user's wallet address
+          const { data: profile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('wallet_address')
+            .eq('fid', fid)
+            .single()
+
+          // Handle case where profile doesn't exist or has no wallet
+          if (profileError || !profile || !profile.wallet_address) {
+            return { quests: [], total: 0 }
+          }
+
+          userAddress = profile.wallet_address.toLowerCase()
         }
-
-        const userAddress = profile.wallet_address.toLowerCase()
 
         // LAYER 2: On-chain (Subsquid) - Get quest completions from blockchain
         const onChainCompletions = await getUserQuestHistory(userAddress, 100)

@@ -17,11 +17,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   const startTime = Date.now();
   const clientIp = getClientIp(request);
-  const questSlug = params.slug;
+  // Next.js 15: params must be awaited
+  const { slug: questSlug } = await params;
   
   try {
     // 1. RATE LIMITING (60 requests per minute)
@@ -47,31 +48,29 @@ export async function GET(
       });
     }
     
-    // 2. INPUT VALIDATION with Zod
+    // 2. INPUT VALIDATION with Zod (userFid optional)
     const searchParams = request.nextUrl.searchParams;
     const userFidParam = searchParams.get('userFid');
+    const cacheBustParam = searchParams.get('_t'); // Cache-busting parameter
     
-    if (!userFidParam) {
-      return createErrorResponse({
-        type: ErrorType.VALIDATION,
-        message: 'User FID is required',
-        statusCode: 400,
-        details: { required: 'userFid query parameter' },
-      });
-    }
+    let userFidNum: number | undefined = undefined;
     
-    const userFidNum = parseInt(userFidParam);
-    
-    // Validate with Zod schema
-    const validationResult = QuestDetailsQuerySchema.safeParse({ userFid: userFidNum });
-    
-    if (!validationResult.success) {
-      return createErrorResponse({
-        type: ErrorType.VALIDATION,
-        message: 'Invalid user FID',
-        statusCode: 400,
-        details: validationResult.error.flatten(),
-      });
+    if (userFidParam) {
+      userFidNum = parseInt(userFidParam);
+      
+      // Validate with Zod schema if provided
+      const validationResult = QuestDetailsQuerySchema.safeParse({ userFid: userFidNum });
+      
+      if (!validationResult.success) {
+        return createErrorResponse({
+          type: ErrorType.VALIDATION,
+          message: 'Invalid user FID',
+          statusCode: 400,
+          details: validationResult.error.flatten(),
+        });
+      }
+      
+      userFidNum = validationResult.data.userFid;
     }
     
     // 3. QUEST SLUG VALIDATION
@@ -84,15 +83,25 @@ export async function GET(
       });
     }
     
-    // 4. CACHED QUEST FETCH WITH PROGRESS
-    const result = await getCached(
-      'quest-details',
-      `${questSlug}:${validationResult.data.userFid}`,
-      async () => {
-        return await getQuestBySlug(questSlug, validationResult.data.userFid);
-      },
-      { ttl: 60 }
-    );
+    // 4. CACHED QUEST FETCH WITH PROGRESS (Bug #42: bypass cache if _t parameter present)
+    const shouldBypassCache = !!cacheBustParam;
+    const cacheKey = userFidNum ? `${questSlug}:${userFidNum}` : questSlug;
+    
+    let result;
+    if (shouldBypassCache) {
+      // Bypass cache for fresh data after quest completion
+      result = await getQuestBySlug(questSlug, userFidNum);
+    } else {
+      // Use cached data for normal requests
+      result = await getCached(
+        'quest-details',
+        cacheKey,
+        async () => {
+          return await getQuestBySlug(questSlug, userFidNum);
+        },
+        { ttl: 60 }
+      );
+    }
     
     if (!result) {
       return createErrorResponse({
@@ -108,7 +117,7 @@ export async function GET(
     console.log('[API] GET /api/quests/[slug]', {
       ip: clientIp,
       questSlug,
-      userFid: validationResult.data.userFid,
+      userFid: userFidNum || 'anonymous',
       duration: `${duration}ms`,
       rateLimit: {
         remaining: rateLimitResult.remaining,

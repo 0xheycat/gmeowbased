@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../SoulboundBadge.sol";
 import "../GmeowNFT.sol";
 import "../interfaces/ICoreContract.sol";
+import "../interfaces/IScoringModule.sol";
 
 /**
  * @title BaseModule
@@ -166,9 +167,21 @@ abstract contract BaseModule is Ownable2Step, Pausable, ReentrancyGuard {
   SoulboundBadge public badgeContract;
   GmeowNFT public nftContract;
 
+  /// @notice On-chain scoring module - single source of truth for all points
+  IScoringModule public scoringModule;
+
   function setBadgeContract(address _badge) external onlyOwner {
     require(_badge != address(0), "Invalid address");
     badgeContract = SoulboundBadge(_badge);
+  }
+
+  /**
+   * @notice Set the scoring module address (callable by all inheriting modules)
+   * @param _scoringModule Address of deployed ScoringModule
+   */
+  function setScoringModule(address _scoringModule) external onlyOwner {
+    require(_scoringModule != address(0), "Zero address not allowed");
+    scoringModule = IScoringModule(_scoringModule);
   }
 
   mapping(address => mapping(uint256 => uint256)) public stakedForBadge;
@@ -216,6 +229,16 @@ abstract contract BaseModule is Ownable2Step, Pausable, ReentrancyGuard {
     if (!quests[questId].isActive) revert QuestNotActive();
     _;
   }
+  
+  modifier onlyAuthorized() virtual {
+    require(msg.sender == owner(), "Not authorized");
+    _;
+  }
+  
+  modifier onlyOracle() {
+    require(authorizedOracles[msg.sender], "Not oracle");
+    _;
+  }
 
   // ============ INTERNAL HELPERS ============
 
@@ -238,55 +261,39 @@ abstract contract BaseModule is Ownable2Step, Pausable, ReentrancyGuard {
   }
   
   /**
-   * @notice Get user's point balance (works in both architectures)
+   * @notice Get user's total score from ScoringModule
    * @param user Address to check
-   * @return Point balance
+   * @return Total score from ScoringModule
    */
   function _getUserPoints(address user) internal view returns (uint256) {
-    if (_isStandalone()) {
-      // Standalone: Read from Core contract
-      address core = _getCoreContract();
-      try ICoreContract(core).pointsBalance(user) returns (uint256 balance) {
-        return balance;
-      } catch {
-        // Fallback to local storage if call fails
-        return pointsBalance[user];
-      }
+    if (address(scoringModule) == address(0)) {
+      return 0;  // Not initialized yet
     }
-    // Proxy: Use local storage
-    return pointsBalance[user];
+    return scoringModule.totalScore(user);
   }
   
   /**
-   * @notice Deduct points from user (works in both architectures)
+   * @notice Deduct points from user via ScoringModule
    * @param from Address to deduct from
    * @param amount Amount to deduct
    */
   function _deductPoints(address from, uint256 amount) internal {
-    if (_isStandalone()) {
-      // Standalone: Deduct from Core contract
-      address core = _getCoreContract();
-      ICoreContract(core).deductPoints(from, amount);
+    if (address(scoringModule) != address(0)) {
+      scoringModule.deductPoints(from, amount, "Points deducted");
     } else {
-      // Proxy: Deduct from local storage
-      if (pointsBalance[from] < amount) revert InsufficientPoints();
-      pointsBalance[from] -= amount;
+      revert("ScoringModule not set");
     }
   }
   
   /**
-   * @notice Add points to user (works in both architectures)
+   * @notice Add points to user via ScoringModule
    * @param to Address to add to
    * @param amount Amount to add
+   * @dev Uses generic addPoints - modules should call specific functions when possible
    */
   function _addPoints(address to, uint256 amount) internal {
-    if (_isStandalone()) {
-      // Standalone: Add to Core contract
-      address core = _getCoreContract();
-      ICoreContract(core).addPoints(to, amount);
-    } else {
-      // Proxy: Add to local storage
-      pointsBalance[to] += amount;
+    if (address(scoringModule) != address(0)) {
+      scoringModule.addPoints(to, amount);
     }
   }
 

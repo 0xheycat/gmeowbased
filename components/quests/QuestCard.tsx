@@ -20,7 +20,7 @@
  *   slug="viral-champion"
  *   category="Social"
  *   coverImage="/quests/viral-champion.jpg"
- *   xpReward={100}
+ *   pointsReward={100}
  *   creator={{ avatar: "/avatars/creator.jpg", name: "gmeow", fid: 12345 }}
  *   participantCount={1234}
  *   estimatedTime="~10 min"
@@ -49,8 +49,8 @@ export interface QuestCardProps {
   coverImage: string;
   /** Quest badge/icon image (optional) */
   badgeImage?: string;
-  /** XP reward amount */
-  xpReward: number;
+  /** Points reward amount (spendable currency from reward_points_awarded) */
+  pointsReward: number;
   /** Quest creator info */
   creator: {
     avatar?: string;
@@ -87,7 +87,7 @@ export default function QuestCard({
   slug,
   category,
   coverImage,
-  xpReward,
+  pointsReward,
   creator,
   participantCount,
   estimatedTime,
@@ -147,11 +147,11 @@ export default function QuestCard({
               </span>
             </div>
             
-            {/* XP Badge - Top Right */}
+            {/* Points Badge - Top Right */}
             <div className="flex flex-col gap-2 items-end">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-yellow-500/90 text-yellow-900 border border-yellow-400 backdrop-blur-sm shadow-lg">
                 <EmojiEventsIcon className="w-4 h-4" />
-                <span>{xpReward} XP</span>
+                <span>{pointsReward} POINTS</span>
               </div>
               
               {/* Hot Badge */}
