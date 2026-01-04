@@ -8,6 +8,14 @@
 
 import { getSupabaseAdminClient } from '@/lib/supabase/edge'
 
+type GuildEvent = {
+  id: string
+  guild_id: string
+  event_type: string
+  points?: number
+  [key: string]: any
+}
+
 async function syncGuildStats() {
   console.log('🏰 Starting guild stats sync from Subsquid indexer...')
   const startTime = Date.now()
@@ -37,14 +45,15 @@ async function syncGuildStats() {
           .eq('guild_id', guild.id)
         
         if (eventsError) throw eventsError
+        if (!events) continue
         
         // Calculate stats from events
-        const memberCount = events.filter(e => e.event_type === 'MEMBER_JOINED').length -
-                           events.filter(e => e.event_type === 'MEMBER_LEFT').length
+        const memberCount = events.filter((e: GuildEvent) => e.event_type === 'MEMBER_JOINED').length -
+                           events.filter((e: GuildEvent) => e.event_type === 'MEMBER_LEFT').length
         
         const totalPoints = events
-          .filter(e => e.event_type === 'POINTS_DEPOSITED')
-          .reduce((sum, e) => sum + (e.points || 0), 0)
+          .filter((e: GuildEvent) => e.event_type === 'POINTS_DEPOSITED')
+          .reduce((sum: number, e: GuildEvent) => sum + (e.points || 0), 0)
         
         // Calculate guild level
         let level = 1
