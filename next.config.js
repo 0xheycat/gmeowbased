@@ -12,9 +12,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true, // Skip TS checks during build (use CI for type checking)
   },
-  eslint: {
-    ignoreDuringBuilds: true, // Skip ESLint during build (use CI for linting)
-  },
+  
+  // Turbopack config (Next.js 16+)
+  turbopack: {}, // Empty config signals we're aware of Turbopack migration
   
   // Removed Nextra - incompatible with Vercel free tier (causes OOM)
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
