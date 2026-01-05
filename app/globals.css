@@ -272,8 +272,7 @@
     border-width: 0;
   }
   
-  .sr-only:focus,
-  .focus\\:not-sr-only:focus {
+  .sr-only:focus {
     position: static;
     width: auto;
     height: auto;
@@ -283,6 +282,8 @@
     clip: auto;
     white-space: normal;
   }
+  
+  /* Tailwind's focus:not-sr-only utility handles focus states */
 }
 
 /* Dark mode focus indicators */
