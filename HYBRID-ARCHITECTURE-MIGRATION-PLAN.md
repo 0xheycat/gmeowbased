@@ -2,13 +2,14 @@
 ## Phase 3.2G: Subsquid + Supabase + API Integration
 
 **Created**: January 1, 2026  
-**Last Updated**: January 4, 2026  
-**Status**: ✅ **100% COMPLETE - Production Ready**  
-**Architecture**: Hybrid (Subsquid GraphQL + Supabase PostgreSQL + Next.js API Routes)
+**Last Updated**: January 5, 2026  
+**Status**: ✅ **100% COMPLETE - Production Ready + Cleaned**  
+**Architecture**: Hybrid (Subsquid GraphQL + Supabase PostgreSQL + Next.js API Routes)  
+**Codebase**: Streamlined (35 unused routes archived)
 
 ---
 
-## 🎉 MIGRATION COMPLETE - January 4, 2026
+## 🎉 MIGRATION COMPLETE - January 5, 2026
 
 ### ✅ Phase 9.1-9.7.1: COMPLETE
 - [x] Code complete (500x performance improvement)
@@ -16,6 +17,14 @@
 - [x] Production build successful
 - [x] **100% migration complete** (all production code uses on-chain/GraphQL)
 - [x] Committed: ed23d38
+
+### ✅ Codebase Cleanup: COMPLETE (January 5, 2026)
+- [x] **35 unused routes archived** to `_archive/`
+- [x] **59% codebase reduction** (59 routes → 22 active)
+- [x] **10 active features** streamlined (frame, bot, viral, profile, dashboard, referral, guild, notifications, quests, settings)
+- [x] **Infrastructure preserved** (auth, cron, user, webhooks)
+- [x] **Zero code deletion** (all archived for restoration if needed)
+- [x] See: [CODEBASE-CLEANUP-COMPLETE.md](./CODEBASE-CLEANUP-COMPLETE.md)
 
 ### ✅ On-Chain Migration: 100% COMPLETE
 **Status**: 🟢 **ALL PRODUCTION CODE ON-CHAIN**  
