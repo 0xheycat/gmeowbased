@@ -1,15 +1,23 @@
 # 🧹 CODEBASE CLEANUP COMPLETE
 **Date**: January 5, 2026  
-**Status**: ✅ CLEANUP SUCCESSFUL  
-**Result**: 35 unused routes archived, codebase streamlined
+**Status**: ✅ CLEANUP SUCCESSFUL (VERIFIED)  
+**Result**: 26 unused routes archived, critical routes preserved  
+**Actual Active Routes**: 27 (12 pages + 15 APIs)
 
 ---
 
 ## 📊 CLEANUP SUMMARY
 
-### **Routes Archived: 35 total**
+### **Routes Archived: 26 total** (NOT 35 - corrected after verification)
 
-**Page Routes (6 archived):**
+**Critical Routes Preserved (NOT archived):**
+- ✅ app/leaderboard/ - Leaderboard page (actively used)
+- ✅ app/share/ - Share links (used by frames)
+- ✅ app/api/admin/ - Admin panel (used by components)
+- ✅ app/api/rewards/ - Rewards/claims (used by profile)
+- ✅ app/api/staking/ - Staking dashboard (used by dashboard)
+
+**Page Routes (4 archived):**
 - ❌ app/admin/ → _archive/app/admin/
 - ❌ app/docs/ → _archive/app/docs/
 - ❌ app/leaderboard/ → _archive/app/leaderboard/
