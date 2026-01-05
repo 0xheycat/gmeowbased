@@ -239,7 +239,10 @@
       "qs": ">=6.14.1",
       "tmp": ">=0.2.4",
       "xml2js": ">=0.6.2",
-      "mime": ">=4.0.5"
+      "mime": ">=4.0.5",
+      "react-server-dom-webpack": "19.2.3",
+      "react-server-dom-parcel": "19.2.3",
+      "react-server-dom-turbopack": "19.2.3"
     }
   }
 }
