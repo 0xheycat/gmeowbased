@@ -22,7 +22,13 @@ const nextConfig = {
   // Webpack configuration to prevent Node.js modules from bundling client-side
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Prevent Node.js built-in modules from being bundled on the client
+      // Alias Node.js built-in modules to browser-compatible polyfills
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        util: 'util/', // Use util polyfill instead of Node.js util
+      };
+      
+      // Prevent other Node.js built-in modules from being bundled on the client
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
@@ -37,7 +43,6 @@ const nextConfig = {
         assert: false,
         os: false,
         path: false,
-        util: false,
       };
     }
     return config;
