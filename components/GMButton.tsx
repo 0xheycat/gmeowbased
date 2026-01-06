@@ -28,7 +28,7 @@ import { getGMStats, type GMStats } from '@/lib/integrations/subsquid-client'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI, type ChainKey } from '@/lib/contracts/gmeow-utils'
 import { Tooltip } from '@/components/ui/tooltip'
 import { getUserStatsOnChainClient } from '@/lib/contracts/scoring-module-client'
-import type { RankProgress } from '@/lib/scoring/unified-calculator'
+import { calculateRankProgress, type RankProgress } from '@/lib/scoring/unified-calculator'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import WbSunnyIcon from '@mui/icons-material/WbSunny'
@@ -142,16 +142,12 @@ export function GMButton({
           try {
             const onChainStats = await getUserStatsOnChainClient(address)
             if (onChainStats) {
-              setRankProgress({
-                currentTier: onChainStats.rankTier,
-                currentPoints: Number(onChainStats.totalScore),
-                nextTierPoints: onChainStats.nextRankThreshold ? Number(onChainStats.nextRankThreshold) : 0,
-                progress: onChainStats.rankProgress || 0,
-                nextTierName: `Tier ${onChainStats.rankTier + 1}`
-              })
+              // Convert contract totalScore to RankProgress format
+              const rankProgressData = calculateRankProgress(Number(onChainStats.totalScore))
+              setRankProgress(rankProgressData)
             }
           } catch (error) {
-            console.error('[GMButton] Error fetching on-chain stats:', error)
+            console.error('[GMButton] Error fetching on-chain rank progress:', error)
           }
         }
       } catch (error) {
@@ -277,13 +273,9 @@ export function GMButton({
         try {
           const onChainStats = await getUserStatsOnChainClient(address)
           if (onChainStats) {
-            setRankProgress({
-              currentTier: onChainStats.rankTier,
-              currentPoints: Number(onChainStats.totalScore),
-              nextTierPoints: onChainStats.nextRankThreshold ? Number(onChainStats.nextRankThreshold) : 0,
-              progress: onChainStats.rankProgress || 0,
-              nextTierName: `Tier ${onChainStats.rankTier + 1}`
-            })
+            // Convert contract totalScore to RankProgress format
+            const rankProgressData = calculateRankProgress(Number(onChainStats.totalScore))
+            setRankProgress(rankProgressData)
           }
         } catch (error) {
           console.error('[GMButton] Error fetching updated on-chain stats:', error)
