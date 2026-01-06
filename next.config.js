@@ -19,9 +19,29 @@ const nextConfig = {
   // Turbopack config (Next.js 16+)
   turbopack: {}, // Empty config signals we're aware of Turbopack migration
   
-  // Server-only packages (Fix: util.deprecate TypeError in browser)
-  // These Node.js modules should never be bundled for client-side
-  serverComponentsExternalPackages: ['zlib', 'util', 'node:util', 'node:zlib'],
+  // Webpack configuration to prevent Node.js modules from bundling client-side
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Prevent Node.js built-in modules from being bundled on the client
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+        util: false,
+      };
+    }
+    return config;
+  },
   
   // Removed Nextra - incompatible with Vercel free tier (causes OOM)
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
