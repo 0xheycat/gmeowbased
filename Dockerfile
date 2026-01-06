@@ -32,12 +32,13 @@ COPY public ./public
 COPY app ./app
 COPY components ./components
 COPY lib ./lib
-COPY contracts ./contracts
-COPY modules ./modules
-COPY scripts ./scripts
+COPY hooks ./hooks
 COPY types ./types
 COPY config ./config
 COPY gmeow-indexer ./gmeow-indexer
+COPY abi ./abi
+COPY supabase ./supabase
+COPY migrations ./migrations
 
 # Build the application
 ENV NODE_ENV=production
