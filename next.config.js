@@ -22,10 +22,15 @@ const nextConfig = {
   // Webpack configuration to prevent Node.js modules from bundling client-side
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Provide browser-compatible polyfills for Node.js modules
+      // Use custom util shim for @reown/appkit compatibility
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        util: require.resolve('./lib/util-shim.js'),
+      };
+      
+      // Block other Node.js built-in modules
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        util: require.resolve('util/'),
         fs: false,
         net: false,
         tls: false,
