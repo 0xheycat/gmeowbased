@@ -457,10 +457,13 @@ export function getEnvValidationErrors() {
  * 2. All env vars have correct types/formats
  * 3. Application fails fast if misconfigured
  * 
+ * Skip validation during Next.js build phase (env vars not available in Docker build)
  * In development, shows friendly error messages.
  * In production, crashes immediately (better than runtime errors).
  */
-if (process.env.NODE_ENV !== 'test') {
+const isNextBuild = process.env.NEXT_PHASE === 'phase-production-build';
+
+if (process.env.NODE_ENV !== 'test' && !isNextBuild) {
   try {
     envSchema.parse(process.env);
     
