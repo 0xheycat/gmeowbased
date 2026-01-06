@@ -1,0 +1,70 @@
+# Dependencies (will be installed during build)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build artifacts (generated during deployment)
+.next
+out
+dist
+build
+.vercel
+
+# Development files
+.git
+.gitignore
+.env*.local
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Testing
+coverage
+.nyc_output
+*.log
+
+# Archives and cleanup
+_archive
+backstop_data
+playwright-report
+test-results
+
+# Documentation and planning (not needed in production)
+*.md
+!README.md
+planning
+docs-archive
+
+# Cache directories
+.cache
+cache
+.turbo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large static assets not needed
+planning/template
+*.zip
+*.fig
+*.mmdb
+*.sketch
+
+# Contract artifacts
+lib/openzeppelin-contracts/.git
+
+# Railway and deployment
+.railway
+railway-set-env.sh
+deploy-modules.sh
+
+# Local environment
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
