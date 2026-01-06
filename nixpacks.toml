@@ -1,0 +1,37 @@
+# Nixpacks Configuration for Railway
+# https://nixpacks.com/docs/configuration
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile --prefer-offline"]
+
+[phases.build]
+cmds = ["pnpm run build"]
+
+[start]
+cmd = "pnpm start"
+
+# Exclude large directories from the final image
+[variables]
+# These will be excluded from the container
+NODE_ENV = "production"
+
+# Files to ignore (supplements .dockerignore)
+[build]
+ignorePaths = [
+  "node_modules",
+  ".next",
+  "_archive",
+  "planning",
+  "docs-archive",
+  "backstop_data",
+  "test-results",
+  "playwright-report",
+  ".cache",
+  "cache",
+  ".git",
+  "*.md",
+  "*.log"
+]
