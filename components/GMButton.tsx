@@ -27,8 +27,7 @@ import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay
 import { getGMStats, type GMStats } from '@/lib/integrations/subsquid-client'
 import { CONTRACT_ADDRESSES, GM_CONTRACT_ABI, type ChainKey } from '@/lib/contracts/gmeow-utils'
 import { Tooltip } from '@/components/ui/tooltip'
-import { invalidateUserScoringCache } from '@/lib/scoring/unified-calculator'
-import { getUserStatsOnChain } from '@/lib/contracts/scoring-module'
+import { getUserStatsOnChainClient } from '@/lib/contracts/scoring-module-client'
 import type { RankProgress } from '@/lib/scoring/unified-calculator'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
@@ -141,7 +140,7 @@ export function GMButton({
         // Get rank progress from on-chain ScoringModule contract
         if (address) {
           try {
-            const onChainStats = await getUserStatsOnChain(address)
+            const onChainStats = await getUserStatsOnChainClient(address)
             if (onChainStats) {
               setRankProgress({
                 currentTier: onChainStats.rankTier,
@@ -248,7 +247,11 @@ export function GMButton({
       console.log('[GMButton] Transaction confirmed! Hash:', txHash)
       
       // Invalidate scoring cache to show updated points immediately
-      await invalidateUserScoringCache(address).catch((err) => {
+      await fetch('/api/scoring/invalidate-cache', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      }).catch((err) => {
         console.error('[GMButton] Failed to invalidate cache:', err);
       });
       
@@ -272,7 +275,7 @@ export function GMButton({
       // Get updated rank progress from on-chain
       if (address) {
         try {
-          const onChainStats = await getUserStatsOnChain(address)
+          const onChainStats = await getUserStatsOnChainClient(address)
           if (onChainStats) {
             setRankProgress({
               currentTier: onChainStats.rankTier,
@@ -288,7 +291,7 @@ export function GMButton({
       }
 
       // Get totalXP from on-chain total score
-      const newTotalXP = address ? Number((await getUserStatsOnChain(address))?.totalScore || 0) : updatedStats.totalGMs * 10
+      const newTotalXP = address ? Number((await getUserStatsOnChainClient(address))?.totalScore || 0) : updatedStats.totalGMs * 10
 
       // Refetch on-chain lastGMTime
       refetchLastGMTime()

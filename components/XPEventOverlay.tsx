@@ -53,7 +53,7 @@ import { useEffect, useRef } from 'react'
 import { useAccount } from 'wagmi'
 import { XPCelebrationModal } from '@/components/xp-celebration'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'
-import { getUserStatsOnChain } from '@/lib/contracts/scoring-module'
+import { getUserStatsOnChainClient } from '@/lib/contracts/scoring-module-client'
 import type { RankProgress } from '@/lib/scoring/unified-calculator'
 import type { TierCategory } from '@/components/xp-celebration/types'
 import {
