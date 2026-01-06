@@ -35,7 +35,6 @@ test-results
 
 # Documentation and planning (not needed in production)
 *.md
-!README.md
 planning
 docs-archive
 
