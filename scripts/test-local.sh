@@ -15,9 +15,11 @@ fi
 echo "✅ Build succeeded"
 
 echo "🚀 3/4 Starting production server..."
+# Kill any existing server on port 3002
+lsof -ti:3002 | xargs kill -9 2>/dev/null || true
 PORT=3002 pnpm run start > /tmp/server.log 2>&1 &
 SERVER_PID=$!
-sleep 8  # Wait for server to start
+sleep 10  # Wait for server to start
 
 echo "🧪 4/4 Testing critical pages..."
 ERRORS=0
@@ -32,7 +34,8 @@ fi
 
 # Test API health
 if ! curl -s -f http://localhost:3002/api/health > /dev/null; then
-  echo "⚠️  API health endpoint not found (may be expected)"
+  echo "❌ API health endpoint failed"
+  ERRORS=$((ERRORS + 1))
 else
   echo "✅ API health OK"
 fi
