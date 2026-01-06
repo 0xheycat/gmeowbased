@@ -25,7 +25,7 @@ const nextConfig = {
       // Alias Node.js built-in modules to browser-compatible polyfills
       config.resolve.alias = {
         ...config.resolve.alias,
-        util: 'util/', // Use util polyfill instead of Node.js util
+        util: require.resolve('util'), // Use util polyfill instead of Node.js util
       };
       
       // Prevent other Node.js built-in modules from being bundled on the client
