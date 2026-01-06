@@ -18,6 +18,9 @@ RUN pnpm install --frozen-lockfile --prefer-offline --prod=false
 FROM base AS builder
 WORKDIR /app
 
+# Copy build-time env placeholders
+COPY .env.build .env
+
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
