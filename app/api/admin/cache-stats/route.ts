@@ -65,18 +65,21 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    // Check Redis health
-    const isHealthy = await checkRedisHealth()
+    // Check Redis health (graceful degradation if using Upstash REST API only)
+    let isHealthy = false
+    let info = null
     
-    if (!isHealthy) {
-      return NextResponse.json(
-        { error: 'Redis is not available' },
-        { status: 503 }
-      )
+    try {
+      isHealthy = await checkRedisHealth()
+      if (isHealthy) {
+        // Get Redis info only if traditional Redis is available
+        info = await getRedisInfo()
+      }
+    } catch (error) {
+      console.log('[cache-stats] Traditional Redis not available (using Upstash REST API)')
+      // This is expected when using Upstash REST API instead of ioredis
+      isHealthy = false
     }
-    
-    // Get Redis info
-    const info = await getRedisInfo()
     
     // Get webhook cache stats (Phase 7 Priority 4)
     const webhookStats = await getWebhookCacheStats()
@@ -90,7 +93,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        ...info,
+        redis: isHealthy ? info : { connected: false, note: 'Using Upstash REST API' },
         webhookCache: webhookStats,
         neynarCache: neynarStats,
         notificationCache: notificationStats,
