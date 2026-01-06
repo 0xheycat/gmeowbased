@@ -34,6 +34,7 @@ COPY hooks ./hooks
 COPY types ./types
 COPY config ./config
 COPY abi ./abi
+COPY scripts ./scripts
 COPY supabase ./supabase
 COPY migrations ./migrations
 
