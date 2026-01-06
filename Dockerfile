@@ -10,7 +10,6 @@ WORKDIR /app
 
 # Copy only package files for dependency installation
 COPY package.json pnpm-lock.yaml ./
-COPY gmeow-indexer/package.json gmeow-indexer/package-lock.json ./gmeow-indexer/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile --prefer-offline --prod=false
@@ -21,7 +20,6 @@ WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/gmeow-indexer/node_modules ./gmeow-indexer/node_modules
 
 # Copy only necessary source files for build
 # Explicitly exclude large folders by not copying them
@@ -35,7 +33,6 @@ COPY lib ./lib
 COPY hooks ./hooks
 COPY types ./types
 COPY config ./config
-COPY gmeow-indexer ./gmeow-indexer
 COPY abi ./abi
 COPY supabase ./supabase
 COPY migrations ./migrations
