@@ -1,12 +1,25 @@
 #!/bin/bash
-# Quick local validation script - tests build and critical functionality
+# Comprehensive local validation script - tests build and all active pages
 
 set -e  # Exit on error
 
-echo "🔧 1/4 Cleaning previous build..."
-rm -rf .next
+# Cleanup function to ensure server is killed
+cleanup() {
+  echo "🧹 Cleaning up..."
+  # Kill all Next.js processes
+  pkill -f "next start" 2>/dev/null || true
+  lsof -ti:3002 | xargs kill -9 2>/dev/null || true
+  sleep 2
+}
 
-echo "📦 2/4 Building project..."
+# Set trap to cleanup on exit
+trap cleanup EXIT
+
+echo "🔧 1/5 Cleaning previous build and processes..."
+rm -rf .next
+cleanup
+
+echo "📦 2/5 Building project..."
 if ! pnpm run build > /tmp/build.log 2>&1; then
   echo "❌ Build failed!"
   tail -50 /tmp/build.log
@@ -14,33 +27,84 @@ if ! pnpm run build > /tmp/build.log 2>&1; then
 fi
 echo "✅ Build succeeded"
 
-echo "🚀 3/4 Starting production server..."
-# Kill any existing server on port 3002
-lsof -ti:3002 | xargs kill -9 2>/dev/null || true
+echo "🚀 3/5 Starting production server..."
 PORT=3002 pnpm run start > /tmp/server.log 2>&1 &
 SERVER_PID=$!
-sleep 10  # Wait for server to start
 
-echo "🧪 4/4 Testing critical pages..."
+# Wait for server with timeout
+for i in {1..20}; do
+  if curl -s http://localhost:3002 > /dev/null 2>&1; then
+    echo "✅ Server started (${i}s)"
+    break
+  fi
+  if [ $i -eq 20 ]; then
+    echo "❌ Server failed to start after 20s"
+    cat /tmp/server.log
+    exit 1
+  fi
+  sleep 1
+done
+
+echo "🧪 4/5 Testing critical pages..."
 ERRORS=0
 
 # Test homepage
 if ! curl -s -f http://localhost:3002 > /dev/null; then
-  echo "❌ Homepage failed"
+  echo "❌ Homepage (/) failed"
   ERRORS=$((ERRORS + 1))
 else
-  echo "✅ Homepage OK"
+  echo "✅ Homepage (/) OK"
 fi
 
 # Test API health
 if ! curl -s -f http://localhost:3002/api/health > /dev/null; then
-  echo "❌ API health endpoint failed"
+  echo "❌ /api/health failed"
   ERRORS=$((ERRORS + 1))
 else
-  echo "✅ API health OK"
+  echo "✅ /api/health OK"
 fi
 
-# Check for util.deprecate error in browser bundle
+# Test other critical API routes
+API_ROUTES=(
+  "/api/quests"
+  "/api/guild/leaderboard"
+  "/api/referral/leaderboard"
+  "/api/viral/leaderboard"
+)
+
+for route in "${API_ROUTES[@]}"; do
+  status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002$route)
+  # Accept 200, 400 (validation error), or 401 (auth required)
+  if [ "$status" = "200" ] || [ "$status" = "400" ] || [ "$status" = "401" ]; then
+    echo "✅ $route OK ($status)"
+  else
+    echo "❌ $route failed ($status)"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
+
+# Test critical pages
+PAGES=(
+  "/dashboard"
+  "/quests"
+  "/guild"
+  "/leaderboard"
+  "/referral"
+)
+
+for page in "${PAGES[@]}"; do
+  status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002$page)
+  if [ "$status" = "200" ]; then
+    echo "✅ $page OK"
+  else
+    echo "❌ $page failed ($status)"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
+
+echo "🔍 5/5 Checking for known errors..."
+
+# Check for util.deprecate error in bundle
 if curl -s http://localhost:3002 | grep -q "webpack-"; then
   echo "✅ Webpack bundle generated"
 else
@@ -48,17 +112,13 @@ else
   ERRORS=$((ERRORS + 1))
 fi
 
-# Cleanup
-echo "🧹 Cleaning up..."
-kill $SERVER_PID 2>/dev/null || true
-sleep 2
-
+# Summary
+echo ""
 if [ $ERRORS -eq 0 ]; then
-  echo ""
   echo "✅ All tests passed! Safe to deploy."
   exit 0
 else
-  echo ""
   echo "❌ $ERRORS test(s) failed. Check logs before deploying."
+  echo "Server logs in /tmp/server.log"
   exit 1
 fi
