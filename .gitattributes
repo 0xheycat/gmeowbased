@@ -1,0 +1,9 @@
+# Tell git to exclude these paths from archives
+planning/ export-ignore
+_archive/ export-ignore
+.next/ export-ignore
+backstop_data/ export-ignore
+test-results/ export-ignore
+playwright-report/ export-ignore
+*.md export-ignore
+*.log export-ignore
