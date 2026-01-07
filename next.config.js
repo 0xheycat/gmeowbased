@@ -19,8 +19,9 @@ const nextConfig = {
     ignoreBuildErrors: true, // Skip TS checks during build (use CI for type checking)
   },
   
-  // Turbopack config (Next.js 16+)
-  turbopack: {}, // Empty config signals we're aware of Turbopack migration
+  // CRITICAL: Disable Turbopack to ensure webpack config works
+  // Turbopack doesn't support webpack aliases yet (Next.js 16)
+  // turbopack: {}, 
   
   // Webpack configuration to prevent Node.js modules from bundling client-side
   webpack: (config, { isServer }) => {
