@@ -54,11 +54,10 @@ deployments/
 *.deployment.log
 deployment-*.log
 
-# Foundry/contract files
+# Foundry/contract files (removed lib/ - conflicts with app lib folder)
 broadcast/
 out/
 cache/
-lib/
 contract/
 foundry.lock
 
