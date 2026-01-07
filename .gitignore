@@ -48,7 +48,7 @@ tmp/
 tmp_dir/
 README.COPILOT.md
 tsconfig.tsbuildinfo
-cache/
+/cache/
 backstop_data/
 playwright-report/
 test-results/
