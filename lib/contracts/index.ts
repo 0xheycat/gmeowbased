@@ -1,3 +1,5 @@
+export * from './use-badge-staking'
+
 /**
  * @file lib/contracts/index.ts
  * @description Smart contract layer barrel export - Base chain only deployment
