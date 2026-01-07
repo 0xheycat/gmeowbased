@@ -15,7 +15,7 @@
  * - Accessible ARIA progress attributes
  */
 
-import { useAuthContext } from '@/lib/contexts/AuthContext'
+import { useAuthContext } from '@/lib/contexts'
 import { useUserStats } from '@/hooks/useUserStats'
 import { TierBadge } from '@/components/score/TierBadge'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'

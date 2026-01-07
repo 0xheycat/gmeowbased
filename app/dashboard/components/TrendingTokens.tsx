@@ -12,7 +12,7 @@ import { formatNumber } from '@/lib/utils/formatters'
 import { withRetry, RetryStrategies } from '@/lib/api/retry'
 import { TrendingBadge, ActivityIndicator, ContextBadge } from '@/components/dashboard-patterns'
 import { TrendingUpIcon } from '@/components/icons/trending-up-icon'
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 export async function TrendingTokens() {
   const response = await withRetry(

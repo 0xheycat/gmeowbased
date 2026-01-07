@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuthContext, useWallets } from '@/lib/contexts/AuthContext'
+import { useAuthContext, useWallets } from '@/lib/contexts'
 
 /**
  * Demo component showing multi-wallet cache from AuthContext

@@ -34,7 +34,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { QuestProgress } from '@/components/quests';
 import { QuestVerification } from '@/components/quests/QuestVerification';
 import { QuestAnalytics } from '@/components/quests/QuestAnalytics';
-import { useAuthContext } from '@/lib/contexts/AuthContext';
+import { useAuthContext } from '@/lib/contexts';
 import { useQuestStats, useQuestCompletions } from '@/hooks/useQuestSubsquid';
 import { Skeleton } from '@/components/ui/skeleton/Skeleton';
 import { motion } from 'framer-motion';

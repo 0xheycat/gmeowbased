@@ -15,7 +15,7 @@
  * - Professional error state with retry
  */
 
-import { useAuthContext } from '@/lib/contexts/AuthContext'
+import { useAuthContext } from '@/lib/contexts'
 import { useUserStats } from '@/hooks/useUserStats'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { motion } from 'framer-motion'

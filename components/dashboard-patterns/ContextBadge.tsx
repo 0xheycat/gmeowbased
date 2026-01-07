@@ -12,7 +12,7 @@
  * - <ContextBadge>Trending in DeFi</ContextBadge>
  */
 
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 
 interface ContextBadgeProps {

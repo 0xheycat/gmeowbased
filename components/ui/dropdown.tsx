@@ -14,7 +14,7 @@
 
 import { useState, useRef, useEffect, createContext, useContext } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 // Context for dropdown state
 interface DropdownContextType {

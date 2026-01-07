@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 import { Tooltip } from '@/components/ui/tooltip'
 import { createAriaLabel } from '@/lib/utils/accessibility'
 

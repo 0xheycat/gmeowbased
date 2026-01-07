@@ -27,7 +27,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { copyToClipboardSafe } from '@/lib/api/share'
-import { useWallets } from '@/lib/contexts/AuthContext'
+import { useWallets } from '@/lib/contexts'
 import type { ProfileData } from '@/lib/profile/types'
 
 // Icons from components/icons

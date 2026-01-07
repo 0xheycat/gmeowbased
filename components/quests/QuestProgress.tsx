@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 
 const classes = {
   base: 'absolute top-0 bottom-0 left-0 h-full flex items-center justify-center',

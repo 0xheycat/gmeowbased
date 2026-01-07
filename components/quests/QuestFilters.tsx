@@ -21,7 +21,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { QuestFiltersSkeleton } from './skeletons';
 import { ErrorState } from './empty-states';
 import CloseIcon from '@mui/icons-material/Close';

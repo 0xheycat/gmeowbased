@@ -20,7 +20,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import WarningIcon from '@mui/icons-material/Warning';
 import { motion, useReducedMotion } from 'framer-motion';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 
 // Empty State Component
 interface EmptyStateProps {

@@ -18,7 +18,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 interface QuestCompletion {
   id: string

@@ -16,13 +16,13 @@
 
 import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
-import { useStakeBadge, useUnstakeBadge } from '@/lib/contracts/use-badge-staking'
+import { useStakeBadge, useUnstakeBadge } from '@/lib/contracts'
 import Image from 'next/image'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import LockIcon from '@mui/icons-material/Lock'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 interface StakedBadge {
   id: string

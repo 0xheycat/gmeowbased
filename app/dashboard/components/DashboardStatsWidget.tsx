@@ -25,7 +25,7 @@
  * - Error handling with retry
  */
 
-import { useAuthContext } from '@/lib/contexts/AuthContext'
+import { useAuthContext } from '@/lib/contexts'
 import { useUserStats } from '@/hooks/useUserStats'
 import { TierBadge } from '@/components/score/TierBadge'
 import { TotalScoreDisplay } from '@/components/score/TotalScoreDisplay'

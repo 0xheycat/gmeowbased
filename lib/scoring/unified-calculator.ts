@@ -86,7 +86,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-import { clamp } from '@/lib/utils/utils'
+import { clamp } from '@/lib/utils'
 import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { SCORING_ABI } from '@/lib/contracts/abis'
 import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
