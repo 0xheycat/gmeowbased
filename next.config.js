@@ -31,7 +31,7 @@ const nextConfig = {
       // Use util package for browser compatibility with @reown/appkit
       config.resolve.alias = {
         ...config.resolve.alias,
-        util: 'util/',
+        util: 'util',
       };
       
       config.resolve.fallback = {
