@@ -107,7 +107,29 @@ import { type Address, getAddress } from 'viem'
 import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
 import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { SCORING_ABI } from '@/lib/contracts/abis'
-import { getCached, invalidateCache } from '@/lib/cache/server'
+
+// Dynamic import helpers for server-only cache module (prevents bundling to client)
+async function getCachedSafe<T>(
+  namespace: string,
+  key: string,
+  factory: () => Promise<T>,
+  options?: { ttl?: number; staleWhileRevalidate?: boolean; force?: boolean }
+): Promise<T> {
+  if (typeof window !== 'undefined') {
+    return factory() // Client: bypass cache
+  }
+  const { getCached } = await import('@/lib/cache/server')
+  return getCached(namespace, key, factory, options)
+}
+
+async function invalidateCacheSafe(namespace: string, key: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    return // Client: no-op
+  }
+  const { invalidateCache } = await import('@/lib/cache/server')
+  return invalidateCache(namespace, key)
+}
+
 import {
   getSubsquidUserStats,
   getSubsquidLevelProgress,
@@ -214,7 +236,7 @@ export async function getUserStatsOnChain(
   const checksummedAddress = getAddress(address)
   const cacheKey = `user-stats:${checksummedAddress}`
 
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -250,7 +272,6 @@ export async function getUserStatsOnChain(
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true,
-      backend: 'auto', // Auto-select: redis → filesystem → memory
       force: forceRefresh,
     }
   )
@@ -279,7 +300,7 @@ export async function getLevelProgressOnChain(
   const checksummedAddress = getAddress(address)
   const cacheKey = `level-progress:${checksummedAddress}`
 
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -316,7 +337,7 @@ export async function getLevelProgressOnChain(
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true,
-      backend: 'auto',
+      
       force: forceRefresh,
     }
   )
@@ -345,7 +366,7 @@ export async function getRankProgressOnChain(
   const checksummedAddress = getAddress(address)
   const cacheKey = `rank-progress:${checksummedAddress}`
 
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -382,7 +403,7 @@ export async function getRankProgressOnChain(
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true,
-      backend: 'auto',
+      
       force: forceRefresh,
     }
   )
@@ -411,7 +432,7 @@ export async function getScoreBreakdownOnChain(
   const checksummedAddress = getAddress(address)
   const cacheKey = `score-breakdown:${checksummedAddress}`
 
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -449,7 +470,7 @@ export async function getScoreBreakdownOnChain(
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true,
-      backend: 'auto',
+      
       force: forceRefresh,
     }
   )
@@ -479,7 +500,7 @@ export async function getUserScoringData(
   const checksummedAddress = getAddress(address)
   const cacheKey = `full-scoring:${checksummedAddress}`
 
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -501,7 +522,7 @@ export async function getUserScoringData(
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true,
-      backend: 'auto',
+      
       force: forceRefresh,
     }
   )
@@ -591,11 +612,11 @@ export async function invalidateUserScoringCache(address: string): Promise<void>
   
   // Invalidate all cache entries for this user
   await Promise.all([
-    invalidateCache(CACHE_NAMESPACE, `user-stats:${checksummedAddress}`),
-    invalidateCache(CACHE_NAMESPACE, `level-progress:${checksummedAddress}`),
-    invalidateCache(CACHE_NAMESPACE, `rank-progress:${checksummedAddress}`),
-    invalidateCache(CACHE_NAMESPACE, `score-breakdown:${checksummedAddress}`),
-    invalidateCache(CACHE_NAMESPACE, `full-scoring:${checksummedAddress}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `user-stats:${checksummedAddress}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `level-progress:${checksummedAddress}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `rank-progress:${checksummedAddress}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `score-breakdown:${checksummedAddress}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `full-scoring:${checksummedAddress}`),
   ])
 }
 

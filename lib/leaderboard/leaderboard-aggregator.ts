@@ -9,7 +9,29 @@ import {
 } from '@/lib/contracts/gmeow-utils'
 import { fetchUsersByAddresses } from '@/lib/integrations/neynar'
 import { trackWarning } from '@/lib/notifications/error-tracking'
-import { getCached, invalidateCachePattern } from '@/lib/cache/server'
+
+// Dynamic import helpers for server-only cache module (prevents bundling to client)
+async function getCachedSafe<T>(
+  namespace: string,
+  key: string,
+  factory: () => Promise<T>,
+  options?: { ttl?: number; staleWhileRevalidate?: boolean; force?: boolean }
+): Promise<T> {
+  if (typeof window !== 'undefined') {
+    return factory() // Client: bypass cache
+  }
+  const { getCached } = await import('@/lib/cache/server')
+  return getCached(namespace, key, factory, options)
+}
+
+async function invalidateCachePatternSafe(namespace: string, pattern: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    return // Client: no-op
+  }
+  const { invalidateCachePattern } = await import('@/lib/cache/server')
+  await invalidateCachePattern(namespace, pattern)
+}
+
 import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 
 const EVT_QUEST_COMPLETED = parseAbiItem(
@@ -144,11 +166,11 @@ async function fetchLogsInChunks(
 
 async function loadChainAggregate(chain: ChainKey): Promise<ChainAggregateState> {
   // Phase 8.1.4: Use unified cache system with stale-while-revalidate
-  return await getCached(
+  return await getCachedSafe(
     'chain-aggregate',
     chain,
     async () => await loadChainAggregateInternal(chain),
-    { ttl: CHAIN_AGGREGATE_CACHE_TTL, backend: 'memory', staleWhileRevalidate: true }
+    { ttl: CHAIN_AGGREGATE_CACHE_TTL, staleWhileRevalidate: true }
   )
 }
 
@@ -156,11 +178,11 @@ async function loadChainAggregateInternal(chain: ChainKey): Promise<ChainAggrega
   const now = Date.now()
   
   // Get previous state from cache (for incremental updates)
-  const cached = await getCached<ChainAggregateState | null>(
+  const cached = await getCachedSafe<ChainAggregateState | null>(
     'chain-aggregate-state',
     chain,
     async () => null,
-    { ttl: CHAIN_AGGREGATE_CACHE_TTL * 10, backend: 'memory' } // Keep state longer
+    { ttl: CHAIN_AGGREGATE_CACHE_TTL * 10 } // Keep state longer
   ).catch(() => null)
 
   let client: ReturnType<typeof getClientByChainKey>
@@ -227,11 +249,11 @@ async function loadChainAggregateInternal(chain: ChainKey): Promise<ChainAggrega
   }
 
   // Phase 8.1.4: Store state in unified cache for next incremental update
-  await getCached(
+  await getCachedSafe(
     'chain-aggregate-state',
     chain,
     async () => updatedState,
-    { ttl: CHAIN_AGGREGATE_CACHE_TTL, backend: 'memory', force: true }
+    { ttl: CHAIN_AGGREGATE_CACHE_TTL, force: true }
   )
   
   return updatedState
@@ -261,13 +283,13 @@ async function resolveProfile(entry: RawAggregate) {
   const key = profileCacheKey(entry.chain, entry.address)
   
   // Phase 8.1.4: Use unified cache system
-  return await getCached(
+  return await getCachedSafe(
     'leaderboard-profile',
     key,
     async () => {
       return await resolveProfileFromChain(entry)
     },
-    { ttl: PROFILE_CACHE_TTL_SEC, backend: 'memory', staleWhileRevalidate: true }
+    { ttl: PROFILE_CACHE_TTL_SEC, staleWhileRevalidate: true }
   )
 }
 
@@ -357,7 +379,7 @@ export async function enrichAggregatedRows(entries: RawAggregate[]): Promise<Enr
       }
 
       // Phase 8.1.4: Update unified cache with Neynar enrichment
-      await getCached(
+      await getCachedSafe(
         'leaderboard-profile',
         profileCacheKey(row.chain, row.address),
         async () => ({
@@ -365,7 +387,7 @@ export async function enrichAggregatedRows(entries: RawAggregate[]): Promise<Enr
           pfpUrl: row.pfpUrl,
           farcasterFid: row.farcasterFid || 0,
         }),
-        { ttl: PROFILE_CACHE_TTL_SEC, backend: 'memory', force: true }
+        { ttl: PROFILE_CACHE_TTL_SEC, force: true }
       ).catch(() => {}) // Fire and forget
     }
   } catch (err) {
@@ -411,9 +433,9 @@ function mapWithConcurrency<T, U>(items: T[], limit: number, iterator: (item: T,
 
 export async function resetLeaderboardCaches() {
   // Phase 8.1.4: Use unified cache invalidation
-  await invalidateCachePattern('chain-aggregate', '*')
-  await invalidateCachePattern('chain-aggregate-state', '*')
-  await invalidateCachePattern('leaderboard-profile', '*')
+  await invalidateCachePatternSafe('chain-aggregate', '*')
+  await invalidateCachePatternSafe('chain-aggregate-state', '*')
+  await invalidateCachePatternSafe('leaderboard-profile', '*')
   
   // Phase 8.2.2: RPC clients now in centralized pool (lib/contracts/rpc-client-pool.ts)
   // No need to clear local cache - pool is shared

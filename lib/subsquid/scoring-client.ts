@@ -44,7 +44,28 @@
  */
 
 import type { UserStats, LevelProgress, RankProgress, ScoreBreakdown } from '@/lib/contracts/scoring-module'
-import { getCached, invalidateCache } from '@/lib/cache/server'
+
+// Dynamic import helpers for server-only cache module (prevents bundling to client)
+async function getCachedSafe<T>(
+  namespace: string,
+  key: string,
+  factory: () => Promise<T>,
+  options?: { ttl?: number; staleWhileRevalidate?: boolean; force?: boolean }
+): Promise<T> {
+  if (typeof window !== 'undefined') {
+    return factory() // Client: bypass cache
+  }
+  const { getCached } = await import('@/lib/cache/server')
+  return getCached(namespace, key, factory, options)
+}
+
+async function invalidateCacheSafe(namespace: string, key: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    return // Client: no-op
+  }
+  const { invalidateCache } = await import('@/lib/cache/server')
+  return invalidateCache(namespace, key)
+}
 
 // ==========================================
 // Constants
@@ -305,7 +326,7 @@ export async function getSubsquidUserStats(address: string): Promise<UserStats> 
   const userId = address.toLowerCase()
   const cacheKey = `user-stats:${userId}`
   
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -343,7 +364,6 @@ export async function getSubsquidUserStats(address: string): Promise<UserStats> 
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true, // Serve stale while fetching fresh
-      backend: 'auto', // Memory → Filesystem (skip Redis, $0 cost)
     }
   )
 }
@@ -355,7 +375,7 @@ export async function getSubsquidLevelProgress(address: string): Promise<LevelPr
   const userId = address.toLowerCase()
   const cacheKey = `level-progress:${userId}`
   
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -383,7 +403,6 @@ export async function getSubsquidLevelProgress(address: string): Promise<LevelPr
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true,
-      backend: 'auto',
     }
   )
 }
@@ -395,7 +414,7 @@ export async function getSubsquidRankProgress(address: string): Promise<RankProg
   const userId = address.toLowerCase()
   const cacheKey = `rank-progress:${userId}`
   
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -423,7 +442,6 @@ export async function getSubsquidRankProgress(address: string): Promise<RankProg
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true,
-      backend: 'auto',
     }
   )
 }
@@ -435,7 +453,7 @@ export async function getSubsquidScoreBreakdown(address: string): Promise<ScoreB
   const userId = address.toLowerCase()
   const cacheKey = `score-breakdown:${userId}`
   
-  return await getCached(
+  return await getCachedSafe(
     CACHE_NAMESPACE,
     cacheKey,
     async () => {
@@ -464,7 +482,6 @@ export async function getSubsquidScoreBreakdown(address: string): Promise<ScoreB
     {
       ttl: DEFAULT_CACHE_TTL,
       staleWhileRevalidate: true,
-      backend: 'auto',
     }
   )
 }
@@ -538,10 +555,10 @@ export async function invalidateSubsquidUserCache(address: string): Promise<void
   const userId = address.toLowerCase()
   
   await Promise.all([
-    invalidateCache(CACHE_NAMESPACE, `user-stats:${userId}`),
-    invalidateCache(CACHE_NAMESPACE, `level-progress:${userId}`),
-    invalidateCache(CACHE_NAMESPACE, `rank-progress:${userId}`),
-    invalidateCache(CACHE_NAMESPACE, `score-breakdown:${userId}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `user-stats:${userId}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `level-progress:${userId}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `rank-progress:${userId}`),
+    invalidateCacheSafe(CACHE_NAMESPACE, `score-breakdown:${userId}`),
   ])
 }
 

@@ -86,11 +86,34 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-import { clamp } from '@/lib/utils'
+import { clamp } from '@/lib/utils/utils'
 import { STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { SCORING_ABI } from '@/lib/contracts/abis'
 import { getPublicClient } from '@/lib/contracts/rpc-client-pool'
-import { getCached, invalidateCache } from '@/lib/cache/server'
+
+// Dynamic import helpers for server-only cache module
+// This prevents server-only code from being bundled to client
+async function getCachedSafe<T>(
+  namespace: string,
+  key: string,
+  factory: () => Promise<T>,
+  options?: { ttl?: number; staleWhileRevalidate?: boolean; force?: boolean }
+): Promise<T> {
+  if (typeof window !== 'undefined') {
+    // Client-side: bypass cache, call factory directly
+    return factory()
+  }
+  const { getCached } = await import('@/lib/cache/server')
+  return getCached(namespace, key, factory, options)
+}
+
+async function invalidateCacheSafe(...args: Parameters<typeof import('@/lib/cache/server').invalidateCache>) {
+  if (typeof window !== 'undefined') {
+    return // Client-side: no-op
+  }
+  const { invalidateCache } = await import('@/lib/cache/server')
+  return invalidateCache(...args)
+}
 
 // ============================================================================
 // VIEM CLIENT (Phase 8.2 - Connection Pooling)
@@ -282,7 +305,7 @@ export async function fetchUserStatsOnChain(
 ): Promise<OnChainUserStats> {
   const cacheKey = `user-stats-${address.toLowerCase()}`
   
-  return getCached(
+  return getCachedSafe(
     'scoring',
     cacheKey,
     async () => {
@@ -354,7 +377,7 @@ export async function fetchTotalScoreOnChain(
 ): Promise<bigint> {
   const cacheKey = `total-score-${address.toLowerCase()}`
   
-  return getCached(
+  return getCachedSafe(
     'scoring',
     cacheKey,
     async () => {
@@ -410,7 +433,7 @@ export async function fetchUserTierOnChain(
 ): Promise<bigint> {
   const cacheKey = `user-tier-${address.toLowerCase()}`
   
-  return getCached(
+  return getCachedSafe(
     'scoring',
     cacheKey,
     async () => {
@@ -466,7 +489,7 @@ export async function fetchScoreBreakdownOnChain(
 ): Promise<Omit<OnChainUserStats, 'tier'>> {
   const cacheKey = `score-breakdown-${address.toLowerCase()}`
   
-  return getCached(
+  return getCachedSafe(
     'scoring',
     cacheKey,
     async () => {
@@ -567,10 +590,10 @@ export async function batchFetchUserStats(
 export async function invalidateUserScoringCache(address: `0x${string}`): Promise<void> {
   const lowerAddress = address.toLowerCase()
   await Promise.all([
-    invalidateCache('scoring', `user-stats-${lowerAddress}`),
-    invalidateCache('scoring', `total-score-${lowerAddress}`),
-    invalidateCache('scoring', `user-tier-${lowerAddress}`),
-    invalidateCache('scoring', `score-breakdown-${lowerAddress}`),
+    invalidateCacheSafe('scoring', `user-stats-${lowerAddress}`),
+    invalidateCacheSafe('scoring', `total-score-${lowerAddress}`),
+    invalidateCacheSafe('scoring', `user-tier-${lowerAddress}`),
+    invalidateCacheSafe('scoring', `score-breakdown-${lowerAddress}`),
   ])
 }
 

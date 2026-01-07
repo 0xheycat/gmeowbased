@@ -26,7 +26,29 @@
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase/edge'
-import { getCached, invalidateCache } from '@/lib/cache/server'
+
+// Dynamic import helpers for server-only cache module (prevents bundling to client)
+async function getCachedSafe<T>(
+  namespace: string,
+  key: string,
+  factory: () => Promise<T>,
+  options?: { ttl?: number; staleWhileRevalidate?: boolean; force?: boolean }
+): Promise<T> {
+  if (typeof window !== 'undefined') {
+    return factory() // Client: bypass cache
+  }
+  const { getCached } = await import('@/lib/cache/server')
+  return getCached(namespace, key, factory, options)
+}
+
+async function invalidateCacheSafe(namespace: string, key: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    return // Client: no-op
+  }
+  const { invalidateCache } = await import('@/lib/cache/server')
+  return invalidateCache(namespace, key)
+}
+
 import { 
   calculateLevelProgress, 
   getRankTierByPoints,
@@ -327,7 +349,7 @@ async function aggregateViralBonusXP(fid: number): Promise<number> {
  * @returns ProfileData or null if user not found
  */
 export async function fetchProfileData(fid: number): Promise<ProfileData | null> {
-  return getCached(
+  return getCachedSafe(
     'profile',
     `fid:${fid}`,
     async () => {
@@ -526,7 +548,7 @@ export async function updateProfileData(
     }
 
     // Invalidate cache
-    await invalidateCache('profile', `fid:${fid}`)
+    await invalidateCacheSafe('profile', `fid:${fid}`)
 
     // Return fresh data
     return fetchProfileData(fid)

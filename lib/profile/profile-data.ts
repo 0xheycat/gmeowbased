@@ -4,7 +4,21 @@ import { buildFrameShareUrl } from '@/lib/api/share'
 import { calculateRankProgress } from '@/lib/scoring/unified-calculator'
 import { fetchUserByAddress, fetchFidByAddress, fetchUserByFid } from '@/lib/integrations/neynar'
 import { getReferrer } from '@/lib/contracts/referral-contract'
-import { getCached } from '@/lib/cache/server'
+
+// Dynamic import helper for server-only cache module (prevents bundling to client)
+async function getCachedSafe<T>(
+  namespace: string,
+  key: string,
+  factory: () => Promise<T>,
+  options?: { ttl?: number; staleWhileRevalidate?: boolean; force?: boolean }
+): Promise<T> {
+  if (typeof window !== 'undefined') {
+    return factory() // Client: bypass cache
+  }
+  const { getCached } = await import('@/lib/cache/server')
+  return getCached(namespace, key, factory, options)
+}
+
 import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 import { getUserStatsOnChain, type UserStats } from '@/lib/contracts/scoring-module'
 
@@ -97,7 +111,7 @@ function getBooleanFromEnv(name: string, fallback: boolean): boolean {
   return fallback
 }
 
-// Phase 8.1.5: Removed memoizeAsync - replaced by getCached() from unified cache
+// Phase 8.1.5: Removed memoizeAsync - replaced by getCachedSafe() from unified cache
 
 export type MiniAppUser = {
   fid?: number
@@ -161,11 +175,11 @@ export function pickAddressFromSource(source: any): `0x${string}` | null {
 export async function fetchChainSnapshot(chain: ChainKey, userAddress: `0x${string}`): Promise<ChainAggregation | null> {
   // Phase 8.1.5: Use unified cache system
   const cacheKey = `${chain}:${userAddress.toLowerCase()}`
-  return await getCached(
+  return await getCachedSafe(
     'profile-chain-snapshot',
     cacheKey,
     async () => await fetchChainSnapshotInternal(chain, userAddress),
-    { ttl: PROFILE_CHAIN_CACHE_TTL, backend: 'memory', staleWhileRevalidate: true }
+    { ttl: PROFILE_CHAIN_CACHE_TTL, staleWhileRevalidate: true }
   )
 }
 
@@ -262,11 +276,11 @@ export async function resolveFarcasterProfile(
   }
   const cacheKey = keyParts.join('|')
 
-  return await getCached(
+  return await getCachedSafe(
     'profile-farcaster',
     cacheKey,
     async () => await resolveFarcasterProfileInternal(address, contextUser, chainFid),
-    { ttl: PROFILE_FARCASTER_CACHE_TTL, backend: 'memory', staleWhileRevalidate: true }
+    { ttl: PROFILE_FARCASTER_CACHE_TTL, staleWhileRevalidate: true }
   )
 }
 
@@ -314,11 +328,11 @@ export async function fetchGlobalRank(address: `0x${string}`): Promise<number | 
 
   // Phase 8.1.5: Use unified cache system
   const cacheKey = address.toLowerCase()
-  return await getCached(
+  return await getCachedSafe(
     'profile-global-rank',
     cacheKey,
     async () => await fetchGlobalRankInternal(address),
-    { ttl: PROFILE_GLOBAL_RANK_CACHE_TTL, backend: 'memory', staleWhileRevalidate: true }
+    { ttl: PROFILE_GLOBAL_RANK_CACHE_TTL, staleWhileRevalidate: true }
   )
 }
 
