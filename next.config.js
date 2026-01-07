@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 import {  fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 
 // Bundle analyzer for performance optimization (Task 6)
 import bundleAnalyzer from '@next/bundle-analyzer';
@@ -28,13 +28,12 @@ const nextConfig = {
   // Webpack configuration to prevent Node.js modules from bundling client-side
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Use custom util shim for @reown/appkit compatibility
+      // Use util package for browser compatibility with @reown/appkit
       config.resolve.alias = {
         ...config.resolve.alias,
-        util: join(__dirname, 'lib', 'util-shim.cjs'),
+        util: 'util/',
       };
       
-      // Block other Node.js built-in modules
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
