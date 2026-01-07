@@ -6,6 +6,7 @@ import { FIDSchema } from '@/lib/validation/api-schemas'
 import { getSubsquidClient } from '@/lib/subsquid-client'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic' // Uses request.headers
 export const revalidate = 300 // 5 minutes
 
 /**
