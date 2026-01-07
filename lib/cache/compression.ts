@@ -1,3 +1,5 @@
+'use server'
+
 /**
  * @file lib/cache/compression.ts
  * @description Cache compression utilities using gzip/brotli
