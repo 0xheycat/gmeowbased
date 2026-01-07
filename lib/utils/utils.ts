@@ -13,7 +13,14 @@ export function clamp(value: number, min: number, max: number) {
 }
 
 // ========================================
-// CACHE FUNCTIONS REMOVED
+// CACHE FUNCTIONS MOVED (Phase 8.1.6)
 // ========================================
-// Cache functions were removed as the cache module no longer exists.
-// If needed, they can be restored from _archive.
+// readStorageCache, writeStorageCache, clearStorageCache
+// → Migrated to lib/cache/client.ts
+//
+// Update imports:
+// - import { readStorageCache } from '@/lib/utils/utils' (OLD)
+// + import { readStorageCache } from '@/lib/cache/client' (NEW)
+//
+// Re-export for backward compatibility (will be removed in Phase 9)
+export { readStorageCache, writeStorageCache, clearStorageCache } from '@/lib/cache/client'
