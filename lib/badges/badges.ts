@@ -4,7 +4,28 @@ import { getClientByChainKey } from '@/lib/contracts/rpc-client-pool'
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/edge'
 import { BADGE_REGISTRY } from './badge-registry-data'
 import type { Json, Database } from '@/types/supabase'
-import { getCached, invalidateCache } from '@/lib/cache/server'
+
+// Dynamic import helpers for server-only cache module (prevents bundling to client)
+async function getCachedSafe<T>(
+  namespace: string,
+  key: string,
+  factory: () => Promise<T>,
+  options?: { ttl?: number; backend?: 'memory' | 'redis'; staleWhileRevalidate?: boolean }
+): Promise<T> {
+  if (typeof window !== 'undefined') {
+    return factory() // Client: bypass cache, call factory directly
+  }
+  const { getCached } = await import('@/lib/cache/server')
+  return getCached(namespace, key, factory, options)
+}
+
+async function invalidateCacheSafe(namespace: string, key: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    return // Client: no-op
+  }
+  const { invalidateCache } = await import('@/lib/cache/server')
+  return invalidateCache(namespace, key)
+}
 
 // Use crypto.randomUUID() for browser/edge compatibility
 const randomUUID = (() => {
@@ -547,7 +568,7 @@ export async function invalidateBadgeCaches() {
  * Phase 8.1: Now uses unified cache system for consistency
  */
 export async function loadBadgeRegistry(): Promise<BadgeRegistry> {
-  return await getCached(
+  return await getCachedSafe(
     'badge-registry',
     'embedded-data',
     () => Promise.resolve(BADGE_REGISTRY),
@@ -595,7 +616,7 @@ export function getBadgeFromRegistry(badgeId: string): BadgeRegistry['badges'][n
  * Phase 8.1: Now uses unified cache system
  */
 export async function getBadgeByTier(tier: TierType): Promise<BadgeRegistry['badges'][number] | null> {
-  return await getCached(
+  return await getCachedSafe(
     'badge-by-tier',
     tier,
     async () => {
@@ -713,7 +734,7 @@ export async function getUserBadges(fid: number): Promise<UserBadge[]> {
     return []
   }
   
-  return await getCached(
+  return await getCachedSafe(
     'user-badges',
     `fid:${fid}`,
     async () => {
@@ -808,7 +829,7 @@ export async function updateBadgeMintStatus(params: {
   }
   
   // Invalidate cache after mint (Phase 8.1: unified cache system)
-  await invalidateCache('user-badges', `fid:${params.fid}`)
+  await invalidateCacheSafe('user-badges', `fid:${params.fid}`)
 }
 
 // ========================================
