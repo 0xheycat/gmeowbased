@@ -11,7 +11,7 @@
  * - Component-specific skeletons
  */
 
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 
 // Base skeleton primitive
 export function Skeleton({ 

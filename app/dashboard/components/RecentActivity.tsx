@@ -15,7 +15,7 @@
  * - Accessible activity feed with ARIA labels
  */
 
-import { useAuthContext } from '@/lib/contexts/AuthContext'
+import { useAuthContext } from '@/lib/contexts'
 import { useUserHistory } from '@/hooks/useUserHistory'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { motion } from 'framer-motion'

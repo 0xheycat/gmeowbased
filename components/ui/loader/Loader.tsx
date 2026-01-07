@@ -11,7 +11,7 @@
  * @template music/loader + gmeowbased0.6/loader (30% adaptation)
  */
 
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 export type LoaderSize = 'small' | 'medium' | 'large'
 export type LoaderVariant = 'dots' | 'pulse' | 'spin'

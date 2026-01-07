@@ -16,7 +16,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { QuestClaimButton } from './QuestClaimButton';
-import { useAuthContext } from '@/lib/contexts/AuthContext';
+import { useAuthContext } from '@/lib/contexts';
 import type { QuestClaimSignature } from '@/lib/quests/oracle-signature';
 
 interface QuestCompleteClientProps {

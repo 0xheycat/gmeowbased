@@ -12,7 +12,7 @@
  * - <ActivityIndicator size="sm" /> - Smaller variant for compact layouts
  */
 
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 interface ActivityIndicatorProps {
   pulse?: boolean

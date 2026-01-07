@@ -15,7 +15,7 @@ import AppKitProvider from '@/components/providers/AppKitProvider'
 import { MiniappReady } from '@/components/MiniappReady'
 import { initWebVitals, initPerformanceMonitoring } from '@/lib/utils/performance'
 import { getMiniappContext } from '@/lib/miniapp/miniappEnv'
-import { AuthProvider } from '@/lib/contexts/AuthContext'
+import { AuthProvider } from '@/lib/contexts'
 import { getApolloClient } from '@/lib/apollo-client'
 
 export function MiniAppProvider({ children }: { children: React.ReactNode }) {

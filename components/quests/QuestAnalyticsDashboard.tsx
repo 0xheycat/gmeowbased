@@ -26,7 +26,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { motion, useReducedMotion } from 'framer-motion';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { AnalyticsDashboardSkeleton } from './skeletons';
 import { AnalyticsDashboardEmptyState, ErrorState } from './empty-states';
 

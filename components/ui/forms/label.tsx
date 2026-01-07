@@ -4,7 +4,7 @@
  * Label Component - Form label with required indicator
  */
 
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 export interface LabelProps
   extends React.LabelHTMLAttributes<HTMLLabelElement> {

@@ -12,7 +12,7 @@
  * - <TrendingBadge variant="new" /> - Blue, recently trending
  */
 
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 interface TrendingBadgeProps {
   variant: 'hot' | 'rising' | 'new'

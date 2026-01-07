@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthContext } from '@/lib/contexts/AuthContext'
+import { useAuthContext } from '@/lib/contexts'
 import { WizardStepper, type WizardStep } from './components/WizardStepper'
 import { TemplateSelector } from './components/TemplateSelector'
 import { QuestBasicsForm } from './components/QuestBasicsForm'

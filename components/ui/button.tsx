@@ -4,7 +4,7 @@
 import { useState, useRef, forwardRef, useImperativeHandle, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot } from '@radix-ui/react-slot'
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 import ButtonDrip from '@/components/ui/button-drip'
 import ButtonLoader from '@/components/ui/button-loader'
 import { type LoaderSize, type LoaderVariant } from '@/components/ui/loader'

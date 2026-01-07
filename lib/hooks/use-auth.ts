@@ -1,8 +1,8 @@
 'use client'
 
 import { useContext } from 'react'
-import { AuthContext } from '@/lib/contexts/AuthContext'
-import type { AuthContextType } from '@/lib/contexts/AuthContext'
+import { AuthContext } from '@/lib/contexts'
+import type { AuthContextType } from '@/lib/contexts'
 
 /**
  * Hook to access unified authentication state

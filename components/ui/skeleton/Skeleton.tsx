@@ -9,7 +9,7 @@
  * Features: GPU-optimized, accessible (aria-busy + aria-live), responsive sizing
  */
 
-import { cn } from '@/lib/utils/utils'
+import { cn } from '@/lib/utils'
 
 export interface SkeletonProps {
   /**
