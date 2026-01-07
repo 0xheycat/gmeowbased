@@ -4,11 +4,6 @@
   "framework": "nextjs",
   "cleanUrls": true,
   "installCommand": "pnpm install --frozen-lockfile",
-  "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 10
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
