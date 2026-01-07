@@ -5,6 +5,7 @@ import { getCached } from '@/lib/cache/server'
 import { createErrorResponse } from '@/lib/middleware/error-handler'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic' // Uses request.headers
 export const revalidate = 300 // 5 minutes
 
 /**

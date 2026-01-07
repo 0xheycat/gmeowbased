@@ -30,11 +30,19 @@
 import Redis from 'ioredis'
 
 // Redis configuration from environment
-const REDIS_CONFIG = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0'),
+// Use REDIS_URL (full connection string for Upstash) or fallback to individual params
+const redisUrl = process.env.REDIS_URL
+
+const REDIS_CONFIG = redisUrl 
+  ? redisUrl // Use connection string (Upstash format: rediss://...)
+  : {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD,
+      db: parseInt(process.env.REDIS_DB || '0'),
+    }
+
+const redisOptions = {
   maxRetriesPerRequest: 3,
   enableReadyCheck: true,
   retryStrategy: (times: number) => {
@@ -53,8 +61,10 @@ const REDIS_CONFIG = {
   },
 }
 
-// Create Redis client instance
-const redis = new Redis(REDIS_CONFIG)
+// Create Redis client instance with connection string or config object
+const redis = typeof REDIS_CONFIG === 'string' 
+  ? new Redis(REDIS_CONFIG, redisOptions)
+  : new Redis({ ...REDIS_CONFIG, ...redisOptions })
 
 // Event handlers
 redis.on('connect', () => {
