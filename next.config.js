@@ -31,6 +31,9 @@ const nextConfig = {
       config.resolve.alias = {
         ...config.resolve.alias,
         util: require.resolve('util/'),
+        // Prevent server-only cache modules from being bundled client-side
+        '@/lib/cache/server': false,
+        '@/lib/cache/compression': false,
       };
       
       config.resolve.fallback = {

@@ -1,5 +1,3 @@
-'use server'
-
 /**
  * @file lib/cache/server.ts
  * @description Unified server-side caching with L1/L2/L3 strategy (Memory/Redis/Filesystem)
