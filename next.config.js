@@ -24,12 +24,13 @@ const nextConfig = {
   // turbopack: {}, 
   
   // Webpack configuration to prevent Node.js modules from bundling client-side
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
-      // Use util package for browser compatibility with @reown/appkit
+      // CRITICAL: Use util package for browser compatibility with @reown/appkit
+      // Force webpack to use util polyfill instead of Node.js util
       config.resolve.alias = {
         ...config.resolve.alias,
-        util: 'util',
+        util: require.resolve('util/'),
       };
       
       config.resolve.fallback = {
@@ -47,7 +48,23 @@ const nextConfig = {
         os: false,
         path: false,
       };
+      
+      // Provide util polyfill globally to fix @reown/appkit util.deprecate error
+      config.plugins.push(
+        new webpack.ProvidePlugin({
+          util: 'util/',
+        })
+      );
     }
+    
+    // Ensure util is not marked as external (force bundling)
+    config.externals = config.externals || [];
+    if (Array.isArray(config.externals)) {
+      config.externals = config.externals.filter(
+        (external) => typeof external !== 'string' || !external.includes('util')
+      );
+    }
+    
     return config;
   },
   
