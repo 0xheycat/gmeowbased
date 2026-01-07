@@ -102,13 +102,23 @@ for page in "${PAGES[@]}"; do
   fi
 done
 
-echo "🔍 5/5 Checking for known errors..."
+echo "🔍 5/6 Checking webpack bundle..."
 
 # Check for util.deprecate error in bundle
 if curl -s http://localhost:3002 | grep -q "webpack-"; then
   echo "✅ Webpack bundle generated"
 else
   echo "❌ No webpack bundle found"
+  ERRORS=$((ERRORS + 1))
+fi
+
+echo "🌐 6/6 Testing browser JavaScript errors..."
+
+# Run browser test to catch JavaScript runtime errors
+if node scripts/browser-test.mjs http://localhost:3002; then
+  echo "✅ No critical JavaScript errors"
+else
+  echo "❌ JavaScript errors detected in browser"
   ERRORS=$((ERRORS + 1))
 fi
 

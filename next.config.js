@@ -25,7 +25,7 @@ const nextConfig = {
       // Use custom util shim for @reown/appkit compatibility
       config.resolve.alias = {
         ...config.resolve.alias,
-        util: require.resolve('./lib/util-shim.js'),
+        util: require.resolve('./lib/util-shim.cjs'),
       };
       
       // Block other Node.js built-in modules
