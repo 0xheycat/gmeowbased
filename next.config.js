@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 
+import {  fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
 // Bundle analyzer for performance optimization (Task 6)
 import bundleAnalyzer from '@next/bundle-analyzer';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -25,7 +31,7 @@ const nextConfig = {
       // Use custom util shim for @reown/appkit compatibility
       config.resolve.alias = {
         ...config.resolve.alias,
-        util: require.resolve('./lib/util-shim.cjs'),
+        util: join(__dirname, 'lib', 'util-shim.cjs'),
       };
       
       // Block other Node.js built-in modules
