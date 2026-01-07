@@ -14,9 +14,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig = {
-  // Output standalone for Docker optimization (reduces image size)
-  output: 'standalone',
-  
   // TypeScript and ESLint optimizations for faster builds
   typescript: {
     ignoreBuildErrors: true, // Skip TS checks during build (use CI for type checking)
