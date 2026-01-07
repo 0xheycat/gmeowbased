@@ -90,3 +90,12 @@ export {
 // Specialized caches
 export * from './contract-cache'
 export * from './neynar-cache'
+
+// Redis client utilities
+export { checkRedisHealth, getRedisInfo } from './redis-client'
+
+// Webhook cache utilities
+export { getWebhookCacheStats } from './webhook-cache'
+
+// Notification cache utilities
+export { getNotificationCacheStats } from './notification-cache'
