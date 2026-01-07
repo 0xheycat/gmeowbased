@@ -22,7 +22,7 @@ logs/
 .cache/
 .backup/
 .lighthouseci/
-cache/
+/cache/
 .DS_Store
 *.swp
 *.swo
@@ -57,7 +57,7 @@ deployment-*.log
 # Foundry/contract files (removed lib/ - conflicts with app lib folder)
 broadcast/
 out/
-cache/
+/cache/
 contract/
 foundry.lock
 
