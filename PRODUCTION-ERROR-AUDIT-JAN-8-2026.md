@@ -7,12 +7,14 @@
 **Auditor:** GitHub Copilot (Claude Sonnet 4.5)
 
 **✅ RESOLUTION STATUS (Session 11 - Dashboard Production Errors):**
-- **GraphQL Timeouts:** ✅ Fixed (commit: dc8efa2) - Custom AbortController fetch
-- **Notification 404s:** ✅ Fixed (commit: dc8efa2) - Created missing API endpoint
-- **Badge 502 Errors:** 📋 Documented - External OpenSea CDN issue
-- **Root Causes:** ✅ Identified - Browser compatibility + missing endpoint
+- **GraphQL Timeouts:** ✅ Fixed (commit: 1eb9aa3) - Custom AbortController fetch
+- **Notification 404s:** ✅ Fixed (commit: 1eb9aa3) - Restored archived implementation
+- **Badge 502 Errors:** ✅ Fixed (commit: 9421857) - Migrated webp→png, integrated badge_templates
+- **Guild Name Mismatch:** ✅ Fixed (commit: 3407180) - Hybrid Subsquid (on-chain) + Supabase (metadata)
+- **Guild API 404s:** ✅ Fixed (commit: 624540e) - Restored 4 missing endpoints from archive
+- **Root Causes:** ✅ Identified - Browser compatibility + missing endpoints + hybrid architecture
 - **Deployment:** ✅ **DEPLOYED** (pushed to main)
-- **Production Tests:** ⏳ **AWAITING VERIFICATION**
+- **Production Tests:** ⏳ **AWAITING VERIFICATION (+2min Vercel)**
 
 **✅ PREVIOUS STATUS (Session 8 - API Testing & Subsquid Schema Audit):**
 - **Wallet API Fix:** ✅ Deployed (commit: add750a)
@@ -3158,5 +3160,231 @@ AFTER (Correct):
 1. `/app/api/guild/list/route.ts` - Add Subsquid query for guild names
 2. `/app/api/guild/[guildId]/route.ts` - Add Subsquid query for guild name
 3. Use GraphQL queries: `GET_ALL_GUILDS`, `GET_GUILD_BY_ID`
+
+---
+
+## Session 11 - Part 3: Missing Guild API Endpoints (RESOLVED)
+
+**Date:** January 8, 2026  
+**Commit:** 624540e  
+**Status:** ✅ **DEPLOYED**
+
+### Production Errors
+
+**4 Guild API Endpoints Returning 404:**
+```javascript
+// Browser console errors on /guild/1 page:
+GET https://gmeowhq.art/api/guild/1/is-member?address=0x8a3094e44577579d6f41F6214a86C250b7dBDC4e 404 (Not Found)
+GET https://gmeowhq.art/api/guild/1/metadata 404 (Not Found)
+GET https://gmeowhq.art/api/guild/1/events?limit=50 404 (Not Found)
+GET https://gmeowhq.art/api/guild/1/analytics?period=week 404 (Not Found)
+```
+
+### Root Cause Analysis
+
+**1. Archive Migration Issue:**
+- During previous cleanup, 4 guild endpoints were moved to `_archive/`
+- Archive process created **double-nested folders**:
+  ```
+  _archive/app/api/guild/[guildId]/
+    ├── is-member/is-member/route.ts    ❌ Wrong structure
+    ├── metadata/metadata/route.ts      ❌ Wrong structure
+    ├── events/events/route.ts          ❌ Wrong structure
+    └── analytics/analytics/route.ts    ❌ Wrong structure
+  ```
+- Correct structure should be: `is-member/route.ts` (not `is-member/is-member/route.ts`)
+
+**2. Missing Restoration:**
+- These endpoints were never migrated from archive to active API directory
+- Frontend components still called these endpoints
+- Result: 404 errors on guild detail page
+
+**3. Outdated Metadata API:**
+- Metadata endpoint only queried Supabase for guild name
+- Should use **hybrid architecture**: Subsquid (on-chain name) + Supabase (metadata)
+- Inconsistent with other guild APIs fixed in commit 3407180
+
+### Investigation Commands
+
+```bash
+# Search for missing endpoints
+file_search "**/api/guild/[guildId]/is-member/route.ts"  # No files found
+file_search "**/api/guild/[guildId]/metadata/route.ts"   # No files found
+file_search "**/api/guild/[guildId]/events/route.ts"     # No files found
+file_search "**/api/guild/[guildId]/analytics/route.ts"  # No files found
+
+# Found in archive with wrong structure
+find _archive/app/api/guild/\[guildId\]/{is-member,metadata,events,analytics} -name "route.ts"
+# Output: Double-nested paths (is-member/is-member/route.ts, etc.)
+```
+
+### Resolution Steps
+
+**1. Restored 4 Missing Endpoints:**
+```bash
+# Copy from double-nested archive to active directory
+cp -r _archive/app/api/guild/[guildId]/is-member/is-member app/api/guild/[guildId]/is-member
+cp -r _archive/app/api/guild/[guildId]/metadata/metadata app/api/guild/[guildId]/metadata
+cp -r _archive/app/api/guild/[guildId]/events/events app/api/guild/[guildId]/events
+cp -r _archive/app/api/guild/[guildId]/analytics/analytics app/api/guild/[guildId]/analytics
+
+# Verify restoration
+ls -la app/api/guild/[guildId]/{is-member,metadata,events,analytics}/route.ts
+# All 4 files now exist ✅
+```
+
+**2. Fixed Metadata API - Hybrid Architecture:**
+
+Updated `/app/api/guild/[guildId]/metadata/route.ts` to use Subsquid + Supabase:
+
+```typescript
+// BEFORE (Supabase only):
+const { data } = await supabase
+  .from('guild_metadata')
+  .select('guild_id, name, description, banner')  // ❌ Old name from Supabase
+  .eq('guild_id', guildId)
+  .single()
+
+return { guild: { name: data.name } }  // ❌ Outdated
+
+// AFTER (Hybrid - Subsquid + Supabase):
+import apolloClient from '@/lib/apollo-client'
+import { GET_GUILD_BY_ID } from '@/lib/graphql/queries/guild'
+
+// Query Subsquid for on-chain guild name
+const { data: subsquidData } = await apolloClient.query({
+  query: GET_GUILD_BY_ID,
+  variables: { id: guildId },
+  fetchPolicy: 'network-only',
+})
+
+const onchainGuild = subsquidData?.guilds?.[0]
+if (!onchainGuild) {
+  return { success: false, message: 'Guild not found on-chain' }
+}
+
+// Query Supabase for metadata only
+const { data } = await supabase
+  .from('guild_metadata')
+  .select('description, banner')  // ✅ Metadata only
+  .eq('guild_id', guildId)
+  .single()
+
+// Merge: On-chain name + Supabase metadata
+return {
+  guild: {
+    id: guildId,
+    name: onchainGuild.name,        // ✅ On-chain source of truth
+    description: data?.description || '',
+    banner: data?.banner || '',
+  }
+}
+```
+
+**3. TypeScript Validation:**
+```bash
+get_errors([
+  "/app/api/guild/[guildId]/is-member",
+  "/app/api/guild/[guildId]/metadata", 
+  "/app/api/guild/[guildId]/events",
+  "/app/api/guild/[guildId]/analytics"
+])
+# Result: No errors found ✅
+```
+
+### Deployment
+
+**Commit:** 624540e
+```bash
+git add app/api/guild/[guildId]/{is-member,metadata,events,analytics}
+git commit -m "fix: restore 4 missing guild API endpoints (is-member, metadata, events, analytics)"
+git push origin main
+```
+
+**Files Restored:**
+1. `app/api/guild/[guildId]/is-member/route.ts` (303 lines) - Member check with rate limiting
+2. `app/api/guild/[guildId]/metadata/route.ts` (120 lines) - Guild metadata with hybrid Subsquid
+3. `app/api/guild/[guildId]/events/route.ts` (3069 lines) - Guild activity feed
+4. `app/api/guild/[guildId]/analytics/route.ts` (23943 lines) - Guild analytics with caching
+
+### Expected Impact
+
+**Before:**
+- ❌ Guild detail page shows "Not a member" incorrectly
+- ❌ Guild metadata missing or outdated name
+- ❌ Guild activity feed empty
+- ❌ Guild analytics dashboard blank
+
+**After:**
+- ✅ Member status displays correctly (is-member endpoint)
+- ✅ Guild metadata shows on-chain name "Gmeow Test Guild" (metadata endpoint with hybrid)
+- ✅ Guild activity feed populates (events endpoint)
+- ✅ Guild analytics dashboard shows data (analytics endpoint)
+
+### Data Flow Architecture
+
+**Hybrid Pattern Applied to Metadata Endpoint:**
+```
+┌─────────────────┐
+│ Frontend        │
+│ /guild/1        │
+└────────┬────────┘
+         │
+         │ GET /api/guild/1/metadata
+         │
+         ↓
+┌─────────────────────────────────────────┐
+│ Metadata API (app/api/guild/[guildId]/ │
+│              metadata/route.ts)         │
+├─────────────────────────────────────────┤
+│ 1. Query Subsquid (On-Chain)           │
+│    GET_GUILD_BY_ID → guild.name         │ ← SOURCE OF TRUTH
+│                                         │
+│ 2. Query Supabase (Metadata)           │
+│    guild_metadata → description, banner │ ← METADATA ONLY
+│                                         │
+│ 3. Merge & Return                       │
+│    { name: onchain, desc: supabase }    │
+└─────────────────────────────────────────┘
+         │
+         │ JSON Response
+         ↓
+┌─────────────────┐
+│ Frontend        │
+│ Renders:        │
+│ - "Gmeow Test   │
+│    Guild" ✅     │
+│ - Description   │
+│ - Banner        │
+└─────────────────┘
+```
+
+### Verification Checklist
+
+- [x] All 4 endpoints restored from archive
+- [x] Metadata endpoint uses hybrid Subsquid + Supabase
+- [x] No TypeScript errors
+- [x] Committed and pushed (624540e)
+- [ ] Production deployment complete (+2min Vercel)
+- [ ] Test `/api/guild/1/is-member?address=0x...` returns 200
+- [ ] Test `/api/guild/1/metadata` shows "Gmeow Test Guild"
+- [ ] Test `/api/guild/1/events` returns activity data
+- [ ] Test `/api/guild/1/analytics` returns analytics data
+
+### Prevention
+
+**Archive Process Improvement:**
+1. When archiving endpoints, use **single-level folders**: `is-member/route.ts` (not `is-member/is-member/route.ts`)
+2. Document archived endpoints in `_archive/ARCHIVED-ENDPOINTS.md`
+3. Check for frontend dependencies before archiving
+4. Use grep to search for endpoint usage before moving to archive
+
+**Hybrid Architecture Standard:**
+- Always query Subsquid first for on-chain data (source of truth)
+- Use Supabase only for off-chain metadata (description, banner, images)
+- Document data flow in API comments
+- Apply pattern consistently across all guild APIs
+
+---
 
 **Status:** 🔄 **FIXING NOW**
