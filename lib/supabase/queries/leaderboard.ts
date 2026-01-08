@@ -107,16 +107,27 @@ export async function getLeaderboardWithProfiles(
     }
 
     // Step 2: Extract wallet addresses for enrichment
-    const wallets = leaderboard.map(entry => entry.wallet.toLowerCase())
+    const wallets = leaderboard.map(entry => entry.id.toLowerCase())
 
     // Step 3: Enrich with Supabase user profiles (<50ms)
     const profileMap = await enrichLeaderboardWithProfiles(wallets)
 
     // Step 4: Merge Subsquid data + Supabase profiles
     const enriched = leaderboard.map(entry => {
-      const profile = profileMap.get(entry.wallet.toLowerCase())
+      const profile = profileMap.get(entry.id.toLowerCase())
       return {
         ...entry,
+        wallet: entry.id, // Add wallet field for backward compatibility
+        rank: 0, // Will be set by caller based on position
+        totalScore: entry.pointsBalance, // Use pointsBalance as totalScore
+        basePoints: entry.pointsBalance,
+        viralPoints: 0, // Not available in UserOnChainStats
+        guildBonus: 0,
+        guildBonusPoints: 0,
+        referralBonus: 0,
+        streakBonus: 0,
+        badgePrestige: 0,
+        updatedAt: new Date().toISOString(),
         fid: profile?.fid,
         username: profile?.username,
         displayName: profile?.displayName,
