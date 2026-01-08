@@ -31,9 +31,10 @@ const nextConfig = {
       config.resolve.alias = {
         ...config.resolve.alias,
         util: require.resolve('util/'),
-        // Prevent server-only cache modules from being bundled client-side
-        '@/lib/cache/server': false,
-        '@/lib/cache/compression': false,
+        // Use client-safe stubs for ALL server-only cache modules
+        '@/lib/cache/server': join(__dirname, 'lib/cache/server.client.ts'),
+        '@/lib/cache/compression': join(__dirname, 'lib/cache/server.client.ts'),
+        '@/lib/cache/redis-client': join(__dirname, 'lib/cache/server.client.ts'),
       };
       
       config.resolve.fallback = {

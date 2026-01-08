@@ -8,12 +8,16 @@
  * - Subsquid: Blockchain data (XP, streaks, leaderboards, events)
  * - Supabase: Identity + metadata (FID→wallet, guild names, quest definitions)
  * 
- * GraphQL Endpoint: http://localhost:4350/graphql
+ * GraphQL Endpoint: Production Subsquid Cloud
  */
 
 import { GraphQLClient, gql } from 'graphql-request';
 
-const SUBSQUID_ENDPOINT = process.env.SUBSQUID_GRAPHQL_URL || 'http://localhost:4350/graphql';
+const SUBSQUID_ENDPOINT = process.env.SUBSQUID_GRAPHQL_URL || process.env.NEXT_PUBLIC_SUBSQUID_URL;
+
+if (!SUBSQUID_ENDPOINT) {
+  throw new Error('SUBSQUID_GRAPHQL_URL or NEXT_PUBLIC_SUBSQUID_URL environment variable is required');
+}
 
 const client = new GraphQLClient(SUBSQUID_ENDPOINT, {
   headers: {
