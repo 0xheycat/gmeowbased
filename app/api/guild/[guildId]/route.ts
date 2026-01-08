@@ -47,6 +47,8 @@ import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { getAllWalletsForFID } from '@/lib/integrations/neynar-wallet-sync'
+import getApolloClient from '@/lib/apollo-client'
+import { GET_GUILD_BY_ID } from '@/lib/graphql/queries/guild'
 
 // ==========================================
 // Helper Functions
@@ -274,9 +276,24 @@ async function fetchGuildFromSupabase(
   }
 } | null> {
   try {
+    // LAYER 1: Get on-chain guild data from Subsquid (source of truth for name)
+    const apolloClient = getApolloClient
+    const { data: subsquidData, error: subsquidError } = await apolloClient.query({
+      query: GET_GUILD_BY_ID,
+      variables: {
+        guildId: guildId,
+      },
+    })
+
+    if (subsquidError) {
+      console.error('[guild-detail] Failed to fetch guild from Subsquid:', subsquidError)
+    }
+
+    const onChainGuild = subsquidData?.guild
+
+    // LAYER 2: Get guild metadata from Supabase (description, banner only)
     const supabase = createClient()
     
-    // LAYER 1: Get guild metadata from Supabase
     const { data: guildData, error: guildError } = await supabase
       .from('guild_metadata')
       .select('guild_id, name, description, banner, created_at')
@@ -284,8 +301,11 @@ async function fetchGuildFromSupabase(
       .single()
     
     if (guildError || !guildData) {
-      console.error('[guild-detail] Guild not found:', guildError)
-      return null
+      console.error('[guild-detail] Guild metadata not found:', guildError)
+      // If no Supabase metadata but on-chain data exists, continue with on-chain only
+      if (!onChainGuild) {
+        return null
+      }
     }
     
     // LAYER 2: Query Subsquid directly for guild stats
@@ -508,10 +528,10 @@ async function fetchGuildFromSupabase(
     
     return {
       guild: {
-        id: guildData.guild_id,
-        name: guildData.name,
-        description: guildData.description || '',
-        banner: guildData.banner || '',
+        id: guildData?.guild_id || guildId,
+        name: onChainGuild?.name || guildData?.name || 'Unknown Guild', // Prioritize on-chain name
+        description: guildData?.description || '',
+        banner: guildData?.banner || '',
         leader: leaderAddress,
         totalPoints,
         memberCount,
