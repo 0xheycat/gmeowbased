@@ -2691,3 +2691,69 @@ Contract Events → Subsquid GraphQL ──────────────�
 3. Verify guild member data shows correctly
 4. Update test-apis.sh results in documentation
 
+
+---
+
+### ✅ Session 9 - Production Verification Results
+
+**Test Time:** Jan 8, 2026 05:53 CST
+**Deployment:** ecde7d9 (successful)
+
+**Production Guild API Test:**
+```bash
+curl https://gmeowhq.art/api/guild/1 | jq
+
+# Response: ✅ SUCCESS
+{
+  "success": true,
+  "guild": {
+    "id": "1",
+    "name": "gmeowbased",
+    "description": "best guild ever",
+    "memberCount": "1",          # ✅ FIXED (was 0)
+    "totalPoints": "0",
+    "level": 1,
+    "leader": "0x8870c155666809609176260f2b65a626c000d773"
+  },
+  "members": [{                  # ✅ FIXED (was empty array)
+    "address": "0x8870c155666809609176260f2b65a626c000d773",
+    "isOfficer": false,
+    "points": "988985",
+    "farcaster": {
+      "fid": 1069798,
+      "username": "fid:1069798"
+    }
+  }],
+  "pagination": {
+    "totalCount": 1,
+    "fetched": 1
+  }
+}
+```
+
+**Verification Checklist:**
+- ✅ Guild API returns memberCount: 1 (was 0)
+- ✅ Members array has 1 member (was empty)
+- ✅ Member data includes address, points, Farcaster info
+- ✅ Subsquid treasuryPoints field used correctly
+- ✅ TypeScript compilation with no errors
+- ✅ Production deployment successful
+
+**Files Deployed (3 commits):**
+1. **a76a3b9** - Initial fix (query Subsquid directly)
+2. **4950ba5** - Documentation update
+3. **ecde7d9** - Final fix (use getGuildStats with treasuryPoints)
+
+**Session 9 Status:** ✅ **COMPLETE**
+
+**Impact:**
+- Guild Details API now shows correct member data
+- Users can see guild membership information
+- Guild leaderboards will populate correctly
+- Foundation for guild features now stable
+
+**Next Monitoring:**
+- Guild API response times
+- Member data accuracy across all guilds
+- Any edge cases with large guilds (50+ members)
+
