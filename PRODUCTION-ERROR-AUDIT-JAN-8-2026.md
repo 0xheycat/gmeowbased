@@ -3074,3 +3074,89 @@ curl https://gmeowhq.art/api/health
 - GM stats accuracy
 - User feedback on dashboard functionality
 
+
+---
+
+## 🔄 Session 11 - Part 3: Guild Name Data Source Issue
+
+**Reported Issue:**
+- Guild list shows different name than guild detail page
+- "Gmeow Test Guild" vs "gmeowbased"
+- User reports: "is name from subsquid or supabase?"
+
+### 📊 Investigation Timeline
+
+**Data Source Analysis:**
+
+**Subsquid (On-Chain Source of Truth):**
+```graphql
+query { guilds(where: { id_eq: "1" }) { id name createdAt } }
+# Response:
+{
+  "id": "1",
+  "name": "Gmeow Test Guild",
+  "createdAt": "1767228655"  # Dec 31, 2025 18:50:55 CST
+}
+```
+
+**Supabase guild_metadata (Off-Chain Metadata):**
+```sql
+SELECT guild_id, name, created_at FROM guild_metadata WHERE guild_id = '1'
+# Response:
+{
+  "guild_id": "1",
+  "name": "gmeowbased",
+  "created_at": "2025-12-10 15:49:10.373+00"  # Dec 10, 2025
+}
+```
+
+### 🎯 Root Cause
+
+**Timeline:**
+- **Dec 10, 2025:** Supabase `guild_metadata` created with name "gmeowbased" (OLD)
+- **Dec 31, 2025:** On-chain guild created/updated with name "Gmeow Test Guild" (CURRENT)
+
+**Current API Behavior (WRONG):**
+- `/api/guild/list` - Uses Supabase `guild_metadata.name` ❌
+- `/api/guild/[guildId]` - Uses Supabase `guild_metadata.name` ❌
+- Neither API queries Subsquid for on-chain guild name
+- APIs show outdated off-chain metadata instead of current on-chain name
+
+**Expected Behavior:**
+- Guild name should come from Subsquid (on-chain source of truth)
+- Supabase `guild_metadata` should only provide supplementary data (description, banner)
+- On-chain data always takes precedence over off-chain metadata
+
+### ✅ Fix Implementation
+
+**Architecture Fix:**
+```
+BEFORE (Wrong):
+┌─────────────────┐
+│ Supabase        │  → name: "gmeowbased" (Dec 10 - OLD)
+│ guild_metadata  │  → description, banner
+└────────┬────────┘
+         │
+         ↓
+    Guild APIs (uses old name)
+
+AFTER (Correct):
+┌─────────────────┐     ┌──────────────────┐
+│ Subsquid        │  →  │ name: "Gmeow     │ ← SOURCE OF TRUTH
+│ (On-Chain)      │     │ Test Guild"      │
+└────────┬────────┘     └──────────────────┘
+         │                      ↓
+         ├───────────────→ Guild APIs
+         │                      ↑
+┌────────┴────────┐     ┌──────────────────┐
+│ Supabase        │  →  │ description,     │ ← METADATA ONLY
+│ guild_metadata  │     │ banner           │
+└─────────────────┘     └──────────────────┘
+```
+
+**Files to Fix:**
+1. `/app/api/guild/list/route.ts` - Add Subsquid query for guild names
+2. `/app/api/guild/[guildId]/route.ts` - Add Subsquid query for guild name
+3. Use GraphQL queries: `GET_ALL_GUILDS`, `GET_GUILD_BY_ID`
+
+**Status:** 🔄 **FIXING NOW**

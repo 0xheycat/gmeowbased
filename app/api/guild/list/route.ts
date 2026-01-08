@@ -26,6 +26,8 @@ import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import type { Badge } from '@/components/guild/badges'
+import getApolloClient from '@/lib/apollo-client'
+import { GET_ALL_GUILDS } from '@/lib/graphql/queries/guild'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -215,12 +217,36 @@ function calculateGuildLevel(points: number): number {
 
 /**
  * Fetch guilds with TRUE HYBRID pattern
- * LAYER 1: Off-chain (Supabase) - Guild metadata
- * LAYER 2: Off-chain (Supabase) - Guild events for stats
+ * LAYER 1: On-chain (Subsquid) - Guild name, owner, createdAt (SOURCE OF TRUTH)
+ * LAYER 2: Off-chain (Supabase) - Guild metadata (description, banner)
  * LAYER 3: Calculated - Stats aggregation + achievements
  */
 async function fetchGuildsFromSupabase(): Promise<Guild[]> {
   try {
+    // LAYER 1: Get on-chain guild data from Subsquid (source of truth for name)
+    const apolloClient = getApolloClient
+    const { data: subsquidData, error: subsquidError } = await apolloClient.query({
+      query: GET_ALL_GUILDS,
+      variables: {
+        limit: 1000, // Get all guilds
+        offset: 0,
+        orderBy: ['totalMembers_DESC'],
+      },
+    })
+
+    if (subsquidError) {
+      console.error('[guild/list] Failed to fetch guilds from Subsquid:', subsquidError)
+    }
+
+    // Build map of on-chain guild data (guild_id -> on-chain data)
+    const onChainGuildsMap = new Map<string, any>()
+    if (subsquidData?.guilds) {
+      for (const guild of subsquidData.guilds) {
+        onChainGuildsMap.set(guild.id, guild)
+      }
+    }
+
+    // LAYER 2: Get guild metadata from Supabase (description, banner only)
     const supabase = createClient()
 
     // LAYER 1: Get all guild metadata
@@ -252,17 +278,18 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
 
     // Build guild list from metadata + cached stats
     const guildList: Guild[] = guilds.map((guild) => {
+      const onChainGuild = onChainGuildsMap.get(guild.guild_id)
       const stats = statsMap.get(guild.guild_id)
 
       return {
         id: guild.guild_id,
         chain: 'base' as const,
-        name: guild.name || 'Unknown Guild',
-        leader: stats?.leader_address || '',
-        totalPoints: stats?.treasury_points || 0,
-        memberCount: stats?.member_count || 0,
-        level: stats?.level || 1,
-        active: stats?.is_active !== false,
+        name: onChainGuild?.name || guild.name || 'Unknown Guild', // Prioritize on-chain name
+        leader: stats?.leader_address || onChainGuild?.owner || '',
+        totalPoints: stats?.treasury_points || onChainGuild?.treasuryPoints || 0,
+        memberCount: stats?.member_count || onChainGuild?.totalMembers || 0,
+        level: stats?.level || onChainGuild?.level || 1,
+        active: stats?.is_active !== false && onChainGuild?.isActive !== false,
         description: guild.description || undefined,
         banner: guild.banner || undefined,
       }
