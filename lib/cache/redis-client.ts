@@ -105,11 +105,11 @@ process.on('SIGTERM', async () => {
   console.log('[Redis] SIGTERM received, closing Redis connection')
   try {
     // Only quit if connection is active (not already closed/ended)
-    if (_getRedisClient().status === 'ready' || _getRedisClient().status === 'connect' || _getRedisClient().status === 'connecting') {
+    if (_redis.status === 'ready' || _redis.status === 'connect' || _redis.status === 'connecting') {
       await _redis.quit()
       console.log('[Redis] Redis connection gracefully closed')
     } else {
-      console.log(`[Redis] Connection already ${_getRedisClient().status}, skipping quit`)
+      console.log(`[Redis] Connection already ${_redis.status}, skipping quit`)
     }
   } catch (error) {
     // Ignore errors during shutdown
@@ -123,11 +123,11 @@ process.on('SIGINT', async () => {
   console.log('[Redis] SIGINT received, closing Redis connection')
   try {
     // Only quit if connection is active (not already closed/ended)
-    if (_getRedisClient().status === 'ready' || _getRedisClient().status === 'connect' || _getRedisClient().status === 'connecting') {
+    if (_redis.status === 'ready' || _redis.status === 'connect' || _redis.status === 'connecting') {
       await _redis.quit()
       console.log('[Redis] Redis connection gracefully closed')
     } else {
-      console.log(`[Redis] Connection already ${_getRedisClient().status}, skipping quit`)
+      console.log(`[Redis] Connection already ${_redis.status}, skipping quit`)
     }
   } catch (error) {
     // Ignore errors during shutdown
