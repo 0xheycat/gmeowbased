@@ -449,7 +449,7 @@ export async function getGuildStats(guildId: string) {
         owner
         createdAt
         totalMembers
-        totalPoints
+        treasuryPoints
         members(limit: 20, orderBy: pointsContributed_DESC) {
           id
           user {
@@ -489,7 +489,7 @@ export async function getGuildStats(guildId: string) {
       owner: guild.owner,
       createdAt: Number(guild.createdAt) * 1000, // Convert to milliseconds
       totalMembers: guild.totalMembers,
-      totalPoints: Number(guild.totalPoints || 0),
+      totalPoints: Number(guild.treasuryPoints || 0), // Use treasuryPoints from schema
       members: guild.members.map((member: any) => ({
         id: member.id,
         address: member.user.id,
