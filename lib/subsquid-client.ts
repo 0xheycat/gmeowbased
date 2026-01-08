@@ -79,10 +79,11 @@ import { logError } from './middleware/error-handler'
 // CONFIGURATION
 // ============================================================================
 
-const SUBSQUID_URL =
-  process.env.NEXT_PUBLIC_SUBSQUID_URL ||
-  process.env.SUBSQUID_URL ||
-  'http://localhost:4350/graphql'
+const SUBSQUID_URL_TEMP = process.env.NEXT_PUBLIC_SUBSQUID_URL || process.env.SUBSQUID_URL
+if (!SUBSQUID_URL_TEMP) {
+  throw new Error('NEXT_PUBLIC_SUBSQUID_URL environment variable is required')
+}
+const SUBSQUID_URL: string = SUBSQUID_URL_TEMP
 
 const DEFAULT_TIMEOUT = 10000 // 10 seconds
 const MAX_RETRIES = 2
