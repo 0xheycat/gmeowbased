@@ -6,6 +6,7 @@
  * Auth: Optional (public guild data)
  * Rate Limit: 60 requests/hour
  * Cache: 120s with stale-while-revalidate
+ * Updated: Jan 8, 2026 - Fixed Vercel deployment
  * 
  * Query Parameters:
  * - period: 'week' | 'month' | 'all-time' (default: 'month')
