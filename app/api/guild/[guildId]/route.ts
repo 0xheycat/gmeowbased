@@ -47,6 +47,7 @@ import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { getAllWalletsForFID } from '@/lib/integrations/neynar-wallet-sync'
+import { gql } from '@apollo/client'
 
 // ==========================================
 // Helper Functions
@@ -288,44 +289,61 @@ async function fetchGuildFromSupabase(
       return null
     }
     
-    // LAYER 2: Use atomic RPC function to calculate stats (BUG #2 FIX)
-    // This prevents race conditions by using SERIALIZABLE transaction isolation
-    const { data: statsData, error: statsError } = await supabase
-      .rpc('get_guild_stats_atomic', { p_guild_id: guildId })
-      .single()
+    // LAYER 2: Query Subsquid directly for guild stats
+    // BUG FIX (Jan 8, 2026): guild_events table is empty, query Subsquid instead
+    const { getSubsquidClient } = await import('@/lib/subsquid-client')
+    const client = getSubsquidClient()
     
-    if (statsError || !statsData) {
-      console.error('[guild-detail] Error fetching atomic stats:', statsError)
+    const { data: subsquidData } = await client.query({
+      query: gql`
+        query GetGuildWithMembers($guildId: String!) {
+          guildById(id: $guildId) {
+            id
+            name
+            owner
+            treasuryPoints
+            totalMembers
+            level
+            officers {
+              address
+            }
+            members(where: { isActive_eq: true }) {
+              id
+              role
+              pointsContributed
+              joinedAt
+              user {
+                id
+              }
+            }
+          }
+        }
+      `,
+      variables: { guildId },
+    })
+    
+    const guildStats = subsquidData?.guildById
+    if (!guildStats) {
+      console.error('[guild-detail] Guild not found in Subsquid:', guildId)
       return null
     }
     
-    // Extract stats from RPC response (with type assertion)
-    const stats = statsData as {
-      leader_address: string
-      total_points: number
-      member_count: number
-      level: number
-      officers: any
-      member_points: any
-      member_addresses: string[]
-    }
+    // Extract stats from Subsquid response
+    const leaderAddress = guildStats.owner
+    const totalPoints = parseInt(guildStats.treasuryPoints || '0')
+    const memberCount = guildStats.totalMembers
+    const level = guildStats.level || 1
+    const memberAddresses = guildStats.members.map((m: any) => m.user.id)
     
-    const {
-      leader_address: leaderAddress,
-      total_points: totalPoints,
-      member_count: memberCount,
-      level,
-      officers: officersJson,
-      member_points: memberPointsJson,
-      member_addresses: memberAddresses
-    } = stats
-    
-    // Parse JSON fields
+    // Parse officers and member points
     const officers = new Set<string>(
-      (officersJson as any[]).map((o: any) => o.address)
+      (guildStats.officers || []).map((o: any) => o.address)
     )
     const memberPointsMap = new Map<string, number>(
-      Object.entries(memberPointsJson as Record<string, number>)
+      guildStats.members.map((m: any) => [
+        m.user.id,
+        parseInt(m.pointsContributed || '0')
+      ])
     )
     
     // ============================================================================
