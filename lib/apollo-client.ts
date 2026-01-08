@@ -81,13 +81,29 @@ const retryLink = new ApolloLink((operation, forward) => {
 
 /**
  * HTTP link to Subsquid GraphQL endpoint
+ * 
+ * NOTE: AbortSignal.timeout() may not be available in all browsers, so we use
+ * a custom fetch implementation with manual timeout handling
  */
 const httpLink = new HttpLink({
   uri: SUBSQUID_GRAPHQL_URL,
   credentials: 'same-origin',
-  fetchOptions: {
-    // Timeout after 120 seconds (production Subsquid cloud can be slow on complex queries)
-    signal: AbortSignal.timeout(120000),
+  // Custom fetch with timeout support
+  fetch: async (uri, options) => {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 60000) // 60 second timeout (reduced from 120s)
+
+    try {
+      const response = await fetch(uri, {
+        ...options,
+        signal: controller.signal,
+      })
+      clearTimeout(timeout)
+      return response
+    } catch (error) {
+      clearTimeout(timeout)
+      throw error
+    }
   },
 })
 
