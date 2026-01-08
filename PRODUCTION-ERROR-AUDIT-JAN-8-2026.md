@@ -6,11 +6,19 @@
 **Updated:** January 8, 2026 22:00 UTC (Session 2 fixes deployed)  
 **Auditor:** GitHub Copilot (Claude Sonnet 4.5)
 
-**✅ RESOLUTION STATUS (Session 2 - Guild/Referral Fixes):**
+**✅ RESOLUTION STATUS (Session 3 - Guild Clickability & Supabase):**
+- **Code Fixes:** ✅ Deployed (commit: 71dee6d)
+- **Guild Clickability:** ✅ Fixed - added onClick handler
+- **Supabase Metadata:** ✅ Fixed - restored REQUIRED metadata fetch
+- **Build Status:** ✅ Passed locally
+- **Deployment:** ✅ **DEPLOYED** (Vercel building)
+- **Production Tests:** ⏳ **AWAITING VERIFICATION**
+
+**✅ PREVIOUS STATUS (Session 2 - Guild/Referral Fixes):**
 - **Code Fixes:** ✅ Deployed (commit: adae4e5)
 - **Guild Page GraphQL:** ✅ Fixed orderBy array type
 - **Referral Analytics:** ✅ Endpoint restored
-- **Supabase Error:** ✅ Graceful degradation added
+- **Supabase Error:** ⚠️ REVERTED (was made optional, now REQUIRED)
 - **Database Cleanup:** ✅ Old data removed
 - **Build Status:** ✅ Passed locally
 - **Deployment:** ✅ **DEPLOYED** (Vercel building)
@@ -87,6 +95,177 @@ curl https://gmeowhq.art/api/frame/leaderboard
 - **ScoringModule** deployed to Base mainnet: ~Dec 31, 2025 / Jan 1, 2026
 - **Subsquid schema** already updated to Phase 3.2G with full ScoringModule support
 - All on-chain scoring data (level, rank, multiplier, breakdown) is indexed and working
+
+---
+
+## 🆕 SESSION 3: GUILD CLICKABILITY & SUPABASE FIXES (Jan 8, 2026 Evening)
+
+**Deployment:** Commit `71dee6d`  
+**Time:** Jan 8, 2026 22:15 UTC  
+**Status:** ✅ DEPLOYED (Vercel building)
+
+### Issues Identified from Production Testing (Post-Session 2)
+
+User tested production after Session 2 deployment and found:
+
+---
+
+### Issue 1: Guild Cards Not Clickable ✅ FIXED
+
+**Error:** Guild list items on `/guild` page are not clickable - no navigation when clicking cards
+
+**Location:** `components/guild/GuildDiscoveryPage.tsx` - guild card button rendering
+
+**Impact:** Users cannot navigate to individual guild pages
+
+**Root Cause:**
+- Button element had keyboard handler (`{...keyboardProps}`) but missing `onClick` handler
+- Keyboard navigation works (Enter/Space) but mouse clicks don't trigger navigation
+
+**Fix Applied:**
+```typescript
+// BEFORE (BROKEN):
+<button
+  key={guild.id}
+  {...keyboardProps}
+  role="button"
+  aria-label={ariaLabel}
+  className={`bg-white dark:bg-gray-800 ... text-left ${FOCUS_STYLES.ring}`}
+>
+
+// AFTER (FIXED):
+<button
+  key={guild.id}
+  onClick={() => handleGuildClick(guild.id)}  // ✅ Added onClick
+  {...keyboardProps}
+  role="button"
+  aria-label={ariaLabel}
+  className={`bg-white dark:bg-gray-800 ... text-left cursor-pointer ${FOCUS_STYLES.ring}`}  // ✅ Added cursor-pointer
+>
+```
+
+**Files Changed:**
+- `components/guild/GuildDiscoveryPage.tsx` (line 345-352)
+
+**Navigation Handler:**
+```typescript
+const handleGuildClick = (guildId: string) => {
+  router.push(`/guild/${guildId}`)  // ✅ Already existed, just not connected to onClick
+}
+```
+
+---
+
+### Issue 2: Supabase Metadata Made Optional (Architecture Violation) ✅ FIXED
+
+**Error:** Session 2 incorrectly made Supabase metadata optional - hybrid architecture REQUIRES both Subsquid + Supabase
+
+**Location:** `components/guild/GuildDiscoveryPage.tsx` - metadata fetch
+
+**Impact:** Guild metadata (descriptions, banners) not loading - breaking hybrid architecture design
+
+**Root Cause:**
+- Session 2 fix added incorrect client-side env check that skipped Supabase fetch
+- Architecture comment states: "Hybrid - GraphQL (Subsquid) + Supabase"
+- Subsquid provides on-chain data (treasury, members, level)
+- Supabase provides off-chain metadata (description, banner, custom data)
+
+**Fix Applied:**
+```typescript
+// BEFORE (SESSION 2 - WRONG):
+useEffect(() => {
+  async function fetchMetadata() {
+    try {
+      // ❌ Skip if Supabase not configured (metadata is optional)
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        setMetadataLoading(false)
+        return
+      }
+
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('guild_metadata')
+        .select('guild_id, description, banner')
+      
+      if (error) {
+        console.error('[GuildDiscovery] Failed to load metadata:', error)
+        return  // ❌ Silently ignore error
+      }
+      // ... rest
+    } catch (err) {
+      console.warn('[GuildDiscovery] Metadata fetch error (non-critical):', err)  // ❌ Marked as "non-critical"
+    }
+  }
+}, [])
+
+// AFTER (SESSION 3 - CORRECT):
+useEffect(() => {
+  async function fetchMetadata() {
+    try {
+      const supabase = createClient()  // ✅ No env check - let createClient() handle config
+      const { data, error } = await supabase
+        .from('guild_metadata')
+        .select('guild_id, description, banner')
+      
+      if (error) {
+        console.error('[GuildDiscovery] Failed to load guild metadata from Supabase:', error)
+        throw new Error(`Supabase metadata fetch failed: ${error.message}`)  // ✅ Throw error
+      }
+
+      // ... process metadata
+    } catch (err) {
+      console.error('[GuildDiscovery] CRITICAL: Guild metadata fetch failed (hybrid architecture requires Supabase):', err)
+      throw err  // ✅ Propagate error - metadata is REQUIRED
+    } finally {
+      setMetadataLoading(false)
+    }
+  }
+  fetchMetadata()
+}, [])
+```
+
+**Files Changed:**
+- `components/guild/GuildDiscoveryPage.tsx` (lines 79-110)
+
+**Architecture Context:**
+```typescript
+/**
+ * GuildDiscoveryPage Component
+ * 
+ * Architecture: Hybrid - GraphQL (Subsquid) + Supabase  // ✅ BOTH required
+ * 
+ * Data Sources:
+ * - Subsquid GraphQL: guild treasury, level, member count (on-chain)
+ * - Supabase: guild description, banner, metadata (off-chain)  // ✅ REQUIRED
+ */
+```
+
+**Why Supabase is Required:**
+1. **Hybrid Architecture Design** - intentionally splits on-chain (Subsquid) and off-chain (Supabase) data
+2. **User-Generated Content** - guild descriptions, banners, custom metadata stored in Supabase
+3. **Not Optional** - without Supabase, guilds have no descriptions or visual identity
+4. **Env Vars Exist** - `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+---
+
+### Session 3 Summary
+
+**What Changed:**
+- ✅ Added `onClick` handler to guild cards (fixes clickability)
+- ✅ Removed incorrect Supabase env check (was breaking hybrid architecture)
+- ✅ Restored REQUIRED Supabase metadata fetch with proper error handling
+- ✅ Added `cursor-pointer` class for better UX
+
+**What Was Wrong in Session 2:**
+- ❌ Session 2 misunderstood Supabase error as "optional feature"
+- ❌ Made Supabase metadata optional when it's architecturally REQUIRED
+- ❌ Added client-side env check that doesn't work (`process.env.NEXT_PUBLIC_*` in useEffect)
+
+**Correct Understanding:**
+- ✅ Supabase is REQUIRED for hybrid architecture (not optional)
+- ✅ Env vars already exist in `.env.local`
+- ✅ If Supabase fails, page should error (not gracefully degrade)
+- ✅ `createClient()` handles env validation internally
 
 ---
 
