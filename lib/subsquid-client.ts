@@ -47,8 +47,8 @@
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * DATA SOURCE:
- * - Subsquid Indexer: https://squid.subsquid.io/gmeow-indexer/graphql (production)
- * - Subsquid Indexer: http://localhost:4350/graphql (local dev)
+ * - Subsquid Indexer: https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql (production)
+ * - Environment Variable: NEXT_PUBLIC_SUBSQUID_URL
  * 
  * FEATURES:
  * ✅ User on-chain stats (totalPoints, currentStreak, lifetimeGMs)
@@ -332,6 +332,19 @@ export class SubsquidClient {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
+        // Get response body for debugging
+        const errorText = await response.text()
+        
+        // Log detailed error with query and variables
+        console.error('[SubsquidClient] HTTP error:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: this.url,
+          query: query.substring(0, 200) + '...', // First 200 chars
+          variables,
+          responseBody: errorText.substring(0, 500), // First 500 chars
+        })
+        
         throw new Error(`Subsquid HTTP error: ${response.status} ${response.statusText}`)
       }
 
@@ -1228,7 +1241,7 @@ export async function getTipAnalytics(
   until?: string | Date
 ): Promise<AnalyticsSeries> {
   const query = `
-    query GetTipAnalytics($since: String!, $until: String!) {
+    query GetTipAnalytics($since: DateTime!, $until: DateTime!) {
       tipEvents(where: { timestamp_gte: $since, timestamp_lte: $until }) {
         id
         amount
@@ -1272,7 +1285,7 @@ export async function getQuestCompletionAnalytics(
   until?: string | Date
 ): Promise<AnalyticsSeries> {
   const query = `
-    query GetQuestCompletionAnalytics($since: String!, $until: String!) {
+    query GetQuestCompletionAnalytics($since: DateTime!, $until: DateTime!) {
       questCompletions(where: { timestamp_gte: $since, timestamp_lte: $until }) {
         id
         pointsAwarded
@@ -1316,10 +1329,10 @@ export async function getBadgeMintAnalytics(
   until?: string | Date
 ): Promise<AnalyticsSeries> {
   const query = `
-    query GetBadgeMintAnalytics($since: String!, $until: String!) {
-      badgeMints(where: { mintedAt_gte: $since, mintedAt_lte: $until }) {
+    query GetBadgeMintAnalytics($since: DateTime!, $until: DateTime!) {
+      badgeMints(where: { timestamp_gte: $since, timestamp_lte: $until }) {
         id
-        mintedAt
+        timestamp
       }
     }
   `
@@ -1332,14 +1345,14 @@ export async function getBadgeMintAnalytics(
   try {
     const client = getSubsquidClient()
     const response = await client['query']<{
-      badgeMints: Array<{ id: string; mintedAt: string }>
+      badgeMints: Array<{ id: string; timestamp: string }>
     }>(query, { since: sinceDate, until: untilDate })
 
     if (!response?.badgeMints) {
       return { daily: Array(7).fill(0), last24h: 0, previous24h: 0, total7d: 0 }
     }
 
-    return calculateAnalyticsSeries(response.badgeMints, 'mintedAt')
+    return calculateAnalyticsSeries(response.badgeMints, 'timestamp')
   } catch (error) {
     console.error('[getBadgeMintAnalytics]', error)
     return { daily: Array(7).fill(0), last24h: 0, previous24h: 0, total7d: 0 }
@@ -1402,7 +1415,7 @@ export async function getGuildDepositAnalytics(
   until?: string | Date
 ): Promise<AnalyticsSeries> {
   const query = `
-    query GetGuildDepositAnalytics($since: String!, $until: String!) {
+    query GetGuildDepositAnalytics($since: BigInt!, $until: BigInt!) {
       guildEvents(where: { 
         eventType_eq: "PointsDeposited",
         timestamp_gte: $since, 
@@ -1415,16 +1428,17 @@ export async function getGuildDepositAnalytics(
     }
   `
 
-  const sinceDate = typeof since === 'string' ? since : since.toISOString()
-  const untilDate = until 
-    ? (typeof until === 'string' ? until : until.toISOString())
-    : new Date().toISOString()
+  // Convert to Unix timestamp in milliseconds (BigInt)
+  const sinceTimestamp = typeof since === 'string' ? new Date(since).getTime() : since.getTime()
+  const untilTimestamp = until 
+    ? (typeof until === 'string' ? new Date(until).getTime() : until.getTime())
+    : Date.now()
 
   try {
     const client = getSubsquidClient()
     const response = await client['query']<{
       guildEvents: Array<{ id: string; amount: string; timestamp: string }>
-    }>(query, { since: sinceDate, until: untilDate })
+    }>(query, { since: sinceTimestamp, until: untilTimestamp })
 
     if (!response?.guildEvents) {
       return { daily: Array(7).fill(0), last24h: 0, previous24h: 0, total7d: 0 }

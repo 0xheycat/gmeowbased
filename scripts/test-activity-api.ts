@@ -9,7 +9,7 @@
 
 const ORACLE_WALLET = '0x8870C155666809609176260F2B65a626C000D773'
 const FID_18139_WALLET = '0x7539472dad6a371e6e152c5a203469aa32314130'
-const SUBSQUID_URL = 'http://localhost:4350/graphql'
+const SUBSQUID_URL = process.env.NEXT_PUBLIC_SUBSQUID_URL || 'https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql'
 const API_URL = 'http://localhost:3000'
 
 async function testSubsquidData(wallet: string) {

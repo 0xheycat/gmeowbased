@@ -20,7 +20,7 @@
  * ✅ NEW SOURCE: Subsquid LeaderboardEntry entities (pre-computed rankings)
  *   - Purpose: Rankings, points, stats (95% of leaderboard calculation)
  *   - Performance: <10ms for top 100 query
- *   - Endpoint: http://localhost:4350/graphql
+ *   - Endpoint: Production cloud endpoint via NEXT_PUBLIC_SUBSQUID_URL
  * 
  * HYBRID QUERY PATTERN:
  * 1. Query Subsquid: getLeaderboard() → [{ wallet, rank, totalScore, basePoints, ... }]
