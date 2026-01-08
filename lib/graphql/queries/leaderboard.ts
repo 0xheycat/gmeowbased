@@ -69,7 +69,7 @@ export const GET_TOP_USERS = gql`
 export const GET_USER_LEADERBOARD_POSITION = gql`
   ${LEADERBOARD_ENTRY_FIELDS}
   query GetUserLeaderboardPosition($address: String!) {
-    leaderboardEntry(id: $address) {
+    leaderboardEntries(where: { id_eq: $address }, limit: 1) {
       ...LeaderboardEntryFields
     }
   }
