@@ -202,7 +202,12 @@ export async function POST(req: NextRequest) {
           }
         `
         
-        const response = await fetch(process.env.NEXT_PUBLIC_SUBSQUID_URL || 'http://localhost:4350/graphql', {
+        const subsquidUrl = process.env.NEXT_PUBLIC_SUBSQUID_URL
+        if (!subsquidUrl) {
+          throw new Error('NEXT_PUBLIC_SUBSQUID_URL not configured')
+        }
+        
+        const response = await fetch(subsquidUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
