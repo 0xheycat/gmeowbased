@@ -39,9 +39,8 @@ import GuildLeaderboard from '@/components/guild/GuildLeaderboard'
 import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA } from '@/lib/utils/accessibility'
 import { useGuilds, type Guild } from '@/hooks/useGuild'
-import { createClient } from '@/lib/supabase/edge'
 
-// Guild metadata from Supabase
+// Guild metadata from API (uses infrastructure: Supabase + caching + rate limiting)
 interface GuildMetadata {
   guild_id: string
   description?: string
@@ -81,35 +80,38 @@ export default function GuildDiscoveryPage() {
     orderBy: sortBy === 'activity' ? 'recent' : sortBy, // Map 'activity' to 'recent'
   })
 
-  // Fetch guild metadata from Supabase (REQUIRED - hybrid architecture)
+  // Fetch guild metadata from API (uses infrastructure: Supabase + caching + rate limiting)
+  // NEVER create client-side Supabase client - use API routes
   useEffect(() => {
     async function fetchMetadata() {
       try {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from('guild_metadata')
-          .select('guild_id, description, banner')
+        const response = await fetch('/api/guild/list?limit=100')
         
-        if (error) {
-          console.error('[GuildDiscovery] Failed to load guild metadata from Supabase:', error)
-          throw new Error(`Supabase metadata fetch failed: ${error.message}`)
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`)
         }
 
-        // Convert to lookup object
-        const metadataMap = (data || []).reduce((acc, item) => {
-          acc[item.guild_id] = {
-            guild_id: item.guild_id,
-            description: item.description || undefined,
-            banner: item.banner || undefined,
+        const result = await response.json()
+        
+        if (!result.success || !result.data?.guilds) {
+          throw new Error('Invalid API response format')
+        }
+
+        // Convert API response to metadata lookup object
+        const metadataMap = result.data.guilds.reduce((acc: Record<string, GuildMetadata>, guild: any) => {
+          acc[guild.id] = {
+            guild_id: guild.id,
+            description: guild.description || undefined,
+            banner: guild.banner || undefined,
           }
           return acc
-        }, {} as Record<string, GuildMetadata>)
+        }, {})
 
         setGuildMetadata(metadataMap)
       } catch (err) {
-        console.error('[GuildDiscovery] CRITICAL: Guild metadata fetch failed (hybrid architecture requires Supabase):', err)
-        // Metadata is REQUIRED for hybrid architecture - propagate error
-        throw err
+        console.error('[GuildDiscovery] Failed to fetch guild metadata from API:', err)
+        // Don't throw - graceful degradation with empty metadata
+        setGuildMetadata({})
       } finally {
         setMetadataLoading(false)
       }
