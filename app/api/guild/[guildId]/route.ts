@@ -291,22 +291,19 @@ async function fetchGuildFromSupabase(
 
     const onChainGuild = subsquidData?.guild
 
-    // LAYER 2: Get guild metadata from Supabase (description, banner only)
+    // LAYER 2: Get guild metadata from Supabase (description, banner only) - OPTIONAL
     const supabase = createClient()
     
-    const { data: guildData, error: guildError } = await supabase
+    const { data: guildData } = await supabase
       .from('guild_metadata')
       .select('guild_id, name, description, banner, created_at')
       .eq('guild_id', guildId)
-      .single()
+      .maybeSingle() // ✅ Returns null if not found (no error)
     
-    if (guildError || !guildData) {
-      console.error('[guild-detail] Guild metadata not found:', guildError)
-      // If no Supabase metadata but on-chain data exists, continue with on-chain only
-      if (!onChainGuild) {
-        return null
-      }
-    }
+    // Use on-chain guild data if no metadata in Supabase
+    const guildName = onChainGuild?.name || guildData?.name || 'Unknown Guild'
+    const guildDescription = guildData?.description || ''
+    const guildBanner = guildData?.banner || ''
     
     // LAYER 2: Query Subsquid directly for guild stats
     // BUG FIX (Jan 8, 2026): guild_events table is empty, query Subsquid instead
@@ -609,7 +606,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
       .from('guild_metadata')
       .select('name')
       .eq('guild_id', guildId.toString())
-      .single()
+      .maybeSingle() // ✅ Returns null if not found
     
     const { data: events } = await supabase
       .from('guild_events')
