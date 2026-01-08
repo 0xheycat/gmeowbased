@@ -6,7 +6,15 @@
 **Updated:** January 8, 2026 22:00 UTC (Session 2 fixes deployed)  
 **Auditor:** GitHub Copilot (Claude Sonnet 4.5)
 
-**✅ RESOLUTION STATUS (Session 4 - UI/UX Improvements):**
+**✅ RESOLUTION STATUS (Session 5 - Supabase Client-Side Fix):**
+- **Code Fixes:** ✅ Deployed (commit: 166d52a)
+- **Supabase Error:** ✅ Fixed - removed client-side createClient()
+- **API Integration:** ✅ Using /api/guild/list infrastructure
+- **Build Status:** ✅ Passed locally
+- **Deployment:** ✅ **DEPLOYED** (Vercel building)
+- **Production Tests:** ⏳ **AWAITING VERIFICATION**
+
+**✅ PREVIOUS STATUS (Session 4 - UI/UX Improvements):**
 - **Code Fixes:** ✅ Deployed (commit: 2e274dd)
 - **Create Guild Button:** ✅ Redesigned with modern professional UI
 - **Button Position:** ✅ Moved to header for better visibility
@@ -103,6 +111,199 @@ curl https://gmeowhq.art/api/frame/leaderboard
 - **ScoringModule** deployed to Base mainnet: ~Dec 31, 2025 / Jan 1, 2026
 - **Subsquid schema** already updated to Phase 3.2G with full ScoringModule support
 - All on-chain scoring data (level, rank, multiplier, breakdown) is indexed and working
+
+---
+
+## 🆕 SESSION 5: SUPABASE CLIENT-SIDE FIX (Jan 8, 2026 Evening)
+
+**Deployment:** Commit `166d52a`  
+**Time:** Jan 8, 2026 23:00 UTC  
+**Status:** ✅ DEPLOYED (Vercel building)
+
+### Critical Error: Client-Side Supabase Usage
+
+**Production Error:**
+```javascript
+[GuildDiscovery] CRITICAL: Guild metadata fetch failed (hybrid architecture requires Supabase): Error: Supabase not configured
+    at d (9427-500c63f7cda875dc.js:1:2145)
+    at page-87418f94aec8bc94.js:1:620
+```
+
+---
+
+### Issue 1: GuildDiscoveryPage Creating Client-Side Supabase Client ✅ FIXED
+
+**Problem:**
+- Component was calling `createClient()` from `@/lib/supabase/edge` on client side
+- Violates infrastructure architecture (all DB access must go through API routes)
+- Bypasses caching, rate limiting, and security layers
+- Error: "Supabase not configured" in production console
+
+**Location:** `components/guild/GuildDiscoveryPage.tsx` (lines 88-118)
+
+**Architecture Violation:**
+```
+❌ WRONG: Client → Supabase (direct)
+✓ CORRECT: Client → API Route → Supabase (with infrastructure)
+```
+
+**Root Cause:**
+- Direct Supabase client creation in component
+- Missing infrastructure pattern enforcement
+- No centralized connection pooling
+- No caching or rate limiting
+
+**Fix Applied:**
+
+**1. Remove Client-Side Supabase Import:**
+```typescript
+// BEFORE (WRONG):
+import { createClient } from '@/lib/supabase/edge'
+
+// AFTER (CORRECT):
+// Removed - NEVER create client-side Supabase clients
+```
+
+**2. Replace with API Route Call:**
+```typescript
+// BEFORE (CLIENT-SIDE SUPABASE):
+useEffect(() => {
+  async function fetchMetadata() {
+    try {
+      const supabase = createClient()  // ❌ Client-side DB access
+      const { data, error } = await supabase
+        .from('guild_metadata')
+        .select('guild_id, description, banner')
+      
+      if (error) {
+        throw new Error(`Supabase metadata fetch failed: ${error.message}`)
+      }
+      
+      const metadataMap = (data || []).reduce((acc, item) => {
+        acc[item.guild_id] = {
+          guild_id: item.guild_id,
+          description: item.description || undefined,
+          banner: item.banner || undefined,
+        }
+        return acc
+      }, {} as Record<string, GuildMetadata>)
+      
+      setGuildMetadata(metadataMap)
+    } catch (err) {
+      console.error('[GuildDiscovery] CRITICAL:', err)
+      throw err  // ❌ Hard error, no graceful degradation
+    } finally {
+      setMetadataLoading(false)
+    }
+  }
+  fetchMetadata()
+}, [])
+
+// AFTER (API ROUTE WITH INFRASTRUCTURE):
+useEffect(() => {
+  async function fetchMetadata() {
+    try {
+      const response = await fetch('/api/guild/list?limit=100')  // ✓ API route
+      
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+      }
+      
+      const result = await response.json()
+      
+      if (!result.success || !result.data?.guilds) {
+        throw new Error('Invalid API response format')
+      }
+      
+      // Convert API response to metadata lookup
+      const metadataMap = result.data.guilds.reduce((acc: Record<string, GuildMetadata>, guild: any) => {
+        acc[guild.id] = {
+          guild_id: guild.id,
+          description: guild.description || undefined,
+          banner: guild.banner || undefined,
+        }
+        return acc
+      }, {})
+      
+      setGuildMetadata(metadataMap)
+    } catch (err) {
+      console.error('[GuildDiscovery] Failed to fetch guild metadata from API:', err)
+      setGuildMetadata({})  // ✓ Graceful degradation
+    } finally {
+      setMetadataLoading(false)
+    }
+  }
+  fetchMetadata()
+}, [])
+```
+
+**3. Infrastructure Benefits:**
+
+**API Route (`/api/guild/list`):**
+- ✓ **Caching:** 60s cache, 120s stale-while-revalidate
+- ✓ **Rate Limiting:** 60 requests/minute per IP
+- ✓ **Connection Pooling:** Shared Supabase connection
+- ✓ **Security:** 10-layer security pattern
+- ✓ **Error Masking:** No sensitive data exposed
+- ✓ **Audit Logging:** All requests tracked
+- ✓ **Type Safety:** Zod validation
+- ✓ **CORS Headers:** Controlled origins
+- ✓ **Response Headers:** Security headers (X-Content-Type-Options, etc.)
+
+**Before vs After:**
+
+| Aspect | Before (Client-Side) | After (API Route) |
+|--------|----------------------|-------------------|
+| **Database Access** | Direct Supabase client | Via API infrastructure |
+| **Caching** | None | 60s cache + 120s SWR |
+| **Rate Limiting** | None | 60 req/min per IP |
+| **Connection Pool** | New connection each call | Shared pool |
+| **Error Handling** | Hard errors, crashes UI | Graceful degradation |
+| **Security** | Exposed credentials | 10-layer pattern |
+| **Audit Logging** | None | All requests tracked |
+| **Type Safety** | Runtime only | Zod + TypeScript |
+
+**Files Changed:**
+- `components/guild/GuildDiscoveryPage.tsx` (22 insertions, 20 deletions)
+
+**Testing:**
+```bash
+# Build test
+pnpm build
+# ✓ Compiled successfully in 43s
+
+# Production verification (after deployment)
+# 1. Open https://gmeowhq.art/guild
+# 2. Check browser console - NO "Supabase not configured" error
+# 3. Verify guild metadata loads (descriptions, banners)
+# 4. Confirm API route caching works (check Network tab)
+```
+
+**Impact:**
+- ✅ Eliminates client-side Supabase error
+- ✅ Enforces infrastructure architecture pattern
+- ✅ Enables caching and rate limiting
+- ✅ Improves performance (cached responses)
+- ✅ Better error handling (graceful degradation)
+- ✅ Centralizes database access control
+
+**Architecture Pattern Enforced:**
+```
+NEVER create client-side Supabase clients
+ALWAYS use API routes for database access
+
+Client → API Route → Infrastructure Layer → Supabase
+         ↑
+         └─ Caching, Rate Limiting, Security, Logging
+```
+
+**Session 5 Summary:**
+- ✅ Removed client-side `createClient()` from GuildDiscoveryPage
+- ✅ Replaced with `/api/guild/list` API route
+- ✅ Enforced infrastructure pattern (caching, rate limiting, security)
+- ✅ Added graceful degradation for metadata fetch errors
+- ✅ Tested build successfully
+- ✅ Deployed (commit: 166d52a)
 
 ---
 
