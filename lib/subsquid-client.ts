@@ -1245,7 +1245,7 @@ export async function getTipAnalytics(
   until?: string | Date
 ): Promise<AnalyticsSeries> {
   const query = `
-    query GetTipAnalytics($since: BigInt!, $until: BigInt!) {
+    query GetTipAnalytics($since: DateTime!, $until: DateTime!) {
       tipEvents(where: { timestamp_gte: $since, timestamp_lte: $until }) {
         id
         amount
@@ -1254,15 +1254,15 @@ export async function getTipAnalytics(
     }
   `
 
-  // Convert to Unix timestamps (seconds)
+  // Convert to ISO 8601 DateTime strings for Subsquid
   const sinceTimestamp = typeof since === 'string' 
-    ? Math.floor(new Date(since).getTime() / 1000).toString()
-    : Math.floor(since.getTime() / 1000).toString()
+    ? new Date(since).toISOString()
+    : since.toISOString()
   const untilTimestamp = until
     ? typeof until === 'string'
-      ? Math.floor(new Date(until).getTime() / 1000).toString()
-      : Math.floor(until.getTime() / 1000).toString()
-    : Math.floor(Date.now() / 1000).toString()
+      ? new Date(until).toISOString()
+      : until.toISOString()
+    : new Date().toISOString()
 
   try {
     const client = getSubsquidClient()
@@ -1294,7 +1294,7 @@ export async function getQuestCompletionAnalytics(
   until?: string | Date
 ): Promise<AnalyticsSeries> {
   const query = `
-    query GetQuestCompletionAnalytics($since: BigInt!, $until: BigInt!) {
+    query GetQuestCompletionAnalytics($since: DateTime!, $until: DateTime!) {
       questCompletions(where: { timestamp_gte: $since, timestamp_lte: $until }) {
         id
         pointsAwarded
@@ -1303,15 +1303,15 @@ export async function getQuestCompletionAnalytics(
     }
   `
 
-  // Convert to Unix timestamps (seconds)
+  // Convert to ISO 8601 DateTime strings for Subsquid
   const sinceTimestamp = typeof since === 'string'
-    ? Math.floor(new Date(since).getTime() / 1000).toString()
-    : Math.floor(since.getTime() / 1000).toString()
+    ? new Date(since).toISOString()
+    : since.toISOString()
   const untilTimestamp = until
     ? typeof until === 'string'
-      ? Math.floor(new Date(until).getTime() / 1000).toString()
-      : Math.floor(until.getTime() / 1000).toString()
-    : Math.floor(Date.now() / 1000).toString()
+      ? new Date(until).toISOString()
+      : until.toISOString()
+    : new Date().toISOString()
 
   try {
     const client = getSubsquidClient()
@@ -1391,7 +1391,7 @@ export async function getGMEventAnalytics(
   until?: string | Date
 ): Promise<AnalyticsSeries> {
   const query = `
-    query GetGMEventAnalytics($since: String!, $until: String!) {
+    query GetGMEventAnalytics($since: BigInt!, $until: BigInt!) {
       gmEvents(where: { timestamp_gte: $since, timestamp_lte: $until }) {
         id
         timestamp
@@ -1399,16 +1399,21 @@ export async function getGMEventAnalytics(
     }
   `
 
-  const sinceDate = typeof since === 'string' ? since : since.toISOString()
-  const untilDate = until 
-    ? (typeof until === 'string' ? until : until.toISOString())
-    : new Date().toISOString()
+  // Convert to Unix timestamp in seconds (BigInt expects number as string)
+  const sinceTimestamp = typeof since === 'string' 
+    ? Math.floor(new Date(since).getTime() / 1000).toString()
+    : Math.floor(since.getTime() / 1000).toString()
+  const untilTimestamp = until 
+    ? (typeof until === 'string' 
+      ? Math.floor(new Date(until).getTime() / 1000).toString()
+      : Math.floor(until.getTime() / 1000).toString())
+    : Math.floor(Date.now() / 1000).toString()
 
   try {
     const client = getSubsquidClient()
     const response = await client['query']<{
       gmEvents: Array<{ id: string; timestamp: string }>
-    }>(query, { since: sinceDate, until: untilDate })
+    }>(query, { since: sinceTimestamp, until: untilTimestamp })
 
     if (!response?.gmEvents) {
       return { daily: Array(7).fill(0), last24h: 0, previous24h: 0, total7d: 0 }
@@ -1447,11 +1452,15 @@ export async function getGuildDepositAnalytics(
     }
   `
 
-  // Convert to Unix timestamp in milliseconds (BigInt)
-  const sinceTimestamp = typeof since === 'string' ? new Date(since).getTime() : since.getTime()
+  // Convert to Unix timestamp in seconds (BigInt expects seconds as strings)
+  const sinceTimestamp = typeof since === 'string' 
+    ? Math.floor(new Date(since).getTime() / 1000).toString() 
+    : Math.floor(since.getTime() / 1000).toString()
   const untilTimestamp = until 
-    ? (typeof until === 'string' ? new Date(until).getTime() : until.getTime())
-    : Date.now()
+    ? (typeof until === 'string' 
+      ? Math.floor(new Date(until).getTime() / 1000).toString() 
+      : Math.floor(until.getTime() / 1000).toString())
+    : Math.floor(Date.now() / 1000).toString()
 
   try {
     const client = getSubsquidClient()
@@ -1731,7 +1740,7 @@ export async function getPointsAnalytics(
     : new Date().toISOString()
 
   const query = `
-    query GetPointsAnalytics($since: BigInt!, $until: BigInt!) {
+    query GetPointsAnalytics($since: DateTime!, $until: DateTime!) {
       pointsTransactions(
         where: {
           timestamp_gte: $since,
@@ -1745,15 +1754,15 @@ export async function getPointsAnalytics(
     }
   `
 
-  // Convert to Unix timestamps (seconds)
+  // Convert to ISO 8601 DateTime strings for Subsquid
   const sinceTimestamp = typeof since === 'string'
-    ? Math.floor(new Date(since).getTime() / 1000).toString()
-    : Math.floor(since.getTime() / 1000).toString()
+    ? new Date(since).toISOString()
+    : since.toISOString()
   const untilTimestamp = until
     ? typeof until === 'string'
-      ? Math.floor(new Date(until).getTime() / 1000).toString()
-      : Math.floor(until.getTime() / 1000).toString()
-    : Math.floor(Date.now() / 1000).toString()
+      ? new Date(until).toISOString()
+      : until.toISOString()
+    : new Date().toISOString()
 
   try {
     const client = getSubsquidClient()
