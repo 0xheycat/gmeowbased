@@ -109,12 +109,12 @@ const envSchema = z.object({
   // REDIS / UPSTASH (REQUIRED for rate limiting)
   // ===================================================================
   
-  UPSTASH_REDIS_REST_URL: urlSchema.describe('Upstash Redis REST URL'),
+  UPSTASH_REDIS_REST_URL: urlSchema.optional().describe('Upstash Redis REST URL'),
   
   UPSTASH_REDIS_REST_TOKEN: z
     .string()
-    .min(1, 'UPSTASH_REDIS_REST_TOKEN is required')
-    .describe('Upstash Redis REST token'),
+    .optional()
+    .describe('Upstash Redis REST token (optional for build)'),
 
   // ===================================================================
   // CONTRACT ADDRESSES (Base Chain)
