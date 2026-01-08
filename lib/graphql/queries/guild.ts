@@ -27,7 +27,7 @@ export const GET_ALL_GUILDS = gql`
   query GetAllGuilds(
     $limit: Int = 20
     $offset: Int = 0
-    $orderBy: GuildOrderByInput = totalMembers_DESC
+    $orderBy: [GuildOrderByInput!] = [totalMembers_DESC]
   ) {
     guilds(
       limit: $limit

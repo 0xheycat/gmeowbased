@@ -85,6 +85,12 @@ export default function GuildDiscoveryPage() {
   useEffect(() => {
     async function fetchMetadata() {
       try {
+        // Skip if Supabase not configured (metadata is optional)
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          setMetadataLoading(false)
+          return
+        }
+
         const supabase = createClient()
         const { data, error } = await supabase
           .from('guild_metadata')
@@ -107,7 +113,8 @@ export default function GuildDiscoveryPage() {
 
         setGuildMetadata(metadataMap)
       } catch (err) {
-        console.error('[GuildDiscovery] Metadata fetch error:', err)
+        // Silently fail - metadata is optional
+        console.warn('[GuildDiscovery] Metadata fetch error (non-critical):', err)
       } finally {
         setMetadataLoading(false)
       }
