@@ -258,14 +258,32 @@ export default function GuildDiscoveryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          Discover Guilds
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Find and join guilds to collaborate with other players
-        </p>
+      {/* Header with Create Guild CTA */}
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            Discover Guilds
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Find and join guilds to collaborate with other players
+          </p>
+        </div>
+        
+        {/* Create Guild Button - Modern Professional Design */}
+        <button
+          onClick={() => router.push('/guild/create')}
+          className="group relative px-6 py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 min-h-[48px] min-w-[200px] flex items-center justify-center gap-2 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          aria-label="Create new guild for 100 BASE POINTS"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          <span className="flex flex-col items-start">
+            <span className="text-sm font-bold">Create Guild</span>
+            <span className="text-xs opacity-90 font-normal">100 BASE POINTS</span>
+          </span>
+          <div className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-200" aria-hidden="true" />
+        </button>
       </div>
 
       {/* Guild Leaderboard Section */}
@@ -308,16 +326,6 @@ export default function GuildDiscoveryPage() {
           <option value="treasury">Highest Treasury</option>
           <option value="activity">Most Active</option>
         </select>
-      </div>
-
-      {/* Create Guild Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => router.push('/guild/create')}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors min-h-[44px] focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          Create Guild (100 BASE POINTS)
-        </button>
       </div>
 
       {/* Guild Cards */}
