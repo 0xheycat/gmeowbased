@@ -67,6 +67,7 @@ export const BADGE_REGISTRY: BadgeRegistry = {
       "active": true,
       "autoAssign": true,
       "assignmentRule": "onboarding_complete",
+      "image_url": "/badges/neon-initiate.png",
       "metadata": {
         "tier": "common",
         "season": "Onboarding",

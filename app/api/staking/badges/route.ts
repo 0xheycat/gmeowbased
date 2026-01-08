@@ -65,6 +65,9 @@ export async function GET(request: NextRequest) {
     
     const result = await getCached('staking', cacheKey, async () => {
 
+    // Initialize Supabase client
+    const supabase = createClient()
+
     // Fetch currently staked badges from Subsquid
     const stakedBadges = await getActiveBadgeStakes(user)
     
@@ -89,16 +92,25 @@ export async function GET(request: NextRequest) {
         }
       }
 
-    // Build available badges list
-    // Since all badges are currently staked, available = 0
+    // Get badge templates from Supabase
+    const badgeIds = Array.from(badgeMap.keys())
+    const { data: badgeTemplates } = await supabase
+      .from('badge_templates')
+      .select('id, name, description, image_url, metadata')
+      .in('id', badgeIds)
+
+    const templateMap = new Map(badgeTemplates?.map((b: any) => [b.id, b]) || [])
+
+    // Build available badges list with real metadata
     const availableBadges: AvailableBadge[] = Array.from(badgeMap.entries()).map(([badgeId, staked]) => {
+      const template = templateMap.get(badgeId) as any
       return {
         badgeId,
-        name: `Badge #${badgeId}`,
-        description: 'Badge description',
-        imageUrl: `/badges/${badgeId}.png`,
-        tier: 'common',
-        owned: staked, // For now, owned = staked (all are staked)
+        name: template?.name || `Badge #${badgeId}`,
+        description: template?.description || 'Badge description',
+        imageUrl: template?.image_url || `/badges/placeholder.png`,
+        tier: (template?.metadata?.tier as string) || 'common',
+        owned: staked,
         staked,
         available: 0, // All are currently staked
         canStake: false,
