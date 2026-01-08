@@ -147,7 +147,6 @@
     "recharts": "^2.14.1",
     "satori": "^0.18.3",
     "server-only": "^0.0.1",
-    "supabase": "2.67.2",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^0.1.19",
@@ -161,6 +160,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@lhci/cli": "^0.15.1",
+    "supabase": "2.67.2",
     "@next/bundle-analyzer": "^16.0.6",
     "@playwright/test": "^1.57.0",
     "@testing-library/dom": "^10.4.1",

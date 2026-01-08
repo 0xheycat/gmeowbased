@@ -87,15 +87,44 @@ redis.on('reconnecting', (delay: number) => {
   console.log(`[Redis] Reconnecting in ${delay}ms`)
 })
 
+// Track if we've already initiated shutdown
+let isShuttingDown = false
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
+  if (isShuttingDown) return
+  isShuttingDown = true
   console.log('[Redis] SIGTERM received, closing Redis connection')
-  await redis.quit()
+  try {
+    // Only quit if connection is active (not already closed/ended)
+    if (redis.status === 'ready' || redis.status === 'connect' || redis.status === 'connecting') {
+      await redis.quit()
+      console.log('[Redis] Redis connection gracefully closed')
+    } else {
+      console.log(`[Redis] Connection already ${redis.status}, skipping quit`)
+    }
+  } catch (error) {
+    // Ignore errors during shutdown
+    console.log('[Redis] Error during shutdown (ignored):', error instanceof Error ? error.message : 'unknown')
+  }
 })
 
 process.on('SIGINT', async () => {
+  if (isShuttingDown) return
+  isShuttingDown = true
   console.log('[Redis] SIGINT received, closing Redis connection')
-  await redis.quit()
+  try {
+    // Only quit if connection is active (not already closed/ended)
+    if (redis.status === 'ready' || redis.status === 'connect' || redis.status === 'connecting') {
+      await redis.quit()
+      console.log('[Redis] Redis connection gracefully closed')
+    } else {
+      console.log(`[Redis] Connection already ${redis.status}, skipping quit`)
+    }
+  } catch (error) {
+    // Ignore errors during shutdown
+    console.log('[Redis] Error during shutdown (ignored):', error instanceof Error ? error.message : 'unknown')
+  }
 })
 
 /**
