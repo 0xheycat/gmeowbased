@@ -698,7 +698,7 @@ export async function getGMStats(params: { fid: number; walletAddress?: string }
 
   const query = gql`
     query GetGMStats($address: String!) {
-      user(id: $address) {
+      users(where: { id_eq: $address }, limit: 1) {
         id
         totalScore
         level
@@ -707,10 +707,10 @@ export async function getGMStats(params: { fid: number; walletAddress?: string }
         lastGMTimestamp
         lifetimeGMs
       }
-      leaderboardEntry(id: $address) {
+      leaderboardEntries(where: { id_eq: $address }, limit: 1) {
         rank
       }
-      gmEvents(where: { user: { id: $address } }, orderBy: timestamp_DESC, limit: 1) {
+      gmEvents(where: { user: { id_eq: $address } }, orderBy: timestamp_DESC, limit: 1) {
         timestamp
       }
     }
@@ -719,11 +719,11 @@ export async function getGMStats(params: { fid: number; walletAddress?: string }
   try {
     const data: any = await getSubsquidClient().request(query, { address: walletAddress.toLowerCase() });
     
-    if (!data.user) {
+    if (!data.users || data.users.length === 0) {
       return null;
     }
 
-    const user = data.user;
+    const user = data.users[0];
     const lastGM = data.gmEvents[0]?.timestamp;
     const now = Date.now();
     const lastGMTimestamp = lastGM ? Number(lastGM) * 1000 : 0; // Convert from seconds to ms
@@ -737,7 +737,7 @@ export async function getGMStats(params: { fid: number; walletAddress?: string }
       longestStreak: user.currentStreak || 0, // TODO: Add longestStreak to schema if needed
       totalGMs: user.lifetimeGMs || 0,
       lastGMTimestamp: user.lastGMTimestamp ? new Date(Number(user.lastGMTimestamp) * 1000).toISOString() : null,
-      rank: data.leaderboardEntry?.rank || 0,
+      rank: data.leaderboardEntries?.[0]?.rank || 0,
       todayGMed,
     };
   } catch (error) {
@@ -983,14 +983,14 @@ export async function getOnchainStats(params: { userAddr: string }): Promise<Onc
 
   const query = gql`
     query GetOnchainStats($address: String!) {
-      user(id: $address) {
+      users(where: { id_eq: $address }, limit: 1) {
         id
         totalTransactions
         totalGasSpent
         firstActivityAt
         lastActivityAt
       }
-      dailyStats(where: { user: $address }, orderBy: date_DESC, limit: 30) {
+      dailyStats(where: { user_eq: $address }, orderBy: date_DESC, limit: 30) {
         date
         transactionCount
         gasSpent
@@ -1001,16 +1001,16 @@ export async function getOnchainStats(params: { userAddr: string }): Promise<Onc
   try {
     const data: any = await getSubsquidClient().request(query, { address: userAddr.toLowerCase() });
     
-    if (!data.user) {
+    if (!data.users || data.users.length === 0) {
       return null;
     }
 
     return {
-      address: data.user.id,
-      totalTransactions: data.user.totalTransactions || 0,
-      totalGasSpent: data.user.totalGasSpent || '0',
-      firstActivityAt: data.user.firstActivityAt || '',
-      lastActivityAt: data.user.lastActivityAt || '',
+      address: data.users[0].id,
+      totalTransactions: data.users[0].totalTransactions || 0,
+      totalGasSpent: data.users[0].totalGasSpent || '0',
+      firstActivityAt: data.users[0].firstActivityAt || '',
+      lastActivityAt: data.users[0].lastActivityAt || '',
       dailyStats: (data.dailyStats || []).map((s: any) => ({
         date: s.date,
         transactionCount: s.transactionCount || 0,
