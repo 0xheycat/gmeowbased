@@ -32,14 +32,21 @@ export async function GET(
     }
 
     // HYBRID ARCHITECTURE: Query Subsquid for on-chain guild name (source of truth)
-    const { data: subsquidData } = await apolloClient.query({
-      query: GET_GUILD_BY_ID,
-      variables: { id: guildId },
-      fetchPolicy: 'network-only',
-    })
+    let onchainGuild = null
+    try {
+      const { data: subsquidData } = await apolloClient.query({
+        query: GET_GUILD_BY_ID,
+        variables: { id: guildId },
+        fetchPolicy: 'network-only',
+      })
+      onchainGuild = subsquidData?.guilds?.[0]
+    } catch (subsquidError) {
+      console.error('[guild-metadata-api] Subsquid query failed:', subsquidError)
+      // Continue without on-chain data - will return error below
+    }
 
-    const onchainGuild = subsquidData?.guilds?.[0]
     if (!onchainGuild) {
+      console.error('[guild-metadata-api] Guild not found on-chain for ID:', guildId)
       return NextResponse.json(
         { success: false, message: 'Guild not found on-chain' },
         { status: 404, headers: { 'X-Request-ID': requestId } }
@@ -51,13 +58,18 @@ export async function GET(
     let metadata = null
     
     if (supabase) {
-      const { data } = await supabase
-        .from('guild_metadata')
-        .select('description, banner')
-        .eq('guild_id', guildId)
-        .maybeSingle() // ✅ Returns null if not found (no error)
-      
-      metadata = data
+      try {
+        const { data } = await supabase
+          .from('guild_metadata')
+          .select('description, banner')
+          .eq('guild_id', guildId)
+          .maybeSingle() // ✅ Returns null if not found (no error)
+        
+        metadata = data
+      } catch (supabaseError) {
+        console.error('[guild-metadata-api] Supabase query failed:', supabaseError)
+        // Continue without metadata - will use empty strings
+      }
     }
 
     // Use on-chain name as source of truth, Supabase for metadata (optional)
