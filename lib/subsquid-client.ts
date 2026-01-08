@@ -79,11 +79,14 @@ import { logError } from './middleware/error-handler'
 // CONFIGURATION
 // ============================================================================
 
-const SUBSQUID_URL_TEMP = process.env.NEXT_PUBLIC_SUBSQUID_URL || process.env.SUBSQUID_URL
-if (!SUBSQUID_URL_TEMP) {
-  throw new Error('NEXT_PUBLIC_SUBSQUID_URL environment variable is required')
+// Lazy-load SUBSQUID_URL to avoid build-time errors
+function getSubsquidUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SUBSQUID_URL || process.env.SUBSQUID_URL
+  if (!url) {
+    throw new Error('NEXT_PUBLIC_SUBSQUID_URL or SUBSQUID_URL environment variable is required')
+  }
+  return url
 }
-const SUBSQUID_URL: string = SUBSQUID_URL_TEMP
 
 const DEFAULT_TIMEOUT = 10000 // 10 seconds
 const MAX_RETRIES = 2
@@ -304,7 +307,7 @@ export class SubsquidClient {
   private url: string
   private timeout: number
 
-  constructor(url: string = SUBSQUID_URL, timeout: number = DEFAULT_TIMEOUT) {
+  constructor(url: string = getSubsquidUrl(), timeout: number = DEFAULT_TIMEOUT) {
     this.url = url
     this.timeout = timeout
   }
@@ -612,7 +615,7 @@ export async function getTipEvents(
       }
     `
     
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -708,7 +711,7 @@ export async function getRankEvents(options: {
       }
     `
     
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -787,7 +790,7 @@ export async function getViralMilestones(options: {
       }
     `
     
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query })
@@ -927,7 +930,7 @@ export async function getQuestCompletions(options: {
       }
     `
     
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
@@ -986,7 +989,7 @@ export async function getQuestById(questId: string): Promise<Quest | null> {
       }
     `
     
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
@@ -1047,7 +1050,7 @@ export async function getQuestLeaderboard(options: {
       }
     `
     
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
@@ -1138,7 +1141,7 @@ export async function getQuestStats(options: {
       }
     `
     
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
@@ -1200,7 +1203,7 @@ export async function isSubsquidAvailable(): Promise<boolean> {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 3000)
 
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: '{ __typename }' }),
@@ -2198,7 +2201,7 @@ export async function getGuildMembershipByAddress(address: string): Promise<any[
   `
   
   try {
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2251,7 +2254,7 @@ export async function getReferralCodeByOwner(address: string): Promise<any | nul
   `
   
   try {
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2308,7 +2311,7 @@ export async function getBadgeStakesByAddress(address: string): Promise<any[]> {
   `
   
   try {
-    const response = await fetch(SUBSQUID_URL, {
+    const response = await fetch(getSubsquidUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

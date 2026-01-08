@@ -13,17 +13,25 @@
 
 import { GraphQLClient, gql } from 'graphql-request';
 
-const SUBSQUID_ENDPOINT = process.env.SUBSQUID_GRAPHQL_URL || process.env.NEXT_PUBLIC_SUBSQUID_URL;
+let _client: GraphQLClient | null = null;
 
-if (!SUBSQUID_ENDPOINT) {
-  throw new Error('SUBSQUID_GRAPHQL_URL or NEXT_PUBLIC_SUBSQUID_URL environment variable is required');
+function getSubsquidClient(): GraphQLClient {
+  if (_client) return _client;
+  
+  const SUBSQUID_ENDPOINT = process.env.SUBSQUID_GRAPHQL_URL || process.env.NEXT_PUBLIC_SUBSQUID_URL;
+  
+  if (!SUBSQUID_ENDPOINT) {
+    throw new Error('SUBSQUID_GRAPHQL_URL or NEXT_PUBLIC_SUBSQUID_URL environment variable is required');
+  }
+  
+  _client = new GraphQLClient(SUBSQUID_ENDPOINT, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  return _client;
 }
-
-const client = new GraphQLClient(SUBSQUID_ENDPOINT, {
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -207,7 +215,7 @@ export async function getUserStats(walletAddress: string): Promise<UserStats | n
   `;
 
   try {
-    const data: any = await client.request(query, { address: addressLower });
+    const data: any = await getSubsquidClient().request(query, { address: addressLower });
     
     if (!data.users || data.users.length === 0) {
       console.warn('[getUserStats] No user found for address:', walletAddress);
@@ -305,7 +313,7 @@ export async function getLeaderboard(params?: {
   `;
 
   try {
-    const data: any = await client.request(query, { limit, offset });
+    const data: any = await getSubsquidClient().request(query, { limit, offset });
     
     if (!data?.leaderboardEntries) {
       console.warn('[getLeaderboard] No leaderboard entries returned');
@@ -377,7 +385,7 @@ export async function getGuildStats(guildId: string) {
   `;
 
   try {
-    const data: any = await client.request(query, { guildId });
+    const data: any = await getSubsquidClient().request(query, { guildId });
     
     if (!data?.guilds || data.guilds.length === 0) {
       console.warn('[getGuildStats] No guild found:', guildId);
@@ -454,7 +462,7 @@ export async function getBadgeStats(params: { fid: number; walletAddress?: strin
       }
     `;
 
-    const response = await client.request(query, {
+    const response = await getSubsquidClient().request(query, {
       userAddress: walletAddress.toLowerCase(),
     });
 
@@ -551,7 +559,7 @@ export async function getReferralStats(params: {
       variables = { owner: ownerAddress!.toLowerCase() };
     }
 
-    const response = await client.request(query, variables);
+    const response = await getSubsquidClient().request(query, variables);
     const referralCode = response.referralCodes?.[0];
 
     if (!referralCode) {
@@ -615,7 +623,7 @@ export async function getGMStats(params: { fid: number; walletAddress?: string }
   `;
 
   try {
-    const data: any = await client.request(query, { address: walletAddress.toLowerCase() });
+    const data: any = await getSubsquidClient().request(query, { address: walletAddress.toLowerCase() });
     
     if (!data.user) {
       return null;
@@ -664,7 +672,7 @@ export async function getQuestStats(questId: string): Promise<QuestStats | null>
   `;
 
   try {
-    const data: any = await client.request(query, { questId });
+    const data: any = await getSubsquidClient().request(query, { questId });
     
     const completions = data.questCompletions || [];
     const uniqueUsers = new Set(completions.map((c: any) => c.user.id)).size;
@@ -714,7 +722,7 @@ export async function getNFTStats(params: { tokenId: string }): Promise<NFTStats
   `;
 
   try {
-    const data: any = await client.request(query, { tokenId });
+    const data: any = await getSubsquidClient().request(query, { tokenId });
     
     if (!data.nftMints || data.nftMints.length === 0) {
       return null;
@@ -785,7 +793,7 @@ export async function getUserNFTStats(params: { address: string }): Promise<User
   `;
 
   try {
-    const data: any = await client.request(query, { address: lowerAddress });
+    const data: any = await getSubsquidClient().request(query, { address: lowerAddress });
     
     const mints = data.nftMints || [];
     const transfers = data.nftTransfers || [];
@@ -854,7 +862,7 @@ export async function getVerificationHistory(params: {
   `;
 
   try {
-    const data: any = await client.request(query, { fid, questId });
+    const data: any = await getSubsquidClient().request(query, { fid, questId });
     
     return {
       fid,
@@ -897,7 +905,7 @@ export async function getOnchainStats(params: { userAddr: string }): Promise<Onc
   `;
 
   try {
-    const data: any = await client.request(query, { address: userAddr.toLowerCase() });
+    const data: any = await getSubsquidClient().request(query, { address: userAddr.toLowerCase() });
     
     if (!data.user) {
       return null;
@@ -937,7 +945,7 @@ export async function checkSubsquidHealth(): Promise<boolean> {
         }
       }
     `;
-    await client.request(query);
+    await getSubsquidClient().request(query);
     return true;
   } catch (error) {
     console.error('Subsquid health check failed:', error);
@@ -957,7 +965,7 @@ export async function getLastIndexedBlock(): Promise<number | null> {
         }
       }
     `;
-    const data: any = await client.request(query);
+    const data: any = await getSubsquidClient().request(query);
     return data._metadata?.lastProcessedBlock || null;
   } catch (error) {
     console.error('Error fetching last indexed block:', error);
