@@ -46,30 +46,29 @@ export async function GET(
       )
     }
 
-    // Fetch guild metadata from Supabase (description, banner)
+    // Fetch guild metadata from Supabase (description, banner) - OPTIONAL
     const supabase = getSupabaseAdminClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, message: 'Database error' },
-        { status: 500, headers: { 'X-Request-ID': requestId } }
-      )
+    let metadata = null
+    
+    if (supabase) {
+      const { data } = await supabase
+        .from('guild_metadata')
+        .select('description, banner')
+        .eq('guild_id', guildId)
+        .maybeSingle() // ✅ Returns null if not found (no error)
+      
+      metadata = data
     }
 
-    const { data, error } = await supabase
-      .from('guild_metadata')
-      .select('guild_id, description, banner')
-      .eq('guild_id', guildId)
-      .single()
-
-    // Use on-chain name as source of truth, Supabase for metadata
+    // Use on-chain name as source of truth, Supabase for metadata (optional)
     return NextResponse.json(
       {
         success: true,
         guild: {
           id: guildId,
           name: onchainGuild.name, // ✅ On-chain source of truth
-          description: data?.description || '',
-          banner: data?.banner || '',
+          description: metadata?.description || '',
+          banner: metadata?.banner || '',
         },
         timestamp: Date.now(),
       },
