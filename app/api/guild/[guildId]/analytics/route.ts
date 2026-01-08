@@ -270,7 +270,7 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
       .from('guild_analytics_cache')
       .select('*')
       .eq('guild_id', guildId)
-      .single()
+      .maybeSingle() // ✅ Returns null if not found (no error)
 
     if (cachedAnalytics && !cacheError) {
       // Type cast for proper type inference
@@ -377,17 +377,15 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
     // FALLBACK: Cache miss - calculate from events (slow path)
     console.log(`[Guild Analytics] Cache miss for guild ${guildId}, calculating from events`)
 
-    // Get guild metadata
-    const { data: guildMeta, error: metaError } = await supabase
+    // Get guild metadata (optional - may not exist)
+    const { data: guildMeta } = await supabase
       .from('guild_metadata')
       .select('guild_id, name, description, created_at')
       .eq('guild_id', guildId)
-      .single()
+      .maybeSingle() // ✅ Returns null if not found (no error)
 
-    if (metaError || !guildMeta) {
-      console.error('[Guild Analytics] Guild metadata not found:', metaError)
-      return null
-    }
+    // Continue without metadata if not found (on-chain data is sufficient)
+    const guildName = guildMeta?.name || `Guild ${guildId}`
 
     // Calculate date range
     const { start, end } = getDateRange(period)
