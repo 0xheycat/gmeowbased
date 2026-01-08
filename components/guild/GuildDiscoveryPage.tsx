@@ -81,24 +81,18 @@ export default function GuildDiscoveryPage() {
     orderBy: sortBy === 'activity' ? 'recent' : sortBy, // Map 'activity' to 'recent'
   })
 
-  // Fetch guild metadata from Supabase
+  // Fetch guild metadata from Supabase (REQUIRED - hybrid architecture)
   useEffect(() => {
     async function fetchMetadata() {
       try {
-        // Skip if Supabase not configured (metadata is optional)
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          setMetadataLoading(false)
-          return
-        }
-
         const supabase = createClient()
         const { data, error } = await supabase
           .from('guild_metadata')
           .select('guild_id, description, banner')
         
         if (error) {
-          console.error('[GuildDiscovery] Failed to load metadata:', error)
-          return
+          console.error('[GuildDiscovery] Failed to load guild metadata from Supabase:', error)
+          throw new Error(`Supabase metadata fetch failed: ${error.message}`)
         }
 
         // Convert to lookup object
@@ -113,8 +107,9 @@ export default function GuildDiscoveryPage() {
 
         setGuildMetadata(metadataMap)
       } catch (err) {
-        // Silently fail - metadata is optional
-        console.warn('[GuildDiscovery] Metadata fetch error (non-critical):', err)
+        console.error('[GuildDiscovery] CRITICAL: Guild metadata fetch failed (hybrid architecture requires Supabase):', err)
+        // Metadata is REQUIRED for hybrid architecture - propagate error
+        throw err
       } finally {
         setMetadataLoading(false)
       }
@@ -349,10 +344,11 @@ export default function GuildDiscoveryPage() {
             return (
               <button
                 key={guild.id}
+                onClick={() => handleGuildClick(guild.id)}
                 {...keyboardProps}
                 role="button"
                 aria-label={ariaLabel}
-                className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:border-wcag-focus-ring dark:hover:border-wcag-focus-ring-dark transition-smooth hover:shadow-lg text-left ${FOCUS_STYLES.ring} ${BUTTON_SIZES.md}`}
+                className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:border-wcag-focus-ring dark:hover:border-wcag-focus-ring-dark transition-smooth hover:shadow-lg text-left cursor-pointer ${FOCUS_STYLES.ring} ${BUTTON_SIZES.md}`}
               >
               {/* Avatar & Name */}
               <div className="flex items-start gap-4 mb-4">
