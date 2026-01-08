@@ -79,6 +79,9 @@ export async function GET(request: NextRequest) {
     
     const result = await getCached('staking', cacheKey, async () => {
 
+    // Initialize Supabase client
+    const supabase = createClient()
+
     // Fetch from Subsquid in parallel
     const [stakes, stats] = await Promise.all([
       getActiveBadgeStakes(user),
@@ -97,17 +100,26 @@ export async function GET(request: NextRequest) {
         }
       }
 
-    // Map stakes with badge metadata
-    // Note: Badge registry can be added for names/images if needed
+    // Get badge templates from Supabase
+    const badgeIds = stakes.map(s => s.badgeId.toString())
+    const { data: badgeTemplates } = await supabase
+      .from('badge_templates')
+      .select('id, name, description, image_url, metadata')
+      .in('id', badgeIds)
+
+    const badgeMap = new Map(badgeTemplates?.map((b: any) => [b.id, b]) || [])
+
+    // Map stakes with real badge metadata from badge_templates
     const enrichedStakes: EnrichedStake[] = stakes.map(stake => {
+      const template = badgeMap.get(stake.badgeId.toString()) as any
       return {
         id: stake.id,
         badgeId: stake.badgeId.toString(),
         badge: {
-          name: `Badge #${stake.badgeId}`,
-          description: stake.isPowerBadge ? 'Power Badge - Enhanced rewards' : 'Standard Badge',
-          imageUrl: `/badges/${stake.badgeId}.png`,
-          tier: stake.isPowerBadge ? 'legendary' : 'common',
+          name: template?.name || `Badge #${stake.badgeId}`,
+          description: template?.description || (stake.isPowerBadge ? 'Power Badge - Enhanced rewards' : 'Standard Badge'),
+          imageUrl: template?.image_url || `/badges/placeholder.png`,
+          tier: (template?.metadata?.tier as string) || (stake.isPowerBadge ? 'legendary' : 'common'),
         },
         stakedAt: stake.stakedAt?.toString() || '',
         rewardsEarned: stake.rewardsEarned?.toString() || '0',
