@@ -47,7 +47,6 @@ import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { getAllWalletsForFID } from '@/lib/integrations/neynar-wallet-sync'
-import { gql } from '@apollo/client'
 
 // ==========================================
 // Helper Functions
@@ -291,38 +290,9 @@ async function fetchGuildFromSupabase(
     
     // LAYER 2: Query Subsquid directly for guild stats
     // BUG FIX (Jan 8, 2026): guild_events table is empty, query Subsquid instead
-    const { getSubsquidClient } = await import('@/lib/subsquid-client')
-    const client = getSubsquidClient()
+    const { getGuildStats } = await import('@/lib/integrations/subsquid-client')
     
-    const { data: subsquidData } = await client.query({
-      query: gql`
-        query GetGuildWithMembers($guildId: String!) {
-          guildById(id: $guildId) {
-            id
-            name
-            owner
-            treasuryPoints
-            totalMembers
-            level
-            officers {
-              address
-            }
-            members(where: { isActive_eq: true }) {
-              id
-              role
-              pointsContributed
-              joinedAt
-              user {
-                id
-              }
-            }
-          }
-        }
-      `,
-      variables: { guildId },
-    })
-    
-    const guildStats = subsquidData?.guildById
+    const guildStats = await getGuildStats(guildId)
     if (!guildStats) {
       console.error('[guild-detail] Guild not found in Subsquid:', guildId)
       return null
@@ -330,20 +300,15 @@ async function fetchGuildFromSupabase(
     
     // Extract stats from Subsquid response
     const leaderAddress = guildStats.owner
-    const totalPoints = parseInt(guildStats.treasuryPoints || '0')
+    const totalPoints = guildStats.totalPoints
     const memberCount = guildStats.totalMembers
-    const level = guildStats.level || 1
-    const memberAddresses = guildStats.members.map((m: any) => m.user.id)
+    const level = 1 // Guild level not in Subsquid yet
+    const memberAddresses = guildStats.members.map((m: any) => m.address)
     
-    // Parse officers and member points
-    const officers = new Set<string>(
-      (guildStats.officers || []).map((o: any) => o.address)
-    )
+    // Parse officers (empty for now - not in response)
+    const officers = new Set<string>()
     const memberPointsMap = new Map<string, number>(
-      guildStats.members.map((m: any) => [
-        m.user.id,
-        parseInt(m.pointsContributed || '0')
-      ])
+      guildStats.members.map((m: any) => [m.address, m.pointsContributed])
     )
     
     // ============================================================================
@@ -358,7 +323,7 @@ async function fetchGuildFromSupabase(
     
     // Fetch FIDs in parallel for all member addresses
     await Promise.all(
-      memberAddresses.map(async (address) => {
+      memberAddresses.map(async (address: string) => {
         try {
           const fid = await fetchFidByAddress(address)
           if (fid) {
@@ -455,7 +420,7 @@ async function fetchGuildFromSupabase(
     // Enrich members with profile data
     // LAYER 4: Enrich members with points data
     // Map member addresses to their data using correct FIDs from Neynar
-    const enrichedMembers = await Promise.all(paginatedAddresses.map(async (address) => {
+    const enrichedMembers = await Promise.all(paginatedAddresses.map(async (address: string) => {
       // Get profile from map (may not exist)
       const currentProfile = profileMap.get(address.toLowerCase())
       
