@@ -39,6 +39,7 @@ import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { getUserQuestHistory } from '@/lib/subsquid-client'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // ============================================================================

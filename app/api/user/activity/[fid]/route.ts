@@ -26,6 +26,7 @@ import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
 import { FIDSchema } from '@/lib/validation/api-schemas'
 import { getAllWalletsForFID } from '@/lib/integrations/neynar-wallet-sync'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // ============================================================================

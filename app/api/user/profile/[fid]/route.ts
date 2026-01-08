@@ -26,11 +26,11 @@ import { createErrorResponse, ErrorType, logError, withErrorHandler } from '@/li
 import { validateAdminRequest } from '@/lib/auth/admin';
 import { createClient } from '@/lib/supabase/edge';
 import { fetchProfileData, updateProfileData, type ProfileData } from '@/lib/profile/profile-service';
-import DOMPurify from 'isomorphic-dompurify';
 import { checkIdempotency, storeIdempotency, getIdempotencyKey } from '@/lib/middleware/idempotency';
 import { getCached } from '@/lib/cache/server';
 import { FIDSchema as LibFIDSchema } from '@/lib/validation/api-schemas';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // ============================================================================
@@ -62,12 +62,14 @@ type ProfileUpdateRequest = z.infer<typeof ProfileUpdateSchema>;
 
 /**
  * Sanitize user input to prevent XSS attacks
+ * Simple sanitization without external dependencies
  */
 function sanitizeInput(input: string): string {
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [], // No HTML tags allowed
-    ALLOWED_ATTR: [],
-  }).trim();
+  // Remove HTML tags and trim
+  return input
+    .replace(/<[^>]*>/g, '') // Remove all HTML tags
+    .replace(/[<>'"]/g, '') // Remove potentially dangerous characters
+    .trim();
 }
 
 /**
