@@ -39,15 +39,39 @@ function getSubsquidClient(): GraphQLClient {
 
 export interface UserStats {
   address: string;
-  totalPoints: number;  // Renamed from totalXP (Dec 20, 2025 schema fix)
-  available: number; // Available points for spending
-  locked: bigint; // Locked points (can't be spent yet)
-  total: bigint; // Total points lifetime
-  level: number;
-  tier: string;
+  
+  // ScoringModule on-chain data (deployed Jan 1, 2026):
+  totalScore: number;      // Sum of all point categories
+  level: number;           // Calculated from totalScore
+  rankTier: number;        // Tier index 0-11
+  multiplier: number;      // Bonus multiplier (1000-2000)
+  
+  // Point breakdown:
+  gmPoints: number;
+  viralPoints: number;
+  questPoints: number;
+  guildPoints: number;
+  referralPoints: number;
+  
+  // Progression:
+  xpIntoLevel: number;
+  xpToNextLevel: number;
+  pointsIntoTier: number;
+  pointsToNextTier: number;
+  
+  // Legacy CoreModule:
+  pointsBalance: number;   // Current spendable
+  available: number;
+  locked: bigint;
+  total: bigint;
+  tier: string;            // Converted from rankTier
+  
+  // Streaks:
   currentStreak: number;
-  lastGMTimestamp: number | null; // milliseconds
+  lastGMTimestamp: number | null;
   lifetimeGMs: number;
+  
+  // Counts:
   guildMemberships: number;
   badgeCount: number;
   rank: number | null;
@@ -58,9 +82,11 @@ export interface UserStats {
 export interface LeaderboardEntry {
   rank: number;
   address: string;
-  totalXP: number;
-  level: number;
-  tier: string;
+  totalPoints: number;  // From LeaderboardEntry entity (denormalized)
+  totalScore: number;   // From User.totalScore (ScoringModule)
+  level: number;        // From User.level
+  rankTier: number;     // From User.rankTier (0-11)
+  tier: string;         // Converted tier name
   gmStreak: number;
   totalGMs: number;
 }
@@ -176,6 +202,32 @@ export interface OnchainStats {
 }
 
 // ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Convert rank tier index to human-readable name
+ * ScoringModule contract has 12 tiers (0-11)
+ */
+function getRankTierName(tierIndex: number): string {
+  const tiers = [
+    'Signal Kitten',      // 0: 0-500
+    'Warp Scout',         // 1: 500-1.5K
+    'Beacon Runner',      // 2: 1.5K-4K (1.1x)
+    'Night Operator',     // 3: 4K-8K
+    'Star Captain',       // 4: 8K-15K (1.2x)
+    'Nebula Commander',   // 5: 15K-25K
+    'Quantum Navigator',  // 6: 25K-40K (1.3x)
+    'Cosmic Architect',   // 7: 40K-60K
+    'Void Walker',        // 8: 60K-100K (1.5x)
+    'Singularity Prime',  // 9: 100K-250K
+    'Infinite GM',        // 10: 250K-500K (2.0x)
+    'Omniversal Being'    // 11: 500K+
+  ];
+  return tiers[tierIndex] || 'Signal Kitten';
+}
+
+// ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
 
@@ -190,7 +242,20 @@ export async function getUserStats(walletAddress: string): Promise<UserStats | n
     query GetUserStats($address: String!) {
       users(where: { id_eq: $address }, limit: 1) {
         id
-        totalPoints
+        pointsBalance
+        totalScore
+        level
+        rankTier
+        multiplier
+        gmPoints
+        viralPoints
+        questPoints
+        guildPoints
+        referralPoints
+        xpIntoLevel
+        xpToNextLevel
+        pointsIntoTier
+        pointsToNextTier
         currentStreak
         lastGMTimestamp
         lifetimeGMs
@@ -225,17 +290,31 @@ export async function getUserStats(walletAddress: string): Promise<UserStats | n
     const user = data.users[0];
     const leaderboard = data.leaderboardEntries?.[0] || null;
     
-    // Calculate level and tier from totalPoints (client-side calculation)
-    const totalPoints = Number(user.totalPoints || 0);
-    const { level, tier } = calculateLevelAndTier(totalPoints);
+    // Use ScoringModule on-chain data (no client-side calculation needed)
+    const totalScore = Number(user.totalScore || 0);
+    const level = user.level || 0;
+    const rankTier = user.rankTier || 0;
+    const tier = getRankTierName(rankTier);
 
     return {
       address: user.id,
-      totalPoints,
-      available: totalPoints, // Simplified: all points available (locked logic TBD)
-      locked: 0n,
-      total: BigInt(totalPoints),
+      totalScore,
       level,
+      rankTier,
+      multiplier: user.multiplier || 1000,
+      gmPoints: Number(user.gmPoints || 0),
+      viralPoints: Number(user.viralPoints || 0),
+      questPoints: Number(user.questPoints || 0),
+      guildPoints: Number(user.guildPoints || 0),
+      referralPoints: Number(user.referralPoints || 0),
+      xpIntoLevel: Number(user.xpIntoLevel || 0),
+      xpToNextLevel: Number(user.xpToNextLevel || 0),
+      pointsIntoTier: Number(user.pointsIntoTier || 0),
+      pointsToNextTier: Number(user.pointsToNextTier || 0),
+      pointsBalance: Number(user.pointsBalance || 0),
+      available: Number(user.pointsBalance || 0),
+      locked: 0n,
+      total: BigInt(totalScore),
       tier,
       currentStreak: user.currentStreak || 0,
       lastGMTimestamp: user.lastGMTimestamp ? Number(user.lastGMTimestamp) * 1000 : null,
@@ -303,7 +382,9 @@ export async function getLeaderboard(params?: {
         updatedAt
         user {
           id
-          totalXP
+          totalScore
+          level
+          rankTier
           currentStreak
           lifetimeGMs
           lastGMTimestamp
@@ -329,11 +410,18 @@ export async function getLeaderboard(params?: {
           ? entry.monthlyPoints 
           : entry.totalPoints;
 
+      const rankTier = entry.user.rankTier || 0;
       return {
         rank: entry.rank,
-        address: entry.user.id, // wallet address (lowercase)
+        address: entry.user.id,
         points: Number(points || 0),
-        totalXP: Number(entry.user.totalXP || 0),
+        totalPoints: Number(entry.totalPoints || 0),
+        totalScore: Number(entry.user.totalScore || 0),
+        level: entry.user.level || 0,
+        rankTier,
+        tier: getRankTierName(rankTier),
+        gmStreak: entry.user.currentStreak || 0,
+        totalGMs: entry.user.lifetimeGMs || 0,
         currentStreak: entry.user.currentStreak || 0,
         lifetimeGMs: entry.user.lifetimeGMs || 0,
         lastGMTimestamp: entry.user.lastGMTimestamp ? Number(entry.user.lastGMTimestamp) * 1000 : null,
@@ -366,7 +454,9 @@ export async function getGuildStats(guildId: string) {
           id
           user {
             id
-            totalXP
+            totalScore
+            level
+            rankTier
           }
           role
           pointsContributed
@@ -407,7 +497,9 @@ export async function getGuildStats(guildId: string) {
         pointsContributed: Number(member.pointsContributed || 0),
         joinedAt: Number(member.joinedAt) * 1000,
         isActive: member.isActive,
-        totalXP: Number(member.user.totalXP || 0),
+        totalScore: Number(member.user.totalScore || 0),
+        level: member.user.level || 0,
+        rankTier: member.user.rankTier || 0,
       })),
       recentEvents: guild.events.map((event: any) => ({
         id: event.id,
@@ -608,7 +700,9 @@ export async function getGMStats(params: { fid: number; walletAddress?: string }
     query GetGMStats($address: String!) {
       user(id: $address) {
         id
-        totalXP
+        totalScore
+        level
+        rankTier
         currentStreak
         lastGMTimestamp
         lifetimeGMs
