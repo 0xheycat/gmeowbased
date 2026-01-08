@@ -6,7 +6,15 @@
 **Updated:** January 8, 2026 22:00 UTC (Session 2 fixes deployed)  
 **Auditor:** GitHub Copilot (Claude Sonnet 4.5)
 
-**✅ RESOLUTION STATUS (Session 5 - Supabase Client-Side Fix):**
+**✅ RESOLUTION STATUS (Session 6 - AuthProvider Wallet Sync Fix):**
+- **Code Fixes:** ✅ Deployed (commit: c3e22cc)
+- **Supabase Error:** ✅ Fixed - removed client-side wallet sync calls
+- **API Endpoints:** ✅ Created /api/user/wallets/sync & /api/user/wallets/[fid]
+- **Build Status:** ✅ Passed locally
+- **Deployment:** ✅ **DEPLOYED** (Vercel building)
+- **Production Tests:** ⏳ **AWAITING VERIFICATION**
+
+**✅ PREVIOUS STATUS (Session 5 - Supabase Client-Side Fix):**
 - **Code Fixes:** ✅ Deployed (commit: 166d52a)
 - **Supabase Error:** ✅ Fixed - removed client-side createClient()
 - **API Integration:** ✅ Using /api/guild/list infrastructure
@@ -111,6 +119,209 @@ curl https://gmeowhq.art/api/frame/leaderboard
 - **ScoringModule** deployed to Base mainnet: ~Dec 31, 2025 / Jan 1, 2026
 - **Subsquid schema** already updated to Phase 3.2G with full ScoringModule support
 - All on-chain scoring data (level, rank, multiplier, breakdown) is indexed and working
+
+---
+
+## 🆕 SESSION 6: AUTHPROVIDER WALLET SYNC FIX (Jan 8, 2026 Evening)
+
+**Deployment:** Commit `c3e22cc`  
+**Time:** Jan 8, 2026 23:15 UTC  
+**Status:** ✅ DEPLOYED (Vercel building)
+
+### Critical Error: AuthProvider Multi-Wallet Sync Supabase Error
+
+**Production Error:**
+```javascript
+[AuthProvider] Multi-wallet sync failed: Error: Supabase not configured
+    at d (9427-500c63f7cda875dc.js:1:2145)
+    at d (9427-500c63f7cda875dc.js:1:3029)
+    at 9427-500c63f7cda875dc.js:1:6539
+```
+
+---
+
+### Issue 1: AuthContext Calling Server-Side Functions from Client ✅ FIXED
+
+**Problem:**
+- `AuthContext.tsx` was importing and calling `syncWalletsFromNeynar()` and `getAllWalletsForFID()`
+- These functions create server-side Supabase clients using `createClient()`
+- Called during authentication flow on client side
+- Error: "Supabase not configured" when functions run in browser
+- Violates infrastructure pattern (all DB access must go through API routes)
+
+**Location:** `lib/contexts/AuthContext.tsx` (lines 196-205, 235-244)
+
+**Architecture Violation:**
+```
+❌ WRONG: Client Component → Server Function → Supabase
+✓ CORRECT: Client Component → API Route → Server Function → Supabase
+```
+
+**Root Cause:**
+- Direct import of server-side functions in client component
+- Missing API layer for wallet sync operations
+- No rate limiting or caching for wallet operations
+- Client-side code attempting to create Supabase connections
+
+**Fix Applied:**
+
+**1. Created API Endpoints:**
+
+**POST /api/user/wallets/sync:**
+```typescript
+// Sync multi-wallet configuration for a user
+// - Fetches from Neynar API
+// - Updates user_profiles with custody + verified addresses
+// - Returns wallet list
+// - Rate limit: 30 req/min
+// - No caching (wallet data changes frequently)
+
+Request:
+{
+  "fid": 12345,
+  "connectedAddress": "0x..." // optional
+  "forceUpdate": false // optional
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "fid": 12345,
+    "wallets": ["0x...", "0x...", "0x..."],
+    "custody_address": "0x...",
+    "verified_addresses": ["0x...", "0x..."]
+  }
+}
+```
+
+**GET /api/user/wallets/[fid]:**
+```typescript
+// Fetch all wallet addresses for a user
+// - Returns cached wallet list from database
+// - Rate limit: 60 req/min
+// - Cache: 60s cache + 120s stale-while-revalidate
+
+Response:
+{
+  "success": true,
+  "data": {
+    "fid": 12345,
+    "wallets": ["0x...", "0x...", "0x..."],
+    "count": 3
+  }
+}
+```
+
+**2. Updated AuthContext to Use API Routes:**
+
+```typescript
+// BEFORE (CLIENT-SIDE SUPABASE - WRONG):
+import { getAllWalletsForFID, syncWalletsFromNeynar } from '@/lib/integrations/neynar-wallet-sync'
+
+// Inside authenticate():
+try {
+  await syncWalletsFromNeynar(contextFid, false)  // ❌ Creates Supabase client in browser
+  const wallets = await getAllWalletsForFID(contextFid)  // ❌ Creates Supabase client in browser
+  setCachedWallets(wallets)
+} catch (err) {
+  console.warn('[AuthProvider] Multi-wallet sync failed:', err)
+}
+
+// AFTER (API ROUTE - CORRECT):
+// DO NOT import server-side Supabase functions - use API routes instead
+
+// Inside authenticate():
+try {
+  const syncResponse = await fetch('/api/user/wallets/sync', {  // ✓ API route
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fid: contextFid }),
+  })
+  
+  if (syncResponse.ok) {
+    const syncResult = await syncResponse.json()
+    if (syncResult.success && syncResult.data?.wallets) {
+      setCachedWallets(syncResult.data.wallets)
+      console.log('[AuthProvider] Cached', syncResult.data.wallets.length, 'wallets for FID', contextFid)
+    }
+  }
+} catch (err) {
+  console.warn('[AuthProvider] Multi-wallet sync failed:', err)
+}
+```
+
+**3. Infrastructure Benefits:**
+
+**API Routes (`/api/user/wallets/*`):**
+- ✓ **Server-Side Only:** Supabase connections only on server
+- ✓ **Rate Limiting:** 30 req/min (sync), 60 req/min (list)
+- ✓ **Caching:** 60s cache + 120s SWR for wallet list
+- ✓ **Connection Pooling:** Shared Supabase connection
+- ✓ **Security:** 10-layer security pattern
+- ✓ **Error Masking:** No sensitive data exposed
+- ✓ **Audit Logging:** All requests tracked
+- ✓ **Type Safety:** Zod validation
+- ✓ **Graceful Errors:** Returns error responses, doesn't crash
+
+**Before vs After:**
+
+| Aspect | Before (Client-Side) | After (API Route) |
+|--------|----------------------|-------------------|
+| **Database Access** | Direct from client | Via API infrastructure |
+| **Function Calls** | syncWalletsFromNeynar() | POST /api/user/wallets/sync |
+| **Connection** | Creates client in browser | Server-side pool |
+| **Rate Limiting** | None | 30-60 req/min per IP |
+| **Caching** | None | 60s + 120s SWR |
+| **Error Handling** | Console warnings | Graceful HTTP errors |
+| **Security** | Exposed credentials | 10-layer pattern |
+| **Type Safety** | Runtime only | Zod + TypeScript |
+
+**Files Changed:**
+- `lib/contexts/AuthContext.tsx` (removed server imports, added API calls)
+- `app/api/user/wallets/sync/route.ts` (NEW - POST endpoint)
+- `app/api/user/wallets/[fid]/route.ts` (NEW - GET endpoint)
+
+**Testing:**
+```bash
+# Build test
+pnpm build
+# ✓ Compiled successfully in 39.3s
+
+# Production verification (after deployment)
+# 1. Connect wallet on https://gmeowhq.art
+# 2. Check browser console - NO "Supabase not configured" error
+# 3. Verify wallet sync completes successfully
+# 4. Check Network tab for /api/user/wallets/sync calls
+```
+
+**Impact:**
+- ✅ Eliminates AuthProvider Supabase error
+- ✅ Enforces infrastructure architecture pattern
+- ✅ Enables rate limiting for wallet operations
+- ✅ Adds caching for wallet list queries
+- ✅ Better error handling (no client crashes)
+- ✅ Centralizes wallet sync logic
+
+**Architecture Pattern Enforced:**
+```
+NEVER import server-side functions in client components
+ALWAYS use API routes for database access
+
+Client Component → API Route → Server Function → Supabase
+                    ↑
+                    └─ Rate Limiting, Caching, Security, Logging
+```
+
+**Session 6 Summary:**
+- ✅ Created POST /api/user/wallets/sync endpoint (wallet sync)
+- ✅ Created GET /api/user/wallets/[fid] endpoint (wallet list)
+- ✅ Removed server-side function imports from AuthContext
+- ✅ Replaced with API route calls (fetch)
+- ✅ Added rate limiting (30/60 req/min)
+- ✅ Added caching (60s + 120s SWR)
+- ✅ Tested build successfully
+- ✅ Deployed (commit: c3e22cc)
 
 ---
 
