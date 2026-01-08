@@ -13,22 +13,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { rateLimit } from '@/lib/middleware/rate-limit'
-import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
+import { getClientIp } from '@/lib/middleware/rate-limit'
+import { createErrorResponse, ErrorType, handleValidationError } from '@/lib/middleware/error-handler'
 import { getAllWalletsForFID } from '@/lib/integrations/neynar-wallet-sync'
 
 // ==========================================
-// 1. Rate Limiting Configuration
-// ==========================================
-
-const RATE_LIMIT_CONFIG = {
-  identifier: 'user-wallet-list',
-  maxRequests: 60,
-  windowMs: 60 * 1000,
-}
-
-// ==========================================
-// 2. Input Validation Schemas
+// 1. Input Validation Schemas
 // ==========================================
 
 const ParamsSchema = z.object({
@@ -36,7 +26,7 @@ const ParamsSchema = z.object({
 })
 
 // ==========================================
-// 3. GET Handler
+// 2. GET Handler
 // ==========================================
 
 export async function GET(
@@ -44,19 +34,18 @@ export async function GET(
   { params }: { params: { fid: string } }
 ) {
   try {
-    // Rate limiting
-    const rateLimitResult = await rateLimit(request, RATE_LIMIT_CONFIG)
-    if (!rateLimitResult.success) {
-      return createErrorResponse(
-        ErrorType.RATE_LIMIT,
-        'Too many wallet requests. Please try again later.',
-        { retryAfter: rateLimitResult.retryAfter }
-      )
-    }
+    // Get client IP for logging
+    const clientIp = getClientIp(request)
+    console.log('[API:WalletList] Request from IP:', clientIp)
 
     // Validate params
-    const validatedParams = ParamsSchema.parse(params)
-    const { fid } = validatedParams
+    const parseResult = ParamsSchema.safeParse(params)
+    
+    if (!parseResult.success) {
+      return handleValidationError(parseResult.error)
+    }
+
+    const { fid } = parseResult.data
 
     // Get all wallets for this FID
     const wallets = await getAllWalletsForFID(fid)
@@ -77,16 +66,13 @@ export async function GET(
     console.error('[API:WalletList] Error:', error)
 
     if (error instanceof z.ZodError) {
-      return createErrorResponse(
-        ErrorType.VALIDATION,
-        'Invalid FID parameter',
-        { errors: error.errors }
-      )
+      return handleValidationError(error)
     }
 
-    return createErrorResponse(
-      ErrorType.INTERNAL,
-      'Failed to fetch wallets'
-    )
+    return createErrorResponse({
+      type: ErrorType.INTERNAL,
+      message: 'Failed to fetch wallets',
+      statusCode: 500,
+    })
   }
 }
