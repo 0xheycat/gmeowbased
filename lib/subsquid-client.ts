@@ -2203,7 +2203,7 @@ export async function getGuildMembershipByAddress(address: string): Promise<any[
           id
           owner
           totalMembers
-          totalPoints
+          treasuryPoints
         }
       }
     }
