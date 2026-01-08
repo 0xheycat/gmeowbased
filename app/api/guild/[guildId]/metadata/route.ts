@@ -36,10 +36,10 @@ export async function GET(
     try {
       const { data: subsquidData } = await apolloClient.query({
         query: GET_GUILD_BY_ID,
-        variables: { id: guildId },
+        variables: { guildId: guildId }, // ✅ Correct variable name
         fetchPolicy: 'network-only',
       })
-      onchainGuild = subsquidData?.guilds?.[0]
+      onchainGuild = subsquidData?.guild // ✅ Returns 'guild' not 'guilds'
     } catch (subsquidError) {
       console.error('[guild-metadata-api] Subsquid query failed:', subsquidError)
       // Continue without on-chain data - will return error below
