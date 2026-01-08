@@ -5,7 +5,9 @@ import type { ReactNode } from 'react'
 import { useAccount } from 'wagmi'
 import { fetchUserByFid, fetchUserByAddress, type FarcasterUser } from '@/lib/integrations/neynar-client'
 import { getMiniappContext } from '@/lib/miniapp/miniappEnv'
-import { getAllWalletsForFID, syncWalletsFromNeynar } from '@/lib/integrations/neynar-wallet-sync'
+
+// DO NOT import server-side Supabase functions - use API routes instead
+// import { getAllWalletsForFID, syncWalletsFromNeynar } from '@/lib/integrations/neynar-wallet-sync'
 
 /**
  * Unified Authentication Context
@@ -192,13 +194,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profileData = await fetchUserByFid(contextFid)
         setProfile(profileData)
         
-        // Sync multi-wallet cache (3-layer hybrid system)
-        // No connected address in miniapp context
+        // Sync multi-wallet cache (3-layer hybrid system) via API
+        // NEVER call Supabase directly from client - use API routes
         try {
-          await syncWalletsFromNeynar(contextFid, false)
-          const wallets = await getAllWalletsForFID(contextFid)
-          setCachedWallets(wallets)
-          console.log('[AuthProvider] Cached', wallets.length, 'wallets for FID', contextFid)
+          const syncResponse = await fetch('/api/user/wallets/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fid: contextFid }),
+          })
+          
+          if (syncResponse.ok) {
+            const syncResult = await syncResponse.json()
+            if (syncResult.success && syncResult.data?.wallets) {
+              setCachedWallets(syncResult.data.wallets)
+              console.log('[AuthProvider] Cached', syncResult.data.wallets.length, 'wallets for FID', contextFid)
+            }
+          }
         } catch (err) {
           console.warn('[AuthProvider] Multi-wallet sync failed:', err)
         }
@@ -231,13 +242,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             address,
           })
           
-          // Sync multi-wallet cache (3-layer hybrid system)
+          // Sync multi-wallet cache (3-layer hybrid system) via API
           // Pass connected wallet address to use as primary
+          // NEVER call Supabase directly from client - use API routes
           try {
-            await syncWalletsFromNeynar(profileData.fid, false, address)
-            const wallets = await getAllWalletsForFID(profileData.fid)
-            setCachedWallets(wallets)
-            console.log('[AuthProvider] Cached', wallets.length, 'wallets for FID', profileData.fid)
+            const syncResponse = await fetch('/api/user/wallets/sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                fid: profileData.fid, 
+                connectedAddress: address,
+              }),
+            })
+            
+            if (syncResponse.ok) {
+              const syncResult = await syncResponse.json()
+              if (syncResult.success && syncResult.data?.wallets) {
+                setCachedWallets(syncResult.data.wallets)
+                console.log('[AuthProvider] Cached', syncResult.data.wallets.length, 'wallets for FID', profileData.fid)
+              }
+            }
           } catch (err) {
             console.warn('[AuthProvider] Multi-wallet sync failed:', err)
           }
