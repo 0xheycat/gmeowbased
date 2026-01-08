@@ -31,15 +31,18 @@ const ParamsSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fid: string } }
+  { params }: { params: Promise<{ fid: string }> }
 ) {
   try {
     // Get client IP for logging
     const clientIp = getClientIp(request)
     console.log('[API:WalletList] Request from IP:', clientIp)
 
+    // Await params (Next.js 16 requirement)
+    const resolvedParams = await params
+
     // Validate params
-    const parseResult = ParamsSchema.safeParse(params)
+    const parseResult = ParamsSchema.safeParse(resolvedParams)
     
     if (!parseResult.success) {
       return handleValidationError(parseResult.error)
