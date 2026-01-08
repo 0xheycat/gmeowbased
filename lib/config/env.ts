@@ -63,28 +63,31 @@ const envSchema = z.object({
     .default('development'),
 
   // ===================================================================
-  // SUPABASE (REQUIRED)
+  // SUPABASE
   // ===================================================================
   
-  SUPABASE_URL: urlSchema.describe('Supabase project URL'),
+  SUPABASE_URL: urlSchema.optional().describe('Supabase project URL'),
   
   SUPABASE_ANON_KEY: z
     .string()
-    .min(1, 'SUPABASE_ANON_KEY is required')
+    .optional()
     .describe('Supabase anonymous/public key'),
+
   
   SUPABASE_SERVICE_ROLE_KEY: z
     .string()
-    .min(1, 'SUPABASE_SERVICE_ROLE_KEY is required for server operations')
+    .optional()
     .describe('Supabase service role key (admin access)'),
 
+
   // Public vars (client-side)
-  NEXT_PUBLIC_SUPABASE_URL: urlSchema.describe('Supabase URL for client'),
+  NEXT_PUBLIC_SUPABASE_URL: urlSchema.optional().describe('Supabase URL for client'),
   
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z
     .string()
-    .min(1)
+    .optional()
     .describe('Supabase anon key for client'),
+
 
   // ===================================================================
   // NEYNAR API (REQUIRED)
@@ -92,8 +95,9 @@ const envSchema = z.object({
   
   NEYNAR_API_KEY: z
     .string()
-    .min(1, 'NEYNAR_API_KEY is required for Farcaster integration')
+    .optional()
     .describe('Neynar API key for Farcaster data'),
+
   
   NEYNAR_SERVER_WALLET_ID: z
     .string()
@@ -102,8 +106,9 @@ const envSchema = z.object({
 
   NEXT_PUBLIC_NEYNAR_API_KEY: z
     .string()
-    .min(1)
+    .optional()
     .describe('Neynar API key for client-side'),
+
 
   // ===================================================================
   // REDIS / UPSTASH (REQUIRED for rate limiting)
