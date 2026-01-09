@@ -261,7 +261,7 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
     }
 
     // LAYER 3: Build guild list from on-chain + off-chain data
-    // NOTE: All stats come from Subsquid (guild_stats_cache is redundant)
+    // All stats come from Subsquid (on-chain source of truth)
     const guildList: Guild[] = guilds
       .map((guild) => {
         const onChainGuild = onChainGuildsMap.get(guild.guild_id)

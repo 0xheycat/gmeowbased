@@ -51,9 +51,6 @@ import { getCached } from '@/lib/cache/server'
 import { createClient } from '@/lib/supabase/edge'
 import { getGuildDepositAnalytics } from '@/lib/subsquid-client'
 import { createErrorResponse, ErrorType } from '@/lib/middleware/error-handler'
-import type { Database } from '@/types/supabase.generated'
-
-type GuildAnalyticsCache = Database['public']['Tables']['guild_analytics_cache']['Row']
 
 // ==========================================
 // 1. Rate Limiting Configuration
