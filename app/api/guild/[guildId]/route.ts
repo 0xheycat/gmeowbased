@@ -68,53 +68,58 @@ function getTierFromRank(rank: number | null | undefined): string {
 }
 
 /**
- * BUG #8 FIX: Get points for a user (already aggregated by Subsquid)
+ * BUG #8 FIX: Get points for a user from ON-CHAIN (Subsquid)
  * 
- * ARCHITECTURE NOTE: Subsquid indexes blockchain data by FID, not by wallet.
- * This means user_points_balances ALREADY aggregates ALL wallet activity for a FID.
- * - When a user has 3 verified wallets, Subsquid combines activity from all 3
- * - The points_balance field includes blockchain points from ALL verified addresses
- * - No manual aggregation needed - Subsquid does this at index-time
+ * ARCHITECTURE (Dec 31): All scoring data is ON-CHAIN in ScoringModule
+ * - Query Subsquid for: totalScore, pointsBalance, viralPoints, guildPoints
+ * - Supabase user_points_balances is DEPRECATED for on-chain data
  * 
- * Follows 4-layer architecture: Contract → Subsquid (aggregates by FID) → Supabase → API
+ * Multi-wallet: Subsquid indexes by wallet address, use primary custody address
  */
-async function getMultiWalletStats(fid: number): Promise<{
+async function getMultiWalletStats(address: string): Promise<{
   pointsBalance: number
   viralPoints: number
   guildBonusPoints: number
   totalScore: number
 }> {
-  const supabase = createClient()
-  if (!supabase) {
+  try {
+    const { getApolloClient } = await import('@/lib/apollo-client')
+    const { gql } = await import('@apollo/client')
+    
+    const apolloClient = getApolloClient()
+    
+    // Query Subsquid for on-chain scoring data
+    const { data } = await apolloClient.query({
+      query: gql`
+        query GetUserStats($address: String!) {
+          users(where: { id_eq: $address }, limit: 1) {
+            id
+            totalScore
+            pointsBalance
+            viralPoints
+            guildPoints
+          }
+        }
+      `,
+      variables: { address: address.toLowerCase() },
+      fetchPolicy: 'cache-first',
+    })
+
+    const user = data?.users?.[0]
+    
+    if (!user) {
+      return { pointsBalance: 0, viralPoints: 0, guildBonusPoints: 0, totalScore: 0 }
+    }
+
+    return {
+      pointsBalance: user.pointsBalance ? Number(user.pointsBalance) : 0,
+      viralPoints: user.viralPoints ? Number(user.viralPoints) : 0,
+      guildBonusPoints: user.guildPoints ? Number(user.guildPoints) : 0,
+      totalScore: user.totalScore ? Number(user.totalScore) : 0,
+    }
+  } catch (error) {
+    console.error('[guild-detail] Error fetching user stats from Subsquid:', error)
     return { pointsBalance: 0, viralPoints: 0, guildBonusPoints: 0, totalScore: 0 }
-  }
-
-  // Query user_points_balances by FID (Subsquid already aggregated all wallets)
-  const { data: pointsData } = await supabase
-    .from('user_points_balances')
-    .select('points_balance, viral_xp, guild_points_awarded, total_score')
-    .eq('fid', fid)
-    .maybeSingle()
-
-  if (!pointsData) {
-    return { pointsBalance: 0, viralPoints: 0, guildBonusPoints: 0, totalScore: 0 }
-  }
-
-  // Get verified wallets count for logging (multi-wallet support verification)
-  const allWallets = await getAllWalletsForFID(fid)
-
-  console.log(`[guild-detail] Multi-wallet stats for FID ${fid}:`, {
-    walletCount: allWallets.length,
-    walletsTracked: allWallets.map(w => w.slice(0, 6) + '...' + w.slice(-4)),
-    pointsBalance: pointsData.points_balance,
-    note: 'Subsquid aggregates all wallet activity by FID automatically',
-  })
-
-  return {
-    pointsBalance: pointsData.points_balance || 0,
-    viralPoints: pointsData.viral_xp || 0,
-    guildBonusPoints: pointsData.guild_points_awarded || 0,
-    totalScore: pointsData.total_score || 0,
   }
 }
 
@@ -471,9 +476,9 @@ async function fetchGuildFromSupabase(
         }
       }
       
-      // Get points breakdown from user_points_balances (migrations applied Dec 22)
-      // BUG #8 FIX: Subsquid aggregates all wallet activity by FID (multi-wallet support)
-      const aggregatedStats = await getMultiWalletStats(fid)
+      // Get points breakdown from Subsquid (on-chain data - ScoringModule Dec 31)
+      // Query by wallet address, not FID
+      const aggregatedStats = await getMultiWalletStats(address)
       
       // Generate badges based on role, points, and activity (not from database)
       const memberBadges = getMemberBadges(
