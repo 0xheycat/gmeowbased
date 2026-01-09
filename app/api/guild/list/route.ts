@@ -260,41 +260,32 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
       return []
     }
 
-    // LAYER 2: Get cached guild stats (from cron sync - updated every 6 hours)
-    const { data: cachedStats, error: statsError } = await supabase
-      .from('guild_stats_cache')
-      .select('guild_id, member_count, treasury_points, level, treasury_balance, is_active, leader_address')
+    // LAYER 3: Build guild list from on-chain + off-chain data
+    // NOTE: All stats come from Subsquid (guild_stats_cache is redundant)
+    const guildList: Guild[] = guilds
+      .map((guild) => {
+        const onChainGuild = onChainGuildsMap.get(guild.guild_id)
 
-    if (statsError) {
-      console.error('[guild/list] Failed to fetch guild stats cache:', statsError)
-    }
+        // If guild not in Subsquid, skip it (shouldn't happen for active guilds)
+        if (!onChainGuild) {
+          console.warn('[guild/list] Guild not found in Subsquid:', guild.guild_id)
+          return null
+        }
 
-    // Build stats map from cache
-    const statsMap = new Map<string, any>()
-    if (cachedStats) {
-      for (const stat of cachedStats) {
-        statsMap.set(stat.guild_id, stat)
-      }
-    }
-
-    // Build guild list from metadata + cached stats
-    const guildList: Guild[] = guilds.map((guild) => {
-      const onChainGuild = onChainGuildsMap.get(guild.guild_id)
-      const stats = statsMap.get(guild.guild_id)
-
-      return {
-        id: guild.guild_id,
-        chain: 'base' as const,
-        name: onChainGuild?.name || 'Unknown Guild', // Always from Subsquid (on-chain)
-        leader: stats?.leader_address || onChainGuild?.owner || '',
-        totalPoints: stats?.treasury_points || onChainGuild?.treasuryPoints || 0,
-        memberCount: stats?.member_count || onChainGuild?.totalMembers || 0,
-        level: stats?.level || onChainGuild?.level || 1,
-        active: stats?.is_active !== false && onChainGuild?.isActive !== false,
-        description: guild.description || undefined,
-        banner: guild.banner || undefined,
-      }
-    })
+        return {
+          id: guild.guild_id,
+          chain: 'base' as const,
+          name: onChainGuild.name || 'Unknown Guild', // Always from Subsquid (on-chain)
+          leader: onChainGuild.owner || '',
+          totalPoints: onChainGuild.treasuryPoints || 0,
+          memberCount: onChainGuild.totalMembers || 0,
+          level: onChainGuild.level || 1,
+          active: onChainGuild.isActive !== false,
+          description: guild.description || undefined,
+          banner: guild.banner || undefined,
+        }
+      })
+      .filter((g) => g !== null) as Guild[] // Remove nulls
 
     return guildList
   } catch (error) {
