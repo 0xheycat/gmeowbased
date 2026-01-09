@@ -22,6 +22,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/edge'
+import { logGuildEvent } from '@/lib/guild/event-logger'
 import { generateRequestId } from '@/lib/middleware/request-id'
 
 const BodySchema = z.object({
