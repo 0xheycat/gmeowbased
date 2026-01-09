@@ -49,6 +49,8 @@ import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { fetchUsersByAddresses, type FarcasterUser } from '@/lib/integrations/neynar'
 import type { Badge } from '@/components/guild/badges/BadgeIcon'
+import getApolloClient from '@/lib/apollo-client'
+import { gql } from '@apollo/client'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -462,39 +464,53 @@ async function getGuildData(guildId: string) {
 }
 
 /**
- * Get all members with roles and points from Supabase (PHASE 2.1 - Cache-based)
- * Primary: guild_member_stats_cache (includes role from Subsquid)
- * Fallback: guild_events (event-based reconstruction)
+ * Get all members with roles and points from Subsquid GraphQL
+ * FIXED: Query Subsquid directly (Supabase tables are empty)
  */
 async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
-  const supabase = createClient()
+  try {
+    // Query Subsquid GraphQL for guild members
+    console.log('[guild-members] Querying Subsquid GraphQL for guild', guildId)
+    const apolloClient = getApolloClient()
+    const { data } = await apolloClient.query({
+      query: gql`
+        query GetGuildMembers($guildId: String!) {
+          guildMembers(
+            where: { guild: { id_eq: $guildId }, isActive_eq: true }
+            orderBy: pointsContributed_DESC
+          ) {
+            id
+            user {
+              id
+            }
+            role
+            pointsContributed
+            joinedAt
+          }
+        }
+      `,
+      variables: { guildId }
+    })
 
-  // PHASE 2.1: Query guild_member_stats_cache for member data including role
-  // @ts-ignore - member_role column exists but types not regenerated yet
-  const { data: memberStats, error: statsError } = await supabase
-    .from('guild_member_stats_cache')
-    .select('member_address, member_role, joined_at, points_contributed')
-    .eq('guild_id', guildId)
-    .order('points_contributed', { ascending: false })
+    if (!data?.guildMembers || data.guildMembers.length === 0) {
+      console.log('[guild-members] No members found in Subsquid')
+      return []
+    }
 
-  // If cache exists and has data, use it
-  if (!statsError && memberStats && memberStats.length > 0) {
-    console.log(`[guild-members] Phase 2.1: Using cached member data with roles from Subsquid`)
-    
-    // Convert cache data to GuildMember format
-    const members: GuildMember[] = memberStats.map((stat: any) => ({
-      address: stat.member_address,
-      role: (stat.member_role === 'leader' ? 'owner' : stat.member_role) as 'owner' | 'officer' | 'member',  // Map leader→owner for API
-      points: stat.points_contributed?.toString() || '0',
-      joinedAt: stat.joined_at || new Date().toISOString(),
+    // Convert Subsquid data to API format
+    const members: GuildMember[] = data.guildMembers.map((member: any) => ({
+      address: member.user.id,
+      role: member.role.toLowerCase() as 'owner' | 'officer' | 'member',
+      points: member.pointsContributed?.toString() || '0',
+      joinedAt: new Date(parseInt(member.joinedAt) * 1000).toISOString(),
     }))
 
+    console.log(`[guild-members] Found ${members.length} members from Subsquid`)
     return members
+  } catch (error) {
+    console.error('[guild-members] Subsquid query failed:', error)
+    return []
   }
-  
-  // Fallback to event-based logic if cache not populated
-  console.log('[guild-members] Cache not available, using event-based fallback')
-  return getGuildMembersFromEvents(guildId)
 }
 
 /**
