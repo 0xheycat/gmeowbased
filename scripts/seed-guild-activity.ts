@@ -14,7 +14,7 @@ interface EventData {
   target_address?: string
   amount?: number
   metadata?: Record<string, any>
-  created_at: Date
+  created_at: string // ISO 8601 string for Supabase
 }
 
 async function seedGuildActivity() {
@@ -43,7 +43,7 @@ async function seedGuildActivity() {
     guild_id: '1',
     event_type: 'GUILD_CREATED',
     actor_address: addresses[1],
-    created_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+    created_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
     metadata: { guild_name: 'Test Guild' },
   })
 
@@ -52,7 +52,7 @@ async function seedGuildActivity() {
     guild_id: '1',
     event_type: 'MEMBER_JOINED',
     actor_address: addresses[0],
-    created_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+    created_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 days ago
     metadata: { guild_name: 'Test Guild', username: 'heycat' },
   })
 
@@ -60,7 +60,7 @@ async function seedGuildActivity() {
     guild_id: '1',
     event_type: 'MEMBER_JOINED',
     actor_address: addresses[1],
-    created_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    created_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
     metadata: { guild_name: 'Test Guild', username: 'member2' },
   })
 
@@ -68,7 +68,7 @@ async function seedGuildActivity() {
     guild_id: '1',
     event_type: 'MEMBER_JOINED',
     actor_address: addresses[2],
-    created_at: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+    created_at: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
     metadata: { guild_name: 'Test Guild', username: 'newbie123' },
   })
 
@@ -78,7 +78,7 @@ async function seedGuildActivity() {
     event_type: 'POINTS_DEPOSITED',
     actor_address: addresses[0],
     amount: 1000,
-    created_at: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+    created_at: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
     metadata: { guild_name: 'Test Guild' },
   })
 
@@ -87,7 +87,7 @@ async function seedGuildActivity() {
     event_type: 'POINTS_DEPOSITED',
     actor_address: addresses[1],
     amount: 2500,
-    created_at: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    created_at: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
     metadata: { guild_name: 'Test Guild' },
   })
 
@@ -96,7 +96,7 @@ async function seedGuildActivity() {
     event_type: 'POINTS_DEPOSITED',
     actor_address: addresses[0],
     amount: 500,
-    created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+    created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
     metadata: { guild_name: 'Test Guild' },
   })
 
@@ -106,7 +106,7 @@ async function seedGuildActivity() {
     event_type: 'POINTS_CLAIMED',
     actor_address: addresses[2],
     amount: 250,
-    created_at: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    created_at: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
     metadata: { guild_name: 'Test Guild' },
   })
 
@@ -115,7 +115,7 @@ async function seedGuildActivity() {
     guild_id: '1',
     event_type: 'MEMBER_JOINED',
     actor_address: addresses[3],
-    created_at: new Date(now.getTime() - 1 * 60 * 60 * 1000), // 1 hour ago
+    created_at: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
     metadata: { guild_name: 'Test Guild', username: 'latest_member' },
   })
 
@@ -124,7 +124,7 @@ async function seedGuildActivity() {
     event_type: 'POINTS_DEPOSITED',
     actor_address: addresses[3],
     amount: 100,
-    created_at: new Date(now.getTime() - 30 * 60 * 1000), // 30 mins ago
+    created_at: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), // 30 mins ago
     metadata: { guild_name: 'Test Guild' },
   })
 

@@ -72,18 +72,20 @@ export async function POST(
     // Get username from address (truncated for display)
     const username = `${address.slice(0, 6)}...${address.slice(-4)}`
 
-    // Insert claim request into treasury transactions
+    // Insert claim request into guild_events table
     const supabase = createClient()
     const { error: insertError } = await supabase
-      .from('guild_treasury_transactions')
+      .from('guild_events')
       .insert({
         guild_id: guildId,
-        user_address: address,
-        username,
-        type: 'claim',
+        event_type: 'POINTS_CLAIMED',
+        actor_address: address,
         amount,
-        status: 'pending',
-        request_id: requestId,
+        metadata: {
+          status: 'pending',
+          request_id: requestId,
+          username,
+        },
       })
 
     if (insertError) {
