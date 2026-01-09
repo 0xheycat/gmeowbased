@@ -247,12 +247,13 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
     }
 
     // LAYER 2: Get guild metadata from Supabase (description, banner only)
+    // NOTE: name is on-chain (from Subsquid), only query off-chain fields
     const supabase = createClient()
 
-    // LAYER 1: Get all guild metadata
+    // LAYER 1: Get all guild metadata (off-chain fields only)
     const { data: guilds, error: guildsError } = await supabase
       .from('guild_metadata')
-      .select('guild_id, name, description, banner, created_at')
+      .select('guild_id, description, banner')
 
     if (guildsError || !guilds) {
       console.error('[guild/list] Failed to fetch guild metadata:', guildsError)
@@ -284,7 +285,7 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
       return {
         id: guild.guild_id,
         chain: 'base' as const,
-        name: onChainGuild?.name || guild.name || 'Unknown Guild', // Prioritize on-chain name
+        name: onChainGuild?.name || 'Unknown Guild', // Always from Subsquid (on-chain)
         leader: stats?.leader_address || onChainGuild?.owner || '',
         totalPoints: stats?.treasury_points || onChainGuild?.treasuryPoints || 0,
         memberCount: stats?.member_count || onChainGuild?.totalMembers || 0,
