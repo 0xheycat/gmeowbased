@@ -297,16 +297,17 @@ async function fetchGuildFromSupabase(
     const onChainGuild = subsquidData?.guild
 
     // LAYER 2: Get guild metadata from Supabase (description, banner only) - OPTIONAL
+    // NOTE: name is on-chain (from Subsquid), only query off-chain fields
     const supabase = createClient()
     
     const { data: guildData } = await supabase
       .from('guild_metadata')
-      .select('guild_id, name, description, banner, created_at')
+      .select('description, banner')
       .eq('guild_id', guildId)
       .maybeSingle() // ✅ Returns null if not found (no error)
     
-    // Use on-chain guild data if no metadata in Supabase
-    const guildName = onChainGuild?.name || guildData?.name || 'Unknown Guild'
+    // Use on-chain guild data (name is always from Subsquid)
+    const guildName = onChainGuild?.name || 'Unknown Guild'
     const guildDescription = guildData?.description || ''
     const guildBanner = guildData?.banner || ''
     
@@ -530,8 +531,8 @@ async function fetchGuildFromSupabase(
     
     return {
       guild: {
-        id: guildData?.guild_id || guildId,
-        name: onChainGuild?.name || guildData?.name || 'Unknown Guild', // Prioritize on-chain name
+        id: guildId, // Use parameter, not from Supabase
+        name: onChainGuild?.name || 'Unknown Guild', // Always from Subsquid (on-chain)
         description: guildData?.description || '',
         banner: guildData?.banner || '',
         leader: leaderAddress,
