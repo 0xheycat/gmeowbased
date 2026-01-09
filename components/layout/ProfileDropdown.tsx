@@ -62,6 +62,7 @@ export function ProfileDropdown() {
           query: gql`
             query GetUserStats($address: String!) {
               users(where: { id_eq: $address }, limit: 1) {
+                id
                 totalScore
                 currentStreak
                 pointsBalance
