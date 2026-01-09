@@ -301,7 +301,7 @@ async function fetchGuildFromSupabase(
     const supabase = createClient()
     
     const { data: guildData } = await supabase
-      .from('guild_metadata')
+      .from('guild_off_chain_metadata')
       .select('description, banner')
       .eq('guild_id', guildId)
       .maybeSingle() // ✅ Returns null if not found (no error)
@@ -609,7 +609,7 @@ async function getGuildMembers(guildId: bigint, leaderAddress: string, limit: nu
     
     // First, get guild metadata and officers
     const { data: guildMeta } = await supabase
-      .from('guild_metadata')
+      .from('guild_off_chain_metadata')
       .select('name')
       .eq('guild_id', guildId.toString())
       .maybeSingle() // ✅ Returns null if not found

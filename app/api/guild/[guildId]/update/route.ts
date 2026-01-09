@@ -134,7 +134,7 @@ export async function PUT(
     
     // Check if guild metadata exists
     const { data: existing } = await supabase
-      .from('guild_metadata')
+      .from('guild_off_chain_metadata')
       .select('*')
       .eq('guild_id', guildId)
       .single()
@@ -150,7 +150,7 @@ export async function PUT(
     if (existing) {
       // Update existing record
       const { error } = await supabase
-        .from('guild_metadata')
+        .from('guild_off_chain_metadata')
         .update(updateData)
         .eq('guild_id', guildId)
 
@@ -158,7 +158,7 @@ export async function PUT(
     } else {
       // Insert new record
       const { error } = await supabase
-        .from('guild_metadata')
+        .from('guild_off_chain_metadata')
         .insert({ ...updateData, created_at: new Date().toISOString() })
 
       if (error) throw error
@@ -196,7 +196,7 @@ export async function PUT(
 
     // 8. Fetch updated data
     const { data: updatedGuild, error: fetchError } = await supabase
-      .from('guild_metadata')
+      .from('guild_off_chain_metadata')
       .select('guild_id, name, description, banner')
       .eq('guild_id', guildId)
       .single()

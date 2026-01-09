@@ -60,7 +60,7 @@ export async function GET(
     if (supabase) {
       try {
         const { data } = await supabase
-          .from('guild_metadata')
+          .from('guild_off_chain_metadata')
           .select('description, banner')
           .eq('guild_id', guildId)
           .maybeSingle() // ✅ Returns null if not found (no error)

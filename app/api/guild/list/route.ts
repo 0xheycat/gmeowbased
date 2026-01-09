@@ -252,7 +252,7 @@ async function fetchGuildsFromSupabase(): Promise<Guild[]> {
 
     // LAYER 1: Get all guild metadata (off-chain fields only)
     const { data: guilds, error: guildsError } = await supabase
-      .from('guild_metadata')
+      .from('guild_off_chain_metadata')
       .select('guild_id, description, banner')
 
     if (guildsError || !guilds) {
