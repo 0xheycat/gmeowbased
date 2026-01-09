@@ -45,6 +45,8 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   const [depositAmount, setDepositAmount] = useState('')
   const [isDepositing, setIsDepositing] = useState(false)
   const [claimingId, setClaimingId] = useState<string | null>(null) // Track which claim is being processed
+  const [claimAmount, setClaimAmount] = useState('') // Track claim request amount
+  const [isRequestingClaim, setIsRequestingClaim] = useState(false) // Track claim request state
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMessage, setDialogMessage] = useState('')
   const [persistentError, setPersistentError] = useState<string | null>(null) // Persistent error banner
@@ -247,6 +249,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
           if (res.ok) {
             const data = await res.json()
             setBalance(data.balance || '0')
+            setTransactions(data.transactions)
           }
         } catch (err) {
         }
@@ -256,6 +259,62 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
       setDialogOpen(true)
     } finally {
       setClaimingId(null)
+    }
+  }
+
+  const handleRequestClaim = async () => {
+    const amount = parseInt(claimAmount)
+    if (!address || !amount || amount <= 0) {
+      setDialogMessage('Please enter a valid amount to claim.')
+      setDialogOpen(true)
+      return
+    }
+
+    if (!isMember) {
+      setDialogMessage('Only guild members can request claims.')
+      setDialogOpen(true)
+      return
+    }
+
+    try {
+      setIsRequestingClaim(true)
+      
+      const response = await fetch(`/api/guild/${guildId}/request-claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, amount })
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        setDialogMessage(data.message || 'Unable to submit claim request. Please try again.')
+        setDialogOpen(true)
+        setIsRequestingClaim(false)
+        return
+      }
+      
+      setDialogMessage('📝 Claim request submitted! Waiting for guild leader approval.')
+      setDialogOpen(true)
+      setClaimAmount('')
+      setIsRequestingClaim(false)
+      
+      // Reload treasury data
+      setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/guild/${guildId}/treasury`)
+          if (res.ok) {
+            const data = await res.json()
+            setBalance(data.balance || '0')
+            setTransactions(data.transactions)
+          }
+        } catch (err) {
+        }
+      }, 2000)
+    } catch (err) {
+      setDialogMessage('Claim request failed. Please check your connection and try again.')
+      setDialogOpen(true)
+      setIsRequestingClaim(false)
     }
   }
 
@@ -389,6 +448,52 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
           </div>
           <p id="deposit-hint" className={`text-sm ${WCAG_CLASSES.text.onLight.secondary} mt-2`}>
             Contribute points from your balance to the guild treasury
+          </p>
+        </div>
+      )}
+
+      {/* Claim Request Form (Members) */}
+      {address && isMember && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className={`text-xl font-bold ${WCAG_CLASSES.text.onLight.primary} mb-4`}>
+            Request Claim
+          </h2>
+          <div className="flex gap-3">
+            <label htmlFor="claim-amount" className="sr-only">Amount to claim from treasury</label>
+            <input
+              id="claim-amount"
+              type="number"
+              value={claimAmount}
+              onChange={(e) => setClaimAmount(e.target.value)}
+              placeholder="Amount"
+              min="1"
+              aria-label="Amount to claim from treasury"
+              aria-describedby="claim-hint"
+              className={`flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 ${WCAG_CLASSES.text.onLight.primary} placeholder-gray-500 ${FOCUS_STYLES.ring} transition-fast ${BUTTON_SIZES.md}`}
+            />
+            <button
+              onClick={handleRequestClaim}
+              disabled={isRequestingClaim || !claimAmount}
+              aria-busy={isRequestingClaim}
+              aria-label={`Request ${claimAmount || '0'} points from guild treasury`}
+              className={`px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-smooth ${BUTTON_SIZES.md} ${FOCUS_STYLES.ring} flex items-center gap-2 ${
+                isRequestingClaim ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
+              }`}
+            >
+              {isRequestingClaim ? (
+                <>
+                  <span {...LOADING_ARIA}>
+                    <Loader size="small" variant="minimal" />
+                  </span>
+                  Submitting...
+                </>
+              ) : (
+                'Request'
+              )}
+            </button>
+          </div>
+          <p id="claim-hint" className={`text-sm ${WCAG_CLASSES.text.onLight.secondary} mt-2`}>
+            Submit a claim request for guild leader approval
           </p>
         </div>
       )}
