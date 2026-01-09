@@ -49,6 +49,8 @@ import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { fetchUsersByAddresses, type FarcasterUser } from '@/lib/integrations/neynar'
 import type { Badge } from '@/components/guild/badges/BadgeIcon'
+import { getApolloClient } from '@/lib/apollo-client'
+import { gql } from '@apollo/client'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -313,8 +315,10 @@ function assignMemberBadges(member: GuildMember, guildCreatedAt: Date): Badge[] 
 
 /**
  * Fetch leaderboard stats for members (TRUE HYBRID - Dec 31 architecture)
- * ON-CHAIN (Subsquid): level, rankTier, totalScore, multiplier, viralPoints, guildPoints
+ * ON-CHAIN (Subsquid via Apollo Client): level, rankTier, totalScore, multiplier, viralPoints, guildPoints
  * OFF-CHAIN (Supabase): global rank only
+ * 
+ * Uses existing Apollo Client infrastructure with caching and rate limiting
  */
 async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<string, any>> {
   if (members.length === 0) return {}
@@ -340,33 +344,30 @@ async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<str
       })
     )
     
-    // LAYER 1: Query Subsquid for ALL ON-CHAIN data (ScoringModule deployed Dec 31)
-    const subsquidUrl = process.env.NEXT_PUBLIC_SUBSQUID_URL || 'https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql'
+    // LAYER 1: Query Subsquid via Apollo Client (has caching, rate limiting, retry logic)
+    const apolloClient = getApolloClient()
     
-    const subsquidResponse = await fetch(subsquidUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `
-          query GetUsers($addresses: [String!]!) {
-            users(where: { id_in: $addresses }) {
-              id
-              level
-              rankTier
-              totalScore
-              multiplier
-              pointsBalance
-              viralPoints
-              guildPoints
-            }
+    const { data: subsquidData } = await apolloClient.query({
+      query: gql`
+        query GetUsersStats($addresses: [String!]!) {
+          users(where: { id_in: $addresses }) {
+            id
+            level
+            rankTier
+            totalScore
+            multiplier
+            pointsBalance
+            viralPoints
+            guildPoints
           }
-        `,
-        variables: { addresses }
-      })
+        }
+      `,
+      variables: { addresses },
+      // Use cache-first policy for better performance
+      fetchPolicy: 'cache-first',
     })
     
-    const subsquidData = await subsquidResponse.json()
-    const onChainUsers = subsquidData.data?.users || []
+    const onChainUsers = subsquidData?.users || []
     
     // Build address → on-chain data map
     const onChainMap = new Map<string, any>()
@@ -501,37 +502,34 @@ async function getGuildData(guildId: string) {
 
 /**
  * Get all members with roles and points from Subsquid GraphQL
- * FIXED: Query Subsquid directly (Supabase tables are empty)
+ * FIXED: Query Subsquid via Apollo Client (has caching and rate limiting)
  */
 async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
   try {
     console.log('[guild-members] Querying Subsquid GraphQL for guild', guildId)
     
-    const subsquidUrl = process.env.NEXT_PUBLIC_SUBSQUID_URL || 'https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql'
+    const apolloClient = getApolloClient()
     
-    const response = await fetch(subsquidUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `
-          query GetGuildMembers($guildId: String!) {
-            guildMembers(where: { guild: { id_eq: $guildId }, isActive_eq: true }) {
+    const { data } = await apolloClient.query({
+      query: gql`
+        query GetGuildMembers($guildId: String!) {
+          guildMembers(where: { guild: { id_eq: $guildId }, isActive_eq: true }) {
+            id
+            role
+            pointsContributed
+            joinedAt
+            user {
               id
-              role
-              pointsContributed
-              joinedAt
-              user {
-                id
-              }
             }
           }
-        `,
-        variables: { guildId }
-      })
+        }
+      `,
+      variables: { guildId },
+      // Cache for 60s
+      fetchPolicy: 'cache-first',
     })
 
-    const result = await response.json()
-    const subsquidMembers = result.data?.guildMembers || []
+    const subsquidMembers = data?.guildMembers || []
 
     if (subsquidMembers.length === 0) {
       console.log('[guild-members] No members found in Subsquid')
