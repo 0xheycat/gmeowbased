@@ -49,8 +49,6 @@ import { createClient } from '@/lib/supabase/edge'
 import { generateRequestId } from '@/lib/middleware/request-id'
 import { fetchUsersByAddresses, type FarcasterUser } from '@/lib/integrations/neynar'
 import type { Badge } from '@/components/guild/badges/BadgeIcon'
-import getApolloClient from '@/lib/apollo-client'
-import { gql } from '@apollo/client'
 
 // ==========================================
 // 1. Rate Limiting Configuration
@@ -469,38 +467,43 @@ async function getGuildData(guildId: string) {
  */
 async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
   try {
-    // Query Subsquid GraphQL for guild members
     console.log('[guild-members] Querying Subsquid GraphQL for guild', guildId)
-    const apolloClient = getApolloClient()
-    const { data } = await apolloClient.query({
-      query: gql`
-        query GetGuildMembers($guildId: String!) {
-          guildMembers(
-            where: { guild: { id_eq: $guildId }, isActive_eq: true }
-            orderBy: pointsContributed_DESC
-          ) {
-            id
-            user {
+    
+    const subsquidUrl = process.env.NEXT_PUBLIC_SUBSQUID_URL || 'https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql'
+    
+    const response = await fetch(subsquidUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
+          query GetGuildMembers($guildId: String!) {
+            guildMembers(where: { guild: { id_eq: $guildId }, isActive_eq: true }) {
               id
+              role
+              pointsContributed
+              joinedAt
+              user {
+                id
+              }
             }
-            role
-            pointsContributed
-            joinedAt
           }
-        }
-      `,
-      variables: { guildId }
+        `,
+        variables: { guildId }
+      })
     })
 
-    if (!data?.guildMembers || data.guildMembers.length === 0) {
+    const result = await response.json()
+    const subsquidMembers = result.data?.guildMembers || []
+
+    if (subsquidMembers.length === 0) {
       console.log('[guild-members] No members found in Subsquid')
       return []
     }
 
     // Convert Subsquid data to API format
-    const members: GuildMember[] = data.guildMembers.map((member: any) => ({
+    const members: GuildMember[] = subsquidMembers.map((member: any) => ({
       address: member.user.id,
-      role: member.role.toLowerCase() as 'owner' | 'officer' | 'member',
+      role: (member.role === 'leader' ? 'owner' : member.role.toLowerCase()) as 'owner' | 'officer' | 'member',
       points: member.pointsContributed?.toString() || '0',
       joinedAt: new Date(parseInt(member.joinedAt) * 1000).toISOString(),
     }))
