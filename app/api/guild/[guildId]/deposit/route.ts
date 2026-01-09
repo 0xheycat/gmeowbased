@@ -58,6 +58,7 @@ import { base } from 'viem/chains'
 import { getContractAddress, STANDALONE_ADDRESSES } from '@/lib/contracts/gmeow-utils'
 import { GUILD_ABI_JSON, GM_CONTRACT_ABI } from '@/lib/contracts/abis'
 import { generateRequestId } from '@/lib/middleware/request-id'
+import { logGuildEvent } from '@/lib/guild/event-logger'
 import { 
   checkIdempotency, 
   storeIdempotency, 

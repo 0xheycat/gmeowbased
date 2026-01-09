@@ -13,8 +13,7 @@
 
 'use client'
 
-import { MonetizationOnIcon, GroupsIcon, EmojiEventsIcon, TrendingUpIcon } from '@/components/icons'
-import { CheckCircle } from 'lucide-react'
+import { MonetizationOnIcon, GroupIcon, EmojiEventsIcon, TrendingUpIcon, CheckCircleIcon } from '@/components/icons'
 
 export function TreasuryInfo() {
   return (
@@ -50,7 +49,7 @@ export function TreasuryInfo() {
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              <GroupsIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <GroupIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               For Members
@@ -58,25 +57,25 @@ export function TreasuryInfo() {
           </div>
           <ul className="space-y-3">
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Earn Rewards:</strong> Request claims for your contributions and active participation
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Support Community:</strong> Pool resources for shared goals and collective growth
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Guild Progression:</strong> Help your guild level up and rank higher on leaderboards
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Track Recognition:</strong> Your deposits are tracked as pointsContributed
               </span>
@@ -96,25 +95,25 @@ export function TreasuryInfo() {
           </div>
           <ul className="space-y-3">
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Distribute Rewards:</strong> Approve claims to reward active members and contributors
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Incentivize Behavior:</strong> Reward quest completions, referrals, and guild activity
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Track Contributions:</strong> See who's depositing points and recognize top contributors
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Manage Economy:</strong> Balance deposits and distributions for healthy guild growth
               </span>
