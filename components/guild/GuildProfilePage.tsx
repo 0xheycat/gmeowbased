@@ -82,6 +82,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
   const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
   const [userRole, setUserRole] = useState<'owner' | 'officer' | 'member' | null>(null)
   const [pendingAction, setPendingAction] = useState<'join' | 'leave' | null>(null)
+  const [memberListRefreshKey, setMemberListRefreshKey] = useState(0)
   
   // Prevent hydration mismatch
   useEffect(() => {
@@ -251,13 +252,15 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
         setDialogOpen(true)
         setPendingAction(null) // Reset pending action
         
-        // Reload guild data
+        // Reload guild data and force member list refresh
         setTimeout(async () => {
           try {
             const response = await fetch(`/api/guild/${guildId}`)
             if (response.ok) {
               const data = await response.json()
               setGuild(data.guild)
+              // Force member list to refresh after leave/join
+              setMemberListRefreshKey(prev => prev + 1)
             }
           } catch (err) {
             console.error('[GuildProfilePage] Failed to reload guild:', err)
@@ -537,7 +540,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
               {activeTab === 'members' && (
                 <div role="tabpanel" id="members-panel" aria-labelledby="members-tab">
-                  <GuildMemberList guildId={guildId} canManage={canManage} />
+                  <GuildMemberList guildId={guildId} canManage={canManage} key={memberListRefreshKey} />
                 </div>
               )}
               {activeTab === 'analytics' && (
