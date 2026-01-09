@@ -443,7 +443,7 @@ async function getGuildData(guildId: string) {
     
     // Get guild metadata
     const { data: guildData, error: guildError } = await supabase
-      .from('guild_metadata')
+      .from('guild_off_chain_metadata')
       .select('guild_id, name, description, banner')
       .eq('guild_id', guildId)
       .single()
