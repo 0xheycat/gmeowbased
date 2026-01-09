@@ -539,7 +539,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
               )}
               {activeTab === 'settings' && (
                 <div role="tabpanel" id="settings-panel" aria-labelledby="settings-tab">
-                  <GuildSettings guildId={guildId} isLeader={canManage} />
+                  <GuildSettings guildId={guildId} isLeader={canManage} isOwner={userRole === 'owner'} />
                 </div>
               )}
             </div>
