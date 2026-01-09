@@ -502,7 +502,7 @@ async function fetchGuildFromSupabase(
       return {
         address: address,
         isOfficer: officers.has(address),
-        points: aggregatedStats.pointsBalance.toString(),
+        points: (memberPointsMap.get(address) || 0).toString(), // Points contributed to guild
         joinedAt: currentProfile?.created_at || undefined, // BUG #10: Include for pagination cursor (may be undefined)
         farcaster: fid ? {
           fid: fid,
