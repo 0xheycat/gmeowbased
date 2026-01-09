@@ -9,12 +9,24 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import BoltIcon from '@mui/icons-material/Bolt'
 import PersonIcon from '@mui/icons-material/Person'
 import LogoutIcon from '@mui/icons-material/Logout'
+import WalletIcon from '@mui/icons-material/AccountBalanceWallet'
 import { fetchUserByAddress, type FarcasterUser } from '@/lib/integrations/neynar-client'
 import { formatNumber } from '@/lib/utils/formatters'
+import { useAuthContext } from '@/lib/contexts'
+
+interface UserStats {
+  totalScore: number
+  currentStreak: number
+  pointsBalance: number
+  level: number
+  rankTier: number
+}
 
 export function ProfileDropdown() {
   const { address, isConnected } = useAccount()
+  const { cachedWallets } = useAuthContext()
   const [profile, setProfile] = useState<FarcasterUser | null>(null)
+  const [stats, setStats] = useState<UserStats | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -28,6 +40,7 @@ export function ProfileDropdown() {
   useEffect(() => {
     if (!address || !isConnected) {
       setProfile(null)
+      setStats(null)
       setLoading(false)
       return
     }
@@ -35,22 +48,56 @@ export function ProfileDropdown() {
     let cancelled = false
     setLoading(true)
 
-    const loadProfile = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchUserByAddress(address)
+        // Fetch Farcaster profile
+        const profileData = await fetchUserByAddress(address)
+        
+        // Fetch on-chain stats from Subsquid via Apollo Client
+        const { getApolloClient } = await import('@/lib/apollo-client')
+        const { gql } = await import('@apollo/client')
+        const apolloClient = getApolloClient()
+        
+        const { data: subsquidData } = await apolloClient.query({
+          query: gql`
+            query GetUserStats($address: String!) {
+              users(where: { id_eq: $address }, limit: 1) {
+                totalScore
+                currentStreak
+                pointsBalance
+                level
+                rankTier
+              }
+            }
+          `,
+          variables: { address: address.toLowerCase() },
+          fetchPolicy: 'cache-first',
+        })
+        
+        const userStats = subsquidData?.users?.[0]
+        
         if (!cancelled) {
-          setProfile(data ?? null)
+          setProfile(profileData ?? null)
+          setStats(userStats ? {
+            totalScore: Number(userStats.totalScore || 0),
+            currentStreak: Number(userStats.currentStreak || 0),
+            pointsBalance: Number(userStats.pointsBalance || 0),
+            level: Number(userStats.level || 0),
+            rankTier: Number(userStats.rankTier || 0),
+          } : null)
           setLoading(false)
         }
-      } catch {
+      } catch (error) {
+        console.error('[ProfileDropdown] Error loading data:', error)
         if (!cancelled) {
           setProfile(null)
+          setStats(null)
           setLoading(false)
         }
       }
     }
 
-    loadProfile()
+    loadData()
 
     return () => {
       cancelled = true
@@ -112,9 +159,9 @@ export function ProfileDropdown() {
 
   const pfpUrl = profile?.pfpUrl || '/logo.png'
   const username = profile?.username || profile?.displayName || 'Anon'
-  const points = profile?.contractData?.points ?? 0
-  const streak = profile?.contractData?.currentStreak ?? 0
-  const rank = profile?.contractData?.rank ?? null
+  const points = stats?.pointsBalance ?? 0
+  const streak = stats?.currentStreak ?? 0
+  const rank = null // TODO: Get rank from leaderboard API
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -196,6 +243,35 @@ export function ProfileDropdown() {
 
             {/* Menu items */}
             <div className="p-2">
+              {/* Multi-Wallet Cache */}
+              {cachedWallets.length > 1 && (
+                <div className="mb-2 px-3 py-2 rounded-lg bg-slate-100/50 dark:bg-slate-800/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <WalletIcon sx={{ fontSize: 14 }} className="text-slate-600 dark:text-slate-400" />
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {cachedWallets.length} Wallets Connected
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    {cachedWallets.map((wallet, i) => (
+                      <div
+                        key={wallet}
+                        className={`text-xs font-mono px-2 py-1 rounded ${
+                          wallet.toLowerCase() === address?.toLowerCase()
+                            ? 'bg-accent-green/20 text-accent-green'
+                            : 'text-slate-600 dark:text-slate-400'
+                        }`}
+                      >
+                        {wallet.slice(0, 6)}...{wallet.slice(-4)}
+                        {wallet.toLowerCase() === address?.toLowerCase() && (
+                          <span className="ml-2 text-[10px]">● Active</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               {/* Wallet Management */}
               <div className="mb-2 px-3 py-2">
                 <appkit-button />
