@@ -62,6 +62,16 @@ export function Header() {
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-4">
             <Link
+              href="/guild"
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/guild')
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50'
+              }`}
+            >
+              Guild
+            </Link>
+            <Link
               href="/quests"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/quests')
@@ -90,6 +100,16 @@ export function Header() {
               }`}
             >
               Dashboard
+            </Link>
+            <Link
+              href="/referral"
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/referral')
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50'
+              }`}
+            >
+              Referral
             </Link>
           </div>
         </div>
