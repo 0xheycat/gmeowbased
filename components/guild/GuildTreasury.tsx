@@ -60,20 +60,15 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   useEffect(() => {
     const checkMembership = async () => {
       if (!address) {
-        console.log('[GuildTreasury] No wallet connected')
         setIsMember(false)
         return
       }
 
       try {
-        console.log('[GuildTreasury] Checking membership for:', address, 'in guild:', guildId)
         const response = await fetch(`/api/guild/${guildId}/is-member?address=${address}`)
         const data = await response.json()
-        console.log('[GuildTreasury] Membership check result:', data)
         setIsMember(data.isMember)
       } catch (err) {
-        // Membership check failed
-        console.error('[GuildTreasury] Membership check error:', err)
         setIsMember(false)
       }
     }
@@ -410,28 +405,12 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
         </div>
       )}
 
-      {/* Debug Info - Remove after testing */}
-      {address && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 text-sm">
-          <p><strong>Debug Info:</strong></p>
-          <p>Wallet: {address}</p>
-          <p>Guild ID: {guildId}</p>
-          <p>Is Member: {isMember ? 'Yes ✓' : 'No ✗'}</p>
-          <p>Can Manage: {canManage ? 'Yes ✓' : 'No ✗'}</p>
-        </div>
-      )}
-
       {/* Deposit Form */}
-      {address && (
+      {address && isMember && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className={`text-xl font-bold ${WCAG_CLASSES.text.onLight.primary} mb-4`}>
             Deposit Points
           </h2>
-          {!isMember && (
-            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg text-sm">
-              ⚠️ You must be a guild member to deposit points. <a href={`/guild/${guildId}`} className="underline font-semibold">Join this guild first</a>
-            </div>
-          )}
           <div className="flex gap-3">
             <label htmlFor="deposit-amount" className="sr-only">Amount to deposit in BASE POINTS</label>
             <input
@@ -441,14 +420,13 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
               onChange={(e) => setDepositAmount(e.target.value)}
               placeholder="Amount"
               min="1"
-              disabled={!isMember}
               aria-label="Amount to deposit in BASE POINTS"
               aria-describedby="deposit-hint"
-              className={`flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 ${WCAG_CLASSES.text.onLight.primary} placeholder-gray-500 ${FOCUS_STYLES.ring} transition-fast ${BUTTON_SIZES.md} disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 ${WCAG_CLASSES.text.onLight.primary} placeholder-gray-500 ${FOCUS_STYLES.ring} transition-fast ${BUTTON_SIZES.md}`}
             />
             <button
               onClick={handleDeposit}
-              disabled={!isMember || isDepositing || isWriting || isConfirming || !depositAmount}
+              disabled={isDepositing || isWriting || isConfirming || !depositAmount}
               aria-busy={isDepositing || isWriting || isConfirming}
               aria-label={`Deposit ${depositAmount || '0'} points to guild treasury`}
               className={`px-6 py-3 bg-wcag-info-light hover:bg-wcag-info-dark disabled:bg-gray-400 text-white font-semibold rounded-lg transition-smooth ${BUTTON_SIZES.md} ${FOCUS_STYLES.ring} flex items-center gap-2 ${
@@ -474,16 +452,11 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
       )}
 
       {/* Claim Request Form (Members) */}
-      {address && (
+      {address && isMember && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className={`text-xl font-bold ${WCAG_CLASSES.text.onLight.primary} mb-4`}>
             Request Claim
           </h2>
-          {!isMember && (
-            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg text-sm">
-              ⚠️ You must be a guild member to request claims. <a href={`/guild/${guildId}`} className="underline font-semibold">Join this guild first</a>
-            </div>
-          )}
           <div className="flex gap-3">
             <label htmlFor="claim-amount" className="sr-only">Amount to claim from treasury</label>
             <input
@@ -493,14 +466,13 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
               onChange={(e) => setClaimAmount(e.target.value)}
               placeholder="Amount"
               min="1"
-              disabled={!isMember}
               aria-label="Amount to claim from treasury"
               aria-describedby="claim-hint"
-              className={`flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 ${WCAG_CLASSES.text.onLight.primary} placeholder-gray-500 ${FOCUS_STYLES.ring} transition-fast ${BUTTON_SIZES.md} disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 ${WCAG_CLASSES.text.onLight.primary} placeholder-gray-500 ${FOCUS_STYLES.ring} transition-fast ${BUTTON_SIZES.md}`}
             />
             <button
               onClick={handleRequestClaim}
-              disabled={!isMember || isRequestingClaim || !claimAmount}
+              disabled={isRequestingClaim || !claimAmount}
               aria-busy={isRequestingClaim}
               aria-label={`Request ${claimAmount || '0'} points from guild treasury`}
               className={`px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-smooth ${BUTTON_SIZES.md} ${FOCUS_STYLES.ring} flex items-center gap-2 ${
