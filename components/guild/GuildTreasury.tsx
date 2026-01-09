@@ -26,6 +26,8 @@ import { Skeleton } from '@/components/ui/skeleton/Skeleton'
 import { createKeyboardHandler, FOCUS_STYLES, WCAG_CLASSES, BUTTON_SIZES, LOADING_ARIA, ERROR_ARIA } from '@/lib/utils/accessibility'
 import { XPEventOverlay, type XpEventPayload } from '@/components/XPEventOverlay'
 import { TreasuryResponseSchema, TreasuryErrorSchema, type TreasuryTransaction } from '@/types/api/guild-treasury'
+import { TreasuryInfo } from './TreasuryInfo'
+import { HelpCircle } from 'lucide-react'
 
 export interface GuildTreasuryProps {
   guildId: string
@@ -51,6 +53,7 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   const [dialogMessage, setDialogMessage] = useState('')
   const [persistentError, setPersistentError] = useState<string | null>(null) // Persistent error banner
   const [isMember, setIsMember] = useState(false)
+  const [showInfo, setShowInfo] = useState(false) // Treasury info section
   
   // XP celebration state
   const [xpOverlayOpen, setXpOverlayOpen] = useState(false)
@@ -383,7 +386,23 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
         <div className="text-sm opacity-75">
           BASE POINTS
         </div>
+        <button
+          onClick={() => setShowInfo(!showInfo)}
+          className="mt-4 w-full px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium rounded-lg transition-colors text-sm flex items-center justify-center gap-2"
+          aria-expanded={showInfo}
+          aria-label={showInfo ? 'Hide treasury information' : 'Show treasury information'}
+        >
+          <HelpCircle className="w-4 h-4" />
+          {showInfo ? 'Hide Info' : 'Learn About Treasury'}
+        </button>
       </div>
+
+      {/* Treasury Info Section (Collapsible) */}
+      {showInfo && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-in slide-in-from-top duration-300">
+          <TreasuryInfo />
+        </div>
+      )}
 
       {/* Persistent Error Banner */}
       {persistentError && (
