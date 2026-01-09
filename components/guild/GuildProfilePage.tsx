@@ -264,6 +264,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
     try {
       setConfirmLeaveOpen(false)
       
+      // Get contract call details from API
       const response = await fetch(`/api/guild/${guildId}/leave`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -278,8 +279,35 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
         return
       }
       
-      // Update membership status immediately
+      // Execute the actual contract transaction
+      if (data.contractCall) {
+        writeContract({
+          address: data.contractCall.address as Address,
+          abi: data.contractCall.abi,
+          functionName: data.contractCall.functionName,
+          args: data.contractCall.args || [],
+        })
+      }
+      
+    } catch (err) {
+      setDialogMessage('Unable to leave guild. Please check your connection and try again.')
+      setDialogOpen(true)
+    }
+  }
+  
+  // Handle leave guild transaction success
+  useEffect(() => {
+    if (isSuccess && !isMember) {
+      // Update membership status
       setIsMember(false)
+      
+      // Invalidate scoring cache
+      if (address) {
+        invalidateUserScoringCache(address).catch((err) => {
+          console.error('[GuildProfilePage] Failed to invalidate cache:', err);
+        });
+      }
+      
       setDialogMessage('👋 You have left the guild. Farewell, brave warrior!')
       setDialogOpen(true)
       
@@ -295,11 +323,8 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
         }
         setDialogOpen(false)
       }, 2000)
-    } catch (err) {
-      setDialogMessage('Unable to leave guild. Please check your connection and try again.')
-      setDialogOpen(true)
     }
-  }
+  }, [isSuccess, isMember, guildId, address])
 
   const isLeader = address && guild && guild.leader.toLowerCase() === address.toLowerCase()
   // Phase 2.3: Check user role from fetched data (owner or officer can manage)
