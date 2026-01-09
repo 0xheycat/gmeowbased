@@ -83,6 +83,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
   const [userRole, setUserRole] = useState<'owner' | 'officer' | 'member' | null>(null)
   const [pendingAction, setPendingAction] = useState<'join' | 'leave' | null>(null)
   const [memberListRefreshKey, setMemberListRefreshKey] = useState(0)
+  const [excludedMemberAddresses, setExcludedMemberAddresses] = useState<string[]>([])
   
   // Prevent hydration mismatch
   useEffect(() => {
@@ -247,6 +248,8 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
           setDialogMessage('⚔️ Welcome to the guild! Your adventure begins now!')
         } else if (pendingAction === 'leave') {
           setDialogMessage('👋 You have left the guild. Farewell, brave warrior!')
+          // Optimistically exclude this address from member list
+          setExcludedMemberAddresses(prev => [...prev, address.toLowerCase()])
         }
         
         setDialogOpen(true)
@@ -540,7 +543,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
               {activeTab === 'members' && (
                 <div role="tabpanel" id="members-panel" aria-labelledby="members-tab">
-                  <GuildMemberList guildId={guildId} canManage={canManage} key={memberListRefreshKey} />
+                  <GuildMemberList guildId={guildId} canManage={canManage} key={memberListRefreshKey} excludeAddresses={excludedMemberAddresses} />
                 </div>
               )}
               {activeTab === 'analytics' && (
