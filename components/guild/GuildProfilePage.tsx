@@ -81,6 +81,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
   const [xpOverlayOpen, setXpOverlayOpen] = useState(false)
   const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
   const [userRole, setUserRole] = useState<'owner' | 'officer' | 'member' | null>(null)
+  const [pendingAction, setPendingAction] = useState<'join' | 'leave' | null>(null)
   
   // Prevent hydration mismatch
   useEffect(() => {
@@ -188,6 +189,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
       // Execute the actual contract transaction
       const { contractAddress, functionName, args } = data
       
+      setPendingAction('join') // Track that we're joining
       writeContract({
         address: contractAddress as Address,
         abi: GUILD_ABI_JSON,
@@ -201,49 +203,74 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
     }
   }
   
-  // Handle transaction success
+  // Handle transaction success (both join and leave)
   useEffect(() => {
-    if (isSuccess) {
-      setIsMember(true)
-      
-      // Invalidate scoring cache to show updated multiplier immediately
-      if (address) {
+    if (isSuccess && pendingAction && address) {
+      const handleSuccess = async () => {
+        // Re-check membership from blockchain
+        try {
+          const memberResponse = await fetch(`/api/guild/${guildId}/is-member?address=${address}`)
+          const memberData = await memberResponse.json()
+          setIsMember(memberData.isMember)
+          
+          if (memberData.isMember && memberData.role) {
+            setUserRole(memberData.role)
+          } else {
+            setUserRole(null)
+          }
+        } catch (err) {
+          console.error('[GuildProfilePage] Failed to check membership:', err)
+        }
+        
+        // Invalidate scoring cache
         invalidateUserScoringCache(address).catch((err) => {
           console.error('[GuildProfilePage] Failed to invalidate cache:', err);
         });
-      }
-      
-      // Show XP celebration
-      const payload: XpEventPayload = {
-        event: 'guild-join',
-        chainKey: 'base',
-        xpEarned: 25, // Guild join reward
-        totalPoints: 0,
-        headline: `Joined ${guild?.name || 'Guild'}! ⚔️`,
-        tierTagline: '+25 XP Earned',
-        shareLabel: 'Share Guild',
-        visitLabel: 'View Guild',
-        visitUrl: `/guild/${guildId}`,
-      }
-      setXpPayload(payload)
-      setTimeout(() => setXpOverlayOpen(true), 100)
-      
-      setDialogMessage('⚔️ Welcome to the guild! Your adventure begins now!')
-      setDialogOpen(true)
-      
-      // Reload guild data
-      setTimeout(async () => {
-        try {
-          const response = await fetch(`/api/guild/${guildId}`)
-          if (response.ok) {
-            const data = await response.json()
-            setGuild(data.guild)
+        
+        if (pendingAction === 'join') {
+          // Show XP celebration for join
+          const payload: XpEventPayload = {
+            event: 'guild-join',
+            chainKey: 'base',
+            xpEarned: 25,
+            totalPoints: 0,
+            headline: `Joined ${guild?.name || 'Guild'}! ⚔️`,
+            tierTagline: '+25 XP Earned',
+            shareLabel: 'Share Guild',
+            visitLabel: 'View Guild',
+            visitUrl: `/guild/${guildId}`,
           }
-        } catch (err) {
+          setXpPayload(payload)
+          setTimeout(() => setXpOverlayOpen(true), 100)
+          
+          setDialogMessage('⚔️ Welcome to the guild! Your adventure begins now!')
+        } else if (pendingAction === 'leave') {
+          setDialogMessage('👋 You have left the guild. Farewell, brave warrior!')
         }
-      }, 1000)
+        
+        setDialogOpen(true)
+        setPendingAction(null) // Reset pending action
+        
+        // Reload guild data
+        setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/guild/${guildId}`)
+            if (response.ok) {
+              const data = await response.json()
+              setGuild(data.guild)
+            }
+          } catch (err) {
+            console.error('[GuildProfilePage] Failed to reload guild:', err)
+          }
+          if (pendingAction === 'leave') {
+            setDialogOpen(false)
+          }
+        }, pendingAction === 'join' ? 1000 : 2000)
+      }
+      
+      handleSuccess()
     }
-  }, [isSuccess, guildId, guild?.name])
+  }, [isSuccess, pendingAction, guildId, guild?.name, address])
   
   // Handle transaction error
   useEffect(() => {
@@ -281,6 +308,7 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
       
       // Execute the actual contract transaction
       if (data.contractCall) {
+        setPendingAction('leave') // Track that we're leaving
         writeContract({
           address: data.contractCall.address as Address,
           abi: data.contractCall.abi,
@@ -294,37 +322,6 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
       setDialogOpen(true)
     }
   }
-  
-  // Handle leave guild transaction success
-  useEffect(() => {
-    if (isSuccess && !isMember) {
-      // Update membership status
-      setIsMember(false)
-      
-      // Invalidate scoring cache
-      if (address) {
-        invalidateUserScoringCache(address).catch((err) => {
-          console.error('[GuildProfilePage] Failed to invalidate cache:', err);
-        });
-      }
-      
-      setDialogMessage('👋 You have left the guild. Farewell, brave warrior!')
-      setDialogOpen(true)
-      
-      // Reload guild data
-      setTimeout(async () => {
-        try {
-          const response = await fetch(`/api/guild/${guildId}`)
-          if (response.ok) {
-            const data = await response.json()
-            setGuild(data.guild)
-          }
-        } catch (err) {
-        }
-        setDialogOpen(false)
-      }, 2000)
-    }
-  }, [isSuccess, isMember, guildId, address])
 
   const isLeader = address && guild && guild.leader.toLowerCase() === address.toLowerCase()
   // Phase 2.3: Check user role from fetched data (owner or officer can manage)
