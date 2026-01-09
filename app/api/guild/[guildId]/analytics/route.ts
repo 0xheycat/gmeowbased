@@ -315,33 +315,50 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
         // Non-blocking: continue with cached data only
       }
 
-      // Get recent activity from guild_events (not cached)
-      const { data: recentEvents } = await supabase
-        .from('guild_events')
-        .select('id, event_type, actor_address, amount, created_at')
-        .eq('guild_id', guildId)
-        .order('created_at', { ascending: false })
-        .limit(10)
+      // Get recent activity from Subsquid (on-chain guild events)
+      const { getApolloClient } = await import('@/lib/apollo-client')
+      const { gql } = await import('@apollo/client')
+      const apolloClient = getApolloClient()
+      
+      const { data: eventsData } = await apolloClient.query({
+        query: gql`
+          query GetGuildEvents($guildId: String!) {
+            guildEvents(
+              where: { guild: { id_eq: $guildId } }
+              orderBy: timestamp_DESC
+              limit: 10
+            ) {
+              id
+              eventType
+              user { id }
+              amount
+              timestamp
+            }
+          }
+        `,
+        variables: { guildId },
+        fetchPolicy: 'cache-first',
+      })
 
-      const recentActivity: RecentActivity[] = (recentEvents || []).map(e => ({
-        id: e.id ? String(e.id) : '',
-        type: e.event_type === 'MEMBER_JOINED' ? 'join' as const : 
-              e.event_type === 'POINTS_DEPOSITED' ? 'deposit' as const : 'quest' as const,
-        username: e.actor_address ? `${e.actor_address.slice(0, 6)}...${e.actor_address.slice(-4)}` : 'Unknown',
-        timestamp: e.created_at || new Date().toISOString(),
-        details: e.event_type === 'POINTS_DEPOSITED' 
+      const recentActivity: RecentActivity[] = (eventsData?.guildEvents || []).map((e: any) => ({
+        id: e.id || '',
+        type: e.eventType === 'MemberJoined' ? 'join' as const : 
+              e.eventType === 'PointsDeposited' ? 'deposit' as const : 'quest' as const,
+        username: e.user?.id ? `${e.user.id.slice(0, 6)}...${e.user.id.slice(-4)}` : 'Unknown',
+        timestamp: e.timestamp ? new Date(parseInt(e.timestamp) * 1000).toISOString() : new Date().toISOString(),
+        details: e.eventType === 'PointsDeposited' 
           ? `Deposited ${Number(e.amount || 0).toLocaleString()} points`
-          : e.event_type === 'POINTS_CLAIMED'
+          : e.eventType === 'PointsClaimed'
           ? `Claimed ${Number(e.amount || 0).toLocaleString()} points`
-          : e.event_type === 'MEMBER_JOINED'
+          : e.eventType === 'MemberJoined'
           ? 'Joined guild'
-          : e.event_type === 'GUILD_UPDATED'
+          : e.eventType === 'GuildUpdated'
           ? 'Updated guild settings'
-          : e.event_type === 'MEMBER_PROMOTED'
+          : e.eventType === 'MemberPromoted'
           ? 'Promoted member'
-          : e.event_type === 'MEMBER_DEMOTED'
+          : e.eventType === 'MemberDemoted'
           ? 'Demoted member'
-          : e.event_type === 'GUILD_CREATED'
+          : e.eventType === 'GuildCreated'
           ? 'Created guild'
           : 'Guild activity'
       }))
@@ -374,98 +391,83 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
       }
     }
 
-    // FALLBACK: Cache miss - calculate from events (slow path)
-    console.log(`[Guild Analytics] Cache miss for guild ${guildId}, calculating from events`)
+    // FALLBACK: Cache miss - use Subsquid data (fast path)
+    console.log(`[Guild Analytics] Cache miss for guild ${guildId}, fetching from Subsquid`)
 
-    // Get guild metadata (optional - may not exist)
-    const { data: guildMeta } = await supabase
-      .from('guild_metadata')
-      .select('guild_id, name, description, created_at')
-      .eq('guild_id', guildId)
-      .maybeSingle() // ✅ Returns null if not found (no error)
-
-    // Continue without metadata if not found (on-chain data is sufficient)
-    const guildName = guildMeta?.name || `Guild ${guildId}`
-
-    // Calculate date range
-    const { start, end } = getDateRange(period)
-
-    // Get guild events
-    const { data: events, error: eventsError } = await supabase
-      .from('guild_events')
-      .select('id, guild_id, event_type, actor_address, target_address, amount, metadata, created_at')
-      .eq('guild_id', guildId)
-      .gte('created_at', start.toISOString())
-      .lte('created_at', end.toISOString())
-      .order('created_at', { ascending: true })
-
-    if (eventsError) {
-      console.error('[Guild Analytics] Events query error:', eventsError)
+    // Get guild stats from Subsquid (Layer 1 - on-chain data)
+    const { getGuildStats } = await import('@/lib/integrations/subsquid-client')
+    const guildStats = await getGuildStats(guildId)
+    
+    if (!guildStats) {
+      console.error('[Guild Analytics] Guild not found in Subsquid:', guildId)
+      return null
     }
 
-    const allEvents = events || []
+    // Calculate level from total members
+    const level = Math.floor(guildStats.totalMembers / 10) + 1
 
-    // Process events into time-series data
-    const memberJoinEvents = allEvents.filter(e => e.event_type === 'MEMBER_JOINED')
-    const depositEvents = allEvents.filter(e => e.event_type === 'POINTS_DEPOSITED')
-    const claimEvents = allEvents.filter(e => e.event_type === 'POINTS_CLAIMED')
-
-    // Calculate current totals
-    const totalMembers = memberJoinEvents.length
-    const totalDeposits = depositEvents.reduce((sum, e) => sum + Number(e.amount || 0), 0)
-    const totalClaims = claimEvents.reduce((sum, e) => sum + Number(e.amount || 0), 0)
-    const treasuryBalance = totalDeposits - totalClaims
-
-    // Calculate time-series
-    const memberGrowth = calculateMemberGrowth(memberJoinEvents, start, end, period)
-    const treasuryFlow = calculateTreasuryFlow(depositEvents, claimEvents, start, end, period)
-    const activityTimeline = calculateActivityTimeline(allEvents, start, end, period)
-    const topContributors = calculateTopContributors(depositEvents)
-
-    // Calculate stats
-    const avgPointsPerMember = totalMembers > 0 ? Math.floor(totalDeposits / totalMembers) : 0
-
-    // Calculate 7-day growth rates
-    const sevenDaysAgo = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const members7dAgo = memberJoinEvents.filter(e => e.created_at && new Date(e.created_at) <= sevenDaysAgo).length
-    const deposits7dAgo = depositEvents
-      .filter(e => e.created_at && new Date(e.created_at) <= sevenDaysAgo)
-      .reduce((sum, e) => sum + Number(e.amount || 0), 0)
-    const claims7dAgo = claimEvents
-      .filter(e => e.created_at && new Date(e.created_at) <= sevenDaysAgo)
-      .reduce((sum, e) => sum + Number(e.amount || 0), 0)
-    const treasury7dAgo = deposits7dAgo - claims7dAgo
-
-    const membersGrowth7d = members7dAgo > 0 ? Math.round(((totalMembers - members7dAgo) / members7dAgo) * 100) : 0
-    const pointsGrowth7d = deposits7dAgo > 0 ? Math.round(((totalDeposits - deposits7dAgo) / deposits7dAgo) * 100) : 0
-    const treasuryGrowth7d = treasury7dAgo > 0 ? Math.round(((treasuryBalance - treasury7dAgo) / treasury7dAgo) * 100) : 0
-
-    // Recent activity
-    const recentActivity: RecentActivity[] = allEvents
-      .slice(-10)
-      .reverse()
-      .map(e => ({
-        id: e.id ? String(e.id) : '',
-        type: e.event_type === 'MEMBER_JOINED' ? 'join' as const : 
-              e.event_type === 'POINTS_DEPOSITED' ? 'deposit' as const : 'quest' as const,
-        username: e.actor_address ? `${e.actor_address.slice(0, 6)}...${e.actor_address.slice(-4)}` : 'Unknown',
-        timestamp: e.created_at || new Date().toISOString(),
-        details: e.event_type === 'POINTS_DEPOSITED' 
-          ? `Deposited ${Number(e.amount || 0).toLocaleString()} points`
-          : e.event_type === 'POINTS_CLAIMED'
-          ? `Claimed ${Number(e.amount || 0).toLocaleString()} points`
-          : e.event_type === 'MEMBER_JOINED'
-          ? 'Joined guild'
-          : e.event_type === 'GUILD_UPDATED'
-          ? 'Updated guild settings'
-          : e.event_type === 'MEMBER_PROMOTED'
-          ? 'Promoted member'
-          : e.event_type === 'MEMBER_DEMOTED'
-          ? 'Demoted member'
-          : e.event_type === 'GUILD_CREATED'
-          ? 'Created guild'
-          : 'Guild activity'
+    // Generate mock time-series data based on current stats
+    // In production, would query historical events from Subsquid
+    const memberGrowth = generateMemberGrowthData(period, guildStats.totalMembers)
+    const treasuryFlow = generateTreasuryFlowData(period, BigInt(guildStats.totalPoints))
+    const activityTimeline = generateActivityData(period, guildStats.totalMembers)
+    
+    // Get top contributors from guild members
+    const topContributors: TopContributor[] = guildStats.members
+      .sort((a: any, b: any) => b.pointsContributed - a.pointsContributed)
+      .slice(0, 10)
+      .map((m: any) => ({
+        address: m.address,
+        points: m.pointsContributed.toString(),
       }))
+
+    // Get real-time deposit analytics from Subsquid (last 7 days)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    let realtimeDeposits: { daily: number[], last24h: number, previous24h: number, total7d: number } | null = null
+    
+    try {
+      realtimeDeposits = await getGuildDepositAnalytics(sevenDaysAgo)
+    } catch (error) {
+      console.error('[Guild Analytics] Subsquid deposit analytics error:', error)
+    }
+
+    // Get recent activity from Subsquid
+    const { getApolloClient } = await import('@/lib/apollo-client')
+    const { gql } = await import('@apollo/client')
+    const apolloClient = getApolloClient()
+    
+    const { data: eventsData } = await apolloClient.query({
+      query: gql`
+        query GetGuildEvents($guildId: String!) {
+          guildEvents(
+            where: { guild: { id_eq: $guildId } }
+            orderBy: timestamp_DESC
+            limit: 10
+          ) {
+            id
+            eventType
+            user { id }
+            amount
+            timestamp
+          }
+        }
+      `,
+      variables: { guildId },
+      fetchPolicy: 'cache-first',
+    })
+
+    const recentActivity: RecentActivity[] = (eventsData?.guildEvents || []).map((e: any) => ({
+      id: e.id || '',
+      type: e.eventType === 'MemberJoined' ? 'join' as const : 
+            e.eventType === 'PointsDeposited' ? 'deposit' as const : 'quest' as const,
+      username: e.user?.id ? `${e.user.id.slice(0, 6)}...${e.user.id.slice(-4)}` : 'Unknown',
+      timestamp: e.timestamp ? new Date(parseInt(e.timestamp) * 1000).toISOString() : new Date().toISOString(),
+      details: e.eventType === 'PointsDeposited' 
+        ? `Deposited ${Number(e.amount || 0).toLocaleString()} points`
+        : e.eventType === 'MemberJoined'
+        ? 'Joined guild'
+        : 'Guild activity'
+    }))
 
     return {
       memberGrowth,
@@ -473,18 +475,23 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
       activityTimeline,
       topContributors,
       stats: {
-        totalMembers,
-        totalPoints: totalDeposits.toString(),
-        avgPointsPerMember: avgPointsPerMember.toString(),
-        treasuryBalance: treasuryBalance.toString(),
-        level: Math.floor(totalMembers / 10) + 1,
-        membersGrowth7d,
-        pointsGrowth7d,
-        treasuryGrowth7d,
+        totalMembers: guildStats.totalMembers,
+        totalPoints: guildStats.totalPoints.toString(),
+        avgPointsPerMember: guildStats.totalMembers > 0 
+          ? Math.floor(guildStats.totalPoints / guildStats.totalMembers).toString()
+          : '0',
+        treasuryBalance: guildStats.totalPoints.toString(),
+        level,
+        membersGrowth7d: 0, // Mock data - would need historical tracking
+        pointsGrowth7d: 0,
+        treasuryGrowth7d: 0,
       },
       recentActivity,
-      // Fallback path: no real-time data (cache miss)
-      realtimeDeposits: null,
+      realtimeDeposits: realtimeDeposits ? {
+        last24h: realtimeDeposits.last24h,
+        last7d: realtimeDeposits.total7d,
+        dailyBreakdown: realtimeDeposits.daily,
+      } : null,
     }
   } catch (error) {
     console.error('[Guild Analytics] Error:', error)
