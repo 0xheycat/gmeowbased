@@ -75,9 +75,10 @@ export interface GuildMember {
 export interface GuildMemberListProps {
   guildId: string
   canManage?: boolean
+  excludeAddresses?: string[] // Optimistically exclude addresses (e.g., members who just left)
 }
 
-export function GuildMemberList({ guildId, canManage = false }: GuildMemberListProps) {
+export function GuildMemberList({ guildId, canManage = false, excludeAddresses = [] }: GuildMemberListProps) {
   const { address } = useAccount()
   const { writeContract, data: hash, error: writeError, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
@@ -200,7 +201,12 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
           leaderboardStats: m.leaderboardStats || null
         }))
         
-        setMembers(transformedMembers)
+        // Filter out optimistically excluded addresses (members who just left)
+        const filteredMembers = transformedMembers.filter((m: any) => 
+          !excludeAddresses.includes(m.address.toLowerCase())
+        )
+        
+        setMembers(filteredMembers)
       } catch (err) {
         setError('Failed to load members. Please refresh the page.')
       } finally {
@@ -209,7 +215,7 @@ export function GuildMemberList({ guildId, canManage = false }: GuildMemberListP
     }
 
     loadMembers()
-  }, [guildId])
+  }, [guildId, excludeAddresses])
 
   const getRoleBadge = (role: GuildMember['role']) => {
     switch (role) {
