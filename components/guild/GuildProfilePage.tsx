@@ -549,12 +549,12 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
                   {parseInt(guild.treasury || '0').toLocaleString()}
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Points in treasury</p>
-                {address && (
+                {address && (isMember || canManage) && (
                   <button
                     onClick={() => setTreasuryOpen(true)}
                     className="mt-4 w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors text-sm"
                   >
-                    {canManage ? 'Manage Treasury' : 'View Treasury'}
+                    {canManage ? 'Manage Treasury' : 'Treasury'}
                   </button>
                 )}
               </div>
