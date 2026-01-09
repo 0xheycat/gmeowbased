@@ -313,8 +313,8 @@ function assignMemberBadges(member: GuildMember, guildCreatedAt: Date): Badge[] 
 
 /**
  * Fetch leaderboard stats for members (TRUE HYBRID - Dec 31 architecture)
- * ON-CHAIN (Subsquid): level, rankTier, totalScore, multiplier, pointsContributed
- * OFF-CHAIN (Supabase): viral_xp, guild_points_awarded
+ * ON-CHAIN (Subsquid): level, rankTier, totalScore, multiplier, viralPoints, guildPoints
+ * OFF-CHAIN (Supabase): global rank only
  */
 async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<string, any>> {
   if (members.length === 0) return {}
@@ -340,7 +340,7 @@ async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<str
       })
     )
     
-    // LAYER 1: Query Subsquid for ON-CHAIN data (ScoringModule deployed Dec 31)
+    // LAYER 1: Query Subsquid for ALL ON-CHAIN data (ScoringModule deployed Dec 31)
     const subsquidUrl = process.env.NEXT_PUBLIC_SUBSQUID_URL || 'https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql'
     
     const subsquidResponse = await fetch(subsquidUrl, {
@@ -356,6 +356,8 @@ async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<str
               totalScore
               multiplier
               pointsBalance
+              viralPoints
+              guildPoints
             }
           }
         `,
@@ -372,54 +374,42 @@ async function fetchLeaderboardStats(members: GuildMember[]): Promise<Record<str
       onChainMap.set(user.id.toLowerCase(), user)
     })
     
-    // LAYER 2: Query Supabase for OFF-CHAIN data (viral XP, guild bonuses)
+    // LAYER 2: Query Supabase ONLY for global rank (off-chain computed)
     const fids = Array.from(addressToFidMap.values())
     const supabase = createClient()
     
-    let offChainMap = new Map<number, any>()
     let rankMap = new Map<number, number | null>()
     
     if (fids.length > 0) {
-      const { data: pointsData } = await supabase
-        .from('user_points_balances')
-        .select('fid, viral_xp, guild_points_awarded')
-        .in('fid', fids)
-      
-      pointsData?.forEach(p => {
-        offChainMap.set(p.fid, p)
-      })
-      
       const { data: rankData } = await supabase
         .from('points_leaderboard')
         .select('fid, points_rank')
         .in('fid', fids)
       
       rankData?.forEach(r => {
-        rankMap.set(r.fid, r.points_rank ?? null)
+        // @ts-ignore - points_rank can be null
+        rankMap.set(r.fid, r.points_rank)
       })
     }
     
-    // Build final stats map (hybrid on-chain + off-chain)
+    // Build final stats map (on-chain from Subsquid + rank from Supabase)
     for (const member of members) {
       const address = member.address.toLowerCase()
       const fid = addressToFidMap.get(address)
       const onChain = onChainMap.get(address)
-      const offChain = fid ? offChainMap.get(fid) : null
       const rank = fid ? rankMap.get(fid) : null
       
       statsMap[address] = {
-        // ON-CHAIN (Subsquid - deployed Dec 31)
+        // ALL ON-CHAIN from Subsquid (ScoringModule deployed Dec 31)
         total_score: onChain?.totalScore ? Number(onChain.totalScore) : 0,
         points_balance: onChain?.pointsBalance ? Number(onChain.pointsBalance) : 0,
         level: onChain?.level || 0,
         rank_tier: onChain?.rankTier || 0,
         multiplier: onChain?.multiplier || 100,
+        viral_points: onChain?.viralPoints ? Number(onChain.viralPoints) : 0,  // ✅ ON-CHAIN
+        guild_points_awarded: onChain?.guildPoints ? Number(onChain.guildPoints) : 0,  // ✅ ON-CHAIN
         
-        // OFF-CHAIN (Supabase)
-        viral_points: offChain?.viral_xp || 0,
-        guild_points_awarded: offChain?.guild_points_awarded || 0,
-        
-        // Role & Rank
+        // Role & Rank (off-chain computed)
         is_guild_officer: member.role === 'officer' || member.role === 'owner',
         global_rank: rank || null,
       }
