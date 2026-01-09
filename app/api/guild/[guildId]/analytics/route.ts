@@ -330,7 +330,7 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
             ) {
               id
               eventType
-              user { id }
+              user
               amount
               timestamp
             }
@@ -344,7 +344,7 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
         id: e.id || '',
         type: e.eventType === 'MemberJoined' ? 'join' as const : 
               e.eventType === 'PointsDeposited' ? 'deposit' as const : 'quest' as const,
-        username: e.user?.id ? `${e.user.id.slice(0, 6)}...${e.user.id.slice(-4)}` : 'Unknown',
+        username: e.user ? `${e.user.slice(0, 6)}...${e.user.slice(-4)}` : 'Unknown',
         timestamp: e.timestamp ? new Date(parseInt(e.timestamp) * 1000).toISOString() : new Date().toISOString(),
         details: e.eventType === 'PointsDeposited' 
           ? `Deposited ${Number(e.amount || 0).toLocaleString()} points`
@@ -446,7 +446,7 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
           ) {
             id
             eventType
-            user { id }
+            user
             amount
             timestamp
           }
@@ -460,7 +460,7 @@ async function fetchGuildAnalytics(guildId: string, period: string): Promise<Ana
       id: e.id || '',
       type: e.eventType === 'MemberJoined' ? 'join' as const : 
             e.eventType === 'PointsDeposited' ? 'deposit' as const : 'quest' as const,
-      username: e.user?.id ? `${e.user.id.slice(0, 6)}...${e.user.id.slice(-4)}` : 'Unknown',
+      username: e.user ? `${e.user.slice(0, 6)}...${e.user.slice(-4)}` : 'Unknown',
       timestamp: e.timestamp ? new Date(parseInt(e.timestamp) * 1000).toISOString() : new Date().toISOString(),
       details: e.eventType === 'PointsDeposited' 
         ? `Deposited ${Number(e.amount || 0).toLocaleString()} points`
