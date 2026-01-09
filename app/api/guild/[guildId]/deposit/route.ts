@@ -349,6 +349,20 @@ export async function POST(
         console.error('[guild-deposit] Transaction failed:', txError)
       } else {
         console.log('[guild-deposit] Transaction success:', txResult)
+        
+        // Log deposit event to guild_events table
+        logGuildEvent({
+          guild_id: guildId.toString(),
+          event_type: 'POINTS_DEPOSITED',
+          actor_address: address,
+          amount: Number(amount),
+          metadata: {
+            guild_name: guildName,
+            request_id: requestId,
+          },
+        }).catch((error: unknown) => {
+          console.error('[guild-deposit] Failed to log event:', error)
+        })
       }
     } catch (err: unknown) {
       console.error('[guild-deposit] Transaction error:', err)
