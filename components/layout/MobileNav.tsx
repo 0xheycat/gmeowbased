@@ -2,17 +2,19 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import HomeIcon from '@mui/icons-material/Home'
+import GroupIcon from '@mui/icons-material/Group'
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import DashboardIcon from '@mui/icons-material/Dashboard'
+import ShareIcon from '@mui/icons-material/Share'
 import { motion } from 'framer-motion'
 
 const navItems = [
-  { href: '/', label: 'Home', icon: HomeIcon },
+  { href: '/guild', label: 'Guild', icon: GroupIcon },
   { href: '/quests', label: 'Quests', icon: SportsEsportsIcon },
   { href: '/leaderboard', label: 'Leaderboard', icon: EmojiEventsIcon },
   { href: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+  { href: '/referral', label: 'Referral', icon: ShareIcon },
 ]
 
 export function MobileNav() {
