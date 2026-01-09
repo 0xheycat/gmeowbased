@@ -140,18 +140,9 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
         const memberData = await memberResponse.json()
         setIsMember(memberData.isMember)
         
-        // Fetch user's role if they are a member
-        if (memberData.isMember) {
-          const membersResponse = await fetch(`/api/guild/${guildId}/members?page=1&limit=50`)
-          if (membersResponse.ok) {
-            const membersData = await membersResponse.json()
-            const userMember = membersData.members?.find(
-              (m: any) => m.address.toLowerCase() === address.toLowerCase()
-            )
-            if (userMember) {
-              setUserRole(userMember.role)
-            }
-          }
+        // Set user role directly from is-member API response
+        if (memberData.isMember && memberData.role) {
+          setUserRole(memberData.role)
         }
       } catch (err) {
         setErrorMessage('Failed to check guild membership')
