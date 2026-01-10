@@ -180,8 +180,8 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
   if (!isConnected && !isWalletLoading) {
     return (
       <div className="w-full max-w-screen-xl mx-auto px-4 py-6">
-        <div className="flex flex-col items-center justify-center p-16 text-center bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 min-h-[300px]">
-          <div className="w-20 h-20 mb-6 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center p-16 text-center bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 min-h-[300px]">
+          <div className="w-20 h-20 mb-6 rounded-full bg-gray-900 dark:bg-gray-700 flex items-center justify-center">
             <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 6v6l4 2"/>
@@ -202,8 +202,8 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-bold tracking-wider text-gray-500 dark:text-gray-400 uppercase">SELECT CHAIN</h3>
-            <div className="flex items-center gap-2 px-3 py-1 bg-indigo-100/50 dark:bg-indigo-900/30 rounded-full text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <div className="w-3 h-3 border-2 border-indigo-600/20 dark:border-indigo-400/20 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin" />
+            <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-400">
+              <div className="w-3 h-3 border-2 border-gray-300 dark:border-gray-600 border-t-gray-900 dark:border-t-gray-400 rounded-full animate-spin" />
               Loading...
             </div>
           </div>
@@ -230,7 +230,7 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
           <div className="text-6xl mb-4">⚠️</div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Failed to Load</h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">{error.message}</p>
-          <button onClick={revalidate} className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/30">
+          <button onClick={revalidate} className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/>
             </svg>
@@ -259,7 +259,7 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
           <h3 className="text-xs font-bold tracking-wider text-gray-500 dark:text-gray-400 uppercase">CHAIN EXPLORER</h3>
           <button 
             onClick={revalidate} 
-            className="p-2 bg-indigo-100/50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200/50 dark:hover:bg-indigo-900/50 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
+            className="p-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
             disabled={validating}
             title="Refresh data"
           >
@@ -283,8 +283,8 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
               onClick={() => setChainKey(c.key)}
               className={`flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold transition-all ${
                 c.key === chainKey
-                  ? 'bg-gradient-to-br from-indigo-600 to-purple-600 border-transparent text-white shadow-lg shadow-indigo-500/40'
-                  : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-indigo-500 dark:hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-md'
+                  ? 'bg-gray-900 dark:bg-gray-700 border-transparent text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-600 hover:-translate-y-0.5 hover:shadow-md'
               }`}
               title={`Switch to ${c.name}`}
             >
@@ -298,7 +298,7 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Portfolio Card - Hero */}
-        <div className="relative bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl p-6 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl">
+        <div className="relative bg-gray-900 dark:bg-gray-800 text-white rounded-2xl p-6 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center text-2xl">💰</div>
             <div className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-semibold uppercase tracking-wide">{chainCfg.name}</div>
@@ -340,7 +340,7 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
                       <span className="font-bold text-gray-900 dark:text-white">{token.symbol}</span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">{formatBalance(token.balance)}</span>
                     </div>
-                    <div className="font-bold text-indigo-600 dark:text-indigo-400">{formatUSD(token.valueUSD)}</div>
+                    <div className="font-bold text-gray-900 dark:text-white">{formatUSD(token.valueUSD)}</div>
                   </div>
                 ))}
                 {topTokens.length === 0 && (
@@ -380,7 +380,7 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
                     <div className="font-bold text-gray-900 dark:text-white mb-1">{nft.name || 'Unnamed'}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{nft.tokenCount} items</div>
                     {nft.totalValueUSD && (
-                      <div className="font-bold text-indigo-600 dark:text-indigo-400 text-sm">{formatUSD(nft.totalValueUSD)}</div>
+                      <div className="font-bold text-gray-900 dark:text-white text-sm">{formatUSD(nft.totalValueUSD)}</div>
                     )}
                   </div>
                 ))}
