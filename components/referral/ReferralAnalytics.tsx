@@ -309,7 +309,7 @@ export function ReferralAnalytics({ fid, className = '' }: ReferralAnalyticsProp
         
         <StatCard
           label="Conversion Rate"
-          value={`${(data.metrics.conversionRate ?? 0).toFixed(1)}%`}
+          value={`${Number(data.metrics.conversionRate ?? 0).toFixed(1)}%`}
           icon={<TrendingUpIcon className="w-6 h-6" />}
           colorClass="text-green-800 dark:text-green-400"
           description="Success rate"
@@ -317,7 +317,7 @@ export function ReferralAnalytics({ fid, className = '' }: ReferralAnalyticsProp
         
         <StatCard
           label="Avg. Convert Time"
-          value={`${(data.metrics.averageTimeToConvert ?? 0).toFixed(0)}h`}
+          value={`${Number(data.metrics.averageTimeToConvert ?? 0).toFixed(0)}h`}
           icon={<CalendarIcon className="w-6 h-6" />}
           colorClass="text-purple-700 dark:text-purple-200"
           description="Time to first action"
