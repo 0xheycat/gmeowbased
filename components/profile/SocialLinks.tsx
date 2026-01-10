@@ -62,7 +62,7 @@ export function SocialLinks({ socialLinks, wallet, className = '' }: SocialLinks
   )
 
   return (
-    <div className={`bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm ${className}`}>
+    <div className={`bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm ${className}`}>
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         Contact & Social
       </h2>

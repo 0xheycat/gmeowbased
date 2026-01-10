@@ -66,7 +66,7 @@ function CategoryBar({
 
   return (
     <motion.div 
-      className="mb-6 p-4 bg-white dark:bg-[#0c1427] rounded-lg border border-gray-200 dark:border-[#172036]"
+      className="mb-6 p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -122,7 +122,7 @@ function CategoryBar({
 function PilotColumn({ pilot, onRemove, rank }: { pilot: ComparisonPilot; onRemove?: () => void; rank: number }) {
   return (
     <motion.div 
-      className="flex flex-col items-center p-4 sm:p-5 bg-gradient-to-b from-gray-50 to-white dark:from-[#15203c] dark:to-[#0c1427] rounded-xl border border-gray-200 dark:border-[#172036] shadow-sm hover:shadow-md transition-shadow relative"
+      className="flex flex-col items-center p-4 sm:p-5 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, delay: rank * 0.1 }}
@@ -156,10 +156,10 @@ function PilotColumn({ pilot, onRemove, rank }: { pilot: ComparisonPilot; onRemo
           <img
             src={pilot.pfp_url}
             alt={pilot.display_name || pilot.username}
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 sm:border-4 border-white dark:border-[#172036] shadow-lg"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-3 sm:border-4 border-white dark:border-gray-700 shadow-lg"
           />
         ) : (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-dark-bg-card dark:to-dark-bg-elevated border-3 sm:border-4 border-white dark:border-[#172036] flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 border-3 sm:border-4 border-white dark:border-gray-700 flex items-center justify-center shadow-lg">
             <PersonIcon sx={{ fontSize: 48 }} className="text-gray-400 dark:text-gray-300" />
           </div>
         )}
@@ -291,11 +291,11 @@ export function ComparisonModal({ pilots, isOpen, onClose, onRemovePilot }: Comp
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-white dark:bg-[#0c1427] text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-4xl data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
+            className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-4xl data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
           >
             {/* Header */}
             <motion.div 
-              className="bg-gradient-to-r from-gray-50 to-white dark:from-[#15203c] dark:to-[#0c1427] px-6 py-5 border-b border-gray-200 dark:border-[#172036]"
+              className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200 dark:border-gray-700"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -324,7 +324,7 @@ export function ComparisonModal({ pilots, isOpen, onClose, onRemovePilot }: Comp
             </motion.div>
 
             {/* Content - Wrappable for screenshot */}
-            <div id="comparison-content" className="p-6 bg-gray-50 dark:bg-[#0c1427]">
+            <div id="comparison-content" className="p-6 bg-gray-50 dark:bg-gray-900">
               {/* Pilot Headers */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 {pilots.map((pilot, index) => (
@@ -366,7 +366,7 @@ export function ComparisonModal({ pilots, isOpen, onClose, onRemovePilot }: Comp
 
             {/* Export & Share Footer - Professional Pattern */}
             <motion.div 
-              className="p-6 bg-white dark:bg-[#15203c] border-t-2 border-gray-200 dark:border-[#172036]"
+              className="p-6 bg-white dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}

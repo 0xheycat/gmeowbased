@@ -61,7 +61,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
   }
 
   return (
-    <div className="bg-white dark:bg-[#0c1427] rounded-lg overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm">
       {/* Cover Image Section */}
       <div className="relative h-48 md:h-64 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
         {profile.cover_image_url ? (
@@ -92,7 +92,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
         {/* Avatar */}
         <div className="relative -mt-16 mb-4">
           <div className="relative inline-block">
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-[#0c1427] bg-gray-200 dark:bg-gray-700">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-900 bg-gray-200 dark:bg-gray-700">
               {profile.avatar_url ? (
                 <Image
                   src={profile.avatar_url}
@@ -109,7 +109,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
             </div>
             
             {/* Base Badge */}
-            <div className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 rounded-full border-4 border-white dark:border-[#0c1427] flex items-center justify-center">
+            <div className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 rounded-full border-4 border-white dark:border-gray-900 flex items-center justify-center">
               <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2L2 7V12C2 16.97 5.5 21.47 10 22.5V14H14V22.5C18.5 21.47 22 16.97 22 12V7L12 2Z" />
               </svg>

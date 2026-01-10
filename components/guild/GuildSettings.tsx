@@ -539,7 +539,7 @@ export function GuildSettings({ guildId, isLeader, isOwner = false }: GuildSetti
 
           {/* Save Button */}
           {isLeader && (
-            <div className="flex items-center justify-end gap-3 sticky bottom-0 bg-white/80 dark:bg-[#0c1427]/80 backdrop-blur-sm py-4 -mx-4 px-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-end gap-3 sticky bottom-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm py-4 -mx-4 px-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="submit"
                 className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"

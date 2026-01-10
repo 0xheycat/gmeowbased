@@ -60,7 +60,7 @@ export default function BadgeHoverCard({
           aria-label={`${badge.name} badge details`}
         >
           <div
-            className="relative rounded-lg border border-white/10 bg-[#1a1a1a] p-4 shadow-xl backdrop-blur-sm"
+            className="relative rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-xl backdrop-blur-sm"
             style={{
               boxShadow: `0 0 20px ${glowColor}, 0 10px 30px rgba(0, 0, 0, 0.5)`,
             }}
@@ -121,7 +121,7 @@ export default function BadgeHoverCard({
 
             {/* Arrow pointer */}
             <div
-              className="absolute -top-1 left-4 h-2 w-2 rotate-45 border-l border-t border-white/10 bg-[#1a1a1a]"
+              className="absolute -top-1 left-4 h-2 w-2 rotate-45 border-l border-t border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
               style={{
                 boxShadow: `-2px -2px 4px ${glowColor}`,
               }}
