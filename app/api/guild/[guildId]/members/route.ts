@@ -491,9 +491,11 @@ async function getGuildData(guildId: string) {
 
 /**
  * Get all members with roles and points from Subsquid GraphQL
- * FIXED: Query Subsquid via Apollo Client (has caching and rate limiting)
- * CRITICAL FIX: Cross-verify with guild_events to filter out members who left
- * (Subsquid indexer has bug where isActive stays true even after member leaves)
+ * CRITICAL FIX: Use Guild.totalMembers (on-chain truth) to filter stale guildMembers
+ * 
+ * BUG IN SUBSQUID: guildMembers array keeps stale entries with isActive=true
+ * FIX: Guild.totalMembers is correct (synced from on-chain), so we filter members
+ * by taking only the most recent N members where N = totalMembers
  */
 async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
   try {
@@ -501,10 +503,15 @@ async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
     
     const apolloClient = getApolloClient()
     
+    // Query both guild (for on-chain totalMembers) and guildMembers
     const { data } = await apolloClient.query({
       query: gql`
         query GetGuildMembers($guildId: String!) {
-          guildMembers(where: { guild: { id_eq: $guildId } }) {
+          guilds(where: { id_eq: $guildId }) {
+            id
+            totalMembers
+          }
+          guildMembers(where: { guild: { id_eq: $guildId } }, orderBy: joinedAt_DESC) {
             id
             role
             pointsContributed
@@ -521,38 +528,30 @@ async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
       fetchPolicy: 'cache-first',
     })
 
+    const guild = data?.guilds?.[0]
     let subsquidMembers = data?.guildMembers || []
+
+    if (!guild) {
+      console.log('[guild-members] Guild not found in Subsquid')
+      return []
+    }
 
     if (subsquidMembers.length === 0) {
       console.log('[guild-members] No members found in Subsquid')
       return []
     }
 
-    // CRITICAL FIX: Cross-verify with guild_events to filter out members who actually left
-    // This is needed because Subsquid indexer has a bug where isActive doesn't update
-    const supabase = createClient()
-    const { data: events } = await supabase
-      .from('guild_events')
-      .select('event_type, actor_address')
-      .eq('guild_id', guildId)
-      .in('event_type', ['MEMBER_LEFT'])
+    // CRITICAL FIX: Use on-chain totalMembers as source of truth
+    // Take only the N most recent members where N = totalMembers
+    // This filters out stale members who left (Subsquid bug keeps them with isActive=true)
+    const onChainMemberCount = guild.totalMembers
+    const reportedMemberCount = subsquidMembers.length
     
-    // Build set of addresses that have left
-    const leftAddresses = new Set<string>()
-    events?.forEach(event => {
-      if (event.event_type === 'MEMBER_LEFT') {
-        leftAddresses.add(event.actor_address.toLowerCase())
-      }
-    })
-    
-    // Filter out members who have left (based on guild_events, not Subsquid's isActive)
-    subsquidMembers = subsquidMembers.filter((member: any) => {
-      const hasLeft = leftAddresses.has(member.user.id.toLowerCase())
-      if (hasLeft) {
-        console.log(`[guild-members] Filtering out ${member.user.id} - found MEMBER_LEFT event`)
-      }
-      return !hasLeft
-    })
+    if (reportedMemberCount > onChainMemberCount) {
+      console.log(`[guild-members] SUBSQUID BUG DETECTED: ${reportedMemberCount} members in array but only ${onChainMemberCount} on-chain`)
+      console.log(`[guild-members] Filtering to most recent ${onChainMemberCount} members by joinedAt`)
+      subsquidMembers = subsquidMembers.slice(0, onChainMemberCount)
+    }
 
     // Convert Subsquid data to API format
     const members: GuildMember[] = subsquidMembers.map((member: any) => ({
@@ -562,7 +561,7 @@ async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
       joinedAt: new Date(parseInt(member.joinedAt) * 1000).toISOString(),
     }))
 
-    console.log(`[guild-members] Found ${members.length} active members from Subsquid (filtered ${subsquidMembers.length - members.length} who left)`)
+    console.log(`[guild-members] Returning ${members.length} active members (on-chain: ${onChainMemberCount})`)
     return members
   } catch (error) {
     console.error('[guild-members] Subsquid query failed, falling back to events:', error)
