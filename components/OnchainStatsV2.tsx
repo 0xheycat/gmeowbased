@@ -176,8 +176,8 @@ export function OnchainStatsV2({ onLoadingChange }: OnchainStatsV2Props) {
   if (!isConnected && !isWalletLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="text-center p-16 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
-          <div className="w-16 h-16 mx-auto mb-6 text-indigo-600 dark:text-indigo-400">
+        <div className="text-center p-16 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700">
+          <div className="w-16 h-16 mx-auto mb-6 text-gray-600 dark:text-gray-400">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2" strokeLinecap="round"/>
               <path d="M9 12l2 2 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -222,7 +222,7 @@ export function OnchainStatsV2({ onLoadingChange }: OnchainStatsV2Props) {
           <div className="text-5xl mb-4">⚠️</div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Failed to Load Stats</h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">{error.message || 'Unable to fetch data'}</p>
-          <button onClick={revalidate} className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-lg font-medium transition-all hover:-translate-y-0.5">
+          <button onClick={revalidate} className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg font-medium transition-all hover:-translate-y-0.5">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2" strokeWidth="2" strokeLinecap="round"/>
             </svg>
@@ -251,7 +251,7 @@ export function OnchainStatsV2({ onLoadingChange }: OnchainStatsV2Props) {
           <h3 className="text-sm font-semibold uppercase text-gray-500 dark:text-gray-400 tracking-wide">CHAIN EXPLORER</h3>
           <button 
             onClick={revalidate} 
-            className="p-2 bg-indigo-100/50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200/50 dark:hover:bg-indigo-900/50 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
+            className="p-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
             disabled={validating} 
             title="Refresh"
           >
@@ -267,8 +267,8 @@ export function OnchainStatsV2({ onLoadingChange }: OnchainStatsV2Props) {
               onClick={() => setChainKey(c.key)}
               className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                 c.key === chainKey
-                  ? 'bg-gradient-to-br from-indigo-600 to-purple-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                  : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-indigo-500 dark:hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-md'
+                  ? 'bg-gray-900 dark:bg-gray-700 border-gray-900 dark:border-gray-700 text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-600 hover:-translate-y-0.5 hover:shadow-md'
               }`}
               title={c.name}
             >
@@ -287,7 +287,7 @@ export function OnchainStatsV2({ onLoadingChange }: OnchainStatsV2Props) {
             onClick={() => setMobileTab(tab)}
             className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
               mobileTab === tab
-                ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500 text-white'
+                ? 'bg-gray-900 dark:bg-gray-700 border-gray-900 dark:border-gray-700 text-white'
                 : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
             }`}
           >
@@ -301,7 +301,7 @@ export function OnchainStatsV2({ onLoadingChange }: OnchainStatsV2Props) {
         {/* Overview Tab */}
         <div className={`${mobileTab === 'overview' ? 'block' : 'hidden md:block'}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-6 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-xl transition-all hover:-translate-y-1 hover:shadow-xl">
+            <div className="p-6 bg-gray-900 dark:bg-gray-800 text-white rounded-xl transition-all hover:-translate-y-1 hover:shadow-xl">
               <div className="text-4xl mb-3">💰</div>
               <div className="text-sm font-medium uppercase tracking-wide opacity-90 mb-2">Portfolio Value</div>
               <div className="text-3xl font-bold mb-1">{portfolioValue}</div>
@@ -340,7 +340,7 @@ export function OnchainStatsV2({ onLoadingChange }: OnchainStatsV2Props) {
                       <span className="font-semibold text-gray-900 dark:text-white">{token.symbol}</span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">{formatBalance(token.balance)}</span>
                     </div>
-                    <div className="font-semibold text-indigo-600 dark:text-indigo-400">{formatUSD(token.valueUSD)}</div>
+                    <div className="font-semibold text-gray-900 dark:text-white">{formatUSD(token.valueUSD)}</div>
                   </div>
                 ))}
               </div>
@@ -361,7 +361,7 @@ export function OnchainStatsV2({ onLoadingChange }: OnchainStatsV2Props) {
                     <div className="font-semibold text-gray-900 dark:text-white mb-1">{nft.name || 'Unnamed'}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{nft.tokenCount} items</div>
                     {nft.totalValueUSD && (
-                      <div className="font-semibold text-indigo-600 dark:text-indigo-400">{formatUSD(nft.totalValueUSD)}</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{formatUSD(nft.totalValueUSD)}</div>
                     )}
                   </div>
                 ))}
