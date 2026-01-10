@@ -235,7 +235,6 @@ export default function GuildProfilePage({ guildId }: GuildProfilePageProps) {
             event: 'guild-join',
             chainKey: 'base',
             xpEarned: 25,
-            totalPoints: 0,
             headline: `Joined ${guild?.name || 'Guild'}! ⚔️`,
             tierTagline: '+25 XP Earned',
             shareLabel: 'Share Guild',

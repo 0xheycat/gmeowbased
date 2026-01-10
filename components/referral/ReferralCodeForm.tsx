@@ -108,7 +108,6 @@ export function ReferralCodeForm({
         event: 'referral-register',
         chainKey: 'base',
         xpEarned: 10, // Referral code registration reward
-        totalPoints: 0,
         headline: `Referral Code "${code}" Registered! 🔗`,
         tierTagline: '+10 XP Earned',
         shareLabel: 'Share Code',

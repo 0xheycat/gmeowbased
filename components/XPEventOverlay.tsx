@@ -212,7 +212,7 @@ export type XpEventPayload = {
   event: XpEventKind
   chainKey: ChainKey
   xpEarned: number
-  totalPoints: number
+  totalPoints?: number // Optional - overlay fetches from ScoringModule on-chain
   progress?: RankProgress | null
   shareUrl?: string
   onShare?: () => void
