@@ -2,12 +2,14 @@
  * GET /api/referral/[fid]/analytics
  * 
  * Purpose: Fetch referral analytics data for performance tracking
- * Returns referral timeline, metrics, and performance stats
+ * Returns referral timeline, metrics, and performance stats from Subsquid
  * 
  * Response: { success, data: { timeline, metrics, comparison } }
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getSupabaseServerClient } from '@/lib/supabase/edge'
+import { getReferrerHistory } from '@/lib/subsquid-client'
 
 export async function GET(
   request: NextRequest,
@@ -24,25 +26,92 @@ export async function GET(
   }
 
   try {
-    // Return mock analytics data for now
-    // TODO: Implement actual analytics from Subsquid
+    // Get wallet address from Supabase
+    const supabase = getSupabaseServerClient()
+    if (!supabase) {
+      throw new Error('Supabase client not available')
+    }
+    
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('wallet_address')
+      .eq('fid', fid)
+      .single()
+
+    if (!profile?.wallet_address) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          timeline: [],
+          metrics: {
+            totalReferrals: 0,
+            conversionRate: 0,
+            averageTimeToConvert: 0,
+            growthRate: 0,
+            peakDay: {
+              date: new Date().toISOString().split('T')[0],
+              count: 0,
+            },
+          },
+          tierDistribution: {
+            bronze: 0,
+            silver: 0,
+            gold: 0,
+          },
+          comparison: {
+            thisWeek: 0,
+            lastWeek: 0,
+            thisMonth: 0,
+            lastMonth: 0,
+          },
+        },
+        fid,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    // Get referral history from Subsquid
+    const referralHistory = await getReferrerHistory(profile.wallet_address, 1000)
+    
+    // Build 30-day timeline
     const now = new Date()
-    const timeline = Array.from({ length: 30 }, (_, i) => {
+    const timelineMap = new Map<string, { referrals: number; points: number }>()
+    
+    for (let i = 0; i < 30; i++) {
       const date = new Date(now)
       date.setDate(date.getDate() - (29 - i))
-      return {
-        date: date.toISOString().split('T')[0],
-        referrals: Math.floor(Math.random() * 5),
-        points: Math.floor(Math.random() * 100),
-      }
-    })
-
-    const totalReferrals = timeline.reduce((sum, day) => sum + day.referrals, 0)
+      const dateKey = date.toISOString().split('T')[0]
+      timelineMap.set(dateKey, { referrals: 0, points: 0 })
+    }
     
-    // Find peak day
+    // Populate timeline with real data
+    for (const ref of referralHistory) {
+      const refDate = new Date(Number(ref.timestamp) * 1000).toISOString().split('T')[0]
+      if (timelineMap.has(refDate)) {
+        const day = timelineMap.get(refDate)!
+        day.referrals += 1
+        day.points += 50 // Referrer bonus
+      }
+    }
+    
+    const timeline = Array.from(timelineMap.entries()).map(([date, data]) => ({
+      date,
+      referrals: data.referrals,
+      points: data.points,
+    }))
+    
+    // Calculate metrics
+    const totalReferrals = referralHistory.length
+    const thisWeek = timeline.slice(-7).reduce((sum, day) => sum + day.referrals, 0)
+    const lastWeek = timeline.slice(-14, -7).reduce((sum, day) => sum + day.referrals, 0)
+    
+    const growthRate = lastWeek > 0 
+      ? Number(((thisWeek - lastWeek) / lastWeek * 100).toFixed(1))
+      : 0
+    
     const peakDayData = timeline.reduce((max, day) => 
       day.referrals > max.referrals ? day : max
-    , timeline[0] || { date: new Date().toISOString().split('T')[0], referrals: 0, points: 0 })
+    , timeline[0])
 
     return NextResponse.json({
       success: true,
@@ -50,24 +119,24 @@ export async function GET(
         timeline,
         metrics: {
           totalReferrals: Number(totalReferrals),
-          conversionRate: Number(totalReferrals > 0 ? 65 : 0),
-          averageTimeToConvert: Number(60),
-          growthRate: Number(15),
+          conversionRate: 0, // Not tracked yet
+          averageTimeToConvert: 0, // Not tracked yet
+          growthRate: Number(growthRate),
           peakDay: {
             date: String(peakDayData.date),
             count: Number(peakDayData.referrals),
           },
         },
         tierDistribution: {
-          bronze: Math.floor(totalReferrals * 0.6),
-          silver: Math.floor(totalReferrals * 0.3),
-          gold: Math.floor(totalReferrals * 0.1),
+          bronze: totalReferrals >= 1 && totalReferrals < 5 ? 1 : 0,
+          silver: totalReferrals >= 5 && totalReferrals < 10 ? 1 : 0,
+          gold: totalReferrals >= 10 ? 1 : 0,
         },
         comparison: {
-          thisWeek: timeline.slice(-7).reduce((sum, day) => sum + day.referrals, 0),
-          lastWeek: timeline.slice(-14, -7).reduce((sum, day) => sum + day.referrals, 0),
+          thisWeek,
+          lastWeek,
           thisMonth: totalReferrals,
-          lastMonth: Math.floor(totalReferrals * 0.8),
+          lastMonth: 0, // Would need historical data
         },
       },
       fid,
