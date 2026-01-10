@@ -194,17 +194,17 @@ export function StakingDashboard({ userWallet }: { userWallet?: string }) {
         </div>
 
         {/* Average APY */}
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-800">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUpIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-            <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-300 uppercase">
+            <TrendingUpIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
               Average APY
             </span>
           </div>
-          <p className="text-4xl font-bold text-yellow-600 dark:text-yellow-400">
+          <p className="text-4xl font-bold text-gray-900 dark:text-white">
             {avgApy.toFixed(1)}%
           </p>
-          <p className="text-sm text-yellow-600/70 dark:text-yellow-400/70 mt-1">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Annual yield rate
           </p>
         </div>

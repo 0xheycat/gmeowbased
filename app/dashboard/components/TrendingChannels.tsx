@@ -73,7 +73,7 @@ export async function TrendingChannels() {
           return (
             <div
               key={channel.id}
-              className="flex items-start gap-3 p-4 rounded-lg border hover:border-purple-500 dark:hover:border-purple-400 transition-colors cursor-pointer"
+              className="flex items-start gap-3 p-4 rounded-lg border hover:border-gray-400 dark:hover:border-gray-500 transition-colors cursor-pointer"
             >
               {/* Icon */}
               <div className="relative w-12 h-12 flex-shrink-0">

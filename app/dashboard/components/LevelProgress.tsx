@@ -108,7 +108,7 @@ export function LevelProgress() {
           aria-label={`Level progress: ${levelPercent.toFixed(1)}% complete`}
         >
           <motion.div
-            className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full"
+            className="bg-gray-900 dark:bg-gray-700 h-full rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${levelPercent}%` }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}

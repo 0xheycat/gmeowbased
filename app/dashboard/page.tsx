@@ -53,7 +53,7 @@ export default async function DashboardPage() {
           {/* User Scoring Stats Widget */}
           <DashboardErrorBoundary componentName="User Stats">
             <Suspense fallback={
-              <div className="h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl animate-pulse mb-6" />
+              <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse mb-6" />
             }>
               <DashboardStatsWidget />
             </Suspense>

@@ -147,8 +147,8 @@ export function RecentActivity() {
               <div className={`
                 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
                 ${isLevelUp 
-                  ? 'bg-blue-100 text-blue-600' 
-                  : 'bg-purple-100 text-purple-600'
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400' 
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                 }
               `}>
                 {isLevelUp ? (
@@ -171,7 +171,7 @@ export function RecentActivity() {
                     </>
                   ) : rankUpEvent ? (
                     <>
-                      Advanced to <span className="text-purple-600 font-bold">{TIER_NAMES[rankUpEvent.newTier || 0]}</span> tier
+                      Advanced to <span className="text-gray-900 dark:text-white font-bold">{TIER_NAMES[rankUpEvent.newTier || 0]}</span> tier
                     </>
                   ) : null}
                 </p>
@@ -190,7 +190,7 @@ export function RecentActivity() {
               )}
               {rankUpEvent && (
                 <div className="flex-shrink-0">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 dark:bg-gray-600 text-white">
                     T{rankUpEvent.newTier}
                   </span>
                 </div>

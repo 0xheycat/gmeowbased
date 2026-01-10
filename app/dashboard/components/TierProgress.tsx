@@ -30,17 +30,17 @@ const TIER_NAMES = [
 
 const TIER_COLORS = [
   'from-gray-400 to-gray-500',       // Iron
-  'from-orange-600 to-orange-700',   // Bronze
+  'from-gray-500 to-gray-600',       // Bronze
   'from-gray-300 to-gray-400',       // Silver
-  'from-yellow-400 to-yellow-600',   // Gold
-  'from-cyan-400 to-cyan-600',       // Platinum
-  'from-blue-400 to-blue-600',       // Diamond
-  'from-purple-500 to-purple-700',   // Master
-  'from-red-500 to-red-700',         // Grandmaster
-  'from-pink-500 to-purple-600',     // Challenger
-  'from-indigo-500 to-purple-700',   // Elite
-  'from-orange-500 to-red-600',      // Legend
-  'from-yellow-400 to-pink-600',     // Mythic
+  'from-gray-600 to-gray-700',       // Gold
+  'from-gray-500 to-gray-600',       // Platinum
+  'from-gray-600 to-gray-700',       // Diamond
+  'from-gray-700 to-gray-800',       // Master
+  'from-gray-800 to-gray-900',       // Grandmaster
+  'from-gray-700 to-gray-800',       // Challenger
+  'from-gray-800 to-gray-900',       // Elite
+  'from-gray-700 to-gray-800',       // Legend
+  'from-gray-800 to-gray-900',       // Mythic
 ]
 
 export function TierProgress() {
@@ -153,16 +153,16 @@ export function TierProgress() {
           </div>
         </div>
       ) : (
-        <div className="p-3 bg-gradient-to-r from-yellow-50 to-pink-50 rounded-lg">
-          <p className="text-xs text-center font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-pink-600">
+        <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <p className="text-xs text-center font-semibold text-gray-900 dark:text-white">
             ⭐ Max Tier Reached!
           </p>
         </div>
       )}
 
       {!isMaxTier && (
-        <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-          <p className="text-xs text-purple-700">
+        <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <p className="text-xs text-gray-700 dark:text-gray-300">
             <span className="font-semibold">{(nextTierPoints - currentPoints).toLocaleString()} points</span>
             {' '}needed for {TIER_NAMES[nextTier]} tier
           </p>

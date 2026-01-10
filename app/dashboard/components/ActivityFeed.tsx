@@ -86,7 +86,7 @@ export async function ActivityFeed() {
                   className="rounded-full object-cover"
                 />
                 {cast.author.powerBadge && (
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center text-white text-[10px]">
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-700 dark:bg-gray-600 rounded-full flex items-center justify-center text-white text-[10px]">
                     ⚡
                   </div>
                 )}

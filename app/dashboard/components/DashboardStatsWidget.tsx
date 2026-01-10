@@ -54,7 +54,7 @@ export function DashboardStatsWidget() {
   if (loading) {
     return (
       <div 
-        className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl p-6 mb-6"
+        className="bg-gray-900 dark:bg-gray-800 rounded-2xl p-6 mb-6"
         role="status"
         aria-live="polite"
         aria-label="Loading dashboard stats"
@@ -75,7 +75,7 @@ export function DashboardStatsWidget() {
   if (error || !stats) {
     return (
       <motion.div 
-        className="bg-gradient-to-br from-red-600 via-orange-600 to-pink-600 rounded-2xl p-6 mb-6"
+        className="bg-red-900/90 dark:bg-red-950/50 rounded-2xl p-6 mb-6"
         role="alert"
         aria-live="assertive"
         initial={{ opacity: 0, scale: 0.95 }}
@@ -119,7 +119,7 @@ export function DashboardStatsWidget() {
 
   return (
     <motion.div 
-      className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl p-6 mb-6 relative overflow-hidden"
+      className="bg-gray-900 dark:bg-gray-800 rounded-2xl p-6 mb-6 relative overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}

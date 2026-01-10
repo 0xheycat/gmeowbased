@@ -32,8 +32,8 @@ export async function TopCasters() {
         
         {/* Enhanced Empty State */}
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-4">
-            <PeopleIcon className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <PeopleIcon className="w-8 h-8 text-gray-600 dark:text-gray-400" />
           </div>
           <h4 className="text-lg font-semibold mb-2">No Top Casters Yet</h4>
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 max-w-sm">
@@ -43,7 +43,7 @@ export async function TopCasters() {
             href="https://warpcast.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
           >
             Start Casting on Warpcast
           </a>
@@ -86,7 +86,7 @@ export async function TopCasters() {
                 className="rounded-full object-cover"
               />
               {caster.powerBadge && (
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-700 dark:bg-gray-600 rounded-full flex items-center justify-center text-white text-xs">
                   ⚡
                 </div>
               )}
