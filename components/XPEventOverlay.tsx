@@ -49,7 +49,7 @@
 
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { XPCelebrationModal } from '@/components/xp-celebration'
 import type { ChainKey } from '@/lib/contracts/gmeow-utils'
@@ -234,8 +234,32 @@ type XPEventOverlayProps = {
 // @edit-start 2025-11-11 — XP overlay accessibility + zero-delta guard
 // @edit-update 2025-12-14 — Added celebration cooldown system (30s per event type)
 export function XPEventOverlay({ open, payload, onClose }: XPEventOverlayProps) {
+  const { address } = useAccount()
   // Cooldown tracking: Map<eventType, lastTimestamp>
   const cooldownMapRef = useRef<Map<XpEventKind, number>>(new Map())
+  const [onChainData, setOnChainData] = useState<{ totalScore: number; progress: RankProgress } | null>(null)
+
+  // Fetch on-chain data from ScoringModule when overlay opens
+  useEffect(() => {
+    if (!open || !payload || !address) return
+    
+    const fetchOnChainData = async () => {
+      try {
+        const response = await fetch(`/api/score/${address}?chain=base`)
+        if (response.ok) {
+          const data = await response.json()
+          setOnChainData({
+            totalScore: data.totalScore || 0,
+            progress: data.progress || null
+          })
+        }
+      } catch (error) {
+        console.error('[XPEventOverlay] Failed to fetch on-chain data:', error)
+      }
+    }
+    
+    fetchOnChainData()
+  }, [open, payload, address])
 
   useEffect(() => {
     if (!open || !payload) return
@@ -263,15 +287,15 @@ export function XPEventOverlay({ open, payload, onClose }: XPEventOverlayProps) 
   if (!open || !payload) return null
 
   const xpEarnedRaw = Number(payload.xpEarned)
-  const totalPointsRaw = Number(payload.totalPoints)
   const hasPositiveDelta = Number.isFinite(xpEarnedRaw) && xpEarnedRaw > 0
   if (!hasPositiveDelta) return null
 
   const xpEarned = Math.max(0, Math.round(xpEarnedRaw))
-  const totalPoints = Number.isFinite(totalPointsRaw) ? Math.max(0, Math.round(totalPointsRaw)) : 0
+  // Use on-chain totalScore from ScoringModule, not offline payload
+  const totalPoints = onChainData?.totalScore || 0
 
-  // Use progress from payload (already fetched from on-chain in useEffect)
-  const progress: RankProgress = payload.progress || {
+  // Use on-chain progress from ScoringModule (fetched in useEffect)
+  const progress: RankProgress = onChainData?.progress || payload.progress || {
     level: 1,
     levelFloor: 0,
     nextLevelTarget: 100,
