@@ -303,6 +303,10 @@ export function buildRegisterReferralCodeTx(code: string, chain: GMChainKey = 'b
  * @param code Referral code of referrer
  * @param chain Chain to use (default: 'base')
  * @returns Transaction object for use with wagmi/viem
+ * 
+ * @usage Used in app/join/page.tsx for accepting referral codes
+ * @rewards Referrer +50 pts, Referee +25 pts (automatic on confirmation)
+ * @important Can only be called once per user - referrer cannot be changed
  */
 export function buildSetReferrerTx(code: string, chain: GMChainKey = 'base') {
   return createSetReferrerTx(code, chain)
