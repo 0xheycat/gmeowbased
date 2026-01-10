@@ -2,7 +2,7 @@ import Loader from '@/components/ui/loader'
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-[#060720] via-[#110c3a] to-[#1b0d4a] bg-gradient-to-br text-slate-200" aria-busy="true">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-950 text-gray-900 dark:text-slate-200" aria-busy="true">
       <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-8 px-4 sm:px-6 py-24 text-center font-site">
         {/* Professional Loader Container */}
         <div className="relative flex h-28 w-28 items-center justify-center rounded-3xl bg-gradient-to-br from-slate-100/10 to-slate-100/5 shadow-[0_32px_96px_rgba(99,102,241,0.15)]">

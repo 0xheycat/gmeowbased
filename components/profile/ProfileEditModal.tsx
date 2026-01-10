@@ -355,9 +355,9 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0c1427] rounded-xl shadow-2xl">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-xl shadow-2xl">
               {/* Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c1427]">
+              <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Profile</h2>
                 <button
                   onClick={handleCancel}
@@ -557,7 +557,7 @@ export function ProfileEditModal({ profile, isOpen, onClose, onSave }: ProfileEd
                 </div>
 
                 {/* Action Buttons - Sticky on mobile for better UX */}
-                <div className="sticky bottom-0 left-0 right-0 flex items-center justify-end gap-3 pt-4 pb-4 md:pb-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c1427] -mx-4 md:-mx-6 px-4 md:px-6 mt-6">
+                <div className="sticky bottom-0 left-0 right-0 flex items-center justify-end gap-3 pt-4 pb-4 md:pb-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 -mx-4 md:-mx-6 px-4 md:px-6 mt-6">
                   <button
                     type="button"
                     onClick={handleCancel}

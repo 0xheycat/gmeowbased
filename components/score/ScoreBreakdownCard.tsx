@@ -79,7 +79,7 @@ export function ScoreBreakdownCard({ address, className = '' }: ScoreBreakdownCa
 
   if (!address) {
     return (
-      <div className={`bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm ${className}`}>
+      <div className={`bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm ${className}`}>
         <p className="text-center text-gray-500 dark:text-gray-400">
           Connect wallet to view scores
         </p>
@@ -89,7 +89,7 @@ export function ScoreBreakdownCard({ address, className = '' }: ScoreBreakdownCa
 
   if (loading) {
     return (
-      <div className={`bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm ${className}`}>
+      <div className={`bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm ${className}`}>
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
@@ -105,7 +105,7 @@ export function ScoreBreakdownCard({ address, className = '' }: ScoreBreakdownCa
 
   if (error || !stats) {
     return (
-      <div className={`bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm ${className}`}>
+      <div className={`bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm ${className}`}>
         <div className="text-center space-y-4">
           <div className="text-red-600 dark:text-red-400">
             <svg className="w-12 h-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,7 +133,7 @@ export function ScoreBreakdownCard({ address, className = '' }: ScoreBreakdownCa
   }
 
   return (
-    <div className={`bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm ${className}`}>
+    <div className={`bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm ${className}`}>
       {/* Header with Total Score */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">

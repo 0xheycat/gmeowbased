@@ -103,7 +103,7 @@ export function ProfileStats({ address, questCompletions, badgeCount, lastActive
   // Loading state
   if (loading) {
     return (
-      <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm">
         <div className="mb-6">
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2 animate-pulse"></div>
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
@@ -124,7 +124,7 @@ export function ProfileStats({ address, questCompletions, badgeCount, lastActive
   // Error state
   if (error || !stats) {
     return (
-      <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm">
         <div className="text-center py-8">
           <p className="text-red-600 dark:text-red-400 mb-2">Failed to load stats</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">{error?.message || 'Unable to fetch scoring data'}</p>
@@ -143,7 +143,7 @@ export function ProfileStats({ address, questCompletions, badgeCount, lastActive
   const tierName = TIER_NAMES[stats.rankTier] || 'Unknown'
 
   return (
-    <div className="bg-white dark:bg-[#0c1427] rounded-lg p-6 shadow-sm">
+    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-sm">
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
