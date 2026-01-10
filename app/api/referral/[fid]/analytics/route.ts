@@ -38,23 +38,24 @@ export async function GET(
     })
 
     const totalReferrals = timeline.reduce((sum, day) => sum + day.referrals, 0)
+    
+    // Find peak day
+    const peakDayData = timeline.reduce((max, day) => 
+      day.referrals > max.referrals ? day : max
+    , timeline[0] || { date: new Date().toISOString().split('T')[0], referrals: 0, points: 0 })
 
     return NextResponse.json({
       success: true,
       data: {
         timeline,
         metrics: {
-          totalReferrals,
-          conversionRate: totalReferrals > 0 ? 65 : 0,
-          averageTimeToConvert: 60,
-          growthRate: 15,
+          totalReferrals: Number(totalReferrals),
+          conversionRate: Number(totalReferrals > 0 ? 65 : 0),
+          averageTimeToConvert: Number(60),
+          growthRate: Number(15),
           peakDay: {
-            date: timeline.reduce((max, day) => 
-              day.referrals > max.referrals ? day : max
-            ).date,
-            count: timeline.reduce((max, day) => 
-              day.referrals > max.referrals ? day : max
-            ).referrals,
+            date: String(peakDayData.date),
+            count: Number(peakDayData.referrals),
           },
         },
         tierDistribution: {
