@@ -69,6 +69,7 @@ const RATE_LIMIT_CONFIG = {
 const QuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).default(0),
+  nocache: z.coerce.number().int().min(0).max(1).optional(), // Cache bypass for testing
 })
 
 type QueryParams = z.infer<typeof QuerySchema>
@@ -441,18 +442,6 @@ async function getGuildData(guildId: string) {
   try {
     const supabase = createClient()
     
-    // Get guild metadata
-    const { data: guildData, error: guildError } = await supabase
-      .from('guild_off_chain_metadata')
-      .select('guild_id, name, description, banner')
-      .eq('guild_id', guildId)
-      .single()
-    
-    if (guildError || !guildData) {
-      console.error('[guild-members] Guild not found:', guildError)
-      return null
-    }
-    
     // Get guild events to calculate leader and stats
     const { data: events, error: eventsError } = await supabase
       .from('guild_events')
@@ -488,7 +477,7 @@ async function getGuildData(guildId: string) {
     memberCount = memberSet.size
     
     return {
-      name: guildData.name,
+      name: `Guild ${guildId}`, // Name comes from Subsquid, this is just a fallback
       leader,
       totalPoints: BigInt(totalPoints),
       memberCount,
@@ -547,8 +536,9 @@ async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
     console.log(`[guild-members] Found ${members.length} members from Subsquid`)
     return members
   } catch (error) {
-    console.error('[guild-members] Subsquid query failed:', error)
-    return []
+    console.error('[guild-members] Subsquid query failed, falling back to events:', error)
+    // Fallback to guild_events when Subsquid is down
+    return await getGuildMembersFromEvents(guildId)
   }
 }
 
@@ -754,15 +744,18 @@ export async function GET(
     const queryParams = QuerySchema.parse({
       limit: url.searchParams.get('limit') || '50',
       offset: url.searchParams.get('offset') || '0',
+      nocache: url.searchParams.get('nocache') || '0',
     })
 
     // 3. FETCH MEMBERS (with caching - TRUE HYBRID)
-    const allMembers = await getCached(
-      'guild-members',
-      guildId,
-      async () => await getGuildMembers(guildId),
-      { ttl: 60 }
-    )
+    const allMembers = queryParams.nocache === 1
+      ? await getGuildMembers(guildId) // Bypass cache for testing
+      : await getCached(
+          'guild-members',
+          guildId,
+          async () => await getGuildMembers(guildId),
+          { ttl: 60 }
+        )
 
     if (!allMembers || allMembers.length === 0) {
       return createErrorResponse({
