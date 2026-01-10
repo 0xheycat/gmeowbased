@@ -40,25 +40,27 @@
 // 3. Match Supabase types: TEXT→string, INTEGER→number, BOOLEAN→boolean, etc.
 // 4. Document change in "Manual additions" section below
 //
-// EXAMPLE (Phase 2.1 - member_role):
-// guild_member_stats_cache: {
+// EXAMPLE (adding a column):
+// some_table: {
 //   Row: {
-//     member_role: string  // ← Add here (NOT NULL → required)
+//     new_column: string  // ← Add here (NOT NULL → required)
 //   }
 //   Insert: {
-//     member_role?: string  // ← Add here (has DEFAULT → optional)
+//     new_column?: string  // ← Add here (has DEFAULT → optional)
 //   }
 //   Update: {
-//     member_role?: string  // ← Add here (always optional)
+//     new_column?: string  // ← Add here (always optional)
 //   }
 // }
 //
 // Manual additions:
-// - 2025-12-21: guild_analytics_cache - Pre-computed guild analytics cache
-// - 2025-12-21: guild_member_stats_cache - Pre-computed member statistics cache
-// - 2025-12-21: guild_stats_cache - Guild stats cache for leaderboard
 // - 2025-12-21: reward_claims - Reward claim tracking table
-// - 2025-12-25: guild_member_stats_cache.member_role - Phase 2.1 member role field (leader/officer/member)
+// - 2026-01-09: guild_off_chain_metadata - Renamed from guild_metadata (off-chain fields only)
+//
+// Tables removed (2026-01-09):
+// - guild_analytics_cache - Redundant with Subsquid indexer
+// - guild_member_stats_cache - Redundant with Subsquid indexer
+// - guild_stats_cache - Redundant with Subsquid indexer
 // - 2025-12-28: unified_quests.verification_data - Populated 'type' field within JSONB (Bug #21 fix)
 //               Migration: 20251228000000_populate_verification_data_type.sql
 //               Note: No schema changes - only data population within existing JSONB column
@@ -305,183 +307,23 @@ export type Database = {
         }
         Relationships: []
       }
-      guild_metadata: {
+      guild_off_chain_metadata: {
         Row: {
           banner: string | null
-          created_at: string
           description: string | null
           guild_id: string
-          name: string
           updated_at: string
         }
         Insert: {
           banner?: string | null
-          created_at?: string
           description?: string | null
           guild_id: string
-          name: string
           updated_at?: string
         }
         Update: {
           banner?: string | null
-          created_at?: string
           description?: string | null
           guild_id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      guild_analytics_cache: {
-        Row: {
-          activity_timeline: Json | null
-          avg_points_per_member: number | null
-          guild_id: string
-          last_synced_at: string | null
-          member_growth_series: Json | null
-          members_7d_growth: number | null
-          points_7d_growth: number | null
-          top_contributors: Json | null
-          total_claims: number | null
-          total_deposits: number | null
-          total_members: number | null
-          treasury_7d_growth: number | null
-          treasury_balance: number | null
-          treasury_flow_series: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          activity_timeline?: Json | null
-          avg_points_per_member?: number | null
-          guild_id: string
-          last_synced_at?: string | null
-          member_growth_series?: Json | null
-          members_7d_growth?: number | null
-          points_7d_growth?: number | null
-          top_contributors?: Json | null
-          total_claims?: number | null
-          total_deposits?: number | null
-          total_members?: number | null
-          treasury_7d_growth?: number | null
-          treasury_balance?: number | null
-          treasury_flow_series?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          activity_timeline?: Json | null
-          avg_points_per_member?: number | null
-          guild_id?: string
-          last_synced_at?: string | null
-          member_growth_series?: Json | null
-          members_7d_growth?: number | null
-          points_7d_growth?: number | null
-          top_contributors?: Json | null
-          total_claims?: number | null
-          total_deposits?: number | null
-          total_members?: number | null
-          treasury_7d_growth?: number | null
-          treasury_balance?: number | null
-          treasury_flow_series?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_guild_metadata"
-            columns: ["guild_id"]
-            isOneToOne: true
-            referencedRelation: "guild_metadata"
-            referencedColumns: ["guild_id"]
-          },
-        ]
-      }
-      guild_member_stats_cache: {
-        Row: {
-          deposit_count: number | null
-          global_rank: number | null
-          guild_id: string
-          guild_rank: number | null
-          joined_at: string
-          last_active: string | null
-          last_synced_at: string | null
-          member_address: string
-          member_role: string  // PHASE 2.1: Added Dec 25 - leader/officer/member
-          points_contributed: number | null
-          quest_completions: number | null
-          total_score: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          deposit_count?: number | null
-          global_rank?: number | null
-          guild_id: string
-          guild_rank?: number | null
-          joined_at: string
-          last_active?: string | null
-          last_synced_at?: string | null
-          member_address: string
-          member_role?: string  // PHASE 2.1: Added Dec 25 - defaults to 'member'
-          points_contributed?: number | null
-          quest_completions?: number | null
-          total_score?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          deposit_count?: number | null
-          global_rank?: number | null
-          guild_id?: string
-          guild_rank?: number | null
-          joined_at?: string
-          last_active?: string | null
-          last_synced_at?: string | null
-          member_address?: string
-          member_role?: string  // PHASE 2.1: Added Dec 25
-          points_contributed?: number | null
-          quest_completions?: number | null
-          total_score?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_guild_metadata"
-            columns: ["guild_id"]
-            isOneToOne: false
-            referencedRelation: "guild_metadata"
-            referencedColumns: ["guild_id"]
-          },
-        ]
-      }
-      guild_stats_cache: {
-        Row: {
-          guild_id: string
-          is_active: boolean
-          last_synced_at: string
-          leader_address: string | null
-          level: number
-          member_count: number
-          treasury_points: number
-          treasury_balance: number
-          updated_at: string
-        }
-        Insert: {
-          guild_id: string
-          is_active?: boolean
-          last_synced_at?: string
-          leader_address?: string | null
-          level?: number
-          member_count?: number
-          treasury_points?: number
-          treasury_balance?: number
-          updated_at?: string
-        }
-        Update: {
-          guild_id?: string
-          is_active?: boolean
-          last_synced_at?: string
-          leader_address?: string | null
-          level?: number
-          member_count?: number
-          treasury_points?: number
-          treasury_balance?: number
           updated_at?: string
         }
         Relationships: []
