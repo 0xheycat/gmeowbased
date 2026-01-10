@@ -45,12 +45,17 @@ export async function GET(
         timeline,
         metrics: {
           totalReferrals,
-          conversionRate: totalReferrals > 0 ? 0.65 : 0,
-          averageTimeToConvert: '2.5 days',
-          growthRate: 0.15,
-          peakDay: timeline.reduce((max, day) => 
-            day.referrals > max.referrals ? day : max
-          ).date,
+          conversionRate: totalReferrals > 0 ? 65 : 0,
+          averageTimeToConvert: 60,
+          growthRate: 15,
+          peakDay: {
+            date: timeline.reduce((max, day) => 
+              day.referrals > max.referrals ? day : max
+            ).date,
+            count: timeline.reduce((max, day) => 
+              day.referrals > max.referrals ? day : max
+            ).referrals,
+          },
         },
         tierDistribution: {
           bronze: Math.floor(totalReferrals * 0.6),
