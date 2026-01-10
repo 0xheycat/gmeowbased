@@ -134,20 +134,8 @@ export function GuildMemberList({ guildId, canManage = false, excludeAddresses =
             const isOfficer = updatedMember.role === 'officer'
             setDialogMessage(`${isOfficer ? '🎉 Quest complete! Member promoted to Officer rank!' : '📊 Member demoted to Member rank. Keep striving!'}`)
             
-            // Trigger XP celebration for management action
-            const payload: XpEventPayload = {
-              event: 'guild',
-              chainKey: 'base',
-              xpEarned: 15,
-              totalPoints: 0, // Will be calculated by overlay
-              headline: isOfficer ? 'Member Promoted! 🏆' : 'Role Updated 📊',
-              tierTagline: '+15 XP Earned',
-              shareLabel: 'Share',
-              visitLabel: 'View Guild',
-              visitUrl: `/guild/${guildId}`,
-            }
-            setXpPayload(payload)
-            setTimeout(() => setXpOverlayOpen(true), 100)
+            // XP overlay removed - promotion is a management action for others, not user's achievement
+            // User's own XP is shown via on-chain metrics in TierBadge + TotalScoreDisplay components
           }
           
           setCurrentAction(null)
