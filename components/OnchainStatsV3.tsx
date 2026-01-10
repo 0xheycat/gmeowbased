@@ -179,16 +179,16 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
   // Empty state
   if (!isConnected && !isWalletLoading) {
     return (
-      <div className="onchain-container">
-        <div className="empty-state">
-          <div className="empty-icon-wrapper">
-            <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <div className="w-full max-w-screen-xl mx-auto px-4 py-6">
+        <div className="flex flex-col items-center justify-center p-16 text-center bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 min-h-[300px]">
+          <div className="w-20 h-20 mb-6 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+            <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 6v6l4 2"/>
             </svg>
           </div>
-          <h3 className="empty-title">Connect to Explore</h3>
-          <p className="empty-desc">View your onchain portfolio across 12 networks</p>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Connect to Explore</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">View your onchain portfolio across 12 networks</p>
           <appkit-button />
         </div>
       </div>
@@ -198,24 +198,24 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
   // Loading state
   if (isWalletLoading || loading) {
     return (
-      <div className="onchain-container">
-        <div className="chain-section">
-          <div className="section-header">
-            <h3 className="section-title">SELECT CHAIN</h3>
-            <div className="status-badge">
-              <div className="spinner" />
+      <div className="w-full max-w-screen-xl mx-auto px-4 py-6">
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-bold tracking-wider text-gray-500 dark:text-gray-400 uppercase">SELECT CHAIN</h3>
+            <div className="flex items-center gap-2 px-3 py-1 bg-indigo-100/50 dark:bg-indigo-900/30 rounded-full text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+              <div className="w-3 h-3 border-2 border-indigo-600/20 dark:border-indigo-400/20 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin" />
               Loading...
             </div>
           </div>
-          <div className="chain-grid">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="chain-btn skeleton-shimmer" />
+              <div key={i} className="h-12 rounded-xl bg-gradient-to-r from-gray-200/50 to-gray-300/50 dark:from-gray-700/50 dark:to-gray-600/50 animate-pulse" />
             ))}
           </div>
         </div>
-        <div className="cards-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="stat-card skeleton-shimmer" style={{ height: '140px' }} />
+            <div key={i} className="h-36 rounded-2xl bg-gradient-to-r from-gray-200/50 to-gray-300/50 dark:from-gray-700/50 dark:to-gray-600/50 animate-pulse" />
           ))}
         </div>
       </div>
@@ -225,12 +225,12 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
   // Error state
   if (error) {
     return (
-      <div className="onchain-container">
-        <div className="error-state">
-          <div className="error-icon">⚠️</div>
-          <h3 className="error-title">Failed to Load</h3>
-          <p className="error-desc">{error.message}</p>
-          <button onClick={revalidate} className="retry-btn">
+      <div className="w-full max-w-screen-xl mx-auto px-4 py-6">
+        <div className="flex flex-col items-center justify-center p-16 text-center bg-red-50/50 dark:bg-red-950/20 rounded-2xl border border-red-200 dark:border-red-900/30 min-h-[300px]">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Failed to Load</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error.message}</p>
+          <button onClick={revalidate} className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/30">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/>
             </svg>
@@ -252,19 +252,19 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
   const topNFTs = data?.topNFTCollections?.slice(0, 10) || []
 
   return (
-    <div className="onchain-container">
-      {/* Chain Switcher - Preserved from v2 */}
-      <div className="chain-section">
-        <div className="section-header">
-          <h3 className="section-title">CHAIN EXPLORER</h3>
+    <div className="w-full max-w-screen-xl mx-auto px-4 py-6">
+      {/* Chain Switcher */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-bold tracking-wider text-gray-500 dark:text-gray-400 uppercase">CHAIN EXPLORER</h3>
           <button 
             onClick={revalidate} 
-            className="refresh-btn" 
+            className="p-2 bg-indigo-100/50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200/50 dark:hover:bg-indigo-900/50 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
             disabled={validating}
             title="Refresh data"
           >
             <svg 
-              className={validating ? 'refresh-icon spinning' : 'refresh-icon'} 
+              className={validating ? 'animate-spin' : ''} 
               width="16" 
               height="16" 
               viewBox="0 0 24 24" 
@@ -276,67 +276,75 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
             </svg>
           </button>
         </div>
-        <div className="chain-grid">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {Object.values(CHAINS).map((c) => (
             <button
               key={c.key}
               onClick={() => setChainKey(c.key)}
-              className={`chain-btn ${c.key === chainKey ? 'active' : ''}`}
+              className={`flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold transition-all ${
+                c.key === chainKey
+                  ? 'bg-gradient-to-br from-indigo-600 to-purple-600 border-transparent text-white shadow-lg shadow-indigo-500/40'
+                  : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-indigo-500 dark:hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-md'
+              }`}
               title={`Switch to ${c.name}`}
             >
               <Image src={c.icon} alt={c.name} width={20} height={20} unoptimized />
-              <span className="chain-name">{c.name}</span>
+              <span className="truncate">{c.name}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Overview Cards - gmeowbased0.6 pattern */}
-      <div className="cards-grid">
-        {/* Portfolio Card - Hero style */}
-        <div className="stat-card hero-card">
-          <div className="card-header">
-            <div className="card-icon gradient-primary">💰</div>
-            <div className="card-badge">{chainCfg.name}</div>
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Portfolio Card - Hero */}
+        <div className="relative bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl p-6 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center text-2xl">💰</div>
+            <div className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-semibold uppercase tracking-wide">{chainCfg.name}</div>
           </div>
-          <div className="card-content">
-            <div className="card-label">Portfolio Value</div>
-            <div className="card-value">{portfolioValue}</div>
-            <div className="card-meta">{balance} ETH</div>
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-semibold uppercase tracking-wide opacity-90">Portfolio Value</div>
+            <div className="text-3xl font-bold leading-none">{portfolioValue}</div>
+            <div className="text-sm opacity-80">{balance} ETH</div>
           </div>
         </div>
 
         {/* Tokens Card - Expandable */}
         <div 
-          className={`stat-card expandable-card ${expandedCard === 'tokens' ? 'expanded' : ''}`}
+          className={`relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-all cursor-pointer overflow-hidden ${
+            expandedCard === 'tokens' 
+              ? 'md:col-span-2' 
+              : 'hover:-translate-y-1 hover:shadow-xl'
+          }`}
           onClick={() => toggleCard('tokens')}
         >
-          <div className="card-header">
-            <div className="card-icon gradient-blue">🪙</div>
-            <svg className="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-2xl">🪙</div>
+            <svg className={`text-gray-400 dark:text-gray-500 transition-transform ${expandedCard === 'tokens' ? 'rotate-180' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 9l6 6 6-6"/>
             </svg>
           </div>
-          <div className="card-content">
-            <div className="card-label">Tokens</div>
-            <div className="card-value">{formatNumber(tokenCount)}</div>
-            <div className="card-meta">ERC-20 Holdings</div>
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">Tokens</div>
+            <div className="text-3xl font-bold leading-none text-gray-900 dark:text-white">{formatNumber(tokenCount)}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">ERC-20 Holdings</div>
           </div>
           {expandedCard === 'tokens' && (
-            <div className="card-expansion" onClick={(e) => e.stopPropagation()}>
-              <div className="expansion-title">Top Holdings</div>
-              <div className="token-list">
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700" onClick={(e) => e.stopPropagation()}>
+              <div className="text-sm font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300 mb-4">Top Holdings</div>
+              <div className="flex flex-col gap-3">
                 {topTokens.slice(0, 5).map((token: any, i: number) => (
-                  <div key={i} className="token-row">
-                    <div className="token-info">
-                      <span className="token-symbol">{token.symbol}</span>
-                      <span className="token-balance">{formatBalance(token.balance)}</span>
+                  <div key={i} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-bold text-gray-900 dark:text-white">{token.symbol}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{formatBalance(token.balance)}</span>
                     </div>
-                    <div className="token-value">{formatUSD(token.valueUSD)}</div>
+                    <div className="font-bold text-indigo-600 dark:text-indigo-400">{formatUSD(token.valueUSD)}</div>
                   </div>
                 ))}
                 {topTokens.length === 0 && (
-                  <div className="empty-message">No tokens found</div>
+                  <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">No tokens found</div>
                 )}
               </div>
             </div>
@@ -345,35 +353,39 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
 
         {/* NFTs Card - Expandable */}
         <div 
-          className={`stat-card expandable-card ${expandedCard === 'nfts' ? 'expanded' : ''}`}
+          className={`relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-all cursor-pointer overflow-hidden ${
+            expandedCard === 'nfts' 
+              ? 'md:col-span-2' 
+              : 'hover:-translate-y-1 hover:shadow-xl'
+          }`}
           onClick={() => toggleCard('nfts')}
         >
-          <div className="card-header">
-            <div className="card-icon gradient-purple">🖼️</div>
-            <svg className="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center text-2xl">🖼️</div>
+            <svg className={`text-gray-400 dark:text-gray-500 transition-transform ${expandedCard === 'nfts' ? 'rotate-180' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 9l6 6 6-6"/>
             </svg>
           </div>
-          <div className="card-content">
-            <div className="card-label">NFT Collections</div>
-            <div className="card-value">{formatNumber(nftCount)}</div>
-            <div className="card-meta">Digital Assets</div>
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">NFT Collections</div>
+            <div className="text-3xl font-bold leading-none text-gray-900 dark:text-white">{formatNumber(nftCount)}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Digital Assets</div>
           </div>
           {expandedCard === 'nfts' && (
-            <div className="card-expansion" onClick={(e) => e.stopPropagation()}>
-              <div className="expansion-title">Collections</div>
-              <div className="nft-grid">
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700" onClick={(e) => e.stopPropagation()}>
+              <div className="text-sm font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300 mb-4">Collections</div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {topNFTs.slice(0, 4).map((nft: any, i: number) => (
-                  <div key={i} className="nft-item">
-                    <div className="nft-name">{nft.name || 'Unnamed'}</div>
-                    <div className="nft-count">{nft.tokenCount} items</div>
+                  <div key={i} className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <div className="font-bold text-gray-900 dark:text-white mb-1">{nft.name || 'Unnamed'}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{nft.tokenCount} items</div>
                     {nft.totalValueUSD && (
-                      <div className="nft-value">{formatUSD(nft.totalValueUSD)}</div>
+                      <div className="font-bold text-indigo-600 dark:text-indigo-400 text-sm">{formatUSD(nft.totalValueUSD)}</div>
                     )}
                   </div>
                 ))}
                 {topNFTs.length === 0 && (
-                  <div className="empty-message">No NFTs found</div>
+                  <div className="col-span-2 text-center py-8 text-gray-400 dark:text-gray-500 text-sm">No NFTs found</div>
                 )}
               </div>
             </div>
@@ -382,40 +394,44 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
 
         {/* Activity Card - Expandable */}
         <div 
-          className={`stat-card expandable-card ${expandedCard === 'activity' ? 'expanded' : ''}`}
+          className={`relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-all cursor-pointer overflow-hidden ${
+            expandedCard === 'activity' 
+              ? 'md:col-span-2' 
+              : 'hover:-translate-y-1 hover:shadow-xl'
+          }`}
           onClick={() => toggleCard('activity')}
         >
-          <div className="card-header">
-            <div className="card-icon gradient-green">⚡</div>
-            <svg className="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-2xl">⚡</div>
+            <svg className={`text-gray-400 dark:text-gray-500 transition-transform ${expandedCard === 'activity' ? 'rotate-180' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 9l6 6 6-6"/>
             </svg>
           </div>
-          <div className="card-content">
-            <div className="card-label">Transactions</div>
-            <div className="card-value">{formatNumber(totalTxs)}</div>
-            <div className="card-meta">Total Activity</div>
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">Transactions</div>
+            <div className="text-3xl font-bold leading-none text-gray-900 dark:text-white">{formatNumber(totalTxs)}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Total Activity</div>
           </div>
           {expandedCard === 'activity' && (
-            <div className="card-expansion" onClick={(e) => e.stopPropagation()}>
-              <div className="expansion-title">Activity Details</div>
-              <div className="activity-list">
-                <div className="activity-item">
-                  <span className="activity-label">Account Age</span>
-                  <span className="activity-value">{accountAge}</span>
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700" onClick={(e) => e.stopPropagation()}>
+              <div className="text-sm font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300 mb-4">Activity Details</div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <span className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Account Age</span>
+                  <span className="block text-xl font-bold text-gray-900 dark:text-white">{accountAge}</span>
                 </div>
-                <div className="activity-item">
-                  <span className="activity-label">Total Transactions</span>
-                  <span className="activity-value">{formatNumber(totalTxs)}</span>
+                <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <span className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Total Transactions</span>
+                  <span className="block text-xl font-bold text-gray-900 dark:text-white">{formatNumber(totalTxs)}</span>
                 </div>
-                <div className="activity-item">
-                  <span className="activity-label">Contracts Deployed</span>
-                  <span className="activity-value">{data?.contractsDeployed || 0}</span>
+                <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <span className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Contracts Deployed</span>
+                  <span className="block text-xl font-bold text-gray-900 dark:text-white">{data?.contractsDeployed || 0}</span>
                 </div>
                 {data?.ensName && (
-                  <div className="activity-item">
-                    <span className="activity-label">ENS Name</span>
-                    <span className="activity-value">{data.ensName}</span>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                    <span className="block text-sm text-gray-600 dark:text-gray-400 mb-2">ENS Name</span>
+                    <span className="block text-xl font-bold text-gray-900 dark:text-white">{data.ensName}</span>
                   </div>
                 )}
               </div>
@@ -423,500 +439,6 @@ export function OnchainStatsV3({ onLoadingChange }: OnchainStatsV3Props) {
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        /* Container */
-        .onchain-container {
-          width: 100%;
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 1.5rem 1rem;
-        }
-
-        /* Empty/Error States */
-        .empty-state,
-        .error-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 4rem 2rem;
-          text-align: center;
-          background: linear-gradient(135deg, 
-            rgba(99, 102, 241, 0.05), 
-            rgba(168, 85, 247, 0.05)
-          );
-          border-radius: 1rem;
-          border: 1px solid rgba(99, 102, 241, 0.1);
-          min-height: 300px;
-        }
-        .empty-icon-wrapper {
-          width: 80px;
-          height: 80px;
-          margin-bottom: 1.5rem;
-          border-radius: 50%;
-          background: linear-gradient(135deg, rgb(99, 102, 241), rgb(139, 92, 246));
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .empty-icon {
-          width: 40px;
-          height: 40px;
-          color: white;
-        }
-        .empty-title,
-        .error-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: rgb(17, 24, 39);
-          margin-bottom: 0.5rem;
-        }
-        .empty-desc,
-        .error-desc {
-          color: rgb(107, 114, 128);
-          margin-bottom: 2rem;
-        }
-        .error-icon {
-          font-size: 4rem;
-          margin-bottom: 1rem;
-        }
-        .retry-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: rgb(99, 102, 241);
-          color: white;
-          border: none;
-          border-radius: 0.5rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .retry-btn:hover {
-          background: rgb(79, 70, 229);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
-
-        /* Chain Switcher */
-        .chain-section {
-          margin-bottom: 2rem;
-        }
-        .section-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1rem;
-        }
-        .section-title {
-          font-size: 0.75rem;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          color: rgb(107, 114, 128);
-          text-transform: uppercase;
-        }
-        .status-badge {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.25rem 0.75rem;
-          background: rgba(99, 102, 241, 0.1);
-          border-radius: 9999px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: rgb(99, 102, 241);
-        }
-        .spinner {
-          width: 12px;
-          height: 12px;
-          border: 2px solid rgba(99, 102, 241, 0.2);
-          border-top-color: rgb(99, 102, 241);
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
-        .refresh-btn {
-          padding: 0.5rem;
-          background: rgba(99, 102, 241, 0.1);
-          border: 1px solid rgba(99, 102, 241, 0.2);
-          border-radius: 0.5rem;
-          color: rgb(99, 102, 241);
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .refresh-btn:hover:not(:disabled) {
-          background: rgba(99, 102, 241, 0.2);
-          transform: scale(1.05);
-        }
-        .refresh-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .refresh-icon {
-          display: block;
-        }
-        .spinning {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        .chain-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-          gap: 0.75rem;
-        }
-        .chain-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem;
-          background: white;
-          border: 2px solid rgb(229, 231, 235);
-          border-radius: 0.75rem;
-          color: rgb(55, 65, 81);
-          font-size: 0.875rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .chain-btn:hover {
-          border-color: rgb(99, 102, 241);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-        }
-        .chain-btn.active {
-          background: linear-gradient(135deg, rgb(99, 102, 241), rgb(139, 92, 246));
-          border-color: transparent;
-          color: white;
-          box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
-        }
-        .chain-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        /* Cards Grid */
-        .cards-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 1.25rem;
-        }
-
-        /* Stat Cards - Pattern from gmeowbased0.6 collection-card */
-        .stat-card {
-          position: relative;
-          background: white;
-          border: 1px solid rgb(229, 231, 235);
-          border-radius: 1rem;
-          padding: 1.5rem;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          overflow: hidden;
-        }
-        .stat-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-        }
-        .hero-card {
-          background: linear-gradient(135deg, rgb(99, 102, 241), rgb(139, 92, 246));
-          border: none;
-          color: white;
-          grid-column: span 1;
-        }
-        .expandable-card {
-          cursor: pointer;
-        }
-        .expandable-card.expanded {
-          grid-column: span 2;
-          transform: none;
-        }
-        .expandable-card.expanded:hover {
-          transform: none;
-        }
-
-        /* Card Header */
-        .card-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1rem;
-        }
-        .card-icon {
-          width: 48px;
-          height: 48px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.5rem;
-        }
-        .gradient-primary {
-          background: linear-gradient(135deg, rgb(252, 211, 77), rgb(251, 146, 60));
-        }
-        .gradient-blue {
-          background: linear-gradient(135deg, rgb(59, 130, 246), rgb(37, 99, 235));
-        }
-        .gradient-purple {
-          background: linear-gradient(135deg, rgb(168, 85, 247), rgb(126, 34, 206));
-        }
-        .gradient-green {
-          background: linear-gradient(135deg, rgb(34, 197, 94), rgb(22, 163, 74));
-        }
-        .card-badge {
-          padding: 0.25rem 0.75rem;
-          background: rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(10px);
-          border-radius: 9999px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .expand-icon {
-          color: rgb(156, 163, 175);
-          transition: transform 0.3s;
-        }
-        .expandable-card.expanded .expand-icon {
-          transform: rotate(180deg);
-        }
-
-        /* Card Content */
-        .card-content {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .card-label {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: rgb(107, 114, 128);
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
-        }
-        .hero-card .card-label {
-          color: rgba(255, 255, 255, 0.9);
-        }
-        .card-value {
-          font-size: 2rem;
-          font-weight: 700;
-          color: rgb(17, 24, 39);
-          line-height: 1;
-        }
-        .hero-card .card-value {
-          color: white;
-        }
-        .card-meta {
-          font-size: 0.875rem;
-          color: rgb(107, 114, 128);
-        }
-        .hero-card .card-meta {
-          color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* Card Expansion */
-        .card-expansion {
-          margin-top: 1.5rem;
-          padding-top: 1.5rem;
-          border-top: 1px solid rgb(229, 231, 235);
-        }
-        .expansion-title {
-          font-size: 0.875rem;
-          font-weight: 700;
-          color: rgb(55, 65, 81);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 1rem;
-        }
-
-        /* Token List */
-        .token-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-        .token-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.75rem 1rem;
-          background: rgb(249, 250, 251);
-          border-radius: 0.5rem;
-          transition: background 0.2s;
-        }
-        .token-row:hover {
-          background: rgb(243, 244, 246);
-        }
-        .token-info {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-        .token-symbol {
-          font-weight: 700;
-          color: rgb(17, 24, 39);
-        }
-        .token-balance {
-          font-size: 0.875rem;
-          color: rgb(107, 114, 128);
-        }
-        .token-value {
-          font-weight: 700;
-          color: rgb(99, 102, 241);
-        }
-
-        /* NFT Grid */
-        .nft-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-        }
-        .nft-item {
-          padding: 1rem;
-          background: rgb(249, 250, 251);
-          border-radius: 0.5rem;
-          transition: background 0.2s;
-        }
-        .nft-item:hover {
-          background: rgb(243, 244, 246);
-        }
-        .nft-name {
-          font-weight: 700;
-          color: rgb(17, 24, 39);
-          margin-bottom: 0.25rem;
-        }
-        .nft-count {
-          font-size: 0.875rem;
-          color: rgb(107, 114, 128);
-          margin-bottom: 0.5rem;
-        }
-        .nft-value {
-          font-weight: 700;
-          color: rgb(99, 102, 241);
-          font-size: 0.875rem;
-        }
-
-        /* Activity List */
-        .activity-list {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-        }
-        .activity-item {
-          padding: 1rem;
-          background: rgb(249, 250, 251);
-          border-radius: 0.5rem;
-        }
-        .activity-label {
-          display: block;
-          font-size: 0.875rem;
-          color: rgb(107, 114, 128);
-          margin-bottom: 0.5rem;
-        }
-        .activity-value {
-          display: block;
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: rgb(17, 24, 39);
-        }
-
-        /* Empty Message */
-        .empty-message {
-          text-align: center;
-          padding: 2rem;
-          color: rgb(156, 163, 175);
-          font-size: 0.875rem;
-        }
-
-        /* Skeleton Shimmer */
-        .skeleton-shimmer {
-          background: linear-gradient(
-            90deg,
-            rgba(229, 231, 235, 0.4) 25%,
-            rgba(229, 231, 235, 0.8) 50%,
-            rgba(229, 231, 235, 0.4) 75%
-          );
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-          .cards-grid {
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          }
-          .expandable-card.expanded {
-            grid-column: span 1;
-          }
-          .nft-grid,
-          .activity-list {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .onchain-container {
-            padding: 1rem;
-          }
-          .chain-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-          .chain-btn {
-            padding: 0.625rem;
-            font-size: 0.8125rem;
-          }
-          .cards-grid {
-            grid-template-columns: 1fr;
-          }
-          .card-value {
-            font-size: 1.75rem;
-          }
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-          .stat-card {
-            background: rgb(31, 41, 55);
-            border-color: rgb(55, 65, 81);
-          }
-          .chain-btn {
-            background: rgb(31, 41, 55);
-            border-color: rgb(55, 65, 81);
-            color: rgb(209, 213, 219);
-          }
-          .card-label,
-          .card-meta {
-            color: rgb(156, 163, 175);
-          }
-          .card-value {
-            color: rgb(243, 244, 246);
-          }
-          .token-row,
-          .nft-item,
-          .activity-item {
-            background: rgb(17, 24, 39);
-          }
-          .token-row:hover,
-          .nft-item:hover {
-            background: rgb(31, 41, 55);
-          }
-          .empty-title,
-          .error-title {
-            color: rgb(243, 244, 246);
-          }
-          .empty-desc,
-          .error-desc {
-            color: rgb(156, 163, 175);
-          }
-        }
-      `}</style>
     </div>
   )
 }
