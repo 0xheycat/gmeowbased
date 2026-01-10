@@ -189,7 +189,6 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
         event: 'guild',
         chainKey: 'base',
         xpEarned: 20,
-        totalPoints: 0, // Will be calculated by overlay
         headline: `Treasury Contribution! 💰`,
         tierTagline: '+20 XP Earned',
         shareLabel: 'Share',

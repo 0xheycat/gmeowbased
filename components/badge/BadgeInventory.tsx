@@ -131,7 +131,6 @@ export function BadgeInventory({
         event: 'badge-claim',
         chainKey: (result.badge.chain || 'base') as any,
         xpEarned: 100, // Standard badge claim XP
-        totalPoints: 0, // Will be updated from API in future
         headline: `${result.badge.name} claimed!`,
         shareLabel: 'Share your new badge',
         visitUrl: `/badges`,

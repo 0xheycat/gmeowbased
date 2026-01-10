@@ -115,7 +115,6 @@ export function GuildCreationForm({
         event: 'guild',
         chainKey: 'base',
         xpEarned: 50, // Guild creation reward
-        totalPoints: 0, // Will be updated by overlay
         headline: `Guild "${guildName.trim()}" Created! 🏰`,
         tierTagline: '+50 XP Earned',
         shareLabel: 'Share Guild',
