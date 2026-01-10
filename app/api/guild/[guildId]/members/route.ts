@@ -492,6 +492,8 @@ async function getGuildData(guildId: string) {
 /**
  * Get all members with roles and points from Subsquid GraphQL
  * FIXED: Query Subsquid via Apollo Client (has caching and rate limiting)
+ * CRITICAL FIX: Cross-verify with guild_events to filter out members who left
+ * (Subsquid indexer has bug where isActive stays true even after member leaves)
  */
 async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
   try {
@@ -502,11 +504,12 @@ async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
     const { data } = await apolloClient.query({
       query: gql`
         query GetGuildMembers($guildId: String!) {
-          guildMembers(where: { guild: { id_eq: $guildId }, isActive_eq: true }) {
+          guildMembers(where: { guild: { id_eq: $guildId } }) {
             id
             role
             pointsContributed
             joinedAt
+            isActive
             user {
               id
             }
@@ -518,12 +521,38 @@ async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
       fetchPolicy: 'cache-first',
     })
 
-    const subsquidMembers = data?.guildMembers || []
+    let subsquidMembers = data?.guildMembers || []
 
     if (subsquidMembers.length === 0) {
       console.log('[guild-members] No members found in Subsquid')
       return []
     }
+
+    // CRITICAL FIX: Cross-verify with guild_events to filter out members who actually left
+    // This is needed because Subsquid indexer has a bug where isActive doesn't update
+    const supabase = createClient()
+    const { data: events } = await supabase
+      .from('guild_events')
+      .select('event_type, actor_address')
+      .eq('guild_id', guildId)
+      .in('event_type', ['MEMBER_LEFT'])
+    
+    // Build set of addresses that have left
+    const leftAddresses = new Set<string>()
+    events?.forEach(event => {
+      if (event.event_type === 'MEMBER_LEFT') {
+        leftAddresses.add(event.actor_address.toLowerCase())
+      }
+    })
+    
+    // Filter out members who have left (based on guild_events, not Subsquid's isActive)
+    subsquidMembers = subsquidMembers.filter((member: any) => {
+      const hasLeft = leftAddresses.has(member.user.id.toLowerCase())
+      if (hasLeft) {
+        console.log(`[guild-members] Filtering out ${member.user.id} - found MEMBER_LEFT event`)
+      }
+      return !hasLeft
+    })
 
     // Convert Subsquid data to API format
     const members: GuildMember[] = subsquidMembers.map((member: any) => ({
@@ -533,7 +562,7 @@ async function getGuildMembers(guildId: string): Promise<GuildMember[]> {
       joinedAt: new Date(parseInt(member.joinedAt) * 1000).toISOString(),
     }))
 
-    console.log(`[guild-members] Found ${members.length} members from Subsquid`)
+    console.log(`[guild-members] Found ${members.length} active members from Subsquid (filtered ${subsquidMembers.length - members.length} who left)`)
     return members
   } catch (error) {
     console.error('[guild-members] Subsquid query failed, falling back to events:', error)
