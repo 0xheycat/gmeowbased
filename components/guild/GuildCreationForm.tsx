@@ -338,8 +338,6 @@ export function GuildCreationForm({
           </p>
           <ScoreBreakdownCard 
             address={address}
-            showTierBadge={true}
-            showLeaderboardRank={false}
           />
         </div>
 

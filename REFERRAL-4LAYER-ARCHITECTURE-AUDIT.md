@@ -1,5 +1,6 @@
 # Referral System 4-Layer Architecture Comprehensive Audit
 **Date**: December 26, 2025  
+**Last Updated**: January 10, 2026 (Acceptance Flow Added)  
 **Status**: ✅ **COMPLETE - PRODUCTION-READY**
 
 ---
@@ -14,8 +15,16 @@ Complete validation of Gmeow Referral System across all 4 architectural layers:
 | **Layer 2** | Subsquid Indexer (ReferralCode, ReferralUse) | ✅ VERIFIED | 0 | N/A |
 | **Layer 3** | Supabase Schema (7 tables) | ✅ VERIFIED | 0 | N/A |
 | **Layer 4** | Next.js API (5 endpoints) | ✅ VERIFIED & FIXED | 1 minor | Naming fix applied |
+| **Layer 4.5** | UI Components (10 total) | ✅ COMPLETE | 0 | Acceptance flow added |
 
-**Result**: ✅ All 4 layers properly aligned with zero naming conflicts
+**Result**: ✅ All layers properly aligned with zero naming conflicts
+
+**✨ NEW: Acceptance Flow (Jan 10, 2026)**
+- ✅ Landing page: `/join?ref=CODE`
+- ✅ Validation hook: `useValidateReferralCode`
+- ✅ Acceptance component: `ReferralAcceptanceForm`
+- ✅ Contract integration: `buildSetReferrerTx` (documented)
+- ✅ Complete user journey: Link click → Accept → Rewards
 
 ---
 
