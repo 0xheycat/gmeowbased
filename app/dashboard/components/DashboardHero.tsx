@@ -5,13 +5,13 @@
 
 export function DashboardHero() {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-8 mb-6">
+    <div className="relative overflow-hidden rounded-2xl bg-gray-900 dark:bg-gray-800 p-8 mb-6">
       {/* Content */}
       <div className="relative z-10">
         <h1 className="text-4xl font-bold text-white mb-2">
           Discover Trending on Base
         </h1>
-        <p className="text-blue-100 text-lg">
+        <p className="text-gray-300 dark:text-gray-400 text-lg">
           Real-time tokens, top casters, trending channels & more
         </p>
       </div>
