@@ -466,7 +466,7 @@ export async function getLeaderboard(options: {
       // Use on-chain data (single source of truth)
       levelInfo = {
         level: onChainStats.level,
-        levelPercent: levelProgress.progressPercent / 100,
+        levelPercent: levelProgress.progressPercent, // Already a decimal (0-1) from toLevelProgress
         xpToNextLevel: Number(levelProgress.xpToNextLevel),
       }
       
