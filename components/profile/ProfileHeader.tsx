@@ -26,6 +26,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { copyToClipboardSafe } from '@/lib/api/share'
 import { useWallets } from '@/lib/contexts'
 import type { ProfileData } from '@/lib/profile/types'
@@ -34,6 +35,7 @@ import type { ProfileData } from '@/lib/profile/types'
 import { ExternalLink } from '@/components/icons/external-link'
 import CheckIcon from '@/components/icons/check-icon'
 import XIcon from '@/components/icons/x-icon'
+import { Share2 } from 'lucide-react'
 
 interface ProfileHeaderProps {
   profile: ProfileData
@@ -45,6 +47,7 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
   const [copyStatus, setCopyStatus] = useState(false)
   const [showAllWallets, setShowAllWallets] = useState(false)
   const cachedWallets = useWallets() // Get cached wallets if viewing own profile
+  const router = useRouter()
 
   const handleCopyAddress = async (address?: string) => {
     const addressToCopy = address || profile.wallet.address
@@ -76,14 +79,24 @@ export function ProfileHeader({ profile, isOwner = false, onEditClick }: Profile
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20" />
         )}
         
-        {/* Edit Button (owner only) */}
+        {/* Edit & Share Buttons (owner only) */}
         {isOwner && (
-          <button
-            onClick={onEditClick}
-            className="absolute top-4 right-4 px-4 py-2 min-h-[44px] bg-white dark:bg-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors shadow-sm"
-          >
-            Edit Profile
-          </button>
+          <div className="absolute top-4 right-4 flex gap-2">
+            <button
+              onClick={() => router.push('/frames')}
+              className="px-4 py-2 min-h-[44px] bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 hover:border-purple-500/70 text-purple-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none transition-colors shadow-sm flex items-center gap-2"
+              title="Share your frames on Farcaster"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Share Frames</span>
+            </button>
+            <button
+              onClick={onEditClick}
+              className="px-4 py-2 min-h-[44px] bg-white dark:bg-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors shadow-sm"
+            >
+              Edit Profile
+            </button>
+          </div>
         )}
       </div>
 

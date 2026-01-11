@@ -31,7 +31,12 @@
     "contracts:verify": "./scripts/verify-contracts.sh",
     "contracts:verify:all": "./scripts/verify-all-contracts.sh",
     "contracts:validate": "npx tsx ./scripts/validate-bytecode.ts",
-    "oracle:monitor": "tsx ./scripts/oracle-balance-monitor.ts"
+    "oracle:monitor": "tsx ./scripts/oracle-balance-monitor.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:active-users": "vitest run app/api/test/active-users-frame/route.test.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@apollo/client": "^3.14.0",
