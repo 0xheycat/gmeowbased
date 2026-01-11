@@ -13,6 +13,7 @@ export const revalidate = 300 // 5 minutes
  * 
  * Fetch leaderboard data with hybrid Subsquid + Supabase pattern
  * Uses lib/ infrastructure for caching, rate limiting, and error handling
+ * Updated: Jan 11, 2026 - Added rank_change field
  * 
  * Query Parameters:
  * - period: 'daily' | 'weekly' | 'all_time' (default: 'all_time')
