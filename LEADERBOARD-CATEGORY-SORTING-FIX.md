@@ -1002,6 +1002,82 @@ const gmFrame = {
 
 ---
 
+## Implementation Summary (January 11, 2026)
+
+### ✅ Completed Today
+
+**1. Viral XP Pipeline (Priority: CRITICAL)**
+- ✅ Created oracle deposit script: `scripts/oracle/deposit-viral-points.ts`
+- ✅ Created authorization verification: `scripts/oracle/verify-authorization.ts`
+- ✅ Created authorization script: `scripts/oracle/authorize-oracle.ts`
+- ✅ Applied database migration: `viral_deposits` table + `get_viral_xp_aggregates()` RPC
+- ✅ Documented oracle workflow: `scripts/oracle/README.md`
+- ✅ Verified existing components:
+  - Badge share webhook: `app/api/cast/badge-share/route.ts` ✅
+  - Viral metrics cron: `app/api/cron/sync-viral-metrics/route.ts` ✅
+  - Database indexes: 11 indexes on `badge_casts` ✅
+
+**Implementation Status**: 🟡 95% Complete (awaiting oracle authorization)
+
+**Blocker**: Oracle wallet not authorized yet
+- Current status: ❌ NOT AUTHORIZED
+- Required action: Contract owner must run `OWNER_PRIVATE_KEY=0x... pnpm tsx scripts/oracle/authorize-oracle.ts`
+- Estimated time: 2 minutes + 1 tx confirmation
+
+**Testing Ready**:
+```bash
+# Step 1: Verify authorization status
+pnpm tsx scripts/oracle/verify-authorization.ts
+
+# Step 2: Authorize oracle (contract owner only)
+OWNER_PRIVATE_KEY=0x... pnpm tsx scripts/oracle/authorize-oracle.ts
+
+# Step 3: Test dry run
+pnpm tsx scripts/oracle/deposit-viral-points.ts --dry-run
+
+# Step 4: Execute live deposit
+pnpm tsx scripts/oracle/deposit-viral-points.ts
+```
+
+### 📋 Next Priorities
+
+**2. Guild Bonus Pipeline (Priority: HIGH)** - TODO
+- Query Subsquid for guild memberships
+- Calculate role multipliers (OWNER: 2.0x, OFFICER: 1.5x, MEMBER: 1.0x)
+- Oracle deposit via `addGuildPoints()`
+
+**3. Referral Bonus Pipeline (Priority: HIGH)** - TODO
+- Query `referral_stats` table
+- Calculate total bonus (points_awarded + successful_referrals × 10)
+- Oracle deposit via `addReferralPoints()`
+
+**4. Streak Bonus Pipeline (Priority: MEDIUM)** - TODO
+- Query Subsquid User.currentStreak
+- Calculate streak tiers (7-29d: 5pts, 30-89d: 10pts, 90+d: 20pts)
+- Apply on GM post or separate oracle deposit
+
+**5. Badge Prestige Pipeline (Priority: MEDIUM)** - TODO
+- Query Subsquid for staked badges
+- Calculate prestige (Σ badge_power × 100)
+- Oracle deposit
+
+### 🎯 Success Metrics
+
+When fully deployed:
+- Viral Legends: Users sorted by actual Warpcast engagement
+- Guild Heroes: Users sorted by guild contribution × role
+- Referral Champions: Users sorted by network growth
+- Streak Warriors: Users sorted by consecutive GM days
+- Badge Collectors: Users sorted by staked badge power
+
+**Estimated Timeline**:
+- Week 1 (Now): Viral XP pipeline authorization + live testing
+- Week 2: Guild + Referral pipelines
+- Week 3: Streak + Badge pipelines
+- Week 4: Category UI branding + tier filtering
+
+---
+
 ## Related Files
 
 **Smart Contracts**:
