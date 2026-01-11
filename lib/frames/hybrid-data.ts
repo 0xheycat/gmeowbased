@@ -130,20 +130,82 @@ export async function fetchLeaderboard(params: {
   }
   
   try {
-    // Step 1: Get leaderboard from Subsquid (95% of data)
-    tracePush(traces, 'leaderboard-subsquid-start')
+    // HYBRID ARCHITECTURE:
+    // 1. PRIMARY: Supabase leaderboard_snapshots (has pfp_url, display_name, fid)
+    // 2. FALLBACK: Subsquid users (blockchain data only, no profiles)
+    // 3. ENRICHMENT: Neynar for missing user profiles (future)
+    
+    // Step 1: Try Supabase snapshots first (fastest, has all user metadata)
+    tracePush(traces, 'leaderboard-supabase-snapshots-start')
+    const supabase = (await import('@/lib/supabase')).getSupabaseServerClient()
+    
+    if (!supabase) {
+      throw new Error('Supabase client unavailable')
+    }
+    
+    const { data: snapshots, error } = await supabase
+      .from('leaderboard_snapshots')
+      .select('*')
+      .eq('season_key', period === 'all_time' ? 'all' : period)
+      .eq('global', chain === 'global' || chain === 'all')
+      .order('rank', { ascending: true })
+      .range(offset, offset + limit - 1)
+    
+    if (error) {
+      console.error('[Leaderboard] Supabase snapshot error:', error)
+      throw error
+    }
+    
+    if (snapshots && snapshots.length > 0) {
+      tracePush(traces, 'leaderboard-supabase-snapshots-ok', { count: snapshots.length })
+      
+      // Convert Supabase snapshots to LeaderboardEntry format
+      const entries: LeaderboardEntry[] = snapshots.map((snap: any) => ({
+        rank: snap.rank || 0,
+        address: snap.address,
+        totalScore: parseInt(snap.points) || 0,
+        gmStreak: 0, // Not in snapshots
+        lifetimeGMs: 0, // Not in snapshots
+        badgeCount: 0, // Not in snapshots
+        guildRole: '', // Not in snapshots
+        referralCount: 0, // Not in snapshots
+        fid: snap.farcaster_fid || 0,
+        username: snap.display_name || '',
+        displayName: snap.display_name || '',
+        pfpUrl: snap.pfp_url || '',
+        questsCompleted: snap.completed || 0,
+        viralPoints: 0, // Not in snapshots
+      }))
+      
+      setCache(cacheKey, entries)
+      
+      return {
+        data: entries,
+        source: 'supabase-snapshots',
+        cached: false,
+        timestamp: Date.now(),
+        traces,
+      }
+    }
+    
+    // Step 2: Fallback to Subsquid if no snapshots (slower, needs enrichment)
+    tracePush(traces, 'leaderboard-subsquid-fallback-start')
     const { getLeaderboard } = await import('@/lib/integrations/subsquid-client')
     const subsquidData = await getLeaderboard({ limit, offset, period })
     tracePush(traces, 'leaderboard-subsquid-ok', { count: subsquidData.length })
     
-    // Step 2: Enrich with Supabase profiles (5% of data)
-    tracePush(traces, 'leaderboard-supabase-start')
+    if (subsquidData.length === 0) {
+      throw new Error('No leaderboard data available from Subsquid or Supabase')
+    }
+    
+    // Step 3: Enrich Subsquid data with Supabase profiles (for display names/pfps)
+    tracePush(traces, 'leaderboard-supabase-enrichment-start')
     const walletAddresses = subsquidData.map((entry: any) => entry.address)
     const { enrichLeaderboardWithProfiles } = await import('@/lib/supabase/queries/leaderboard')
     const profilesMap = await enrichLeaderboardWithProfiles(walletAddresses)
-    tracePush(traces, 'leaderboard-supabase-ok', { profiles: profilesMap.size })
+    tracePush(traces, 'leaderboard-supabase-enrichment-ok', { profiles: profilesMap.size })
     
-    // Step 3: Combine data
+    // Step 4: Combine Subsquid + Supabase enrichment
     const combined: LeaderboardEntry[] = subsquidData.map((entry: any) => {
       const profile = profilesMap.get(entry.address)
       
@@ -179,68 +241,10 @@ export async function fetchLeaderboard(params: {
     }
   } catch (error: any) {
     tracePush(traces, 'leaderboard-error', error.message)
+    console.error('[Leaderboard] Failed to fetch:', error.message)
     
-    // FALLBACK: Return mock leaderboard data when Subsquid unavailable
-    console.warn('[Leaderboard] Subsquid fetch failed, using fallback data:', error.message)
-    
-    const mockData: LeaderboardEntry[] = [
-      {
-        rank: 1,
-        address: '0x742d35cc6634c0532925a3b844bc9e7595f0beb',
-        totalScore: 15420,
-        gmStreak: 45,
-        lifetimeGMs: 120,
-        badgeCount: 8,
-        guildRole: 'owner',
-        referralCount: 15,
-        fid: 18139,
-        username: 'meowmaster',
-        displayName: 'Meow Master',
-        pfpUrl: '',
-        questsCompleted: 25,
-        viralPoints: 3500,
-      },
-      {
-        rank: 2,
-        address: '0x1234567890abcdef1234567890abcdef12345678',
-        totalScore: 12830,
-        gmStreak: 30,
-        lifetimeGMs: 95,
-        badgeCount: 6,
-        guildRole: 'officer',
-        referralCount: 10,
-        fid: 12345,
-        username: 'catpilot',
-        displayName: 'Cat Pilot',
-        pfpUrl: '',
-        questsCompleted: 20,
-        viralPoints: 2800,
-      },
-      {
-        rank: 3,
-        address: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
-        totalScore: 10560,
-        gmStreak: 20,
-        lifetimeGMs: 75,
-        badgeCount: 5,
-        guildRole: 'member',
-        referralCount: 8,
-        fid: 67890,
-        username: 'gmchaser',
-        displayName: 'GM Chaser',
-        pfpUrl: '',
-        questsCompleted: 18,
-        viralPoints: 2200,
-      },
-    ].slice(0, limit)
-    
-    return {
-      data: mockData,
-      source: 'fallback',
-      cached: false,
-      timestamp: Date.now(),
-      traces,
-    }
+    // NO FALLBACK: Leaderboard must show real data only
+    throw new Error(`Leaderboard unavailable: ${error.message}`)
   }
 }
 
