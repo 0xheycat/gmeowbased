@@ -1060,15 +1060,38 @@ npm run build          # Compile TypeScript
 sqd deploy             # Deploy to Subsquid Cloud
 ```
 
-**Verification**:
+**Verification After Redeploy**:
 ```bash
-# After redeploy, query GraphQL
+# Test user 1 (should show viralPoints=300 after redeploy with test data re-inserted)
 curl -X POST https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql \
   -H "Content-Type: application/json" \
-  -d '{"query":"{ userById(id: \"0x8a3094e44577579d6f41f6214a86c250b7dbdc4e\") { viralPoints totalScore } }"}' | jq .
+  -d '{"query":"{ userById(id: \"0x8a3094e44577579d6f41f6214a86c250b7dbdc4e\") { id totalScore viralPoints questPoints guildPoints referralPoints gmPoints } }"}' | jq .
 
-# Expected: { "viralPoints": "300", "totalScore": "310" }
+# Expected result:
+# {
+#   "data": {
+#     "userById": {
+#       "id": "0x8a3094e44577579d6f41f6214a86c250b7dbdc4e",
+#       "totalScore": "310",
+#       "viralPoints": "300",  ← SHOULD BE 300 (not 0)
+#       "questPoints": "0",
+#       "guildPoints": "0",
+#       "referralPoints": "0",
+#       "gmPoints": "10"
+#     }
+#   }
+# }
+
+# Test leaderboard viral_xp sorting
+curl 'https://gmeowhq.art/api/leaderboard-v2?orderBy=viral_xp&page=1&pageSize=5' | jq '.data[] | {username, viral_xp, total_score, rank: .global_rank}'
+
+# Expected: Users sorted by viral_xp (highest first)
 ```
+
+**Monitoring**:
+- Check Subsquid Cloud dashboard for deployment status
+- Monitor indexer logs for contract state read errors
+- Verify RPC rate limits not exceeded (eth_call per StatsUpdated event)
 
 **Impact**:
 - ✅ Leaderboard viral_xp category will now show correct rankings
