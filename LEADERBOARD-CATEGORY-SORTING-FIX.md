@@ -5,13 +5,16 @@
 **Status**: ✅ SORTING FIXED | 🚧 DATA PIPELINES IN PROGRESS
 
 **Implementation Progress (Jan 11, 2026)**:
-- ✅ Viral XP Pipeline: **INDEXER FIX DEPLOYED** 
+- ⚠️ Viral XP Pipeline: **INDEXER FIX DEPLOYED - NOT WORKING** 
   - ✅ Oracle authorized (tx: 0xedc04091...9eb41)
   - ✅ Deposit script functional (tested with 2 deposits: 300 XP + 25 XP)
   - ✅ On-chain verification passed (viralPoints = 300, totalScore = 310)
-  - ✅ **Subsquid indexer FIXED**: Added contract state reads for score components (Jan 11, 2026)
-  - ⚠️ No real user data yet (badge_casts cleared, awaiting production badge shares)
-  - 🚧 **NEXT**: Redeploy indexer → Wait for real badge shares → E2E test
+  - ✅ **Subsquid indexer DEPLOYED** with contract state reads (Jan 11, 2026 19:20 UTC)
+  - ❌ **TESTED - STILL FAILING**: Triggered GM claim (new StatsUpdated event) but viralPoints still shows 0
+  - ❌ **GraphQL Test Result**: `{ "viralPoints": "0", "totalScore": "310", "gmPoints": "0" }`
+  - ❌ **VERIFICATION FAILED**: New indexer code NOT reading contract state correctly
+  - 🔧 **ROOT CAUSE**: Need to investigate why eth_call is not working or indexer not processing properly
+  - 🚧 **NEXT**: Debug indexer logs → Check eth_call errors → Verify contract ABI → Retest
   
 - 📋 Guild Bonus Pipeline: TODO (blocked - need real guild memberships)
 - 📋 Referral Bonus Pipeline: TODO (blocked - need real referrals)
