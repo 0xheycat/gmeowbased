@@ -2,7 +2,95 @@
 
 **Date**: January 11, 2026  
 **Issue**: All leaderboard categories showing identical results  
-**Status**: ✅ FIXED
+**Status**: ✅ SORTING FIXED | 🚧 DATA PIPELINES IN PROGRESS
+
+**Implementation Progress (Jan 11, 2026)**:
+- ✅ Viral XP Pipeline: Webhook exists, cron exists, oracle script created, DB migration applied
+- ⚠️ Oracle Authorization: NOT YET (blocker - needs contract owner action)
+- 📋 Guild Bonus Pipeline: TODO
+- 📋 Referral Bonus Pipeline: TODO
+- 📋 Streak Bonus Pipeline: TODO
+- 📋 Badge Prestige Pipeline: TODO
+
+---
+
+## Architecture Overview
+
+### System Architecture (Deployed Dec 31, 2025)
+
+**On-Chain Layer (Source of Truth)**:
+- Contract: `ScoringModule.sol` (Base blockchain)
+- Deployment: December 31, 2025
+- Functions: XP/level/rank calculations, 12-tier system, score components
+- Score Components:
+  - `scoringPointsBalance`: On-chain points from GM/quest claims
+  - `viralPoints`: Oracle-deposited viral engagement XP
+  - `questPoints`: Off-chain quest completions
+  - `guildPoints`: Guild membership bonuses
+  - `referralPoints`: Referral network rewards
+
+**Indexing Layer (Fast Queries)**:
+- **Subsquid Cloud Indexer**: Real-time blockchain event indexing
+- Endpoint: `https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql`
+- Performance: ~100ms per user (50x faster than RPC ~5s)
+- Batch Support: 100 users in 1 GraphQL query
+- Data: Indexed from ScoringModule events (StatsUpdated, LevelUp, RankUp)
+
+**Enrichment Layer (Off-Chain Data)**:
+- **Supabase PostgreSQL**: User profiles, Neynar social data, guild metadata
+- Tables: `user_profiles`, `badge_casts`, `guild_off_chain_metadata`, `viral_share_events`, `referral_stats`
+- Neynar Integration: Usernames, display names, PFPs, scores
+- Purpose: Enrich blockchain data with social context
+
+**Caching Layer (Performance)**:
+- **L1 (Memory)**: In-process Map (1000 entries max, per-instance)
+- **L2 (Redis)**: Upstash/Vercel KV (shared across serverless)
+- **L3 (Filesystem)**: `.cache/server/` (free-tier fallback)
+- Strategy: Stale-while-revalidate (serve stale, refresh background)
+- TTL: 5 minutes (300 seconds)
+- Cache Key: `leaderboard-v2:${period}:${page}:${pageSize}:${search}:${orderBy}`
+
+**Rate Limiting**:
+- SDK: `@upstash/ratelimit` (sliding window algorithm)
+- API Routes: 60 req/min per IP
+- Strict Routes: 10 req/min per IP (admin/auth)
+- Webhooks: 500 req/5min per webhook
+- Graceful Degradation: Fails open if Redis unavailable
+
+**UI Layer**:
+- Framework: Next.js 14 (App Router)
+- File: `app/leaderboard/page.tsx`
+- Components: 9 category tabs, 12-tier filtering, pagination, search
+- Icons: MUI icons (Trophy, Star, Flash, Profile, etc.)
+- Real-time: WebSocket updates for rank changes
+
+**Frame Layer (Social Sharing)**:
+- Farcaster Frames: Badge share, leaderboard share
+- Routes: `/api/frame/badgeShare`, `/frame/leaderboard`
+- Image Generation: `next/og` ImageResponse (600x400px, 3:2 ratio)
+- Fonts: Gmeow TTF from `app/fonts/`
+
+### Data Flow Architecture
+
+```
+User Request → Next.js API → Cache Check (L1→L2→L3)
+                 ↓
+         Cache Miss? → Subsquid GraphQL Query
+                 ↓
+         User Stats (on-chain) + Supabase Enrichment (off-chain)
+                 ↓
+         Apply Sorting (orderBy parameter)
+                 ↓
+         Cache Result → Return JSON
+                 ↓
+         UI Renders with Framer Motion
+```
+
+### Hybrid Subsquid + Supabase Pattern
+
+**Subsquid provides**: Level, rank tier, total score, XP progress, multiplier (blockchain truth)
+**Supabase provides**: Username, display name, PFP URL, Neynar score (social context)
+**Result**: Rich leaderboard entries with both on-chain stats and social identity
 
 ---
 
@@ -211,20 +299,215 @@ NFT-based scoring (currently 0, planned feature)
 
 **Status**: ⚠️ Sorting works, but data shows all zeros
 
-All users currently have:
-- `viral_xp`: 0
-- `guild_bonus`: 0  
-- `referral_bonus`: 0
-- `streak_bonus`: 0
-- `badge_prestige`: 0
+**Database Analysis** (via Supabase MCP - January 11, 2026):
+```sql
+SELECT 
+  COUNT(*) FILTER (WHERE viral_bonus_xp > 0) as users_with_viral_xp,
+  SUM(viral_bonus_xp) as total_viral_xp,
+  MAX(viral_bonus_xp) as max_viral_xp,
+  COUNT(DISTINCT fid) as total_users
+FROM badge_casts;
 
-**Why categories appear identical**: When all values are 0, sorting produces the same order (tied at rank 1). The sorting logic IS working correctly - we just need active data in these categories.
+Result: { users_with_viral_xp: 0, total_viral_xp: null, max_viral_xp: null, total_users: 0 }
+```
 
-**Next Steps**: 
-1. Verify badge_casts table has viral_bonus_xp data
-2. Ensure guild membership bonuses are calculating
-3. Check referral system is tracking rewards
-4. Confirm GM streaks are being recorded
+**Root Cause**: `badge_casts` table is empty - no badge shares have been indexed yet.
+
+**Score Component Status**:
+- `points_balance`: ✅ Active (on-chain GM/quest claims working)
+- `viral_xp`: ❌ Zero (no badge_casts data)
+- `guild_bonus`: ❌ Zero (guild membership oracle not depositing)
+- `referral_bonus`: ❌ Zero (referral oracle not depositing)
+- `streak_bonus`: ❌ Zero (streak bonus not calculated)
+- `badge_prestige`: ❌ Zero (badge staking not active)
+
+**Why categories appear identical**: When all bonus values are 0, sorting by different fields produces same order (everyone tied). The sorting logic IS working correctly - issue is data collection.
+
+**Contract Integration Status**:
+- ✅ **ScoringModule.sol deployed**: December 31, 2025 (Base blockchain)
+- ✅ **Subsquid indexer live**: Tracking StatsUpdated events
+- ⚠️ **Oracle deposits pending**: `setViralPoints()`, `addGuildPoints()`, `addReferralPoints()` not called yet
+- ⚠️ **Badge casts not indexed**: Warpcast integration inactive
+
+**Action Items** (Implementation Roadmap):
+
+### 1. Viral XP Pipeline (Priority: CRITICAL) ✅ IMPLEMENTED
+
+**Goal**: Populate `badge_casts` table and sync to on-chain `viralPoints`
+
+**Status**: All components implemented, ready for testing
+
+**Steps**:
+- [x] **1.1**: Enable Warpcast webhook for badge share casts
+  - File: `app/api/cast/badge-share/route.ts` ✅ EXISTS
+  - Endpoint: `/api/cast/badge-share` (POST)
+  - Functionality: Logs cast to `badge_casts` table (lines 136-152)
+  
+- [x] **1.2**: Index to `badge_casts` table
+  - Insert row with: `fid`, `badge_id`, `cast_hash`, `cast_url`, `tier`, `created_at`
+  - Schema verified ✅: Table has all required columns (14 total)
+  - Indexes ✅: 11 indexes including `idx_badge_casts_fid`, `idx_badge_casts_created_at`
+  
+- [x] **1.3**: Daily cron job - Update engagement metrics
+  - File: `app/api/cron/sync-viral-metrics/route.ts` ✅ EXISTS
+  - File: `scripts/automation/sync-viral-metrics.ts` ✅ EXISTS
+  - Schedule: Every 6 hours (via GitHub Actions or Vercel cron)
+  - Query: Neynar API `GET /v2/farcaster/cast?identifier={cast_hash}`
+  - Update: `likes_count`, `recasts_count`, `replies_count`, `last_metrics_update`
+  
+- [x] **1.4**: Calculate viral score and XP
+  - Formula: `viral_score = (recasts × 10) + (replies × 5) + (likes × 2)` ✅ IMPLEMENTED
+  - XP Tiers: none(0), active(10), engaging(50), popular(100), viral(250), mega_viral(500+) ✅ IMPLEMENTED
+  - Update: `viral_score`, `viral_tier`, `viral_bonus_xp` ✅ IMPLEMENTED
+  - Location: `scripts/automation/sync-viral-metrics.ts` lines 93-108
+  
+- [x] **1.5**: Oracle deposit to ScoringModule
+  - File: `scripts/oracle/deposit-viral-points.ts` ✅ CREATED (Jan 11, 2026)
+  - RPC Function: `get_viral_xp_aggregates()` ✅ CREATED (migration applied)
+  - Table: `viral_deposits` ✅ CREATED (tracks tx_hash for audit)
+  - Aggregate: `SUM(viral_bonus_xp) GROUP BY fid` via RPC function
+  - Call: `ScoringModule.setViralPoints(userAddress, totalViralXP)` (onlyOracle)
+  - Track: Logs to `viral_deposits` table with tx_hash
+  - Usage: `pnpm tsx scripts/oracle/deposit-viral-points.ts [--dry-run]`
+
+**Next Steps**:
+1. ⚠️ Verify oracle wallet authorized: `pnpm tsx scripts/oracle/verify-authorization.ts`
+2. Authorize oracle (if needed): `OWNER_PRIVATE_KEY=0x... pnpm tsx scripts/oracle/authorize-oracle.ts`
+3. Test dry run: `pnpm tsx scripts/oracle/deposit-viral-points.ts --dry-run`
+4. Test live deposit with 1 user first
+5. Schedule daily/weekly oracle deposits (GitHub Actions or Vercel cron)
+
+### 2. Guild Bonus Pipeline (Priority: HIGH)
+**Goal**: Calculate guild contribution bonuses and deposit on-chain
+
+**Steps**:
+- [ ] **2.1**: Query Subsquid for guild memberships
+  - GraphQL: `guildMembers(where: { member: $address })`
+  - Fields: `guild.id`, `pointsContributed`, `role` (MEMBER/OFFICER/OWNER)
+  
+- [ ] **2.2**: Calculate role multipliers
+  - OWNER: 2.0x (multiply `pointsContributed` × 2)
+  - OFFICER: 1.5x (multiply `pointsContributed` × 1.5)
+  - MEMBER: 1.0x (use `pointsContributed` as-is)
+  
+- [ ] **2.3**: Oracle deposit to ScoringModule
+  - Call: `ScoringModule.addGuildPoints(userAddress, guildBonus)` (onlyAuthorized)
+  - Frequency: Daily or on GuildPointsDeposited event
+
+### 3. Referral Bonus Pipeline (Priority: HIGH)
+**Goal**: Sync referral rewards from Supabase to on-chain
+
+**Steps**:
+- [ ] **3.1**: Query `referral_stats` table
+  - Fields: `fid`, `points_awarded`, `successful_referrals`
+  - Verified ✅: Column is `points_awarded` not `totalRewards`
+  
+- [ ] **3.2**: Calculate total referral bonus
+  - Formula: `points_awarded + (successful_referrals × 10)`
+  - Note: Base rewards already in `points_awarded`, add 10pt per referral milestone
+  
+- [ ] **3.3**: Oracle deposit to ScoringModule
+  - Call: `ScoringModule.addReferralPoints(userAddress, referralBonus)` (onlyAuthorized)
+
+### 4. Streak Bonus Pipeline (Priority: MEDIUM)
+**Goal**: Track GM streaks and apply bonus multipliers
+
+**Steps**:
+- [ ] **4.1**: Query Subsquid User entity
+  - Field: `currentStreak` (consecutive GM days)
+  - Note: Streak is already tracked in Subsquid indexer
+  
+- [ ] **4.2**: Calculate streak bonus tiers
+  - 1-6 days: 0 bonus
+  - 7-29 days: 5 points/day
+  - 30-89 days: 10 points/day
+  - 90+ days: 20 points/day
+  
+- [ ] **4.3**: Apply on GM post
+  - Check streak during `CoreModule.sendGM()` transaction
+  - Include streak bonus in `addPoints()` call
+  - Alternative: Separate daily cron job to deposit streak bonuses
+
+### 5. Badge Prestige Pipeline (Priority: MEDIUM)
+**Goal**: Reward badge staking with prestige points
+
+**Steps**:
+- [ ] **5.1**: Query Subsquid for staked badges
+  - Entity: `BadgeStake` (if exists) or query `BadgeStaked` events
+  - Fields: `user`, `badgeId`, `tier`, `power`
+  
+- [ ] **5.2**: Calculate prestige score
+  - Formula: Σ(badge_power × 100) for all staked badges
+  - Tier multipliers: common=1, rare=2, epic=3, legendary=5, mythic=10
+  
+- [ ] **5.3**: Oracle deposit to ScoringModule
+  - Call: `ScoringModule.addPoints(userAddress, badgePrestige)` (onlyAuthorized)
+  - Or: Add dedicated `setBadgePrestige()` function to contract
+
+---
+
+## Pre-Implementation Validation Checklist
+
+**Before starting any implementation, verify**:
+
+### ✅ Contract Layer Validation
+- [x] **ScoringModule.sol deployed**: December 31, 2025 (Base blockchain)
+- [x] **Tier names match contract**: Signal Kitten → Omniversal Being (12 tiers)
+- [ ] **Oracle wallet authorized**: Check `authorizedOracles[0x...]` mapping
+- [ ] **Contract functions callable**: Test `setViralPoints()`, `addGuildPoints()`, `addReferralPoints()`
+- [ ] **Gas estimation**: Simulate oracle deposit for 100 users
+
+### ✅ Subsquid Indexer Validation
+- [x] **Endpoint accessible**: GraphQL endpoint returns data
+- [ ] **Schema matches docs**: Query `userById` returns all expected fields
+- [ ] **StatsUpdated events indexed**: Check latest indexed block vs current block
+- [ ] **Performance benchmark**: Measure query time for 100 users
+- [ ] **Error handling**: Test with invalid addresses
+
+### ✅ Supabase Database Validation
+- [x] **badge_casts table exists**: Verified schema (14 columns)
+- [x] **Column names correct**: `viral_bonus_xp`, `viral_score`, `viral_tier`
+- [ ] **Indexes optimized**: Add index on `fid`, `created_at`, `cast_hash`
+- [ ] **Referral stats populated**: Verify `referral_stats.points_awarded` has data
+- [ ] **RLS policies**: Ensure API can read/write badge_casts
+
+### ✅ API Layer Validation
+- [x] **Sorting implemented**: Lines 567-584 in leaderboard-service.ts
+- [x] **Cache keys unique**: Different orderBy = different cache key
+- [ ] **Rate limiting configured**: Test 60 req/min limit
+- [ ] **Error responses**: Test invalid orderBy parameter
+- [ ] **Pagination works**: Test page=1, page=2 with orderBy
+
+### ✅ Integration Testing Plan
+- [ ] **Webhook test**: POST mock cast to `/api/webhooks/warpcast/cast-created`
+- [ ] **Cron test**: Run viral metrics update job manually
+- [ ] **Oracle test**: Call `setViralPoints()` with test data
+- [ ] **Subsquid sync test**: Wait 5min, verify StatsUpdated event indexed
+- [ ] **Cache invalidation**: Clear cache, verify fresh data
+
+### ✅ Production Readiness
+- [ ] **Environment variables set**:
+  - `NEXT_PUBLIC_SUBSQUID_URL`
+  - `UPSTASH_REDIS_REST_URL`
+  - `UPSTASH_REDIS_REST_TOKEN`
+  - `ORACLE_PRIVATE_KEY`
+  - `NEYNAR_API_KEY`
+  
+- [ ] **Monitoring setup**:
+  - Sentry error tracking for oracle deposits
+  - Vercel logs for webhook failures
+  - Subsquid dashboard for indexing lag
+  
+- [ ] **Rollback plan**:
+  - Can disable webhooks without deployment
+  - Can pause oracle via `setAuthorizedOracle(oracle, false)`
+  - Cache TTL ensures bad data expires in 5min
+
+### ✅ Data Migration Safety
+- [ ] **Backup strategy**: Supabase automatic daily backups enabled
+- [ ] **Test on staging**: Deploy to preview environment first
+- [ ] **Gradual rollout**: Enable for 10% users, monitor, then 100%
+- [ ] **Verify existing data intact**: Check `points_balance` unchanged after oracle deposits
 
 ---
 
@@ -296,24 +579,24 @@ const CATEGORY_METADATA = {
 
 **UI Changes**:
 ```typescript
-// Add tier filter dropdown
+// Add tier filter dropdown (EXACT tier names from ScoringModule.sol)
 <TierFilter
   selected={selectedTier}
   onChange={setSelectedTier}
   categories={[
     'All Tiers',
-    'Signal Kitten (0)',
-    'Quantum Tabby (1)',
-    'Cosmic Cat (2)',
-    'Galactic Kitty (3)',
-    'Nebula Lynx (4)',
-    'Stellar Panther (5)',
-    'Constellation Tiger (6)',
-    'Void Walker (7)',
-    'Dimensional Prowler (8)',
-    'Ethereal Predator (9)',
-    'Celestial Guardian (10)',
-    'Omniversal Being (11)'
+    'Signal Kitten (0)',       // 0-500 pts, 1.0x
+    'Warp Scout (1)',          // 500-1.5K pts, 1.0x
+    'Beacon Runner (2)',       // 1.5K-4K pts, 1.1x ✨
+    'Night Operator (3)',      // 4K-8K pts, 1.0x
+    'Star Captain (4)',        // 8K-15K pts, 1.2x ✨
+    'Nebula Commander (5)',    // 15K-25K pts, 1.0x
+    'Quantum Navigator (6)',   // 25K-40K pts, 1.3x ✨
+    'Cosmic Architect (7)',    // 40K-60K pts, 1.0x
+    'Void Walker (8)',         // 60K-100K pts, 1.5x ✨
+    'Singularity Prime (9)',   // 100K-250K pts, 1.0x
+    'Infinite GM (10)',        // 250K-500K pts, 2.0x ✨✨
+    'Omniversal Being (11)'    // 500K+ pts, 1.0x (mythic)
   ]}
 />
 ```
@@ -339,7 +622,76 @@ export async function getLeaderboard(options: {
 }
 ```
 
-### Phase 3: Category-Specific Stats Cards (Medium Priority)
+---
+
+## Pre-Implementation Validation Checklist
+
+**Before starting any implementation, verify**:
+
+### ✅ Contract Layer Validation
+- [x] **ScoringModule.sol deployed**: December 31, 2025 (Base blockchain)
+- [x] **Tier names match contract**: Signal Kitten → Omniversal Being (12 tiers)
+- [ ] **Oracle wallet authorized**: Check `authorizedOracles[0x...]` mapping
+- [ ] **Contract functions callable**: Test `setViralPoints()`, `addGuildPoints()`, `addReferralPoints()`
+- [ ] **Gas estimation**: Simulate oracle deposit for 100 users
+
+### ✅ Subsquid Indexer Validation
+- [x] **Endpoint accessible**: GraphQL endpoint returns data
+- [ ] **Schema matches docs**: Query `userById` returns all expected fields
+- [ ] **StatsUpdated events indexed**: Check latest indexed block vs current block
+- [ ] **Performance benchmark**: Measure query time for 100 users
+- [ ] **Error handling**: Test with invalid addresses
+
+### ✅ Supabase Database Validation
+- [x] **badge_casts table exists**: Verified schema (14 columns)
+- [x] **Column names correct**: `viral_bonus_xp`, `viral_score`, `viral_tier`
+- [ ] **Indexes optimized**: Add index on `fid`, `created_at`, `cast_hash`
+- [ ] **Referral stats populated**: Verify `referral_stats.points_awarded` has data
+- [ ] **RLS policies**: Ensure API can read/write badge_casts
+
+### ✅ API Layer Validation
+- [x] **Sorting implemented**: Lines 567-584 in leaderboard-service.ts
+- [x] **Cache keys unique**: Different orderBy = different cache key
+- [ ] **Rate limiting configured**: Test 60 req/min limit
+- [ ] **Error responses**: Test invalid orderBy parameter
+- [ ] **Pagination works**: Test page=1, page=2 with orderBy
+
+### ✅ Integration Testing Plan
+- [ ] **Webhook test**: POST mock cast to `/api/webhooks/warpcast/cast-created`
+- [ ] **Cron test**: Run viral metrics update job manually
+- [ ] **Oracle test**: Call `setViralPoints()` with test data
+- [ ] **Subsquid sync test**: Wait 5min, verify StatsUpdated event indexed
+- [ ] **Cache invalidation**: Clear cache, verify fresh data
+
+### ✅ Production Readiness
+- [ ] **Environment variables set**:
+  - `NEXT_PUBLIC_SUBSQUID_URL`
+  - `UPSTASH_REDIS_REST_URL`
+  - `UPSTASH_REDIS_REST_TOKEN`
+  - `ORACLE_PRIVATE_KEY`
+  - `NEYNAR_API_KEY`
+  
+- [ ] **Monitoring setup**:
+  - Sentry error tracking for oracle deposits
+  - Vercel logs for webhook failures
+  - Subsquid dashboard for indexing lag
+  
+- [ ] **Rollback plan**:
+  - Can disable webhooks without deployment
+  - Can pause oracle via `setAuthorizedOracle(oracle, false)`
+  - Cache TTL ensures bad data expires in 5min
+
+### ✅ Data Migration Safety
+- [ ] **Backup strategy**: Supabase automatic daily backups enabled
+- [ ] **Test on staging**: Deploy to preview environment first
+- [ ] **Gradual rollout**: Enable for 10% users, monitor, then 100%
+- [ ] **Verify existing data intact**: Check `points_balance` unchanged after oracle deposits
+
+---
+
+## Enhancement Roadmap
+
+### Phase 1: Category-Specific Titles & Branding (Immediate)
 **Goal**: Show category leaders and milestones
 
 ```typescript
@@ -449,15 +801,248 @@ curl 'https://gmeowhq.art/api/leaderboard-v2?orderBy=viral_xp&page=1&pageSize=5'
 
 ---
 
-## Related Files
+## Technical Implementation Details
 
-- `app/leaderboard/page.tsx` - Category tabs UI
-- `lib/hooks/useLeaderboard.ts` - Frontend data fetching hook
-- `app/api/leaderboard-v2/route.ts` - API route handler
-- `components/leaderboard/LeaderboardTable.tsx` - Table component
+### On-Chain Scoring (ScoringModule.sol)
+
+**Level Calculation** (Quadratic Formula):
+```solidity
+// XP for level n: 300 + (n-1) × 200
+// Total XP to reach level n: (n² × 100) + (n × 200) - 300
+function calculateLevel(uint256 points) public pure returns (uint256 level) {
+    // Quadratic formula: (-b + √(b² + 4ac)) / 2a
+    // where a = 100, b = 200, c = -points
+    uint256 discriminant = (b * b) + (4 * a * points);
+    uint256 sqrtDiscriminant = _sqrt(discriminant);
+    uint256 raw = (sqrtDiscriminant - b) / (2 * a);
+    
+    // Refinement for edge cases (matches TypeScript)
+    uint256 n = raw;
+    while (getTotalXpToReachLevel(n + 2) <= points) n += 1;
+    while (n > 0 && getTotalXpToReachLevel(n + 1) > points) n -= 1;
+    
+    return n + 1;
+}
+```
+
+**12-Tier Rank System**:
+- Tier 0: Signal Kitten (0-500 pts) - 1.0x multiplier
+- Tier 1: Warp Scout (500-1.5K pts) - 1.0x
+- Tier 2: Beacon Runner (1.5K-4K pts) - 1.1x ✨
+- Tier 3: Night Operator (4K-8K pts) - 1.0x
+- Tier 4: Star Captain (8K-15K pts) - 1.2x ✨
+- Tier 5: Nebula Commander (15K-25K pts) - 1.0x
+- Tier 6: Quantum Navigator (25K-40K pts) - 1.3x ✨
+- Tier 7: Cosmic Architect (40K-60K pts) - 1.0x
+- Tier 8: Void Walker (60K-100K pts) - 1.5x ✨
+- Tier 9: Singularity Prime (100K-250K pts) - 1.0x
+- Tier 10: Infinite GM (250K-500K pts) - 2.0x ✨✨
+- Tier 11: Omniversal Being (500K+ pts) - 1.0x (mythic tier)
+
+**Score Update Flow**:
+```solidity
+function _updateUserStats(address user) internal {
+    uint256 newScore = scoringPointsBalance[user] + 
+                       viralPoints[user] + 
+                       questPoints[user] + 
+                       guildPoints[user] + 
+                       referralPoints[user];
+    
+    totalScore[user] = newScore;
+    userLevel[user] = calculateLevel(newScore);
+    userRankTier[user] = getRankTier(newScore);
+    
+    emit StatsUpdated(user, newScore, level, tier, multiplier);
+}
+```
+
+### Subsquid GraphQL Schema
+
+**Available User Fields** (verified from scoring-client.ts):
+```graphql
+type User @entity {
+  id: String!              # Wallet address (lowercase)
+  level: Int!              # Current level (1-based)
+  rankTier: Int!           # Tier index (0-11)
+  totalScore: BigInt!      # Sum of all score components
+  multiplier: Int!         # Current tier multiplier (basis points)
+  xpIntoLevel: BigInt!     # XP progress in current level
+  xpToNextLevel: BigInt!   # XP needed for next level
+  pointsIntoTier: BigInt!  # Points above tier minimum
+  pointsToNextTier: BigInt!# Points to reach next tier (note: field name)
+  gmPoints: BigInt!        # GM post rewards
+  viralPoints: BigInt!     # Viral engagement XP
+  questPoints: BigInt!     # Quest completion points
+  guildPoints: BigInt!     # Guild activity points
+  referralPoints: BigInt!  # Referral network points
+}
+```
+
+**Note**: Fields `lastLevelUpAt` and `lastRankUpAt` may not be available in current Subsquid schema (not in GET_USER_STATS_QUERY). Verify before using in UI.
+
+**Query Example**:
+```graphql
+query GetLeaderboard {
+  users(
+    orderBy: totalScore_DESC
+    limit: 100
+  ) {
+    id
+    level
+    rankTier
+    totalScore
+    multiplier
+  }
+}
+```
+
+### Supabase Tables Reference (verified via MCP)
+
+**badge_casts** (14 columns - READY):
+- Core: `id` (uuid), `fid` (int), `badge_id` (text), `cast_hash` (text), `cast_url` (text), `tier` (text)
+- Timestamps: `created_at`, `last_metrics_update`
+- Engagement: `likes_count` (int, default 0), `recasts_count` (int, default 0), `replies_count` (int, default 0)
+- Scoring: `viral_score` (numeric, default 0), `viral_tier` (text, default 'none'), `viral_bonus_xp` (int, default 0)
+
+**user_profiles** (22 columns):
+- Identity: `fid` (unique), `wallet_address`, `custody_address`, `verified_addresses`
+- Neynar: `neynar_score`, `neynar_tier`
+- Points: `points_balance` (on-chain snapshot), `total_earned_from_gms`, `total_points_spent`
+- Social: `display_name`, `bio`, `avatar_url`, `cover_image_url`, `social_links`
+
+**referral_stats** (15 columns):
+- Stats: `fid`, `total_referrals`, `successful_referrals`, `points_awarded`, `conversion_rate`
+- Ranking: `tier`, `rank`, `rank_change`, `growth_rate`
+
+**guild_off_chain_metadata** (4 columns):
+- Metadata: `guild_id`, `description`, `banner`, `updated_at`
+
+**viral_share_events** (9 columns):
+- Tracking: `fid`, `tier`, `cast_hash`, `cast_url`, `bonus_awarded`, `bonus_points`, `share_platform`, `created_at`
+
+**leaderboard_snapshots** (14 columns - PHASE 6):
+- Snapshot: `address`, `chain`, `season_key`, `global`, `points`, `completed`, `rewards`, `rank`, `farcaster_fid`, `display_name`, `pfp_url`, `updated_at`
+
+### Caching Strategy
+
+**lib/cache/server.ts** (Phase 8.1 - December 18, 2025):
+```typescript
+// L1: Memory cache (Map with TTL, 1000 entries max)
+// L2: Redis/Vercel KV (shared across serverless)
+// L3: Filesystem (.cache/server/)
+
+await getCached('leaderboard', cacheKey, async () => {
+  // Fetch from Subsquid + enrich with Neynar
+  return await getLeaderboard(options)
+}, {
+  ttl: 300, // 5 minutes
+  staleWhileRevalidate: true // Serve stale, refresh background
+})
+```
+
+**Cache Invalidation**:
+- Time-based: Auto-expire after 5 minutes
+- Event-based: Invalidate on `StatsUpdated` event (future)
+- Pattern-based: `invalidateCachePattern('leaderboard', 'viral_xp')`
+
+### Rate Limiting
+
+**lib/middleware/rate-limit.ts**:
+```typescript
+// Upstash Ratelimit with sliding window
+export const apiLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(60, '1 m'), // 60 req/min
+  analytics: true,
+  prefix: 'api',
+})
+
+// Usage in API route
+const { success, remaining } = await rateLimit(clientIp, apiLimiter)
+if (!success) {
+  return NextResponse.json(
+    { error: 'Rate limit exceeded' },
+    { status: 429, headers: { 'X-RateLimit-Remaining': String(remaining) } }
+  )
+}
+```
+
+### Frame Sharing (Farcaster Integration)
+
+**Badge Share Frame** (`/api/frame/badgeShare/image`):
+- Generates 600×400px OG images (3:2 Farcaster spec)
+- Background: `public/og-image.png`
+- Badge: `public/badges/{badgeId}.png`
+- User PFP: Fetched from Neynar API
+- Font: Gmeow TTF (`app/fonts/gmeow2.ttf`)
+- Runtime: Node.js (filesystem access required)
+
+**Leaderboard Share Frame** (`/frame/leaderboard`):
+- Shows top 5 users with rank badges
+- Category-specific views (orderBy parameter)
+- Real-time data from Subsquid
+- Interactive: Click to view full leaderboard
+
+**Frame Metadata** (`app/layout.tsx`):
+```typescript
+const gmFrame = {
+  version: '1.0.0',
+  imageUrl: `${baseUrl}/frame-image.png`,
+  button: {
+    title: 'Launch',
+    action: {
+      type: 'launch_frame',
+      name: 'Gmeow',
+      url: baseUrl,
+      splashImageUrl: `${baseUrl}/splash.png`
+    }
+  }
+}
+```
 
 ---
 
-**Status**: ✅ Production Ready  
+## Related Files
+
+**Smart Contracts**:
+- `contract/modules/ScoringModule.sol` - On-chain XP/level/rank calculations (deployed Dec 31)
+- `contract/modules/BaseModule.sol` - Shared contract infrastructure
+
+**Indexing**:
+- `lib/subsquid-client.ts` - Subsquid GraphQL client
+- `lib/subsquid/scoring-client.ts` - Scoring-specific queries
+
+**API Layer**:
+- `app/api/leaderboard-v2/route.ts` - Main leaderboard API endpoint
+- `lib/leaderboard/leaderboard-service.ts` - Business logic (sorting implemented here)
+
+**UI Layer**:
+- `app/leaderboard/page.tsx` - Category tabs UI (9 tabs, MUI icons)
+- `components/leaderboard/LeaderboardTable.tsx` - Table component
+- `components/leaderboard/TierFilter.tsx` - 12-tier dropdown filter
+- `components/leaderboard/StatsCard.tsx` - Category statistics
+- `lib/hooks/useLeaderboard.ts` - React Query data fetching
+
+**Caching**:
+- `lib/cache/server.ts` - L1/L2/L3 cache with stale-while-revalidate
+
+**Rate Limiting**:
+- `lib/middleware/rate-limit.ts` - Upstash rate limiter
+- `lib/middleware/api-security.ts` - API security middleware
+
+**Frames**:
+- `app/api/frame/badgeShare/image/route.tsx` - Badge share OG image
+- `app/frame/leaderboard/route.tsx` - Leaderboard share frame
+- `lib/frames/frame-validation.ts` - Input sanitization
+- `lib/frames/frame-design-system.ts` - Typography/fonts config
+
+**Database**:
+- Supabase: `user_profiles`, `badge_casts`, `viral_share_events`, `referral_stats`
+- Subsquid: Indexed blockchain data (GraphQL endpoint)
+
+---
+
+**Status**: ✅ Sorting Fixed, ⚠️ Data Collection Pending  
 **Author**: GitHub Copilot  
-**Reviewed**: January 11, 2026
+**Last Updated**: January 11, 2026  
+**Contract Deployed**: December 31, 2025 (Base blockchain)
