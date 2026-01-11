@@ -1451,12 +1451,59 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                             // Get or create user
                             let user = getOrCreateUser(users, userAddr, blockTime)
                             
-                            // Update user scoring fields
+                            // Update user scoring fields from event
                             user.level = level
                             user.rankTier = rankTier
                             user.totalScore = totalScore
                             user.multiplier = multiplier
                             user.updatedAt = new Date(Number(blockTime) * 1000)
+                            
+                            // FIX (Jan 11, 2026): Read score component breakdowns from contract state
+                            // StatsUpdated event doesn't include viralPoints, questPoints, etc.
+                            // We need to query contract state to get the actual values
+                            try {
+                                const blockHeader = block.header
+                                
+                                // Read viralPoints from contract state
+                                const viralPointsData = await ctx._chain.client.call('eth_call', [{
+                                    to: SCORING_ADDRESS,
+                                    data: scoringInterface.encodeFunctionData('viralPoints', [decoded.args.user])
+                                }, blockHeader.hash])
+                                user.viralPoints = BigInt(viralPointsData)
+                                
+                                // Read questPoints from contract state
+                                const questPointsData = await ctx._chain.client.call('eth_call', [{
+                                    to: SCORING_ADDRESS,
+                                    data: scoringInterface.encodeFunctionData('questPoints', [decoded.args.user])
+                                }, blockHeader.hash])
+                                user.questPoints = BigInt(questPointsData)
+                                
+                                // Read guildPoints from contract state
+                                const guildPointsData = await ctx._chain.client.call('eth_call', [{
+                                    to: SCORING_ADDRESS,
+                                    data: scoringInterface.encodeFunctionData('guildPoints', [decoded.args.user])
+                                }, blockHeader.hash])
+                                user.guildPoints = BigInt(guildPointsData)
+                                
+                                // Read referralPoints from contract state
+                                const referralPointsData = await ctx._chain.client.call('eth_call', [{
+                                    to: SCORING_ADDRESS,
+                                    data: scoringInterface.encodeFunctionData('referralPoints', [decoded.args.user])
+                                }, blockHeader.hash])
+                                user.referralPoints = BigInt(referralPointsData)
+                                
+                                // Read gmPoints (scoringPointsBalance) from contract state
+                                const gmPointsData = await ctx._chain.client.call('eth_call', [{
+                                    to: SCORING_ADDRESS,
+                                    data: scoringInterface.encodeFunctionData('scoringPointsBalance', [decoded.args.user])
+                                }, blockHeader.hash])
+                                user.gmPoints = BigInt(gmPointsData)
+                                
+                                ctx.log.info(`   ✅ Read score components: viral=${user.viralPoints}, quest=${user.questPoints}, guild=${user.guildPoints}, referral=${user.referralPoints}, gm=${user.gmPoints}`)
+                            } catch (err: any) {
+                                ctx.log.warn(`   ⚠️  Failed to read score components for ${userAddr}: ${err.message}`)
+                                // Keep existing values on error (don't reset to 0)
+                            }
                             
                             // Determine trigger type from transaction context
                             // Note: This is a simplification - in production you'd analyze the tx to determine trigger
