@@ -267,6 +267,47 @@ export async function fetchAggregatedRaw(options: { global: boolean; chain?: Cha
   const states = await Promise.all(chainsToQuery.map(loadChainAggregate))
   const rows = states.flatMap(state => state.rows)
 
+  // Phase 9.1: Enrich with FIDs from user_profiles (multi-wallet integration)
+  try {
+    const { createClient } = await import('@/lib/supabase/edge')
+    const supabase = createClient()
+    
+    if (supabase) {
+      const addressesWithoutFid = rows
+        .filter(row => !row.farcasterFid || row.farcasterFid === 0)
+        .map(row => row.address.toLowerCase())
+      
+      if (addressesWithoutFid.length > 0) {
+        // Use LOWER() in SQL for case-insensitive matching
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('wallet_address, fid')
+          .not('fid', 'is', null)
+        
+        if (profiles) {
+          const addressToFidMap = new Map<string, number>()
+          for (const profile of profiles) {
+            if (profile.fid && profile.wallet_address) {
+              addressToFidMap.set(profile.wallet_address.toLowerCase(), profile.fid)
+            }
+          }
+          
+          // Update rows with FIDs
+          for (const row of rows) {
+            if (!row.farcasterFid || row.farcasterFid === 0) {
+              const fid = addressToFidMap.get(row.address.toLowerCase())
+              if (fid) {
+                row.farcasterFid = fid
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[fetchAggregatedRaw] Failed to enrich FIDs from user_profiles:', err)
+  }
+
   rows.sort((a, b) => {
     if (a.points === b.points) return 0
     return a.points > b.points ? -1 : 1
@@ -352,19 +393,53 @@ export async function enrichAggregatedRows(entries: RawAggregate[]): Promise<Enr
   if (missing.length === 0) return enriched
 
   try {
-    // Phase 9.1: Use existing Neynar cache infrastructure (no inline API spam)
-    // Strategy: Fetch by FID (more reliable than address lookup)
+    // Phase 9.1: Multi-Wallet Integration (uses existing auth infrastructure)
+    // Step 1: Look up FIDs from user_profiles (wallet → FID mapping from Neynar sync)
+    const addressToFidMap = new Map<string, number>()
+    
+    // Import createClient dynamically (server-only)
+    const { createClient } = await import('@/lib/supabase/edge')
+    const supabase = createClient()
+    
+    if (supabase) {
+      const addresses = missing.map(row => row.address.toLowerCase())
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('wallet_address, fid, display_name, avatar_url')
+        .in('wallet_address', addresses)
+        .not('fid', 'is', null)
+      
+      if (profiles) {
+        for (const profile of profiles) {
+          if (profile.fid && profile.wallet_address) {
+            addressToFidMap.set(profile.wallet_address.toLowerCase(), profile.fid)
+          }
+        }
+      }
+    }
+
+    // Step 2: Populate FIDs for rows that don't have them
+    for (const row of missing) {
+      if (!row.farcasterFid || row.farcasterFid <= 0) {
+        const fid = addressToFidMap.get(row.address.toLowerCase())
+        if (fid) {
+          row.farcasterFid = fid
+        }
+      }
+    }
+
+    // Step 3: Collect FIDs to fetch profiles for
     const fidsToFetch = missing
       .filter(row => row.farcasterFid && row.farcasterFid > 0)
       .map(row => row.farcasterFid)
     
     if (fidsToFetch.length === 0) return enriched
 
-    // 1. Check cache first (getBatchCachedNeynarUsers from lib/cache/neynar-cache.ts)
+    // Step 4: Check Neynar cache (getBatchCachedNeynarUsers from lib/cache/neynar-cache.ts)
     const cachedUsers = await getBatchCachedNeynarUsers(fidsToFetch)
     const now = Date.now()
 
-    // 2. Enrich rows with cached data
+    // Step 5: Enrich rows with cached data
     for (const row of missing) {
       if (!row.farcasterFid || row.farcasterFid <= 0) continue
       
@@ -388,7 +463,7 @@ export async function enrichAggregatedRows(entries: RawAggregate[]): Promise<Enr
         continue
       }
 
-      // 3. Fetch missing profiles (uses Neynar cache internally - lib/integrations/neynar.ts)
+      // Step 6: Fetch missing profiles from Neynar (uses cache internally)
       try {
         const user = await fetchUserByFid(row.farcasterFid)
         if (user) {
