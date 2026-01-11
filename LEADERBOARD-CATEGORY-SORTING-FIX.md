@@ -5,13 +5,19 @@
 **Status**: ✅ SORTING FIXED | 🚧 DATA PIPELINES IN PROGRESS
 
 **Implementation Progress (Jan 11, 2026)**:
-- ✅ Viral XP Pipeline: **FULLY OPERATIONAL** (oracle authorized, tested with 2 users, 325 XP deposited)
-- ✅ Oracle Authorization: **AUTHORIZED** (tx: 0xedc04091...9eb41)
-- ✅ Live Testing: **PASSED** (2 deposits confirmed on-chain, audit logs in viral_deposits table)
-- 📋 Guild Bonus Pipeline: TODO
-- 📋 Referral Bonus Pipeline: TODO
-- 📋 Streak Bonus Pipeline: TODO
-- 📋 Badge Prestige Pipeline: TODO
+- ⚠️ Viral XP Pipeline: **ORACLE TESTED - AWAITING REAL USER DATA**
+  - ✅ Oracle authorized (tx: 0xedc04091...9eb41)
+  - ✅ Deposit script functional (2 test deposits: 300 XP + 25 XP)
+  - ✅ On-chain verification passed (viralPoints = 300, totalScore = 310)
+  - ⚠️ Subsquid indexer issue: viralPoints field shows 0 (indexer not parsing contract state correctly)
+  - ⚠️ No real user data yet (badge_casts empty except test data, user_profiles only 2 test users)
+  - 🚧 **BLOCKED**: Need real badge shares from production users to fully test
+  
+- 📋 Guild Bonus Pipeline: TODO (blocked - need real guild memberships)
+- 📋 Referral Bonus Pipeline: TODO (blocked - need real referrals)
+- 📋 Streak Bonus Pipeline: TODO (blocked - need real GM streaks)
+- 📋 Badge Prestige Pipeline: TODO (blocked - need real staked badges)
+- 📋 Leaderboard Integration: TODO (needs Subsquid indexer fix OR alternate data source)
 
 ---
 
@@ -1018,30 +1024,80 @@ const gmFrame = {
   - Viral metrics cron: `app/api/cron/sync-viral-metrics/route.ts` ✅
   - Database indexes: 11 indexes on `badge_casts` ✅
 
-**Implementation Status**: ✅ 100% Complete - PRODUCTION READY
+**Implementation Status**: ⚠️ 80% Complete - BLOCKED ON INDEXER + REAL DATA
+
+**What's Working**:
+- ✅ Oracle authorization (tx confirmed)
+- ✅ Deposit script (2 test deposits successful)
+- ✅ On-chain viral points (contract shows correct values)
+- ✅ Audit trail (viral_deposits table logging)
+- ✅ Database migration (viral_deposits + RPC function)
+- ✅ Badge share webhook (ready to receive real shares)
+- ✅ Viral metrics cron (ready to update engagement)
+- ✅ Leaderboard sorting logic (dynamic orderBy)
+
+**What's Broken**:
+- ❌ Subsquid indexer viralPoints field (shows 0 instead of 300)
+- ❌ Leaderboard viral_xp category (will show all zeros until indexer fixed)
+- ⚠️ No real user data (badge_casts empty, user_profiles minimal)
+
+**Next Steps**:
+1. **Fix Subsquid Indexer** (CRITICAL):
+   - Update indexer to read viralPoints from contract state
+   - OR implement RPC fallback for viral_xp queries
+   - OR use hybrid approach (Subsquid for totals, contract for components)
+
+2. **Wait for Real Badge Shares**:
+   - Need users sharing badges on Warpcast
+   - Webhook will log to badge_casts
+   - Cron will update engagement metrics
+   - Oracle can then deposit real viral XP
+
+3. **End-to-End Testing**:
+   - Real badge share → engagement sync → oracle deposit → indexer update → leaderboard display
+   - Verify viral_xp category shows different rankings
+
+**Production Readiness**: 🟡 Ready for badge shares, NOT ready for leaderboard viral_xp category
 
 **Authorization**: ✅ COMPLETE
 - Oracle wallet: `0x8870C155666809609176260F2B65a626C000D773`
 - Authorization tx: `0xedc04091dd82e3b450fc43de7a4ce247034448ff493c60dc9c8c6d2033c9eb41`
 - Verified: `authorizedOracles[oracle] = true`
 
-**Live Testing**: ✅ PASSED
+**Oracle Testing**: ✅ PASSED (with test data, now cleared)
 ```
-Test Users: 2
-Badge Casts: 3 (legendary_gm, epic_achievement, rare_badge)
-Total Viral XP: 325 (300 + 25)
+Test Scenario:
+- Created 3 fake badge casts (FID 18139, 1069798)
+- Ran deposit script: 2 successful transactions
+- On-chain verification: viralPoints = 300 ✅, totalScore = 310 ✅
+- Audit trail: viral_deposits table logged tx_hashes ✅
 
-Deposit Transactions:
-- User 18139: 300 XP → 0xd5eabf997a62ae2c3f70c7628a9ccfa90fa7bdb05c94145d6a56c3af61e3adef
-- User 1069798: 25 XP → 0xf96d8a581273b6e821a6ddfaa81700292ef9eae0bd98f9b2a7a842f1652f9e61
-
-On-Chain Verification:
-- viralPoints[0x8a3094e44577579d6f41F6214a86C250b7dBDC4e] = 300 ✅
-- viralPoints[0x8870C155666809609176260F2B65a626C000D773] = 25 ✅
-
-Audit Trail:
-- viral_deposits table: 2 entries with tx_hash logged ✅
+Test data CLEARED - ready for production badge shares
 ```
+
+**Critical Issues Discovered**:
+
+1. **Subsquid Indexer Bug** ⚠️:
+   - On-chain: `viralPoints[0x8a30...] = 300` ✅
+   - Subsquid: `user.viralPoints = "0"` ❌
+   - **Impact**: Leaderboard won't show viral_xp category correctly until indexer is fixed
+   - **Root Cause**: Indexer not parsing viralPoints from contract state (only tracking StatsUpdated events)
+   - **Workaround Options**:
+     - A) Fix Subsquid indexer to read viralPoints from contract state
+     - B) Use direct RPC calls to contract (slower but accurate)
+     - C) Hybrid: Subsquid for totalScore, Supabase for viral_xp breakdown
+
+2. **No Production Data** ⚠️:
+   - badge_casts: 0 real rows (only had test data, now cleared)
+   - user_profiles: 2 test users only
+   - **Impact**: Cannot test full pipeline with real users yet
+   - **Needs**: Real users sharing badges on Warpcast
+
+3. **Leaderboard Integration Status** 🚧:
+   - Sorting logic: ✅ Working (implemented lines 567-584)
+   - Oracle deposits: ✅ Working (script tested)
+   - Data flow: ❌ Broken (Subsquid viralPoints = 0)
+   - **Status**: BLOCKED until Subsquid indexer fixed OR workaround implemented
 
 **How Viral XP Works**:
 
