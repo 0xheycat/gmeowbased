@@ -562,6 +562,24 @@ export async function getLeaderboard(options: {
     }
   }
 
+  // ========================================
+  // SORT BY CATEGORY (orderBy parameter)
+  // ========================================
+  // Map orderBy to actual field names in LeaderboardEntry
+  const sortField = orderBy === 'guild_points_awarded' ? 'guild_bonus' : orderBy
+  
+  // Sort in descending order (highest first)
+  filteredData.sort((a, b) => {
+    const aValue = (a as any)[sortField] || 0
+    const bValue = (b as any)[sortField] || 0
+    return bValue - aValue
+  })
+  
+  // Recalculate ranks after sorting
+  filteredData.forEach((entry, index) => {
+    entry.global_rank = index + 1
+  })
+
   return {
     data: filteredData,
     count: filteredData.length,
