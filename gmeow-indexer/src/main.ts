@@ -1469,35 +1469,35 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                                     to: SCORING_ADDRESS,
                                     data: scoringInterface.encodeFunctionData('viralPoints', [decoded.args.user])
                                 }, blockHeader.hash])
-                                user.viralPoints = BigInt(viralPointsData)
+                                user.viralPoints = BigInt(scoringInterface.decodeFunctionResult('viralPoints', viralPointsData)[0].toString())
                                 
                                 // Read questPoints from contract state
                                 const questPointsData = await ctx._chain.client.call('eth_call', [{
                                     to: SCORING_ADDRESS,
                                     data: scoringInterface.encodeFunctionData('questPoints', [decoded.args.user])
                                 }, blockHeader.hash])
-                                user.questPoints = BigInt(questPointsData)
+                                user.questPoints = BigInt(scoringInterface.decodeFunctionResult('questPoints', questPointsData)[0].toString())
                                 
                                 // Read guildPoints from contract state
                                 const guildPointsData = await ctx._chain.client.call('eth_call', [{
                                     to: SCORING_ADDRESS,
                                     data: scoringInterface.encodeFunctionData('guildPoints', [decoded.args.user])
                                 }, blockHeader.hash])
-                                user.guildPoints = BigInt(guildPointsData)
+                                user.guildPoints = BigInt(scoringInterface.decodeFunctionResult('guildPoints', guildPointsData)[0].toString())
                                 
                                 // Read referralPoints from contract state
                                 const referralPointsData = await ctx._chain.client.call('eth_call', [{
                                     to: SCORING_ADDRESS,
                                     data: scoringInterface.encodeFunctionData('referralPoints', [decoded.args.user])
                                 }, blockHeader.hash])
-                                user.referralPoints = BigInt(referralPointsData)
+                                user.referralPoints = BigInt(scoringInterface.decodeFunctionResult('referralPoints', referralPointsData)[0].toString())
                                 
                                 // Read gmPoints (scoringPointsBalance) from contract state
                                 const gmPointsData = await ctx._chain.client.call('eth_call', [{
                                     to: SCORING_ADDRESS,
                                     data: scoringInterface.encodeFunctionData('scoringPointsBalance', [decoded.args.user])
                                 }, blockHeader.hash])
-                                user.gmPoints = BigInt(gmPointsData)
+                                user.gmPoints = BigInt(scoringInterface.decodeFunctionResult('scoringPointsBalance', gmPointsData)[0].toString())
                                 
                                 ctx.log.info(`   ✅ Read score components: viral=${user.viralPoints}, quest=${user.questPoints}, guild=${user.guildPoints}, referral=${user.referralPoints}, gm=${user.gmPoints}`)
                             } catch (err: any) {
