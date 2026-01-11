@@ -43,6 +43,17 @@ export async function handleLeaderboardFrame(ctx: FrameHandlerContext): Promise<
     const result = await fetchLeaderboard({ limit, offset: 0, period, chain: chainKey, traces })
     const topEntries = result.data
 
+    console.log('[Leaderboard Frame] Data fetched:', {
+      source: result.source,
+      count: topEntries.length,
+      firstEntry: topEntries[0] ? {
+        rank: topEntries[0].rank,
+        username: topEntries[0].username,
+        displayName: topEntries[0].displayName,
+        totalScore: topEntries[0].totalScore
+      } : null
+    })
+
     tracePush(traces, 'leaderboard-fetched', {
       source: result.source,
       cached: result.cached,
