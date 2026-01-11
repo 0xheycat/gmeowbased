@@ -197,22 +197,28 @@ export async function getLeaderboard(options: {
   // ========================================
   // LAYER 2: SUPABASE - LOOKUP FID + METADATA
   // ========================================
-  // Map wallet -> FID via user_profiles.verified_addresses
-  const { data: profiles } = await supabase
+  // Query ALL user_profiles with FIDs (small dataset, ~100 users)
+  // Then match on wallet_address OR verified_addresses in code
+  const { data: allProfiles } = await supabase
     .from('user_profiles')
-    .select('fid, display_name, bio, avatar_url, social_links, verified_addresses')
-    .contains('verified_addresses', walletAddresses)
+    .select('wallet_address, fid, display_name, bio, avatar_url, social_links, verified_addresses')
+    .not('fid', 'is', null)
   
-  // Build wallet -> profile map
+  // Build wallet -> profile map (match both wallet_address and verified_addresses)
   const walletToProfile = new Map<string, any>()
-  profiles?.forEach(profile => {
+  allProfiles?.forEach(profile => {
+    // Match on wallet_address field (case-insensitive)
+    if (profile.wallet_address) {
+      walletToProfile.set(profile.wallet_address.toLowerCase(), profile)
+    }
+    // Also match on verified_addresses array
     profile.verified_addresses?.forEach((addr: string) => {
       walletToProfile.set(addr.toLowerCase(), profile)
     })
   })
   
   // Get FIDs for viral bonus lookup
-  const fids = profiles?.map(p => p.fid).filter(Boolean) || []
+  const fids = allProfiles?.map(p => p.fid).filter(Boolean) || []
   
   // Query viral bonus XP from badge_casts
   const viralBonusData = new Map<number, number>()

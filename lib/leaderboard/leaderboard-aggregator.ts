@@ -272,17 +272,23 @@ export async function fetchAggregatedRaw(options: { global: boolean; chain?: Cha
     const { createClient } = await import('@/lib/supabase/edge')
     const supabase = createClient()
     
+    console.log('[fetchAggregatedRaw] Starting FID enrichment, rows:', rows.length)
+    
     if (supabase) {
       const addressesWithoutFid = rows
         .filter(row => !row.farcasterFid || row.farcasterFid === 0)
         .map(row => row.address.toLowerCase())
       
+      console.log('[fetchAggregatedRaw] Addresses without FID:', addressesWithoutFid.length)
+      
       if (addressesWithoutFid.length > 0) {
         // Use LOWER() in SQL for case-insensitive matching
-        const { data: profiles } = await supabase
+        const { data: profiles, error } = await supabase
           .from('user_profiles')
           .select('wallet_address, fid')
           .not('fid', 'is', null)
+        
+        console.log('[fetchAggregatedRaw] Query result - profiles:', profiles?.length, 'error:', error)
         
         if (profiles) {
           const addressToFidMap = new Map<string, number>()
@@ -292,17 +298,25 @@ export async function fetchAggregatedRaw(options: { global: boolean; chain?: Cha
             }
           }
           
+          console.log('[fetchAggregatedRaw] Address→FID map:', Object.fromEntries(addressToFidMap))
+          
           // Update rows with FIDs
+          let enriched = 0
           for (const row of rows) {
             if (!row.farcasterFid || row.farcasterFid === 0) {
               const fid = addressToFidMap.get(row.address.toLowerCase())
               if (fid) {
                 row.farcasterFid = fid
+                enriched++
               }
             }
           }
+          
+          console.log('[fetchAggregatedRaw] Enriched', enriched, 'rows with FIDs')
         }
       }
+    } else {
+      console.error('[fetchAggregatedRaw] Supabase client is null!')
     }
   } catch (err) {
     console.error('[fetchAggregatedRaw] Failed to enrich FIDs from user_profiles:', err)
