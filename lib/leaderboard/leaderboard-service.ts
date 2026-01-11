@@ -115,6 +115,7 @@ export type LeaderboardEntry = {
   tip_points: number
   nft_points: number
   global_rank: number
+  rank_change: number
   
   is_guild_officer: boolean
   guild_id: string | null
@@ -497,6 +498,7 @@ export async function getLeaderboard(options: {
       tip_points: parseInt(user.totalTipsGiven || '0'),
       nft_points: 0,
       global_rank: offset + index + 1, // Simple rank based on position
+      rank_change: 0, // TODO: Implement historical rank tracking
       is_guild_officer: isGuildOfficer,
       guild_id: guildId,
       guild_name: guildName,
