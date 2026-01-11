@@ -9,27 +9,26 @@ console.log('🧪 Testing Active Users Frame API\n')
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-interface TestResult {
+interface ActiveUsersFrameTestResult {
   name: string
   passed: boolean
   duration: number
   error?: string
-  details?: any
 }
 
-const results: TestResult[] = []
+const testResults: ActiveUsersFrameTestResult[] = []
 
 async function test(name: string, fn: () => Promise<void>): Promise<void> {
   const startTime = Date.now()
   try {
     await fn()
     const duration = Date.now() - startTime
-    results.push({ name, passed: true, duration })
+    testResults.push({ name, passed: true, duration })
     console.log(`✓ ${name} (${duration}ms)`)
   } catch (error) {
     const duration = Date.now() - startTime
     const errorMessage = error instanceof Error ? error.message : String(error)
-    results.push({ name, passed: false, duration, error: errorMessage })
+    testResults.push({ name, passed: false, duration, error: errorMessage })
     console.log(`✗ ${name} (${duration}ms)`)
     console.log(`  Error: ${errorMessage}`)
   }
@@ -41,7 +40,7 @@ function assert(condition: boolean, message: string): void {
   }
 }
 
-async function runTests() {
+async function runActiveUsersFrameTests() {
   console.log('🔍 Testing JSON Format...\n')
 
   await test('Should return active guild members in JSON format', async () => {
@@ -146,7 +145,7 @@ async function runTests() {
 
     assert(response.status === 200, `Expected status 200, got ${response.status}`)
     assert(
-      response.headers.get('content-type')?.includes('image'),
+      response.headers.get('content-type')?.includes('image') === true,
       'Expected content-type to include "image"'
     )
   })
@@ -200,10 +199,10 @@ async function runTests() {
   console.log('\n' + '='.repeat(60))
   console.log('📊 Test Summary\n')
   
-  const passed = results.filter(r => r.passed).length
-  const failed = results.filter(r => !r.passed).length
-  const total = results.length
-  const totalDuration = results.reduce((sum, r) => sum + r.duration, 0)
+  const passed = testResults.filter(r => r.passed).length
+  const failed = testResults.filter(r => !r.passed).length
+  const total = testResults.length
+  const totalDuration = testResults.reduce((sum, r) => sum + r.duration, 0)
 
   console.log(`Total Tests: ${total}`)
   console.log(`✓ Passed: ${passed}`)
@@ -212,7 +211,7 @@ async function runTests() {
   
   if (failed > 0) {
     console.log('\n❌ Failed Tests:')
-    results.filter(r => !r.passed).forEach(r => {
+    testResults.filter(r => !r.passed).forEach(r => {
       console.log(`  - ${r.name}`)
       console.log(`    ${r.error}`)
     })
@@ -226,7 +225,7 @@ async function runTests() {
 }
 
 // Run tests
-runTests().catch(error => {
+runActiveUsersFrameTests().catch(error => {
   console.error('\n💥 Test runner failed:', error)
   process.exit(1)
 })

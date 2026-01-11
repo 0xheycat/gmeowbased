@@ -246,11 +246,11 @@ export async function getLeaderboard(options: {
         let guildName = null
         if (guildId) {
           const { data: guildMeta } = await supabase
-            .from('guild_metadata')
+            .from('guild_off_chain_metadata')
             .select('name')
             .eq('guild_id', guildId)
             .single()
-          guildName = guildMeta?.name || null
+          guildName = (guildMeta as any)?.name || null
         }
         
         guildMembershipData.set(wallet, {

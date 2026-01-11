@@ -139,17 +139,19 @@ const FRAME_CARDS: FrameCard[] = [
 ]
 
 export default function FramesPage() {
-  const { fid, isAuthenticated, loading: authLoading } = useAuth()
+  const { fid, isAuthenticated } = useAuth()
   const router = useRouter()
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    setIsLoading(false)
+    if (!isLoading && !isAuthenticated) {
       router.push('/login?redirect=/frames')
     }
-  }, [authLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, router])
 
   const handleCopyUrl = async (frameId: string, url: string) => {
     try {
@@ -172,7 +174,7 @@ export default function FramesPage() {
     window.open(shareUrl, '_blank', 'noopener,noreferrer')
   }
 
-  if (authLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />

@@ -181,7 +181,7 @@ export async function fetchLeaderboard(params: {
       
       return {
         data: entries,
-        source: 'supabase-snapshots',
+        source: 'supabase',
         cached: false,
         timestamp: Date.now(),
         traces,
