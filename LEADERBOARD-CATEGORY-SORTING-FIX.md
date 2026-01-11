@@ -1011,7 +1011,71 @@ const gmFrame = {
 
 ## Implementation Summary (January 11, 2026)
 
-### ✅ Completed Today
+### ✅ Subsquid Indexer Fix Implemented (Jan 11, 2026)
+
+**Problem**: GraphQL `user.viralPoints` returned "0" even though on-chain contract had 300
+
+**Root Cause**: 
+- StatsUpdated event only emits: `(address user, uint256 totalScore, uint256 level, uint256 rankTier, uint256 multiplier)`
+- Individual score components (viralPoints, questPoints, etc.) NOT included in event
+- Indexer was not reading contract state, only processing event data
+
+**Solution Implemented**:
+Added contract state reads in `gmeow-indexer/src/main.ts` StatsUpdated handler:
+
+```typescript
+// FIX (Jan 11, 2026): Read score component breakdowns from contract state
+try {
+    const blockHeader = block.header
+    
+    // Read viralPoints from contract state
+    const viralPointsData = await ctx._chain.client.call('eth_call', [{
+        to: SCORING_ADDRESS,
+        data: scoringInterface.encodeFunctionData('viralPoints', [decoded.args.user])
+    }, blockHeader.hash])
+    user.viralPoints = BigInt(viralPointsData)
+    
+    // Read questPoints, guildPoints, referralPoints, gmPoints
+    // (same pattern for each component)
+    
+    ctx.log.info(`✅ Read score components: viral=${user.viralPoints}, ...`)
+} catch (err: any) {
+    ctx.log.warn(`⚠️ Failed to read score components: ${err.message}`)
+    // Keep existing values on error (don't reset to 0)
+}
+```
+
+**Files Changed**:
+- `gmeow-indexer/src/main.ts` (lines 1460-1505): Added contract state reads
+- Error handling: Preserves existing values if RPC call fails
+
+**Testing**:
+- Test deposit confirmed: On-chain viralPoints = 300
+- After indexer redeploy, GraphQL should return: `user.viralPoints = "300"`
+
+**Deployment Steps**:
+```bash
+cd gmeow-indexer
+npm run build          # Compile TypeScript
+sqd deploy             # Deploy to Subsquid Cloud
+```
+
+**Verification**:
+```bash
+# After redeploy, query GraphQL
+curl -X POST https://4d343279-1b28-406c-886e-e47719c79639.squids.live/gmeow-indexer@v1/api/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ userById(id: \"0x8a3094e44577579d6f41f6214a86c250b7dbdc4e\") { viralPoints totalScore } }"}' | jq .
+
+# Expected: { "viralPoints": "300", "totalScore": "310" }
+```
+
+**Impact**:
+- ✅ Leaderboard viral_xp category will now show correct rankings
+- ✅ All score components (quest, guild, referral) will be accurate
+- ✅ No changes needed to frontend or API (GraphQL schema unchanged)
+
+---
 
 **1. Viral XP Pipeline (Priority: CRITICAL)**
 - ✅ Created oracle deposit script: `scripts/oracle/deposit-viral-points.ts`
