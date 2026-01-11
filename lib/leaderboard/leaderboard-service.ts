@@ -317,13 +317,51 @@ export async function getLeaderboard(options: {
   }
   
   // ========================================
-  // LAYER 3: CALCULATION - DERIVE ALL METRICS
+  // LAYER 3: NEYNAR ENRICHMENT - FETCH PROFILE DATA
+  // ========================================
+  // Fetch Neynar profiles for all FIDs (with cache)
+  const { getBatchCachedNeynarUsers } = await import('@/lib/cache/neynar-cache')
+  const { fetchUserByFid } = await import('@/lib/integrations/neynar')
+  
+  const cachedNeynarProfiles = await getBatchCachedNeynarUsers(fids)
+  const fidToNeynarProfile = new Map<number, any>()
+  
+  // Check which FIDs are missing from cache
+  const uncachedFids = fids.filter(fid => !cachedNeynarProfiles.has(fid))
+  
+  // Fetch missing profiles from Neynar API (parallel)
+  if (uncachedFids.length > 0) {
+    const neynarResults = await Promise.allSettled(
+      uncachedFids.map(fid => fetchUserByFid(fid))
+    )
+    
+    neynarResults.forEach((result, index) => {
+      if (result.status === 'fulfilled' && result.value) {
+        const fid = uncachedFids[index]
+        fidToNeynarProfile.set(fid, result.value)
+      }
+    })
+  }
+  
+  // Merge cached + freshly fetched profiles
+  cachedNeynarProfiles.forEach((cached, fid) => {
+    fidToNeynarProfile.set(fid, {
+      fid: cached.fid,
+      username: cached.username,
+      displayName: cached.displayName,
+      pfpUrl: cached.pfpUrl,
+    })
+  })
+  
+  // ========================================
+  // LAYER 4: CALCULATION - DERIVE ALL METRICS
   // ========================================
   // Transform raw on-chain data into leaderboard entries with calculated fields
   const data = await Promise.all(rawUsers.map(async (user: any, index: number) => {
     const wallet = user.id.toLowerCase()
     const profile = walletToProfile.get(wallet)
     const fid = profile?.fid || null
+    const neynarProfile = fid ? fidToNeynarProfile.get(fid) : null
     const viralBonus = fid ? (viralBonusData.get(fid) || 0) : 0
     
     // On-chain current balance from Subsquid (actual spendable points)
@@ -463,12 +501,13 @@ export async function getLeaderboard(options: {
       guild_id: guildId,
       guild_name: guildName,
       period: period,
-      // Profile data from Supabase
-      username: null, // TODO: Fetch from Neynar if needed
-      display_name: profile?.display_name || null,
-      pfp_url: null,
-      bio: profile?.bio || null,
-      avatar_url: profile?.avatar_url || null,
+      // Profile data from Neynar (cached)
+      username: neynarProfile?.username || null,
+      farcaster_username: neynarProfile?.username || null,
+      display_name: neynarProfile?.displayName || profile?.display_name || null,
+      pfp_url: neynarProfile?.pfpUrl || profile?.avatar_url || null,
+      bio: neynarProfile?.bio || profile?.bio || null,
+      avatar_url: neynarProfile?.pfpUrl || profile?.avatar_url || null,
       social_links: profile?.social_links || null,
       viral_bonus_xp: viralBonus,
       // Calculated fields
