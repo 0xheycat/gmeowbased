@@ -32,8 +32,8 @@ export async function ActivityFeed() {
         
         {/* Enhanced Empty State */}
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-4">
-            <TimelineIcon className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <TimelineIcon className="w-8 h-8 text-gray-600 dark:text-gray-400" />
           </div>
           <h4 className="text-lg font-semibold mb-2">No Activity Yet</h4>
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 max-w-sm">
@@ -41,7 +41,7 @@ export async function ActivityFeed() {
           </p>
           <a
             href="/quests"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
           >
             Complete Your First Quest
           </a>
@@ -109,7 +109,7 @@ export async function ActivityFeed() {
                   {cast.text.length > 280 ? (
                     <>
                       {truncateText(cast.text, 280)}{' '}
-                      <button className="text-blue-500 hover:underline text-xs">
+                      <button className="text-gray-600 dark:text-gray-400 hover:underline text-xs">
                         Read more
                       </button>
                     </>
@@ -127,13 +127,13 @@ export async function ActivityFeed() {
 
                 {/* Engagement Stats */}
                 <div className="flex gap-4 text-xs text-gray-500">
-                  <span className="hover:text-blue-500 cursor-pointer">
+                  <span className="hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
                     💬 {cast.replies}
                   </span>
-                  <span className="hover:text-red-500 cursor-pointer">
+                  <span className="hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
                     ❤️ {cast.likes}
                   </span>
-                  <span className="hover:text-green-500 cursor-pointer">
+                  <span className="hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
                     🔄 {cast.recasts}
                   </span>
                 </div>
