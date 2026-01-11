@@ -1,0 +1,154 @@
+{
+  "timestamp": "2026-01-11T12:30:33.280Z",
+  "summary": {
+    "total": 16,
+    "passed": 13,
+    "failed": 3,
+    "duration": 58595
+  },
+  "results": [
+    {
+      "name": "Main Frame",
+      "endpoint": "/api/frame",
+      "status": 200,
+      "success": true,
+      "duration": 9762,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "name": "Badge Frame",
+      "endpoint": "/api/frame/image/badge",
+      "status": 200,
+      "success": true,
+      "duration": 3741,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/badge-frame.png"
+    },
+    {
+      "name": "Badge Collection Frame",
+      "endpoint": "/api/frame/image/badgecollection",
+      "status": 200,
+      "success": true,
+      "duration": 3685,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/badge-collection-frame.png"
+    },
+    {
+      "name": "GM Frame",
+      "endpoint": "/api/frame/image/gm",
+      "status": 200,
+      "success": true,
+      "duration": 3174,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/gm-frame.png"
+    },
+    {
+      "name": "Guild Frame",
+      "endpoint": "/api/frame/image/guild",
+      "status": 200,
+      "success": true,
+      "duration": 3365,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/guild-frame.png"
+    },
+    {
+      "name": "Leaderboard Frame",
+      "endpoint": "/api/frame/image/leaderboard",
+      "status": 200,
+      "success": true,
+      "duration": 3156,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/leaderboard-frame.png"
+    },
+    {
+      "name": "NFT Frame",
+      "endpoint": "/api/frame/image/nft",
+      "status": 200,
+      "success": true,
+      "duration": 3101,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/nft-frame.png"
+    },
+    {
+      "name": "OnchainStats Frame",
+      "endpoint": "/api/frame/image/onchainstats",
+      "status": 200,
+      "success": true,
+      "duration": 3172,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/onchainstats-frame.png"
+    },
+    {
+      "name": "Points Frame",
+      "endpoint": "/api/frame/image/points",
+      "status": 200,
+      "success": true,
+      "duration": 3365,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/points-frame.png"
+    },
+    {
+      "name": "Quest Frame",
+      "endpoint": "/api/frame/image/quest",
+      "status": 200,
+      "success": true,
+      "duration": 3118,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/quest-frame.png"
+    },
+    {
+      "name": "Referral Frame",
+      "endpoint": "/api/frame/image/referral",
+      "status": 200,
+      "success": true,
+      "duration": 3158,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/referral-frame.png"
+    },
+    {
+      "name": "Verify Frame",
+      "endpoint": "/api/frame/image/verify",
+      "status": 200,
+      "success": true,
+      "duration": 3789,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/verify-frame.png"
+    },
+    {
+      "name": "Badge Share Frame",
+      "endpoint": "/api/frame/badgeShare",
+      "status": 400,
+      "success": false,
+      "duration": 3916,
+      "contentType": "text/plain;charset=UTF-8",
+      "error": "Missing fid parameter"
+    },
+    {
+      "name": "Badge Share Image",
+      "endpoint": "/api/frame/badgeShare/image",
+      "status": 200,
+      "success": true,
+      "duration": 3021,
+      "contentType": "image/png",
+      "imagePath": "/home/heycat/Desktop/2025/Gmeowbased/test-output/frames/badge-share-image.png"
+    },
+    {
+      "name": "Active Users Frame (JSON)",
+      "endpoint": "/api/test/active-users-frame",
+      "status": 500,
+      "success": false,
+      "duration": 4675,
+      "contentType": "application/json",
+      "error": "{\"error\":\"Failed to fetch guild data\"}"
+    },
+    {
+      "name": "Active Users Frame (Image)",
+      "endpoint": "/api/test/active-users-frame",
+      "status": 500,
+      "success": false,
+      "duration": 397,
+      "contentType": "application/json",
+      "error": "{\"error\":\"Failed to fetch guild data\"}"
+    }
+  ]
+}

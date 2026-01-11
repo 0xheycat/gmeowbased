@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Active Users Frame Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      color: #f9fafb;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 36px;
+      color: #f9fafb;
+    }
+
+    .controls {
+      background: #374151;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 20px;
+      align-items: end;
+    }
+
+    .control-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #d1d5db;
+    }
+
+    input, select {
+      padding: 10px 14px;
+      border: 2px solid #4b5563;
+      border-radius: 8px;
+      background: #1f2937;
+      color: #f9fafb;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #6b7280;
+    }
+
+    button {
+      padding: 10px 24px;
+      background: #f9fafb;
+      color: #111827;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .section {
+      background: #374151;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .section h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #f9fafb;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      font-size: 12px;
+      padding: 4px 8px;
+      background: #1f2937;
+      border-radius: 6px;
+      color: #9ca3af;
+    }
+
+    pre {
+      background: #1f2937;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .image-container {
+      background: #1f2937;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .image-container img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #9ca3af;
+    }
+
+    .error {
+      background: #7f1d1d;
+      color: #fecaca;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #1f2937;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #f9fafb;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .member-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .member-item {
+      background: #1f2937;
+      padding: 12px 16px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .member-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .member-rank {
+      font-weight: bold;
+      color: #9ca3af;
+      min-width: 30px;
+    }
+
+    .member-name {
+      color: #f9fafb;
+    }
+
+    .member-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      background: #374151;
+      border-radius: 4px;
+      color: #d1d5db;
+    }
+
+    .member-points {
+      font-weight: bold;
+      color: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏰 Active Guild Members - Frame Test</h1>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="guildId">Guild ID</label>
+        <input type="text" id="guildId" value="1" placeholder="Enter guild ID">
+      </div>
+      <div class="control-group">
+        <label for="format">Format</label>
+        <select id="format">
+          <option value="json">JSON Data</option>
+          <option value="image">Frame Image</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+      <button onclick="loadData()">🔄 Load Data</button>
+    </div>
+
+    <div id="error"></div>
+
+    <div class="content" id="content">
+      <div class="loading">
+        <p>👆 Select a guild and click "Load Data" to begin</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadData() {
+      const guildId = document.getElementById('guildId').value || '1';
+      const format = document.getElementById('format').value;
+      const errorDiv = document.getElementById('error');
+      const contentDiv = document.getElementById('content');
+
+      errorDiv.innerHTML = '';
+      contentDiv.innerHTML = '<div class="loading">Loading...</div>';
+
+      try {
+        if (format === 'both') {
+          // Load both JSON and image
+          const [jsonData] = await Promise.all([
+            fetch(`/api/test/active-users-frame?guildId=${guildId}&format=json`).then(r => r.json())
+          ]);
+
+          if (!jsonData.success) {
+            throw new Error(jsonData.error || 'Failed to load data');
+          }
+
+          contentDiv.innerHTML = `
+            <div class="section">
+              <h2>📊 JSON Response <span class="badge">API Data</span></h2>
+              ${renderStats(jsonData)}
+              ${renderMembers(jsonData.activeMembers)}
+              <h3 style="margin: 20px 0 10px 0; font-size: 16px;">Raw JSON:</h3>
+              <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+            </div>
+            <div class="section">
+              <h2>🖼️ Frame Image <span class="badge">OG Image</span></h2>
+              <div class="image-container">
+                <img src="/api/test/active-users-frame?guildId=${guildId}&format=image&t=${Date.now()}" alt="Guild Frame" />
+              </div>
+              <p style="margin-top: 16px; font-size: 14px; color: #9ca3af; text-align: center;">
+                Direct URL: <a href="/api/test/active-users-frame?guildId=${guildId}&format=image" target="_blank" style="color: #60a5fa; text-decoration: none;">Open Image</a>
+              </p>
+            </div>
+          `;
+        } else if (format === 'json') {
+          const jsonData = await fetch(`/api/test/active-users-frame?guildId=${guildId}&format=json`).then(r => r.json());
+
+          if (!jsonData.success) {
+            throw new Error(jsonData.error || 'Failed to load data');
+          }
+
+          contentDiv.innerHTML = `
+            <div class="section" style="grid-column: 1 / -1;">
+              <h2>📊 JSON Response <span class="badge">API Data</span></h2>
+              ${renderStats(jsonData)}
+              ${renderMembers(jsonData.activeMembers)}
+              <h3 style="margin: 20px 0 10px 0; font-size: 16px;">Raw JSON:</h3>
+              <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+            </div>
+          `;
+        } else if (format === 'image') {
+          contentDiv.innerHTML = `
+            <div class="section" style="grid-column: 1 / -1;">
+              <h2>🖼️ Frame Image <span class="badge">OG Image</span></h2>
+              <div class="image-container">
+                <img src="/api/test/active-users-frame?guildId=${guildId}&format=image&t=${Date.now()}" alt="Guild Frame" />
+              </div>
+              <p style="margin-top: 16px; font-size: 14px; color: #9ca3af; text-align: center;">
+                Direct URL: <a href="/api/test/active-users-frame?guildId=${guildId}&format=image" target="_blank" style="color: #60a5fa; text-decoration: none;">Open Image</a>
+              </p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        errorDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        contentDiv.innerHTML = '';
+        console.error('Error loading data:', error);
+      }
+    }
+
+    function renderStats(data) {
+      const { guild, activeMembers } = data;
+      const officers = activeMembers.filter(m => m.isOfficer).length;
+
+      return `
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">${guild.name}</div>
+            <div class="stat-label">Guild Name</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">Lv ${guild.level}</div>
+            <div class="stat-label">Level</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${parseInt(guild.totalPoints).toLocaleString()}</div>
+            <div class="stat-label">Total Points</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${activeMembers.length}</div>
+            <div class="stat-label">Active Members</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${officers}</div>
+            <div class="stat-label">Officers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${guild.active ? '✅' : '❌'}</div>
+            <div class="stat-label">Status</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMembers(members) {
+      const top10 = members.slice(0, 10);
+
+      return `
+        <div style="margin-top: 20px;">
+          <h3 style="margin-bottom: 12px; font-size: 16px;">Top Active Members:</h3>
+          <div class="member-list">
+            ${top10.map(member => `
+              <div class="member-item">
+                <div class="member-info">
+                  <span class="member-rank">#${member.rank}</span>
+                  <span class="member-name">
+                    ${member.farcasterUsername || `${member.address.slice(0, 6)}...${member.address.slice(-4)}`}
+                  </span>
+                  ${member.isOfficer ? '<span class="member-badge">⭐ Officer</span>' : ''}
+                </div>
+                <span class="member-points">${parseInt(member.points).toLocaleString()} pts</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Auto-load on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('format').value = 'both';
+      loadData();
+    });
+  </script>
+</body>
+</html>

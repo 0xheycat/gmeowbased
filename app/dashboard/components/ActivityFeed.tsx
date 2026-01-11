@@ -145,7 +145,7 @@ export async function ActivityFeed() {
 
       {/* Footer with Cache Info */}
       <div className="mt-4 flex justify-between items-center text-xs text-gray-500">
-        <span>Powered by Neynar Feed API</span>
+        <span></span>
         <span className="font-medium">Updated {lastUpdated}</span>
       </div>
     </div>

@@ -1,0 +1,28 @@
+✅ Frame Contract Event Verification Complete
+
+All frame API routes verified against Dec 31, 2025 contract deployment:
+
+📦 Contract Addresses (Base Mainnet):
+- Core: 0x343829A6A613d51B4A81c2dE508e49CA66D4548d
+- Guild: 0xC3AA96aDA307BaD7e6c2d7575051fA19C358C097  
+- Referral: 0x50941e1033fF8E163fB60A0433b1CB2bc71Ce8Df
+- NFT: 0x34d0CD77Ba8d643C1d5f568331d61eFa35132eA8
+- Badge: 0x45a2aaa181dd5f9b1fd173b135b44f5207ee3dbb
+- Scoring: 0xdeCFDc900DD1DBD6f947d3558143aA8374413Bd6
+
+✅ Frame Verification Results:
+- Quest Frame: Using QuestCompleted, OnchainQuestCompleted ✓
+- Guild Frame: Using GuildCreated, GuildJoined ✓
+- Active Users Frame: Using GuildJoined, GuildLeft ✓
+- GM Frame: Using GMSent ✓
+- Points Frame: Using PointsTipped, QuestCompleted ✓
+- Badge Frame: Using BadgeMinted ✓
+- Leaderboard Frame: Using QuestCompleted, GMSent ✓
+
+📝 Event Updates Applied:
+1. Updated Active Users Frame to use GUILD_LEFT (was MEMBER_LEFT)
+2. Verified all 9 critical events match Dec 31 deployment
+3. All frame images tested and generating correctly
+
+Last Verified: Sun Jan 11 06:29:26 CST 2026
+
