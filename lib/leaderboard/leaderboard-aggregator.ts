@@ -7,8 +7,9 @@ import {
   type ChainKey,
   type GMChainKey,
 } from '@/lib/contracts/gmeow-utils'
-import { fetchUsersByAddresses } from '@/lib/integrations/neynar'
 import { trackWarning } from '@/lib/notifications/error-tracking'
+import { getBatchCachedNeynarUsers, setCachedNeynarUser } from '@/lib/cache/neynar-cache'
+import { fetchUserByFid } from '@/lib/integrations/neynar'
 
 // Dynamic import helpers for server-only cache module (prevents bundling to client)
 async function getCachedSafe<T>(
@@ -351,48 +352,85 @@ export async function enrichAggregatedRows(entries: RawAggregate[]): Promise<Enr
   if (missing.length === 0) return enriched
 
   try {
-    const addressToUser = await fetchUsersByAddresses(missing.map(row => row.address))
+    // Phase 9.1: Use existing Neynar cache infrastructure (no inline API spam)
+    // Strategy: Fetch by FID (more reliable than address lookup)
+    const fidsToFetch = missing
+      .filter(row => row.farcasterFid && row.farcasterFid > 0)
+      .map(row => row.farcasterFid)
+    
+    if (fidsToFetch.length === 0) return enriched
+
+    // 1. Check cache first (getBatchCachedNeynarUsers from lib/cache/neynar-cache.ts)
+    const cachedUsers = await getBatchCachedNeynarUsers(fidsToFetch)
     const now = Date.now()
 
+    // 2. Enrich rows with cached data
     for (const row of missing) {
-      const user = addressToUser[row.address] ?? addressToUser[row.address.toLowerCase()]
-      if (!user) continue
-
-      const handle = user.username ? `@${user.username}` : ''
-      const resolvedName = row.name.trim() || (user.displayName && user.displayName.trim()) || handle
-      const existingPfp = row.pfpUrl.trim()
-      const neynarPfp = typeof user.pfpUrl === 'string' ? user.pfpUrl.trim() : ''
-      const resolvedPfp = existingPfp || neynarPfp
-      const resolvedFid =
-        row.farcasterFid && row.farcasterFid > 0
-          ? row.farcasterFid
-          : typeof user.fid === 'number' && Number.isFinite(user.fid) && user.fid > 0
-          ? user.fid
-          : 0
-
-      row.name = resolvedName ? resolvedName : row.name
-      if ((!row.pfpUrl || row.pfpUrl.trim().length === 0) && resolvedPfp) {
-        row.pfpUrl = resolvedPfp
+      if (!row.farcasterFid || row.farcasterFid <= 0) continue
+      
+      const cached = cachedUsers.get(row.farcasterFid)
+      if (cached) {
+        // Use cached profile data
+        row.name = row.name.trim() || cached.displayName || cached.username || ''
+        row.pfpUrl = row.pfpUrl.trim() || cached.pfpUrl || ''
+        
+        // Update server cache (unified cache system)
+        await getCachedSafe(
+          'leaderboard-profile',
+          profileCacheKey(row.chain, row.address),
+          async () => ({
+            name: row.name,
+            pfpUrl: row.pfpUrl,
+            farcasterFid: row.farcasterFid || 0,
+          }),
+          { ttl: PROFILE_CACHE_TTL_SEC, force: true }
+        ).catch(() => {}) // Fire and forget
+        continue
       }
-      if ((!row.farcasterFid || row.farcasterFid <= 0) && resolvedFid > 0) {
-        row.farcasterFid = resolvedFid
-      }
 
-      // Phase 8.1.4: Update unified cache with Neynar enrichment
-      await getCachedSafe(
-        'leaderboard-profile',
-        profileCacheKey(row.chain, row.address),
-        async () => ({
-          name: row.name,
-          pfpUrl: row.pfpUrl,
-          farcasterFid: row.farcasterFid || 0,
-        }),
-        { ttl: PROFILE_CACHE_TTL_SEC, force: true }
-      ).catch(() => {}) // Fire and forget
+      // 3. Fetch missing profiles (uses Neynar cache internally - lib/integrations/neynar.ts)
+      try {
+        const user = await fetchUserByFid(row.farcasterFid)
+        if (user) {
+          const resolvedName = row.name.trim() || user.displayName || user.username || ''
+          const resolvedPfp = row.pfpUrl.trim() || user.pfpUrl || ''
+          
+          row.name = resolvedName
+          row.pfpUrl = resolvedPfp
+
+          // Cache for next time (setCachedNeynarUser from lib/cache/neynar-cache.ts)
+          await setCachedNeynarUser(row.farcasterFid, {
+            fid: row.farcasterFid,
+            username: user.username || '',
+            displayName: user.displayName || '',
+            pfpUrl: user.pfpUrl || '',
+          })
+
+          // Update server cache
+          await getCachedSafe(
+            'leaderboard-profile',
+            profileCacheKey(row.chain, row.address),
+            async () => ({
+              name: row.name,
+              pfpUrl: row.pfpUrl,
+              farcasterFid: row.farcasterFid || 0,
+            }),
+            { ttl: PROFILE_CACHE_TTL_SEC, force: true }
+          ).catch(() => {})
+        }
+      } catch (err) {
+        if (AGGREGATOR_DEBUG) {
+          trackWarning('leaderboard_profile_fetch_failed', { 
+            function: 'enrichAggregatedRows', 
+            fid: row.farcasterFid, 
+            error: String(err) 
+          })
+        }
+      }
     }
   } catch (err) {
     if (AGGREGATOR_DEBUG) {
-      trackWarning('leaderboard_neynar_enrichment_failed', { function: 'getTopUsers', error: String(err) })
+      trackWarning('leaderboard_neynar_enrichment_failed', { function: 'enrichAggregatedRows', error: String(err) })
     }
   }
 
