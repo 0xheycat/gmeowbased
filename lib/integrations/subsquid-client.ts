@@ -366,29 +366,23 @@ export async function getLeaderboard(params?: {
 }) {
   const { limit = 10, offset = 0, period = 'all_time' } = params || {};
 
-  // Build query based on period
+  // Query users directly instead of leaderboardEntries (which doesn't exist)
   const query = gql`
     query GetLeaderboard($limit: Int!, $offset: Int!) {
-      leaderboardEntries(
+      users(
         limit: $limit
         offset: $offset
-        orderBy: rank_ASC
+        orderBy: totalScore_DESC
       ) {
         id
-        rank
-        totalPoints
-        weeklyPoints
-        monthlyPoints
-        updatedAt
-        user {
-          id
-          totalScore
-          level
-          rankTier
-          currentStreak
-          lifetimeGMs
-          lastGMTimestamp
-        }
+        totalScore
+        pointsBalance
+        level
+        rankTier
+        currentStreak
+        lifetimeGMs
+        lastGMTimestamp
+        multiplier
       }
     }
   `;
@@ -396,40 +390,35 @@ export async function getLeaderboard(params?: {
   try {
     const data: any = await getSubsquidClient().request(query, { limit, offset });
     
-    if (!data?.leaderboardEntries) {
-      console.warn('[getLeaderboard] No leaderboard entries returned');
+    if (!data?.users) {
+      console.warn('[getLeaderboard] No users returned');
       return [];
     }
 
-    // Map to frame-compatible format
-    return data.leaderboardEntries.map((entry: any) => {
-      // Determine points based on period
-      const points = period === 'weekly' 
-        ? entry.weeklyPoints 
-        : period === 'monthly' 
-          ? entry.monthlyPoints 
-          : entry.totalPoints;
-
-      const rankTier = entry.user.rankTier || 0;
+    // Map to frame-compatible format with calculated rank
+    return data.users.map((user: any, index: number) => {
+      const rankTier = user.rankTier || 0;
       return {
-        rank: entry.rank,
-        address: entry.user.id,
-        points: Number(points || 0),
-        totalPoints: Number(entry.totalPoints || 0),
-        totalScore: Number(entry.user.totalScore || 0),
-        level: entry.user.level || 0,
+        rank: offset + index + 1, // Calculate rank from position
+        address: user.id,
+        points: Number(user.pointsBalance || 0),
+        totalPoints: Number(user.pointsBalance || 0),
+        totalScore: Number(user.totalScore || 0),
+        totalXP: Number(user.totalScore || 0), // Alias for hybrid-data compatibility
+        level: user.level || 0,
         rankTier,
         tier: getRankTierName(rankTier),
-        gmStreak: entry.user.currentStreak || 0,
-        totalGMs: entry.user.lifetimeGMs || 0,
-        currentStreak: entry.user.currentStreak || 0,
-        lifetimeGMs: entry.user.lifetimeGMs || 0,
-        lastGMTimestamp: entry.user.lastGMTimestamp ? Number(entry.user.lastGMTimestamp) * 1000 : null,
-        updatedAt: entry.updatedAt,
+        gmStreak: user.currentStreak || 0,
+        totalGMs: user.lifetimeGMs || 0,
+        currentStreak: user.currentStreak || 0,
+        lifetimeGMs: user.lifetimeGMs || 0,
+        lastGMTimestamp: user.lastGMTimestamp ? Number(user.lastGMTimestamp) * 1000 : null,
+        multiplier: user.multiplier || 1000,
       };
     });
   } catch (error) {
     console.error('[getLeaderboard] Error:', error);
+    // Return empty array so fallback can be used upstream
     return [];
   }
 }

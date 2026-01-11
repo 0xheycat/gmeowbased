@@ -162,7 +162,7 @@ export async function enrichLeaderboardWithProfiles(
   try {
     const { data: profiles, error } = await supabase
       .from('user_profiles')
-      .select('fid, wallet_address, display_name, pfp_url')
+      .select('fid, wallet_address, display_name')
       .in('wallet_address', walletAddresses)
 
     if (error) {
@@ -183,7 +183,7 @@ export async function enrichLeaderboardWithProfiles(
           fid: profile.fid,
           username: profile.display_name || null, // Use display_name as username
           displayName: profile.display_name || null,
-          pfpUrl: profile.pfp_url || null,
+          pfpUrl: null, // pfp_url column doesn't exist, will be populated from Neynar
         })
       }
     })
