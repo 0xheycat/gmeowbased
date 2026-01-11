@@ -207,18 +207,228 @@ NFT-based scoring (currently 0, planned feature)
 
 ---
 
-## Future Improvements
+## Current Data Issue
 
-### Short-term
-- [ ] Add visual indicator showing which category is active
-- [ ] Show category-specific stats in leaderboard header
-- [ ] Add tooltips explaining each category
+**Status**: ⚠️ Sorting works, but data shows all zeros
 
-### Long-term
-- [ ] Add category-specific rank change tracking
-- [ ] Implement category-specific tier thresholds
-- [ ] Add category achievement badges
-- [ ] Create combined category scores (e.g., "Social Score" = viral + guild + referral)
+All users currently have:
+- `viral_xp`: 0
+- `guild_bonus`: 0  
+- `referral_bonus`: 0
+- `streak_bonus`: 0
+- `badge_prestige`: 0
+
+**Why categories appear identical**: When all values are 0, sorting produces the same order (tied at rank 1). The sorting logic IS working correctly - we just need active data in these categories.
+
+**Next Steps**: 
+1. Verify badge_casts table has viral_bonus_xp data
+2. Ensure guild membership bonuses are calculating
+3. Check referral system is tracking rewards
+4. Confirm GM streaks are being recorded
+
+---
+
+## Enhancement Roadmap
+
+### Phase 1: Category-Specific Titles & Branding (Immediate)
+**Goal**: Make each category feel unique with custom titles and descriptions
+
+- [x] **All Pilots** - Overall leaderboard
+- [ ] **Viral Legends** - Top social influencers (viral_xp)
+  - Title: "Viral Legends - Most Shared Badges"
+  - Description: "Top pilots by Warpcast engagement"
+  - Icon: 🔥 Fire
+  
+- [ ] **Guild Heroes** - Top guild contributors (guild_bonus)
+  - Title: "Guild Heroes - Greatest Contributors"
+  - Description: "Top pilots by guild participation"
+  - Icon: ⚔️ Crossed Swords
+  
+- [ ] **Referral Champions** - Network builders (referral_bonus)
+  - Title: "Referral Champions - Network Builders"
+  - Description: "Top pilots by referral network size"
+  - Icon: 🌐 Globe
+  
+- [ ] **Streak Warriors** - Consistency masters (streak_bonus)
+  - Title: "Streak Warriors - Daily Dedication"
+  - Description: "Top pilots by consecutive GM days"
+  - Icon: 🔥 Flame (different color)
+  
+- [ ] **Badge Collectors** - Prestige elites (badge_prestige)
+  - Title: "Badge Collectors - Prestige Elite"
+  - Description: "Top pilots by staked badge collection"
+  - Icon: 🏆 Trophy
+  
+- [ ] **Tip Kings** - Generous pilots (tip_points)
+  - Title: "Tip Kings - Most Generous"
+  - Description: "Top pilots by tips given"
+  - Icon: 💰 Money Bag
+  
+- [ ] **NFT Whales** - Digital collectors (nft_points)
+  - Title: "NFT Whales - Coming Soon"
+  - Description: "NFT-based scoring (planned)"
+  - Icon: 🐋 Whale
+
+**Implementation**:
+```typescript
+// app/leaderboard/page.tsx
+const CATEGORY_METADATA = {
+  viral_xp: {
+    title: 'Viral Legends',
+    subtitle: 'Most Shared Badges',
+    icon: '🔥',
+    description: 'Top pilots by Warpcast engagement',
+    gradient: 'from-orange-500 to-red-600'
+  },
+  guild_bonus: {
+    title: 'Guild Heroes',
+    subtitle: 'Greatest Contributors',
+    icon: '⚔️',
+    description: 'Top pilots by guild participation',
+    gradient: 'from-purple-500 to-indigo-600'
+  },
+  // ... etc
+}
+```
+
+### Phase 2: Tier Filtering (High Priority)
+**Goal**: Filter leaderboards by rank tier for fair competition
+
+**UI Changes**:
+```typescript
+// Add tier filter dropdown
+<TierFilter
+  selected={selectedTier}
+  onChange={setSelectedTier}
+  categories={[
+    'All Tiers',
+    'Signal Kitten (0)',
+    'Quantum Tabby (1)',
+    'Cosmic Cat (2)',
+    'Galactic Kitty (3)',
+    'Nebula Lynx (4)',
+    'Stellar Panther (5)',
+    'Constellation Tiger (6)',
+    'Void Walker (7)',
+    'Dimensional Prowler (8)',
+    'Ethereal Predator (9)',
+    'Celestial Guardian (10)',
+    'Omniversal Being (11)'
+  ]}
+/>
+```
+
+**Backend Enhancement**:
+```typescript
+// lib/leaderboard/leaderboard-service.ts
+export async function getLeaderboard(options: {
+  // ... existing params
+  tierFilter?: number // 0-11, null for all tiers
+}) {
+  // ... existing code ...
+  
+  // Filter by tier if specified
+  if (tierFilter !== undefined && tierFilter !== null) {
+    filteredData = filteredData.filter(entry => {
+      const tierIndex = TIER_NAMES.indexOf(entry.rankTier)
+      return tierIndex === tierFilter
+    })
+  }
+  
+  // ... rest of sorting logic
+}
+```
+
+### Phase 3: Category-Specific Stats Cards (Medium Priority)
+**Goal**: Show category leaders and milestones
+
+```typescript
+// components/leaderboard/CategoryStatsCard.tsx
+<CategoryStatsCard category="viral_xp">
+  <StatItem label="Top Viral Score" value="15,420" user="@pilot123" />
+  <StatItem label="Avg Viral Score" value="1,250" />
+  <StatItem label="Active Influencers" value="127" />
+  <StatItem label="This Week's Leader" value="@newstar" change="+850" />
+</CategoryStatsCard>
+```
+
+### Phase 4: Category Badges & Achievements (Long-term)
+**Goal**: Reward category dominance
+
+**Achievement System**:
+- 🏆 **Category King**: #1 in category for 7 days
+- ⭐ **Rising Star**: Moved up 10+ ranks in 24h
+- 💎 **Top 10 Elite**: Stayed in top 10 for 30 days
+- 🔥 **Hot Streak**: #1 for 3 consecutive days
+- 🌟 **Multi-Category Legend**: Top 3 in 3+ categories
+
+**Badge Storage**:
+```sql
+CREATE TABLE category_achievements (
+  id SERIAL PRIMARY KEY,
+  fid INTEGER NOT NULL,
+  category TEXT NOT NULL, -- 'viral_xp', 'guild_bonus', etc
+  achievement TEXT NOT NULL, -- 'category_king', 'rising_star', etc
+  earned_at TIMESTAMP DEFAULT NOW(),
+  metadata JSONB -- { rank: 1, score: 1500, duration_days: 7 }
+);
+```
+
+### Phase 5: Multi-Category Combined Scores (Long-term)
+**Goal**: Create meta-categories that combine multiple metrics
+
+**New Categories**:
+- **Social Score** = viral_xp + guild_bonus + referral_bonus
+- **Consistency Score** = streak_bonus + (daily_gms * 10)
+- **Wealth Score** = tip_points + nft_points + badge_prestige
+- **Influencer Score** = viral_xp + referral_bonus + (followers * 5)
+
+### Phase 6: Historical Rank Tracking (Long-term)
+**Goal**: Show rank changes over time
+
+**Database Schema**:
+```sql
+CREATE TABLE leaderboard_snapshots (
+  id SERIAL PRIMARY KEY,
+  fid INTEGER NOT NULL,
+  category TEXT NOT NULL,
+  rank INTEGER NOT NULL,
+  score INTEGER NOT NULL,
+  tier INTEGER NOT NULL,
+  snapshot_date DATE NOT NULL,
+  UNIQUE(fid, category, snapshot_date)
+);
+```
+
+**Features**:
+- Daily snapshots of all category rankings
+- Rank change indicators (↑5, ↓3, -)
+- Historical rank graph (last 30 days)
+- Peak rank achievement display
+
+---
+
+## Implementation Priority
+
+### 🔴 Critical (Week 1)
+1. **Fix data collection** - Ensure viral_xp, guild_bonus, etc. are calculating
+2. **Add category titles** - Make each tab feel unique with custom branding
+3. **Tier filtering** - Allow users to compete within their tier
+
+### 🟡 High (Week 2-3)  
+4. **Category stats cards** - Show leaders and milestones per category
+5. **Visual differentiation** - Different gradients/colors per category
+6. **Empty state handling** - Show helpful message when category has no data
+
+### 🟢 Medium (Month 2)
+7. **Category badges** - Achievement system for category dominance
+8. **Combined scores** - Meta-categories (Social, Consistency, Wealth)
+9. **Historical tracking** - Rank change over time
+
+### 🔵 Nice-to-have (Month 3+)
+10. **Category-specific rewards** - Special perks for category leaders
+11. **Category tournaments** - Weekly competitions per category
+12. **Prediction system** - Forecast who will reach top 10 next
 
 ---
 
