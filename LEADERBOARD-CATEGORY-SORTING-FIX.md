@@ -5,8 +5,9 @@
 **Status**: ✅ SORTING FIXED | 🚧 DATA PIPELINES IN PROGRESS
 
 **Implementation Progress (Jan 11, 2026)**:
-- ✅ Viral XP Pipeline: Webhook exists, cron exists, oracle script created, DB migration applied
-- ⚠️ Oracle Authorization: NOT YET (blocker - needs contract owner action)
+- ✅ Viral XP Pipeline: **FULLY OPERATIONAL** (oracle authorized, tested with 2 users, 325 XP deposited)
+- ✅ Oracle Authorization: **AUTHORIZED** (tx: 0xedc04091...9eb41)
+- ✅ Live Testing: **PASSED** (2 deposits confirmed on-chain, audit logs in viral_deposits table)
 - 📋 Guild Bonus Pipeline: TODO
 - 📋 Referral Bonus Pipeline: TODO
 - 📋 Streak Bonus Pipeline: TODO
@@ -1017,26 +1018,54 @@ const gmFrame = {
   - Viral metrics cron: `app/api/cron/sync-viral-metrics/route.ts` ✅
   - Database indexes: 11 indexes on `badge_casts` ✅
 
-**Implementation Status**: 🟡 95% Complete (awaiting oracle authorization)
+**Implementation Status**: ✅ 100% Complete - PRODUCTION READY
 
-**Blocker**: Oracle wallet not authorized yet
-- Current status: ❌ NOT AUTHORIZED
-- Required action: Contract owner must run `OWNER_PRIVATE_KEY=0x... pnpm tsx scripts/oracle/authorize-oracle.ts`
-- Estimated time: 2 minutes + 1 tx confirmation
+**Authorization**: ✅ COMPLETE
+- Oracle wallet: `0x8870C155666809609176260F2B65a626C000D773`
+- Authorization tx: `0xedc04091dd82e3b450fc43de7a4ce247034448ff493c60dc9c8c6d2033c9eb41`
+- Verified: `authorizedOracles[oracle] = true`
 
-**Testing Ready**:
+**Live Testing**: ✅ PASSED
+```
+Test Users: 2
+Badge Casts: 3 (legendary_gm, epic_achievement, rare_badge)
+Total Viral XP: 325 (300 + 25)
+
+Deposit Transactions:
+- User 18139: 300 XP → 0xd5eabf997a62ae2c3f70c7628a9ccfa90fa7bdb05c94145d6a56c3af61e3adef
+- User 1069798: 25 XP → 0xf96d8a581273b6e821a6ddfaa81700292ef9eae0bd98f9b2a7a842f1652f9e61
+
+On-Chain Verification:
+- viralPoints[0x8a3094e44577579d6f41F6214a86C250b7dBDC4e] = 300 ✅
+- viralPoints[0x8870C155666809609176260F2B65a626C000D773] = 25 ✅
+
+Audit Trail:
+- viral_deposits table: 2 entries with tx_hash logged ✅
+```
+
+**How Viral XP Works**:
+
+The viral XP system tracks **badge shares on Farcaster** (Warpcast) and rewards engagement:
+
+1. **User Shares Badge** → POST `/api/cast/badge-share` → Logs to `badge_casts` table
+2. **Cron Updates Engagement** (every 6 hours) → Fetches likes/recasts/replies from Neynar API
+3. **Calculate Viral Score** → `(recasts × 10) + (replies × 5) + (likes × 2)`
+4. **Assign Tier & XP**:
+   - `none`: 0-9 score → 0 XP
+   - `active`: 10-49 score → 10 XP
+   - `engaging`: 50-99 score → 25 XP
+   - `popular`: 100-249 score → 50 XP
+   - `viral`: 250-499 score → 100 XP
+   - `mega_viral`: 500+ score → 250 XP
+5. **Oracle Deposits to Contract** → Aggregates XP per user → Calls `setViralPoints()` on-chain
+
+**Production Usage**:
 ```bash
-# Step 1: Verify authorization status
-pnpm tsx scripts/oracle/verify-authorization.ts
-
-# Step 2: Authorize oracle (contract owner only)
-OWNER_PRIVATE_KEY=0x... pnpm tsx scripts/oracle/authorize-oracle.ts
-
-# Step 3: Test dry run
-pnpm tsx scripts/oracle/deposit-viral-points.ts --dry-run
-
-# Step 4: Execute live deposit
+# Daily/weekly oracle deposit (manual or cron)
 pnpm tsx scripts/oracle/deposit-viral-points.ts
+
+# Verify before depositing
+pnpm tsx scripts/oracle/deposit-viral-points.ts --dry-run
 ```
 
 ### 📋 Next Priorities
