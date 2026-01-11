@@ -178,17 +178,17 @@ export function StakingDashboard({ userWallet }: { userWallet?: string }) {
         </div>
 
         {/* Total Rewards */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
-            <EmojiEventsIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <span className="text-sm font-semibold text-green-700 dark:text-green-300 uppercase">
+            <EmojiEventsIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
               Rewards Earned
             </span>
           </div>
-          <p className="text-4xl font-bold text-green-600 dark:text-green-400">
+          <p className="text-4xl font-bold text-gray-900 dark:text-white">
             {totalRewards.toFixed(1)}
           </p>
-          <p className="text-sm text-green-600/70 dark:text-green-400/70 mt-1">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Points accumulated
           </p>
         </div>
@@ -253,7 +253,7 @@ export function StakingDashboard({ userWallet }: { userWallet?: string }) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Rewards:</span>
-                    <span className="font-semibold text-green-600 dark:text-green-400">
+                    <span className="font-semibold text-gray-900 dark:text-white">
                       +{badge.rewardsEarned.toFixed(1)} pts
                     </span>
                   </div>
@@ -267,7 +267,7 @@ export function StakingDashboard({ userWallet }: { userWallet?: string }) {
 
                 {/* Unstake Button */}
                 <button
-                  className="w-full mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => unstakeBadge(BigInt(badge.id))}
                   disabled={isUnstaking || isUnstakeConfirming}
                 >

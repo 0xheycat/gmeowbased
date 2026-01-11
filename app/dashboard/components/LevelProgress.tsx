@@ -85,7 +85,7 @@ export function LevelProgress() {
 
       <div className="mb-4">
         <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-bold text-blue-600">
+          <span className="text-4xl font-bold text-gray-900 dark:text-white">
             {stats.level}
           </span>
           <span className="text-lg text-gray-400">
@@ -120,8 +120,8 @@ export function LevelProgress() {
       </div>
 
       {stats.level < 100 && (
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-          <p className="text-xs text-blue-700">
+        <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <p className="text-xs text-gray-700 dark:text-gray-300">
             <span className="font-semibold">{(nextLevelXP - currentXP).toLocaleString()} XP</span>
             {' '}needed to reach Level {stats.level + 1}
           </p>

@@ -68,7 +68,7 @@ export async function TopCasters() {
         {casters.map((caster, index) => (
           <div
             key={caster.fid}
-            className="flex items-center gap-3 p-4 rounded-lg border hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer"
+            className="flex items-center gap-3 p-4 rounded-lg border hover:border-gray-400 dark:hover:border-gray-500 transition-colors cursor-pointer"
           >
             {/* Avatar */}
             <div className="relative w-12 h-12 flex-shrink-0">

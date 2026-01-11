@@ -32,8 +32,8 @@ export async function TrendingTokens() {
         
         {/* Enhanced Empty State */}
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-4">
-            <TrendingUpIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <TrendingUpIcon className="w-8 h-8 text-gray-600 dark:text-gray-400" />
           </div>
           <h4 className="text-lg font-semibold mb-2">No Trending Tokens Yet</h4>
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 max-w-sm">
@@ -43,7 +43,7 @@ export async function TrendingTokens() {
             href="https://www.base.org/ecosystem"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
           >
             Explore Base Tokens
           </a>

@@ -167,7 +167,7 @@ export function RecentActivity() {
                 <p className="text-sm font-medium text-gray-900">
                   {isLevelUp && levelUpEvent ? (
                     <>
-                      Reached <span className="text-blue-600 font-bold">Level {levelUpEvent.newLevel}</span>
+                      Reached <span className="text-gray-900 dark:text-white font-bold">Level {levelUpEvent.newLevel}</span>
                     </>
                   ) : rankUpEvent ? (
                     <>
@@ -183,7 +183,7 @@ export function RecentActivity() {
               {/* Value badge */}
               {levelUpEvent && (
                 <div className="flex-shrink-0">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 dark:bg-gray-600 text-white">
                     Lv {levelUpEvent.newLevel}
                   </span>
                 </div>
@@ -204,7 +204,7 @@ export function RecentActivity() {
       {recentEvents.length >= 8 && (
         <div className="mt-4 pt-4 border-t border-gray-100">
           <motion.button 
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium w-full text-center"
+            className="text-sm text-gray-900 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white font-medium w-full text-center"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
