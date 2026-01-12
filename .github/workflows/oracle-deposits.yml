@@ -34,6 +34,8 @@ jobs:
           NEXT_PUBLIC_GM_BASE_SCORING: ${{ secrets.NEXT_PUBLIC_GM_BASE_SCORING }}
           NEXT_PUBLIC_BASE_RPC_URL: ${{ secrets.NEXT_PUBLIC_BASE_RPC_URL }}
           ORACLE_PRIVATE_KEY: ${{ secrets.ORACLE_PRIVATE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: pnpm tsx scripts/oracle/deposit-guild-points.ts
         continue-on-error: true
 
@@ -42,6 +44,8 @@ jobs:
           NEXT_PUBLIC_GM_BASE_SCORING: ${{ secrets.NEXT_PUBLIC_GM_BASE_SCORING }}
           NEXT_PUBLIC_BASE_RPC_URL: ${{ secrets.NEXT_PUBLIC_BASE_RPC_URL }}
           ORACLE_PRIVATE_KEY: ${{ secrets.ORACLE_PRIVATE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: pnpm tsx scripts/oracle/deposit-viral-points.ts
         continue-on-error: true
 
