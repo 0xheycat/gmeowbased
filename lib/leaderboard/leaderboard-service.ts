@@ -166,7 +166,7 @@ export async function getLeaderboard(options: {
   page?: number
   perPage?: number
   search?: string
-  orderBy?: 'total_score' | 'points_balance' | 'viral_xp' | 'guild_points_awarded' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
+  orderBy?: 'total_score' | 'points_balance' | 'viral_xp' | 'guild_bonus' | 'referral_bonus' | 'streak_bonus' | 'badge_prestige' | 'tip_points' | 'nft_points'
 }): Promise<LeaderboardResponse> {
   const {
     period = 'all_time',
@@ -565,13 +565,10 @@ export async function getLeaderboard(options: {
   // ========================================
   // SORT BY CATEGORY (orderBy parameter)
   // ========================================
-  // Map orderBy to actual field names in LeaderboardEntry
-  const sortField = orderBy === 'guild_points_awarded' ? 'guild_bonus' : orderBy
-  
   // Sort in descending order (highest first)
   filteredData.sort((a, b) => {
-    const aValue = (a as any)[sortField] || 0
-    const bValue = (b as any)[sortField] || 0
+    const aValue = (a as any)[orderBy] || 0
+    const bValue = (b as any)[orderBy] || 0
     return bValue - aValue
   })
   

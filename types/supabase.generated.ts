@@ -56,6 +56,7 @@
 // Manual additions:
 // - 2025-12-21: reward_claims - Reward claim tracking table
 // - 2026-01-09: guild_off_chain_metadata - Renamed from guild_metadata (off-chain fields only)
+// - 2026-01-12: guild_deposits - Oracle deposit audit trail for guild bonus points
 //
 // Tables removed (2026-01-09):
 // - guild_analytics_cache - Redundant with Subsquid indexer
@@ -304,6 +305,33 @@ export type Database = {
           id?: number
           metadata?: Json | null
           target_address?: string | null
+        }
+        Relationships: []
+      }
+      guild_deposits: {
+        Row: {
+          id: string
+          user_address: string
+          guild_bonus: number
+          guilds: Json
+          tx_hash: string
+          deposited_at: string
+        }
+        Insert: {
+          id?: string
+          user_address: string
+          guild_bonus: number
+          guilds: Json
+          tx_hash: string
+          deposited_at?: string
+        }
+        Update: {
+          id?: string
+          user_address?: string
+          guild_bonus?: number
+          guilds?: Json
+          tx_hash?: string
+          deposited_at?: string
         }
         Relationships: []
       }
