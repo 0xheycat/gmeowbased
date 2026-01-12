@@ -1330,6 +1330,42 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_deposits: {
+        Row: {
+          id: string
+          wallet_address: string
+          total_rewards_calculated: number
+          current_onchain: number
+          deposited_amount: number
+          referral_code_count: number
+          total_code_uses: number
+          tx_hash: string | null
+          timestamp: string
+        }
+        Insert: {
+          id?: string
+          wallet_address: string
+          total_rewards_calculated: number
+          current_onchain: number
+          deposited_amount: number
+          referral_code_count: number
+          total_code_uses: number
+          tx_hash?: string | null
+          timestamp?: string
+        }
+        Update: {
+          id?: string
+          wallet_address?: string
+          total_rewards_calculated?: number
+          current_onchain?: number
+          deposited_amount?: number
+          referral_code_count?: number
+          total_code_uses?: number
+          tx_hash?: string | null
+          timestamp?: string
+        }
+        Relationships: []
+      }
       reward_claims: {
         Row: {
           badge_prestige_claimed: number | null
@@ -1992,6 +2028,36 @@ export type Database = {
             referencedColumns: ["fid"]
           },
         ]
+      }
+      viral_deposits: {
+        Row: {
+          id: string
+          fid: number
+          wallet_address: string
+          viral_xp: number
+          tx_hash: string
+          deposited_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          fid: number
+          wallet_address: string
+          viral_xp: number
+          tx_hash: string
+          deposited_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          fid?: number
+          wallet_address?: string
+          viral_xp?: number
+          tx_hash?: string
+          deposited_at?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

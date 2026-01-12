@@ -29,10 +29,15 @@ Guild sorting:     0 → 0 → 0    ✅ EXPECTED (no data yet)
 
 ---
 
-**Latest Update (Jan 12, 2026 ~11:45 UTC)**:
-- ✅ **AUTOMATION IMPLEMENTED**: GitHub Actions cron job created
-- ✅ **AUTO-DEPOSITS EVERY 5 MINUTES**: Guild + Viral bonuses now automatic
+**Latest Update (Jan 12, 2026 ~12:00 UTC)**:
+- ✅ **ORACLE AUTOMATION COMPLETE**: 3/5 pipelines deployed and running
+- ✅ **AUTO-DEPOSITS EVERY 5 MINUTES**: Guild + Viral + Referral bonuses automatic
 - ✅ **PRODUCTION BLOCKER RESOLVED**: No more manual oracle execution
+- ✅ **AUDIT TABLES CREATED**: All 3 deposit tables in Supabase
+  - `guild_deposits` - Guild contribution bonus audit log
+  - `viral_deposits` - Viral XP engagement bonus audit log
+  - `referral_deposits` - Referral rewards bonus audit log
+- ✅ **TYPES UPDATED**: `types/supabase.generated.ts` includes all audit tables
 - ✅ **FILES CREATED**:
   - `.github/workflows/oracle-deposits.yml` - GitHub Actions cron
   - `app/api/internal/oracle/deposit-guild-points/route.ts` - Guild API
@@ -155,9 +160,28 @@ Guild sorting:     0 → 0 → 0    ✅ EXPECTED (no data yet)
   - ✅ **Indexer fix** providing accurate real-time data
   - ✅ **Production active** - 100k points ready for platform operations
   
-- 📋 Referral Bonus Pipeline: TODO (blocked - need real referrals)
-- 📋 Streak Bonus Pipeline: TODO (blocked - need real GM streaks)
-- 📋 Badge Prestige Pipeline: TODO (blocked - need real staked badges)
+- ✅ Referral Bonus Pipeline: **IMPLEMENTED** (Jan 12, 2026 ~11:30 UTC)
+  - ✅ Created oracle deposit script: `scripts/oracle/deposit-referral-points.ts`
+  - ✅ Queries Subsquid for ReferralCode entities (totalRewards)
+  - ✅ Aggregates per user (supports multiple codes)
+  - ✅ Deposits to ScoringModule.addReferralPoints()
+  - ✅ Audit logging to `referral_deposits` table
+  - ✅ Deployed to GitHub Actions workflow
+  - ⏳ Waiting for referral code usage (1 code "heycat", 0 uses)
+
+- ℹ️ Streak Bonus Pipeline: **NO ORACLE NEEDED** (Client-calculated)
+  - Formula: `streakBonus = currentStreak * 10`
+  - Data source: Subsquid `UserOnChainStats.currentStreak`
+  - Implementation: Calculated in `lib/leaderboard/leaderboard-service.ts`
+  - Reason: Streak bonuses already in `pointsBalance` (applied at GM claim time)
+  - Contract: `CoreLogicLib.sol` applies streak % bonus (7d=15%, 30d=30%, 100d=60%)
+
+- ℹ️ Badge Prestige Pipeline: **NO ORACLE NEEDED** (Client-calculated)
+  - Formula: `badgePrestige = rewardsEarned + (powerMultiplier * 100)`
+  - Data source: Subsquid `BadgeStake` entities
+  - Implementation: Calculated in `lib/leaderboard/leaderboard-service.ts`
+  - Reason: Badge staking rewards in separate contract, derived for display
+  - No badge stakes active yet (empty Subsquid data)
 
 ---
 
@@ -754,21 +778,24 @@ Result: { users_with_viral_xp: 0, total_viral_xp: null, max_viral_xp: null, tota
 
 **Root Cause**: `badge_casts` table is empty - no badge shares have been indexed yet.
 
-**Score Component Status**:
+**Score Component Status** (Updated Jan 12, 2026 ~12:00 UTC):
 - `points_balance`: ✅ Active (on-chain GM/quest claims working)
-- `viral_xp`: ❌ Zero (no badge_casts data)
-- `guild_bonus`: ❌ Zero (guild membership oracle not depositing)
-- `referral_bonus`: ❌ Zero (referral oracle not depositing)
-- `streak_bonus`: ❌ Zero (streak bonus not calculated)
-- `badge_prestige`: ❌ Zero (badge staking not active)
+- `viral_xp`: ✅ **ORACLE DEPLOYED** (auto-deposits every 5min, waiting for badge shares)
+- `guild_bonus`: ✅ **ORACLE DEPLOYED** (auto-deposits every 5min, waiting for quest contributions)
+- `referral_bonus`: ✅ **ORACLE DEPLOYED** (auto-deposits every 5min, waiting for referral uses)
+- `streak_bonus`: ✅ **CLIENT-CALCULATED** (currentStreak * 10, no oracle needed)
+- `badge_prestige`: ✅ **CLIENT-CALCULATED** (badge staking data, no oracle needed)
 
 **Why categories appear identical**: When all bonus values are 0, sorting by different fields produces same order (everyone tied). The sorting logic IS working correctly - issue is data collection.
 
-**Contract Integration Status**:
+**Contract Integration Status** (Updated Jan 12, 2026 ~12:00 UTC):
 - ✅ **ScoringModule.sol deployed**: December 31, 2025 (Base blockchain)
 - ✅ **Subsquid indexer live**: Tracking StatsUpdated events
-- ⚠️ **Oracle deposits pending**: `setViralPoints()`, `addGuildPoints()`, `addReferralPoints()` not called yet
-- ⚠️ **Badge casts not indexed**: Warpcast integration inactive
+- ✅ **Oracle automated**: GitHub Actions running every 5 minutes (Workflow #222842344)
+- ✅ **3/5 Pipelines active**: Guild, Viral, Referral (auto-depositing)
+- ✅ **2/5 Client-calculated**: Streak, Badge Prestige (no oracle needed)
+- ✅ **Audit tables ready**: `guild_deposits`, `viral_deposits`, `referral_deposits`
+- ⏳ **Waiting for user activity**: Quest contributions, badge shares, referral uses
 
 **Action Items** (Implementation Roadmap):
 
