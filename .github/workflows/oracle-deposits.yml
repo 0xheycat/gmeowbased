@@ -1,0 +1,51 @@
+name: Oracle Deposits (Automated)
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deposit-bonuses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Guild Bonus Deposits
+        env:
+          NEXT_PUBLIC_GM_BASE_SCORING: ${{ secrets.NEXT_PUBLIC_GM_BASE_SCORING }}
+          NEXT_PUBLIC_BASE_RPC_URL: ${{ secrets.NEXT_PUBLIC_BASE_RPC_URL }}
+          ORACLE_PRIVATE_KEY: ${{ secrets.ORACLE_PRIVATE_KEY }}
+        run: pnpm tsx scripts/oracle/deposit-guild-points.ts
+        continue-on-error: true
+
+      - name: Run Viral XP Deposits
+        env:
+          NEXT_PUBLIC_GM_BASE_SCORING: ${{ secrets.NEXT_PUBLIC_GM_BASE_SCORING }}
+          NEXT_PUBLIC_BASE_RPC_URL: ${{ secrets.NEXT_PUBLIC_BASE_RPC_URL }}
+          ORACLE_PRIVATE_KEY: ${{ secrets.ORACLE_PRIVATE_KEY }}
+        run: pnpm tsx scripts/oracle/deposit-viral-points.ts
+        continue-on-error: true
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Oracle deposits failed. Check logs for details."
