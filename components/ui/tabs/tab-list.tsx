@@ -21,9 +21,13 @@ export function TabList({ children, center, expand, className }: TabListProps) {
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(false);
   const [showHintAnimation, setShowHintAnimation] = useState(false);
+  
+  // Check if wrapping is enabled (disable scroll features)
+  const isWrapping = className?.includes('flex-wrap');
 
   // Update fade indicators on scroll
   const updateFadeIndicators = () => {
+    if (isWrapping) return; // Skip fade indicators if wrapping
     const el = scrollRef.current;
     if (!el) return;
 
@@ -44,6 +48,7 @@ export function TabList({ children, center, expand, className }: TabListProps) {
 
   // Check on mount and when content changes
   useEffect(() => {
+    if (isWrapping) return; // Skip if wrapping
     updateFadeIndicators();
     
     // Show hint animation if scrollable
@@ -61,6 +66,7 @@ export function TabList({ children, center, expand, className }: TabListProps) {
 
   // Listen to scroll events
   useEffect(() => {
+    if (isWrapping) return; // Skip if wrapping
     const el = scrollRef.current;
     if (!el) return;
 
@@ -77,7 +83,7 @@ export function TabList({ children, center, expand, className }: TabListProps) {
     <FocusScope>
       <div className="relative">
         {/* Left fade gradient with shadow */}
-        {showLeftFade && (
+        {!isWrapping && showLeftFade && (
           <>
             <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-16 bg-gradient-to-r from-white via-white/90 to-transparent dark:from-dark-bg-base dark:via-dark-bg-base/90" />
             <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-1 shadow-[4px_0_8px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_8px_rgba(0,0,0,0.3)]" />
@@ -85,7 +91,7 @@ export function TabList({ children, center, expand, className }: TabListProps) {
         )}
         
         {/* Right fade gradient with shadow and hint animation */}
-        {showRightFade && (
+        {!isWrapping && showRightFade && (
           <>
             <div 
               className={clsx(
@@ -109,9 +115,9 @@ export function TabList({ children, center, expand, className }: TabListProps) {
           ref={scrollRef}
           className={clsx(
             // Hidden scrollbar, smooth scroll with snap points for better mobile UX
-            'hidden-scrollbar relative flex max-w-full gap-1 overflow-x-auto overflow-y-hidden scroll-smooth border-b-2 border-gray-200 dark:border-gray-700',
-            // Snap to start of tabs for better touch UX
-            'snap-x snap-mandatory',
+            'hidden-scrollbar relative flex max-w-full gap-1 border-b-2 border-gray-200 dark:border-gray-700',
+            !isWrapping && 'overflow-x-auto overflow-y-hidden scroll-smooth',
+            !isWrapping && 'snap-x snap-mandatory', // Snap to start of tabs for better touch UX
             className
           )}
           role="tablist"

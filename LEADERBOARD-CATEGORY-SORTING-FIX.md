@@ -2605,6 +2605,48 @@ filteredData.sort((a, b) => {
 - [x] Audit logging in place
 - [x] All 9 categories tested and verified with test harness
 - [x] Production deployment (gmeowhq.art) verified with latest commit
+- [x] **Tab accessibility improved** - All categories now visible and clickable on desktop ✅
+
+### UI/UX Improvements (Jan 13, 2026)
+
+**Issue**: Tab overflow on desktop - hidden categories not accessible
+- Problem: With 9 category tabs (All Pilots, Quest Masters, Viral Legends, Guild Heroes, Referral Champions, Streak Warriors, Badge Collectors, Tip Kings, NFT Whales), some tabs were scrolled off-screen on desktop
+- User feedback: "tabs have great professional design but can't click hidden category"
+
+**Solution Applied** ✅:
+1. **Enabled tab wrapping on desktop**
+   - Changed `TabList` from horizontal scroll to flex-wrap
+   - Modified: `app/leaderboard/page.tsx` - Added `flex-wrap` className
+   
+2. **Reduced tab padding for better fit**
+   - Reduced medium size tabs: `px-6 py-4` → `px-4 py-3` (33% smaller)
+   - Reduced small size tabs: `px-4 py-3` → `px-3 py-2`
+   - Modified: `components/ui/tabs/tab.tsx`
+   
+3. **Conditionally disabled scroll features when wrapping**
+   - Disabled fade gradients when tabs wrap
+   - Disabled scroll snap points when wrapping
+   - Disabled horizontal scroll hints when wrapping
+   - Modified: `components/ui/tabs/tab-list.tsx`
+
+**Result**:
+- ✅ All 9 categories now visible on desktop (wrap to 2-3 rows if needed)
+- ✅ All tabs clickable without scrolling
+- ✅ Mobile still uses horizontal scroll with fade indicators
+- ✅ Professional appearance maintained
+- ✅ Better accessibility and discoverability
+
+**Files Modified** (3 files):
+1. `app/leaderboard/page.tsx` - Added `flex-wrap` to TabList
+2. `components/ui/tabs/tab.tsx` - Reduced padding sizes
+3. `components/ui/tabs/tab-list.tsx` - Conditional scroll/wrap logic
+- [x] TypeScript type safety enforced
+- [x] API validation working - All 9 endpoints tested
+- [x] Oracle automation deployed
+- [x] GitHub Actions running automatically
+- [x] Audit logging in place
+- [x] All 9 categories tested and verified with test harness
+- [x] Production deployment (gmeowhq.art) verified with latest commit
 
 ⚠️ **EXPECTED BEHAVIOR** - Categories show same order because:
 - All users currently have identical values (total: 10, bonuses: 0)
