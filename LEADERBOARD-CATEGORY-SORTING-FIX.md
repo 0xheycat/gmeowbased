@@ -3011,8 +3011,55 @@ curl 'https://gmeowhq.art/api/leaderboard-v2?orderBy=nft_points'      ✅ Workin
 
 ---
 
-*Last Updated: January 12, 2026 12:15 UTC*  
+## Rank Tier API Endpoint Fix (Jan 13, 2026)
+
+### Problem
+Treasury claim UI was calling `/api/user/[address]/rank-tier` endpoint that didn't exist, resulting in 404 errors and preventing rank badge display in guild treasury.
+
+### Solution
+Created the missing API endpoint to fetch user rank tier from ScoringModule smart contract.
+
+### Implementation
+
+**File Created**: `app/api/user/[address]/rank-tier/route.ts` (102 lines)
+
+**Features**:
+- Queries ScoringModule.userRankTier() for user's tier (0-11)
+- Maps tier number to tier name and multiplier
+- Returns next tier information for progression tracking
+- Graceful fallback to Rookie tier on errors
+- Public read-only endpoint (no auth required)
+
+**Response Structure**:
+```json
+{
+  "success": true,
+  "tier": 4,
+  "tierName": "Platinum",
+  "multiplier": 1.3,
+  "nextTier": "Diamond",
+  "nextMultiplier": 1.5
+}
+```
+
+**Tier Mapping** (12 tiers):
+- Rookie (1.0x) → Bronze (1.05x) → Silver (1.1x) → Gold (1.15x)
+- Platinum (1.3x) → Diamond (1.5x) → Master (1.75x) → Grandmaster (2.0x)
+- Challenger (2.5x) → Legend (3.0x) → Mythic (4.0x) → Immortal (5.0x)
+
+**Testing Checklist**:
+- [ ] Endpoint returns correct tier for test addresses
+- [ ] Treasury UI shows rank badge (e.g., "Platinum 1.3x")
+- [ ] Bonus calculation uses correct multiplier
+- [ ] Fallback works when contract query fails
+- [ ] Next tier progression shows correctly
+
+**Commit**: 528d4e5
+
+---
+
+*Last Updated: January 13, 2026*  
 *Status: ✅ PRODUCTION READY*  
-*Next Milestone: First successful oracle deposit with real user activity*
+*Next Milestone: Treasury claim system end-to-end testing*
 
 
