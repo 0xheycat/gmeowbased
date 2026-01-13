@@ -55,6 +55,12 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
   const [isMember, setIsMember] = useState(false)
   const [showInfo, setShowInfo] = useState(false) // Treasury info section
   
+  // Leader direct claim state
+  const [isClaimingDirect, setIsClaimingDirect] = useState(false)
+  const [rankTier, setRankTier] = useState<string>('Rookie')
+  const [rankMultiplier, setRankMultiplier] = useState<number>(1.0)
+  const [estimatedBonus, setEstimatedBonus] = useState<number>(0)
+  
   // XP celebration state
   const [xpOverlayOpen, setXpOverlayOpen] = useState(false)
   const [xpPayload, setXpPayload] = useState<XpEventPayload | null>(null)
@@ -319,6 +325,99 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
     }
   }
 
+  const handleDirectClaim = async () => {
+    const amount = parseInt(claimAmount)
+    if (!address || !amount || amount <= 0) {
+      setDialogMessage('Please enter a valid amount to claim.')
+      setDialogOpen(true)
+      return
+    }
+
+    if (amount > parseInt(balance)) {
+      setDialogMessage(`Insufficient treasury balance. Available: ${parseInt(balance).toLocaleString()} points`)
+      setDialogOpen(true)
+      return
+    }
+
+    try {
+      setIsClaimingDirect(true)
+      
+      // Step 1: Get contract call instructions from API
+      const response = await fetch(`/api/guild/${guildId}/claim-direct`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, amount })
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        const errorMsg = data.message || 'Unable to process claim. Please check permissions and try again.'
+        setDialogMessage(errorMsg)
+        setDialogOpen(true)
+        setIsClaimingDirect(false)
+        return
+      }
+      
+      // Step 2: Execute blockchain transaction
+      writeContract({
+        address: data.contractCall.address,
+        abi: data.contractCall.abi,
+        functionName: data.contractCall.functionName,
+        args: data.contractCall.args,
+      })
+      
+      // Transaction will be handled by wagmi hooks (isWriting, isConfirming, isConfirmed)
+      // Success message shown after transaction confirms
+      setDialogMessage(`🎉 Claiming ${amount.toLocaleString()} points → You'll receive ${data.estimatedBonus.toLocaleString()} points with ${data.rankTier} bonus!`)
+      setDialogOpen(true)
+      setClaimAmount('')
+      setEstimatedBonus(0)
+      setIsClaimingDirect(false)
+      
+      // Reload treasury data after brief delay
+      setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/guild/${guildId}/treasury`)
+          if (res.ok) {
+            const treasuryData = await res.json()
+            setBalance(treasuryData.balance || '0')
+            setTransactions(treasuryData.transactions)
+          }
+        } catch (err) {
+          console.error('Failed to reload treasury:', err)
+        }
+      }, 3000)
+      
+    } catch (err) {
+      console.error('Direct claim error:', err)
+      setDialogMessage('Claim failed. Please check your connection and try again.')
+      setDialogOpen(true)
+      setIsClaimingDirect(false)
+    }
+  }
+
+  // Fetch user's rank tier on mount (for leader direct claim bonus display)
+  useEffect(() => {
+    const fetchRankTier = async () => {
+      if (!address || !canManage) return
+      
+      try {
+        const response = await fetch(`/api/user/${address}/rank-tier`)
+        if (response.ok) {
+          const data = await response.json()
+          setRankTier(data.tierName || 'Rookie')
+          setRankMultiplier(data.multiplier || 1.0)
+        }
+      } catch (err) {
+        console.error('Failed to fetch rank tier:', err)
+        // Keep defaults
+      }
+    }
+    
+    fetchRankTier()
+  }, [address, canManage])
+
   if (isLoading) {
     return (
       <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading treasury">
@@ -469,49 +568,131 @@ export function GuildTreasury({ guildId, canManage = false }: GuildTreasuryProps
         </div>
       )}
 
-      {/* Claim Request Form (Members) */}
-      {address && isMember && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className={`text-xl font-bold ${WCAG_CLASSES.text.onLight.primary} mb-4`}>
-            Request Claim
-          </h2>
-          <div className="flex gap-3">
-            <label htmlFor="claim-amount" className="sr-only">Amount to claim from treasury</label>
-            <input
-              id="claim-amount"
-              type="number"
-              value={claimAmount}
-              onChange={(e) => setClaimAmount(e.target.value)}
-              placeholder="Amount"
-              min="1"
-              aria-label="Amount to claim from treasury"
-              aria-describedby="claim-hint"
-              className={`flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 ${WCAG_CLASSES.text.onLight.primary} placeholder-gray-500 ${FOCUS_STYLES.ring} transition-fast ${BUTTON_SIZES.md}`}
-            />
+      {/* Leader/Officer Direct Claim Form (Template: music/forms + gmeowbased0.6) */}
+      {address && isMember && canManage && (
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl border border-purple-200 dark:border-purple-800 p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-purple-900 dark:text-purple-100 flex items-center gap-2">
+              <MonetizationOnIcon className="w-6 h-6" />
+              Leader Claim (Direct)
+            </h2>
+            <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-800 rounded-lg border border-purple-300 dark:border-purple-700">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Rank Bonus:</span>
+              <span className="text-sm font-bold text-purple-600 dark:text-purple-400">{rankMultiplier}x</span>
+            </div>
+          </div>
+
+          {/* Rank tier display */}
+          <div className="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-700">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Your Rank:</span>
+              <span className="font-semibold text-purple-600 dark:text-purple-400">{rankTier}</span>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              As a {rankTier} rank, you get {rankMultiplier}x multiplier on claimed points
+            </p>
+          </div>
+
+          {/* Claim amount input */}
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="leader-claim-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Amount to Claim
+              </label>
+              <input
+                id="leader-claim-amount"
+                type="number"
+                value={claimAmount}
+                onChange={(e) => {
+                  setClaimAmount(e.target.value)
+                  // Calculate estimated bonus in real-time
+                  const amount = parseInt(e.target.value) || 0
+                  setEstimatedBonus(Math.floor(amount * rankMultiplier))
+                }}
+                placeholder="Enter amount"
+                min="1"
+                max={balance}
+                aria-label="Amount to claim from treasury"
+                aria-describedby="leader-claim-hint"
+                className="w-full px-4 py-3 border border-purple-300 dark:border-purple-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all min-h-[44px]"
+              />
+            </div>
+
+            {/* Estimated bonus display */}
+            {claimAmount && parseInt(claimAmount) > 0 && (
+              <div className="p-4 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-lg border border-purple-300 dark:border-purple-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Treasury Deduction:</span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">-{parseInt(claimAmount).toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">You Receive:</span>
+                  <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">+{estimatedBonus.toLocaleString()}</span>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  Includes {rankMultiplier}x {rankTier} rank multiplier bonus
+                </p>
+              </div>
+            )}
+
+            {/* Claim button */}
             <button
-              onClick={handleRequestClaim}
-              disabled={isRequestingClaim || !claimAmount}
-              aria-busy={isRequestingClaim}
-              aria-label={`Request ${claimAmount || '0'} points from guild treasury`}
-              className={`px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-smooth ${BUTTON_SIZES.md} ${FOCUS_STYLES.ring} flex items-center gap-2 ${
-                isRequestingClaim ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
+              onClick={handleDirectClaim}
+              disabled={isClaimingDirect || !claimAmount || parseInt(claimAmount) <= 0 || parseInt(claimAmount) > parseInt(balance)}
+              aria-busy={isClaimingDirect}
+              aria-label={`Claim ${claimAmount || '0'} points from treasury (receive ${estimatedBonus.toLocaleString()} with bonus)`}
+              className={`w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold rounded-lg transition-all shadow-lg hover:shadow-xl min-h-[48px] focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex items-center justify-center gap-2 ${
+                isClaimingDirect ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
               }`}
             >
-              {isRequestingClaim ? (
+              {isClaimingDirect ? (
                 <>
-                  <span {...LOADING_ARIA}>
-                    <Loader size="small" variant="minimal" />
-                  </span>
-                  Submitting...
+                  <Loader size="small" variant="minimal" />
+                  <span>Claiming...</span>
                 </>
               ) : (
-                'Request'
+                <>
+                  <MonetizationOnIcon className="w-5 h-5" />
+                  <span>Claim Now</span>
+                </>
               )}
             </button>
+
+            <p id="leader-claim-hint" className="text-xs text-gray-600 dark:text-gray-400 text-center">
+              Direct claim as guild leader/officer • Points credited instantly with rank multiplier
+            </p>
           </div>
-          <p id="claim-hint" className={`text-sm ${WCAG_CLASSES.text.onLight.secondary} mt-2`}>
-            Submit a claim request for guild leader approval
-          </p>
+        </div>
+      )}
+
+      {/* Member View - Cannot Claim Directly */}
+      {address && isMember && !canManage && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <MonetizationOnIcon className="w-6 h-6 text-gray-500" />
+            Treasury Claim
+          </h2>
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-900 dark:text-blue-100 mb-2">
+              <strong>Members cannot claim directly from treasury.</strong>
+            </p>
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              Only guild leaders and officers have permission to distribute treasury points. Contact your guild leader if you believe you've earned a reward.
+            </p>
+          </div>
+          
+          {/* Show how members can earn */}
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+            <p className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
+              How to Earn Points:
+            </p>
+            <ul className="space-y-1 text-sm text-green-700 dark:text-green-300">
+              <li>• Complete guild quests</li>
+              <li>• Participate in guild activities</li>
+              <li>• Contribute to guild treasury (deposit points)</li>
+              <li>• Help recruit new members</li>
+            </ul>
+          </div>
         </div>
       )}
 

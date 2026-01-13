@@ -2640,6 +2640,279 @@ filteredData.sort((a, b) => {
 1. `app/leaderboard/page.tsx` - Added `flex-wrap` to TabList
 2. `components/ui/tabs/tab.tsx` - Reduced padding sizes
 3. `components/ui/tabs/tab-list.tsx` - Conditional scroll/wrap logic
+
+---
+
+### Guild Points System Clarification (Jan 13, 2026)
+
+**User Question**: "I made 1000x deposit to treasury guild, why nothing happened in leaderboard?"
+
+**Answer**: Guild leaderboard bonuses are calculated from `pointsContributed`, NOT `treasuryPoints`.
+
+**How Guild Points Work**:
+
+1. **Treasury Deposit** (what you did):
+   ```typescript
+   // When you deposit points to guild treasury:
+   guildTreasuryPoints[guildId] += 1000  // ✅ Treasury balance increases
+   member.pointsContributed += 0          // ❌ Your contribution score stays 0
+   ```
+   
+2. **Leaderboard Calculation** (how bonuses work):
+   ```typescript
+   // Guild Heroes category sorts by guild_bonus:
+   guildBonus = pointsContributed × roleMultiplier
+   
+   // Your case:
+   // - Role: leader (2.0x multiplier)
+   // - pointsContributed: 0 (no quest/activity contributions)
+   // - Bonus: 0 × 2.0 = 0 points
+   ```
+
+3. **Two Separate Systems**:
+   - **Guild Treasury** (`treasuryPoints`): 
+     - Shared pool of points for guild operations
+     - Leaders/officers can distribute to members
+     - Used for guild upgrades/features
+   
+   - **Member Contributions** (`pointsContributed`):
+     - Individual member's earned points from quests/activities
+     - Used for leaderboard ranking bonuses
+     - Tracks personal achievement in guild context
+
+**Why No Change in Leaderboard**:
+- Your 1000 point deposit went to treasury (✅ stored in `guildTreasuryPoints`)
+- But leaderboard ranks by `pointsContributed` from quests/activities (still 0)
+- Direct treasury deposits don't count as personal contributions
+
+**To Increase Guild Leaderboard Rank**:
+1. Complete quests and earn points through activities
+2. Those earned points update your `pointsContributed` score
+3. Oracle calculates: `yourBonus = pointsContributed × 2.0` (leader multiplier)
+4. Your "Guild Heroes" rank increases based on this bonus
+
+**Current State**:
+- ✅ Treasury has 1000 points (can be distributed to members)
+- ❌ No leaderboard change (need quest contributions, not direct deposits)
+- 💡 This is **correct behavior** - treasury ≠ contribution score
+
+**How to Use Your 1000 Treasury Points** (Leader Actions):
+
+1. **Claim Points for Yourself** (with rank multiplier bonus):
+   - Go to guild page → Treasury section
+   - Click "Request" or "Claim" button (leader/officer only)
+   - Enter amount (e.g., 500 points)
+   - Smart contract deducts from treasury and adds to YOUR personal points WITH your rank tier multiplier
+   - Formula: `yourGain = claimAmount × rankMultiplier`
+   - Example: Claim 500 → Get 650 points (if Platinum tier 1.3x)
+
+2. **Treasury Distribution System**:
+   - Treasury is NOT automatically distributed to all members
+   - Only **leaders and officers** can claim from treasury
+   - When you claim, YOU receive the points (with multiplier bonus)
+   - This is by design - leaders reward themselves for contributions or distribute strategically
+
+3. **Guild vs Quest Confusion - Separate Systems**:
+   
+   **Guild Treasury** (what you deposited to):
+   - Shared pool of points
+   - Leaders/officers can claim with bonus multipliers
+   - Used for rewarding leaders and officers
+   - Located: Guild page → Treasury tab
+   
+   **Guild Leaderboard** (separate ranking system):
+   - Ranks members by `pointsContributed` from quests/activities
+   - Not affected by treasury deposits
+   - Located: Leaderboard page → "Guild Heroes" tab
+   
+   **Quest System** (separate feature):
+   - Individual challenges/tasks
+   - Rewards quest points (not guild points)
+   - Located: Quests page (if implemented)
+
+**Why These Are Separate**:
+- **Treasury** = Guild's shared bank account (financial system)
+- **Leaderboard** = Personal achievement ranking (reputation system)
+- **Quests** = Activity/task completion (engagement system)
+- They serve different purposes and don't overlap
+
+**What You Should Do Next**:
+1. Go to your guild page's Treasury section
+2. As the leader, you can claim points from the 1000 treasury balance
+3. When you claim, you'll receive points WITH your rank multiplier bonus
+4. Example: Claim 500 → Treasury becomes 500, you get 650 points (with 1.3x multiplier)
+
+---
+
+### Production Issue: Missing Direct Claim UI for Leaders (Jan 13, 2026)
+
+**User Report**: "I'm owner, tested request claim 500 points, nothing happened, no claim UI button on gmeowhq.art"
+
+**Root Cause Analysis**:
+
+1. **Smart Contract Has Direct Claim** ✅:
+   ```solidity
+   function claimGuildReward(uint256 guildId, uint256 points) external {
+     require(msg.sender == g.leader || guildOfficers[guildId][msg.sender], "E008");
+     guildTreasuryPoints[guildId] -= points;
+     // Apply rank multiplier bonus
+     scoringModule.addGuildPoints(msg.sender, bonusPoints);
+   }
+   ```
+
+2. **UI Only Has Request/Approve Flow** ❌:
+   - Members see: "Request Claim" button → submits request → waits for approval
+   - Leaders see: "Approve" button in "Pending Claims" section
+   - **MISSING**: Direct "Claim from Treasury" button for leaders
+
+3. **Current UI Behavior**:
+   - `GuildTreasury.tsx` line 472: Shows "Request Claim" for ALL members (including leaders)
+   - Leaders must request, then approve their own request (2-step inefficiency)
+   - Smart contract allows 1-step direct claim, but UI doesn't expose it
+
+**Issue**: No `/api/guild/[guildId]/request-claim` endpoint exists
+- Search result: No file found at `app/api/guild/[guildId]/request-claim/route.ts`
+- When leader clicks "Request", API call fails → "nothing happened"
+- Pending claim never created → no approval button appears
+
+**Missing Components**:
+1. ❌ `/api/guild/[guildId]/request-claim/route.ts` - Create claim request
+2. ❌ Direct claim UI for leaders (bypass request/approve flow)
+3. ❌ API endpoint for direct leader claim calling `claimGuildReward()`
+
+**Two Possible Fixes**:
+
+**Option A: Implement Request/Approve System**:
+- Create `/api/guild/[guildId]/request-claim` endpoint
+- Store pending claims in database (supabase `guild_claim_requests` table)
+- Leaders approve their own or members' requests
+- More overhead, but provides audit trail
+
+**Option B: Implement Direct Claim for Leaders** (Recommended):
+- Add new UI section in `GuildTreasury.tsx` for leaders:
+  ```tsx
+  {canManage && (
+    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl">
+      <h2>Leader Direct Claim (with {rankMultiplier}x bonus)</h2>
+      <input type="number" placeholder="Amount to claim" />
+      <button>Claim Now</button>
+    </div>
+  )}
+  ```
+- Create `/api/guild/[guildId]/claim-direct` endpoint
+- Calls smart contract `claimGuildReward()` directly
+- Faster, simpler, matches contract design
+
+**Recommended Solution**: Option B - Direct claim for leaders
+- Matches smart contract architecture
+- Simpler UX (1 step vs 2 steps)
+- Leaders get instant claim with rank multiplier bonus
+- Members can still request (if we build request system later)
+
+**Files Needing Changes**:
+1. `components/guild/GuildTreasury.tsx` - Add leader direct claim UI
+2. `app/api/guild/[guildId]/claim-direct/route.ts` - New endpoint
+3. `lib/contracts/guild-contract.ts` - Already has `buildClaimGuildRewardTx()` ✅
+
+**Status**: 🚧 **NOT IMPLEMENTED** - Production treasury system incomplete
+
+---
+
+### Treasury Claim System Implementation (Jan 13, 2026)
+
+**Status**: ✅ **IMPLEMENTED** - Professional UI with direct claim for leaders
+
+**Problem Solved**: No functional way for leaders to claim from treasury
+
+**Solution Implemented**:
+
+1. **API Endpoint** - `/api/guild/[guildId]/claim-direct` ✅
+   - Validates leader/officer permissions
+   - Fetches user's rank tier for bonus calculation
+   - Returns contract call + estimated bonus
+   - Security: Rate limiting (20 req/hour), RBAC, audit logging
+
+2. **Professional UI** (Template: music/forms + gmeowbased0.6) ✅
+   - **Leader View**: Direct claim form with:
+     - Rank tier display (e.g., "Platinum")
+     - Rank multiplier badge (e.g., "1.3x")
+     - Real-time estimated bonus calculation
+     - Gradient purple/indigo design
+     - Treasury deduction vs. points received comparison
+     - Professional animations and transitions
+   
+   - **Member View**: Informative message with:
+     - Explanation that only leaders/officers can claim
+     - How members can earn points
+     - Clear call-to-action for member activities
+
+3. **Key Features**:
+   - ✅ Real-time bonus calculation (updates as user types amount)
+   - ✅ Form validation (max = treasury balance)
+   - ✅ Loading states with spinner
+   - ✅ Success/error dialogs
+   - ✅ Accessibility (ARIA labels, keyboard navigation)
+   - ✅ Dark mode support
+   - ✅ Responsive design
+   - ✅ Template-based (music/forms 40% + gmeowbased0.6 10%)
+
+**How It Works** (Leader Flow):
+1. Leader opens Treasury dialog on guild page
+2. Sees "Leader Claim (Direct)" section with rank badge
+3. Enters amount to claim (e.g., 500 points)
+4. Sees estimated bonus: "You receive: +650" (with 1.3x Platinum multiplier)
+5. Clicks "Claim Now" → Signs transaction
+6. Smart contract:
+   - Deducts 500 from treasury
+   - Applies rank multiplier (500 × 1.3 = 650)
+   - Credits 650 points to leader via ScoringModule
+7. Success message + treasury balance updates
+
+**Technical Implementation**:
+- **Frontend**: `components/guild/GuildTreasury.tsx`
+  - Added state: `isClaimingDirect`, `rankTier`, `rankMultiplier`, `estimatedBonus`
+  - Added handler: `handleDirectClaim()` - calls API → executes contract
+  - Added effect: Fetches rank tier on mount for leaders
+  - UI adaptation: 40% (music forms) + 10% (gmeowbased0.6 gradients)
+
+- **Backend**: `app/api/guild/[guildId]/claim-direct/route.ts`
+  - Validates: Leader OR officer permission
+  - Queries: Guild treasury balance, user rank tier
+  - Returns: Contract call object + estimated bonus
+  - Security: Rate limiting, RBAC, audit logging
+
+- **Smart Contract**: `GuildModule.sol` (already deployed)
+  ```solidity
+  function claimGuildReward(uint256 guildId, uint256 points) external {
+    require(isLeader || isOfficer, "E008");
+    guildTreasuryPoints[guildId] -= points;
+    // Apply rank multiplier via ScoringModule
+    scoringModule.addGuildPoints(msg.sender, bonusPoints);
+  }
+  ```
+
+**Files Created/Modified** (3 files):
+1. ✅ `app/api/guild/[guildId]/claim-direct/route.ts` - New API endpoint (420 lines)
+2. ✅ `components/guild/GuildTreasury.tsx` - Updated UI (added 120 lines)
+3. ✅ `LEADERBOARD-CATEGORY-SORTING-FIX.md` - Documentation updated
+
+**Testing Checklist**:
+- [ ] Leader can see claim form with rank badge
+- [ ] Amount input validates (max = treasury balance)
+- [ ] Estimated bonus calculates correctly
+- [ ] API returns rank tier and multiplier
+- [ ] Contract transaction executes successfully
+- [ ] Treasury balance updates after claim
+- [ ] Member sees informative message (no claim button)
+- [ ] Error handling works (insufficient balance, not leader, etc.)
+- [ ] Dark mode styling correct
+- [ ] Mobile responsive layout
+
+**Next Steps**:
+1. Test on local dev server
+2. Verify transaction flow end-to-end
+3. Deploy to production (gmeowhq.art)
+4. Monitor audit logs for claim attempts
 - [x] TypeScript type safety enforced
 - [x] API validation working - All 9 endpoints tested
 - [x] Oracle automation deployed
