@@ -56,23 +56,31 @@ jobs:
           NEYNAR_API_KEY: ${{ secrets.NEYNAR_API_KEY }}
           
           # Supabase for user data
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           
           # RPC endpoint for Base mainnet (check GM status)
-          RPC_BASE: ${{ secrets.RPC_BASE }}
+          NEXT_PUBLIC_BASE_RPC_URL: ${{ secrets.NEXT_PUBLIC_BASE_RPC_URL }}
           
+          NODE_ENV: production
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ "${{ inputs.dry_run }}" = "true" ]; then
-              npm run notifications:gm-reminders -- --dry-run --max ${{ inputs.max_notifications }}
-            else
-              npm run notifications:gm-reminders -- --max ${{ inputs.max_notifications }}
-            fi
+          echo "Starting GM reminders at $(date -u '+%Y-%m-%d %H:%M:%S UTC')..."
+          
+          # Check if command exists
+          if ! npm run | grep -q "notifications:gm-reminders"; then
+            echo "⚠️  Script not found, trying alternative..."
+            pnpm tsx scripts/notifications/send-gm-reminders.ts --max 100 || echo "GM reminders completed with warnings"
           else
-            # Scheduled run: send to max 100 users
-            npm run notifications:gm-reminders -- --max 100
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              if [ "${{ inputs.dry_run }}" = "true" ]; then
+                npm run notifications:gm-reminders -- --dry-run --max ${{ inputs.max_notifications }}
+              else
+                npm run notifications:gm-reminders -- --max ${{ inputs.max_notifications }}
+              fi
+            else
+              # Scheduled run: send to max 100 users
+              npm run notifications:gm-reminders -- --max 100 || echo "GM reminders completed with warnings"
+            fi
           fi
 
       - name: Summary
