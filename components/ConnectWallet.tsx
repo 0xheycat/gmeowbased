@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect } from 'wagmi'
-import { probeMiniappReady } from '@/lib/miniapp/miniappEnv'
+import { probeMiniappReady, getFarcasterWalletAddress } from '@/lib/miniapp/miniappEnv'
 
 
 export function ConnectWallet() {
@@ -14,10 +14,20 @@ export function ConnectWallet() {
   const triedAutoRef = useRef(false)
   const [miniappReady, setMiniappReady] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     setMounted(true)
+    console.log('[ConnectWallet] Component mounted')
   }, [])
+
+  useEffect(() => {
+    console.log('[ConnectWallet] connectors updated:', connectors.map((c: any) => ({ id: c?.id, name: c?.name, ready: c?.ready })), 'count:', connectors.length)
+  }, [connectors])
+
+  useEffect(() => {
+    console.log('[ConnectWallet] miniappReady changed to:', miniappReady)
+  }, [miniappReady])
 
   useEffect(() => {
     let active = true
@@ -64,30 +74,90 @@ export function ConnectWallet() {
   // Auto-connect in Farcaster Mini App ONLY (not on web refresh)
   useEffect(() => {
     if (triedAutoRef.current) return
-    if (isConnected || !availableConnectors.length) return
+    if (isConnected) return
+    
     // CRITICAL: Only auto-connect when in miniapp context
-    if (!miniappReady) return
-    const farcaster =
-      availableConnectors.find(
-        (c: any) =>
-          c?.id?.toString?.().toLowerCase().includes('farcaster') ||
-          c?.name?.toLowerCase?.().includes('farcaster'),
-      ) || availableConnectors[0]
-    if (!farcaster) return
-    if (typeof farcaster.ready === 'boolean' && !farcaster.ready) return
+    if (!miniappReady) {
+      console.log('[ConnectWallet] Skipping auto-connect: miniapp not ready')
+      return
+    }
+
+    console.log('[ConnectWallet] miniappReady=true, attempting auto-connect...')
+    
+    if (!availableConnectors.length) {
+      console.log('[ConnectWallet] No available connectors')
+      return
+    }
+
+    const farcaster = availableConnectors.find(
+      (c: any) =>
+        c?.id?.toString?.().toLowerCase().includes('farcaster') ||
+        c?.name?.toLowerCase?.().includes('farcaster'),
+    )
+
+    if (!farcaster) {
+      console.warn('[ConnectWallet] No Farcaster connector found. Available:', availableConnectors.map((c: any) => ({ id: c?.id, name: c?.name })))
+      
+      // Retry a few times
+      if (retryCount < 2) {
+        console.log(`[ConnectWallet] Retrying (attempt ${retryCount + 1}/2)...`)
+        const timer = setTimeout(() => setRetryCount((r) => r + 1), 300)
+        return () => clearTimeout(timer)
+      }
+
+      // Try SDK fallback
+      console.log('[ConnectWallet] Trying SDK direct fallback...')
+      triedAutoRef.current = true
+      setConnectingId('auto-sdk')
+      
+      ;(async () => {
+        try {
+          const addr = await getFarcasterWalletAddress()
+          if (addr) {
+            console.log('[ConnectWallet] SDK fallback got address:', addr)
+          } else {
+            console.warn('[ConnectWallet] SDK fallback failed - no address')
+            setConnectingId(null)
+          }
+        } catch (err) {
+          console.error('[ConnectWallet] SDK fallback error:', err)
+          setConnectingId(null)
+        }
+      })()
+      
+      return
+    }
+
+    setRetryCount(0)
+    console.log('[ConnectWallet] Found Farcaster connector:', { id: farcaster?.id, name: farcaster?.name })
+    
+    if (typeof farcaster.ready === 'boolean' && !farcaster.ready) {
+      console.warn('[ConnectWallet] Farcaster connector not ready:', farcaster.ready)
+      return
+    }
+
     triedAutoRef.current = true
     setConnectingId('auto')
+    console.log('[ConnectWallet] Starting auto-connect...')
+    
     // Defer to avoid blocking first paint
     setTimeout(async () => {
       try {
-        if (connectAsync) await connectAsync({ connector: farcaster })
-        else connect({ connector: farcaster })
-      } catch {
-        // Silent fail; user can tap a button below
+        console.log('[ConnectWallet] Calling connectAsync/connect for Farcaster')
+        if (connectAsync) {
+          console.log('[ConnectWallet] Using connectAsync')
+          await connectAsync({ connector: farcaster })
+        } else {
+          console.log('[ConnectWallet] Using sync connect')
+          connect({ connector: farcaster })
+        }
+        console.log('[ConnectWallet] Auto-connect call completed')
+      } catch (err) {
+        console.error('[ConnectWallet] Auto-connect failed:', err)
         setConnectingId(null)
       }
-    }, 0)
-  }, [isConnected, availableConnectors, connect, connectAsync, miniappReady])
+    }, 100)
+  }, [isConnected, availableConnectors, connect, connectAsync, miniappReady, retryCount])
 
   const handleConnect = async (connector: any) => {
     if (typeof connector?.ready === 'boolean' && !connector.ready) {
