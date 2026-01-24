@@ -34,11 +34,15 @@ export function isAllowedReferrer(): boolean {
   return allowed
 }
 
-// Probe the miniapp. Only returns true if we're embedded in an allowed referrer and SDK handshakes.
+// Probe the miniapp. Returns true if SDK is available and handshakes successfully.
 // MCP best practice: Use 10s timeout for mobile networks (Dec 2025)
-// IMPORTANT: On mobile, referrer is often stripped for privacy, so we also try SDK detection directly
+// 
+// Detection strategy:
+// 1. Check referrer + embedded (web Farcaster/base.dev)
+// 2. Check embedded only, no referrer (mobile web with stripped referrer)
+// 3. Try SDK directly regardless of embedding (mobile WebView - doesn't set iframe flags)
 export async function probeMiniappReady(timeoutMs = 10000): Promise<boolean> {
-  // Check referrer first (works on web)
+  // Strategy 1: Check referrer + embedded (works on web)
   if (isEmbedded() && isAllowedReferrer()) {
     try {
       const { sdk } = await import('@farcaster/miniapp-sdk')
@@ -59,10 +63,10 @@ export async function probeMiniappReady(timeoutMs = 10000): Promise<boolean> {
     }
   }
 
-  // Fallback: If embedded but no referrer (common on mobile), try SDK directly
+  // Strategy 2: If embedded but no referrer (common on mobile), try SDK directly
   // This is important for mobile Farcaster which strips referrer for privacy
   if (isEmbedded() && !referrerHost()) {
-    console.log('[miniappEnv] No referrer detected, trying SDK directly (likely mobile)')
+    console.log('[miniappEnv] No referrer detected, trying SDK directly (mobile with iframe)')
     try {
       const { sdk } = await import('@farcaster/miniapp-sdk')
       const ok = await Promise.race<boolean>([
@@ -74,27 +78,61 @@ export async function probeMiniappReady(timeoutMs = 10000): Promise<boolean> {
         })(),
         new Promise<boolean>((r) => setTimeout(() => r(false), timeoutMs)),
       ])
-      return !!ok
+      if (ok) return true
     } catch (err) {
-      console.warn('[miniappEnv] probeMiniappReady: SDK failed on mobile fallback', err)
-      return false
+      console.warn('[miniappEnv] probeMiniappReady: Strategy 2 failed', err)
     }
   }
 
-  console.log('[miniappEnv] probeMiniappReady: false (not embedded or missing referrer)')
+  // Strategy 3: Mobile WebView fallback - try SDK directly without iframe/referrer checks
+  // On mobile WebView (iOS/Android), window.self === window.top even though it's Farcaster
+  // The SDK may still be available and functional
+  console.log('[miniappEnv] Trying SDK direct detection (mobile WebView fallback)...')
+  try {
+    const { sdk } = await import('@farcaster/miniapp-sdk')
+    console.log('[miniappEnv] SDK imported, attempting context handshake...')
+    
+    const ok = await Promise.race<boolean>([
+      (async () => {
+        // Check if SDK context is available
+        const context = await sdk.context
+        if (context) {
+          console.log('[miniappEnv] SDK context available:', {
+            user: context.user?.fid,
+            client: context.client?.clientFid,
+          })
+          
+          // Try ready action if available
+          if (sdk.actions?.ready) {
+            await sdk.actions.ready()
+          }
+          
+          console.log('[miniappEnv] probeMiniappReady: true (WebView SDK direct)')
+          return true
+        }
+        return false
+      })(),
+      new Promise<boolean>((r) => setTimeout(() => r(false), timeoutMs)),
+    ])
+    
+    if (ok) return true
+  } catch (err) {
+    console.warn('[miniappEnv] probeMiniappReady: All strategies failed', {
+      error: String(err),
+      embedded: isEmbedded(),
+      referrer: referrerHost(),
+    })
+  }
+
+  console.log('[miniappEnv] probeMiniappReady: false (SDK not available in this context)')
   return false
 }
 
 export async function getMiniappContext(): Promise<any | null> {
   try {
-    // Check if we're embedded and allowed first
-    if (!isEmbedded() || !isAllowedReferrer()) {
-      return null
-    }
-
     const { sdk } = await import('@farcaster/miniapp-sdk')
     
-    // Wait for context with longer timeout for mobile
+    // Try to get context with timeout (works on web and mobile WebView)
     const context = await Promise.race([
       sdk.context,
       new Promise((_, reject) => 
@@ -102,7 +140,12 @@ export async function getMiniappContext(): Promise<any | null> {
       )
     ])
     
-    return context
+    if (context) {
+      console.log('[getMiniappContext] Got context:', { fid: (context as any).user?.fid })
+      return context
+    }
+    
+    return null
   } catch (error) {
     console.warn('[getMiniappContext] Failed to get context:', error)
     return null
