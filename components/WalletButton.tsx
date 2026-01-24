@@ -69,11 +69,14 @@ export function WalletButton() {
     if (triedAutoRef.current) return
     if (isConnected || !availableConnectors.length) return
     
+    // Only auto-connect Farcaster if detected in miniapp context
+    if (!miniappReady) return
+    
     const farcaster = availableConnectors.find(
       (c: any) =>
         c?.id?.toString?.().toLowerCase().includes('farcaster') ||
         c?.name?.toLowerCase?.().includes('farcaster'),
-    ) || availableConnectors[0]
+    )
     
     if (!farcaster) return
     if (typeof farcaster.ready === 'boolean' && !farcaster.ready) return
