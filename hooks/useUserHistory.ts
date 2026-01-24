@@ -171,7 +171,7 @@ export function useUserHistory(
   const {
     data,
     loading,
-    error,
+    error: apolloError,
     refetch,
     fetchMore: apolloFetchMore,
   } = useQuery(query, {
@@ -184,6 +184,8 @@ export function useUserHistory(
     skip: !address || skip,
     pollInterval: 60000, // 60s
     fetchPolicy: 'cache-first',
+    errorPolicy: 'all', // Return partial data even on error
+    notifyOnNetworkStatusChange: true,
   })
 
   // Extract events based on query type
@@ -212,7 +214,7 @@ export function useUserHistory(
     rankUps,
     statsUpdates,
     loading,
-    error: error ? new Error(`Failed to fetch user history: ${error.message}`) : null,
+    error: apolloError ? new Error(`Failed to fetch user history: ${apolloError.message}`) : null,
     refetch,
     fetchMore,
     hasMore,
