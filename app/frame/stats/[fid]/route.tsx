@@ -2,10 +2,14 @@
 /**
  * Warpcast-safe frame endpoint for user stats sharing
  * GI-11 compliant: Uses /frame/* pattern for user-facing URLs
+ * 
+ * DIRECT HANDLER: Directly calls onchainstats handler instead of proxying
+ * to ensure Farcaster crawlers receive proper OG tags in response headers
  */
 
 import { NextResponse } from 'next/server'
 import { sanitizeFID, sanitizeChainKey } from '@/lib/frames/frame-validation'
+import { handleOnchainStatsFrame } from '@/lib/frames/handlers/onchainstats'
 
 export const runtime = 'nodejs'
 export const revalidate = 300
@@ -35,38 +39,39 @@ export async function GET(
     chain = validChain
   }
   
-  // Redirect to main frame handler with validated parameters
-  const frameUrl = new URL('/api/frame', origin)
-  frameUrl.searchParams.set('type', 'onchainstats')
-  frameUrl.searchParams.set('fid', String(fid))
-  if (chain) {
-    frameUrl.searchParams.set('chain', chain)
+  try {
+    // Directly call handler with validated parameters
+    const response = await handleOnchainStatsFrame({
+      req,
+      url,
+      params: {
+        type: 'onchainstats',
+        fid: String(fid),
+        chain: chain || undefined,
+        user: url.searchParams.get('user') || undefined,
+        debug: url.searchParams.get('debug') || undefined,
+      },
+      traces: [],
+      origin,
+      defaultFrameImage: `${origin}/frame-image.png`,
+      asJson: false,
+    })
+    
+    // Ensure proper cache headers for Farcaster crawlers
+    return new NextResponse(response.body, {
+      status: response.status,
+      headers: {
+        ...Object.fromEntries(response.headers.entries()),
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=60',
+      },
+    })
+  } catch (error) {
+    return new NextResponse('Frame generation failed', { 
+      status: 500,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+      },
+    })
   }
-  
-  // Forward debug parameter if present
-  const debugParam = url.searchParams.get('debug')
-  if (debugParam) {
-    frameUrl.searchParams.set('debug', debugParam)
-  }
-  
-  // Fetch frame HTML from API handler (crawlers don't follow redirects)
-  const frameResponse = await fetch(frameUrl.toString(), {
-    headers: {
-      'User-Agent': req.headers.get('User-Agent') || 'Farcaster-Crawler/1.0',
-    },
-  })
-  
-  if (!frameResponse.ok) {
-    return new NextResponse('Frame generation failed', { status: 500 })
-  }
-  
-  const frameHtml = await frameResponse.text()
-  
-  return new NextResponse(frameHtml, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
-    },
-  })
 }
