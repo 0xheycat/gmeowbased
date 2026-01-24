@@ -41,9 +41,23 @@ const TIER_NAMES = [
 
 export default function ProgressionCharts({ userAddress }: ProgressionChartsProps) {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('30d')
+  const [retryCount, setRetryCount] = useState(0)
   
   // Fetch historical data from Subsquid GraphQL
-  const { levelUps, rankUps, loading, error } = useUserHistory(userAddress)
+  const { levelUps, rankUps, loading, error, refetch } = useUserHistory(userAddress)
+  
+  // Auto-retry on error (with backoff)
+  useEffect(() => {
+    if (error && retryCount < 2) {
+      const delayMs = Math.pow(2, retryCount) * 2000 // 2s, 4s
+      const timer = setTimeout(() => {
+        console.log(`[ProgressionCharts] Retrying fetch (attempt ${retryCount + 1})`)
+        refetch()
+        setRetryCount(retryCount + 1)
+      }, delayMs)
+      return () => clearTimeout(timer)
+    }
+  }, [error, retryCount, refetch])
 
   // Performance monitoring (dev only)
   useEffect(() => {
@@ -146,13 +160,38 @@ export default function ProgressionCharts({ userAddress }: ProgressionChartsProp
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
             />
           </svg>
-          <div>
+          <div className="flex-1">
             <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-1">
               Unable to Load Progression Charts
             </h3>
-            <p className="text-red-700 dark:text-red-300 text-sm">
-              Failed to fetch historical data. Please try again later.
+            <p className="text-red-700 dark:text-red-300 text-sm mb-4">
+              {retryCount >= 2 
+                ? "The indexer is currently syncing your data. This usually resolves within a few minutes."
+                : "Failed to fetch historical data from the indexer."}
             </p>
+            <button
+              onClick={() => {
+                setRetryCount(0)
+                refetch()
+              }}
+              className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+              aria-label="Retry loading progression charts"
+            >
+              <svg 
+                className="w-4 h-4 mr-2" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+                />
+              </svg>
+              Try Again
+            </button>
           </div>
         </div>
       </div>
@@ -188,7 +227,15 @@ export default function ProgressionCharts({ userAddress }: ProgressionChartsProp
           No Progression Data Yet
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-500">
-          Level up or rank up to see your progression charts here!
+          Your progression history will appear here as you level up and advance ranks. 
+          {retryCount > 0 && (
+            <>
+              <br/>
+              <span className="text-xs mt-2 inline-block">
+                (Indexer is syncing your data, reload in a few minutes)
+              </span>
+            </>
+          )}
         </p>
       </div>
     )
