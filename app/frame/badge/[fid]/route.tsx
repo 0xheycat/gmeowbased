@@ -83,7 +83,7 @@ export async function GET(
     }, origin)
     
     const frameJson = {
-      version: 'next',
+      version: '1',
       imageUrl: imageUrl,
       button: {
         title: 'View Badges',

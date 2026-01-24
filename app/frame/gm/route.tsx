@@ -140,7 +140,7 @@ export async function GET(req: Request) {
   
   // Build Mini App Embed (vNext format)
   const frameJson = {
-    version: 'next',
+    version: '1',
     imageUrl: imageUrl,
     button: {
       title: 'Open GM Ritual',
