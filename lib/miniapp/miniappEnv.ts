@@ -241,3 +241,38 @@ export async function fireMiniappReady(): Promise<void> {
     // NEVER throw - always let the app proceed
   }
 }
+
+/**
+ * Get wallet address directly from Farcaster SDK
+ * This is a fallback for when the wagmi Farcaster connector isn't available
+ */
+export async function getFarcasterWalletAddress(): Promise<string | null> {
+  try {
+    const context = await getMiniappContext()
+    if (!context) {
+      console.warn('[getFarcasterWalletAddress] No miniapp context')
+      return null
+    }
+
+    // Try to get address from context directly
+    const contextAny = context as any
+    
+    // Check various possible locations for the account address
+    const address = 
+      contextAny.account?.address ??
+      contextAny.walletAddress ??
+      contextAny.address ??
+      (contextAny as any)?.user?.walletAddress
+
+    if (address) {
+      console.log('[getFarcasterWalletAddress] Got address:', address)
+      return address
+    }
+
+    console.warn('[getFarcasterWalletAddress] No address found in context:', contextAny)
+    return null
+  } catch (error) {
+    console.error('[getFarcasterWalletAddress] Error:', error)
+    return null
+  }
+}
