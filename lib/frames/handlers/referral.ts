@@ -102,6 +102,7 @@ function buildReferralFrameHtml(params: {
     `<meta property="fc:frame:image" content="${imageUrl || defaultFrameImage}" />`,
     `<meta property="fc:frame:image:aspect_ratio" content="1:1" />`,
     `<meta property="og:image" content="${imageUrl || defaultFrameImage}" />`,
+    `<meta property="og:url" content="${origin}/frame/referral" />`,
     `<meta property="og:title" content="Gmeowbased - Referral Program" />`,
     `<meta property="og:description" content="${stats.referralCodes} referrals | Earn 50 XP per referral" />`,
   ]

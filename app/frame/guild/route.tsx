@@ -84,6 +84,7 @@ export async function GET(req: Request) {
     <meta name="fc:frame" content="${JSON.stringify(frameJson).replace(/"/g, '&quot;')}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:url" content="${guildUrl}" />
     <meta property="og:image" content="${imageUrl}" />
     <style>
       body{margin:0;padding:20px;background:linear-gradient(135deg,#050a20,#4da3ff20);font-family:system-ui,sans-serif;color:#fff;min-height:100dvh}
