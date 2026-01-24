@@ -863,7 +863,11 @@ function detectIntentWithConfidence(
       { regex: /\bprogress\b/g, weight: 0.25 },
       { regex: /\binsights?\b/g, weight: 0.2 },
       { regex: /\bdashboard\b/g, weight: 0.25 },
-      { regex: /how\s+(am\s+i|\'m\s+i)\s+doing/g, weight: 0.3 }
+      { regex: /how\s+(am\s+i|\'m\s+i)\s+doing/g, weight: 0.3 },
+      { regex: /\bneynar\s+score\b/g, weight: 0.35 },
+      { regex: /show\s+my\s+(stats?|xp|points?)/g, weight: 0.3 },
+      { regex: /\breliability\b/g, weight: 0.25 },
+      { regex: /\bpower\b/g, weight: 0.25 }
     ],
     gm: [
       { regex: /\bgm\b/g, weight: 0.4 },

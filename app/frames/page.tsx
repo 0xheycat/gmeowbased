@@ -167,11 +167,19 @@ export default function FramesPage() {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-  const handleShareToFarcaster = (url: string, title: string) => {
-    // Warpcast share URL format
-    const text = encodeURIComponent(`Check out my ${title}!`)
-    const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(url)}`
-    window.open(shareUrl, '_blank', 'noopener,noreferrer')
+  const handleShareToFarcaster = async (url: string, title: string) => {
+    try {
+      // Try miniapp SDK first (mobile Warpcast/Farcaster)
+      const { safeComposeCast } = await import('@/lib/miniapp/miniappEnv')
+      const text = `Check out my ${title}!`
+      await safeComposeCast({ text, embeds: [url] })
+    } catch (err) {
+      // Fallback to web composer if SDK not available
+      console.warn('[frames] Miniapp SDK not available, using web composer:', err)
+      const text = encodeURIComponent(`Check out my ${title}!`)
+      const shareUrl = `https://warpcast.com/~/compose?text=${text}&embeds[]=${encodeURIComponent(url)}`
+      window.open(shareUrl, '_blank', 'noopener,noreferrer')
+    }
   }
 
   if (isLoading) {

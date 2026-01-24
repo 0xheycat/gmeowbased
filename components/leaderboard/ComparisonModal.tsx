@@ -287,15 +287,15 @@ export function ComparisonModal({ pilots, isOpen, onClose, onRemovePilot }: Comp
         className="fixed inset-0 bg-gray-500/75 dark:bg-black/75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
       />
 
-      <div className="fixed inset-0 z-50 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+      <div className="fixed inset-0 z-50 w-screen overflow-y-auto pt-4 sm:pt-0">
+        <div className="flex min-h-full items-end justify-center pb-4 px-3 sm:p-0 text-center sm:items-center">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-4xl data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
+            className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in w-full mx-auto max-h-[90vh] sm:mx-8 sm:my-8 sm:w-full sm:max-w-4xl data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
           >
             {/* Header */}
             <motion.div 
-              className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200 dark:border-gray-700"
+              className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 px-3 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-gray-700"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -306,25 +306,25 @@ export function ComparisonModal({ pilots, isOpen, onClose, onRemovePilot }: Comp
                     <BarChartIcon className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                       Pilot Comparison
                     </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Compare performance across all categories
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      Compare performance
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="w-9 h-9 flex items-center justify-center rounded-lg transition-all text-gray-600 dark:text-gray-400 hover:text-white hover:bg-danger-500 dark:hover:bg-danger-500"
+                  className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg transition-all text-gray-600 dark:text-gray-400 hover:text-white hover:bg-danger-500 dark:hover:bg-danger-500 flex-shrink-0"
                 >
-                  <CloseIcon className="w-5 h-5" />
+                  <CloseIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </motion.div>
 
             {/* Content - Wrappable for screenshot */}
-            <div id="comparison-content" className="p-6 bg-gray-50 dark:bg-gray-900">
+            <div id="comparison-content" className="p-3 sm:p-6 bg-gray-50 dark:bg-gray-900 overflow-y-auto max-h-[calc(90vh-280px)]">
               {/* Pilot Headers */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 {pilots.map((pilot, index) => (
@@ -366,7 +366,7 @@ export function ComparisonModal({ pilots, isOpen, onClose, onRemovePilot }: Comp
 
             {/* Export & Share Footer - Professional Pattern */}
             <motion.div 
-              className="p-6 bg-white dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700"
+              className="p-3 sm:p-6 bg-white dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -377,83 +377,83 @@ export function ComparisonModal({ pilots, isOpen, onClose, onRemovePilot }: Comp
               </div>
 
               {/* Share Buttons Grid - Strava/LinkedIn Pattern */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
                 <Button
                   onClick={handleShareWarpcast}
                   disabled={isExporting}
                   variant="outline"
-                  size="default"
-                  className="flex flex-col items-center gap-1 h-auto py-3"
+                  size="sm"
+                  className="flex flex-col items-center gap-0.5 h-auto py-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  <span className="text-xs font-medium">Share</span>
+                  <span className="text-[10px] sm:text-xs font-medium">Share</span>
                 </Button>
 
                 <Button
                   onClick={handleMintNFT}
                   disabled={isExporting}
                   variant="outline"
-                  size="default"
-                  className="flex flex-col items-center gap-1 h-auto py-3 bg-gradient-to-r from-brand/5 to-purple-600/5 hover:from-brand/10 hover:to-purple-600/10 border-brand/20"
+                  size="sm"
+                  className="flex flex-col items-center gap-0.5 h-auto py-2 bg-gradient-to-r from-brand/5 to-purple-600/5 hover:from-brand/10 hover:to-purple-600/10 border-brand/20"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3h6a2 2 0 012 2v14a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2z" />
                   </svg>
-                  <span className="text-xs font-medium bg-gradient-to-r from-brand to-purple-600 bg-clip-text text-transparent">Mint NFT</span>
+                  <span className="text-[10px] sm:text-xs font-medium bg-gradient-to-r from-brand to-purple-600 bg-clip-text text-transparent">Mint NFT</span>
                 </Button>
 
                 <Button
                   onClick={handleCopyText}
                   disabled={isExporting}
                   variant="outline"
-                  size="default"
-                  className="flex flex-col items-center gap-1 h-auto py-3"
+                  size="sm"
+                  className="flex flex-col items-center gap-0.5 h-auto py-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                  <span className="text-xs font-medium">Copy Text</span>
+                  <span className="text-[10px] sm:text-xs font-medium">Copy Text</span>
                 </Button>
 
                 <Button
                   onClick={handleDownload}
                   disabled={isExporting}
                   variant="outline"
-                  size="default"
-                  className="flex flex-col items-center gap-1 h-auto py-3"
+                  size="sm"
+                  className="flex flex-col items-center gap-0.5 h-auto py-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  <span className="text-xs font-medium">Download</span>
+                  <span className="text-[10px] sm:text-xs font-medium">Download</span>
                 </Button>
               </div>
 
               {/* Primary Action Button */}
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 {/* Native Share (Mobile Only) */}
                 {typeof window !== 'undefined' && 'share' in navigator && (
                   <Button
                     onClick={handleNativeShare}
                     disabled={isExporting}
                     variant="default"
-                    size="lg"
-                    className="flex-1 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 shadow-lg md:hidden"
+                    size="sm"
+                    className="flex-1 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 shadow-lg md:hidden text-xs sm:text-sm py-2 sm:py-3"
                   >
-                    <EmojiEventsIcon className="w-4 h-4 mr-2" />
+                    <EmojiEventsIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     Share Results
                   </Button>
                 )}
                 <Button
                   onClick={onClose}
                   variant="outline"
-                  size="lg"
-                  className={typeof window !== 'undefined' && 'share' in navigator ? 'flex-1' : 'w-full'}
+                  size="sm"
+                  className={`${typeof window !== 'undefined' && 'share' in navigator ? 'flex-1' : 'w-full'} text-xs sm:text-sm py-2 sm:py-3`}
                 >
-                  <CloseIcon className="w-4 h-4 mr-2" />
+                  <CloseIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   Close
                 </Button>
               </div>
