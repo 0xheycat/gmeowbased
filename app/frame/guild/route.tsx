@@ -30,13 +30,19 @@ export async function GET(req: Request) {
     } catch {}
   }
   
-  // Fetch guild name for better SEO
+  // Fetch guild name for better SEO (with timeout)
   let guildName = guildId ? `Guild #${guildId}` : 'Guild'
   if (guildId) {
     try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 2000) // 2s timeout
+      
       const guildResponse = await fetch(`${origin}/api/guild/${guildId}`, {
-        next: { revalidate: 300 } // Cache for 5 minutes
+        next: { revalidate: 300 }, // Cache for 5 minutes
+        signal: controller.signal
       })
+      clearTimeout(timeout)
+      
       if (guildResponse.ok) {
         const guildData = await guildResponse.json()
         if (guildData.guild?.name) {
@@ -60,7 +66,7 @@ export async function GET(req: Request) {
   }, origin)
   
   const frameJson = {
-    version: 'next',
+    version: '1',
     imageUrl,
     button: {
       title: 'Open Guild',

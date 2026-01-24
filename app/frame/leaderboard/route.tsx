@@ -39,8 +39,12 @@ export async function GET(req: Request) {
   }
   
   try {
-    // Directly call handler with validated parameters
-    const response = await handleLeaderboardFrame({
+    // Wrap in Promise.race with timeout to prevent hanging
+    const timeoutPromise = new Promise<Response>((_, reject) =>
+      setTimeout(() => reject(new Error('Frame generation timeout')), 4000)
+    )
+    
+    const framePromise = handleLeaderboardFrame({
       req,
       url,
       params: {
@@ -56,6 +60,9 @@ export async function GET(req: Request) {
       defaultFrameImage: `${origin}/frame-image.png`,
       asJson: false,
     })
+    
+    // Race: first to complete wins
+    const response = await Promise.race([framePromise, timeoutPromise])
     
     // Ensure proper cache headers for Farcaster crawlers
     return new NextResponse(response.body, {
