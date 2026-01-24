@@ -36,22 +36,53 @@ export function isAllowedReferrer(): boolean {
 
 // Probe the miniapp. Only returns true if we're embedded in an allowed referrer and SDK handshakes.
 // MCP best practice: Use 10s timeout for mobile networks (Dec 2025)
+// IMPORTANT: On mobile, referrer is often stripped for privacy, so we also try SDK detection directly
 export async function probeMiniappReady(timeoutMs = 10000): Promise<boolean> {
-  if (!isEmbedded() || !isAllowedReferrer()) return false
-  try {
-    const { sdk } = await import('@farcaster/miniapp-sdk')
-    const ok = await Promise.race<boolean>([
-      (async () => {
-        await sdk.context
-        await sdk.actions.ready?.()
+  // Check referrer first (works on web)
+  if (isEmbedded() && isAllowedReferrer()) {
+    try {
+      const { sdk } = await import('@farcaster/miniapp-sdk')
+      const ok = await Promise.race<boolean>([
+        (async () => {
+          await sdk.context
+          await sdk.actions.ready?.()
+          return true
+        })(),
+        new Promise<boolean>((r) => setTimeout(() => r(false), timeoutMs)),
+      ])
+      if (ok) {
+        console.log('[miniappEnv] probeMiniappReady: true (referrer + SDK)')
         return true
-      })(),
-      new Promise<boolean>((r) => setTimeout(() => r(false), timeoutMs)),
-    ])
-    return !!ok
-  } catch {
-    return false
+      }
+    } catch {
+      console.warn('[miniappEnv] probeMiniappReady: SDK handshake failed with allowed referrer')
+    }
   }
+
+  // Fallback: If embedded but no referrer (common on mobile), try SDK directly
+  // This is important for mobile Farcaster which strips referrer for privacy
+  if (isEmbedded() && !referrerHost()) {
+    console.log('[miniappEnv] No referrer detected, trying SDK directly (likely mobile)')
+    try {
+      const { sdk } = await import('@farcaster/miniapp-sdk')
+      const ok = await Promise.race<boolean>([
+        (async () => {
+          await sdk.context
+          await sdk.actions.ready?.()
+          console.log('[miniappEnv] probeMiniappReady: true (embedded + SDK, no referrer)')
+          return true
+        })(),
+        new Promise<boolean>((r) => setTimeout(() => r(false), timeoutMs)),
+      ])
+      return !!ok
+    } catch (err) {
+      console.warn('[miniappEnv] probeMiniappReady: SDK failed on mobile fallback', err)
+      return false
+    }
+  }
+
+  console.log('[miniappEnv] probeMiniappReady: false (not embedded or missing referrer)')
+  return false
 }
 
 export async function getMiniappContext(): Promise<any | null> {
