@@ -22,6 +22,12 @@ export default function DebugMiniappPage() {
 
   const [logs, setLogs] = useState<Array<{ time: string; message: string; level: 'log' | 'warn' | 'error' }>>([])
 
+  // Log connector changes
+  useEffect(() => {
+    const connectorsList = connectors.map((c: any) => `${c?.name || c?.id}${typeof c?.ready === 'boolean' ? ` (${c.ready ? '✅' : '❌'})` : ''}`).join(', ')
+    console.log('[DebugMiniapp] Connectors updated:', connectorsList)
+  }, [connectors])
+
   // Capture console logs
   useEffect(() => {
     const originalLog = console.log
