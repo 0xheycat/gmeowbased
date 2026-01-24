@@ -254,25 +254,62 @@ export async function getFarcasterWalletAddress(): Promise<string | null> {
       return null
     }
 
-    // Try to get address from context directly
     const contextAny = context as any
+    console.log('[getFarcasterWalletAddress] Full context:', JSON.stringify(contextAny, null, 2))
     
     // Check various possible locations for the account address
     const address = 
       contextAny.account?.address ??
       contextAny.walletAddress ??
       contextAny.address ??
-      (contextAny as any)?.user?.walletAddress
+      contextAny.user?.wallet?.address ??
+      contextAny.user?.address ??
+      (contextAny as any)?.accountAssociation?.payload  // Might be base64 encoded
 
-    if (address) {
+    if (address && typeof address === 'string' && address.startsWith('0x')) {
       console.log('[getFarcasterWalletAddress] Got address:', address)
       return address
     }
 
-    console.warn('[getFarcasterWalletAddress] No address found in context:', contextAny)
+    // If we have user info, that's still a connection indicator
+    if (contextAny.user || contextAny.user?.fid) {
+      console.log('[getFarcasterWalletAddress] Got user context (FID:', contextAny.user?.fid, ') but no address - may need to initialize account')
+      return null
+    }
+
+    console.warn('[getFarcasterWalletAddress] No address or user found in context')
     return null
   } catch (error) {
     console.error('[getFarcasterWalletAddress] Error:', error)
     return null
+  }
+}
+
+/**
+ * Initialize Farcaster wallet connection
+ * Calls SDK methods to establish connection
+ */
+export async function initializeFarcasterWallet(): Promise<boolean> {
+  try {
+    console.log('[initializeFarcasterWallet] Starting...')
+    const { sdk } = await import('@farcaster/miniapp-sdk')
+    
+    // Get context to verify we have account info
+    const context = await getMiniappContext()
+    if (context) {
+      const contextAny = context as any
+      console.log('[initializeFarcasterWallet] Context available after init:', {
+        hasUser: !!contextAny.user,
+        fid: contextAny.user?.fid,
+        hasAccount: !!contextAny.account,
+        hasWalletAddress: !!contextAny.account?.address,
+      })
+      return !!contextAny.user
+    }
+    
+    return false
+  } catch (error) {
+    console.error('[initializeFarcasterWallet] Error:', error)
+    return false
   }
 }
