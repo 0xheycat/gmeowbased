@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect } from 'wagmi'
-import { probeMiniappReady, getFarcasterWalletAddress } from '@/lib/miniapp/miniappEnv'
+import { probeMiniappReady } from '@/lib/miniapp/miniappEnv'
+import { useFarcasterWalletConnect } from '@/lib/hooks/useFarcasterWalletConnect'
 
 
 export function ConnectWallet() {
@@ -15,6 +16,9 @@ export function ConnectWallet() {
   const [miniappReady, setMiniappReady] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+
+  // Use the Farcaster wallet auto-connect hook
+  useFarcasterWalletConnect()
 
   useEffect(() => {
     setMounted(true)
@@ -97,34 +101,7 @@ export function ConnectWallet() {
 
     if (!farcaster) {
       console.warn('[ConnectWallet] No Farcaster connector found. Available:', availableConnectors.map((c: any) => ({ id: c?.id, name: c?.name })))
-      
-      // Retry a few times
-      if (retryCount < 2) {
-        console.log(`[ConnectWallet] Retrying (attempt ${retryCount + 1}/2)...`)
-        const timer = setTimeout(() => setRetryCount((r) => r + 1), 300)
-        return () => clearTimeout(timer)
-      }
-
-      // Try SDK fallback
-      console.log('[ConnectWallet] Trying SDK direct fallback...')
-      triedAutoRef.current = true
-      setConnectingId('auto-sdk')
-      
-      ;(async () => {
-        try {
-          const addr = await getFarcasterWalletAddress()
-          if (addr) {
-            console.log('[ConnectWallet] SDK fallback got address:', addr)
-          } else {
-            console.warn('[ConnectWallet] SDK fallback failed - no address')
-            setConnectingId(null)
-          }
-        } catch (err) {
-          console.error('[ConnectWallet] SDK fallback error:', err)
-          setConnectingId(null)
-        }
-      })()
-      
+      console.warn('[ConnectWallet] Farcaster auto-connect handled by useFarcasterWalletConnect hook')
       return
     }
 
