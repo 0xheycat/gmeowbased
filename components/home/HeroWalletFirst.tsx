@@ -21,16 +21,6 @@ export function HeroWalletFirst({ stats }: HeroWalletFirstProps) {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
         <div className="text-center max-w-4xl mx-auto">
-          {/* DEBUG LINK - Remove after testing */}
-          <div className="mb-6 text-xs">
-            <a 
-              href="/debug/miniapp" 
-              className="inline-block px-3 py-1 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
-            >
-              🐛 Debug Miniapp (testing only)
-            </a>
-          </div>
-
           {/* Main headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
             Earn rewards for being{' '}
