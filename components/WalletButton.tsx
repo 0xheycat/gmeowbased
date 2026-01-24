@@ -78,8 +78,14 @@ export function WalletButton() {
         c?.name?.toLowerCase?.().includes('farcaster'),
     )
     
-    if (!farcaster) return
-    if (typeof farcaster.ready === 'boolean' && !farcaster.ready) return
+    if (!farcaster) {
+      console.warn('[WalletButton] No Farcaster connector found among:', availableConnectors.map((c: any) => ({ id: c?.id, name: c?.name })))
+      return
+    }
+    if (typeof farcaster.ready === 'boolean' && !farcaster.ready) {
+      console.warn('[WalletButton] Farcaster connector not ready:', farcaster.ready)
+      return
+    }
     
     triedAutoRef.current = true
     setConnectingId('auto')
@@ -87,17 +93,27 @@ export function WalletButton() {
     // Defer to avoid blocking first paint (MCP best practice)
     setTimeout(async () => {
       try {
+        console.log('[WalletButton] Attempting auto-connect with:', { id: farcaster?.id, name: farcaster?.name })
+        
         if (connectAsync) {
+          console.log('[WalletButton] Using connectAsync...')
           await connectAsync({ connector: farcaster })
         } else {
+          console.log('[WalletButton] Using sync connect...')
           connect({ connector: farcaster })
         }
+        console.log('[WalletButton] Auto-connect initiated successfully')
       } catch (err) {
-        console.warn('[WalletButton] Auto-connect failed:', err)
+        console.error('[WalletButton] Auto-connect failed:', {
+          error: err,
+          errorMessage: (err as any)?.message,
+          errorName: (err as any)?.name,
+          connector: { id: farcaster?.id, name: farcaster?.name },
+        })
         setConnectingId(null)
       }
-    }, 0)
-  }, [isConnected, availableConnectors, connect, connectAsync])
+    }, 100) // Increase delay slightly for mobile
+  }, [isConnected, availableConnectors, connect, connectAsync, miniappReady])
 
   // Close menu on outside click
   useEffect(() => {
@@ -132,16 +148,31 @@ export function WalletButton() {
     
     try {
       setConnectingId(connector?.id || connector?.name || 'wallet')
+      const connectorName = connector?.name || connector?.id || 'Unknown'
+      
+      console.log('[WalletButton] Attempting connection:', { 
+        id: connector?.id, 
+        name: connectorName,
+        ready: connector?.ready,
+      })
       
       if (connectAsync) {
+        console.log('[WalletButton] Using connectAsync for:', connectorName)
         await connectAsync({ connector })
       } else {
+        console.log('[WalletButton] Using sync connect for:', connectorName)
         connect({ connector })
       }
       
+      console.log('[WalletButton] Connection initiated for:', connectorName)
       // Connection success shown in button UI state
     } catch (err: any) {
-      console.error('[WalletButton] Failed to connect:', err)
+      console.error('[WalletButton] Failed to connect:', {
+        error: err,
+        message: err?.message,
+        name: err?.name,
+        connector: connector?.name || connector?.id,
+      })
       
       const message = normalizeConnectError(err)
       if (message) {
