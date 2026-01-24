@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
-import { probeMiniappReady } from '@/lib/miniapp/miniappEnv'
+import { probeMiniappReady, getFarcasterWalletAddress } from '@/lib/miniapp/miniappEnv'
 import { useDialog, ErrorDialog } from '@/components/dialogs'
 
 /**
@@ -102,7 +102,7 @@ export function WalletButton() {
   // Auto-connect in Farcaster Mini App
   useEffect(() => {
     if (triedAutoRef.current) return
-    if (isConnected || !availableConnectors.length) return
+    if (isConnected) return
     
     // Only auto-connect Farcaster if detected in miniapp context
     if (!miniappReady) return
@@ -117,15 +117,35 @@ export function WalletButton() {
       console.warn('[WalletButton] No Farcaster connector found. Available:', availableConnectors.map((c: any) => c?.name || c?.id))
       
       // Retry a few times in case Farcaster connector is still loading
-      if (retryCount < 3) {
-        console.log(`[WalletButton] Retrying in 500ms (attempt ${retryCount + 1}/3)...`)
+      if (retryCount < 2) {
+        console.log(`[WalletButton] Retrying to find Farcaster connector (attempt ${retryCount + 1}/2)...`)
         const timer = setTimeout(() => {
           setRetryCount((r) => r + 1)
-        }, 500)
+        }, 300)
         return () => clearTimeout(timer)
       } else {
-        console.error('[WalletButton] Farcaster connector not found after 3 retries, giving up')
+        // After retries, try direct SDK fallback
+        console.log('[WalletButton] Farcaster connector not found after retries, trying SDK direct approach...')
         triedAutoRef.current = true
+        setConnectingId('auto-sdk')
+        
+        ;(async () => {
+          try {
+            const address = await getFarcasterWalletAddress()
+            if (address) {
+              console.log('[WalletButton] Got address from Farcaster SDK:', address)
+              // Show success - user should see their address connected
+              // Note: This is SDK-level connection, actual onchain actions may need manual connection
+              console.log('[WalletButton] Farcaster SDK connection ready at:', address)
+            } else {
+              console.warn('[WalletButton] Could not get address from Farcaster SDK')
+              setConnectingId(null)
+            }
+          } catch (err) {
+            console.error('[WalletButton] SDK fallback failed:', err)
+            setConnectingId(null)
+          }
+        })()
       }
       return
     }
