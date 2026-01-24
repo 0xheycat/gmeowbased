@@ -41,6 +41,16 @@ export function WalletButton() {
   const triedAutoRef = useRef(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  // Log connectors on mount and changes
+  useEffect(() => {
+    const connectorsList = connectors.map((c: any) => ({
+      id: c?.id,
+      name: c?.name,
+      ready: typeof c?.ready === 'boolean' ? c.ready : 'unknown',
+    }))
+    console.log('[WalletButton] Initial/updated connectors:', connectorsList, 'count:', connectors.length)
+  }, [connectors])
+
   // Check if in Farcaster miniapp context
   useEffect(() => {
     let active = true
