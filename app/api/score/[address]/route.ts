@@ -21,14 +21,14 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { isAddress } from 'viem'
-import { getUserStats, getLevelProgressOnChain, getRankProgressOnChain } from '@/lib/contracts/scoring-module'
+import { getUserStatsOnChain, getLevelProgressOnChain, getRankProgressOnChain } from '@/lib/contracts/scoring-module'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = params
+    const { address } = await params
     const { searchParams } = new URL(request.url)
     const chain = searchParams.get('chain') || 'base'
 
@@ -51,7 +51,7 @@ export async function GET(
     // Fetch on-chain data from ScoringModule
     // Uses Subsquid (primary) with RPC fallback, cached for 5min
     const [stats, levelProgress, rankProgress] = await Promise.all([
-      getUserStats(address),
+      getUserStatsOnChain(address),
       getLevelProgressOnChain(address),
       getRankProgressOnChain(address)
     ])
