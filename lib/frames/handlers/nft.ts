@@ -6,6 +6,7 @@
 import type { FrameHandlerContext } from '../types'
 import { tracePush, buildHtmlResponse, shortenAddress } from '../utils'
 import { fetchUserStats } from '../hybrid-data'
+import { getUserProfile } from '@/lib/supabase/queries/user'
 import { getUserNFTStats } from '@/lib/integrations/subsquid-client'
 
 export async function handleNFTFrame(ctx: FrameHandlerContext): Promise<Response> {
@@ -24,8 +25,19 @@ export async function handleNFTFrame(ctx: FrameHandlerContext): Promise<Response
   }
 
   try {
+    // Resolve wallet address by FID if address not provided
+    let resolvedAddress = userAddress
+    if (!resolvedAddress && fid) {
+      try {
+        const profile = await getUserProfile('', fid)
+        if (profile?.wallet_address) resolvedAddress = profile.wallet_address.toLowerCase()
+      } catch (err) {
+        console.warn('[nft-frame] Failed to resolve wallet by FID', err)
+      }
+    }
+
     // Fetch user stats for basic info
-    const result = await fetchUserStats({ address: userAddress || '0x0', fid, traces })
+    const result = await fetchUserStats({ address: resolvedAddress || '0x0', fid, traces })
     const stats = result.data
     
     // Fetch NFT data from Subsquid

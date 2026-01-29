@@ -6,6 +6,7 @@
 import type { FrameHandlerContext } from '../types'
 import { tracePush, buildHtmlResponse, shortenAddress } from '../utils'
 import { fetchUserStats } from '../hybrid-data'
+import { getUserProfile } from '@/lib/supabase/queries/user'
 
 export async function handleBadgeCollectionFrame(ctx: FrameHandlerContext): Promise<Response> {
   const { params, traces, origin, defaultFrameImage, asJson } = ctx
@@ -23,9 +24,20 @@ export async function handleBadgeCollectionFrame(ctx: FrameHandlerContext): Prom
   }
 
   try {
+    // Resolve wallet address by FID if address not provided
+    let resolvedAddress = userAddress
+    if (!resolvedAddress && fid) {
+      try {
+        const profile = await getUserProfile('', fid)
+        if (profile?.wallet_address) resolvedAddress = profile.wallet_address.toLowerCase()
+      } catch (err) {
+        console.warn('[badgecollection-frame] Failed to resolve wallet by FID', err)
+      }
+    }
+
     // Fetch user stats for badge count
     const result = await fetchUserStats({ 
-      address: userAddress || '0x0', 
+      address: resolvedAddress || '0x0', 
       fid, 
       traces 
     })

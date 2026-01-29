@@ -6,6 +6,7 @@
 import type { FrameHandlerContext } from '../types'
 import { tracePush, buildHtmlResponse, formatPoints, shortenAddress } from '../utils'
 import { fetchUserStats } from '../hybrid-data'
+import { getUserProfile } from '@/lib/supabase/queries/user'
 
 export async function handleReferralFrame(ctx: FrameHandlerContext): Promise<Response> {
   const { params, traces, origin, defaultFrameImage, asJson } = ctx
@@ -25,9 +26,20 @@ export async function handleReferralFrame(ctx: FrameHandlerContext): Promise<Res
   }
 
   try {
+    // Resolve wallet address by FID if address not provided
+    let resolvedAddress = userAddress
+    if (!resolvedAddress && fid) {
+      try {
+        const profile = await getUserProfile('', fid)
+        if (profile?.wallet_address) resolvedAddress = profile.wallet_address.toLowerCase()
+      } catch (err) {
+        console.warn('[referral-frame] Failed to resolve wallet by FID', err)
+      }
+    }
+
     // Fetch user stats for referral count
     const result = await fetchUserStats({ 
-      address: userAddress || '0x0', 
+      address: resolvedAddress || '0x0', 
       fid, 
       traces 
     })
