@@ -44,12 +44,25 @@ export async function GET(
   const badgeId = url.searchParams.get('badgeId') || 'gm-master'
   
   try {
+    // Resolve wallet address by FID
+    let resolvedAddress = '0x0'
+    if (fid) {
+      try {
+        const profile = await import('@/lib/supabase/queries/user').then(m => m.getUserProfile('', fid))
+        if (profile?.wallet_address) {
+          resolvedAddress = profile.wallet_address.toLowerCase()
+        }
+      } catch (err) {
+        console.warn('[badge-frame] Failed to resolve wallet by FID:', err)
+      }
+    }
+    
     // Fetch user stats
     let username = ''
     let address = ''
     
     const stats = await fetchUserStats({ 
-      address: '0x0', 
+      address: resolvedAddress, 
       fid, 
       traces: [] 
     })
