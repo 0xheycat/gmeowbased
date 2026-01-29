@@ -1,4 +1,4 @@
-// app/frame/stats/[fid]/route.tsx
+ // app/frame/stats/[fid]/route.tsx
 /**
  * Warpcast-safe frame endpoint for user stats sharing
  * GI-11 compliant: Uses /frame/* pattern for user-facing URLs
