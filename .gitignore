@@ -71,3 +71,4 @@ authbase.md
 
 # GitHub secrets backup (DO NOT COMMIT)
 .github-secrets-values.txt
+.env*.local
