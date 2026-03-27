@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Build and runtime
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+.vercel/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.build
+.env.contracts.example
+.env.example.supabase
+.env.sepolia
+.env.vercel
+.env.vercel.production
+
+# Cache and logs
+.cache/
+*.log
+.DS_Store
+.thumbs
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+.nyc_output/
+
+# OS
+Thumbs.db
+.DS_Store
