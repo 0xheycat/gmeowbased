@@ -42,7 +42,7 @@ export function HeroWalletFirst({ stats }: HeroWalletFirstProps) {
 
             {/* Secondary CTA - Try Frame */}
             <Link
-              href="/frame"
+              href="/frames"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl border-2 border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 min-h-[56px]"
             >
               Try Frame in Warpcast

@@ -20,6 +20,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { ContentCopyIcon, Twitter, CheckCircleIcon, ShareIcon } from '@/components/icons'
+import { buildFrameShareUrl, type FrameShareInput } from '@/lib/api/share'
 
 export interface ReferralLinkGeneratorProps {
   /** Referral code */
@@ -48,16 +49,23 @@ export function ReferralLinkGenerator({
     return `${baseUrl}/join?ref=${encodeURIComponent(code)}`
   }, [code, baseUrl])
 
+  // Generate frame share URL for Farcaster with proper OG tags
+  const frameShareUrl = useMemo(() => {
+    return buildFrameShareUrl({ type: 'referral', referral: code }, baseUrl)
+  }, [code, baseUrl])
+
   // Social share URLs
   const twitterShareUrl = useMemo(() => {
     const text = `Join me on Gmeowbased! Use my referral code: ${code}`
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(referralLink)}`
   }, [code, referralLink])
 
+  // Warpcast share URL with frame metadata
   const warpcastShareUrl = useMemo(() => {
-    const text = `Join me on Gmeowbased! Use my referral code: ${code}\n${referralLink}`
-    return `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`
-  }, [code, referralLink])
+    // Share the frame URL which includes OG tags for Farcaster preview
+    const text = `Join me on Gmeowbased! Use my referral code: ${code}`
+    return `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}\n${encodeURIComponent(frameShareUrl)}`
+  }, [code, frameShareUrl])
 
   // Copy to clipboard
   const handleCopy = useCallback(async () => {
@@ -183,7 +191,7 @@ export function ReferralLinkGenerator({
               <span>Twitter</span>
             </a>
 
-            {/* Warpcast */}
+            {/* Warpcast - with Frame Preview */}
             <a
               href={warpcastShareUrl}
               target="_blank"
@@ -194,7 +202,9 @@ export function ReferralLinkGenerator({
                 bg-[#8A63D2] hover:bg-[#7851c4]
                 text-white font-semibold
                 transition-colors duration-200
+                ring-2 ring-purple-400/50
               "
+              title="Share with interactive frame preview on Farcaster feed"
             >
               <ShareIcon className="h-5 w-5" />
               <span>Warpcast</span>
@@ -218,6 +228,9 @@ export function ReferralLinkGenerator({
               </button>
             )}
           </div>
+          <p className="text-xs text-purple-300/70">
+            💡 Tip: Warpcast share shows an interactive frame preview in the feed - easier for friends to join!
+          </p>
         </div>
       )}
 

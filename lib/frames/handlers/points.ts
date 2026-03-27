@@ -6,6 +6,7 @@
 import type { FrameHandlerContext } from '../types'
 import { tracePush, buildHtmlResponse, formatPoints, shortenAddress } from '../utils'
 import { fetchUserStats } from '../hybrid-data'
+import { getUserProfile } from '@/lib/supabase/queries/user'
 
 export async function handlePointsFrame(ctx: FrameHandlerContext): Promise<Response> {
   const { params, traces, origin, defaultFrameImage, asJson } = ctx
@@ -22,9 +23,20 @@ export async function handlePointsFrame(ctx: FrameHandlerContext): Promise<Respo
   }
 
   try {
+    // Resolve wallet address by FID if address not provided
+    let resolvedAddress = userAddress
+    if (!resolvedAddress && fid) {
+      try {
+        const profile = await getUserProfile('', fid)
+        if (profile?.wallet_address) resolvedAddress = profile.wallet_address.toLowerCase()
+      } catch (err) {
+        console.warn('[points-frame] Failed to resolve wallet by FID', err)
+      }
+    }
+
     // Fetch hybrid user stats
     const result = await fetchUserStats({ 
-      address: userAddress || '0x0', 
+      address: resolvedAddress || '0x0', 
       fid, 
       traces 
     })
@@ -102,6 +114,7 @@ function buildPointsFrameHtml(params: {
     `<meta property="fc:frame:image" content="${imageUrl || defaultFrameImage}" />`,
     `<meta property="fc:frame:image:aspect_ratio" content="1:1" />`,
     `<meta property="og:image" content="${imageUrl || defaultFrameImage}" />`,
+    `<meta property="og:url" content="${origin}/frame/points" />`,
     `<meta property="og:title" content="Gmeowbased - Points Breakdown" />`,
     `<meta property="og:description" content="${formatPoints(stats.totalXP)} total XP" />`,
   ]

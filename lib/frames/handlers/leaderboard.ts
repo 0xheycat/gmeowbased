@@ -166,6 +166,7 @@ function buildLeaderboardFrameHtml(params: {
     `<meta property="fc:frame:image" content="${imageUrl || defaultFrameImage}" />`,
     `<meta property="fc:frame:image:aspect_ratio" content="1:1" />`,
     `<meta property="og:image" content="${imageUrl || defaultFrameImage}" />`,
+    `<meta property="og:url" content="${origin}/frame/leaderboard" />`,
     `<meta property="og:title" content="Gmeowbased Leaderboard - ${chainDisplay}" />`,
     `<meta property="og:description" content="Top ${topEntries.length} players competing for glory!" />`,
   ]

@@ -30,13 +30,19 @@ export async function GET(req: Request) {
     } catch {}
   }
   
-  // Fetch guild name for better SEO
+  // Fetch guild name for better SEO (with timeout)
   let guildName = guildId ? `Guild #${guildId}` : 'Guild'
   if (guildId) {
     try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 2000) // 2s timeout
+      
       const guildResponse = await fetch(`${origin}/api/guild/${guildId}`, {
-        next: { revalidate: 300 } // Cache for 5 minutes
+        next: { revalidate: 300 }, // Cache for 5 minutes
+        signal: controller.signal
       })
+      clearTimeout(timeout)
+      
       if (guildResponse.ok) {
         const guildData = await guildResponse.json()
         if (guildData.guild?.name) {
@@ -60,7 +66,7 @@ export async function GET(req: Request) {
   }, origin)
   
   const frameJson = {
-    version: 'next',
+    version: '1',
     imageUrl,
     button: {
       title: 'Open Guild',
@@ -84,6 +90,7 @@ export async function GET(req: Request) {
     <meta name="fc:frame" content="${JSON.stringify(frameJson).replace(/"/g, '&quot;')}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:url" content="${guildUrl}" />
     <meta property="og:image" content="${imageUrl}" />
     <style>
       body{margin:0;padding:20px;background:linear-gradient(135deg,#050a20,#4da3ff20);font-family:system-ui,sans-serif;color:#fff;min-height:100dvh}

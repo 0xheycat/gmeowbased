@@ -6,6 +6,7 @@
 import type { FrameHandlerContext } from '../types'
 import { tracePush, buildHtmlResponse, formatPoints, shortenAddress } from '../utils'
 import { fetchUserStats } from '../hybrid-data'
+import { getUserProfile } from '@/lib/supabase/queries/user'
 
 export async function handleOnchainStatsFrame(ctx: FrameHandlerContext): Promise<Response> {
   const { params, traces, origin, defaultFrameImage, asJson } = ctx
@@ -22,9 +23,20 @@ export async function handleOnchainStatsFrame(ctx: FrameHandlerContext): Promise
   }
 
   try {
+    // Resolve wallet address by FID if address not provided
+    let resolvedAddress = userAddress
+    if (!resolvedAddress && fid) {
+      try {
+        const profile = await getUserProfile('', fid)
+        if (profile?.wallet_address) resolvedAddress = profile.wallet_address.toLowerCase()
+      } catch (err) {
+        console.warn('[onchainstats-frame] Failed to resolve wallet by FID', err)
+      }
+    }
+
     // Fetch comprehensive stats
     const result = await fetchUserStats({ 
-      address: userAddress || '0x0', 
+      address: resolvedAddress || '0x0', 
       fid, 
       traces 
     })

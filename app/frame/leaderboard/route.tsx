@@ -2,10 +2,14 @@
 /**
  * Warpcast-safe frame endpoint for leaderboard sharing
  * GI-11 compliant: Uses /frame/* pattern for user-facing URL
+ * 
+ * DIRECT HANDLER: Directly calls leaderboard handler instead of proxying
+ * to ensure Farcaster crawlers receive proper OG tags in response headers
  */
 
 import { NextResponse } from 'next/server'
 import { sanitizeChainKey } from '@/lib/frames/frame-validation'
+import { handleLeaderboardFrame } from '@/lib/frames/handlers/leaderboard'
 
 export const runtime = 'nodejs'
 export const revalidate = 300
@@ -34,37 +38,47 @@ export async function GET(req: Request) {
     }
   }
   
-  // Redirect to main frame handler with validated parameters
-  const frameUrl = new URL('/api/frame', origin)
-  frameUrl.searchParams.set('type', 'leaderboards')
-  if (chain) {
-    frameUrl.searchParams.set('chain', chain)
+  try {
+    // Wrap in Promise.race with timeout to prevent hanging
+    const timeoutPromise = new Promise<Response>((_, reject) =>
+      setTimeout(() => reject(new Error('Frame generation timeout')), 4000)
+    )
+    
+    const framePromise = handleLeaderboardFrame({
+      req,
+      url,
+      params: {
+        type: 'leaderboards',
+        chain: chain || undefined,
+        global: url.searchParams.get('global') || undefined,
+        limit: url.searchParams.get('limit') || undefined,
+        season: url.searchParams.get('season') || undefined,
+        debug: url.searchParams.get('debug') || undefined,
+      },
+      traces: [],
+      origin,
+      defaultFrameImage: `${origin}/frame-image.png`,
+      asJson: false,
+    })
+    
+    // Race: first to complete wins
+    const response = await Promise.race([framePromise, timeoutPromise])
+    
+    // Ensure proper cache headers for Farcaster crawlers
+    return new NextResponse(response.body, {
+      status: response.status,
+      headers: {
+        ...Object.fromEntries(response.headers.entries()),
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=60',
+      },
+    })
+  } catch (error) {
+    return new NextResponse('Frame generation failed', { 
+      status: 500,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+      },
+    })
   }
-  
-  // Forward debug parameter if present
-  const debugParam = url.searchParams.get('debug')
-  if (debugParam) {
-    frameUrl.searchParams.set('debug', debugParam)
-  }
-  
-  // Fetch frame HTML from API handler (crawlers don't follow redirects)
-  const frameResponse = await fetch(frameUrl.toString(), {
-    headers: {
-      'User-Agent': req.headers.get('User-Agent') || 'Farcaster-Crawler/1.0',
-    },
-  })
-  
-  if (!frameResponse.ok) {
-    return new NextResponse('Frame generation failed', { status: 500 })
-  }
-  
-  const frameHtml = await frameResponse.text()
-  
-  return new NextResponse(frameHtml, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
-    },
-  })
 }

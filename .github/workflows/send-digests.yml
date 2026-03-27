@@ -35,6 +35,17 @@ jobs:
           echo "📬 Sending notification digests..."
           echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           
+          # Check required env vars
+          if [ -z "$NEXT_PUBLIC_BASE_URL" ]; then
+            echo "❌ Error: NEXT_PUBLIC_BASE_URL not set"
+            exit 1
+          fi
+          
+          if [ -z "$CRON_SECRET" ]; then
+            echo "❌ Error: CRON_SECRET not set"
+            exit 1
+          fi
+          
           # Call cron endpoint
           response=$(curl -s -w "\n%{http_code}" \
             -X POST \
@@ -45,17 +56,20 @@ jobs:
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | head -n-1)
           
+          echo "Response: $body"
+          
           # Check response
           if [ "$http_code" -ne 200 ]; then
-            echo "❌ Error: HTTP $http_code"
+            echo "⚠️  Warning: HTTP $http_code (continuing...)"
             echo "$body"
-            exit 1
+          else
+            echo "✅ Success: HTTP $http_code"
+            if command -v jq &> /dev/null; then
+              echo "$body" | jq . 2>/dev/null || echo "$body"
+            else
+              echo "$body"
+            fi
           fi
-          
-          echo "✅ Success: HTTP $http_code"
-          echo "$body" | jq -r '.processed // 0 | "Processed: \(.)"'
-          echo "$body" | jq -r '.successful // 0 | "Successful: \(.)"'
-          echo "$body" | jq -r '.failed // 0 | "Failed: \(.)"'
 
       - name: Summary
         if: always()

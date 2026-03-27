@@ -93,12 +93,12 @@ export default function GuildDiscoveryPage() {
 
         const result = await response.json()
         
-        if (!result.success || !result.data?.guilds) {
+        if (!result.success || !result.guilds) {
           throw new Error('Invalid API response format')
         }
 
         // Convert API response to metadata lookup object
-        const metadataMap = result.data.guilds.reduce((acc: Record<string, GuildMetadata>, guild: any) => {
+        const metadataMap = result.guilds.reduce((acc: Record<string, GuildMetadata>, guild: any) => {
           acc[guild.id] = {
             guild_id: guild.id,
             description: guild.description || undefined,

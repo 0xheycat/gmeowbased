@@ -8,7 +8,7 @@
  * {
  *   "crons": [{
  *     "path": "/api/cron/oracle-deposits",
- *     "schedule": "*/5 * * * *"
+ *     "schedule": "every 5 minutes"
  *   }]
  * }
  * 

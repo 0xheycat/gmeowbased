@@ -65,7 +65,7 @@ export default function LeaderboardPage() {
       
       {/* Category Tabs */}
       <Tabs className="mb-6" size="md" isLazy>
-        <TabList className="border-gray-200 dark:border-gray-700">
+        <TabList className="border-gray-200 dark:border-gray-700 flex-wrap">
           <Tab>
             <span className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />

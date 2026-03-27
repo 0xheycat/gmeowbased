@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
-import { probeMiniappReady } from '@/lib/miniapp/miniappEnv'
+import { probeMiniappReady, getFarcasterWalletAddress } from '@/lib/miniapp/miniappEnv'
 import { useDialog, ErrorDialog } from '@/components/dialogs'
 
 /**
@@ -37,8 +37,31 @@ export function WalletButton() {
   const [connectingId, setConnectingId] = useState<string | null>(null)
   const [showWalletMenu, setShowWalletMenu] = useState(false)
   const [miniappReady, setMiniappReady] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
   const triedAutoRef = useRef(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Log component mount and state
+  useEffect(() => {
+    console.log('[WalletButton] Component mounted')
+    console.log('[WalletButton] useConnect available:', { connect: !!connect, connectAsync: !!connectAsync, connectors: connectors.length })
+    console.log('[WalletButton] useAccount:', { address, isConnected })
+  }, [])
+
+  // Log connectors on mount and changes
+  useEffect(() => {
+    const connectorsList = connectors.map((c: any) => ({
+      id: c?.id,
+      name: c?.name,
+      ready: typeof c?.ready === 'boolean' ? c.ready : 'unknown',
+    }))
+    console.log('[WalletButton] Initial/updated connectors:', connectorsList, 'count:', connectors.length)
+  }, [connectors])
+
+  // Log miniappReady changes
+  useEffect(() => {
+    console.log('[WalletButton] miniappReady changed to:', miniappReady)
+  }, [miniappReady])
 
   // Check if in Farcaster miniapp context
   useEffect(() => {
@@ -56,27 +79,99 @@ export function WalletButton() {
     }
   }, [])
 
-  // Available connectors (filter by readiness)
+  // Available connectors (filter by readiness, but include Farcaster if miniapp detected)
   const availableConnectors = useMemo(() => {
-    return connectors.filter((connector) => {
+    const filtered = connectors.filter((connector) => {
       if (typeof connector.ready === 'boolean') return connector.ready
       return true
     })
-  }, [connectors])
+    
+    // If miniapp is detected, ALWAYS include Farcaster connector even if it reports ready: false
+    // This is because the connector's ready status might be determined by SDK context,
+    // which we've already validated with probeMiniappReady()
+    if (miniappReady) {
+      const hasFarcaster = filtered.some((c: any) =>
+        c?.id?.toString?.().toLowerCase().includes('farcaster') ||
+        c?.name?.toLowerCase?.().includes('farcaster')
+      )
+      
+      if (!hasFarcaster) {
+        // Find Farcaster connector in full list and add it
+        const farcasterConnector = connectors.find((c: any) =>
+          c?.id?.toString?.().toLowerCase().includes('farcaster') ||
+          c?.name?.toLowerCase?.().includes('farcaster')
+        )
+        if (farcasterConnector) {
+          console.log('[WalletButton] Force-including Farcaster connector (miniapp detected)')
+          filtered.push(farcasterConnector)
+        }
+      }
+    }
+    
+    return filtered
+  }, [connectors, miniappReady])
 
   // Auto-connect in Farcaster Mini App
   useEffect(() => {
     if (triedAutoRef.current) return
-    if (isConnected || !availableConnectors.length) return
+    if (isConnected) return
+    
+    // Only auto-connect Farcaster if detected in miniapp context
+    if (!miniappReady) return
     
     const farcaster = availableConnectors.find(
       (c: any) =>
         c?.id?.toString?.().toLowerCase().includes('farcaster') ||
         c?.name?.toLowerCase?.().includes('farcaster'),
-    ) || availableConnectors[0]
+    )
     
-    if (!farcaster) return
-    if (typeof farcaster.ready === 'boolean' && !farcaster.ready) return
+    if (!farcaster) {
+      console.warn('[WalletButton] No Farcaster connector found. Available:', availableConnectors.map((c: any) => c?.name || c?.id))
+      
+      // Retry a few times in case Farcaster connector is still loading
+      if (retryCount < 2) {
+        console.log(`[WalletButton] Retrying to find Farcaster connector (attempt ${retryCount + 1}/2)...`)
+        const timer = setTimeout(() => {
+          setRetryCount((r) => r + 1)
+        }, 300)
+        return () => clearTimeout(timer)
+      } else {
+        // After retries, try direct SDK fallback
+        console.log('[WalletButton] Farcaster connector not found after retries, trying SDK direct approach...')
+        triedAutoRef.current = true
+        setConnectingId('auto-sdk')
+        
+        ;(async () => {
+          try {
+            const address = await getFarcasterWalletAddress()
+            if (address) {
+              console.log('[WalletButton] Got address from Farcaster SDK:', address)
+              // Show success - user should see their address connected
+              // Note: This is SDK-level connection, actual onchain actions may need manual connection
+              console.log('[WalletButton] Farcaster SDK connection ready at:', address)
+            } else {
+              console.warn('[WalletButton] Could not get address from Farcaster SDK')
+              setConnectingId(null)
+            }
+          } catch (err) {
+            console.error('[WalletButton] SDK fallback failed:', err)
+            setConnectingId(null)
+          }
+        })()
+      }
+      return
+    }
+    
+    // Reset retry count once we find the connector
+    setRetryCount(0)
+    
+    // Don't check ready status for Farcaster - we already validated via probeMiniappReady()
+    if (farcaster?.id?.toString?.().toLowerCase().includes('farcaster')) {
+      console.log('[WalletButton] Farcaster connector found, skipping ready check (SDK pre-validated)')
+    } else if (typeof farcaster.ready === 'boolean' && !farcaster.ready) {
+      console.warn('[WalletButton] Non-Farcaster connector not ready:', farcaster.ready)
+      return
+    }
     
     triedAutoRef.current = true
     setConnectingId('auto')
@@ -84,17 +179,27 @@ export function WalletButton() {
     // Defer to avoid blocking first paint (MCP best practice)
     setTimeout(async () => {
       try {
+        console.log('[WalletButton] Attempting auto-connect with:', { id: farcaster?.id, name: farcaster?.name })
+        
         if (connectAsync) {
+          console.log('[WalletButton] Using connectAsync...')
           await connectAsync({ connector: farcaster })
         } else {
+          console.log('[WalletButton] Using sync connect...')
           connect({ connector: farcaster })
         }
+        console.log('[WalletButton] Auto-connect initiated successfully')
       } catch (err) {
-        console.warn('[WalletButton] Auto-connect failed:', err)
+        console.error('[WalletButton] Auto-connect failed:', {
+          error: err,
+          errorMessage: (err as any)?.message,
+          errorName: (err as any)?.name,
+          connector: { id: farcaster?.id, name: farcaster?.name },
+        })
         setConnectingId(null)
       }
-    }, 0)
-  }, [isConnected, availableConnectors, connect, connectAsync])
+    }, 100) // Increase delay slightly for mobile
+  }, [isConnected, availableConnectors, connect, connectAsync, miniappReady, retryCount])
 
   // Close menu on outside click
   useEffect(() => {
@@ -129,16 +234,31 @@ export function WalletButton() {
     
     try {
       setConnectingId(connector?.id || connector?.name || 'wallet')
+      const connectorName = connector?.name || connector?.id || 'Unknown'
+      
+      console.log('[WalletButton] Attempting connection:', { 
+        id: connector?.id, 
+        name: connectorName,
+        ready: connector?.ready,
+      })
       
       if (connectAsync) {
+        console.log('[WalletButton] Using connectAsync for:', connectorName)
         await connectAsync({ connector })
       } else {
+        console.log('[WalletButton] Using sync connect for:', connectorName)
         connect({ connector })
       }
       
+      console.log('[WalletButton] Connection initiated for:', connectorName)
       // Connection success shown in button UI state
     } catch (err: any) {
-      console.error('[WalletButton] Failed to connect:', err)
+      console.error('[WalletButton] Failed to connect:', {
+        error: err,
+        message: err?.message,
+        name: err?.name,
+        connector: connector?.name || connector?.id,
+      })
       
       const message = normalizeConnectError(err)
       if (message) {
